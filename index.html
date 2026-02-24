@@ -204,6 +204,7 @@ tbody td{padding:8px 12px;vertical-align:middle}
   </div>
   <div class="nav-section">
     <div class="nav-label">Presupuestación</div>
+    <div class="nav-item" data-view="presupuesto"><span class="ni">💰</span><span>Presupuesto</span></div>
     <div class="nav-item" data-view="tarifario"><span class="ni">📋</span><span>Tarifario</span></div>
     <div class="nav-item" data-view="cype"><span class="ni">📐</span><span>CYPE 2026</span><span class="nav-badge" id="cype-badge">524</span></div>
     <div class="nav-item" data-view="interiorismo"><span class="ni">🛋</span><span>Interiorismo</span></div>
@@ -280,6 +281,45 @@ tbody td{padding:8px 12px;vertical-align:middle}
         <div class="card-header"><div class="card-title">📁 Proyectos <span id="proyectos-count" style="font-size:11px;font-weight:400;color:var(--text-soft);margin-left:6px"></span></div></div>
         <div class="table-wrap"><table><thead><tr><th>ID</th><th>Nombre</th><th>Cliente</th><th>Tipo</th><th>Estado</th><th>Responsable</th><th>Inicio</th><th></th></tr></thead>
         <tbody id="proyectos-tbody"><tr><td colspan="8" class="loading">Cargando…</td></tr></tbody></table></div>
+      </div>
+    </div>
+
+
+    <!-- PRESUPUESTO -->
+    <div class="view" id="view-presupuesto">
+      <div class="search-bar">
+        <select class="form-input" style="width:260px" id="pres-proyecto-sel" onchange="loadPresupuesto()"><option value="">Seleccionar proyecto…</option></select>
+        <select class="form-input" style="width:80px" id="pres-version-sel" onchange="loadPresupuesto()"><option value="v1">v1</option><option value="v2">v2</option><option value="v3">v3</option></select>
+        <button class="btn btn-primary" onclick="addLineaPresupuesto()">＋ Añadir línea</button>
+        <button class="btn btn-ghost" onclick="addCapituloPresupuesto()">＋ Capítulo</button>
+        <button class="btn btn-ghost btn-sm" id="pres-total-btn" style="margin-left:auto;font-size:13px;font-weight:700;color:var(--navy)"></button>
+      </div>
+      <!-- RESUMEN -->
+      <div id="pres-resumen" style="display:none;margin-bottom:14px">
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+          <div class="kpi blue"><div class="kpi-label">Base imponible</div><div class="kpi-value" id="pres-k-base">—</div></div>
+          <div class="kpi amber"><div class="kpi-label">CI+GG+BI</div><div class="kpi-value" id="pres-k-ci">—</div></div>
+          <div class="kpi green"><div class="kpi-label">Total s/IVA</div><div class="kpi-value" id="pres-k-total">—</div></div>
+          <div class="kpi red"><div class="kpi-label">Total c/IVA (10%)</div><div class="kpi-value" id="pres-k-iva">—</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="table-wrap"><table id="pres-table">
+          <thead><tr>
+            <th style="width:30px">#</th>
+            <th>Descripción</th>
+            <th style="width:50px">Ud.</th>
+            <th style="width:70px">Cant.</th>
+            <th style="width:100px">Precio Base</th>
+            <th style="width:70px">Margen %</th>
+            <th style="width:70px">CI+GG+BI</th>
+            <th style="width:110px">Precio Venta</th>
+            <th style="width:110px">Subtotal</th>
+            <th style="width:60px">IVA</th>
+            <th style="width:60px"></th>
+          </tr></thead>
+          <tbody id="pres-tbody"><tr><td colspan="11"><div class="empty"><div class="empty-icon">💰</div><div class="empty-text">Selecciona un proyecto para ver o crear su presupuesto</div></div></td></tr></tbody>
+        </table></div>
       </div>
     </div>
 
@@ -582,6 +622,45 @@ tbody td{padding:8px 12px;vertical-align:middle}
   </div></div>
 </div></div>
 
+
+<!-- PRESUPUESTO LINEA -->
+<div class="overlay" id="m-pres-linea"><div class="modal" style="width:620px">
+  <div class="modal-head"><div class="modal-title">💰 <span id="m-pres-title">Nueva línea</span></div><button class="modal-close" onclick="closeModal('m-pres-linea')">×</button></div>
+  <div class="modal-body"><input type="hidden" id="pl-id">
+    <div class="form-grid">
+      <div class="form-group fg-full">
+        <label class="form-label">Buscar en CYPE 2026</label>
+        <input class="form-input" id="pl-cype-search" placeholder="Escribe para buscar partida CYPE…" oninput="searchCypeLinea()">
+        <div id="pl-cype-results" style="max-height:150px;overflow-y:auto;border:1px solid var(--border);border-top:none;border-radius:0 0 4px 4px;display:none;background:white;z-index:10;position:relative"></div>
+      </div>
+      <div class="form-group fg-full">
+        <label class="form-label">O buscar en Tarifario propio</label>
+        <select class="form-input" id="pl-tarif-sel" onchange="loadTarifLinea()"><option value="">— Seleccionar del tarifario —</option></select>
+      </div>
+      <div class="form-group fg-full"><label class="form-label">Descripción *</label><input class="form-input" id="pl-desc" placeholder="Descripción de la partida"></div>
+      <div class="form-group"><label class="form-label">Unidad</label><select class="form-input" id="pl-ud"><option>m²</option><option>m³</option><option>ml</option><option>Ud</option><option>kg</option><option>h</option><option>PA</option><option>m</option></select></div>
+      <div class="form-group"><label class="form-label">Cantidad</label><input class="form-input" id="pl-cant" type="number" step="0.01" value="1" oninput="calcLineaPres()"></div>
+      <div class="form-group"><label class="form-label">Precio Base (coste s/IVA)</label><input class="form-input" id="pl-precio" type="number" step="0.01" oninput="calcLineaPres()"></div>
+      <div class="form-group"><label class="form-label">Margen %</label><input class="form-input" id="pl-margen" type="number" step="0.1" value="0" oninput="calcLineaPres()"></div>
+      <div class="form-group"><label class="form-label">CI+GG+BI %</label><input class="form-input" id="pl-ci" type="number" step="0.1" value="0" oninput="calcLineaPres()"></div>
+      <div class="form-group"><label class="form-label">Precio Venta (calculado)</label><input class="form-input calc" id="pl-pventa" readonly></div>
+      <div class="form-group"><label class="form-label">Subtotal (calculado)</label><input class="form-input calc" id="pl-subtotal" readonly></div>
+      <div class="form-group"><label class="form-label">IVA</label><select class="form-input" id="pl-iva"><option>10%</option><option>21%</option><option>4%</option><option>Exento</option></select></div>
+      <div class="form-group"><label class="form-label">Capítulo / Partida</label><input class="form-input" id="pl-partida" placeholder="01. Demoliciones"></div>
+    </div>
+  </div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('m-pres-linea')">Cancelar</button><button class="btn btn-primary" onclick="saveLineaPresupuesto()">💾 Guardar</button></div>
+</div></div>
+
+<!-- PRESUPUESTO CAPÍTULO -->
+<div class="overlay" id="m-pres-cap"><div class="modal" style="width:400px">
+  <div class="modal-head"><div class="modal-title">📂 Nuevo capítulo</div><button class="modal-close" onclick="closeModal('m-pres-cap')">×</button></div>
+  <div class="modal-body">
+    <div class="form-group"><label class="form-label">Nombre del capítulo</label><input class="form-input" id="cap-nombre" placeholder="01. Demoliciones y trabajos previos"></div>
+  </div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('m-pres-cap')">Cancelar</button><button class="btn btn-primary" onclick="saveCapitulo()">💾 Guardar</button></div>
+</div></div>
+
 <!-- CONFIRM -->
 <div class="confirm-overlay" id="confirm-overlay">
   <div class="confirm-box">
@@ -599,7 +678,7 @@ const SB_URL = 'https://qxyflndntpmcdbyvwjnj.supabase.co';
 const SB_KEY = 'sb_publishable_mCrvdo_QgXEwReMdKxJ1RQ_wpRcqLcE';
 
 // ── LOGIN ────────────────────────────────────────────
-const USERS = { 'jose':'pau2025', 'pau':'pau2025', 'admin':'pau2025' };
+const USERS = { 'jose':'Pauinteriorismo2026', 'pau':'Pauinteriorismo2026' };
 
 function doLogin() {
   const u = document.getElementById('login-user').value.trim().toLowerCase();
@@ -658,6 +737,7 @@ const META = {
   gerencia:     {t:'Gerencia · Panel ejecutivo',     b:'Resumen global de la empresa'},
   clientes:     {t:'Clientes · Base de datos',       b:'Base de datos centralizada'},
   proyectos:    {t:'Proyectos',                      b:'Todos los proyectos'},
+  presupuesto:  {t:'Presupuesto · Constructor',       b:'Crea presupuestos usando CYPE 2026 y tu tarifario'},
   tarifario:    {t:'Tarifario · Catálogo propio',    b:'Disponible en todos los presupuestos'},
   cype:         {t:'CYPE 2026 · 524 partidas',       b:'Base de precios importada de tu Excel'},
   interiorismo: {t:'Interiorismo & Mobiliario',      b:'Propuestas · Pedidos · Márgenes'},
@@ -1007,8 +1087,250 @@ async function populateIntCatalog(){
   el.innerHTML='<option value="">— descripción libre —</option>'+TC.map(t=>`<option value="${t.codigo}">${t.codigo} · ${t.descripcion}</option>`).join('');
 }
 
+
+// ── PRESUPUESTO ───────────────────────────────────────
+let PresC = [];
+let cyCache = [];
+
+async function initPresupuesto() {
+  // Populate proyecto select
+  if(!PC.length) PC = await sbGet('proyectos').catch(()=>[]);
+  const sel = document.getElementById('pres-proyecto-sel');
+  sel.innerHTML = '<option value="">Seleccionar proyecto…</option>' +
+    PC.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
+  // Populate tarifario select in modal
+  if(!TC.length) TC = await sbGet('tarifario').catch(()=>[]);
+  const tsel = document.getElementById('pl-tarif-sel');
+  tsel.innerHTML = '<option value="">— Seleccionar del tarifario —</option>' +
+    TC.map(t=>`<option value="${t.id}">${t.codigo} · ${t.descripcion}</option>`).join('');
+  // Load CYPE cache
+  if(!cyCache.length) cyCache = await sbGet('precios_cype','?order=codigo.asc').catch(()=>[]);
+}
+
+async function loadPresupuesto() {
+  const proy = document.getElementById('pres-proyecto-sel').value;
+  const ver  = document.getElementById('pres-version-sel').value;
+  const tbody = document.getElementById('pres-tbody');
+  if(!proy) {
+    tbody.innerHTML = `<tr><td colspan="11"><div class="empty"><div class="empty-icon">💰</div><div class="empty-text">Selecciona un proyecto</div></div></td></tr>`;
+    document.getElementById('pres-resumen').style.display='none';
+    return;
+  }
+  try {
+    PresC = await sbGet('presupuesto_lineas', `?proyecto_id=eq.${proy}&version=eq.${ver}&order=orden.asc`);
+    renderPresupuesto();
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="11" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;
+  }
+}
+
+function renderPresupuesto() {
+  const tbody = document.getElementById('pres-tbody');
+  if(!PresC.length) {
+    tbody.innerHTML = `<tr><td colspan="11"><div class="empty"><div class="empty-icon">💰</div><div class="empty-text">Presupuesto vacío. Añade capítulos y líneas.</div><button class="btn btn-ghost" onclick="addCapituloPresupuesto()">＋ Capítulo</button></div></td></tr>`;
+    document.getElementById('pres-resumen').style.display='none';
+    return;
+  }
+  let totalBase=0, totalCI=0, totalVenta=0;
+  tbody.innerHTML = PresC.map((l,i) => {
+    if(l.es_capitulo) {
+      return `<tr style="background:var(--navy);color:#fff">
+        <td colspan="9" style="padding:10px 12px;font-weight:700;font-size:13px">📂 ${l.descripcion}</td>
+        <td></td>
+        <td><button class="btn btn-icon btn-sm" style="background:rgba(255,255,255,.1);border:none;color:#fff" onclick="confirmDelete('presupuesto_lineas','${l.id}','${l.descripcion}')">🗑</button></td>
+      </tr>`;
+    }
+    const pv = l.precio_venta || 0;
+    const sub = l.subtotal || (l.cantidad * pv);
+    const ci = l.ci_gg_bi_pct || 0;
+    const subCI = ci > 0 ? sub * (1 + ci/100) : sub;
+    totalBase += (l.cantidad||0) * (l.precio_base||0);
+    totalCI   += subCI - sub;
+    totalVenta += subCI;
+    return `<tr data-search="${(l.descripcion||'').toLowerCase()}">
+      <td style="color:var(--text-soft);font-size:11px">${i+1}</td>
+      <td><strong>${l.descripcion||'—'}</strong>${l.ref_cype?`<br><span style="font-size:9px;color:var(--text-soft)">${l.ref_cype}</span>`:''}</td>
+      <td style="text-align:center">${l.unidad||'—'}</td>
+      <td class="td-mono">${l.cantidad||0}</td>
+      <td class="td-mono">${fmt(l.precio_base)}</td>
+      <td class="td-mono" style="color:var(--green)">${l.margen_pct>0?fmtP(l.margen_pct):'—'}</td>
+      <td class="td-mono" style="color:var(--amber)">${ci>0?fmtP(ci):'—'}</td>
+      <td class="td-mono" style="font-weight:700">${fmt(pv)}</td>
+      <td class="td-mono" style="font-weight:700;color:var(--navy)">${fmt(subCI)}</td>
+      <td><span class="badge b-gray">${l.iva_pct||'10%'}</span></td>
+      <td><div class="td-actions">
+        <button class="btn btn-ghost btn-icon btn-sm" onclick="editLineaPresupuesto('${l.id}')">✏️</button>
+        <button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('presupuesto_lineas','${l.id}','${(l.descripcion||'línea').replace(/'/g,"\'")}')">🗑</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+
+  // Resumen
+  const iva = totalVenta * 0.10;
+  document.getElementById('pres-k-base').textContent = fmt(totalBase).replace('€','');
+  document.getElementById('pres-k-ci').textContent   = fmt(totalCI).replace('€','');
+  document.getElementById('pres-k-total').textContent= fmt(totalVenta).replace('€','');
+  document.getElementById('pres-k-iva').textContent  = fmt(totalVenta+iva).replace('€','');
+  document.getElementById('pres-resumen').style.display='grid';
+  document.getElementById('pres-total-btn').textContent = `TOTAL c/IVA: ${fmt(totalVenta+iva)}`;
+}
+
+function calcLineaPres() {
+  const precio = parseFloat(document.getElementById('pl-precio').value)||0;
+  const margen = parseFloat(document.getElementById('pl-margen').value)||0;
+  const ci     = parseFloat(document.getElementById('pl-ci').value)||0;
+  const cant   = parseFloat(document.getElementById('pl-cant').value)||0;
+  let pv = margen > 0 && margen < 100 ? precio / (1-margen/100) : precio;
+  if(ci > 0) pv = pv * (1 + ci/100);
+  const sub = cant * pv;
+  document.getElementById('pl-pventa').value   = pv > 0 ? pv.toFixed(2)+' €' : '—';
+  document.getElementById('pl-subtotal').value = sub > 0 ? sub.toFixed(2)+' €' : '—';
+}
+
+function searchCypeLinea() {
+  const q = document.getElementById('pl-cype-search').value.toLowerCase();
+  const res = document.getElementById('pl-cype-results');
+  if(q.length < 2) { res.style.display='none'; return; }
+  const matches = cyCache.filter(c =>
+    c.codigo.toLowerCase().includes(q) || c.descripcion.toLowerCase().includes(q)
+  ).slice(0,8);
+  if(!matches.length) { res.style.display='none'; return; }
+  res.style.display='block';
+  res.innerHTML = matches.map(c=>`
+    <div onclick="selectCype('${c.id}')" style="padding:8px 12px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--border)" 
+         onmouseover="this.style.background='var(--blue-light)'" onmouseout="this.style.background=''">
+      <strong style="color:var(--navy-mid)">${c.codigo}</strong> · ${c.descripcion} 
+      <span style="float:right;color:var(--green);font-weight:700">${fmt(c.precio)}/${c.unidad}</span>
+    </div>`).join('');
+}
+
+function selectCype(id) {
+  const c = cyCache.find(x=>x.id===id);
+  if(!c) return;
+  document.getElementById('pl-desc').value   = c.descripcion;
+  document.getElementById('pl-precio').value = c.precio;
+  document.getElementById('pl-ud').value     = c.unidad||'m²';
+  document.getElementById('pl-cype-search').value = `${c.codigo} · ${c.descripcion}`;
+  document.getElementById('pl-cype-search').dataset.cypeRef = c.codigo;
+  document.getElementById('pl-cype-results').style.display='none';
+  calcLineaPres();
+}
+
+function loadTarifLinea() {
+  const id = document.getElementById('pl-tarif-sel').value;
+  if(!id) return;
+  const t = TC.find(x=>x.id===id);
+  if(!t) return;
+  document.getElementById('pl-desc').value   = t.descripcion;
+  document.getElementById('pl-precio').value = t.precio_coste||0;
+  document.getElementById('pl-margen').value = t.margen_pct||0;
+  document.getElementById('pl-ud').value     = t.unidad||'Ud';
+  calcLineaPres();
+}
+
+function addLineaPresupuesto() {
+  const proy = document.getElementById('pres-proyecto-sel').value;
+  if(!proy) { toast('Selecciona un proyecto primero','error'); return; }
+  document.getElementById('m-pres-title').textContent = 'Nueva línea';
+  document.getElementById('pl-id').value='';
+  document.getElementById('pl-desc').value='';
+  document.getElementById('pl-precio').value='';
+  document.getElementById('pl-margen').value='0';
+  document.getElementById('pl-ci').value='0';
+  document.getElementById('pl-cant').value='1';
+  document.getElementById('pl-pventa').value='';
+  document.getElementById('pl-subtotal').value='';
+  document.getElementById('pl-partida').value='';
+  document.getElementById('pl-cype-search').value='';
+  document.getElementById('pl-cype-search').dataset.cypeRef='';
+  document.getElementById('pl-cype-results').style.display='none';
+  document.getElementById('pl-tarif-sel').value='';
+  openModal('m-pres-linea');
+}
+
+function editLineaPresupuesto(id) {
+  const l = PresC.find(x=>x.id===id);
+  if(!l) return;
+  document.getElementById('m-pres-title').textContent = 'Editar línea';
+  document.getElementById('pl-id').value      = l.id;
+  document.getElementById('pl-desc').value    = l.descripcion||'';
+  document.getElementById('pl-precio').value  = l.precio_base||0;
+  document.getElementById('pl-margen').value  = l.margen_pct||0;
+  document.getElementById('pl-ci').value      = l.ci_gg_bi_pct||0;
+  document.getElementById('pl-cant').value    = l.cantidad||1;
+  document.getElementById('pl-ud').value      = l.unidad||'m²';
+  document.getElementById('pl-iva').value     = l.iva_pct||'10%';
+  document.getElementById('pl-partida').value = l.partida||'';
+  document.getElementById('pl-cype-search').value = l.ref_cype||'';
+  document.getElementById('pl-cype-search').dataset.cypeRef = l.ref_cype||'';
+  document.getElementById('pl-cype-results').style.display='none';
+  calcLineaPres();
+  openModal('m-pres-linea');
+}
+
+async function saveLineaPresupuesto() {
+  const desc = document.getElementById('pl-desc').value.trim();
+  if(!desc) { toast('La descripción es obligatoria','error'); return; }
+  const proy = document.getElementById('pres-proyecto-sel').value;
+  const ver  = document.getElementById('pres-version-sel').value;
+  const precio = parseFloat(document.getElementById('pl-precio').value)||0;
+  const margen = parseFloat(document.getElementById('pl-margen').value)||0;
+  const ci     = parseFloat(document.getElementById('pl-ci').value)||0;
+  const cant   = parseFloat(document.getElementById('pl-cant').value)||0;
+  let pv = margen > 0 && margen < 100 ? precio/(1-margen/100) : precio;
+  if(ci>0) pv = pv*(1+ci/100);
+  const id = document.getElementById('pl-id').value;
+  const d = {
+    proyecto_id: proy, version: ver,
+    descripcion: desc,
+    ref_cype: document.getElementById('pl-cype-search').dataset.cypeRef||null,
+    unidad: document.getElementById('pl-ud').value,
+    cantidad: cant,
+    precio_base: precio,
+    margen_pct: margen,
+    ci_gg_bi_pct: ci,
+    precio_venta: parseFloat(pv.toFixed(4)),
+    subtotal: parseFloat((cant*pv).toFixed(4)),
+    iva_pct: document.getElementById('pl-iva').value,
+    partida: document.getElementById('pl-partida').value,
+    es_capitulo: false,
+    orden: PresC.length + 1,
+  };
+  try {
+    if(id) { await sbPatch('presupuesto_lineas',id,d); toast('Línea actualizada ✅'); }
+    else   { await sbPost('presupuesto_lineas',d);    toast('Línea añadida ✅'); }
+    closeModal('m-pres-linea');
+    loadPresupuesto();
+  } catch(e) { toast('Error: '+e.message,'error'); }
+}
+
+function addCapituloPresupuesto() {
+  const proy = document.getElementById('pres-proyecto-sel').value;
+  if(!proy) { toast('Selecciona un proyecto primero','error'); return; }
+  document.getElementById('cap-nombre').value='';
+  openModal('m-pres-cap');
+}
+
+async function saveCapitulo() {
+  const nombre = document.getElementById('cap-nombre').value.trim();
+  if(!nombre) { toast('Escribe el nombre del capítulo','error'); return; }
+  const proy = document.getElementById('pres-proyecto-sel').value;
+  const ver  = document.getElementById('pres-version-sel').value;
+  try {
+    await sbPost('presupuesto_lineas', {
+      proyecto_id: proy, version: ver,
+      descripcion: nombre, es_capitulo: true,
+      orden: PresC.length + 1,
+      cantidad:0, precio_base:0, precio_venta:0, subtotal:0
+    });
+    toast('Capítulo añadido ✅');
+    closeModal('m-pres-cap');
+    loadPresupuesto();
+  } catch(e) { toast('Error: '+e.message,'error'); }
+}
+
 // ── LOADERS MAP ───────────────────────────────────────
-const loaders={gerencia:loadGerencia,clientes:loadClientes,proyectos:loadProyectos,tarifario:loadTarifario,cype:loadCype,interiorismo:loadInteriorismo,compras:loadCompras,subcontratas:loadSubcontratas,horas:loadHoras,proveedores:loadProveedores,facturas:loadFacturas};
+const loaders={gerencia:loadGerencia,presupuesto:()=>{initPresupuesto();if(document.getElementById('pres-proyecto-sel').value)loadPresupuesto();},clientes:loadClientes,proyectos:loadProyectos,tarifario:loadTarifario,cype:loadCype,interiorismo:loadInteriorismo,compras:loadCompras,subcontratas:loadSubcontratas,horas:loadHoras,proveedores:loadProveedores,facturas:loadFacturas};
 
 // ── INIT ─────────────────────────────────────────────
 async function init(){
