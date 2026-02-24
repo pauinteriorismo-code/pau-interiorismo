@@ -227,7 +227,7 @@ tbody td{padding:7px 10px;vertical-align:middle}
 <!-- APP -->
 <div class="app">
 <nav class="sidebar">
-  <div class="sidebar-logo"><div class="brand">PAU INTERIORISMO</div><div class="brand-sub">Sistema de gestión · <span style="color:#b87333">v20</span></div></div>
+  <div class="sidebar-logo"><div class="brand">PAU INTERIORISMO</div><div class="brand-sub">Sistema de gestión · <span style="color:#b87333">v21</span></div></div>
   <div class="nav-section">
     <div class="nav-label">Principal</div>
     <div class="nav-item active" data-view="gerencia"><span class="ni">🏠</span><span>Gerencia</span></div>
@@ -403,8 +403,13 @@ tbody td{padding:7px 10px;vertical-align:middle}
 
     <!-- ═══ PEDIDO DOC ═══ -->
     <div class="view" id="view-pedido_doc">
-      <div class="search-bar" style="flex-wrap:wrap;gap:8px">
-        <button class="btn btn-primary" onclick="window.print()">🖨️ Imprimir / PDF</button>
+      <div class="search-bar" style="flex-wrap:wrap;gap:8px;align-items:center">
+        <select class="form-input" style="width:220px" id="pd-pedido-sel" onchange="cargarPedidoEnDoc()">
+          <option value="">— Nuevo pedido —</option>
+        </select>
+        <button class="btn btn-primary" onclick="guardarDocPedido()">💾 Guardar pedido</button>
+        <button class="btn btn-ghost" onclick="window.print()">🖨️ Imprimir / PDF</button>
+        <button class="btn btn-ghost btn-sm" onclick="nuevoPedidoDoc()">＋ Nuevo</button>
       </div>
       <!-- DOCUMENTO PEDIDO EDITABLE + IMPRIMIBLE -->
       <div id="pd-doc" style="background:white;max-width:720px;margin:0 auto;padding:32px 40px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;font-family:Arial,sans-serif">
@@ -1918,6 +1923,111 @@ async function loadHoras(){
     tb.innerHTML=HC.map(h=>`<tr data-search="${(h.proyecto_id+h.trabajador+h.descripcion).toLowerCase()}"><td>${fmtD(h.fecha)}</td><td class="td-mono" style="color:var(--text-soft)">${h.proyecto_id||'—'}</td><td><strong>${h.trabajador||'—'}</strong></td><td class="td-mono">${h.horas}h</td><td class="td-mono">${fmt(h.coste_hora)}</td><td class="td-mono" style="font-weight:700">${fmt(h.total)}</td><td style="color:var(--text-soft)">${h.descripcion||'—'}</td><td><button class="btn btn-ghost btn-sm" style="margin-right:4px;font-size:11px" onclick="editHora('${h.id}')">Editar</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('horas','${h.id}','horas ${h.trabajador}')">🗑</button></td></tr>`).join('');
   }catch(e){tb.innerHTML=`<tr><td colspan="8" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
 }
+// ═══════════════════════════════════════════
+// DOC. PEDIDO - INTEGRACIÓN CON REGISTRO
+// ═══════════════════════════════════════════
+
+// Navega a Doc.Pedido y carga el pedido con ese ID
+async function abrirDocPedido(pedidoId){
+  await navTo('pedido_doc');
+  const sel = document.getElementById('pd-pedido-sel');
+  if(sel){ sel.value = pedidoId; cargarPedidoEnDoc(); }
+}
+
+// Nuevo pedido en blanco
+function nuevoPedidoDoc(){
+  window.pdLineas = Array.from({length:20}, ()=>({cant:'',desc:''}));
+  window.pdPedidoId = null;
+  ['pd-num-input','pd-prov-input','pd-prov-tel-input','pd-proyecto-input','pd-obs-input'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  const today = new Date().toISOString().split('T')[0];
+  const f=document.getElementById('pd-fecha-input'); if(f) f.value=today;
+  const n=document.getElementById('pd-nota-input');
+  if(n) n.value='SERVIR LO ANTES POSIBLE.\n\nDIRECCIÓN DE ENTREGA AV. DIPUTACIÓN Nº 24 - ALCASSER 46290 (VALENCIA)\nHORARIO DE DESCARGA DE 10:00 - 14:00 Y DE 16:30 A 19:00 H.\nTELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.';
+  const sel=document.getElementById('pd-pedido-sel'); if(sel) sel.value='';
+  renderPedidoLineas();
+}
+
+// Carga el pedido seleccionado en el documento
+function cargarPedidoEnDoc(){
+  const sel = document.getElementById('pd-pedido-sel');
+  if(!sel||!sel.value){ nuevoPedidoDoc(); return; }
+  const p = PedC.find(x=>String(x.id)===String(sel.value));
+  if(!p) return;
+  window.pdPedidoId = p.id;
+  // Cabecera
+  const setVal=(id,v)=>{ const el=document.getElementById(id); if(el) el.value=v||''; };
+  setVal('pd-num-input', p.num_pedido);
+  setVal('pd-fecha-input', p.fecha);
+  setVal('pd-prov-input', p.proveedor);
+  setVal('pd-prov-tel-input', p.prov_tel);
+  setVal('pd-proyecto-input', p.proyecto_id);
+  setVal('pd-obs-input', p.observaciones);
+  // Líneas
+  if(p.lineas && Array.isArray(p.lineas) && p.lineas.length){
+    window.pdLineas = p.lineas;
+    // Pad to minimum 20 lines
+    while(window.pdLineas.length < 20) window.pdLineas.push({cant:'',desc:''});
+  } else {
+    window.pdLineas = Array.from({length:20}, ()=>({cant:'',desc:''}));
+  }
+  renderPedidoLineas();
+}
+
+// Guarda el documento en la tabla pedidos
+async function guardarDocPedido(){
+  const getVal = id => { const el=document.getElementById(id); return el?el.value:''; };
+  const lineasLimpias = (window.pdLineas||[]).filter(l=>l.cant||l.desc);
+  const d = {
+    num_pedido:   getVal('pd-num-input'),
+    fecha:        getVal('pd-fecha-input') || new Date().toISOString().split('T')[0],
+    proveedor:    getVal('pd-prov-input'),
+    prov_tel:     getVal('pd-prov-tel-input'),
+    proyecto_id:  getVal('pd-proyecto-input') || null,
+    observaciones:getVal('pd-obs-input'),
+    lineas:       lineasLimpias,
+    estado:       'Pendiente',
+    tipo:         'Material',
+    importe:      0,
+  };
+  try{
+    if(window.pdPedidoId){
+      // UPDATE
+      await sb('pedidos','PATCH',d,null,`?id=eq.${window.pdPedidoId}`);
+      toast('Pedido actualizado ✅');
+    } else {
+      // INSERT
+      const res = await fetch(`${SB_URL}/rest/v1/pedidos`,{
+        method:'POST',
+        headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json','Prefer':'return=representation'},
+        body:JSON.stringify(d)
+      });
+      if(!res.ok) throw new Error(await res.text());
+      const created = await res.json();
+      if(created&&created[0]) window.pdPedidoId = created[0].id;
+      toast('Pedido creado y guardado ✅');
+    }
+    // Refresh PedC cache and selector
+    PedC = await sbGet('pedidos','?order=fecha.desc').catch(()=>PedC);
+    poblarSelectorDocPedido();
+    if(window.pdPedidoId){
+      const sel=document.getElementById('pd-pedido-sel');
+      if(sel) sel.value = window.pdPedidoId;
+    }
+  }catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+// Rellena el selector con los pedidos existentes
+function poblarSelectorDocPedido(){
+  const sel = document.getElementById('pd-pedido-sel');
+  if(!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">— Nuevo pedido —</option>'
+    + PedC.map(p=>`<option value="${p.id}">${p.num_pedido||'Sin nº'} · ${p.proveedor||'Sin proveedor'} · ${fmtD(p.fecha)}</option>`).join('');
+  if(cur) sel.value = cur;
+}
+
 // ═══ PEDIDO DOCUMENTO - LÍNEAS EDITABLES ═══
 function renderPedidoLineas(){
   const tbody=document.getElementById('pd-lineas-body');
@@ -2017,7 +2127,7 @@ async function loadPedidos(){
     PedC=await sbGet('pedidos','?order=fecha.desc');
     document.getElementById('pedidos-count').textContent=PedC.length+' pedidos';
     if(!PedC.length){tb.innerHTML=`<tr><td colspan="9"><div class="empty"><div class="empty-icon">📦</div><div class="empty-text">Sin pedidos</div><button class="btn btn-primary" onclick="openModal('m-pedido')">＋ Nuevo</button></div></td></tr>`;return;}
-    tb.innerHTML=PedC.map(p=>`<tr data-search="${(p.num_pedido+p.proyecto_id+p.proveedor+p.tipo).toLowerCase()}"><td class="td-mono" style="font-weight:700">${p.num_pedido||'—'}</td><td>${fmtD(p.fecha)}</td><td class="td-mono" style="color:var(--text-soft)">${p.proyecto_id||'—'}</td><td><span class="badge b-blue">${p.tipo||'—'}</span></td><td>${p.proveedor||'—'}</td><td class="td-mono" style="font-weight:700">${fmt(p.importe)}</td><td>${bE(p.estado)}</td><td style="color:var(--text-soft)">${p.observaciones||'—'}</td><td><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('pedidos','${p.id}','${(p.num_pedido||'pedido').replace(/'/g,"\\'")}')">🗑</button></td></tr>`).join('');
+    tb.innerHTML=PedC.map(p=>`<tr data-search="${(p.num_pedido+p.proyecto_id+p.proveedor+p.tipo).toLowerCase()}"><td class="td-mono" style="font-weight:700">${p.num_pedido||'—'}</td><td>${fmtD(p.fecha)}</td><td class="td-mono" style="color:var(--text-soft)">${p.proyecto_id||'—'}</td><td><span class="badge b-blue">${p.tipo||'—'}</span></td><td>${p.proveedor||'—'}</td><td class="td-mono" style="font-weight:700">${fmt(p.importe)}</td><td>${bE(p.estado)}</td><td style="color:var(--text-soft)">${p.observaciones||'—'}</td><td style="display:flex;gap:4px"><button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="abrirDocPedido('${p.id}')">📋 Doc.</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('pedidos','${p.id}','${(p.num_pedido||'pedido').replace(/'/g,"\\'")}')">🗑</button></td></tr>`).join('');
   }catch(e){tb.innerHTML=`<tr><td colspan="9" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
 }
 function fillProvSelect(selId){
@@ -2310,10 +2420,15 @@ const loaders={
     }
   },
   pedido_doc:async()=>{
-    // Siempre reinicializar las líneas al entrar en la vista
-    window.pdLineas=Array.from({length:20},()=>({cant:'',desc:''}));
-    const today=new Date().toISOString().split('T')[0];
-    const f=document.getElementById('pd-fecha-input');if(f&&!f.value)f.value=today;
+    // Cargar pedidos para el selector
+    PedC = await sbGet('pedidos','?order=fecha.desc').catch(()=>PedC||[]);
+    poblarSelectorDocPedido();
+    // Si no hay pedido activo, iniciar en blanco
+    if(!window.pdPedidoId){
+      window.pdLineas=Array.from({length:20},()=>({cant:'',desc:''}));
+      const today=new Date().toISOString().split('T')[0];
+      const f=document.getElementById('pd-fecha-input');if(f&&!f.value)f.value=today;
+    }
     renderPedidoLineas();
   },
   listas:()=>{
