@@ -160,6 +160,50 @@ tbody td{padding:7px 10px;vertical-align:middle}
 .lista-item{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:var(--sand);border-radius:var(--radius-sm);font-size:12px;margin-bottom:5px}
 .lista-item:hover{background:var(--blue-light)}
 @media(max-width:768px){.sidebar{width:52px}.brand,.brand-sub,.nav-label,.nav-item span:not(.ni),.nav-badge,.user-name,.user-role{display:none}.nav-item{justify-content:center;padding:9px}.kpi-grid,.kpi-grid-3{grid-template-columns:1fr 1fr}.form-grid{grid-template-columns:1fr}.fg-full{grid-column:1}.content{padding:12px}}
+
+/* ══════════════════════════════
+   PRINT STYLES
+══════════════════════════════ */
+@media print {
+  /* Hide everything except the document */
+  .sidebar, .topbar, .search-bar, .btn, 
+  .nav-item, .overlay, .toast, .confirm-overlay,
+  #login-screen { display: none !important; }
+  
+  /* Reset layout */
+  body { background: white !important; }
+  .app { display: block !important; }
+  .main { display: block !important; overflow: visible !important; }
+  .content { padding: 0 !important; overflow: visible !important; }
+  
+  /* Hide all views except the active one */
+  .view { display: none !important; }
+  .view.active { display: block !important; }
+  
+  /* Hide search bar and controls inside active view */
+  .view.active .search-bar { display: none !important; }
+  .view.active .kpi, .view.active .card:not(#pf-doc):not(#ct-doc):not(#pd-doc) { display: none !important; }
+  
+  /* Show ONLY the document div */
+  #pf-doc, #ct-doc, #pd-doc {
+    display: block !important;
+    border: none !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 20mm !important;
+    max-width: 100% !important;
+    width: 210mm !important;
+    min-height: 297mm !important;
+    font-size: 11pt !important;
+    page-break-after: always;
+  }
+
+  /* Page setup */
+  @page {
+    size: A4;
+    margin: 0;
+  }
+}
 </style>
 </head>
 <body>
@@ -691,7 +735,7 @@ tbody td{padding:7px 10px;vertical-align:middle}
     <div class="view" id="view-pedidos">
       <div class="search-bar">
         <div class="search-wrap"><span class="search-icon">🔍</span><input class="form-input" id="search-pedidos" placeholder="Buscar…" oninput="filterTable('pedidos-tbody','search-pedidos')"></div>
-        <button class="btn btn-primary" onclick="openModal('m-pedido')">＋ Nuevo pedido</button>
+        <button class="btn btn-primary" onclick="openPedidoModal()">＋ Nuevo pedido</button>
       </div>
       <div class="card">
         <div class="card-header"><div class="card-title">📦 Registro de pedidos<span id="pedidos-count" style="font-size:11px;font-weight:400;color:var(--text-soft);margin-left:6px"></span></div></div>
@@ -1101,7 +1145,7 @@ tbody td{padding:7px 10px;vertical-align:middle}
       <div class="form-group"><label class="form-label">Fecha</label><input class="form-input" id="ped-fecha" type="date"></div>
       <div class="form-group"><label class="form-label">Proyecto</label><select class="form-input" id="ped-proyecto"><option value="">Seleccionar…</option></select></div>
       <div class="form-group"><label class="form-label">Tipo</label><select class="form-input" id="ped-tipo"><option>Material</option><option>Mobiliario</option><option>Subcontrata</option><option>Herramienta</option><option>Otros</option></select></div>
-      <div class="form-group"><label class="form-label">Empresa/Proveedor</label><input class="form-input" id="ped-prov"></div>
+      <div class="form-group fg-full"><label class="form-label">Empresa/Proveedor</label><select class="form-input" id="ped-prov"><option value="">Seleccionar proveedor…</option></select></div>
       <div class="form-group"><label class="form-label">Importe €</label><input class="form-input" id="ped-importe" type="number" step="0.01"></div>
       <div class="form-group"><label class="form-label">Estado</label><select class="form-input" id="ped-estado"><option>Pendiente</option><option>Solicitado</option><option>Confirmado</option><option>En tránsito</option><option>Recibido</option><option>Pagado</option><option>Cancelado</option></select></div>
       <div class="form-group fg-full"><label class="form-label">Observaciones</label><input class="form-input" id="ped-obs"></div>
@@ -1768,6 +1812,7 @@ async function saveHora(){const d={fecha:document.getElementById('h-fecha').valu
 // PEDIDOS
 // ═══════════════════════════════════════════
 async function loadPedidos(){
+  if(!ProvC.length)ProvC=await sbGet('proveedores','?order=nombre.asc').catch(()=>[]);
   const tb=document.getElementById('pedidos-tbody');
   try{
     PedC=await sbGet('pedidos','?order=fecha.desc');
@@ -1775,6 +1820,18 @@ async function loadPedidos(){
     if(!PedC.length){tb.innerHTML=`<tr><td colspan="9"><div class="empty"><div class="empty-icon">📦</div><div class="empty-text">Sin pedidos</div><button class="btn btn-primary" onclick="openModal('m-pedido')">＋ Nuevo</button></div></td></tr>`;return;}
     tb.innerHTML=PedC.map(p=>`<tr data-search="${(p.num_pedido+p.proyecto_id+p.proveedor+p.tipo).toLowerCase()}"><td class="td-mono" style="font-weight:700">${p.num_pedido||'—'}</td><td>${fmtD(p.fecha)}</td><td class="td-mono" style="color:var(--text-soft)">${p.proyecto_id||'—'}</td><td><span class="badge b-blue">${p.tipo||'—'}</span></td><td>${p.proveedor||'—'}</td><td class="td-mono" style="font-weight:700">${fmt(p.importe)}</td><td>${bE(p.estado)}</td><td style="color:var(--text-soft)">${p.observaciones||'—'}</td><td><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('pedidos','${p.id}','${(p.num_pedido||'pedido').replace(/'/g,"\\'")}')">🗑</button></td></tr>`).join('');
   }catch(e){tb.innerHTML=`<tr><td colspan="9" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
+}
+function openPedidoModal(){
+  // Populate proveedor select fresh
+  const sel=document.getElementById('ped-prov');
+  sel.innerHTML='<option value="">Seleccionar proveedor…</option>'+ProvC.map(p=>`<option value="${p.nombre}">${p.nombre}</option>`).join('');
+  // Also add free-text option at end
+  document.getElementById('ped-id').value='';
+  document.getElementById('ped-num').value='PED-'+String(PedC.length+1).padStart(3,'0');
+  document.getElementById('ped-fecha').value=new Date().toISOString().split('T')[0];
+  document.getElementById('ped-obs').value='';
+  document.getElementById('ped-importe').value='';
+  openModal('m-pedido');
 }
 async function savePedido(){const d={num_pedido:document.getElementById('ped-num').value,fecha:document.getElementById('ped-fecha').value||new Date().toISOString().split('T')[0],proyecto_id:document.getElementById('ped-proyecto').value||null,tipo:document.getElementById('ped-tipo').value,proveedor:document.getElementById('ped-prov').value,importe:parseFloat(document.getElementById('ped-importe').value)||0,estado:document.getElementById('ped-estado').value,observaciones:document.getElementById('ped-obs').value};try{await sbPost('pedidos',d);toast('Pedido registrado ✅');closeModal('m-pedido');loadPedidos();}catch(e){toast('Error: '+e.message,'error');}
 }
