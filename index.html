@@ -227,7 +227,7 @@ tbody td{padding:7px 10px;vertical-align:middle}
 <!-- APP -->
 <div class="app">
 <nav class="sidebar">
-  <div class="sidebar-logo"><div class="brand">PAU INTERIORISMO</div><div class="brand-sub">Sistema de gestión · <span style="color:#b87333">v26</span></div></div>
+  <div class="sidebar-logo"><div class="brand">PAU INTERIORISMO</div><div class="brand-sub">Sistema de gestión · <span style="color:#b87333">v27</span></div></div>
   <div class="nav-section">
     <div class="nav-label">Principal</div>
     <div class="nav-item active" data-view="gerencia"><span class="ni">🏠</span><span>Gerencia</span></div>
@@ -408,7 +408,8 @@ tbody td{padding:7px 10px;vertical-align:middle}
           <option value="">— Nuevo pedido —</option>
         </select>
         <button class="btn btn-primary" onclick="guardarDocPedido()">💾 Guardar pedido</button>
-        <button class="btn btn-ghost" onclick="window.print()">🖨️ Imprimir / PDF</button>
+        <button class="btn btn-primary" onclick="exportarPDF('pd-doc', (document.getElementById('pd-num-input')?.value||'pedido')+'.pdf')">⬇️ Descargar PDF</button>
+        <button class="btn btn-ghost" onclick="window.print()">🖨️ Imprimir</button>
         <button class="btn btn-ghost btn-sm" onclick="nuevoPedidoDoc()">＋ Nuevo</button>
       </div>
       <!-- DOCUMENTO PEDIDO EDITABLE + IMPRIMIBLE -->
@@ -665,6 +666,8 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <select class="form-input" style="width:75px" id="pres-version-sel" onchange="loadPresupuesto()"><option value="v1">v1</option><option value="v2">v2</option><option value="v3">v3</option></select>
         <button class="btn btn-primary" onclick="addLineaPresupuesto()">＋ Línea</button>
         <button class="btn btn-ghost" onclick="addCapituloPresupuesto()">＋ Capítulo</button>
+        <button class="btn btn-primary no-print" onclick="exportarPresupuestoPDF()">⬇️ Descargar PDF</button>
+        <button class="btn btn-ghost no-print" onclick="window.print()">🖨️ Imprimir</button>
         <div id="pres-total-lbl" style="margin-left:auto;font-size:13px;font-weight:700;color:var(--navy)"></div>
       </div>
       <div id="pres-resumen" style="display:none">
@@ -1279,6 +1282,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 </div>
 <div class="toast" id="toast"></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script>
 
 // ═══════════════════════════════════════════
@@ -2273,6 +2277,102 @@ function clearPedidoLineas(){
   const f=document.getElementById('pd-fecha-input');if(f)f.value=today;
   const n=document.getElementById('pd-nota-input');
   if(n)n.value='SERVIR LO ANTES POSIBLE.\n\nDIRECCIÓN DE ENTREGA AV. DIPUTACIÓN Nº 24 - ALCASSER 46290 (VALENCIA)\nHORARIO DE DESCARGA DE 10:00 - 14:00 Y DE 16:30 A 19:00 H.\nTELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.';
+}
+
+// ═══════════════════════════════════════════
+// EXPORTAR PDF
+// ═══════════════════════════════════════════
+async function exportarPDF(elementId, nombreArchivo){
+  const el = document.getElementById(elementId);
+  if(!el){ toast('Elemento no encontrado','error'); return; }
+  toast('Generando PDF…');
+  const opt = {
+    margin:       [8, 8, 8, 8],
+    filename:     nombreArchivo || 'documento.pdf',
+    image:        { type: 'jpeg', quality: 0.98 },
+    html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
+    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+  };
+  try {
+    await html2pdf().set(opt).from(el).save();
+    toast('PDF descargado ✅');
+  } catch(e) {
+    toast('Error generando PDF: ' + e.message, 'error');
+  }
+}
+
+async function exportarPresupuestoPDF(){
+  const proy = document.getElementById('pres-proyecto-sel')?.value;
+  const ver  = document.getElementById('pres-version-sel')?.value || 'v1';
+  if(!proy){ toast('Selecciona un proyecto primero','error'); return; }
+  // Get project and client info
+  const proyecto = PC.find(p=>p.proyecto_id===proy)||{};
+  const cliente  = CC.find(c=>c.cliente_id===proyecto.cliente_id)||{};
+  // Get rows from table
+  const tbody = document.getElementById('pres-tbody');
+  if(!tbody){ toast('Sin datos de presupuesto','error'); return; }
+  // Build a clean printable div
+  const totalEl = document.getElementById('pres-total-lbl');
+  const totalText = totalEl ? totalEl.textContent : '';
+  const rowsHtml = Array.from(tbody.querySelectorAll('tr[data-search]'))
+    .filter(tr=>tr.style.display!=='none')
+    .map(tr=>{
+      const tds = tr.querySelectorAll('td');
+      const isCapitulo = tr.classList.contains('capitulo-row') || (tds[0]&&tds[0].colSpan>1);
+      if(isCapitulo){
+        return `<tr style="background:#1a2a3a;color:white"><td colspan="7" style="padding:7px 10px;font-weight:700">${tds[0]?.textContent||''}</td></tr>`;
+      }
+      return `<tr style="border-bottom:1px solid #eee">
+        ${Array.from(tds).slice(0,-1).map(td=>`<td style="padding:5px 8px;font-size:11px">${td.textContent}</td>`).join('')}
+      </tr>`;
+    }).join('');
+
+  const printDiv = document.createElement('div');
+  printDiv.innerHTML = `
+    <div style="font-family:Arial,sans-serif;padding:20px;max-width:800px;margin:0 auto">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #1a2a3a;padding-bottom:12px;margin-bottom:16px">
+        <div>
+          <div style="font-size:18px;font-weight:700;color:#1a2a3a">PAU INTERIORISMO S.L.</div>
+          <div style="font-size:10px;color:#666">C/ Tomás y Valiente Nº 6 Bajo · 46290 Alcàsser · info@pauinteriorismo.com · CIF: B-56909641</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:18px;font-weight:700;color:#b87333">PRESUPUESTO</div>
+          <div style="font-size:11px;color:#666">${proy} · ${ver.toUpperCase()} · ${new Date().toLocaleDateString('es-ES')}</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+        <div style="background:#f7f4ef;padding:10px;border-radius:4px">
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#8a9aaa;margin-bottom:4px">CLIENTE</div>
+          <div style="font-weight:700">${cliente.nombre||'—'}</div>
+          <div style="font-size:11px;color:#666">${cliente.email||''} ${cliente.telefono||''}</div>
+        </div>
+        <div style="background:#f7f4ef;padding:10px;border-radius:4px">
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#8a9aaa;margin-bottom:4px">PROYECTO</div>
+          <div style="font-weight:700">${proyecto.nombre||proy}</div>
+          <div style="font-size:11px;color:#666">${proyecto.tipo||''}</div>
+        </div>
+      </div>
+      <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
+        <thead><tr style="background:#1a2a3a;color:white;font-size:11px">
+          <th style="padding:7px;text-align:left">Cód.</th>
+          <th style="padding:7px;text-align:left">Descripción</th>
+          <th style="padding:7px;text-align:center">Ud.</th>
+          <th style="padding:7px;text-align:right">Med.</th>
+          <th style="padding:7px;text-align:right">P.Unit.</th>
+          <th style="padding:7px;text-align:right">Total</th>
+        </tr></thead>
+        <tbody>${rowsHtml}</tbody>
+      </table>
+      <div style="text-align:right;font-size:14px;font-weight:700;padding:10px;background:#f7f4ef;border-radius:4px">${totalText}</div>
+      <div style="color:#666;font-size:10px;text-align:center;border-top:1px solid #eee;padding-top:10px;margin-top:16px">
+        PAU INTERIORISMO S.L. · CIF B-56909641 · info@pauinteriorismo.com · Tel: 961 20 01 87
+      </div>
+    </div>`;
+  document.body.appendChild(printDiv);
+  const filename = `Presupuesto_${proy}_${ver}_${new Date().toISOString().split('T')[0]}.pdf`;
+  await exportarPDF(printDiv.firstElementChild, filename);
+  document.body.removeChild(printDiv);
 }
 // ═══ EDITAR HORAS ═══
 function editHora(id){
