@@ -1812,7 +1812,8 @@ async function saveHora(){const d={fecha:document.getElementById('h-fecha').valu
 // PEDIDOS
 // ═══════════════════════════════════════════
 async function loadPedidos(){
-  if(!ProvC.length)ProvC=await sbGet('proveedores','?order=nombre.asc').catch(()=>[]);
+  // Siempre cargar proveedores para tenerlos listos
+  try{ ProvC=await sbGet('proveedores','?order=nombre.asc'); }catch(e){ ProvC=[]; }
   const tb=document.getElementById('pedidos-tbody');
   try{
     PedC=await sbGet('pedidos','?order=fecha.desc');
@@ -1821,29 +1822,35 @@ async function loadPedidos(){
     tb.innerHTML=PedC.map(p=>`<tr data-search="${(p.num_pedido+p.proyecto_id+p.proveedor+p.tipo).toLowerCase()}"><td class="td-mono" style="font-weight:700">${p.num_pedido||'—'}</td><td>${fmtD(p.fecha)}</td><td class="td-mono" style="color:var(--text-soft)">${p.proyecto_id||'—'}</td><td><span class="badge b-blue">${p.tipo||'—'}</span></td><td>${p.proveedor||'—'}</td><td class="td-mono" style="font-weight:700">${fmt(p.importe)}</td><td>${bE(p.estado)}</td><td style="color:var(--text-soft)">${p.observaciones||'—'}</td><td><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('pedidos','${p.id}','${(p.num_pedido||'pedido').replace(/'/g,"\\'")}')">🗑</button></td></tr>`).join('');
   }catch(e){tb.innerHTML=`<tr><td colspan="9" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
 }
+function fillProvSelect(selId){
+  const sel=document.getElementById(selId);
+  if(!sel)return;
+  if(!ProvC.length){
+    sel.innerHTML='<option value="">Sin proveedores registrados</option>';
+    return;
+  }
+  sel.innerHTML='<option value="">Seleccionar proveedor…</option>'
+    +ProvC.map(p=>`<option value="${p.nombre}">${p.nombre}${p.tipo?' ('+p.tipo+')':''}</option>`).join('');
+}
 async function openPedidoModal(){
-  const sel=document.getElementById('ped-prov');
-  sel.innerHTML='<option value="">Cargando…</option>';
-  openModal('m-pedido');
-  // Forzar carga de proveedores siempre
+  // Siempre cargar proveedores frescos antes de abrir
   try{
     ProvC=await sbGet('proveedores','?order=nombre.asc');
-  }catch(e){ProvC=[];}
-  sel.innerHTML='<option value="">Seleccionar proveedor…</option>'
-    + ProvC.map(p=>`<option value="${p.nombre}">${p.nombre}${p.tipo?' ('+p.tipo+')':''}</option>`).join('')
-    + '<option value="__otro__">— Escribir nombre libre —</option>';
-  sel.onchange=function(){
-    if(this.value==='__otro__'){
-      const v=prompt('Nombre del proveedor/empresa:');
-      if(v){this.innerHTML+=`<option value="${v}" selected>${v}</option>`;this.value=v;}
-      else this.value='';
-    }
-  };
+    toast('','success'); // clear any error
+  }catch(e){
+    toast('Error cargando proveedores: '+e.message,'error');
+    ProvC=[];
+  }
+  // Reset fields
   document.getElementById('ped-id').value='';
-  document.getElementById('ped-num').value='PED-'+String(PedC.length+1).padStart(3,'0');
+  document.getElementById('ped-num').value='PED-'+String((PedC.length||0)+1).padStart(3,'0');
   document.getElementById('ped-fecha').value=new Date().toISOString().split('T')[0];
   document.getElementById('ped-obs').value='';
   document.getElementById('ped-importe').value='';
+  document.getElementById('ped-estado').value='Pendiente';
+  // Fill select BEFORE opening modal
+  fillProvSelect('ped-prov');
+  openModal('m-pedido');
 }
 async function savePedido(){const d={num_pedido:document.getElementById('ped-num').value,fecha:document.getElementById('ped-fecha').value||new Date().toISOString().split('T')[0],proyecto_id:document.getElementById('ped-proyecto').value||null,tipo:document.getElementById('ped-tipo').value,proveedor:document.getElementById('ped-prov').value,importe:parseFloat(document.getElementById('ped-importe').value)||0,estado:document.getElementById('ped-estado').value,observaciones:document.getElementById('ped-obs').value};try{await sbPost('pedidos',d);toast('Pedido registrado ✅');closeModal('m-pedido');loadPedidos();}catch(e){toast('Error: '+e.message,'error');}
 }
