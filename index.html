@@ -1993,6 +1993,26 @@ const loaders={
   proveedores:loadProveedores,
   rentabilidad:()=>{initRentabilidad();if(document.getElementById('rent-proyecto-sel').value)loadRentabilidad();},
   facturas:loadFacturas,contabilidad:loadContabilidad,configuracion:loadConfiguracion,
+  pres_final:async()=>{
+    PC=await sbGet('proyectos').catch(()=>[]);
+    if(!CC.length)CC=await sbGet('clientes').catch(()=>[]);
+    const sel=document.getElementById('pf-proyecto-sel');
+    sel.innerHTML='<option value="">Seleccionar proyecto…</option>'+PC.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
+  },
+  contrato:async()=>{
+    PC=await sbGet('proyectos').catch(()=>[]);
+    if(!CC.length)CC=await sbGet('clientes').catch(()=>[]);
+    const sel=document.getElementById('ct-proyecto-sel');
+    sel.innerHTML='<option value="">Seleccionar proyecto…</option>'+PC.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
+  },
+  pedido_doc:async()=>{
+    PedC=await sbGet('pedidos','?order=fecha.desc').catch(()=>[]);
+    if(!ProvC.length)ProvC=await sbGet('proveedores','?order=nombre.asc').catch(()=>[]);
+    if(!PC.length)PC=await sbGet('proyectos').catch(()=>[]);
+    const sel=document.getElementById('pd-pedido-sel');
+    sel.innerHTML='<option value="">Seleccionar pedido…</option>'+PedC.map(p=>`<option value="${p.id}">${p.num_pedido||'Sin nº'} · ${p.proveedor||'—'} · ${p.importe?p.importe.toFixed(2)+'€':'—'}</option>`).join('');
+  },
+  listas:()=>{},
 };
 
 // ═══════════════════════════════════════════
