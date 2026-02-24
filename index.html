@@ -227,7 +227,7 @@ tbody td{padding:7px 10px;vertical-align:middle}
 <!-- APP -->
 <div class="app">
 <nav class="sidebar">
-  <div class="sidebar-logo"><div class="brand">PAU INTERIORISMO</div><div class="brand-sub">Sistema de gestión · <span style="color:#b87333">v22</span></div></div>
+  <div class="sidebar-logo"><div class="brand">PAU INTERIORISMO</div><div class="brand-sub">Sistema de gestión · <span style="color:#b87333">v23</span></div></div>
   <div class="nav-section">
     <div class="nav-label">Principal</div>
     <div class="nav-item active" data-view="gerencia"><span class="ni">🏠</span><span>Gerencia</span></div>
@@ -726,8 +726,11 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 
     <!-- ═══ COMPRAS ═══ -->
     <div class="view" id="view-compras">
-      <div class="search-bar">
-        <div class="search-wrap"><span class="search-icon">🔍</span><input class="form-input" id="search-compras" placeholder="Buscar…" oninput="filterTable('compras-tbody','search-compras')"></div>
+      <div class="search-bar" style="gap:8px;flex-wrap:wrap">
+        <select class="form-input" style="width:240px;flex-shrink:0" id="filter-proyecto-compras" onchange="filtrarModuloPorProyecto('compras')">
+          <option value="">📁 Todos los proyectos</option>
+        </select>
+        <div class="search-wrap" style="flex:1;min-width:180px"><span class="search-icon">🔍</span><input class="form-input" id="search-compras" placeholder="Buscar…" oninput="filterTable('compras-tbody','search-compras')"></div>
         <button class="btn btn-primary" onclick="openModal('m-compra')">＋ Nueva compra</button>
       </div>
       <div class="card">
@@ -739,8 +742,11 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 
     <!-- ═══ SUBCONTRATAS ═══ -->
     <div class="view" id="view-subcontratas">
-      <div class="search-bar">
-        <div class="search-wrap"><span class="search-icon">🔍</span><input class="form-input" id="search-subcontratas" placeholder="Buscar…" oninput="filterTable('subcontratas-tbody','search-subcontratas')"></div>
+      <div class="search-bar" style="gap:8px;flex-wrap:wrap">
+        <select class="form-input" style="width:240px;flex-shrink:0" id="filter-proyecto-subcontratas" onchange="filtrarModuloPorProyecto('subcontratas')">
+          <option value="">📁 Todos los proyectos</option>
+        </select>
+        <div class="search-wrap" style="flex:1;min-width:180px"><span class="search-icon">🔍</span><input class="form-input" id="search-subcontratas" placeholder="Buscar…" oninput="filterTable('subcontratas-tbody','search-subcontratas')"></div>
         <button class="btn btn-primary" onclick="openModal('m-subcontrata')">＋ Nueva subcontrata</button>
       </div>
       <div class="card">
@@ -752,8 +758,11 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 
     <!-- ═══ HORAS ═══ -->
     <div class="view" id="view-horas">
-      <div class="search-bar">
-        <div class="search-wrap"><span class="search-icon">🔍</span><input class="form-input" id="search-horas" placeholder="Buscar…" oninput="filterTable('horas-tbody','search-horas')"></div>
+      <div class="search-bar" style="gap:8px;flex-wrap:wrap">
+        <select class="form-input" style="width:240px;flex-shrink:0" id="filter-proyecto-horas" onchange="filtrarModuloPorProyecto('horas')">
+          <option value="">📁 Todos los proyectos</option>
+        </select>
+        <div class="search-wrap" style="flex:1;min-width:180px"><span class="search-icon">🔍</span><input class="form-input" id="search-horas" placeholder="Buscar…" oninput="filterTable('horas-tbody','search-horas')"></div>
         <button class="btn btn-primary" onclick="openModal('m-hora')">＋ Registrar horas</button>
       </div>
       <div class="card">
@@ -765,8 +774,11 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 
     <!-- ═══ PEDIDOS ═══ -->
     <div class="view" id="view-pedidos">
-      <div class="search-bar">
-        <div class="search-wrap"><span class="search-icon">🔍</span><input class="form-input" id="search-pedidos" placeholder="Buscar…" oninput="filterTable('pedidos-tbody','search-pedidos')"></div>
+      <div class="search-bar" style="gap:8px;flex-wrap:wrap">
+        <select class="form-input" style="width:240px;flex-shrink:0" id="filter-proyecto-pedidos" onchange="filtrarModuloPorProyecto('pedidos')">
+          <option value="">📁 Todos los proyectos</option>
+        </select>
+        <div class="search-wrap" style="flex:1;min-width:180px"><span class="search-icon">🔍</span><input class="form-input" id="search-pedidos" placeholder="Buscar…" oninput="filterTable('pedidos-tbody','search-pedidos')"></div>
         <button class="btn btn-primary" onclick="openPedidoModal()">＋ Nuevo pedido</button>
       </div>
       <div class="card">
@@ -1554,6 +1566,50 @@ function populateAllListas(){
     ids.forEach(id=>{const el=document.getElementById(id);if(!el)return;const cur=el.value;el.innerHTML='<option value="">Seleccionar…</option>'+vals.map(v=>`<option value="${v}">${v}</option>`).join('');if(cur&&vals.includes(cur))el.value=cur;});
   });
 }
+// ═══════════════════════════════════════════
+// FILTRO POR PROYECTO EN MÓDULOS
+// ═══════════════════════════════════════════
+function poblarFiltrosProyecto(){
+  const mods=['compras','subcontratas','horas','pedidos'];
+  mods.forEach(mod=>{
+    const sel=document.getElementById(`filter-proyecto-${mod}`);
+    if(!sel)return;
+    const cur=sel.value;
+    sel.innerHTML='<option value="">📁 Todos los proyectos</option>'
+      +PC.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
+    if(cur)sel.value=cur;
+  });
+}
+
+function filtrarModuloPorProyecto(mod){
+  const sel=document.getElementById(`filter-proyecto-${mod}`);
+  const proyId=sel?sel.value:'';
+  const tbody=document.getElementById(`${mod}-tbody`);
+  if(!tbody)return;
+  const rows=tbody.querySelectorAll('tr');
+  let visible=0;
+  rows.forEach(tr=>{
+    // data-search contains proyecto_id as first part
+    const ds=tr.dataset.search||'';
+    const show = !proyId || ds.startsWith(proyId.toLowerCase()) || ds.includes(proyId.toLowerCase());
+    tr.style.display=show?'':'none';
+    if(show)visible++;
+  });
+  // Update count badge
+  const count=document.getElementById(`${mod}-count`);
+  if(count){
+    const total=rows.length;
+    count.textContent=proyId
+      ? `${visible} de ${total} registros · ${proyId}`
+      : `${total} registros`;
+  }
+  // Auto-set proyecto in new record modal when filter active
+  if(proyId){
+    const modalField=document.getElementById(`${mod==='compras'?'co':mod==='subcontratas'?'sc':mod==='horas'?'h':'ped'}-proyecto`);
+    if(modalField)modalField.value=proyId;
+  }
+}
+
 function populateTrabajadores(){
   const ids=['h-trab','ch-trab-sel','p-resp'];
   ids.forEach(id=>{
@@ -1682,7 +1738,7 @@ async function loadGerencia(){
     }).join('');
 
     const s=document.getElementById('conn-status');s.style.background='var(--green-soft)';s.style.color='var(--green)';s.textContent='🟢 Conectado';
-    populateSelects();populateIntCatalog();populateTrabajadores();
+    populateSelects();populateIntCatalog();populateTrabajadores();poblarFiltrosProyecto();
   }catch(e){
     console.error(e);
     const s=document.getElementById('conn-status');s.style.background='var(--red-soft)';s.style.color='var(--red)';s.textContent='🔴 Error';
@@ -1874,6 +1930,8 @@ async function loadCompras(){
     if(!CoC.length){tb.innerHTML=`<tr><td colspan="9"><div class="empty"><div class="empty-icon">🛒</div><div class="empty-text">Sin compras</div><button class="btn btn-primary" onclick="openModal('m-compra')">＋ Nueva</button></div></td></tr>`;return;}
     tb.innerHTML=CoC.map(c=>{const tot=c.base_imponible*(1+ivaPct(c.iva_pct)/100);return`<tr data-search="${(c.proyecto_id+c.proveedor_id+c.concepto).toLowerCase()}"><td>${fmtD(c.fecha)}</td><td class="td-mono" style="color:var(--text-soft)">${c.proyecto_id||'—'}</td><td>${c.proveedor_id||'—'}</td><td>${c.concepto||'—'}</td><td class="td-mono">${fmt(c.base_imponible)}</td><td class="td-mono">${c.iva_pct}</td><td class="td-mono" style="font-weight:700">${fmt(tot)}</td><td>${bE(c.estado_pago)}</td><td style="display:flex;gap:4px"><button class="btn btn-ghost btn-icon btn-sm" onclick="editCompra('${c.id}')" style="font-size:11px">Editar</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('compras','${c.id}','${(c.concepto||'compra').replace(/'/g,"\\'")}')">🗑</button></td></tr>`;}).join('');
   }catch(e){tb.innerHTML=`<tr><td colspan="9" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
+  // Re-apply project filter after load
+  filtrarModuloPorProyecto('compras');
 }
 async function saveCompra(){
   const id=document.getElementById('co-id')?.value;
@@ -1898,6 +1956,8 @@ async function loadSubcontratas(){
     if(!ScC.length){tb.innerHTML=`<tr><td colspan="9"><div class="empty"><div class="empty-icon">👷</div><div class="empty-text">Sin subcontratas</div><button class="btn btn-primary" onclick="openModal('m-subcontrata')">＋ Nueva</button></div></td></tr>`;return;}
     tb.innerHTML=ScC.map(s=>{const tot=s.importe*(1+ivaPct(s.iva_pct)/100);return`<tr data-search="${(s.proyecto_id+s.proveedor_id+s.trabajo).toLowerCase()}"><td>${fmtD(s.fecha)}</td><td class="td-mono" style="color:var(--text-soft)">${s.proyecto_id||'—'}</td><td>${s.proveedor_id||'—'}</td><td>${s.trabajo||'—'}</td><td class="td-mono">${fmt(s.importe)}</td><td class="td-mono">${s.iva_pct}</td><td class="td-mono" style="font-weight:700">${fmt(tot)}</td><td>${bE(s.estado_pago)}</td><td style="display:flex;gap:4px"><button class="btn btn-ghost btn-icon btn-sm" onclick="editSubcontrata('${s.id}')" style="font-size:11px">Editar</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('subcontratas','${s.id}','${(s.trabajo||'subcontrata').replace(/'/g,"\\'")}')">🗑</button></td></tr>`;}).join('');
   }catch(e){tb.innerHTML=`<tr><td colspan="9" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
+  // Re-apply project filter after load
+  filtrarModuloPorProyecto('subcontratas');
 }
 async function saveSubcontrata(){
   const id=document.getElementById('sc-id')?.value;
@@ -1922,6 +1982,8 @@ async function loadHoras(){
     if(!HC.length){tb.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="empty-icon">⏱</div><div class="empty-text">Sin horas registradas</div><button class="btn btn-primary" onclick="openModal('m-hora')">＋ Registrar</button></div></td></tr>`;return;}
     tb.innerHTML=HC.map(h=>`<tr data-search="${(h.proyecto_id+h.trabajador+h.descripcion).toLowerCase()}"><td>${fmtD(h.fecha)}</td><td class="td-mono" style="color:var(--text-soft)">${h.proyecto_id||'—'}</td><td><strong>${h.trabajador||'—'}</strong></td><td class="td-mono">${h.horas}h</td><td class="td-mono">${fmt(h.coste_hora)}</td><td class="td-mono" style="font-weight:700">${fmt(h.total)}</td><td style="color:var(--text-soft)">${h.descripcion||'—'}</td><td><button class="btn btn-ghost btn-sm" style="margin-right:4px;font-size:11px" onclick="editHora('${h.id}')">Editar</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('horas','${h.id}','horas ${h.trabajador}')">🗑</button></td></tr>`).join('');
   }catch(e){tb.innerHTML=`<tr><td colspan="8" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
+  // Re-apply project filter after load
+  filtrarModuloPorProyecto('horas');
 }
 // ═══════════════════════════════════════════
 // DOC. PEDIDO - INTEGRACIÓN CON REGISTRO
@@ -2131,6 +2193,8 @@ async function loadPedidos(){
     if(!PedC.length){tb.innerHTML=`<tr><td colspan="9"><div class="empty"><div class="empty-icon">📦</div><div class="empty-text">Sin pedidos</div><button class="btn btn-primary" onclick="openModal('m-pedido')">＋ Nuevo</button></div></td></tr>`;return;}
     tb.innerHTML=PedC.map(p=>`<tr data-search="${(p.num_pedido+p.proyecto_id+p.proveedor+p.tipo).toLowerCase()}"><td class="td-mono" style="font-weight:700">${p.num_pedido||'—'}</td><td>${fmtD(p.fecha)}</td><td class="td-mono" style="color:var(--text-soft)">${p.proyecto_id||'—'}</td><td><span class="badge b-blue">${p.tipo||'—'}</span></td><td>${p.proveedor||'—'}</td><td class="td-mono" style="font-weight:700">${fmt(p.importe)}</td><td>${bE(p.estado)}</td><td style="color:var(--text-soft)">${p.referencia?`<span style="font-weight:600;color:var(--navy)">${p.referencia}</span>`:''} ${p.observaciones||''}</td><td style="display:flex;gap:4px"><button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="editPedido('${p.id}')">Editar</button><button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="abrirDocPedido('${p.id}')">📋 Doc.</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('pedidos','${p.id}','${(p.num_pedido||'pedido').replace(/'/g,"\\'")}')">🗑</button></td></tr>`).join('');
   }catch(e){tb.innerHTML=`<tr><td colspan="9" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
+  // Re-apply project filter after load
+  filtrarModuloPorProyecto('pedidos');
 }
 function fillProvSelect(selId){
   const sel=document.getElementById(selId);
@@ -2508,6 +2572,7 @@ async function init(){
   populateIntCatalog();
   populateTrabajadores();
   populateAllListas();
+  poblarFiltrosProyecto();
 }
 </script>
 </body>
