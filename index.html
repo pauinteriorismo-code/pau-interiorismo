@@ -227,7 +227,7 @@ tbody td{padding:7px 10px;vertical-align:middle}
 <!-- APP -->
 <div class="app">
 <nav class="sidebar">
-  <div class="sidebar-logo"><div class="brand">PAU INTERIORISMO</div><div class="brand-sub">Sistema de gestión · <span style="color:#b87333">v27</span></div></div>
+  <div class="sidebar-logo"><div class="brand">PAU INTERIORISMO</div><div class="brand-sub">Sistema de gestión · <span style="color:#b87333">v28</span></div></div>
   <div class="nav-section">
     <div class="nav-label">Principal</div>
     <div class="nav-item active" data-view="gerencia"><span class="ni">🏠</span><span>Gerencia</span></div>
@@ -285,8 +285,11 @@ tbody td{padding:7px 10px;vertical-align:middle}
 
     <!-- ═══ PRESUPUESTO FINAL ═══ -->
     <div class="view" id="view-pres_final">
-      <div class="search-bar">
-        <select class="form-input" style="width:270px" id="pf-proyecto-sel" onchange="loadPresupuestoFinal()"><option value="">Seleccionar proyecto…</option></select>
+      <div class="search-bar" style="gap:8px;flex-wrap:wrap;align-items:center">
+        <select class="form-input" style="width:195px;flex-shrink:0" id="filter-cliente-pres_final" onchange="cascadaModulo('pres_final','pf-proyecto-sel',loadPresupuestoFinal)">
+          <option value="">👤 Cliente…</option>
+        </select>
+        <select class="form-input" style="width:220px" id="pf-proyecto-sel" onchange="loadPresupuestoFinal()"><option value="">📁 Proyecto…</option></select>
         <select class="form-input" style="width:75px" id="pf-version-sel" onchange="loadPresupuestoFinal()"><option value="v1">v1</option><option value="v2">v2</option><option value="v3">v3</option></select>
         <button class="btn btn-primary" onclick="window.print()">🖨️ Imprimir / PDF</button>
       </div>
@@ -355,8 +358,11 @@ tbody td{padding:7px 10px;vertical-align:middle}
 
     <!-- ═══ CONTRATO ═══ -->
     <div class="view" id="view-contrato">
-      <div class="search-bar">
-        <select class="form-input" style="width:270px" id="ct-proyecto-sel" onchange="loadContrato()"><option value="">Seleccionar proyecto…</option></select>
+      <div class="search-bar" style="gap:8px;flex-wrap:wrap;align-items:center">
+        <select class="form-input" style="width:195px;flex-shrink:0" id="filter-cliente-contrato" onchange="cascadaModulo('contrato','ct-proyecto-sel',loadContrato)">
+          <option value="">👤 Cliente…</option>
+        </select>
+        <select class="form-input" style="width:220px" id="ct-proyecto-sel" onchange="loadContrato()"><option value="">📁 Proyecto…</option></select>
         <select class="form-input" style="width:180px" id="ct-pres-sel"><option value="">Presupuesto vinculado…</option></select>
         <button class="btn btn-primary" onclick="window.print()">🖨️ Imprimir / PDF</button>
       </div>
@@ -404,11 +410,17 @@ tbody td{padding:7px 10px;vertical-align:middle}
     <!-- ═══ PEDIDO DOC ═══ -->
     <div class="view" id="view-pedido_doc">
       <div class="search-bar" style="flex-wrap:wrap;gap:8px;align-items:center">
-        <select class="form-input" style="width:220px" id="pd-pedido-sel" onchange="cargarPedidoEnDoc()">
-          <option value="">— Nuevo pedido —</option>
+        <select class="form-input" style="width:195px;flex-shrink:0" id="filter-cliente-pedido_doc" onchange="cascadaDocPedido()">
+          <option value="">👤 Cliente…</option>
         </select>
-        <button class="btn btn-primary" onclick="guardarDocPedido()">💾 Guardar pedido</button>
-        <button class="btn btn-primary" onclick="exportarPDF('pd-doc', (document.getElementById('pd-num-input')?.value||'pedido')+'.pdf')">⬇️ Descargar PDF</button>
+        <select class="form-input" style="width:210px" id="filter-proyecto-pedido_doc" onchange="filtrarPedidosPorProyecto()">
+          <option value="">📁 Proyecto…</option>
+        </select>
+        <select class="form-input" style="width:200px" id="pd-pedido-sel" onchange="cargarPedidoEnDoc()">
+          <option value="">— Pedido… —</option>
+        </select>
+        <button class="btn btn-primary" onclick="guardarDocPedido()">💾 Guardar</button>
+        <button class="btn btn-primary" onclick="exportarPDF('pd-doc', (document.getElementById('pd-num-input')?.value||'pedido')+'.pdf')">⬇️ PDF</button>
         <button class="btn btn-ghost" onclick="window.print()">🖨️ Imprimir</button>
         <button class="btn btn-ghost btn-sm" onclick="nuevoPedidoDoc()">＋ Nuevo</button>
       </div>
@@ -1624,6 +1636,68 @@ function filtrarProyectosPorCliente(){
   }
 }
 
+
+// ═══════════════════════════════════════════
+// CASCADA CLIENTE→PROYECTO PARA DOCUMENTOS
+// (pres_final, contrato, pedido_doc)
+// ═══════════════════════════════════════════
+
+// Generic: filter project selector by client, then call loadFn
+function cascadaModulo(mod, proySelId, loadFn){
+  const clienteSel = document.getElementById(`filter-cliente-${mod}`);
+  const clienteId  = clienteSel ? clienteSel.value : '';
+  const proySel    = document.getElementById(proySelId);
+  if(!proySel) return;
+  const cur = proySel.value;
+  const filtrados = clienteId ? PC.filter(p=>p.cliente_id===clienteId) : PC;
+  proySel.innerHTML = '<option value="">📁 Proyecto…</option>'
+    + filtrados.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
+  // Restore selection if still valid
+  if(cur && filtrados.find(p=>p.proyecto_id===cur)) proySel.value = cur;
+  if(loadFn) loadFn();
+}
+
+// Doc. Pedido: cliente → filter proyecto → filter pedidos list
+function cascadaDocPedido(){
+  const clienteSel = document.getElementById('filter-cliente-pedido_doc');
+  const clienteId  = clienteSel ? clienteSel.value : '';
+  const proySel    = document.getElementById('filter-proyecto-pedido_doc');
+  if(!proySel) return;
+  const filtrados = clienteId ? PC.filter(p=>p.cliente_id===clienteId) : PC;
+  proySel.innerHTML = '<option value="">📁 Proyecto…</option>'
+    + filtrados.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
+  // Reset pedido selector and doc
+  const pedSel = document.getElementById('pd-pedido-sel');
+  if(pedSel) pedSel.innerHTML = '<option value="">— Pedido… —</option>';
+  nuevoPedidoDoc();
+}
+
+// Doc. Pedido: proyecto → filter pedidos list
+function filtrarPedidosPorProyecto(){
+  const proySel  = document.getElementById('filter-proyecto-pedido_doc');
+  const proyId   = proySel ? proySel.value : '';
+  const pedSel   = document.getElementById('pd-pedido-sel');
+  if(!pedSel) return;
+  const pedidos = proyId ? PedC.filter(p=>p.proyecto_id===proyId) : PedC;
+  pedSel.innerHTML = '<option value="">— Pedido… —</option>'
+    + pedidos.map(p=>`<option value="${p.id}">${p.num_pedido||'Sin nº'} · ${p.proveedor||'Sin prov.'}</option>`).join('');
+  // Reset doc content
+  nuevoPedidoDoc();
+}
+
+// Poblar selectores de cliente en documentos al init/load
+function poblarClientesDocumentos(){
+  const ids = ['filter-cliente-pres_final','filter-cliente-contrato','filter-cliente-pedido_doc'];
+  ids.forEach(selId=>{
+    const sel = document.getElementById(selId);
+    if(!sel) return;
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">👤 Cliente…</option>'
+      + CC.map(c=>`<option value="${c.cliente_id}">${c.nombre}</option>`).join('');
+    if(cur) sel.value = cur;
+  });
+}
+
 // ═══════════════════════════════════════════
 // CASCADA CLIENTE → PROYECTO EN MÓDULOS
 // ═══════════════════════════════════════════
@@ -2778,9 +2852,8 @@ const loaders={
     }
   },
   pedido_doc:async()=>{
-    // Cargar pedidos para el selector
     PedC = await sbGet('pedidos','?order=fecha.desc').catch(()=>PedC||[]);
-    poblarSelectorDocPedido();
+    poblarClientesDocumentos();
     // Si no hay pedido activo, iniciar en blanco
     if(!window.pdPedidoId){
       window.pdLineas=Array.from({length:20},()=>({cant:'',desc:''}));
@@ -2826,6 +2899,7 @@ async function init(){
   populateAllListas();
   poblarFiltrosProyecto();
   poblarFiltrosCliente();
+  poblarClientesDocumentos();
 }
 </script>
 </body>
