@@ -232,7 +232,7 @@ tbody td{padding:7px 10px;vertical-align:middle}
 <!-- APP -->
 <div class="app">
 <nav class="sidebar">
-  <div class="sidebar-logo"><div class="brand">PAU INTERIORISMO</div><div class="brand-sub">Sistema de gestión · <span style="color:#b87333">v29</span></div></div>
+  <div class="sidebar-logo"><div class="brand">PAU INTERIORISMO</div><div class="brand-sub">Sistema de gestión · <span style="color:#b87333">v30</span></div></div>
   <div class="nav-section">
     <div class="nav-label">Principal</div>
     <div class="nav-item active" data-view="gerencia"><span class="ni">🏠</span><span>Gerencia</span></div>
@@ -779,8 +779,14 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 
     <!-- ═══ INTERIORISMO ═══ -->
     <div class="view" id="view-interiorismo">
-      <div class="search-bar">
-        <div class="search-wrap"><span class="search-icon">🔍</span><input class="form-input" id="search-interiorismo" placeholder="Buscar…" oninput="filterTable('interiorismo-tbody','search-interiorismo')"></div>
+      <div class="search-bar" style="gap:8px;flex-wrap:wrap;align-items:center">
+        <select class="form-input" style="width:195px;flex-shrink:0" id="filter-cliente-interiorismo" onchange="cascadaModuloInt()">
+          <option value="">👤 Cliente…</option>
+        </select>
+        <select class="form-input" style="width:215px;flex-shrink:0" id="filter-proyecto-interiorismo" onchange="filtrarInteriorismo()">
+          <option value="">📁 Proyecto…</option>
+        </select>
+        <div class="search-wrap" style="flex:1;min-width:160px"><span class="search-icon">🔍</span><input class="form-input" id="search-interiorismo" placeholder="Buscar…" oninput="filterTable('interiorismo-tbody','search-interiorismo')"></div>
         <button class="btn btn-copper" onclick="openModal('m-interiorismo')">＋ Añadir artículo</button>
       </div>
       <div class="card">
@@ -1701,6 +1707,87 @@ function filtrarProyectosPorCliente(){
 }
 
 
+
+// ═══════════════════════════════════════════
+// INTERIORISMO: CASCADA + EDICIÓN
+// ═══════════════════════════════════════════
+function cascadaModuloInt(){
+  const clienteSel = document.getElementById('filter-cliente-interiorismo');
+  const clienteId  = clienteSel ? clienteSel.value : '';
+  const proySel    = document.getElementById('filter-proyecto-interiorismo');
+  if(!proySel) return;
+  const filtrados  = clienteId ? PC.filter(p=>p.cliente_id===clienteId) : PC;
+  proySel.innerHTML = '<option value="">📁 Proyecto…</option>'
+    + filtrados.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
+  filtrarInteriorismo();
+}
+
+function filtrarInteriorismo(){
+  const proySel = document.getElementById('filter-proyecto-interiorismo');
+  const proyId  = proySel ? proySel.value : '';
+  const tbody   = document.getElementById('interiorismo-tbody');
+  if(!tbody) return;
+  const count   = document.getElementById('interiorismo-count');
+
+  if(!proyId){
+    tbody.innerHTML=`<tr><td colspan="10" style="text-align:center;padding:40px;color:var(--text-soft)">
+      <div style="font-size:32px;margin-bottom:10px">🛋</div>
+      <div style="font-size:14px;font-weight:600;margin-bottom:6px">Selecciona un cliente y proyecto</div>
+      <div style="font-size:12px">Los artículos aparecerán aquí una vez seleccionado el proyecto</div>
+    </td></tr>`;
+    if(count) count.textContent='—';
+    return;
+  }
+  // Auto-set proyecto en modal
+  const iProy = document.getElementById('i-proyecto');
+  if(iProy) iProy.value = proyId;
+
+  const rows = tbody.querySelectorAll('tr[data-search]');
+  let visible = 0;
+  rows.forEach(tr=>{
+    const show = tr.dataset.search?.includes(proyId.toLowerCase());
+    tr.style.display = show ? '' : 'none';
+    if(show) visible++;
+  });
+  if(visible===0 && rows.length>0){
+    if(!tbody.querySelector('#int-empty-state')){
+      const tr=document.createElement('tr'); tr.id='int-empty-state';
+      tr.innerHTML=`<td colspan="10" style="text-align:center;padding:30px;color:var(--text-soft)">
+        <div style="font-size:24px;margin-bottom:6px">📋</div>
+        <div>Sin artículos para <strong>${proyId}</strong></div>
+      </td>`;
+      tbody.appendChild(tr);
+    }
+  } else {
+    const empty = tbody.querySelector('#int-empty-state');
+    if(empty) empty.remove();
+  }
+  if(count) count.textContent=`${visible} artículo${visible!==1?'s':''} · ${proyId}`;
+}
+
+function editInteriorismo(id){
+  const item = IntC.find(x=>String(x.id)===String(id)); if(!item) return;
+  const set = (elId, val) => { const el=document.getElementById(elId); if(el) el.value=val||''; };
+  document.getElementById('i-id').value = item.id;
+  set('i-proyecto',   item.proyecto_id);
+  set('i-estancia',   item.estancia);
+  set('i-ref',        item.ref_catalogo);
+  set('i-desc',       item.descripcion);
+  set('i-marca',      item.marca);
+  set('i-acabado',    item.acabado);
+  set('i-cant',       item.cantidad);
+  set('i-pvp',        item.pvp_catalogo);
+  set('i-dto',        item.dto_cliente_pct);
+  set('i-coste',      item.coste_neto);
+  set('i-iva',        item.iva_pct||'21%');
+  set('i-eprop',      item.estado_propuesta);
+  set('i-eped',       item.estado_pedido);
+  set('i-fentrega',   item.fecha_entrega);
+  set('i-notas',      item.notas);
+  document.querySelector('#m-interiorismo .modal-title').textContent = '✏️ Editar artículo';
+  openModal('m-interiorismo');
+}
+
 // ═══════════════════════════════════════════
 // CASCADA CLIENTE→PROYECTO PARA DOCUMENTOS
 // (pres_final, contrato, pedido_doc)
@@ -1767,7 +1854,7 @@ function poblarClientesDocumentos(){
 // ═══════════════════════════════════════════
 
 // Módulos con cascada cliente→proyecto
-const CASCADA_MODS = ['presupuesto','compras','subcontratas','horas','pedidos'];
+const CASCADA_MODS = ['presupuesto','compras','subcontratas','horas','pedidos','interiorismo'];
 
 // Prefijo del campo proyecto en el modal de cada módulo
 const MOD_PROYECTO_FIELD = {
@@ -2201,7 +2288,8 @@ async function loadInteriorismo(){
     IntC=await sbGet('interiorismo_lineas','?order=created_at.desc');
     document.getElementById('interiorismo-count').textContent=IntC.length+' líneas';
     if(!IntC.length){tb.innerHTML=`<tr><td colspan="10"><div class="empty"><div class="empty-icon">🛋</div><div class="empty-text">Sin propuestas</div><button class="btn btn-copper" onclick="openModal('m-interiorismo')">＋ Añadir</button></div></td></tr>`;return;}
-    tb.innerHTML=IntC.map(i=>`<tr data-search="${(i.proyecto_id+i.estancia+i.descripcion+i.marca).toLowerCase()}"><td class="td-mono" style="color:var(--text-soft)">${i.proyecto_id||'—'}</td><td>${i.estancia?`<span class="badge b-gray">${i.estancia}</span>`:'—'}</td><td class="td-mono">${i.ref_catalogo||'—'}</td><td>${i.descripcion||'—'}</td><td>${i.cantidad||1}</td><td class="td-mono" style="font-weight:700">${fmt(i.pvp_neto)}</td><td class="td-mono" style="color:var(--green)">${i.coste_neto&&i.pvp_neto?fmtP((i.pvp_neto-i.coste_neto)/i.pvp_neto*100):'—'}</td><td>${bE(i.estado_propuesta)}</td><td>${bE(i.estado_pedido)}</td><td><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('interiorismo_lineas','${i.id}','${(i.descripcion||'artículo').replace(/'/g,"\\'")}')">🗑</button></td></tr>`).join('');
+    tb.innerHTML=IntC.map(i=>`<tr data-search="${(i.proyecto_id+i.estancia+i.descripcion+i.marca).toLowerCase()}"><td class="td-mono" style="color:var(--text-soft)">${i.proyecto_id||'—'}</td><td>${i.estancia?`<span class="badge b-gray">${i.estancia}</span>`:'—'}</td><td class="td-mono">${i.ref_catalogo||'—'}</td><td>${i.descripcion||'—'}</td><td>${i.cantidad||1}</td><td class="td-mono" style="font-weight:700">${fmt(i.pvp_neto)}</td><td class="td-mono" style="color:var(--green)">${i.coste_neto&&i.pvp_neto?fmtP((i.pvp_neto-i.coste_neto)/i.pvp_neto*100):'—'}</td><td>${bE(i.estado_propuesta)}</td><td>${bE(i.estado_pedido)}</td><td style="display:flex;gap:3px"><button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="editInteriorismo('${i.id}')">Editar</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('interiorismo_lineas','${i.id}','${(i.descripcion||'artículo').replace(/'/g,"\\'")}')">🗑</button></td></tr>`).join('');
+  filtrarInteriorismo();
   }catch(e){tb.innerHTML=`<tr><td colspan="10" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
 }
 function loadTarifarioItem(){const ref=document.getElementById('i-ref').value;if(!ref)return;const item=TC.find(t=>t.id===ref);if(!item)return;document.getElementById('i-desc').value=item.descripcion||'';document.getElementById('i-marca').value=item.marca||'';document.getElementById('i-pvp').value=item.precio_venta||0;document.getElementById('i-coste').value=item.precio_coste||0;calcIntPvp();}
@@ -2209,7 +2297,19 @@ function calcIntPvp(){const cant=parseFloat(document.getElementById('i-cant').va
 async function saveInteriorismo(){
   const proy=document.getElementById('i-proyecto').value;if(!proy){toast('Selecciona un proyecto','error');return;}
   const d={proyecto_id:proy,estancia:document.getElementById('i-estancia').value,ref_catalogo:document.getElementById('i-ref').value||null,descripcion:document.getElementById('i-desc').value,marca:document.getElementById('i-marca').value,acabado:document.getElementById('i-acabado').value,unidad:'Ud',cantidad:parseFloat(document.getElementById('i-cant').value)||1,pvp_catalogo:parseFloat(document.getElementById('i-pvp').value)||0,dto_cliente_pct:parseFloat(document.getElementById('i-dto').value)||0,coste_neto:parseFloat(document.getElementById('i-coste').value)||0,iva_pct:document.getElementById('i-iva').value,estado_propuesta:document.getElementById('i-eprop').value,estado_cobro:'Pendiente',estado_pedido:document.getElementById('i-eped').value,fecha_entrega:document.getElementById('i-fentrega').value||null,notas:document.getElementById('i-notas').value};
-  try{await sbPost('interiorismo_lineas',d);toast('Artículo añadido ✅');closeModal('m-interiorismo');loadInteriorismo();}catch(e){toast('Error: '+e.message,'error');}
+  try{
+    const id=document.getElementById('i-id')?.value;
+    if(id){
+      await sb('interiorismo_lineas','PATCH',d,null,`?id=eq.${id}`);
+      toast('Artículo actualizado ✅');
+    } else {
+      await sbPost('interiorismo_lineas',d);
+      toast('Artículo añadido ✅');
+    }
+    document.getElementById('i-id').value='';
+    document.querySelector('#m-interiorismo .modal-title').textContent='🛋 Añadir artículo';
+    closeModal('m-interiorismo'); loadInteriorismo();
+  }catch(e){toast('Error: '+e.message,'error');}
 }
 
 // ═══════════════════════════════════════════
