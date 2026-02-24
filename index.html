@@ -1338,26 +1338,53 @@ async function loadPedidoDoc(){
 // ═══════════════════════════════════════════
 // LISTAS
 // ═══════════════════════════════════════════
+async function upsertConfig(clave, valor){
+  // Upsert usando Supabase: si existe actualiza, si no inserta
+  const resp = await fetch(`${SB_URL}/rest/v1/configuracion`, {
+    method: 'POST',
+    headers: {
+      'apikey': SB_KEY,
+      'Authorization': `Bearer ${SB_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'resolution=merge-duplicates,return=minimal'
+    },
+    body: JSON.stringify({clave, valor, descripcion:'Lista editable'})
+  });
+  if(!resp.ok){
+    const err = await resp.text();
+    throw new Error(err);
+  }
+}
+
 async function addListItem(listId, tipo){
   const val=prompt(`Nuevo ${tipo}:`);
   if(!val||!val.trim())return;
   const v=val.trim();
-  const list=document.getElementById(listId);
-  const div=document.createElement('div');
-  div.className='lista-item';div.dataset.val=v;div.textContent=v;
-  list.appendChild(div);
+  // Actualizar caché en memoria
   const clave=LISTA_MAP[listId];
   if(clave){
-    if(clave==='trabajadores'){if(!TRABAJADORES.includes(v))TRABAJADORES.push(v);populateTrabajadores();}
-    else if(LISTAS[clave]){if(!LISTAS[clave].includes(v))LISTAS[clave].push(v);populateAllListas();}
+    if(clave==='trabajadores'){if(!TRABAJADORES.includes(v))TRABAJADORES.push(v);}
+    else if(LISTAS[clave]){if(!LISTAS[clave].includes(v))LISTAS[clave].push(v);}
+  }
+  // Actualizar UI
+  const list=document.getElementById(listId);
+  if(list){
+    const div=document.createElement('div');
+    div.className='lista-item';div.dataset.val=v;div.textContent=v;
+    list.appendChild(div);
+  }
+  // Refrescar todos los desplegables
+  populateTrabajadores();
+  populateAllListas();
+  // Guardar en Supabase
+  if(clave){
     const arr=clave==='trabajadores'?TRABAJADORES:(LISTAS[clave]||[]);
-    const val2=arr.join(',');
     try{
-      const ex=await sbGet('configuracion',`?clave=eq.${clave}`);
-      if(ex&&ex.length>0){await fetch(`${SB_URL}/rest/v1/configuracion?clave=eq.${clave}`,{method:'PATCH',headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({valor:val2})});}
-      else{await sbPost('configuracion',{clave,valor:val2,descripcion:'Lista editable'});}
-      toast(`"${v}" guardado — disponible en toda la app ✅`);
-    }catch(e){toast(`"${v}" añadido (error: ${e.message})`,'error');}
+      await upsertConfig(clave, arr.join(','));
+      toast(`"${v}" guardado ✅`);
+    }catch(e){
+      toast(`Error guardando: ${e.message}`,'error');
+    }
   } else {
     toast(`"${v}" añadido ✅`);
   }
@@ -2095,8 +2122,27 @@ async function loadConfiguracion(){
   }catch(e){toast('Configura la tabla configuracion ejecutando el SQL de nuevas tablas','error');}
 }
 async function saveConfig(){
-  const updates=[['razon_social',document.getElementById('cfg-razon').value],['cif',document.getElementById('cfg-cif').value],['telefono',document.getElementById('cfg-tel').value],['email',document.getElementById('cfg-email').value],['web',document.getElementById('cfg-web').value],['direccion',document.getElementById('cfg-dir').value],['ci_pct',document.getElementById('cfg-ci').value],['gg_pct',document.getElementById('cfg-gg').value],['bi_pct',document.getElementById('cfg-bi').value],['coste_hora_defecto',document.getElementById('cfg-hora').value]];
-  try{for(const[k,v]of updates){await sb('configuracion','PATCH',{valor:v},null,`?clave=eq.${k}`);}toast('Configuración guardada ✅');}catch(e){toast('Error: '+e.message,'error');}
+  const updates=[
+    ['razon_social', document.getElementById('cfg-razon')?.value],
+    ['cif',          document.getElementById('cfg-cif')?.value],
+    ['telefono',     document.getElementById('cfg-tel')?.value],
+    ['email',        document.getElementById('cfg-email')?.value],
+    ['web',          document.getElementById('cfg-web')?.value],
+    ['direccion',    document.getElementById('cfg-dir')?.value],
+    ['ci_pct',       document.getElementById('cfg-ci')?.value],
+    ['gg_pct',       document.getElementById('cfg-gg')?.value],
+    ['bi_pct',       document.getElementById('cfg-bi')?.value],
+    ['coste_hora_defecto', document.getElementById('cfg-hora')?.value],
+  ];
+  try{
+    for(const[k,v] of updates){
+      if(v===undefined||v===null) continue;
+      await upsertConfig(k, v);
+    }
+    toast('Configuración guardada ✅');
+  }catch(e){
+    toast('Error guardando: '+e.message,'error');
+  }
 }
 
 // ═══════════════════════════════════════════
