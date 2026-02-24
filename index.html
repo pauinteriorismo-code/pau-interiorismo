@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PAU INTERIORISMO · Gestión</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" defer></script>
 <style>
 :root {
   --navy:#1a2a3a;--navy-mid:#27405b;--navy-light:#3d5a78;
@@ -24,6 +23,13 @@
 html,body{height:100%;font-family:'Segoe UI',system-ui,sans-serif;color:var(--text);background:var(--cream)}
 button,input,select,textarea{font-family:inherit}
 button{cursor:pointer}
+
+/* LOGIN */
+.login-screen{position:fixed;inset:0;background:var(--navy);display:flex;align-items:center;justify-content:center;z-index:1000}
+.login-box{background:var(--white);border-radius:var(--radius);padding:40px;width:340px;box-shadow:var(--shadow-lg);text-align:center}
+.login-logo{font-size:15px;font-weight:700;color:var(--navy);letter-spacing:.06em;margin-bottom:4px}
+.login-sub{font-size:10px;color:var(--text-soft);margin-bottom:28px;letter-spacing:.08em;text-transform:uppercase}
+.login-error{background:var(--red-soft);color:var(--red);font-size:12px;padding:8px 12px;border-radius:var(--radius-sm);margin-bottom:12px;display:none}
 
 /* APP LAYOUT */
 .app{display:flex;height:100vh;overflow:hidden}
@@ -125,7 +131,6 @@ tbody td{padding:8px 12px;vertical-align:middle}
 
 /* ALERTS */
 .info-box{background:var(--blue-light);border:1px solid var(--blue-soft);border-radius:var(--radius-sm);padding:11px 14px;font-size:12px;color:var(--navy-mid);margin-bottom:16px}
-.warn-box{background:var(--amber-soft);border:1px solid #e6d080;border-radius:var(--radius-sm);padding:11px 14px;font-size:12px;color:var(--amber);margin-bottom:16px}
 
 /* SEARCH */
 .search-bar{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
@@ -133,14 +138,14 @@ tbody td{padding:8px 12px;vertical-align:middle}
 .search-wrap input{padding-left:32px}
 .search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-soft);font-size:13px;pointer-events:none}
 
-/* LOADING / EMPTY */
+/* EMPTY / LOADING */
 .loading{text-align:center;padding:40px;color:var(--text-soft);font-size:13px}
 .empty{text-align:center;padding:50px 20px;color:var(--text-soft)}
 .empty-icon{font-size:40px;margin-bottom:12px}
 .empty-text{font-size:13px;margin-bottom:16px}
 
 /* TOAST */
-.toast{position:fixed;bottom:20px;right:20px;background:var(--navy);color:#fff;padding:12px 20px;border-radius:var(--radius);font-size:13px;font-weight:500;z-index:999;box-shadow:var(--shadow-lg);transform:translateY(20px);opacity:0;transition:all .3s;max-width:300px}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--navy);color:#fff;padding:12px 20px;border-radius:var(--radius);font-size:13px;font-weight:500;z-index:999;box-shadow:var(--shadow-lg);transform:translateY(20px);opacity:0;transition:all .3s;max-width:320px}
 .toast.show{transform:translateY(0);opacity:1}
 .toast.success{background:var(--green)}
 .toast.error{background:var(--red)}
@@ -148,20 +153,11 @@ tbody td{padding:8px 12px;vertical-align:middle}
 /* CONFIRM */
 .confirm-overlay{position:fixed;inset:0;background:rgba(10,20,30,.5);display:flex;align-items:center;justify-content:center;z-index:300;opacity:0;pointer-events:none;transition:opacity .2s}
 .confirm-overlay.open{opacity:1;pointer-events:all}
-.confirm-box{background:var(--white);border-radius:var(--radius);padding:24px;width:340px;box-shadow:var(--shadow-lg);text-align:center}
+.confirm-box{background:var(--white);border-radius:var(--radius);padding:28px;width:340px;box-shadow:var(--shadow-lg);text-align:center}
 .confirm-title{font-size:15px;font-weight:700;color:var(--navy);margin-bottom:8px}
 .confirm-text{font-size:13px;color:var(--text-mid);margin-bottom:20px}
 .confirm-btns{display:flex;gap:10px;justify-content:center}
 
-/* TABS */
-.tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:18px}
-.tab{padding:9px 16px;font-size:12.5px;font-weight:600;color:var(--text-soft);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s}
-.tab:hover{color:var(--navy)}.tab.active{color:var(--navy);border-bottom-color:var(--copper)}
-
-/* SEPARATOR */
-.sep{height:1px;background:var(--border);margin:16px 0}
-
-/* RESPONSIVE */
 @media(max-width:768px){
   .sidebar{width:56px}
   .brand,.brand-sub,.nav-label,.nav-item span:not(.ni),.nav-badge,.user-name,.user-role{display:none}
@@ -174,9 +170,27 @@ tbody td{padding:8px 12px;vertical-align:middle}
 </style>
 </head>
 <body>
-<div class="app">
 
-<!-- SIDEBAR -->
+<!-- LOGIN -->
+<div id="login-screen" class="login-screen">
+  <div class="login-box">
+    <div class="login-logo">PAU INTERIORISMO S.L.</div>
+    <div class="login-sub">Sistema de gestión · Acceso privado</div>
+    <div class="login-error" id="login-error">Usuario o contraseña incorrectos</div>
+    <div class="form-group" style="margin-bottom:12px;text-align:left">
+      <label class="form-label">Usuario</label>
+      <input class="form-input" id="login-user" placeholder="usuario" autocomplete="username">
+    </div>
+    <div class="form-group" style="margin-bottom:20px;text-align:left">
+      <label class="form-label">Contraseña</label>
+      <input class="form-input" id="login-pass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center;padding:11px" onclick="doLogin()">Entrar →</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app">
 <nav class="sidebar">
   <div class="sidebar-logo">
     <div class="brand">PAU INTERIORISMO</div>
@@ -191,7 +205,7 @@ tbody td{padding:8px 12px;vertical-align:middle}
   <div class="nav-section">
     <div class="nav-label">Presupuestación</div>
     <div class="nav-item" data-view="tarifario"><span class="ni">📋</span><span>Tarifario</span></div>
-    <div class="nav-item" data-view="cype"><span class="ni">📐</span><span>CYPE 2026</span><span class="nav-badge" id="cype-badge">—</span></div>
+    <div class="nav-item" data-view="cype"><span class="ni">📐</span><span>CYPE 2026</span><span class="nav-badge" id="cype-badge">524</span></div>
     <div class="nav-item" data-view="interiorismo"><span class="ni">🛋</span><span>Interiorismo</span></div>
   </div>
   <div class="nav-section">
@@ -207,13 +221,12 @@ tbody td{padding:8px 12px;vertical-align:middle}
   </div>
   <div class="sidebar-bottom">
     <div class="user-card">
-      <div class="user-av">JA</div>
-      <div><div class="user-name">Jose Asins</div><div class="user-role">Administrador</div></div>
+      <div class="user-av" id="user-av">JA</div>
+      <div><div class="user-name" id="user-name">Jose Asins</div><div class="user-role">Administrador</div></div>
     </div>
   </div>
 </nav>
 
-<!-- MAIN -->
 <div class="main">
   <div class="topbar">
     <div>
@@ -222,7 +235,8 @@ tbody td{padding:8px 12px;vertical-align:middle}
     </div>
     <div class="topbar-right">
       <div id="conn-status" style="font-size:11px;padding:4px 10px;border-radius:10px;background:var(--amber-soft);color:var(--amber);font-weight:600">⏳ Conectando…</div>
-      <button class="btn btn-primary btn-sm" onclick="showQuickAdd()">＋ Nuevo</button>
+      <button class="btn btn-ghost btn-sm" onclick="doLogout()">Salir</button>
+      <button class="btn btn-primary btn-sm" onclick="openModal('m-quick')">＋ Nuevo</button>
     </div>
   </div>
 
@@ -231,13 +245,13 @@ tbody td{padding:8px 12px;vertical-align:middle}
     <!-- GERENCIA -->
     <div class="view active" id="view-gerencia">
       <div class="kpi-grid">
-        <div class="kpi blue"><div class="kpi-label">Clientes registrados</div><div class="kpi-value" id="k-clientes">—</div><div class="kpi-sub">Base de datos compartida</div></div>
+        <div class="kpi blue"><div class="kpi-label">Clientes</div><div class="kpi-value" id="k-clientes">—</div><div class="kpi-sub">Base de datos compartida</div></div>
         <div class="kpi green"><div class="kpi-label">Proyectos activos</div><div class="kpi-value" id="k-proyectos">—</div><div class="kpi-sub">En curso</div></div>
-        <div class="kpi amber"><div class="kpi-label">Artículos en tarifario</div><div class="kpi-value" id="k-tarifario">—</div><div class="kpi-sub">Disponibles en todos los presupuestos</div></div>
+        <div class="kpi amber"><div class="kpi-label">Artículos tarifario</div><div class="kpi-value" id="k-tarifario">—</div><div class="kpi-sub">Disponibles en todos los presupuestos</div></div>
         <div class="kpi red"><div class="kpi-label">Partidas CYPE 2026</div><div class="kpi-value" id="k-cype">—</div><div class="kpi-sub">Base de precios centralizada</div></div>
       </div>
       <div class="card">
-        <div class="card-header"><div class="card-title">📁 Proyectos recientes</div></div>
+        <div class="card-header"><div class="card-title">📁 Proyectos recientes</div><button class="btn btn-ghost btn-sm" onclick="navTo('proyectos')">Ver todos</button></div>
         <div class="table-wrap"><table><thead><tr><th>ID</th><th>Proyecto</th><th>Cliente</th><th>Tipo</th><th>Estado</th></tr></thead>
         <tbody id="gerencia-proyectos"><tr><td colspan="5" class="loading">Cargando…</td></tr></tbody></table></div>
       </div>
@@ -247,15 +261,11 @@ tbody td{padding:8px 12px;vertical-align:middle}
     <div class="view" id="view-clientes">
       <div class="search-bar">
         <div class="search-wrap"><span class="search-icon">🔍</span><input class="form-input" id="search-clientes" placeholder="Buscar cliente…" oninput="filterTable('clientes-tbody','search-clientes')"></div>
-        <select class="form-input" style="width:150px" id="filter-tipo-cliente" onchange="filterTable('clientes-tbody','search-clientes')">
-          <option value="">Todos los tipos</option>
-          <option>Particular</option><option>Empresa</option><option>Promotora</option><option>Administración</option>
-        </select>
         <button class="btn btn-primary" onclick="openModal('m-cliente')">＋ Nuevo cliente</button>
       </div>
       <div class="card">
         <div class="card-header"><div class="card-title">🤝 Clientes <span id="clientes-count" style="font-size:11px;font-weight:400;color:var(--text-soft);margin-left:6px"></span></div></div>
-        <div class="table-wrap"><table><thead><tr><th>ID</th><th>Nombre</th><th>CIF</th><th>Teléfono</th><th>Email</th><th>Tipo</th><th>Acciones</th></tr></thead>
+        <div class="table-wrap"><table><thead><tr><th>ID</th><th>Nombre</th><th>CIF</th><th>Teléfono</th><th>Email</th><th>Tipo</th><th></th></tr></thead>
         <tbody id="clientes-tbody"><tr><td colspan="7" class="loading">Cargando…</td></tr></tbody></table></div>
       </div>
     </div>
@@ -268,33 +278,36 @@ tbody td{padding:8px 12px;vertical-align:middle}
       </div>
       <div class="card">
         <div class="card-header"><div class="card-title">📁 Proyectos <span id="proyectos-count" style="font-size:11px;font-weight:400;color:var(--text-soft);margin-left:6px"></span></div></div>
-        <div class="table-wrap"><table><thead><tr><th>ID</th><th>Nombre</th><th>Cliente</th><th>Tipo</th><th>Estado</th><th>Responsable</th><th>Inicio</th><th>Acciones</th></tr></thead>
+        <div class="table-wrap"><table><thead><tr><th>ID</th><th>Nombre</th><th>Cliente</th><th>Tipo</th><th>Estado</th><th>Responsable</th><th>Inicio</th><th></th></tr></thead>
         <tbody id="proyectos-tbody"><tr><td colspan="8" class="loading">Cargando…</td></tr></tbody></table></div>
       </div>
     </div>
 
     <!-- TARIFARIO -->
     <div class="view" id="view-tarifario">
-      <div class="info-box">📋 Añade aquí tus artículos y precios propios. Quedan disponibles inmediatamente para todos los presupuestos y propuestas de interiorismo de cualquier proyecto.</div>
+      <div class="info-box">📋 Artículos y precios propios. Disponibles inmediatamente en todos los presupuestos e interiorismo.</div>
       <div class="search-bar">
-        <div class="search-wrap"><span class="search-icon">🔍</span><input class="form-input" id="search-tarifario" placeholder="Buscar por código o descripción…" oninput="filterTable('tarifario-tbody','search-tarifario')"></div>
+        <div class="search-wrap"><span class="search-icon">🔍</span><input class="form-input" id="search-tarifario" placeholder="Buscar…" oninput="filterTable('tarifario-tbody','search-tarifario')"></div>
         <button class="btn btn-primary" onclick="openModal('m-tarifario')">＋ Nuevo artículo</button>
       </div>
       <div class="card">
-        <div class="card-header"><div class="card-title">📋 Tarifario propio <span id="tarifario-count" style="font-size:11px;font-weight:400;color:var(--text-soft);margin-left:6px"></span></div></div>
-        <div class="table-wrap"><table><thead><tr><th>Código</th><th>Descripción</th><th>Unidad</th><th>Coste</th><th>Margen %</th><th>Precio Venta</th><th>Categoría</th><th>Acciones</th></tr></thead>
+        <div class="card-header"><div class="card-title">📋 Tarifario <span id="tarifario-count" style="font-size:11px;font-weight:400;color:var(--text-soft);margin-left:6px"></span></div></div>
+        <div class="table-wrap"><table><thead><tr><th>Código</th><th>Descripción</th><th>Ud.</th><th>Coste</th><th>Margen</th><th>Precio Venta</th><th>Categoría</th><th></th></tr></thead>
         <tbody id="tarifario-tbody"><tr><td colspan="8" class="loading">Cargando…</td></tr></tbody></table></div>
       </div>
     </div>
 
     <!-- CYPE -->
     <div class="view" id="view-cype">
-      <div class="info-box">📐 <strong>529 partidas CYPE 2026</strong> en tu base de datos. Úsalas como referencia de precio al presupuestar cualquier proyecto.</div>
+      <div class="info-box">📐 <strong>524 partidas CYPE 2026</strong> importadas de tu Excel. Base de precios centralizada.</div>
       <div class="search-bar">
-        <div class="search-wrap"><span class="search-icon">🔍</span><input class="form-input" id="search-cype" placeholder="Buscar por código o descripción…" oninput="filterTable('cype-tbody','search-cype')"></div>
+        <div class="search-wrap"><span class="search-icon">🔍</span><input class="form-input" id="search-cype" placeholder="Buscar por código, descripción o capítulo…" oninput="filterTable('cype-tbody','search-cype')"></div>
+        <select class="form-input" style="width:220px" id="filter-cype-cap" onchange="filterTable('cype-tbody','search-cype')">
+          <option value="">Todos los capítulos</option>
+        </select>
       </div>
       <div class="card">
-        <div class="table-wrap"><table><thead><tr><th>Código</th><th>Descripción</th><th>Unidad</th><th>Precio s/IVA</th><th>Capítulo</th></tr></thead>
+        <div class="table-wrap"><table><thead><tr><th>Código</th><th>Descripción</th><th>Ud.</th><th>Precio s/IVA</th><th>Capítulo</th></tr></thead>
         <tbody id="cype-tbody"><tr><td colspan="5" class="loading">Cargando…</td></tr></tbody></table></div>
       </div>
     </div>
@@ -302,12 +315,12 @@ tbody td{padding:8px 12px;vertical-align:middle}
     <!-- INTERIORISMO -->
     <div class="view" id="view-interiorismo">
       <div class="search-bar">
-        <div class="search-wrap"><span class="search-icon">🔍</span><input class="form-input" id="search-interiorismo" placeholder="Buscar por proyecto o artículo…" oninput="filterTable('interiorismo-tbody','search-interiorismo')"></div>
+        <div class="search-wrap"><span class="search-icon">🔍</span><input class="form-input" id="search-interiorismo" placeholder="Buscar…" oninput="filterTable('interiorismo-tbody','search-interiorismo')"></div>
         <button class="btn btn-copper" onclick="openModal('m-interiorismo')">＋ Añadir artículo</button>
       </div>
       <div class="card">
         <div class="card-header"><div class="card-title">🛋 Propuestas de mobiliario e interiorismo <span id="interiorismo-count" style="font-size:11px;font-weight:400;color:var(--text-soft);margin-left:6px"></span></div></div>
-        <div class="table-wrap"><table><thead><tr><th>Proyecto</th><th>Estancia</th><th>Ref.</th><th>Descripción</th><th>Cant.</th><th>PVP Neto</th><th>Margen</th><th>Est. Propuesta</th><th>Est. Pedido</th><th>Acciones</th></tr></thead>
+        <div class="table-wrap"><table><thead><tr><th>Proyecto</th><th>Estancia</th><th>Ref.</th><th>Descripción</th><th>Cant.</th><th>PVP Neto</th><th>Margen</th><th>Est. Propuesta</th><th>Est. Pedido</th><th></th></tr></thead>
         <tbody id="interiorismo-tbody"><tr><td colspan="10" class="loading">Cargando…</td></tr></tbody></table></div>
       </div>
     </div>
@@ -320,7 +333,7 @@ tbody td{padding:8px 12px;vertical-align:middle}
       </div>
       <div class="card">
         <div class="card-header"><div class="card-title">🛒 Compras <span id="compras-count" style="font-size:11px;font-weight:400;color:var(--text-soft);margin-left:6px"></span></div></div>
-        <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Proyecto</th><th>Proveedor</th><th>Concepto</th><th>Base Imp.</th><th>IVA</th><th>Total</th><th>Estado</th><th>Acciones</th></tr></thead>
+        <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Proyecto</th><th>Proveedor</th><th>Concepto</th><th>Base Imp.</th><th>IVA</th><th>Total</th><th>Estado</th><th></th></tr></thead>
         <tbody id="compras-tbody"><tr><td colspan="9" class="loading">Cargando…</td></tr></tbody></table></div>
       </div>
     </div>
@@ -333,7 +346,7 @@ tbody td{padding:8px 12px;vertical-align:middle}
       </div>
       <div class="card">
         <div class="card-header"><div class="card-title">👷 Subcontratas <span id="subcontratas-count" style="font-size:11px;font-weight:400;color:var(--text-soft);margin-left:6px"></span></div></div>
-        <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Proyecto</th><th>Subcontratista</th><th>Trabajo</th><th>Importe</th><th>IVA</th><th>Total</th><th>Estado</th><th>Acciones</th></tr></thead>
+        <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Proyecto</th><th>Subcontratista</th><th>Trabajo</th><th>Importe</th><th>IVA</th><th>Total</th><th>Estado</th><th></th></tr></thead>
         <tbody id="subcontratas-tbody"><tr><td colspan="9" class="loading">Cargando…</td></tr></tbody></table></div>
       </div>
     </div>
@@ -345,8 +358,8 @@ tbody td{padding:8px 12px;vertical-align:middle}
         <button class="btn btn-primary" onclick="openModal('m-hora')">＋ Registrar horas</button>
       </div>
       <div class="card">
-        <div class="card-header"><div class="card-title">⏱ Horas trabajadas <span id="horas-count" style="font-size:11px;font-weight:400;color:var(--text-soft);margin-left:6px"></span></div></div>
-        <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Proyecto</th><th>Trabajador</th><th>Horas</th><th>€/h</th><th>Total</th><th>Descripción</th><th>Acciones</th></tr></thead>
+        <div class="card-header"><div class="card-title">⏱ Horas <span id="horas-count" style="font-size:11px;font-weight:400;color:var(--text-soft);margin-left:6px"></span></div></div>
+        <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Proyecto</th><th>Trabajador</th><th>Horas</th><th>€/h</th><th>Total</th><th>Descripción</th><th></th></tr></thead>
         <tbody id="horas-tbody"><tr><td colspan="8" class="loading">Cargando…</td></tr></tbody></table></div>
       </div>
     </div>
@@ -354,12 +367,12 @@ tbody td{padding:8px 12px;vertical-align:middle}
     <!-- PROVEEDORES -->
     <div class="view" id="view-proveedores">
       <div class="search-bar">
-        <div class="search-wrap"><span class="search-icon">🔍</span><input class="form-input" id="search-proveedores" placeholder="Buscar proveedor…" oninput="filterTable('proveedores-tbody','search-proveedores')"></div>
+        <div class="search-wrap"><span class="search-icon">🔍</span><input class="form-input" id="search-proveedores" placeholder="Buscar…" oninput="filterTable('proveedores-tbody','search-proveedores')"></div>
         <button class="btn btn-primary" onclick="openModal('m-proveedor')">＋ Nuevo proveedor</button>
       </div>
       <div class="card">
-        <div class="card-header"><div class="card-title">🏭 Proveedores y subcontratas <span id="proveedores-count" style="font-size:11px;font-weight:400;color:var(--text-soft);margin-left:6px"></span></div></div>
-        <div class="table-wrap"><table><thead><tr><th>Nombre</th><th>CIF</th><th>Tipo</th><th>Especialidad</th><th>Teléfono</th><th>Forma pago</th><th>Acciones</th></tr></thead>
+        <div class="card-header"><div class="card-title">🏭 Proveedores <span id="proveedores-count" style="font-size:11px;font-weight:400;color:var(--text-soft);margin-left:6px"></span></div></div>
+        <div class="table-wrap"><table><thead><tr><th>Nombre</th><th>CIF</th><th>Tipo</th><th>Especialidad</th><th>Teléfono</th><th>Forma pago</th><th></th></tr></thead>
         <tbody id="proveedores-tbody"><tr><td colspan="7" class="loading">Cargando…</td></tr></tbody></table></div>
       </div>
     </div>
@@ -367,1241 +380,642 @@ tbody td{padding:8px 12px;vertical-align:middle}
     <!-- FACTURAS -->
     <div class="view" id="view-facturas">
       <div class="search-bar">
-        <div class="search-wrap"><span class="search-icon">🔍</span><input class="form-input" id="search-facturas" placeholder="Buscar factura…" oninput="filterTable('facturas-tbody','search-facturas')"></div>
+        <div class="search-wrap"><span class="search-icon">🔍</span><input class="form-input" id="search-facturas" placeholder="Buscar…" oninput="filterTable('facturas-tbody','search-facturas')"></div>
         <button class="btn btn-primary" onclick="openModal('m-factura')">＋ Nueva factura</button>
       </div>
       <div class="card">
-        <div class="card-header"><div class="card-title">🧾 Facturas emitidas <span id="facturas-count" style="font-size:11px;font-weight:400;color:var(--text-soft);margin-left:6px"></span></div></div>
-        <div class="table-wrap"><table><thead><tr><th>Nº Factura</th><th>Fecha</th><th>Cliente</th><th>Proyecto</th><th>Base Imp.</th><th>IVA</th><th>Total</th><th>Estado</th><th>Acciones</th></tr></thead>
+        <div class="card-header"><div class="card-title">🧾 Facturas <span id="facturas-count" style="font-size:11px;font-weight:400;color:var(--text-soft);margin-left:6px"></span></div></div>
+        <div class="table-wrap"><table><thead><tr><th>Nº Factura</th><th>Fecha</th><th>Cliente</th><th>Proyecto</th><th>Base Imp.</th><th>IVA</th><th>Total</th><th>Estado</th><th></th></tr></thead>
         <tbody id="facturas-tbody"><tr><td colspan="9" class="loading">Cargando…</td></tr></tbody></table></div>
       </div>
     </div>
 
-  </div><!-- /content -->
-</div><!-- /main -->
-</div><!-- /app -->
-
-<!-- ════ MODALES ════ -->
-
-<!-- CLIENTE -->
-<div class="overlay" id="m-cliente">
-  <div class="modal">
-    <div class="modal-head"><div class="modal-title">🤝 <span id="m-cliente-title">Nuevo cliente</span></div><button class="modal-close" onclick="closeModal('m-cliente')">×</button></div>
-    <div class="modal-body">
-      <input type="hidden" id="c-id">
-      <div class="form-grid">
-        <div class="form-group fg-full"><label class="form-label">Nombre / Razón social *</label><input class="form-input" id="c-nombre" placeholder="Antonio García Martínez"></div>
-        <div class="form-group"><label class="form-label">CIF / NIF</label><input class="form-input" id="c-cif" placeholder="12345678A"></div>
-        <div class="form-group"><label class="form-label">Teléfono</label><input class="form-input" id="c-tel" placeholder="666 123 456"></div>
-        <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="c-email" type="email" placeholder="cliente@email.com"></div>
-        <div class="form-group"><label class="form-label">Tipo</label>
-          <select class="form-input" id="c-tipo"><option>Particular</option><option>Empresa</option><option>Promotora</option><option>Administración</option><option>Otros</option></select></div>
-        <div class="form-group"><label class="form-label">Forma de pago</label>
-          <select class="form-input" id="c-pago"><option>Transferencia</option><option>Efectivo</option><option>Giro</option><option>Domiciliación</option><option>Confirming</option><option>Pagaré</option></select></div>
-        <div class="form-group fg-full"><label class="form-label">Dirección</label><input class="form-input" id="c-dir" placeholder="C/ Mayor 1, 46001 Valencia"></div>
-        <div class="form-group fg-full"><label class="form-label">Notas</label><textarea class="form-input" id="c-notas" rows="2" placeholder="Observaciones…"></textarea></div>
-      </div>
-    </div>
-    <div class="modal-foot">
-      <button class="btn btn-ghost" onclick="closeModal('m-cliente')">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveCliente()">💾 Guardar</button>
-    </div>
   </div>
 </div>
+</div>
+
+<!-- MODALES -->
+<!-- CLIENTE -->
+<div class="overlay" id="m-cliente"><div class="modal">
+  <div class="modal-head"><div class="modal-title">🤝 <span id="m-cliente-title">Nuevo cliente</span></div><button class="modal-close" onclick="closeModal('m-cliente')">×</button></div>
+  <div class="modal-body"><input type="hidden" id="c-id">
+    <div class="form-grid">
+      <div class="form-group fg-full"><label class="form-label">Nombre *</label><input class="form-input" id="c-nombre" placeholder="Antonio García Martínez"></div>
+      <div class="form-group"><label class="form-label">CIF / NIF</label><input class="form-input" id="c-cif" placeholder="12345678A"></div>
+      <div class="form-group"><label class="form-label">Teléfono</label><input class="form-input" id="c-tel" placeholder="666 123 456"></div>
+      <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="c-email" type="email"></div>
+      <div class="form-group"><label class="form-label">Tipo</label><select class="form-input" id="c-tipo"><option>Particular</option><option>Empresa</option><option>Promotora</option><option>Administración</option><option>Otros</option></select></div>
+      <div class="form-group"><label class="form-label">Forma de pago</label><select class="form-input" id="c-pago"><option>Transferencia</option><option>Efectivo</option><option>Giro</option><option>Domiciliación</option><option>Confirming</option><option>Pagaré</option></select></div>
+      <div class="form-group fg-full"><label class="form-label">Dirección</label><input class="form-input" id="c-dir"></div>
+      <div class="form-group fg-full"><label class="form-label">Notas</label><textarea class="form-input" id="c-notas" rows="2"></textarea></div>
+    </div>
+  </div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('m-cliente')">Cancelar</button><button class="btn btn-primary" onclick="saveCliente()">💾 Guardar</button></div>
+</div></div>
 
 <!-- PROYECTO -->
-<div class="overlay" id="m-proyecto">
-  <div class="modal">
-    <div class="modal-head"><div class="modal-title">📁 <span id="m-proyecto-title">Nuevo proyecto</span></div><button class="modal-close" onclick="closeModal('m-proyecto')">×</button></div>
-    <div class="modal-body">
-      <input type="hidden" id="p-id">
-      <div class="form-grid">
-        <div class="form-group"><label class="form-label">Cliente *</label><select class="form-input" id="p-cliente"><option value="">Seleccionar…</option></select></div>
-        <div class="form-group"><label class="form-label">Nombre del proyecto *</label><input class="form-input" id="p-nombre" placeholder="Unifamiliar C/ Alcalá 12"></div>
-        <div class="form-group"><label class="form-label">Tipo</label>
-          <select class="form-input" id="p-tipo"><option>Obra nueva</option><option>Rehabilitación integral</option><option>Reforma parcial</option><option>Cocina</option><option>Baño</option><option>Interiorismo</option><option>Mobiliario</option><option>Otros</option></select></div>
-        <div class="form-group"><label class="form-label">Estado</label>
-          <select class="form-input" id="p-estado"><option>Nuevo lead</option><option>Presupuesto enviado</option><option>Aprobado</option><option>En ejecución</option><option>Finalizado</option><option>Facturado</option><option>Cobrado</option><option>Cancelado</option></select></div>
-        <div class="form-group"><label class="form-label">Responsable</label>
-          <select class="form-input" id="p-resp"><option>Jose Asins</option><option>Pau</option><option>Paco</option><option>Raúl</option><option>Boro</option><option>Julio</option></select></div>
-        <div class="form-group"><label class="form-label">Fecha inicio</label><input class="form-input" id="p-fecha" type="date"></div>
-        <div class="form-group fg-full"><label class="form-label">Dirección de obra</label><input class="form-input" id="p-dir" placeholder="C/ Alcalá 12, 46001 Valencia"></div>
-        <div class="form-group fg-full"><label class="form-label">Notas</label><textarea class="form-input" id="p-notas" rows="2"></textarea></div>
-      </div>
-    </div>
-    <div class="modal-foot">
-      <button class="btn btn-ghost" onclick="closeModal('m-proyecto')">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveProyecto()">💾 Guardar</button>
+<div class="overlay" id="m-proyecto"><div class="modal">
+  <div class="modal-head"><div class="modal-title">📁 <span id="m-proyecto-title">Nuevo proyecto</span></div><button class="modal-close" onclick="closeModal('m-proyecto')">×</button></div>
+  <div class="modal-body"><input type="hidden" id="p-id">
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">Cliente</label><select class="form-input" id="p-cliente"><option value="">Seleccionar…</option></select></div>
+      <div class="form-group"><label class="form-label">Nombre del proyecto *</label><input class="form-input" id="p-nombre"></div>
+      <div class="form-group"><label class="form-label">Tipo</label><select class="form-input" id="p-tipo"><option>Obra nueva</option><option>Rehabilitación integral</option><option>Reforma parcial</option><option>Cocina</option><option>Baño</option><option>Interiorismo</option><option>Mobiliario</option><option>Otros</option></select></div>
+      <div class="form-group"><label class="form-label">Estado</label><select class="form-input" id="p-estado"><option>Nuevo lead</option><option>Presupuesto enviado</option><option>Aprobado</option><option>En ejecución</option><option>Finalizado</option><option>Facturado</option><option>Cobrado</option><option>Cancelado</option></select></div>
+      <div class="form-group"><label class="form-label">Responsable</label><select class="form-input" id="p-resp"><option>Jose Asins</option><option>Pau</option><option>Paco</option><option>Raúl</option><option>Boro</option><option>Julio</option></select></div>
+      <div class="form-group"><label class="form-label">Fecha inicio</label><input class="form-input" id="p-fecha" type="date"></div>
+      <div class="form-group fg-full"><label class="form-label">Dirección de obra</label><input class="form-input" id="p-dir"></div>
+      <div class="form-group fg-full"><label class="form-label">Notas</label><textarea class="form-input" id="p-notas" rows="2"></textarea></div>
     </div>
   </div>
-</div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('m-proyecto')">Cancelar</button><button class="btn btn-primary" onclick="saveProyecto()">💾 Guardar</button></div>
+</div></div>
 
 <!-- TARIFARIO -->
-<div class="overlay" id="m-tarifario">
-  <div class="modal">
-    <div class="modal-head"><div class="modal-title">📋 <span id="m-tarif-title">Nuevo artículo</span></div><button class="modal-close" onclick="closeModal('m-tarifario')">×</button></div>
-    <div class="modal-body">
-      <input type="hidden" id="t-id">
-      <div class="form-grid">
-        <div class="form-group"><label class="form-label">Código *</label><input class="form-input" id="t-codigo" placeholder="SOF-001"></div>
-        <div class="form-group"><label class="form-label">Unidad</label>
-          <select class="form-input" id="t-unidad"><option>Ud</option><option>m²</option><option>m³</option><option>ml</option><option>kg</option><option>h</option><option>PA</option></select></div>
-        <div class="form-group fg-full"><label class="form-label">Descripción *</label><input class="form-input" id="t-desc" placeholder="Sofá modular 3 plazas Kave Home"></div>
-        <div class="form-group"><label class="form-label">Precio coste (s/IVA)</label><input class="form-input" id="t-coste" type="number" step="0.01" placeholder="0.00" oninput="calcPrecioVenta()"></div>
-        <div class="form-group"><label class="form-label">Margen %</label><input class="form-input" id="t-margen" type="number" step="0.1" placeholder="30" oninput="calcPrecioVenta()"></div>
-        <div class="form-group"><label class="form-label">Precio venta (calculado)</label><input class="form-input calc" id="t-pventa" readonly placeholder="—"></div>
-        <div class="form-group"><label class="form-label">Categoría</label>
-          <select class="form-input" id="t-cat"><option>Mobiliario</option><option>Sanitarios</option><option>Griferías</option><option>Cocina</option><option>Carpintería</option><option>Pavimentos</option><option>Revestimientos</option><option>Instalaciones</option><option>Otros</option></select></div>
-        <div class="form-group"><label class="form-label">Marca / Proveedor</label><input class="form-input" id="t-marca" placeholder="Kave Home"></div>
-        <div class="form-group fg-full"><label class="form-label">Notas / Referencia</label><input class="form-input" id="t-notas" placeholder="Ref. catálogo, colección…"></div>
-      </div>
-    </div>
-    <div class="modal-foot">
-      <button class="btn btn-ghost" onclick="closeModal('m-tarifario')">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveTarifario()">💾 Guardar</button>
+<div class="overlay" id="m-tarifario"><div class="modal">
+  <div class="modal-head"><div class="modal-title">📋 <span id="m-tarif-title">Nuevo artículo</span></div><button class="modal-close" onclick="closeModal('m-tarifario')">×</button></div>
+  <div class="modal-body"><input type="hidden" id="t-id">
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">Código *</label><input class="form-input" id="t-codigo" placeholder="SOF-001"></div>
+      <div class="form-group"><label class="form-label">Unidad</label><select class="form-input" id="t-unidad"><option>Ud</option><option>m²</option><option>m³</option><option>ml</option><option>kg</option><option>h</option><option>PA</option></select></div>
+      <div class="form-group fg-full"><label class="form-label">Descripción *</label><input class="form-input" id="t-desc"></div>
+      <div class="form-group"><label class="form-label">Precio coste (s/IVA)</label><input class="form-input" id="t-coste" type="number" step="0.01" oninput="calcPrecioVenta()"></div>
+      <div class="form-group"><label class="form-label">Margen %</label><input class="form-input" id="t-margen" type="number" step="0.1" placeholder="30" oninput="calcPrecioVenta()"></div>
+      <div class="form-group"><label class="form-label">Precio venta (calculado)</label><input class="form-input calc" id="t-pventa" readonly></div>
+      <div class="form-group"><label class="form-label">Categoría</label><select class="form-input" id="t-cat"><option>Mobiliario</option><option>Sanitarios</option><option>Griferías</option><option>Cocina</option><option>Carpintería</option><option>Pavimentos</option><option>Revestimientos</option><option>Instalaciones</option><option>Otros</option></select></div>
+      <div class="form-group"><label class="form-label">Marca / Proveedor</label><input class="form-input" id="t-marca"></div>
+      <div class="form-group fg-full"><label class="form-label">Notas</label><input class="form-input" id="t-notas"></div>
     </div>
   </div>
-</div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('m-tarifario')">Cancelar</button><button class="btn btn-primary" onclick="saveTarifario()">💾 Guardar</button></div>
+</div></div>
 
 <!-- INTERIORISMO -->
-<div class="overlay" id="m-interiorismo">
-  <div class="modal">
-    <div class="modal-head"><div class="modal-title">🛋 Añadir artículo a propuesta</div><button class="modal-close" onclick="closeModal('m-interiorismo')">×</button></div>
-    <div class="modal-body">
-      <input type="hidden" id="i-id">
-      <div class="form-grid">
-        <div class="form-group"><label class="form-label">Proyecto *</label><select class="form-input" id="i-proyecto"><option value="">Seleccionar…</option></select></div>
-        <div class="form-group"><label class="form-label">Estancia</label>
-          <select class="form-input" id="i-estancia"><option>Salón</option><option>Cocina</option><option>Dormitorio</option><option>Baño</option><option>Terraza</option><option>Despacho</option><option>Comedor</option><option>Pasillo</option><option>Entrada</option><option>Otros</option></select></div>
-        <div class="form-group"><label class="form-label">Ref. Catálogo / Tarifario</label><select class="form-input" id="i-ref" onchange="loadTarifarioItem()"><option value="">— o descripc. libre —</option></select></div>
-        <div class="form-group"><label class="form-label">Descripción</label><input class="form-input" id="i-desc" placeholder="Sofá modular 3 plazas"></div>
-        <div class="form-group"><label class="form-label">Marca</label><input class="form-input" id="i-marca" placeholder="Kave Home"></div>
-        <div class="form-group"><label class="form-label">Acabado</label><input class="form-input" id="i-acabado" placeholder="Gris marengo"></div>
-        <div class="form-group"><label class="form-label">Cantidad</label><input class="form-input" id="i-cant" type="number" value="1" step="0.01" oninput="calcIntPvp()"></div>
-        <div class="form-group"><label class="form-label">PVP unitario</label><input class="form-input" id="i-pvp" type="number" step="0.01" placeholder="0.00" oninput="calcIntPvp()"></div>
-        <div class="form-group"><label class="form-label">Dto. cliente %</label><input class="form-input" id="i-dto" type="number" step="0.1" value="0" oninput="calcIntPvp()"></div>
-        <div class="form-group"><label class="form-label">PVP Neto (calculado)</label><input class="form-input calc" id="i-neto" readonly placeholder="—"></div>
-        <div class="form-group"><label class="form-label">Coste neto</label><input class="form-input" id="i-coste" type="number" step="0.01" placeholder="0.00"></div>
-        <div class="form-group"><label class="form-label">IVA</label>
-          <select class="form-input" id="i-iva"><option>21%</option><option>10%</option><option>4%</option><option>Exento</option></select></div>
-        <div class="form-group"><label class="form-label">Estado propuesta</label>
-          <select class="form-input" id="i-eprop"><option>Borrador</option><option>Enviada</option><option>Aprobada</option><option>Rechazada</option><option>En pedido</option><option>Entregada</option></select></div>
-        <div class="form-group"><label class="form-label">Estado pedido</label>
-          <select class="form-input" id="i-eped"><option>Pendiente</option><option>Solicitado</option><option>Confirmado</option><option>En tránsito</option><option>Recibido</option><option>Pagado</option></select></div>
-        <div class="form-group"><label class="form-label">Fecha entrega</label><input class="form-input" id="i-fentrega" type="date"></div>
-        <div class="form-group"><label class="form-label">Notas</label><input class="form-input" id="i-notas" placeholder="Observaciones…"></div>
-      </div>
-    </div>
-    <div class="modal-foot">
-      <button class="btn btn-ghost" onclick="closeModal('m-interiorismo')">Cancelar</button>
-      <button class="btn btn-copper" onclick="saveInteriorismo()">💾 Guardar</button>
+<div class="overlay" id="m-interiorismo"><div class="modal">
+  <div class="modal-head"><div class="modal-title">🛋 Añadir artículo</div><button class="modal-close" onclick="closeModal('m-interiorismo')">×</button></div>
+  <div class="modal-body"><input type="hidden" id="i-id">
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">Proyecto *</label><select class="form-input" id="i-proyecto"><option value="">Seleccionar…</option></select></div>
+      <div class="form-group"><label class="form-label">Estancia</label><select class="form-input" id="i-estancia"><option>Salón</option><option>Cocina</option><option>Dormitorio</option><option>Baño</option><option>Terraza</option><option>Despacho</option><option>Comedor</option><option>Pasillo</option><option>Entrada</option><option>Otros</option></select></div>
+      <div class="form-group"><label class="form-label">Ref. Tarifario</label><select class="form-input" id="i-ref" onchange="loadTarifarioItem()"><option value="">— descripción libre —</option></select></div>
+      <div class="form-group"><label class="form-label">Descripción</label><input class="form-input" id="i-desc"></div>
+      <div class="form-group"><label class="form-label">Marca</label><input class="form-input" id="i-marca"></div>
+      <div class="form-group"><label class="form-label">Acabado</label><input class="form-input" id="i-acabado"></div>
+      <div class="form-group"><label class="form-label">Cantidad</label><input class="form-input" id="i-cant" type="number" value="1" step="0.01" oninput="calcIntPvp()"></div>
+      <div class="form-group"><label class="form-label">PVP unitario</label><input class="form-input" id="i-pvp" type="number" step="0.01" oninput="calcIntPvp()"></div>
+      <div class="form-group"><label class="form-label">Dto. cliente %</label><input class="form-input" id="i-dto" type="number" value="0" oninput="calcIntPvp()"></div>
+      <div class="form-group"><label class="form-label">PVP Neto (calculado)</label><input class="form-input calc" id="i-neto" readonly></div>
+      <div class="form-group"><label class="form-label">Coste neto</label><input class="form-input" id="i-coste" type="number" step="0.01"></div>
+      <div class="form-group"><label class="form-label">IVA</label><select class="form-input" id="i-iva"><option>21%</option><option>10%</option><option>4%</option><option>Exento</option></select></div>
+      <div class="form-group"><label class="form-label">Estado propuesta</label><select class="form-input" id="i-eprop"><option>Borrador</option><option>Enviada</option><option>Aprobada</option><option>Rechazada</option><option>En pedido</option><option>Entregada</option></select></div>
+      <div class="form-group"><label class="form-label">Estado pedido</label><select class="form-input" id="i-eped"><option>Pendiente</option><option>Solicitado</option><option>Confirmado</option><option>En tránsito</option><option>Recibido</option><option>Pagado</option></select></div>
+      <div class="form-group"><label class="form-label">Fecha entrega</label><input class="form-input" id="i-fentrega" type="date"></div>
+      <div class="form-group"><label class="form-label">Notas</label><input class="form-input" id="i-notas"></div>
     </div>
   </div>
-</div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('m-interiorismo')">Cancelar</button><button class="btn btn-copper" onclick="saveInteriorismo()">💾 Guardar</button></div>
+</div></div>
 
 <!-- COMPRA -->
-<div class="overlay" id="m-compra">
-  <div class="modal">
-    <div class="modal-head"><div class="modal-title">🛒 Nueva compra</div><button class="modal-close" onclick="closeModal('m-compra')">×</button></div>
-    <div class="modal-body">
-      <input type="hidden" id="co-id">
-      <div class="form-grid">
-        <div class="form-group"><label class="form-label">Fecha</label><input class="form-input" id="co-fecha" type="date"></div>
-        <div class="form-group"><label class="form-label">Proyecto</label><select class="form-input" id="co-proyecto"><option value="">Seleccionar…</option></select></div>
-        <div class="form-group"><label class="form-label">Proveedor</label><select class="form-input" id="co-prov"><option value="">Seleccionar…</option></select></div>
-        <div class="form-group"><label class="form-label">IVA</label>
-          <select class="form-input" id="co-iva"><option>21%</option><option>10%</option><option>4%</option><option>Exento</option></select></div>
-        <div class="form-group fg-full"><label class="form-label">Concepto</label><input class="form-input" id="co-concepto" placeholder="Porcelánico exterior 180m²"></div>
-        <div class="form-group"><label class="form-label">Base imponible (€)</label><input class="form-input" id="co-base" type="number" step="0.01" placeholder="0.00"></div>
-        <div class="form-group"><label class="form-label">Estado pago</label>
-          <select class="form-input" id="co-estado"><option>Pendiente</option><option>Pagado</option><option>Parcial</option><option>Vencido</option></select></div>
-        <div class="form-group"><label class="form-label">Fecha vencimiento</label><input class="form-input" id="co-vto" type="date"></div>
-        <div class="form-group fg-full"><label class="form-label">Notas</label><input class="form-input" id="co-notas" placeholder=""></div>
-      </div>
-    </div>
-    <div class="modal-foot">
-      <button class="btn btn-ghost" onclick="closeModal('m-compra')">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveCompra()">💾 Guardar</button>
+<div class="overlay" id="m-compra"><div class="modal">
+  <div class="modal-head"><div class="modal-title">🛒 Nueva compra</div><button class="modal-close" onclick="closeModal('m-compra')">×</button></div>
+  <div class="modal-body"><input type="hidden" id="co-id">
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">Fecha</label><input class="form-input" id="co-fecha" type="date"></div>
+      <div class="form-group"><label class="form-label">Proyecto</label><select class="form-input" id="co-proyecto"><option value="">Seleccionar…</option></select></div>
+      <div class="form-group"><label class="form-label">Proveedor</label><select class="form-input" id="co-prov"><option value="">Seleccionar…</option></select></div>
+      <div class="form-group"><label class="form-label">IVA</label><select class="form-input" id="co-iva"><option>21%</option><option>10%</option><option>4%</option><option>Exento</option></select></div>
+      <div class="form-group fg-full"><label class="form-label">Concepto</label><input class="form-input" id="co-concepto"></div>
+      <div class="form-group"><label class="form-label">Base imponible (€)</label><input class="form-input" id="co-base" type="number" step="0.01"></div>
+      <div class="form-group"><label class="form-label">Estado pago</label><select class="form-input" id="co-estado"><option>Pendiente</option><option>Pagado</option><option>Parcial</option><option>Vencido</option></select></div>
+      <div class="form-group"><label class="form-label">Fecha vencimiento</label><input class="form-input" id="co-vto" type="date"></div>
+      <div class="form-group fg-full"><label class="form-label">Notas</label><input class="form-input" id="co-notas"></div>
     </div>
   </div>
-</div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('m-compra')">Cancelar</button><button class="btn btn-primary" onclick="saveCompra()">💾 Guardar</button></div>
+</div></div>
 
 <!-- SUBCONTRATA -->
-<div class="overlay" id="m-subcontrata">
-  <div class="modal">
-    <div class="modal-head"><div class="modal-title">👷 Nueva subcontrata</div><button class="modal-close" onclick="closeModal('m-subcontrata')">×</button></div>
-    <div class="modal-body">
-      <input type="hidden" id="sc-id">
-      <div class="form-grid">
-        <div class="form-group"><label class="form-label">Fecha</label><input class="form-input" id="sc-fecha" type="date"></div>
-        <div class="form-group"><label class="form-label">Proyecto</label><select class="form-input" id="sc-proyecto"><option value="">Seleccionar…</option></select></div>
-        <div class="form-group"><label class="form-label">Subcontratista</label><select class="form-input" id="sc-prov"><option value="">Seleccionar…</option></select></div>
-        <div class="form-group"><label class="form-label">IVA</label>
-          <select class="form-input" id="sc-iva"><option>21%</option><option>10%</option><option>4%</option><option>Exento</option></select></div>
-        <div class="form-group fg-full"><label class="form-label">Trabajo / Descripción</label><input class="form-input" id="sc-trabajo" placeholder="Instalación eléctrica planta baja"></div>
-        <div class="form-group"><label class="form-label">Importe base (€)</label><input class="form-input" id="sc-importe" type="number" step="0.01" placeholder="0.00"></div>
-        <div class="form-group"><label class="form-label">Estado pago</label>
-          <select class="form-input" id="sc-estado"><option>Pendiente</option><option>Pagado</option><option>Parcial</option><option>Vencido</option></select></div>
-        <div class="form-group"><label class="form-label">Fecha vencimiento</label><input class="form-input" id="sc-vto" type="date"></div>
-      </div>
-    </div>
-    <div class="modal-foot">
-      <button class="btn btn-ghost" onclick="closeModal('m-subcontrata')">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveSubcontrata()">💾 Guardar</button>
+<div class="overlay" id="m-subcontrata"><div class="modal">
+  <div class="modal-head"><div class="modal-title">👷 Nueva subcontrata</div><button class="modal-close" onclick="closeModal('m-subcontrata')">×</button></div>
+  <div class="modal-body"><input type="hidden" id="sc-id">
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">Fecha</label><input class="form-input" id="sc-fecha" type="date"></div>
+      <div class="form-group"><label class="form-label">Proyecto</label><select class="form-input" id="sc-proyecto"><option value="">Seleccionar…</option></select></div>
+      <div class="form-group"><label class="form-label">Subcontratista</label><select class="form-input" id="sc-prov"><option value="">Seleccionar…</option></select></div>
+      <div class="form-group"><label class="form-label">IVA</label><select class="form-input" id="sc-iva"><option>21%</option><option>10%</option><option>4%</option><option>Exento</option></select></div>
+      <div class="form-group fg-full"><label class="form-label">Trabajo</label><input class="form-input" id="sc-trabajo"></div>
+      <div class="form-group"><label class="form-label">Importe base (€)</label><input class="form-input" id="sc-importe" type="number" step="0.01"></div>
+      <div class="form-group"><label class="form-label">Estado pago</label><select class="form-input" id="sc-estado"><option>Pendiente</option><option>Pagado</option><option>Parcial</option><option>Vencido</option></select></div>
+      <div class="form-group"><label class="form-label">Fecha vencimiento</label><input class="form-input" id="sc-vto" type="date"></div>
     </div>
   </div>
-</div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('m-subcontrata')">Cancelar</button><button class="btn btn-primary" onclick="saveSubcontrata()">💾 Guardar</button></div>
+</div></div>
 
 <!-- HORA -->
-<div class="overlay" id="m-hora">
-  <div class="modal" style="width:420px">
-    <div class="modal-head"><div class="modal-title">⏱ Registrar horas</div><button class="modal-close" onclick="closeModal('m-hora')">×</button></div>
-    <div class="modal-body">
-      <input type="hidden" id="h-id">
-      <div class="form-grid">
-        <div class="form-group"><label class="form-label">Fecha</label><input class="form-input" id="h-fecha" type="date"></div>
-        <div class="form-group"><label class="form-label">Proyecto</label><select class="form-input" id="h-proyecto"><option value="">Seleccionar…</option></select></div>
-        <div class="form-group"><label class="form-label">Trabajador</label>
-          <select class="form-input" id="h-trab"><option>Paco</option><option>Raúl</option><option>Boro</option><option>Julio</option><option>Pau</option><option>Jose Asins</option></select></div>
-        <div class="form-group"><label class="form-label">Horas</label><input class="form-input" id="h-horas" type="number" step="0.5" placeholder="8"></div>
-        <div class="form-group"><label class="form-label">€/hora</label><input class="form-input" id="h-coste" type="number" step="0.01" value="18"></div>
-        <div class="form-group fg-full"><label class="form-label">Descripción</label><input class="form-input" id="h-desc" placeholder="Solado planta baja"></div>
-      </div>
-    </div>
-    <div class="modal-foot">
-      <button class="btn btn-ghost" onclick="closeModal('m-hora')">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveHora()">💾 Guardar</button>
+<div class="overlay" id="m-hora"><div class="modal" style="width:420px">
+  <div class="modal-head"><div class="modal-title">⏱ Registrar horas</div><button class="modal-close" onclick="closeModal('m-hora')">×</button></div>
+  <div class="modal-body"><input type="hidden" id="h-id">
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">Fecha</label><input class="form-input" id="h-fecha" type="date"></div>
+      <div class="form-group"><label class="form-label">Proyecto</label><select class="form-input" id="h-proyecto"><option value="">Seleccionar…</option></select></div>
+      <div class="form-group"><label class="form-label">Trabajador</label><select class="form-input" id="h-trab"><option>Paco</option><option>Raúl</option><option>Boro</option><option>Julio</option><option>Pau</option><option>Jose Asins</option></select></div>
+      <div class="form-group"><label class="form-label">Horas</label><input class="form-input" id="h-horas" type="number" step="0.5" placeholder="8"></div>
+      <div class="form-group"><label class="form-label">€/hora</label><input class="form-input" id="h-coste" type="number" value="18"></div>
+      <div class="form-group fg-full"><label class="form-label">Descripción</label><input class="form-input" id="h-desc"></div>
     </div>
   </div>
-</div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('m-hora')">Cancelar</button><button class="btn btn-primary" onclick="saveHora()">💾 Guardar</button></div>
+</div></div>
 
 <!-- PROVEEDOR -->
-<div class="overlay" id="m-proveedor">
-  <div class="modal">
-    <div class="modal-head"><div class="modal-title">🏭 Nuevo proveedor</div><button class="modal-close" onclick="closeModal('m-proveedor')">×</button></div>
-    <div class="modal-body">
-      <input type="hidden" id="pv-id">
-      <div class="form-grid">
-        <div class="form-group fg-full"><label class="form-label">Nombre / Razón social *</label><input class="form-input" id="pv-nombre" placeholder="Fontanería VLC SL"></div>
-        <div class="form-group"><label class="form-label">CIF</label><input class="form-input" id="pv-cif" placeholder="B12345678"></div>
-        <div class="form-group"><label class="form-label">Tipo</label>
-          <select class="form-input" id="pv-tipo"><option>Proveedor</option><option>Subcontrata</option><option>Alquiler</option><option>Servicio</option><option>Transporte</option><option>Otros</option></select></div>
-        <div class="form-group"><label class="form-label">Teléfono</label><input class="form-input" id="pv-tel" placeholder="963 123 456"></div>
-        <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="pv-email" type="email"></div>
-        <div class="form-group"><label class="form-label">Especialidad</label><input class="form-input" id="pv-esp" placeholder="Fontanería, cerámica…"></div>
-        <div class="form-group"><label class="form-label">Forma de pago</label>
-          <select class="form-input" id="pv-pago"><option>Transferencia</option><option>Efectivo</option><option>Giro</option><option>Domiciliación</option><option>Confirming</option><option>Pagaré</option></select></div>
-        <div class="form-group"><label class="form-label">IBAN</label><input class="form-input" id="pv-iban" placeholder="ES00 0000 0000 0000 0000 0000"></div>
-        <div class="form-group fg-full"><label class="form-label">Notas</label><textarea class="form-input" id="pv-notas" rows="2"></textarea></div>
-      </div>
-    </div>
-    <div class="modal-foot">
-      <button class="btn btn-ghost" onclick="closeModal('m-proveedor')">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveProveedor()">💾 Guardar</button>
+<div class="overlay" id="m-proveedor"><div class="modal">
+  <div class="modal-head"><div class="modal-title">🏭 Nuevo proveedor</div><button class="modal-close" onclick="closeModal('m-proveedor')">×</button></div>
+  <div class="modal-body"><input type="hidden" id="pv-id">
+    <div class="form-grid">
+      <div class="form-group fg-full"><label class="form-label">Nombre *</label><input class="form-input" id="pv-nombre"></div>
+      <div class="form-group"><label class="form-label">CIF</label><input class="form-input" id="pv-cif"></div>
+      <div class="form-group"><label class="form-label">Tipo</label><select class="form-input" id="pv-tipo"><option>Proveedor</option><option>Subcontrata</option><option>Alquiler</option><option>Servicio</option><option>Transporte</option><option>Otros</option></select></div>
+      <div class="form-group"><label class="form-label">Teléfono</label><input class="form-input" id="pv-tel"></div>
+      <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="pv-email" type="email"></div>
+      <div class="form-group"><label class="form-label">Especialidad</label><input class="form-input" id="pv-esp"></div>
+      <div class="form-group"><label class="form-label">Forma de pago</label><select class="form-input" id="pv-pago"><option>Transferencia</option><option>Efectivo</option><option>Giro</option><option>Domiciliación</option><option>Confirming</option><option>Pagaré</option></select></div>
+      <div class="form-group"><label class="form-label">IBAN</label><input class="form-input" id="pv-iban"></div>
+      <div class="form-group fg-full"><label class="form-label">Notas</label><textarea class="form-input" id="pv-notas" rows="2"></textarea></div>
     </div>
   </div>
-</div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('m-proveedor')">Cancelar</button><button class="btn btn-primary" onclick="saveProveedor()">💾 Guardar</button></div>
+</div></div>
 
 <!-- FACTURA -->
-<div class="overlay" id="m-factura">
-  <div class="modal">
-    <div class="modal-head"><div class="modal-title">🧾 Nueva factura</div><button class="modal-close" onclick="closeModal('m-factura')">×</button></div>
-    <div class="modal-body">
-      <input type="hidden" id="f-id">
-      <div class="form-grid">
-        <div class="form-group"><label class="form-label">Nº Factura</label><input class="form-input" id="f-num" placeholder="FAC-2025-001"></div>
-        <div class="form-group"><label class="form-label">Fecha emisión</label><input class="form-input" id="f-fecha" type="date"></div>
-        <div class="form-group"><label class="form-label">Cliente</label><select class="form-input" id="f-cliente"><option value="">Seleccionar…</option></select></div>
-        <div class="form-group"><label class="form-label">Proyecto</label><select class="form-input" id="f-proyecto"><option value="">Seleccionar…</option></select></div>
-        <div class="form-group"><label class="form-label">Base imponible (€)</label><input class="form-input" id="f-base" type="number" step="0.01" placeholder="0.00"></div>
-        <div class="form-group"><label class="form-label">IVA</label>
-          <select class="form-input" id="f-iva"><option>10%</option><option>21%</option><option>4%</option><option>Exento</option></select></div>
-        <div class="form-group"><label class="form-label">Forma de pago</label>
-          <select class="form-input" id="f-pago"><option>Transferencia</option><option>Efectivo</option><option>Giro</option><option>Domiciliación</option></select></div>
-        <div class="form-group"><label class="form-label">Fecha vencimiento</label><input class="form-input" id="f-vto" type="date"></div>
-        <div class="form-group"><label class="form-label">Estado</label>
-          <select class="form-input" id="f-estado"><option>Pendiente</option><option>Cobrada</option><option>Parcial</option><option>Vencida</option></select></div>
-        <div class="form-group"><label class="form-label">Fecha cobro</label><input class="form-input" id="f-fcobro" type="date"></div>
-        <div class="form-group fg-full"><label class="form-label">Concepto</label><input class="form-input" id="f-concepto" placeholder="Certificación nº1 - Obra nueva Picassent"></div>
-      </div>
-    </div>
-    <div class="modal-foot">
-      <button class="btn btn-ghost" onclick="closeModal('m-factura')">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveFactura()">💾 Guardar</button>
+<div class="overlay" id="m-factura"><div class="modal">
+  <div class="modal-head"><div class="modal-title">🧾 Nueva factura</div><button class="modal-close" onclick="closeModal('m-factura')">×</button></div>
+  <div class="modal-body"><input type="hidden" id="f-id">
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">Nº Factura</label><input class="form-input" id="f-num" placeholder="FAC-2025-001"></div>
+      <div class="form-group"><label class="form-label">Fecha emisión</label><input class="form-input" id="f-fecha" type="date"></div>
+      <div class="form-group"><label class="form-label">Cliente</label><select class="form-input" id="f-cliente"><option value="">Seleccionar…</option></select></div>
+      <div class="form-group"><label class="form-label">Proyecto</label><select class="form-input" id="f-proyecto"><option value="">Seleccionar…</option></select></div>
+      <div class="form-group"><label class="form-label">Base imponible (€)</label><input class="form-input" id="f-base" type="number" step="0.01"></div>
+      <div class="form-group"><label class="form-label">IVA</label><select class="form-input" id="f-iva"><option>10%</option><option>21%</option><option>4%</option><option>Exento</option></select></div>
+      <div class="form-group"><label class="form-label">Forma de pago</label><select class="form-input" id="f-pago"><option>Transferencia</option><option>Efectivo</option><option>Giro</option><option>Domiciliación</option></select></div>
+      <div class="form-group"><label class="form-label">Fecha vencimiento</label><input class="form-input" id="f-vto" type="date"></div>
+      <div class="form-group"><label class="form-label">Estado</label><select class="form-input" id="f-estado"><option>Pendiente</option><option>Cobrada</option><option>Parcial</option><option>Vencida</option></select></div>
+      <div class="form-group"><label class="form-label">Fecha cobro</label><input class="form-input" id="f-fcobro" type="date"></div>
+      <div class="form-group fg-full"><label class="form-label">Concepto</label><input class="form-input" id="f-concepto"></div>
     </div>
   </div>
-</div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('m-factura')">Cancelar</button><button class="btn btn-primary" onclick="saveFactura()">💾 Guardar</button></div>
+</div></div>
 
 <!-- QUICK ADD -->
-<div class="overlay" id="m-quick">
-  <div class="modal" style="width:360px">
-    <div class="modal-head"><div class="modal-title">＋ ¿Qué quieres crear?</div><button class="modal-close" onclick="closeModal('m-quick')">×</button></div>
-    <div class="modal-body">
-      <div style="display:flex;flex-direction:column;gap:8px">
-        <button class="btn btn-ghost" style="justify-content:flex-start;padding:13px 16px" onclick="closeModal('m-quick');openModal('m-cliente')">🤝 <strong style="margin-left:8px">Nuevo cliente</strong></button>
-        <button class="btn btn-ghost" style="justify-content:flex-start;padding:13px 16px" onclick="closeModal('m-quick');openModal('m-proyecto')">📁 <strong style="margin-left:8px">Nuevo proyecto</strong></button>
-        <button class="btn btn-ghost" style="justify-content:flex-start;padding:13px 16px" onclick="closeModal('m-quick');openModal('m-tarifario')">📋 <strong style="margin-left:8px">Añadir al tarifario</strong></button>
-        <button class="btn btn-ghost" style="justify-content:flex-start;padding:13px 16px" onclick="closeModal('m-quick');openModal('m-interiorismo')">🛋 <strong style="margin-left:8px">Propuesta interiorismo</strong></button>
-        <button class="btn btn-ghost" style="justify-content:flex-start;padding:13px 16px" onclick="closeModal('m-quick');openModal('m-compra')">🛒 <strong style="margin-left:8px">Registrar compra</strong></button>
-        <button class="btn btn-ghost" style="justify-content:flex-start;padding:13px 16px" onclick="closeModal('m-quick');openModal('m-factura')">🧾 <strong style="margin-left:8px">Emitir factura</strong></button>
-      </div>
-    </div>
-  </div>
-</div>
+<div class="overlay" id="m-quick"><div class="modal" style="width:340px">
+  <div class="modal-head"><div class="modal-title">＋ ¿Qué quieres crear?</div><button class="modal-close" onclick="closeModal('m-quick')">×</button></div>
+  <div class="modal-body"><div style="display:flex;flex-direction:column;gap:8px">
+    <button class="btn btn-ghost" style="justify-content:flex-start;padding:13px 16px" onclick="closeModal('m-quick');openModal('m-cliente')">🤝 <strong style="margin-left:8px">Nuevo cliente</strong></button>
+    <button class="btn btn-ghost" style="justify-content:flex-start;padding:13px 16px" onclick="closeModal('m-quick');openModal('m-proyecto')">📁 <strong style="margin-left:8px">Nuevo proyecto</strong></button>
+    <button class="btn btn-ghost" style="justify-content:flex-start;padding:13px 16px" onclick="closeModal('m-quick');openModal('m-tarifario')">📋 <strong style="margin-left:8px">Añadir al tarifario</strong></button>
+    <button class="btn btn-ghost" style="justify-content:flex-start;padding:13px 16px" onclick="closeModal('m-quick');openModal('m-interiorismo')">🛋 <strong style="margin-left:8px">Propuesta interiorismo</strong></button>
+    <button class="btn btn-ghost" style="justify-content:flex-start;padding:13px 16px" onclick="closeModal('m-quick');openModal('m-compra')">🛒 <strong style="margin-left:8px">Registrar compra</strong></button>
+    <button class="btn btn-ghost" style="justify-content:flex-start;padding:13px 16px" onclick="closeModal('m-quick');openModal('m-factura')">🧾 <strong style="margin-left:8px">Emitir factura</strong></button>
+  </div></div>
+</div></div>
 
-<!-- CONFIRM DELETE -->
+<!-- CONFIRM -->
 <div class="confirm-overlay" id="confirm-overlay">
   <div class="confirm-box">
     <div class="confirm-title">⚠️ Eliminar registro</div>
-    <div class="confirm-text" id="confirm-text">¿Seguro que quieres eliminar este registro? Esta acción no se puede deshacer.</div>
-    <div class="confirm-btns">
-      <button class="btn btn-ghost" onclick="closeConfirm()">Cancelar</button>
-      <button class="btn btn-danger" onclick="confirmDeleteAction()">Eliminar</button>
-    </div>
+    <div class="confirm-text" id="confirm-text">¿Seguro que quieres eliminar este registro?</div>
+    <div class="confirm-btns"><button class="btn btn-ghost" onclick="closeConfirm()">Cancelar</button><button class="btn btn-danger" onclick="confirmDeleteAction()">Eliminar</button></div>
   </div>
 </div>
 
-<!-- TOAST -->
 <div class="toast" id="toast"></div>
 
 <script>
-// ══════════════════════════════════════════
-// SUPABASE CONFIG
-// ══════════════════════════════════════════
-const SUPABASE_URL = 'https://qxyflndntpmcdbyvwjnj.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_mCrvdo_QgXEwReMdKxJ1RQ_wpRcqLcE';
+// ── CONFIG ──────────────────────────────────────────
+const SB_URL = 'https://qxyflndntpmcdbyvwjnj.supabase.co';
+const SB_KEY = 'sb_publishable_mCrvdo_QgXEwReMdKxJ1RQ_wpRcqLcE';
 
-async function sb(table, method='GET', body=null, id=null, extra='') {
-  const url = `${SUPABASE_URL}/rest/v1/${table}${id ? `?id=eq.${id}` : ''}${extra}`;
-  const opts = {
-    method,
-    headers: {
-      'apikey': SUPABASE_KEY,
-      'Authorization': `Bearer ${SUPABASE_KEY}`,
-      'Content-Type': 'application/json',
-      'Prefer': method==='POST' ? 'return=representation' : (method==='PATCH'||method==='DELETE' ? 'return=representation' : ''),
-    }
-  };
-  if (body) opts.body = JSON.stringify(body);
-  const r = await fetch(url, opts);
-  if (!r.ok) {
-    const err = await r.text();
-    throw new Error(err);
+// ── LOGIN ────────────────────────────────────────────
+const USERS = { 'jose':'pau2025', 'pau':'pau2025', 'admin':'pau2025' };
+
+function doLogin() {
+  const u = document.getElementById('login-user').value.trim().toLowerCase();
+  const p = document.getElementById('login-pass').value;
+  if (USERS[u] && USERS[u]===p) {
+    document.getElementById('login-screen').style.display='none';
+    sessionStorage.setItem('pau-auth','1');
+    sessionStorage.setItem('pau-user',u);
+    setUserDisplay(u);
+    init();
+  } else {
+    document.getElementById('login-error').style.display='block';
+    document.getElementById('login-pass').value='';
   }
-  if (method==='DELETE') return true;
-  const text = await r.text();
-  return text ? JSON.parse(text) : [];
+}
+function doLogout() {
+  sessionStorage.clear();
+  location.reload();
+}
+function setUserDisplay(u) {
+  const name = u.charAt(0).toUpperCase()+u.slice(1);
+  document.getElementById('user-name').textContent = name;
+  document.getElementById('user-av').textContent = name.substring(0,2).toUpperCase();
+}
+document.getElementById('login-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+
+// Check session
+if (sessionStorage.getItem('pau-auth')==='1') {
+  document.getElementById('login-screen').style.display='none';
+  setUserDisplay(sessionStorage.getItem('pau-user')||'jose');
+  document.addEventListener('DOMContentLoaded', init);
+  if (document.readyState !== 'loading') init();
 }
 
-async function sbGet(table, extra='') {
-  return sb(table, 'GET', null, null, extra);
+// ── SUPABASE ─────────────────────────────────────────
+async function sb(table, method='GET', body=null, id=null, extra='') {
+  const url = `${SB_URL}/rest/v1/${table}${id?`?id=eq.${id}`:''}${extra}`;
+  const opts = { method, headers: {
+    'apikey':SB_KEY, 'Authorization':`Bearer ${SB_KEY}`,
+    'Content-Type':'application/json',
+    'Prefer': method==='POST'?'return=representation':'',
+  }};
+  if(body) opts.body=JSON.stringify(body);
+  const r = await fetch(url,opts);
+  if(!r.ok) throw new Error(await r.text());
+  const t = await r.text();
+  return t?JSON.parse(t):[];
 }
-async function sbPost(table, data) {
-  return sb(table, 'POST', data);
-}
-async function sbPatch(table, id, data) {
-  return sb(table, 'PATCH', data, id);
-}
-async function sbDelete(table, id) {
-  return sb(table, 'DELETE', null, id);
-}
+const sbGet=(t,e='')=>sb(t,'GET',null,null,e);
+const sbPost=(t,d)=>sb(t,'POST',d);
+const sbPatch=(t,id,d)=>sb(t,'PATCH',d,id);
+const sbDelete=(t,id)=>sb(t,'DELETE',null,id);
 
-// ══════════════════════════════════════════
-// NAVIGATION
-// ══════════════════════════════════════════
-const viewMeta = {
-  gerencia:      {title:'Gerencia · Panel ejecutivo',    bc:'Resumen global de la empresa'},
-  clientes:      {title:'Clientes · Base de datos',      bc:'Base de datos centralizada · Disponible para todos los proyectos'},
-  proyectos:     {title:'Proyectos',                     bc:'Seguimiento de todos los proyectos'},
-  tarifario:     {title:'Tarifario · Catálogo propio',   bc:'Añadir aquí = disponible en todos los presupuestos'},
-  cype:          {title:'CYPE 2026 · Base de precios',   bc:'529 partidas actualizadas a 2026'},
-  interiorismo:  {title:'Interiorismo & Mobiliario',     bc:'Propuestas · Pedidos · Márgenes'},
-  compras:       {title:'Compras',                       bc:'Registro de compras a proveedores'},
-  subcontratas:  {title:'Subcontratas',                  bc:'Trabajos subcontratados por proyecto'},
-  horas:         {title:'Control de horas',              bc:'Horas por trabajador y proyecto'},
-  proveedores:   {title:'Proveedores y subcontratas',    bc:'Base de datos centralizada de proveedores'},
-  facturas:      {title:'Facturas emitidas',             bc:'Seguimiento de cobros'},
+// ── NAVIGATION ───────────────────────────────────────
+const META = {
+  gerencia:     {t:'Gerencia · Panel ejecutivo',     b:'Resumen global de la empresa'},
+  clientes:     {t:'Clientes · Base de datos',       b:'Base de datos centralizada'},
+  proyectos:    {t:'Proyectos',                      b:'Todos los proyectos'},
+  tarifario:    {t:'Tarifario · Catálogo propio',    b:'Disponible en todos los presupuestos'},
+  cype:         {t:'CYPE 2026 · 524 partidas',       b:'Base de precios importada de tu Excel'},
+  interiorismo: {t:'Interiorismo & Mobiliario',      b:'Propuestas · Pedidos · Márgenes'},
+  compras:      {t:'Compras',                        b:'Registro de compras a proveedores'},
+  subcontratas: {t:'Subcontratas',                   b:'Trabajos subcontratados'},
+  horas:        {t:'Control de horas',               b:'Horas por trabajador y proyecto'},
+  proveedores:  {t:'Proveedores',                    b:'Base de datos · 32 proveedores importados'},
+  facturas:     {t:'Facturas emitidas',              b:'Seguimiento de cobros'},
 };
-
-document.querySelectorAll('.nav-item[data-view]').forEach(el => {
-  el.addEventListener('click', () => {
-    const v = el.dataset.view;
-    document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
-    el.classList.add('active');
-    document.querySelectorAll('.view').forEach(x => x.classList.remove('active'));
-    document.getElementById('view-'+v)?.classList.add('active');
-    const m = viewMeta[v] || {};
-    document.getElementById('tb-title').textContent = m.title || v;
-    document.getElementById('tb-bc').textContent = m.bc || '';
-    loaders[v]?.();
-  });
+document.querySelectorAll('.nav-item[data-view]').forEach(el=>{
+  el.addEventListener('click',()=>navTo(el.dataset.view));
 });
-
-// ══════════════════════════════════════════
-// TOAST
-// ══════════════════════════════════════════
-let toastTimer;
-function toast(msg, type='success') {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.className = `toast show ${type}`;
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+function navTo(v) {
+  document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
+  document.querySelector(`[data-view="${v}"]`)?.classList.add('active');
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
+  document.getElementById('view-'+v)?.classList.add('active');
+  const m=META[v]||{};
+  document.getElementById('tb-title').textContent=m.t||v;
+  document.getElementById('tb-bc').textContent=m.b||'';
+  loaders[v]?.();
 }
 
-// ══════════════════════════════════════════
-// MODALS
-// ══════════════════════════════════════════
-function openModal(id) { document.getElementById(id)?.classList.add('open'); }
-function closeModal(id) { document.getElementById(id)?.classList.remove('open'); }
-document.querySelectorAll('.overlay').forEach(o => {
-  o.addEventListener('click', e => { if(e.target===o) o.classList.remove('open'); });
-});
-function showQuickAdd() { openModal('m-quick'); }
+// ── TOAST ────────────────────────────────────────────
+let toastT;
+function toast(msg,type='success'){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.className=`toast show ${type}`;
+  clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('show'),3000);
+}
 
-// ══════════════════════════════════════════
-// CONFIRM DELETE
-// ══════════════════════════════════════════
-let pendingDelete = null;
-function confirmDelete(table, id, name) {
-  pendingDelete = {table, id};
-  document.getElementById('confirm-text').textContent = `¿Eliminar "${name}"? Esta acción no se puede deshacer.`;
+// ── MODALS ───────────────────────────────────────────
+function openModal(id){document.getElementById(id)?.classList.add('open')}
+function closeModal(id){document.getElementById(id)?.classList.remove('open')}
+document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open')}));
+
+// ── CONFIRM DELETE ───────────────────────────────────
+let pendingDel=null;
+function confirmDelete(table,id,name){
+  pendingDel={table,id};
+  document.getElementById('confirm-text').textContent=`¿Eliminar "${name}"? No se puede deshacer.`;
   document.getElementById('confirm-overlay').classList.add('open');
 }
-function closeConfirm() {
-  pendingDelete = null;
-  document.getElementById('confirm-overlay').classList.remove('open');
+function closeConfirm(){pendingDel=null;document.getElementById('confirm-overlay').classList.remove('open')}
+async function confirmDeleteAction(){
+  if(!pendingDel)return;
+  try{
+    await sbDelete(pendingDel.table,pendingDel.id);
+    toast('Eliminado ✅'); closeConfirm();
+    loaders[currentView()]?.(); loadGerencia();
+  }catch(e){toast('Error: '+e.message,'error')}
 }
-async function confirmDeleteAction() {
-  if (!pendingDelete) return;
-  try {
-    await sbDelete(pendingDelete.table, pendingDelete.id);
-    toast('Registro eliminado');
-    closeConfirm();
-    loaders[currentView()]?.();
-    loadGerencia();
-  } catch(e) {
-    toast('Error al eliminar: '+e.message, 'error');
-  }
-}
-function currentView() {
-  const a = document.querySelector('.view.active');
-  return a ? a.id.replace('view-','') : 'gerencia';
+function currentView(){return document.querySelector('.view.active')?.id.replace('view-','')||'gerencia'}
+
+// ── HELPERS ──────────────────────────────────────────
+function bE(v){const m={'Nuevo lead':'b-gray','Presupuesto enviado':'b-amber','Aprobado':'b-blue','En ejecución':'b-blue','Finalizado':'b-green','Facturado':'b-green','Cobrado':'b-navy','Cancelado':'b-red','Pendiente':'b-amber','Pagado':'b-green','Cobrada':'b-green','Parcial':'b-copper','Vencido':'b-red','Vencida':'b-red','Borrador':'b-gray','Enviada':'b-amber','Aprobada':'b-green','Rechazada':'b-red','En pedido':'b-blue','Entregada':'b-navy','Solicitado':'b-amber','Confirmado':'b-blue','En tránsito':'b-blue','Recibido':'b-copper'};return`<span class="badge ${m[v]||'b-gray'}">${v||'—'}</span>`}
+function bT(v){const m={'Particular':'b-blue','Empresa':'b-green','Promotora':'b-copper','Proveedor':'b-blue','Subcontrata':'b-green','Obra nueva':'b-navy','Rehabilitación integral':'b-green','Interiorismo':'b-copper','Mobiliario':'b-copper'};return`<span class="badge ${m[v]||'b-gray'}">${v||'—'}</span>`}
+function fmt(n){if(n===null||n===undefined)return'—';return Number(n).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€'}
+function fmtP(n){return n!=null?Number(n).toFixed(1)+'%':'—'}
+function fmtD(d){if(!d)return'—';const p=d.split('-');return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:d}
+function genId(pre,list){const ns=list.map(x=>parseInt((x[pre.toLowerCase()+'_id']||'0').replace(/\D/g,''))||0);return`${pre}-${(Math.max(0,...ns)+1).toString().padStart(3,'0')}`}
+function filterTable(tbId,inId){
+  const q=document.getElementById(inId)?.value.toLowerCase()||'';
+  document.querySelectorAll(`#${tbId} tr[data-search]`).forEach(r=>{r.style.display=r.dataset.search.includes(q)?'':'none'});
 }
 
-// ══════════════════════════════════════════
-// BADGES
-// ══════════════════════════════════════════
-function badgeEstado(v) {
-  const map = {
-    'Nuevo lead':'b-gray','Presupuesto enviado':'b-amber','Presupuestado':'b-amber',
-    'Aprobado':'b-blue','En ejecución':'b-blue','Finalizado':'b-green',
-    'Facturado':'b-green','Cobrado':'b-navy','Cancelado':'b-red',
-    'Pendiente':'b-amber','Pagado':'b-green','Cobrada':'b-green',
-    'Parcial':'b-copper','Vencido':'b-red','Vencida':'b-red',
-    'Borrador':'b-gray','Enviada':'b-amber','Aprobada':'b-green','Rechazada':'b-red',
-    'En pedido':'b-blue','Entregada':'b-navy',
-    'Solicitado':'b-amber','Confirmado':'b-blue','En tránsito':'b-blue','Recibido':'b-copper',
-  };
-  return `<span class="badge ${map[v]||'b-gray'}">${v||'—'}</span>`;
-}
-function badgeTipo(v) {
-  const map={'Particular':'b-blue','Empresa':'b-green','Promotora':'b-copper',
-    'Proveedor':'b-blue','Subcontrata':'b-green','Obra nueva':'b-navy',
-    'Rehabilitación integral':'b-green','Interiorismo':'b-copper','Mobiliario':'b-copper'};
-  return `<span class="badge ${map[v]||'b-gray'}">${v||'—'}</span>`;
-}
-function fmt(n) {
-  if(n===null||n===undefined||n==='') return '—';
-  return Number(n).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€';
-}
-function fmtPct(n) { return n!=null ? Number(n).toFixed(1)+'%' : '—'; }
-function fmtDate(d) { if(!d) return '—'; const p=d.split('-'); return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:d; }
-function genId(prefix, list) {
-  const nums = list.map(x=>parseInt((x[prefix.toLowerCase()+'_id']||'0').replace(/\D/g,''))||0);
-  const next = (Math.max(0,...nums)+1).toString().padStart(3,'0');
-  return `${prefix}-${next}`;
+// ── CACHES ───────────────────────────────────────────
+let CC=[],PC=[],TC=[],ProvC=[],IntC=[],CoC=[],ScC=[],HC=[],FC=[];
+
+// ── GERENCIA ─────────────────────────────────────────
+async function loadGerencia(){
+  try{
+    const [cl,pr,ta,cy]=await Promise.all([sbGet('clientes'),sbGet('proyectos'),sbGet('tarifario'),sbGet('precios_cype','?select=count')]);
+    CC=cl; PC=pr; TC=ta;
+    document.getElementById('k-clientes').textContent=cl.length;
+    document.getElementById('k-proyectos').textContent=pr.filter(p=>['Aprobado','En ejecución'].includes(p.estado)).length;
+    document.getElementById('k-tarifario').textContent=ta.length;
+    const cyCount=await sbGet('precios_cype','?select=id');
+    document.getElementById('k-cype').textContent=cyCount.length;
+    document.getElementById('cype-badge').textContent=cyCount.length;
+    const tbody=document.getElementById('gerencia-proyectos');
+    if(!pr.length){tbody.innerHTML=`<tr><td colspan="5"><div class="empty"><div class="empty-icon">📁</div><div class="empty-text">Aún no hay proyectos</div><button class="btn btn-primary" onclick="openModal('m-proyecto')">＋ Nuevo proyecto</button></div></td></tr>`;return}
+    tbody.innerHTML=pr.slice(0,8).map(p=>`<tr><td class="td-mono" style="color:var(--text-soft)">${p.proyecto_id||'—'}</td><td><strong>${p.nombre}</strong></td><td style="color:var(--text-soft)">${p.cliente_id||'—'}</td><td>${bT(p.tipo)}</td><td>${bE(p.estado)}</td></tr>`).join('');
+    const s=document.getElementById('conn-status');
+    s.style.background='var(--green-soft)';s.style.color='var(--green)';s.textContent='🟢 Conectado';
+  }catch(e){console.error(e);const s=document.getElementById('conn-status');s.style.background='var(--red-soft)';s.style.color='var(--red)';s.textContent='🔴 Error'}
 }
 
-// ══════════════════════════════════════════
-// FILTER TABLE
-// ══════════════════════════════════════════
-function filterTable(tbodyId, inputId) {
-  const q = document.getElementById(inputId)?.value.toLowerCase() || '';
-  const rows = document.querySelectorAll(`#${tbodyId} tr[data-search]`);
-  rows.forEach(r => {
-    r.style.display = r.dataset.search.includes(q) ? '' : 'none';
-  });
+// ── CLIENTES ─────────────────────────────────────────
+async function loadClientes(){
+  const tb=document.getElementById('clientes-tbody');
+  try{
+    CC=await sbGet('clientes','?order=created_at.desc');
+    document.getElementById('clientes-count').textContent=CC.length+' clientes';
+    if(!CC.length){tb.innerHTML=`<tr><td colspan="7"><div class="empty"><div class="empty-icon">🤝</div><div class="empty-text">Sin clientes aún</div><button class="btn btn-primary" onclick="openModal('m-cliente')">＋ Nuevo cliente</button></div></td></tr>`;return}
+    tb.innerHTML=CC.map(c=>`<tr data-search="${(c.nombre+c.cif+c.email+c.tipo).toLowerCase()}"><td class="td-mono" style="color:var(--text-soft)">${c.cliente_id||'—'}</td><td><strong>${c.nombre}</strong></td><td class="td-mono">${c.cif||'—'}</td><td>${c.telefono||'—'}</td><td style="color:var(--navy-mid)">${c.email||'—'}</td><td>${bT(c.tipo)}</td><td><div class="td-actions"><button class="btn btn-ghost btn-icon btn-sm" onclick="editCliente('${c.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('clientes','${c.id}','${c.nombre.replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`).join('');
+    populateSelects();
+  }catch(e){tb.innerHTML=`<tr><td colspan="7" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`}
 }
-
-// ══════════════════════════════════════════
-// GERENCIA
-// ══════════════════════════════════════════
-async function loadGerencia() {
-  try {
-    const [cl,pr,ta,cy] = await Promise.all([
-      sbGet('clientes','?select=count'),
-      sbGet('proyectos','?select=count'),
-      sbGet('tarifario','?select=count'),
-      sbGet('precios_cype','?select=count'),
-    ]);
-    // Supabase count
-    const count = arr => Array.isArray(arr) ? arr.length : 0;
-    const [clientes,proyectos,tarifario,cype] = await Promise.all([
-      sbGet('clientes'),sbGet('proyectos'),sbGet('tarifario'),sbGet('precios_cype'),
-    ]);
-    document.getElementById('k-clientes').textContent = clientes.length;
-    document.getElementById('k-proyectos').textContent = proyectos.filter(p=>['Aprobado','En ejecución'].includes(p.estado)).length;
-    document.getElementById('k-tarifario').textContent = tarifario.length;
-    document.getElementById('k-cype').textContent = cype.length;
-    document.getElementById('cype-badge').textContent = cype.length || '—';
-
-    const tbody = document.getElementById('gerencia-proyectos');
-    if (!proyectos.length) {
-      tbody.innerHTML = `<tr><td colspan="5"><div class="empty"><div class="empty-icon">📁</div><div class="empty-text">Aún no hay proyectos. ¡Crea el primero!</div><button class="btn btn-primary" onclick="openModal('m-proyecto')">＋ Nuevo proyecto</button></div></td></tr>`;
-      return;
-    }
-    tbody.innerHTML = proyectos.slice(0,8).map(p=>`
-      <tr data-search="${(p.proyecto_id+p.nombre+p.tipo+p.estado).toLowerCase()}">
-        <td class="td-mono" style="color:var(--text-soft)">${p.proyecto_id||'—'}</td>
-        <td><strong>${p.nombre}</strong></td>
-        <td style="color:var(--text-soft)">${p.cliente_id||'—'}</td>
-        <td>${badgeTipo(p.tipo)}</td>
-        <td>${badgeEstado(p.estado)}</td>
-      </tr>`).join('');
-  } catch(e) {
-    console.error(e);
-  }
-}
-
-// ══════════════════════════════════════════
-// CLIENTES
-// ══════════════════════════════════════════
-let clientesCache = [];
-async function loadClientes() {
-  const tbody = document.getElementById('clientes-tbody');
-  try {
-    clientesCache = await sbGet('clientes','?order=created_at.desc');
-    document.getElementById('clientes-count').textContent = clientesCache.length + ' clientes';
-    if (!clientesCache.length) {
-      tbody.innerHTML = `<tr><td colspan="7"><div class="empty"><div class="empty-icon">🤝</div><div class="empty-text">Sin clientes aún. ¡Añade el primero!</div><button class="btn btn-primary" onclick="openModal('m-cliente')">＋ Nuevo cliente</button></div></td></tr>`;
-      return;
-    }
-    tbody.innerHTML = clientesCache.map(c=>`
-      <tr data-search="${(c.nombre+c.cif+c.email+c.telefono+c.tipo).toLowerCase()}">
-        <td class="td-mono" style="color:var(--text-soft)">${c.cliente_id||'—'}</td>
-        <td><strong>${c.nombre}</strong></td>
-        <td class="td-mono">${c.cif||'—'}</td>
-        <td>${c.telefono||'—'}</td>
-        <td style="color:var(--navy-mid)">${c.email||'—'}</td>
-        <td>${badgeTipo(c.tipo)}</td>
-        <td><div class="td-actions">
-          <button class="btn btn-ghost btn-icon btn-sm" onclick="editCliente('${c.id}')" title="Editar">✏️</button>
-          <button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('clientes','${c.id}','${c.nombre}')" title="Eliminar">🗑</button>
-        </div></td>
-      </tr>`).join('');
-  } catch(e) {
-    tbody.innerHTML = `<tr><td colspan="7" style="color:var(--red);text-align:center;padding:20px">Error al cargar: ${e.message}</td></tr>`;
-  }
-}
-
-function newCliente() {
-  document.getElementById('m-cliente-title').textContent = 'Nuevo cliente';
-  ['c-id','c-nombre','c-cif','c-tel','c-email','c-dir','c-notas'].forEach(id => document.getElementById(id).value='');
-  document.getElementById('c-tipo').value='Particular';
-  document.getElementById('c-pago').value='Transferencia';
+function editCliente(id){
+  const c=CC.find(x=>x.id===id);if(!c)return;
+  document.getElementById('m-cliente-title').textContent='Editar cliente';
+  ['c-id','c-nombre','c-cif','c-tel','c-email','c-dir','c-notas'].forEach((f,i)=>{document.getElementById(f).value=[c.id,c.nombre,c.cif,c.telefono,c.email,c.direccion,c.notas][i]||''});
+  document.getElementById('c-tipo').value=c.tipo||'Particular';
+  document.getElementById('c-pago').value=c.forma_pago||'Transferencia';
   openModal('m-cliente');
 }
-function editCliente(id) {
-  const c = clientesCache.find(x=>x.id===id);
-  if(!c) return;
-  document.getElementById('m-cliente-title').textContent = 'Editar cliente';
-  document.getElementById('c-id').value = c.id;
-  document.getElementById('c-nombre').value = c.nombre||'';
-  document.getElementById('c-cif').value = c.cif||'';
-  document.getElementById('c-tel').value = c.telefono||'';
-  document.getElementById('c-email').value = c.email||'';
-  document.getElementById('c-dir').value = c.direccion||'';
-  document.getElementById('c-tipo').value = c.tipo||'Particular';
-  document.getElementById('c-pago').value = c.forma_pago||'Transferencia';
-  document.getElementById('c-notas').value = c.notas||'';
-  openModal('m-cliente');
+async function saveCliente(){
+  const nombre=document.getElementById('c-nombre').value.trim();
+  if(!nombre){toast('El nombre es obligatorio','error');return}
+  const id=document.getElementById('c-id').value;
+  const d={nombre,cif:document.getElementById('c-cif').value,telefono:document.getElementById('c-tel').value,email:document.getElementById('c-email').value,direccion:document.getElementById('c-dir').value,tipo:document.getElementById('c-tipo').value,forma_pago:document.getElementById('c-pago').value,notas:document.getElementById('c-notas').value};
+  try{
+    if(id){await sbPatch('clientes',id,d);toast('Cliente actualizado ✅')}
+    else{d.cliente_id=genId('CLI',CC);await sbPost('clientes',d);toast('Cliente guardado ✅')}
+    closeModal('m-cliente');document.getElementById('c-id').value='';
+    loadClientes();loadGerencia();populateSelects();
+  }catch(e){toast('Error: '+e.message,'error')}
 }
-async function saveCliente() {
-  const nombre = document.getElementById('c-nombre').value.trim();
-  if(!nombre) { toast('El nombre es obligatorio','error'); return; }
-  const id = document.getElementById('c-id').value;
-  const data = {
-    nombre, cif: document.getElementById('c-cif').value,
-    telefono: document.getElementById('c-tel').value,
-    email: document.getElementById('c-email').value,
-    direccion: document.getElementById('c-dir').value,
-    tipo: document.getElementById('c-tipo').value,
-    forma_pago: document.getElementById('c-pago').value,
-    notas: document.getElementById('c-notas').value,
-  };
-  try {
-    if (id) {
-      await sbPatch('clientes', id, data);
-      toast('Cliente actualizado ✅');
-    } else {
-      data.cliente_id = genId('CLI', clientesCache);
-      await sbPost('clientes', data);
-      toast('Cliente guardado ✅');
-    }
-    closeModal('m-cliente');
-    loadClientes(); loadGerencia();
+
+// ── PROYECTOS ────────────────────────────────────────
+async function loadProyectos(){
+  const tb=document.getElementById('proyectos-tbody');
+  try{
+    PC=await sbGet('proyectos','?order=created_at.desc');
+    document.getElementById('proyectos-count').textContent=PC.length+' proyectos';
+    if(!PC.length){tb.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="empty-icon">📁</div><div class="empty-text">Sin proyectos aún</div><button class="btn btn-primary" onclick="openModal('m-proyecto')">＋ Nuevo proyecto</button></div></td></tr>`;return}
+    tb.innerHTML=PC.map(p=>`<tr data-search="${(p.proyecto_id+p.nombre+p.cliente_id+p.tipo+p.estado).toLowerCase()}"><td class="td-mono" style="color:var(--text-soft)">${p.proyecto_id||'—'}</td><td><strong>${p.nombre}</strong></td><td>${p.cliente_id||'—'}</td><td>${bT(p.tipo)}</td><td>${bE(p.estado)}</td><td>${p.responsable||'—'}</td><td>${fmtD(p.fecha_inicio)}</td><td><div class="td-actions"><button class="btn btn-ghost btn-icon btn-sm" onclick="editProyecto('${p.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('proyectos','${p.id}','${p.nombre.replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`).join('');
     populateSelects();
-  } catch(e) { toast('Error: '+e.message,'error'); }
+  }catch(e){tb.innerHTML=`<tr><td colspan="8" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`}
+}
+function editProyecto(id){
+  const p=PC.find(x=>x.id===id);if(!p)return;
+  document.getElementById('m-proyecto-title').textContent='Editar proyecto';
+  document.getElementById('p-id').value=p.id;document.getElementById('p-nombre').value=p.nombre||'';
+  document.getElementById('p-cliente').value=p.cliente_id||'';document.getElementById('p-tipo').value=p.tipo||'Obra nueva';
+  document.getElementById('p-estado').value=p.estado||'Nuevo lead';document.getElementById('p-resp').value=p.responsable||'Jose Asins';
+  document.getElementById('p-fecha').value=p.fecha_inicio||'';document.getElementById('p-dir').value=p.direccion_obra||'';
+  document.getElementById('p-notas').value=p.notas||'';openModal('m-proyecto');
+}
+async function saveProyecto(){
+  const nombre=document.getElementById('p-nombre').value.trim();
+  if(!nombre){toast('El nombre es obligatorio','error');return}
+  const id=document.getElementById('p-id').value;
+  const d={cliente_id:document.getElementById('p-cliente').value||null,nombre,tipo:document.getElementById('p-tipo').value,estado:document.getElementById('p-estado').value,responsable:document.getElementById('p-resp').value,fecha_inicio:document.getElementById('p-fecha').value||null,direccion_obra:document.getElementById('p-dir').value,notas:document.getElementById('p-notas').value};
+  try{
+    if(id){await sbPatch('proyectos',id,d);toast('Proyecto actualizado ✅')}
+    else{d.proyecto_id=genId('PRY',PC);await sbPost('proyectos',d);toast('Proyecto creado ✅')}
+    closeModal('m-proyecto');document.getElementById('p-id').value='';
+    loadProyectos();loadGerencia();populateSelects();
+  }catch(e){toast('Error: '+e.message,'error')}
 }
 
-// ══════════════════════════════════════════
-// PROYECTOS
-// ══════════════════════════════════════════
-let proyectosCache = [];
-async function loadProyectos() {
-  const tbody = document.getElementById('proyectos-tbody');
-  try {
-    proyectosCache = await sbGet('proyectos','?order=created_at.desc');
-    document.getElementById('proyectos-count').textContent = proyectosCache.length + ' proyectos';
-    if (!proyectosCache.length) {
-      tbody.innerHTML = `<tr><td colspan="8"><div class="empty"><div class="empty-icon">📁</div><div class="empty-text">Sin proyectos aún.</div><button class="btn btn-primary" onclick="openModal('m-proyecto')">＋ Nuevo proyecto</button></div></td></tr>`;
-      return;
-    }
-    tbody.innerHTML = proyectosCache.map(p=>`
-      <tr data-search="${(p.proyecto_id+p.nombre+p.cliente_id+p.tipo+p.estado+p.responsable).toLowerCase()}">
-        <td class="td-mono" style="color:var(--text-soft)">${p.proyecto_id||'—'}</td>
-        <td><strong>${p.nombre}</strong>${p.direccion_obra?`<br><span style="font-size:10px;color:var(--text-soft)">${p.direccion_obra}</span>`:''}</td>
-        <td>${p.cliente_id||'—'}</td>
-        <td>${badgeTipo(p.tipo)}</td>
-        <td>${badgeEstado(p.estado)}</td>
-        <td>${p.responsable||'—'}</td>
-        <td>${fmtDate(p.fecha_inicio)}</td>
-        <td><div class="td-actions">
-          <button class="btn btn-ghost btn-icon btn-sm" onclick="editProyecto('${p.id}')" title="Editar">✏️</button>
-          <button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('proyectos','${p.id}','${p.nombre}')" title="Eliminar">🗑</button>
-        </div></td>
-      </tr>`).join('');
-  } catch(e) {
-    tbody.innerHTML = `<tr><td colspan="8" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;
-  }
+// ── TARIFARIO ────────────────────────────────────────
+async function loadTarifario(){
+  const tb=document.getElementById('tarifario-tbody');
+  try{
+    TC=await sbGet('tarifario','?order=created_at.desc');
+    document.getElementById('tarifario-count').textContent=TC.length+' artículos';
+    if(!TC.length){tb.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="empty-icon">📋</div><div class="empty-text">El tarifario está vacío</div><button class="btn btn-primary" onclick="openModal('m-tarifario')">＋ Nuevo artículo</button></div></td></tr>`;return}
+    tb.innerHTML=TC.map(t=>`<tr data-search="${(t.codigo+t.descripcion+t.categoria+t.marca).toLowerCase()}"><td class="td-mono" style="color:var(--navy-mid);font-weight:700">${t.codigo}</td><td>${t.descripcion}</td><td style="text-align:center">${t.unidad||'Ud'}</td><td class="td-mono">${fmt(t.precio_coste)}</td><td class="td-mono" style="color:var(--green)">${fmtP(t.margen_pct)}</td><td class="td-mono" style="font-weight:700">${fmt(t.precio_venta)}</td><td>${t.categoria?`<span class="badge b-copper">${t.categoria}</span>`:'—'}</td><td><div class="td-actions"><button class="btn btn-ghost btn-icon btn-sm" onclick="editTarifario('${t.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('tarifario','${t.id}','${t.descripcion.replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`).join('');
+    populateIntCatalog();
+  }catch(e){tb.innerHTML=`<tr><td colspan="8" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`}
+}
+function calcPrecioVenta(){
+  const c=parseFloat(document.getElementById('t-coste').value)||0;
+  const m=parseFloat(document.getElementById('t-margen').value)||0;
+  const pv=m<100?c/(1-m/100):0;
+  document.getElementById('t-pventa').value=pv>0?pv.toFixed(2)+' €':'—';
+}
+function editTarifario(id){
+  const t=TC.find(x=>x.id===id);if(!t)return;
+  document.getElementById('m-tarif-title').textContent='Editar artículo';
+  document.getElementById('t-id').value=t.id;document.getElementById('t-codigo').value=t.codigo||'';
+  document.getElementById('t-desc').value=t.descripcion||'';document.getElementById('t-unidad').value=t.unidad||'Ud';
+  document.getElementById('t-coste').value=t.precio_coste||0;document.getElementById('t-margen').value=t.margen_pct||30;
+  document.getElementById('t-cat').value=t.categoria||'Mobiliario';document.getElementById('t-marca').value=t.marca||'';
+  document.getElementById('t-notas').value=t.notas||'';calcPrecioVenta();openModal('m-tarifario');
+}
+async function saveTarifario(){
+  const codigo=document.getElementById('t-codigo').value.trim();
+  const desc=document.getElementById('t-desc').value.trim();
+  if(!codigo||!desc){toast('Código y descripción son obligatorios','error');return}
+  const id=document.getElementById('t-id').value;
+  const d={codigo,descripcion:desc,unidad:document.getElementById('t-unidad').value,precio_coste:parseFloat(document.getElementById('t-coste').value)||0,margen_pct:parseFloat(document.getElementById('t-margen').value)||30,categoria:document.getElementById('t-cat').value,marca:document.getElementById('t-marca').value,notas:document.getElementById('t-notas').value};
+  try{
+    if(id){await sbPatch('tarifario',id,d);toast('Artículo actualizado ✅')}
+    else{await sbPost('tarifario',d);toast('Artículo añadido ✅')}
+    closeModal('m-tarifario');document.getElementById('t-id').value='';
+    loadTarifario();loadGerencia();
+  }catch(e){toast('Error: '+e.message,'error')}
 }
 
-function editProyecto(id) {
-  const p = proyectosCache.find(x=>x.id===id);
-  if(!p) return;
-  document.getElementById('m-proyecto-title').textContent = 'Editar proyecto';
-  document.getElementById('p-id').value = p.id;
-  document.getElementById('p-cliente').value = p.cliente_id||'';
-  document.getElementById('p-nombre').value = p.nombre||'';
-  document.getElementById('p-tipo').value = p.tipo||'Obra nueva';
-  document.getElementById('p-estado').value = p.estado||'Nuevo lead';
-  document.getElementById('p-resp').value = p.responsable||'Jose Asins';
-  document.getElementById('p-fecha').value = p.fecha_inicio||'';
-  document.getElementById('p-dir').value = p.direccion_obra||'';
-  document.getElementById('p-notas').value = p.notas||'';
-  openModal('m-proyecto');
+// ── CYPE ─────────────────────────────────────────────
+async function loadCype(){
+  const tb=document.getElementById('cype-tbody');
+  try{
+    const data=await sbGet('precios_cype','?order=codigo.asc');
+    if(!data.length){tb.innerHTML=`<tr><td colspan="5"><div class="empty"><div class="empty-icon">📐</div><div class="empty-text">Ejecuta el SQL de datos reales para importar las 524 partidas</div></div></td></tr>`;return}
+    // Populate chapter filter
+    const caps=[...new Set(data.map(c=>c.capitulo).filter(Boolean))].sort();
+    const sel=document.getElementById('filter-cype-cap');
+    sel.innerHTML='<option value="">Todos los capítulos</option>'+caps.map(c=>`<option>${c}</option>`).join('');
+    sel.onchange=()=>{
+      const q=document.getElementById('search-cype').value.toLowerCase();
+      const cap=sel.value;
+      document.querySelectorAll('#cype-tbody tr[data-search]').forEach(r=>{
+        const matchQ=r.dataset.search.includes(q);
+        const matchC=!cap||r.dataset.cap===cap;
+        r.style.display=matchQ&&matchC?'':'none';
+      });
+    };
+    tb.innerHTML=data.map(c=>`<tr data-search="${(c.codigo+c.descripcion+c.capitulo).toLowerCase()}" data-cap="${c.capitulo||''}"><td class="td-mono" style="color:var(--navy-mid);font-weight:700">${c.codigo}</td><td>${c.descripcion}</td><td style="text-align:center">${c.unidad||'—'}</td><td class="td-mono" style="font-weight:700">${fmt(c.precio)}</td><td>${c.capitulo?`<span class="badge b-gray" style="font-size:9px">${c.capitulo}</span>`:'—'}</td></tr>`).join('');
+  }catch(e){tb.innerHTML=`<tr><td colspan="5" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`}
 }
-async function saveProyecto() {
-  const nombre = document.getElementById('p-nombre').value.trim();
-  if(!nombre) { toast('El nombre es obligatorio','error'); return; }
-  const id = document.getElementById('p-id').value;
-  const data = {
-    cliente_id: document.getElementById('p-cliente').value||null,
-    nombre,
-    tipo: document.getElementById('p-tipo').value,
-    estado: document.getElementById('p-estado').value,
-    responsable: document.getElementById('p-resp').value,
-    fecha_inicio: document.getElementById('p-fecha').value||null,
-    direccion_obra: document.getElementById('p-dir').value,
-    notas: document.getElementById('p-notas').value,
-  };
-  try {
-    if (id) {
-      await sbPatch('proyectos', id, data);
-      toast('Proyecto actualizado ✅');
-    } else {
-      data.proyecto_id = genId('PRY', proyectosCache);
-      await sbPost('proyectos', data);
-      toast('Proyecto creado ✅');
-    }
-    closeModal('m-proyecto');
-    loadProyectos(); loadGerencia();
+
+// ── INTERIORISMO ──────────────────────────────────────
+async function loadInteriorismo(){
+  const tb=document.getElementById('interiorismo-tbody');
+  try{
+    IntC=await sbGet('interiorismo_lineas','?order=created_at.desc');
+    document.getElementById('interiorismo-count').textContent=IntC.length+' líneas';
+    if(!IntC.length){tb.innerHTML=`<tr><td colspan="10"><div class="empty"><div class="empty-icon">🛋</div><div class="empty-text">Sin propuestas aún</div><button class="btn btn-copper" onclick="openModal('m-interiorismo')">＋ Añadir artículo</button></div></td></tr>`;return}
+    tb.innerHTML=IntC.map(i=>`<tr data-search="${(i.proyecto_id+i.estancia+i.descripcion+i.marca).toLowerCase()}"><td class="td-mono" style="color:var(--text-soft)">${i.proyecto_id||'—'}</td><td>${i.estancia?`<span class="badge b-gray">${i.estancia}</span>`:'—'}</td><td class="td-mono">${i.ref_catalogo||'—'}</td><td>${i.descripcion||'—'}</td><td>${i.cantidad||1}</td><td class="td-mono" style="font-weight:700">${fmt(i.pvp_neto)}</td><td class="td-mono" style="color:var(--green)">${i.coste_neto&&i.pvp_neto?fmtP((i.pvp_neto-i.coste_neto)/i.pvp_neto*100):'—'}</td><td>${bE(i.estado_propuesta)}</td><td>${bE(i.estado_pedido)}</td><td><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('interiorismo_lineas','${i.id}','${(i.descripcion||'artículo').replace(/'/g,"\\'")}')">🗑</button></td></tr>`).join('');
+  }catch(e){tb.innerHTML=`<tr><td colspan="10" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`}
+}
+function loadTarifarioItem(){
+  const ref=document.getElementById('i-ref').value;if(!ref)return;
+  const item=TC.find(t=>t.codigo===ref);
+  if(item){document.getElementById('i-desc').value=item.descripcion||'';document.getElementById('i-marca').value=item.marca||'';document.getElementById('i-pvp').value=item.precio_venta||0;document.getElementById('i-coste').value=item.precio_coste||0;calcIntPvp()}
+}
+function calcIntPvp(){
+  const cant=parseFloat(document.getElementById('i-cant').value)||1;
+  const pvp=parseFloat(document.getElementById('i-pvp').value)||0;
+  const dto=parseFloat(document.getElementById('i-dto').value)||0;
+  const neto=cant*pvp*(1-dto/100);
+  document.getElementById('i-neto').value=neto>0?neto.toFixed(2)+' €':'—';
+}
+async function saveInteriorismo(){
+  const proy=document.getElementById('i-proyecto').value;
+  if(!proy){toast('Selecciona un proyecto','error');return}
+  const d={proyecto_id:proy,estancia:document.getElementById('i-estancia').value,ref_catalogo:document.getElementById('i-ref').value||null,descripcion:document.getElementById('i-desc').value,marca:document.getElementById('i-marca').value,acabado:document.getElementById('i-acabado').value,unidad:'Ud',cantidad:parseFloat(document.getElementById('i-cant').value)||1,pvp_catalogo:parseFloat(document.getElementById('i-pvp').value)||0,dto_cliente_pct:parseFloat(document.getElementById('i-dto').value)||0,coste_neto:parseFloat(document.getElementById('i-coste').value)||0,iva_pct:document.getElementById('i-iva').value,estado_propuesta:document.getElementById('i-eprop').value,estado_cobro:'Pendiente',estado_pedido:document.getElementById('i-eped').value,fecha_entrega:document.getElementById('i-fentrega').value||null,notas:document.getElementById('i-notas').value};
+  try{await sbPost('interiorismo_lineas',d);toast('Artículo añadido ✅');closeModal('m-interiorismo');loadInteriorismo()}catch(e){toast('Error: '+e.message,'error')}
+}
+
+// ── COMPRAS ───────────────────────────────────────────
+async function loadCompras(){
+  const tb=document.getElementById('compras-tbody');
+  try{
+    CoC=await sbGet('compras','?order=fecha.desc');
+    document.getElementById('compras-count').textContent=CoC.length+' registros';
+    if(!CoC.length){tb.innerHTML=`<tr><td colspan="9"><div class="empty"><div class="empty-icon">🛒</div><div class="empty-text">Sin compras</div><button class="btn btn-primary" onclick="openModal('m-compra')">＋ Nueva</button></div></td></tr>`;return}
+    tb.innerHTML=CoC.map(c=>{const pct=c.iva_pct==='Exento'?0:parseFloat(c.iva_pct)||21;const tot=c.base_imponible*(1+pct/100);return`<tr data-search="${(c.proyecto_id+c.proveedor_id+c.concepto).toLowerCase()}"><td>${fmtD(c.fecha)}</td><td class="td-mono" style="color:var(--text-soft)">${c.proyecto_id||'—'}</td><td>${c.proveedor_id||'—'}</td><td>${c.concepto||'—'}</td><td class="td-mono">${fmt(c.base_imponible)}</td><td class="td-mono">${c.iva_pct}</td><td class="td-mono" style="font-weight:700">${fmt(tot)}</td><td>${bE(c.estado_pago)}</td><td><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('compras','${c.id}','${(c.concepto||'compra').replace(/'/g,"\\'")}')">🗑</button></td></tr>`}).join('');
+  }catch(e){tb.innerHTML=`<tr><td colspan="9" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`}
+}
+async function saveCompra(){
+  const d={fecha:document.getElementById('co-fecha').value||new Date().toISOString().split('T')[0],proyecto_id:document.getElementById('co-proyecto').value||null,proveedor_id:document.getElementById('co-prov').value||null,concepto:document.getElementById('co-concepto').value,base_imponible:parseFloat(document.getElementById('co-base').value)||0,iva_pct:document.getElementById('co-iva').value,estado_pago:document.getElementById('co-estado').value,fecha_vencimiento:document.getElementById('co-vto').value||null,notas:document.getElementById('co-notas').value};
+  try{await sbPost('compras',d);toast('Compra registrada ✅');closeModal('m-compra');loadCompras()}catch(e){toast('Error: '+e.message,'error')}
+}
+
+// ── SUBCONTRATAS ──────────────────────────────────────
+async function loadSubcontratas(){
+  const tb=document.getElementById('subcontratas-tbody');
+  try{
+    ScC=await sbGet('subcontratas','?order=fecha.desc');
+    document.getElementById('subcontratas-count').textContent=ScC.length+' registros';
+    if(!ScC.length){tb.innerHTML=`<tr><td colspan="9"><div class="empty"><div class="empty-icon">👷</div><div class="empty-text">Sin subcontratas</div><button class="btn btn-primary" onclick="openModal('m-subcontrata')">＋ Nueva</button></div></td></tr>`;return}
+    tb.innerHTML=ScC.map(s=>{const pct=s.iva_pct==='Exento'?0:parseFloat(s.iva_pct)||21;const tot=s.importe*(1+pct/100);return`<tr data-search="${(s.proyecto_id+s.proveedor_id+s.trabajo).toLowerCase()}"><td>${fmtD(s.fecha)}</td><td class="td-mono" style="color:var(--text-soft)">${s.proyecto_id||'—'}</td><td>${s.proveedor_id||'—'}</td><td>${s.trabajo||'—'}</td><td class="td-mono">${fmt(s.importe)}</td><td class="td-mono">${s.iva_pct}</td><td class="td-mono" style="font-weight:700">${fmt(tot)}</td><td>${bE(s.estado_pago)}</td><td><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('subcontratas','${s.id}','${(s.trabajo||'subcontrata').replace(/'/g,"\\'")}')">🗑</button></td></tr>`}).join('');
+  }catch(e){tb.innerHTML=`<tr><td colspan="9" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`}
+}
+async function saveSubcontrata(){
+  const d={fecha:document.getElementById('sc-fecha').value||new Date().toISOString().split('T')[0],proyecto_id:document.getElementById('sc-proyecto').value||null,proveedor_id:document.getElementById('sc-prov').value||null,trabajo:document.getElementById('sc-trabajo').value,importe:parseFloat(document.getElementById('sc-importe').value)||0,iva_pct:document.getElementById('sc-iva').value,estado_pago:document.getElementById('sc-estado').value,fecha_vencimiento:document.getElementById('sc-vto').value||null};
+  try{await sbPost('subcontratas',d);toast('Subcontrata registrada ✅');closeModal('m-subcontrata');loadSubcontratas()}catch(e){toast('Error: '+e.message,'error')}
+}
+
+// ── HORAS ─────────────────────────────────────────────
+async function loadHoras(){
+  const tb=document.getElementById('horas-tbody');
+  try{
+    HC=await sbGet('horas','?order=fecha.desc');
+    document.getElementById('horas-count').textContent=HC.length+' registros';
+    if(!HC.length){tb.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="empty-icon">⏱</div><div class="empty-text">Sin horas registradas</div><button class="btn btn-primary" onclick="openModal('m-hora')">＋ Registrar</button></div></td></tr>`;return}
+    tb.innerHTML=HC.map(h=>`<tr data-search="${(h.proyecto_id+h.trabajador+h.descripcion).toLowerCase()}"><td>${fmtD(h.fecha)}</td><td class="td-mono" style="color:var(--text-soft)">${h.proyecto_id||'—'}</td><td><strong>${h.trabajador||'—'}</strong></td><td class="td-mono">${h.horas}h</td><td class="td-mono">${fmt(h.coste_hora)}</td><td class="td-mono" style="font-weight:700">${fmt(h.total)}</td><td style="color:var(--text-soft)">${h.descripcion||'—'}</td><td><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('horas','${h.id}','horas ${h.trabajador}')">🗑</button></td></tr>`).join('');
+  }catch(e){tb.innerHTML=`<tr><td colspan="8" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`}
+}
+async function saveHora(){
+  const d={fecha:document.getElementById('h-fecha').value||new Date().toISOString().split('T')[0],proyecto_id:document.getElementById('h-proyecto').value||null,trabajador:document.getElementById('h-trab').value,horas:parseFloat(document.getElementById('h-horas').value)||0,coste_hora:parseFloat(document.getElementById('h-coste').value)||18,descripcion:document.getElementById('h-desc').value};
+  try{await sbPost('horas',d);toast('Horas registradas ✅');closeModal('m-hora');loadHoras()}catch(e){toast('Error: '+e.message,'error')}
+}
+
+// ── PROVEEDORES ───────────────────────────────────────
+async function loadProveedores(){
+  const tb=document.getElementById('proveedores-tbody');
+  try{
+    ProvC=await sbGet('proveedores','?order=nombre.asc');
+    document.getElementById('proveedores-count').textContent=ProvC.length+' proveedores';
+    if(!ProvC.length){tb.innerHTML=`<tr><td colspan="7"><div class="empty"><div class="empty-icon">🏭</div><div class="empty-text">Sin proveedores. Ejecuta el SQL de datos reales.</div></div></td></tr>`;return}
+    tb.innerHTML=ProvC.map(p=>`<tr data-search="${(p.nombre+p.cif+p.especialidad+p.tipo).toLowerCase()}"><td><strong>${p.nombre}</strong></td><td class="td-mono">${p.cif||'—'}</td><td>${bT(p.tipo)}</td><td>${p.especialidad||'—'}</td><td>${p.telefono||'—'}</td><td>${p.forma_pago||'—'}</td><td><div class="td-actions"><button class="btn btn-ghost btn-icon btn-sm" onclick="editProveedor('${p.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('proveedores','${p.id}','${p.nombre.replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`).join('');
     populateSelects();
-  } catch(e) { toast('Error: '+e.message,'error'); }
+  }catch(e){tb.innerHTML=`<tr><td colspan="7" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`}
 }
-
-// ══════════════════════════════════════════
-// TARIFARIO
-// ══════════════════════════════════════════
-let tarifarioCache = [];
-async function loadTarifario() {
-  const tbody = document.getElementById('tarifario-tbody');
-  try {
-    tarifarioCache = await sbGet('tarifario','?order=created_at.desc');
-    document.getElementById('tarifario-count').textContent = tarifarioCache.length + ' artículos';
-    if (!tarifarioCache.length) {
-      tbody.innerHTML = `<tr><td colspan="8"><div class="empty"><div class="empty-icon">📋</div><div class="empty-text">El tarifario está vacío. Añade tus primeros artículos.</div><button class="btn btn-primary" onclick="openModal('m-tarifario')">＋ Nuevo artículo</button></div></td></tr>`;
-      return;
-    }
-    tbody.innerHTML = tarifarioCache.map(t=>`
-      <tr data-search="${(t.codigo+t.descripcion+t.categoria+t.marca).toLowerCase()}">
-        <td class="td-mono" style="color:var(--navy-mid);font-weight:700">${t.codigo}</td>
-        <td>${t.descripcion}</td>
-        <td style="text-align:center">${t.unidad||'Ud'}</td>
-        <td class="td-mono">${fmt(t.precio_coste)}</td>
-        <td class="td-mono" style="color:var(--green)">${fmtPct(t.margen_pct)}</td>
-        <td class="td-mono" style="font-weight:700">${fmt(t.precio_venta)}</td>
-        <td>${t.categoria?`<span class="badge b-copper">${t.categoria}</span>`:'—'}</td>
-        <td><div class="td-actions">
-          <button class="btn btn-ghost btn-icon btn-sm" onclick="editTarifario('${t.id}')" title="Editar">✏️</button>
-          <button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('tarifario','${t.id}','${t.descripcion}')" title="Eliminar">🗑</button>
-        </div></td>
-      </tr>`).join('');
-  } catch(e) {
-    tbody.innerHTML = `<tr><td colspan="8" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;
-  }
-}
-
-function calcPrecioVenta() {
-  const coste = parseFloat(document.getElementById('t-coste').value)||0;
-  const margen = parseFloat(document.getElementById('t-margen').value)||0;
-  const pv = margen < 100 ? coste / (1 - margen/100) : 0;
-  document.getElementById('t-pventa').value = pv > 0 ? pv.toFixed(2)+' €' : '—';
-}
-function editTarifario(id) {
-  const t = tarifarioCache.find(x=>x.id===id);
-  if(!t) return;
-  document.getElementById('m-tarif-title').textContent = 'Editar artículo';
-  document.getElementById('t-id').value = t.id;
-  document.getElementById('t-codigo').value = t.codigo||'';
-  document.getElementById('t-desc').value = t.descripcion||'';
-  document.getElementById('t-unidad').value = t.unidad||'Ud';
-  document.getElementById('t-coste').value = t.precio_coste||0;
-  document.getElementById('t-margen').value = t.margen_pct||30;
-  document.getElementById('t-cat').value = t.categoria||'Mobiliario';
-  document.getElementById('t-marca').value = t.marca||'';
-  document.getElementById('t-notas').value = t.notas||'';
-  calcPrecioVenta();
-  openModal('m-tarifario');
-}
-async function saveTarifario() {
-  const codigo = document.getElementById('t-codigo').value.trim();
-  const desc = document.getElementById('t-desc').value.trim();
-  if(!codigo||!desc) { toast('Código y descripción son obligatorios','error'); return; }
-  const id = document.getElementById('t-id').value;
-  const data = {
-    codigo, descripcion: desc,
-    unidad: document.getElementById('t-unidad').value,
-    precio_coste: parseFloat(document.getElementById('t-coste').value)||0,
-    margen_pct: parseFloat(document.getElementById('t-margen').value)||30,
-    categoria: document.getElementById('t-cat').value,
-    marca: document.getElementById('t-marca').value,
-    notas: document.getElementById('t-notas').value,
-  };
-  try {
-    if (id) {
-      await sbPatch('tarifario', id, data);
-      toast('Artículo actualizado ✅');
-    } else {
-      await sbPost('tarifario', data);
-      toast('Artículo añadido al tarifario ✅');
-    }
-    closeModal('m-tarifario');
-    document.getElementById('t-id').value = '';
-    loadTarifario(); loadGerencia();
-    populateInteriorismoCatalog();
-  } catch(e) { toast('Error: '+e.message,'error'); }
-}
-
-// ══════════════════════════════════════════
-// CYPE
-// ══════════════════════════════════════════
-async function loadCype() {
-  const tbody = document.getElementById('cype-tbody');
-  try {
-    const data = await sbGet('precios_cype','?order=codigo.asc');
-    if (!data.length) {
-      tbody.innerHTML = `<tr><td colspan="5"><div class="empty"><div class="empty-icon">📐</div><div class="empty-text">No hay partidas CYPE. Ejecuta el SQL de configuración inicial.</div></div></td></tr>`;
-      return;
-    }
-    tbody.innerHTML = data.map(c=>`
-      <tr data-search="${(c.codigo+c.descripcion+c.capitulo).toLowerCase()}">
-        <td class="td-mono" style="color:var(--navy-mid);font-weight:700">${c.codigo}</td>
-        <td>${c.descripcion}</td>
-        <td style="text-align:center">${c.unidad||'—'}</td>
-        <td class="td-mono" style="font-weight:700">${fmt(c.precio)}</td>
-        <td>${c.capitulo?`<span class="badge b-gray">${c.capitulo}</span>`:'—'}</td>
-      </tr>`).join('');
-  } catch(e) {
-    tbody.innerHTML = `<tr><td colspan="5" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;
-  }
-}
-
-// ══════════════════════════════════════════
-// INTERIORISMO
-// ══════════════════════════════════════════
-let interiorismoCache = [];
-async function loadInteriorismo() {
-  const tbody = document.getElementById('interiorismo-tbody');
-  try {
-    interiorismoCache = await sbGet('interiorismo_lineas','?order=created_at.desc');
-    document.getElementById('interiorismo-count').textContent = interiorismoCache.length + ' líneas';
-    if (!interiorismoCache.length) {
-      tbody.innerHTML = `<tr><td colspan="10"><div class="empty"><div class="empty-icon">🛋</div><div class="empty-text">Sin propuestas de interiorismo aún.</div><button class="btn btn-copper" onclick="openModal('m-interiorismo')">＋ Añadir artículo</button></div></td></tr>`;
-      return;
-    }
-    tbody.innerHTML = interiorismoCache.map(i=>`
-      <tr data-search="${(i.proyecto_id+i.estancia+i.descripcion+i.marca).toLowerCase()}">
-        <td class="td-mono" style="color:var(--text-soft)">${i.proyecto_id||'—'}</td>
-        <td>${i.estancia?`<span class="badge b-gray">${i.estancia}</span>`:'—'}</td>
-        <td class="td-mono">${i.ref_catalogo||'—'}</td>
-        <td>${i.descripcion||'—'}<br><span style="font-size:10px;color:var(--text-soft)">${i.marca||''}</span></td>
-        <td>${i.cantidad||1}</td>
-        <td class="td-mono" style="font-weight:700">${fmt(i.pvp_neto)}</td>
-        <td class="td-mono" style="color:var(--green)">${i.coste_neto && i.pvp_neto ? fmtPct((i.pvp_neto-i.coste_neto)/i.pvp_neto*100) : '—'}</td>
-        <td>${badgeEstado(i.estado_propuesta)}</td>
-        <td>${badgeEstado(i.estado_pedido)}</td>
-        <td><div class="td-actions">
-          <button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('interiorismo_lineas','${i.id}','${i.descripcion||'artículo'}')" title="Eliminar">🗑</button>
-        </div></td>
-      </tr>`).join('');
-  } catch(e) {
-    tbody.innerHTML = `<tr><td colspan="10" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;
-  }
-}
-
-function loadTarifarioItem() {
-  const ref = document.getElementById('i-ref').value;
-  if (!ref) return;
-  const item = tarifarioCache.find(t=>t.codigo===ref);
-  if (item) {
-    document.getElementById('i-desc').value = item.descripcion||'';
-    document.getElementById('i-marca').value = item.marca||'';
-    document.getElementById('i-pvp').value = item.precio_venta||0;
-    document.getElementById('i-coste').value = item.precio_coste||0;
-    calcIntPvp();
-  }
-}
-function calcIntPvp() {
-  const cant = parseFloat(document.getElementById('i-cant').value)||1;
-  const pvp = parseFloat(document.getElementById('i-pvp').value)||0;
-  const dto = parseFloat(document.getElementById('i-dto').value)||0;
-  const neto = cant * pvp * (1 - dto/100);
-  document.getElementById('i-neto').value = neto > 0 ? neto.toFixed(2)+' €' : '—';
-}
-async function saveInteriorismo() {
-  const proyecto = document.getElementById('i-proyecto').value;
-  if(!proyecto) { toast('Selecciona un proyecto','error'); return; }
-  const cant = parseFloat(document.getElementById('i-cant').value)||1;
-  const pvp = parseFloat(document.getElementById('i-pvp').value)||0;
-  const dto = parseFloat(document.getElementById('i-dto').value)||0;
-  const data = {
-    proyecto_id: proyecto,
-    estancia: document.getElementById('i-estancia').value,
-    ref_catalogo: document.getElementById('i-ref').value||null,
-    descripcion: document.getElementById('i-desc').value,
-    marca: document.getElementById('i-marca').value,
-    acabado: document.getElementById('i-acabado').value,
-    unidad: 'Ud',
-    cantidad: cant,
-    pvp_catalogo: pvp,
-    dto_cliente_pct: dto,
-    coste_neto: parseFloat(document.getElementById('i-coste').value)||0,
-    iva_pct: document.getElementById('i-iva').value,
-    estado_propuesta: document.getElementById('i-eprop').value,
-    estado_cobro: 'Pendiente',
-    estado_pedido: document.getElementById('i-eped').value,
-    fecha_entrega: document.getElementById('i-fentrega').value||null,
-    notas: document.getElementById('i-notas').value,
-  };
-  try {
-    await sbPost('interiorismo_lineas', data);
-    toast('Artículo añadido a la propuesta ✅');
-    closeModal('m-interiorismo');
-    loadInteriorismo();
-  } catch(e) { toast('Error: '+e.message,'error'); }
-}
-
-// ══════════════════════════════════════════
-// COMPRAS
-// ══════════════════════════════════════════
-let comprasCache = [];
-async function loadCompras() {
-  const tbody = document.getElementById('compras-tbody');
-  try {
-    comprasCache = await sbGet('compras','?order=fecha.desc');
-    document.getElementById('compras-count').textContent = comprasCache.length + ' registros';
-    if (!comprasCache.length) {
-      tbody.innerHTML = `<tr><td colspan="9"><div class="empty"><div class="empty-icon">🛒</div><div class="empty-text">Sin compras registradas.</div><button class="btn btn-primary" onclick="openModal('m-compra')">＋ Nueva compra</button></div></td></tr>`;
-      return;
-    }
-    tbody.innerHTML = comprasCache.map(c=>{
-      const pct = c.iva_pct==='Exento'?0:parseFloat(c.iva_pct)||21;
-      const total = c.base_imponible*(1+pct/100);
-      return `<tr data-search="${(c.proyecto_id+c.proveedor_id+c.concepto).toLowerCase()}">
-        <td>${fmtDate(c.fecha)}</td>
-        <td class="td-mono" style="color:var(--text-soft)">${c.proyecto_id||'—'}</td>
-        <td>${c.proveedor_id||'—'}</td>
-        <td>${c.concepto||'—'}</td>
-        <td class="td-mono">${fmt(c.base_imponible)}</td>
-        <td class="td-mono">${c.iva_pct||'—'}</td>
-        <td class="td-mono" style="font-weight:700">${fmt(total)}</td>
-        <td>${badgeEstado(c.estado_pago)}</td>
-        <td><div class="td-actions">
-          <button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('compras','${c.id}','${c.concepto||'compra'}')" title="Eliminar">🗑</button>
-        </div></td>
-      </tr>`;}).join('');
-  } catch(e) {
-    tbody.innerHTML = `<tr><td colspan="9" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;
-  }
-}
-async function saveCompra() {
-  const data = {
-    fecha: document.getElementById('co-fecha').value||new Date().toISOString().split('T')[0],
-    proyecto_id: document.getElementById('co-proyecto').value||null,
-    proveedor_id: document.getElementById('co-prov').value||null,
-    concepto: document.getElementById('co-concepto').value,
-    base_imponible: parseFloat(document.getElementById('co-base').value)||0,
-    iva_pct: document.getElementById('co-iva').value,
-    estado_pago: document.getElementById('co-estado').value,
-    fecha_vencimiento: document.getElementById('co-vto').value||null,
-    notas: document.getElementById('co-notas').value,
-  };
-  try {
-    await sbPost('compras', data);
-    toast('Compra registrada ✅');
-    closeModal('m-compra');
-    loadCompras();
-  } catch(e) { toast('Error: '+e.message,'error'); }
-}
-
-// ══════════════════════════════════════════
-// SUBCONTRATAS
-// ══════════════════════════════════════════
-let subcontratosCache = [];
-async function loadSubcontratas() {
-  const tbody = document.getElementById('subcontratas-tbody');
-  try {
-    subcontratosCache = await sbGet('subcontratas','?order=fecha.desc');
-    document.getElementById('subcontratas-count').textContent = subcontratosCache.length + ' registros';
-    if (!subcontratosCache.length) {
-      tbody.innerHTML = `<tr><td colspan="9"><div class="empty"><div class="empty-icon">👷</div><div class="empty-text">Sin subcontratas registradas.</div><button class="btn btn-primary" onclick="openModal('m-subcontrata')">＋ Nueva subcontrata</button></div></td></tr>`;
-      return;
-    }
-    tbody.innerHTML = subcontratosCache.map(s=>{
-      const pct = s.iva_pct==='Exento'?0:parseFloat(s.iva_pct)||21;
-      const total = s.importe*(1+pct/100);
-      return `<tr data-search="${(s.proyecto_id+s.proveedor_id+s.trabajo).toLowerCase()}">
-        <td>${fmtDate(s.fecha)}</td>
-        <td class="td-mono" style="color:var(--text-soft)">${s.proyecto_id||'—'}</td>
-        <td>${s.proveedor_id||'—'}</td>
-        <td>${s.trabajo||'—'}</td>
-        <td class="td-mono">${fmt(s.importe)}</td>
-        <td class="td-mono">${s.iva_pct||'—'}</td>
-        <td class="td-mono" style="font-weight:700">${fmt(total)}</td>
-        <td>${badgeEstado(s.estado_pago)}</td>
-        <td><div class="td-actions">
-          <button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('subcontratas','${s.id}','${s.trabajo||'subcontrata'}')" title="Eliminar">🗑</button>
-        </div></td>
-      </tr>`;}).join('');
-  } catch(e) {
-    tbody.innerHTML = `<tr><td colspan="9" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;
-  }
-}
-async function saveSubcontrata() {
-  const data = {
-    fecha: document.getElementById('sc-fecha').value||new Date().toISOString().split('T')[0],
-    proyecto_id: document.getElementById('sc-proyecto').value||null,
-    proveedor_id: document.getElementById('sc-prov').value||null,
-    trabajo: document.getElementById('sc-trabajo').value,
-    importe: parseFloat(document.getElementById('sc-importe').value)||0,
-    iva_pct: document.getElementById('sc-iva').value,
-    estado_pago: document.getElementById('sc-estado').value,
-    fecha_vencimiento: document.getElementById('sc-vto').value||null,
-  };
-  try {
-    await sbPost('subcontratas', data);
-    toast('Subcontrata registrada ✅');
-    closeModal('m-subcontrata');
-    loadSubcontratas();
-  } catch(e) { toast('Error: '+e.message,'error'); }
-}
-
-// ══════════════════════════════════════════
-// HORAS
-// ══════════════════════════════════════════
-let horasCache = [];
-async function loadHoras() {
-  const tbody = document.getElementById('horas-tbody');
-  try {
-    horasCache = await sbGet('horas','?order=fecha.desc');
-    document.getElementById('horas-count').textContent = horasCache.length + ' registros';
-    if (!horasCache.length) {
-      tbody.innerHTML = `<tr><td colspan="8"><div class="empty"><div class="empty-icon">⏱</div><div class="empty-text">Sin horas registradas.</div><button class="btn btn-primary" onclick="openModal('m-hora')">＋ Registrar horas</button></div></td></tr>`;
-      return;
-    }
-    tbody.innerHTML = horasCache.map(h=>`
-      <tr data-search="${(h.proyecto_id+h.trabajador+h.descripcion).toLowerCase()}">
-        <td>${fmtDate(h.fecha)}</td>
-        <td class="td-mono" style="color:var(--text-soft)">${h.proyecto_id||'—'}</td>
-        <td><strong>${h.trabajador||'—'}</strong></td>
-        <td class="td-mono">${h.horas}h</td>
-        <td class="td-mono">${fmt(h.coste_hora)}</td>
-        <td class="td-mono" style="font-weight:700">${fmt(h.total)}</td>
-        <td style="color:var(--text-soft)">${h.descripcion||'—'}</td>
-        <td><div class="td-actions">
-          <button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('horas','${h.id}','registro de horas')" title="Eliminar">🗑</button>
-        </div></td>
-      </tr>`).join('');
-  } catch(e) {
-    tbody.innerHTML = `<tr><td colspan="8" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;
-  }
-}
-async function saveHora() {
-  const data = {
-    fecha: document.getElementById('h-fecha').value||new Date().toISOString().split('T')[0],
-    proyecto_id: document.getElementById('h-proyecto').value||null,
-    trabajador: document.getElementById('h-trab').value,
-    horas: parseFloat(document.getElementById('h-horas').value)||0,
-    coste_hora: parseFloat(document.getElementById('h-coste').value)||18,
-    descripcion: document.getElementById('h-desc').value,
-  };
-  try {
-    await sbPost('horas', data);
-    toast('Horas registradas ✅');
-    closeModal('m-hora');
-    loadHoras();
-  } catch(e) { toast('Error: '+e.message,'error'); }
-}
-
-// ══════════════════════════════════════════
-// PROVEEDORES
-// ══════════════════════════════════════════
-let proveedoresCache = [];
-async function loadProveedores() {
-  const tbody = document.getElementById('proveedores-tbody');
-  try {
-    proveedoresCache = await sbGet('proveedores','?order=created_at.desc');
-    document.getElementById('proveedores-count').textContent = proveedoresCache.length + ' proveedores';
-    if (!proveedoresCache.length) {
-      tbody.innerHTML = `<tr><td colspan="7"><div class="empty"><div class="empty-icon">🏭</div><div class="empty-text">Sin proveedores registrados.</div><button class="btn btn-primary" onclick="openModal('m-proveedor')">＋ Nuevo proveedor</button></div></td></tr>`;
-      return;
-    }
-    tbody.innerHTML = proveedoresCache.map(p=>`
-      <tr data-search="${(p.nombre+p.cif+p.especialidad+p.tipo).toLowerCase()}">
-        <td><strong>${p.nombre}</strong></td>
-        <td class="td-mono">${p.cif||'—'}</td>
-        <td>${badgeTipo(p.tipo)}</td>
-        <td>${p.especialidad||'—'}</td>
-        <td>${p.telefono||'—'}</td>
-        <td>${p.forma_pago||'—'}</td>
-        <td><div class="td-actions">
-          <button class="btn btn-ghost btn-icon btn-sm" onclick="editProveedor('${p.id}')" title="Editar">✏️</button>
-          <button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('proveedores','${p.id}','${p.nombre}')" title="Eliminar">🗑</button>
-        </div></td>
-      </tr>`).join('');
-    populateSelects();
-  } catch(e) {
-    tbody.innerHTML = `<tr><td colspan="7" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;
-  }
-}
-function editProveedor(id) {
-  const p = proveedoresCache.find(x=>x.id===id);
-  if(!p) return;
-  document.getElementById('pv-id').value = p.id;
-  document.getElementById('pv-nombre').value = p.nombre||'';
-  document.getElementById('pv-cif').value = p.cif||'';
-  document.getElementById('pv-tipo').value = p.tipo||'Proveedor';
-  document.getElementById('pv-tel').value = p.telefono||'';
-  document.getElementById('pv-email').value = p.email||'';
-  document.getElementById('pv-esp').value = p.especialidad||'';
-  document.getElementById('pv-pago').value = p.forma_pago||'Transferencia';
-  document.getElementById('pv-iban').value = p.iban||'';
-  document.getElementById('pv-notas').value = p.notas||'';
+function editProveedor(id){
+  const p=ProvC.find(x=>x.id===id);if(!p)return;
+  document.getElementById('pv-id').value=p.id;document.getElementById('pv-nombre').value=p.nombre||'';document.getElementById('pv-cif').value=p.cif||'';document.getElementById('pv-tipo').value=p.tipo||'Proveedor';document.getElementById('pv-tel').value=p.telefono||'';document.getElementById('pv-email').value=p.email||'';document.getElementById('pv-esp').value=p.especialidad||'';document.getElementById('pv-pago').value=p.forma_pago||'Transferencia';document.getElementById('pv-iban').value=p.iban||'';document.getElementById('pv-notas').value=p.notas||'';
   openModal('m-proveedor');
 }
-async function saveProveedor() {
-  const nombre = document.getElementById('pv-nombre').value.trim();
-  if(!nombre) { toast('El nombre es obligatorio','error'); return; }
-  const id = document.getElementById('pv-id').value;
-  const data = {
-    nombre, cif: document.getElementById('pv-cif').value,
-    tipo: document.getElementById('pv-tipo').value,
-    telefono: document.getElementById('pv-tel').value,
-    email: document.getElementById('pv-email').value,
-    especialidad: document.getElementById('pv-esp').value,
-    forma_pago: document.getElementById('pv-pago').value,
-    iban: document.getElementById('pv-iban').value,
-    notas: document.getElementById('pv-notas').value,
-  };
-  try {
-    if (id) {
-      await sbPatch('proveedores', id, data);
-      toast('Proveedor actualizado ✅');
-    } else {
-      data.proveedor_id = genId('PRV', proveedoresCache);
-      await sbPost('proveedores', data);
-      toast('Proveedor guardado ✅');
-    }
-    closeModal('m-proveedor');
-    document.getElementById('pv-id').value = '';
-    loadProveedores();
-    populateSelects();
-  } catch(e) { toast('Error: '+e.message,'error'); }
+async function saveProveedor(){
+  const nombre=document.getElementById('pv-nombre').value.trim();
+  if(!nombre){toast('El nombre es obligatorio','error');return}
+  const id=document.getElementById('pv-id').value;
+  const d={nombre,cif:document.getElementById('pv-cif').value,tipo:document.getElementById('pv-tipo').value,telefono:document.getElementById('pv-tel').value,email:document.getElementById('pv-email').value,especialidad:document.getElementById('pv-esp').value,forma_pago:document.getElementById('pv-pago').value,iban:document.getElementById('pv-iban').value,notas:document.getElementById('pv-notas').value};
+  try{
+    if(id){await sbPatch('proveedores',id,d);toast('Proveedor actualizado ✅')}
+    else{d.proveedor_id=genId('PRV',ProvC);await sbPost('proveedores',d);toast('Proveedor guardado ✅')}
+    closeModal('m-proveedor');document.getElementById('pv-id').value='';
+    loadProveedores();populateSelects();
+  }catch(e){toast('Error: '+e.message,'error')}
 }
 
-// ══════════════════════════════════════════
-// FACTURAS
-// ══════════════════════════════════════════
-let facturasCache = [];
-async function loadFacturas() {
-  const tbody = document.getElementById('facturas-tbody');
-  try {
-    facturasCache = await sbGet('facturas','?order=fecha_emision.desc');
-    document.getElementById('facturas-count').textContent = facturasCache.length + ' facturas';
-    if (!facturasCache.length) {
-      tbody.innerHTML = `<tr><td colspan="9"><div class="empty"><div class="empty-icon">🧾</div><div class="empty-text">Sin facturas emitidas.</div><button class="btn btn-primary" onclick="openModal('m-factura')">＋ Nueva factura</button></div></td></tr>`;
-      return;
-    }
-    tbody.innerHTML = facturasCache.map(f=>{
-      const pct = f.iva_pct==='Exento'?0:parseFloat(f.iva_pct)||10;
-      const total = f.base_imponible*(1+pct/100);
-      return `<tr data-search="${(f.num_factura+f.cliente_id+f.proyecto_id+f.concepto).toLowerCase()}">
-        <td class="td-mono" style="font-weight:700">${f.num_factura||'—'}</td>
-        <td>${fmtDate(f.fecha_emision)}</td>
-        <td>${f.cliente_id||'—'}</td>
-        <td class="td-mono" style="color:var(--text-soft)">${f.proyecto_id||'—'}</td>
-        <td class="td-mono">${fmt(f.base_imponible)}</td>
-        <td class="td-mono">${f.iva_pct||'—'}</td>
-        <td class="td-mono" style="font-weight:700">${fmt(total)}</td>
-        <td>${badgeEstado(f.estado)}</td>
-        <td><div class="td-actions">
-          <button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('facturas','${f.id}','${f.num_factura||'factura'}')" title="Eliminar">🗑</button>
-        </div></td>
-      </tr>`;}).join('');
-  } catch(e) {
-    tbody.innerHTML = `<tr><td colspan="9" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;
-  }
+// ── FACTURAS ──────────────────────────────────────────
+async function loadFacturas(){
+  const tb=document.getElementById('facturas-tbody');
+  try{
+    FC=await sbGet('facturas','?order=fecha_emision.desc');
+    document.getElementById('facturas-count').textContent=FC.length+' facturas';
+    if(!FC.length){tb.innerHTML=`<tr><td colspan="9"><div class="empty"><div class="empty-icon">🧾</div><div class="empty-text">Sin facturas</div><button class="btn btn-primary" onclick="openModal('m-factura')">＋ Nueva</button></div></td></tr>`;return}
+    tb.innerHTML=FC.map(f=>{const pct=f.iva_pct==='Exento'?0:parseFloat(f.iva_pct)||10;const tot=f.base_imponible*(1+pct/100);return`<tr data-search="${(f.num_factura+f.cliente_id+f.proyecto_id+f.concepto).toLowerCase()}"><td class="td-mono" style="font-weight:700">${f.num_factura||'—'}</td><td>${fmtD(f.fecha_emision)}</td><td>${f.cliente_id||'—'}</td><td class="td-mono" style="color:var(--text-soft)">${f.proyecto_id||'—'}</td><td class="td-mono">${fmt(f.base_imponible)}</td><td class="td-mono">${f.iva_pct}</td><td class="td-mono" style="font-weight:700">${fmt(tot)}</td><td>${bE(f.estado)}</td><td><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('facturas','${f.id}','${(f.num_factura||'factura').replace(/'/g,"\\'")}')">🗑</button></td></tr>`}).join('');
+  }catch(e){tb.innerHTML=`<tr><td colspan="9" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`}
 }
-async function saveFactura() {
-  const data = {
-    num_factura: document.getElementById('f-num').value,
-    fecha_emision: document.getElementById('f-fecha').value||new Date().toISOString().split('T')[0],
-    cliente_id: document.getElementById('f-cliente').value||null,
-    proyecto_id: document.getElementById('f-proyecto').value||null,
-    base_imponible: parseFloat(document.getElementById('f-base').value)||0,
-    iva_pct: document.getElementById('f-iva').value,
-    forma_pago: document.getElementById('f-pago').value,
-    fecha_vencimiento: document.getElementById('f-vto').value||null,
-    estado: document.getElementById('f-estado').value,
-    fecha_cobro: document.getElementById('f-fcobro').value||null,
-    concepto: document.getElementById('f-concepto').value,
-  };
-  try {
-    await sbPost('facturas', data);
-    toast('Factura guardada ✅');
-    closeModal('m-factura');
-    loadFacturas();
-  } catch(e) { toast('Error: '+e.message,'error'); }
+async function saveFactura(){
+  const d={num_factura:document.getElementById('f-num').value,fecha_emision:document.getElementById('f-fecha').value||new Date().toISOString().split('T')[0],cliente_id:document.getElementById('f-cliente').value||null,proyecto_id:document.getElementById('f-proyecto').value||null,base_imponible:parseFloat(document.getElementById('f-base').value)||0,iva_pct:document.getElementById('f-iva').value,forma_pago:document.getElementById('f-pago').value,fecha_vencimiento:document.getElementById('f-vto').value||null,estado:document.getElementById('f-estado').value,fecha_cobro:document.getElementById('f-fcobro').value||null,concepto:document.getElementById('f-concepto').value};
+  try{await sbPost('facturas',d);toast('Factura guardada ✅');closeModal('m-factura');loadFacturas()}catch(e){toast('Error: '+e.message,'error')}
 }
 
-// ══════════════════════════════════════════
-// POPULATE SELECTS
-// ══════════════════════════════════════════
-async function populateSelects() {
-  if (!clientesCache.length) clientesCache = await sbGet('clientes').catch(()=>[]);
-  if (!proyectosCache.length) proyectosCache = await sbGet('proyectos').catch(()=>[]);
-  if (!proveedoresCache.length) proveedoresCache = await sbGet('proveedores').catch(()=>[]);
-
-  const clienteSels = ['p-cliente','f-cliente'];
-  clienteSels.forEach(id => {
-    const el = document.getElementById(id);
-    if(!el) return;
-    const cur = el.value;
-    el.innerHTML = '<option value="">Seleccionar…</option>' +
-      clientesCache.map(c=>`<option value="${c.cliente_id}">${c.nombre}</option>`).join('');
-    if(cur) el.value = cur;
-  });
-
-  const proySels = ['co-proyecto','sc-proyecto','h-proyecto','f-proyecto','i-proyecto'];
-  proySels.forEach(id => {
-    const el = document.getElementById(id);
-    if(!el) return;
-    const cur = el.value;
-    el.innerHTML = '<option value="">Seleccionar…</option>' +
-      proyectosCache.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
-    if(cur) el.value = cur;
-  });
-
-  const provSels = ['co-prov','sc-prov'];
-  provSels.forEach(id => {
-    const el = document.getElementById(id);
-    if(!el) return;
-    const cur = el.value;
-    el.innerHTML = '<option value="">Seleccionar…</option>' +
-      proveedoresCache.map(p=>`<option value="${p.proveedor_id||p.nombre}">${p.nombre}</option>`).join('');
-    if(cur) el.value = cur;
-  });
+// ── POPULATE SELECTS ──────────────────────────────────
+async function populateSelects(){
+  if(!CC.length) CC=await sbGet('clientes').catch(()=>[]);
+  if(!PC.length) PC=await sbGet('proyectos').catch(()=>[]);
+  if(!ProvC.length) ProvC=await sbGet('proveedores').catch(()=>[]);
+  ['p-cliente','f-cliente'].forEach(id=>{const el=document.getElementById(id);if(!el)return;const cur=el.value;el.innerHTML='<option value="">Seleccionar…</option>'+CC.map(c=>`<option value="${c.cliente_id}">${c.nombre}</option>`).join('');if(cur)el.value=cur});
+  ['co-proyecto','sc-proyecto','h-proyecto','f-proyecto','i-proyecto'].forEach(id=>{const el=document.getElementById(id);if(!el)return;const cur=el.value;el.innerHTML='<option value="">Seleccionar…</option>'+PC.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');if(cur)el.value=cur});
+  ['co-prov','sc-prov'].forEach(id=>{const el=document.getElementById(id);if(!el)return;const cur=el.value;el.innerHTML='<option value="">Seleccionar…</option>'+ProvC.map(p=>`<option value="${p.proveedor_id||p.nombre}">${p.nombre}</option>`).join('');if(cur)el.value=cur});
+}
+async function populateIntCatalog(){
+  if(!TC.length) TC=await sbGet('tarifario').catch(()=>[]);
+  const el=document.getElementById('i-ref');if(!el)return;
+  el.innerHTML='<option value="">— descripción libre —</option>'+TC.map(t=>`<option value="${t.codigo}">${t.codigo} · ${t.descripcion}</option>`).join('');
 }
 
-async function populateInteriorismoCatalog() {
-  if (!tarifarioCache.length) tarifarioCache = await sbGet('tarifario').catch(()=>[]);
-  const el = document.getElementById('i-ref');
-  if(!el) return;
-  el.innerHTML = '<option value="">— o descripción libre —</option>' +
-    tarifarioCache.map(t=>`<option value="${t.codigo}">${t.codigo} · ${t.descripcion}</option>`).join('');
+// ── LOADERS MAP ───────────────────────────────────────
+const loaders={gerencia:loadGerencia,clientes:loadClientes,proyectos:loadProyectos,tarifario:loadTarifario,cype:loadCype,interiorismo:loadInteriorismo,compras:loadCompras,subcontratas:loadSubcontratas,horas:loadHoras,proveedores:loadProveedores,facturas:loadFacturas};
+
+// ── INIT ─────────────────────────────────────────────
+async function init(){
+  const today=new Date().toISOString().split('T')[0];
+  ['co-fecha','sc-fecha','h-fecha','f-fecha'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=today});
+  await Promise.all([loadGerencia(),populateSelects(),populateIntCatalog()]);
 }
-
-// ══════════════════════════════════════════
-// LOADERS MAP
-// ══════════════════════════════════════════
-const loaders = {
-  gerencia: loadGerencia,
-  clientes: loadClientes,
-  proyectos: loadProyectos,
-  tarifario: loadTarifario,
-  cype: loadCype,
-  interiorismo: loadInteriorismo,
-  compras: loadCompras,
-  subcontratas: loadSubcontratas,
-  horas: loadHoras,
-  proveedores: loadProveedores,
-  facturas: loadFacturas,
-};
-
-// ══════════════════════════════════════════
-// INIT
-// ══════════════════════════════════════════
-async function init() {
-  const statusEl = document.getElementById('conn-status');
-  try {
-    await sbGet('clientes','?limit=1');
-    statusEl.style.background = 'var(--green-soft)';
-    statusEl.style.color = 'var(--green)';
-    statusEl.textContent = '🟢 Conectado';
-  } catch(e) {
-    statusEl.style.background = 'var(--red-soft)';
-    statusEl.style.color = 'var(--red)';
-    statusEl.textContent = '🔴 Sin conexión';
-    console.error('Supabase connection error:', e);
-  }
-
-  // Set today's date in all date inputs
-  const today = new Date().toISOString().split('T')[0];
-  ['co-fecha','sc-fecha','h-fecha','f-fecha'].forEach(id => {
-    const el = document.getElementById(id);
-    if(el) el.value = today;
-  });
-
-  await Promise.all([
-    loadGerencia(),
-    populateSelects(),
-    populateInteriorismoCatalog(),
-  ]);
-}
-
-init();
 </script>
 </body>
 </html>
