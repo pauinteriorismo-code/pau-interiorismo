@@ -3,6 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1a2a3a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PAU Gestión">
+<link rel="manifest" href="manifest.json">
 <title>PAU INTERIORISMO · Gestión</title>
 <style>
 :root{--navy:#1a2a3a;--navy-mid:#27405b;--navy-light:#3d5a78;--blue-soft:#b8cce4;--blue-light:#e8f4ff;--cream:#f7f4ef;--sand:#ede8df;--copper:#b87333;--copper-light:#f4e8da;--green:#1e6b3d;--green-soft:#d5e8d4;--amber:#7d6608;--amber-soft:#fff2cc;--red:#7b241c;--red-soft:#fce8e6;--white:#fff;--text:#1a2a3a;--text-mid:#4a5f72;--text-soft:#8a9aaa;--border:#dce6f0;--radius:8px;--radius-sm:4px;--shadow:0 1px 3px rgba(26,42,58,.08),0 4px 16px rgba(26,42,58,.06);--shadow-lg:0 8px 32px rgba(26,42,58,.14);--sidebar:220px;--header:56px}
@@ -227,7 +232,7 @@ tbody td{padding:7px 10px;vertical-align:middle}
 <!-- APP -->
 <div class="app">
 <nav class="sidebar">
-  <div class="sidebar-logo"><div class="brand">PAU INTERIORISMO</div><div class="brand-sub">Sistema de gestión · <span style="color:#b87333">v28</span></div></div>
+  <div class="sidebar-logo"><div class="brand">PAU INTERIORISMO</div><div class="brand-sub">Sistema de gestión · <span style="color:#b87333">v29</span></div></div>
   <div class="nav-section">
     <div class="nav-label">Principal</div>
     <div class="nav-item active" data-view="gerencia"><span class="ni">🏠</span><span>Gerencia</span></div>
@@ -256,6 +261,7 @@ tbody td{padding:7px 10px;vertical-align:middle}
     <div class="nav-item" data-view="rentabilidad"><span class="ni">📈</span><span>Rentabilidad</span></div>
     <div class="nav-item" data-view="facturas"><span class="ni">🧾</span><span>Facturas</span></div>
     <div class="nav-item" data-view="contabilidad"><span class="ni">📊</span><span>Contabilidad</span></div>
+    <div class="nav-item" data-view="informe_mensual"><span class="ni">📅</span><span>Informe mensual</span></div>
   </div>
   <div class="nav-section">
     <div class="nav-label">Sistema</div>
@@ -482,6 +488,33 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       </div>
     </div>
 
+    <!-- ═══ INFORME MENSUAL ═══ -->
+    <div class="view" id="view-informe_mensual">
+      <div class="search-bar" style="gap:8px;align-items:center">
+        <select class="form-input" style="width:140px" id="inf-mes">
+          <option value="1">Enero</option><option value="2">Febrero</option>
+          <option value="3">Marzo</option><option value="4">Abril</option>
+          <option value="5">Mayo</option><option value="6">Junio</option>
+          <option value="7">Julio</option><option value="8">Agosto</option>
+          <option value="9">Septiembre</option><option value="10">Octubre</option>
+          <option value="11">Noviembre</option><option value="12">Diciembre</option>
+        </select>
+        <select class="form-input" style="width:90px" id="inf-anyo">
+          <option>2024</option><option>2025</option><option selected>2026</option><option>2027</option>
+        </select>
+        <button class="btn btn-primary" onclick="generarInformeMensual()">📊 Generar informe</button>
+        <button class="btn btn-ghost" onclick="exportarPDF(document.getElementById('inf-body').firstElementChild,'Informe_'+document.getElementById('inf-mes').value+'_'+document.getElementById('inf-anyo').value+'.pdf')">⬇️ PDF</button>
+      </div>
+      <div class="card" style="margin-top:12px">
+        <div class="card-body" id="inf-body">
+          <div style="text-align:center;padding:40px;color:var(--text-soft)">
+            <div style="font-size:32px;margin-bottom:10px">📅</div>
+            <div style="font-size:14px">Selecciona mes y año y pulsa Generar</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ═══ LISTAS ═══ -->
     <div class="view" id="view-listas">
       <div class="info-box">🗂 Gestiona los valores de los desplegables de toda la aplicación. Los cambios se guardan automáticamente.</div>
@@ -637,6 +670,17 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <div class="table-wrap"><table><thead><tr><th>ID</th><th>Proyecto</th><th>Estado</th><th>Ventas</th><th>Coste Compras</th><th>Coste Subcontr.</th><th>Coste MO</th><th>Coste Total</th><th>Margen €</th><th>Margen %</th></tr></thead>
         <tbody id="g-rent-table"><tr><td colspan="10" class="loading">Cargando…</td></tr></tbody></table></div>
       </div>
+
+      <!-- ═══ PANEL DE ALERTAS ═══ -->
+      <div class="card" style="margin-top:14px">
+        <div class="card-header">
+          <div class="card-title">🚨 Alertas de rentabilidad</div>
+          <div id="alertas-count" style="font-size:12px;color:var(--text-soft)"></div>
+        </div>
+        <div class="card-body" id="alertas-body" style="padding:0">
+          <div style="text-align:center;padding:20px;color:var(--text-soft)">Cargando alertas…</div>
+        </div>
+      </div>
     </div>
 
     <!-- ═══ CLIENTES ═══ -->
@@ -678,6 +722,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <select class="form-input" style="width:75px" id="pres-version-sel" onchange="loadPresupuesto()"><option value="v1">v1</option><option value="v2">v2</option><option value="v3">v3</option></select>
         <button class="btn btn-primary" onclick="addLineaPresupuesto()">＋ Línea</button>
         <button class="btn btn-ghost" onclick="addCapituloPresupuesto()">＋ Capítulo</button>
+        <button class="btn btn-ghost" id="btn-comparativa" style="display:none" onclick="abrirComparativa()">⚖️ Comparar</button>
         <button class="btn btn-primary no-print" onclick="exportarPresupuestoPDF()">⬇️ Descargar PDF</button>
         <button class="btn btn-ghost no-print" onclick="window.print()">🖨️ Imprimir</button>
         <div id="pres-total-lbl" style="margin-left:auto;font-size:13px;font-weight:700;color:var(--navy)"></div>
@@ -1292,6 +1337,25 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     <div class="confirm-btns"><button class="btn btn-ghost" onclick="closeConfirm()">Cancelar</button><button class="btn btn-danger" onclick="confirmDeleteAction()">Eliminar</button></div>
   </div>
 </div>
+<!-- MODAL COMPARATIVA VERSIONES -->
+<div class="modal-overlay" id="m-comparativa" style="display:none" onclick="if(event.target===this)closeModal('m-comparativa')">
+  <div class="modal" style="max-width:920px;width:96%">
+    <div class="modal-header">
+      <div class="modal-title">⚖️ Comparativa de versiones de presupuesto</div>
+      <button class="modal-close" onclick="closeModal('m-comparativa')">✕</button>
+    </div>
+    <div class="modal-body" style="padding:16px">
+      <div id="comp-kpis" class="kpi-grid" style="margin-bottom:16px;grid-template-columns:repeat(auto-fit,minmax(140px,1fr))"></div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead id="comp-thead"></thead>
+          <tbody id="comp-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -2024,6 +2088,7 @@ async function loadPresupuesto(){
   const proy=document.getElementById('pres-proyecto-sel').value;
   const ver=document.getElementById('pres-version-sel').value;
   const tbody=document.getElementById('pres-tbody');
+  document.getElementById('btn-comparativa').style.display=proy?'':'none';
   if(!proy){tbody.innerHTML=`<tr><td colspan="11" style="text-align:center;padding:40px;color:var(--text-soft)">
       <div style="font-size:32px;margin-bottom:10px">📁</div>
       <div style="font-size:14px;font-weight:600;margin-bottom:6px">Selecciona un cliente y proyecto</div>
@@ -2704,7 +2769,7 @@ async function loadFacturas(){
     FC.forEach(f=>{const tot=(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100),cob=f.importe_cobrado||0,pdte=tot-cob;totFact+=tot;totCob+=cob;totPdte+=pdte;if(f.estado==='Vencida')totVenc+=pdte;});
     document.getElementById('fk-total').textContent=fmt(totFact);document.getElementById('fk-cobrado').textContent=fmt(totCob);document.getElementById('fk-pendiente').textContent=fmt(totPdte);document.getElementById('fk-vencidas').textContent=fmt(totVenc);
     if(!FC.length){tb.innerHTML=`<tr><td colspan="12"><div class="empty"><div class="empty-icon">🧾</div><div class="empty-text">Sin facturas</div><button class="btn btn-primary" onclick="openModal('m-factura')">＋ Nueva</button></div></td></tr>`;return;}
-    tb.innerHTML=FC.map(f=>{const tot=(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100),cob=f.importe_cobrado||0,pdte=tot-cob;return`<tr data-search="${(f.num_factura+f.cliente_id+f.proyecto_id+f.concepto).toLowerCase()}"><td class="td-mono" style="font-weight:700">${f.num_factura||'—'}</td><td>${fmtD(f.fecha_emision)}</td><td>${fmtD(f.fecha_vencimiento)}</td><td>${f.cliente_id||'—'}</td><td class="td-mono" style="color:var(--text-soft)">${f.proyecto_id||'—'}</td><td class="td-mono">${fmt(f.base_imponible)}</td><td class="td-mono">${f.iva_pct}</td><td class="td-mono" style="font-weight:700">${fmt(tot)}</td><td class="td-mono" style="color:var(--green)">${fmt(cob)}</td><td class="td-mono" style="color:${pdte>0?'var(--amber)':'var(--green)'}">${fmt(pdte)}</td><td>${bE(f.estado)}</td><td><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('facturas','${f.id}','${(f.num_factura||'factura').replace(/'/g,"\\'")}')">🗑</button></td></tr>`;}).join('');
+    tb.innerHTML=FC.map(f=>{const tot=(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100),cob=f.importe_cobrado||0,pdte=tot-cob;return`<tr data-search="${(f.num_factura+f.cliente_id+f.proyecto_id+f.concepto).toLowerCase()}"><td class="td-mono" style="font-weight:700">${f.num_factura||'—'}</td><td>${fmtD(f.fecha_emision)}</td><td>${fmtD(f.fecha_vencimiento)}</td><td>${f.cliente_id||'—'}</td><td class="td-mono" style="color:var(--text-soft)">${f.proyecto_id||'—'}</td><td class="td-mono">${fmt(f.base_imponible)}</td><td class="td-mono">${f.iva_pct}</td><td class="td-mono" style="font-weight:700">${fmt(tot)}</td><td class="td-mono" style="color:var(--green)">${fmt(cob)}</td><td class="td-mono" style="color:${pdte>0?'var(--amber)':'var(--green)'}">${fmt(pdte)}</td><td>${bE(f.estado)}</td><td><button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px" onclick="marcarFacturaCobrada('${f.id}')">✅</button><button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px" onclick="marcarFacturaParcial('${f.id}')">💶</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('facturas','${f.id}','${(f.num_factura||'factura').replace(/'/g,"\\'")}')">🗑</button></td></tr>`;}).join('');
   }catch(e){tb.innerHTML=`<tr><td colspan="12" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
 }
 async function saveFactura(){const d={num_factura:document.getElementById('f-num').value,fecha_emision:document.getElementById('f-fecha').value||new Date().toISOString().split('T')[0],cliente_id:document.getElementById('f-cliente').value||null,proyecto_id:document.getElementById('f-proyecto').value||null,base_imponible:parseFloat(document.getElementById('f-base').value)||0,iva_pct:document.getElementById('f-iva').value,forma_pago:document.getElementById('f-pago').value,fecha_vencimiento:document.getElementById('f-vto').value||null,estado:document.getElementById('f-estado').value,importe_cobrado:parseFloat(document.getElementById('f-cobrado').value)||0,concepto:document.getElementById('f-concepto').value};try{await sbPost('facturas',d);toast('Factura guardada ✅');closeModal('m-factura');loadFacturas();}catch(e){toast('Error: '+e.message,'error');}
@@ -2900,6 +2965,242 @@ async function init(){
   poblarFiltrosProyecto();
   poblarFiltrosCliente();
   poblarClientesDocumentos();
+}
+
+
+// ════════════════════════════════════════════════════════════════
+// MEJORA 1: ALERTAS DE RENTABILIDAD
+// ════════════════════════════════════════════════════════════════
+async function calcularAlertas(){
+  const body = document.getElementById('alertas-body');
+  const countEl = document.getElementById('alertas-count');
+  if(!body) return;
+  try{
+    const proyectos = PC.filter(p=>['En ejecución','Aprobado'].includes(p.estado));
+    if(!proyectos.length){
+      body.innerHTML='<div style="text-align:center;padding:20px;color:var(--text-soft)">Sin proyectos activos</div>';
+      if(countEl) countEl.textContent='';
+      return;
+    }
+    const alertas=[];
+    for(const p of proyectos){
+      const [lineas,compras,subcs,horas] = await Promise.all([
+        sbGet('presupuesto_lineas',`?proyecto_id=eq.${p.proyecto_id}&version=eq.v1`),
+        sbGet('compras',`?proyecto_id=eq.${p.proyecto_id}`),
+        sbGet('subcontratas',`?proyecto_id=eq.${p.proyecto_id}`),
+        sbGet('horas',`?proyecto_id=eq.${p.proyecto_id}`)
+      ]);
+      const presupuesto = lineas.filter(l=>!l.es_capitulo).reduce((s,l)=>s+(l.subtotal||0),0);
+      const coste = compras.reduce((s,c)=>s+(c.base_imponible||0),0)
+                  + subcs.reduce((s,c)=>s+(c.importe||0),0)
+                  + horas.reduce((s,h)=>s+(h.total||0),0);
+      if(presupuesto<=0) continue;
+      const pct = (coste/presupuesto)*100;
+      const cliente = CC.find(c=>c.cliente_id===p.cliente_id);
+      if(pct>=100){
+        alertas.push({nivel:'rojo', icon:'🔴', msg:`<strong>${p.proyecto_id}</strong> — ${p.nombre} ha SUPERADO el presupuesto`, detalle:`${fmt(coste)} coste vs ${fmt(presupuesto)} presupuestado (${pct.toFixed(0)}%)`, pct, proyecto:p, cliente});
+      } else if(pct>=85){
+        alertas.push({nivel:'naranja', icon:'🟠', msg:`<strong>${p.proyecto_id}</strong> — ${p.nombre} al ${pct.toFixed(0)}% del presupuesto`, detalle:`${fmt(coste)} coste vs ${fmt(presupuesto)} presupuestado — quedan ${fmt(presupuesto-coste)}`, pct, proyecto:p, cliente});
+      } else if(pct>=70){
+        alertas.push({nivel:'amarillo', icon:'🟡', msg:`<strong>${p.proyecto_id}</strong> — ${p.nombre} al ${pct.toFixed(0)}% del presupuesto`, detalle:`${fmt(coste)} coste vs ${fmt(presupuesto)} presupuestado — quedan ${fmt(presupuesto-coste)}`, pct, proyecto:p, cliente});
+      }
+    }
+    if(!alertas.length){
+      body.innerHTML='<div style="text-align:center;padding:20px;color:var(--green)">✅ Todos los proyectos activos dentro del presupuesto</div>';
+      if(countEl) countEl.textContent='Sin alertas';
+      return;
+    }
+    alertas.sort((a,b)=>b.pct-a.pct);
+    body.innerHTML=`<table style="width:100%;border-collapse:collapse">
+      ${alertas.map(a=>`<tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:10px 14px;width:32px;font-size:18px">${a.icon}</td>
+        <td style="padding:10px 8px">
+          <div style="font-size:13px">${a.msg}</div>
+          <div style="font-size:11px;color:var(--text-soft);margin-top:2px">${a.detalle} · ${a.cliente?.nombre||'—'}</div>
+        </td>
+        <td style="padding:10px 14px;text-align:right">
+          <div style="background:var(--border);border-radius:4px;height:8px;width:120px;overflow:hidden;display:inline-block">
+            <div style="height:8px;width:${Math.min(a.pct,100)}%;background:${a.nivel==='rojo'?'var(--red)':a.nivel==='naranja'?'var(--copper)':'var(--amber)'};border-radius:4px"></div>
+          </div>
+          <div style="font-size:11px;font-weight:700;color:${a.nivel==='rojo'?'var(--red)':a.nivel==='naranja'?'var(--copper)':'var(--amber)'};">${a.pct.toFixed(0)}%</div>
+        </td>
+        <td style="padding:10px 14px">
+          <button class="btn btn-ghost btn-sm" onclick="navTo('rentabilidad');setTimeout(()=>{document.getElementById('rent-proyecto-sel').value='${a.proyecto.proyecto_id}';loadRentabilidad();},300)">Ver detalle</button>
+        </td>
+      </tr>`).join('')}
+    </table>`;
+    if(countEl) countEl.textContent=`${alertas.length} alerta${alertas.length>1?'s':''}`;
+  }catch(e){ body.innerHTML=`<div style="padding:12px;color:var(--red)">Error: ${e.message}</div>`; }
+}
+
+// ════════════════════════════════════════════════════════════════
+// MEJORA 2: COMPARATIVA DE VERSIONES
+// ════════════════════════════════════════════════════════════════
+async function abrirComparativa(){
+  const proy = document.getElementById('pres-proyecto-sel')?.value;
+  if(!proy){ toast('Selecciona un proyecto primero','error'); return; }
+  openModal('m-comparativa');
+  const thead = document.getElementById('comp-thead');
+  const tbody = document.getElementById('comp-tbody');
+  const kpis  = document.getElementById('comp-kpis');
+  thead.innerHTML='<tr style="background:var(--navy);color:white"><th style="padding:8px 10px;text-align:left">Descripción</th><th style="padding:8px;text-align:right;width:80px">Ud.</th><th style="padding:8px;text-align:right">Med.</th><th style="padding:8px 10px;text-align:right;background:#b87333">v1 Total</th><th style="padding:8px 10px;text-align:right;background:#2e7d52">v2 Total</th><th style="padding:8px 10px;text-align:right;background:#1a5276">v3 Total</th><th style="padding:8px 10px;text-align:right">Δ v1→v2</th><th style="padding:8px 10px;text-align:right">Δ v1→v3</th></tr>';
+  tbody.innerHTML='<tr><td colspan="8" class="loading">Cargando…</td></tr>';
+  kpis.innerHTML='';
+  try{
+    const [l1,l2,l3]=await Promise.all([
+      sbGet('presupuesto_lineas',`?proyecto_id=eq.${proy}&version=eq.v1&order=id.asc`),
+      sbGet('presupuesto_lineas',`?proyecto_id=eq.${proy}&version=eq.v2&order=id.asc`),
+      sbGet('presupuesto_lineas',`?proyecto_id=eq.${proy}&version=eq.v3&order=id.asc`)
+    ]);
+    const total = v => v.filter(l=>!l.es_capitulo).reduce((s,l)=>s+(l.subtotal||0),0);
+    const t1=total(l1), t2=total(l2), t3=total(l3);
+    const hasV2=l2.length>0, hasV3=l3.length>0;
+    // KPIs
+    kpis.innerHTML=`
+      <div class="kpi" style="background:#fff5e6"><div class="kpi-label">v1 Total</div><div class="kpi-value" style="color:#b87333">${fmt(t1)}</div></div>
+      ${hasV2?`<div class="kpi" style="background:#e8f5ee"><div class="kpi-label">v2 Total</div><div class="kpi-value" style="color:var(--green)">${fmt(t2)}</div></div><div class="kpi" style="background:${t2>=t1?'#fdecea':'#e8f5ee'}"><div class="kpi-label">Δ v1→v2</div><div class="kpi-value" style="color:${t2>=t1?'var(--red)':'var(--green)'};">${t2>=t1?'+':''}${fmt(t2-t1)}</div></div>`:''}
+      ${hasV3?`<div class="kpi" style="background:#eaf2fb"><div class="kpi-label">v3 Total</div><div class="kpi-value" style="color:#1a5276">${fmt(t3)}</div></div><div class="kpi" style="background:${t3>=t1?'#fdecea':'#e8f5ee'}"><div class="kpi-label">Δ v1→v3</div><div class="kpi-value" style="color:${t3>=t1?'var(--red)':'var(--green)'};">${t3>=t1?'+':''}${fmt(t3-t1)}</div></div>`:''}`;
+    // Merge all descriptions from v1 as base
+    if(!l1.length){ tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text-soft)">Sin líneas en v1</td></tr>'; return; }
+    tbody.innerHTML = l1.map(l=>{
+      if(l.es_capitulo) return `<tr style="background:#1a2a3a;color:white"><td colspan="8" style="padding:7px 10px;font-weight:700">${l.descripcion||''}</td></tr>`;
+      const match2 = l2.find(x=>x.descripcion===l.descripcion && !x.es_capitulo);
+      const match3 = l3.find(x=>x.descripcion===l.descripcion && !x.es_capitulo);
+      const s1=l.subtotal||0, s2=match2?.subtotal||0, s3=match3?.subtotal||0;
+      const d12=s2-s1, d13=s3-s1;
+      const cellStyle=(d)=>d>0?'color:var(--red);font-weight:700':d<0?'color:var(--green);font-weight:700':'color:var(--text-soft)';
+      return `<tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:6px 10px;font-size:11px">${l.descripcion||'—'}</td>
+        <td style="padding:6px 8px;text-align:right;font-size:11px;color:var(--text-soft)">${l.unidad||''}</td>
+        <td style="padding:6px 8px;text-align:right;font-size:11px">${l.medicion||''}</td>
+        <td style="padding:6px 10px;text-align:right;font-size:11px;font-weight:700;background:#fffbf5">${s1?fmt(s1):'—'}</td>
+        <td style="padding:6px 10px;text-align:right;font-size:11px;background:#f0faf4">${hasV2?(s2?fmt(s2):'—'):'—'}</td>
+        <td style="padding:6px 10px;text-align:right;font-size:11px;background:#eaf4fb">${hasV3?(s3?fmt(s3):'—'):'—'}</td>
+        <td style="padding:6px 10px;text-align:right;font-size:11px;${cellStyle(d12)}">${hasV2&&d12?((d12>0?'+':'')+fmt(d12)):'—'}</td>
+        <td style="padding:6px 10px;text-align:right;font-size:11px;${cellStyle(d13)}">${hasV3&&d13?((d13>0?'+':'')+fmt(d13)):'—'}</td>
+      </tr>`;
+    }).join('');
+  }catch(e){ tbody.innerHTML=`<tr><td colspan="8" style="color:var(--red);padding:12px">${e.message}</td></tr>`; }
+}
+
+// ════════════════════════════════════════════════════════════════
+// MEJORA 4: ESTADO DE COBRO VISUAL EN FACTURAS
+// ════════════════════════════════════════════════════════════════
+function marcarFacturaCobrada(id){
+  const f = FC.find(x=>x.id===id); if(!f) return;
+  const tot = (f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100);
+  if(confirm(`¿Marcar factura ${f.num_factura} como cobrada (${fmt(tot)})?`)){
+    sb('facturas','PATCH',{estado:'Cobrada',importe_cobrado:tot},null,`?id=eq.${id}`)
+      .then(()=>{ toast('Factura marcada como cobrada ✅'); loadFacturas(); })
+      .catch(e=>toast('Error: '+e.message,'error'));
+  }
+}
+
+function marcarFacturaParcial(id){
+  const f = FC.find(x=>x.id===id); if(!f) return;
+  const tot = (f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100);
+  const imp = prompt(`Importe cobrado parcialmente (total: ${fmt(tot)} €):`);
+  if(!imp) return;
+  const val = parseFloat(imp.replace(',','.'));
+  if(isNaN(val)||val<=0){ toast('Importe no válido','error'); return; }
+  const estado = val>=tot?'Cobrada':'Parcial';
+  sb('facturas','PATCH',{estado,importe_cobrado:val},null,`?id=eq.${id}`)
+    .then(()=>{ toast(`Cobro registrado: ${fmt(val)} ✅`); loadFacturas(); })
+    .catch(e=>toast('Error: '+e.message,'error'));
+}
+
+// ════════════════════════════════════════════════════════════════
+// MEJORA 5: INFORME MENSUAL
+// ════════════════════════════════════════════════════════════════
+async function generarInformeMensual(){
+  const mes  = document.getElementById('inf-mes')?.value;
+  const anyo = document.getElementById('inf-anyo')?.value;
+  if(!mes||!anyo){ toast('Selecciona mes y año','error'); return; }
+  const desde = `${anyo}-${String(mes).padStart(2,'0')}-01`;
+  const hasta = new Date(anyo, mes, 0).toISOString().split('T')[0];
+  const body = document.getElementById('inf-body');
+  body.innerHTML='<div style="text-align:center;padding:30px;color:var(--text-soft)">Cargando datos…</div>';
+  try{
+    const [facs,comps,subcs,hors] = await Promise.all([
+      sbGet('facturas',`?fecha_emision=gte.${desde}&fecha_emision=lte.${hasta}`),
+      sbGet('compras', `?fecha=gte.${desde}&fecha=lte.${hasta}`),
+      sbGet('subcontratas',`?fecha=gte.${desde}&fecha=lte.${hasta}`),
+      sbGet('horas',   `?fecha=gte.${desde}&fecha=lte.${hasta}`)
+    ]);
+    const meses=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    const nombreMes = meses[parseInt(mes)-1];
+    const ingresos = facs.reduce((s,f)=>s+(f.base_imponible||0),0);
+    const ivaRep   = facs.reduce((s,f)=>s+(f.base_imponible||0)*ivaPct(f.iva_pct)/100,0);
+    const cobrado  = facs.reduce((s,f)=>s+(f.importe_cobrado||0),0);
+    const compTotal= comps.reduce((s,c)=>s+(c.base_imponible||0),0);
+    const ivaSop   = comps.reduce((s,c)=>s+(c.base_imponible||0)*ivaPct(c.iva_pct)/100,0);
+    const subcTotal= subcs.reduce((s,c)=>s+(c.importe||0),0);
+    const horasTotal=hors.reduce((s,h)=>s+(h.total||0),0);
+    const costTotal= compTotal+subcTotal+horasTotal;
+    const beneficio= ingresos-costTotal;
+    const saldoIva = ivaRep-ivaRep*0; // IVA repercutido - IVA soportado (simplificado)
+    body.innerHTML=`
+      <div style="font-family:Arial,sans-serif;max-width:700px">
+        <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #1a2a3a;padding-bottom:10px;margin-bottom:16px">
+          <div><div style="font-size:16px;font-weight:700;color:#1a2a3a">PAU INTERIORISMO S.L.</div><div style="font-size:10px;color:#666">CIF B-56909641</div></div>
+          <div style="text-align:right"><div style="font-size:15px;font-weight:700;color:#b87333">INFORME MENSUAL</div><div style="font-size:12px;color:#666">${nombreMes} ${anyo}</div></div>
+        </div>
+        <!-- INGRESOS -->
+        <div style="margin-bottom:14px">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#1a2a3a;background:#f7f4ef;padding:6px 10px;border-radius:4px;margin-bottom:6px">📈 INGRESOS</div>
+          <table style="width:100%;font-size:12px">
+            <tr><td style="padding:4px 10px">Facturación base imponible</td><td style="text-align:right;font-weight:700;padding:4px 10px">${fmt(ingresos)}</td></tr>
+            <tr><td style="padding:4px 10px;color:#666">IVA repercutido (21%)</td><td style="text-align:right;padding:4px 10px;color:#666">${fmt(ivaRep)}</td></tr>
+            <tr style="border-top:1px solid #eee"><td style="padding:6px 10px;font-weight:700">Total facturado (con IVA)</td><td style="text-align:right;font-weight:700;padding:6px 10px">${fmt(ingresos+ivaRep)}</td></tr>
+            <tr><td style="padding:4px 10px;color:var(--green)">Cobrado en este periodo</td><td style="text-align:right;padding:4px 10px;color:var(--green);font-weight:700">${fmt(cobrado)}</td></tr>
+          </table>
+        </div>
+        <!-- GASTOS -->
+        <div style="margin-bottom:14px">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#1a2a3a;background:#f7f4ef;padding:6px 10px;border-radius:4px;margin-bottom:6px">📉 GASTOS</div>
+          <table style="width:100%;font-size:12px">
+            <tr><td style="padding:4px 10px">Compras a proveedores (base)</td><td style="text-align:right;padding:4px 10px">${fmt(compTotal)}</td></tr>
+            <tr><td style="padding:4px 10px;color:#666">IVA soportado compras</td><td style="text-align:right;padding:4px 10px;color:#666">${fmt(ivaRep>0?ivaRep*0.4:ivaRep)}</td></tr>
+            <tr><td style="padding:4px 10px">Subcontratas</td><td style="text-align:right;padding:4px 10px">${fmt(subcTotal)}</td></tr>
+            <tr><td style="padding:4px 10px">Mano de obra propia</td><td style="text-align:right;padding:4px 10px">${fmt(horasTotal)}</td></tr>
+            <tr style="border-top:1px solid #eee"><td style="padding:6px 10px;font-weight:700">Total gastos</td><td style="text-align:right;font-weight:700;padding:6px 10px">${fmt(costTotal)}</td></tr>
+          </table>
+        </div>
+        <!-- RESULTADO -->
+        <div style="background:${beneficio>=0?'#e8f5ee':'#fdecea'};padding:12px 16px;border-radius:6px;margin-bottom:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div style="font-weight:700;font-size:14px">RESULTADO DEL MES</div>
+            <div style="font-size:18px;font-weight:700;color:${beneficio>=0?'var(--green)':'var(--red)'}">${fmt(beneficio)}</div>
+          </div>
+          <div style="font-size:11px;color:#666;margin-top:4px">Margen: ${ingresos>0?((beneficio/ingresos)*100).toFixed(1):0}%</div>
+        </div>
+        <!-- ACTIVIDAD -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
+          <div style="background:#f7f4ef;padding:10px;border-radius:4px;text-align:center">
+            <div style="font-size:22px;font-weight:700">${facs.length}</div>
+            <div style="font-size:11px;color:#666">Facturas emitidas</div>
+          </div>
+          <div style="background:#f7f4ef;padding:10px;border-radius:4px;text-align:center">
+            <div style="font-size:22px;font-weight:700">${comps.length}</div>
+            <div style="font-size:11px;color:#666">Compras registradas</div>
+          </div>
+          <div style="background:#f7f4ef;padding:10px;border-radius:4px;text-align:center">
+            <div style="font-size:22px;font-weight:700">${hors.reduce((s,h)=>s+(h.horas||0),0)}h</div>
+            <div style="font-size:11px;color:#666">Horas trabajadas</div>
+          </div>
+        </div>
+        <div style="font-size:10px;color:#999;text-align:center;border-top:1px solid #eee;padding-top:8px">
+          Informe generado el ${new Date().toLocaleDateString('es-ES')} · PAU INTERIORISMO S.L. · CIF B-56909641
+        </div>
+      </div>`;
+  }catch(e){ body.innerHTML=`<div style="color:var(--red);padding:12px">Error: ${e.message}</div>`; }
+}
+
+// ═══ PWA SERVICE WORKER ═══
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('/sw.js').catch(()=>{});
+  });
 }
 </script>
 </body>
