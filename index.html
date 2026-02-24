@@ -227,7 +227,7 @@ tbody td{padding:7px 10px;vertical-align:middle}
 <!-- APP -->
 <div class="app">
 <nav class="sidebar">
-  <div class="sidebar-logo"><div class="brand">PAU INTERIORISMO</div><div class="brand-sub">Sistema de gestión · <span style="color:#b87333">v19</span></div></div>
+  <div class="sidebar-logo"><div class="brand">PAU INTERIORISMO</div><div class="brand-sub">Sistema de gestión · <span style="color:#b87333">v20</span></div></div>
   <div class="nav-section">
     <div class="nav-label">Principal</div>
     <div class="nav-item active" data-view="gerencia"><span class="ni">🏠</span><span>Gerencia</span></div>
@@ -1923,15 +1923,15 @@ function renderPedidoLineas(){
   const tbody=document.getElementById('pd-lineas-body');
   if(!tbody)return;
   if(!window.pdLineas||!window.pdLineas.length){
-    window.pdLineas=[{cant:'',desc:''},{cant:'',desc:''},{cant:'',desc:''},{cant:'',desc:''},{cant:'',desc:''},{cant:'',desc:''},{cant:'',desc:''},{cant:'',desc:''},{cant:'',desc:''},{cant:'',desc:''},{cant:'',desc:''},{cant:'',desc:''},{cant:'',desc:''},{cant:'',desc:''},{cant:'',desc:''},{cant:'',desc:''},{cant:'',desc:''},{cant:'',desc:''},{cant:'',desc:''},{cant:'',desc:''}];
+    window.pdLineas=Array.from({length:20},()=>({cant:'',desc:''}));
   }
   tbody.innerHTML=window.pdLineas.map((l,i)=>`
-    <tr style="border-bottom:1px solid #eee">
-      <td style="padding:2px 4px;text-align:center;border-right:1px solid #eee">
-        <input value="${l.cant}" onchange="window.pdLineas[${i}].cant=this.value" style="border:none;width:52px;text-align:center;font-size:12px;background:transparent" placeholder="">
+    <tr style="border-bottom:1px solid #ddd">
+      <td style="padding:4px 6px;text-align:center;border-right:1px solid #ddd;width:64px;min-height:24px">
+        <input value="${l.cant}" oninput="window.pdLineas[${i}].cant=this.value" style="width:54px;text-align:center;font-size:12px;font-family:Arial;border:none;border-bottom:1px dotted #bbb;outline:none;background:transparent;min-height:20px" placeholder=" ">
       </td>
-      <td style="padding:2px 4px">
-        <input value="${l.desc}" onchange="window.pdLineas[${i}].desc=this.value" style="border:none;width:100%;font-size:12px;background:transparent" placeholder="">
+      <td style="padding:4px 6px;min-height:24px">
+        <input value="${l.desc}" oninput="window.pdLineas[${i}].desc=this.value" style="width:100%;font-size:12px;font-family:Arial;border:none;border-bottom:1px dotted #bbb;outline:none;background:transparent;min-height:20px" placeholder=" ">
       </td>
     </tr>`).join('');
 }
@@ -2310,6 +2310,8 @@ const loaders={
     }
   },
   pedido_doc:async()=>{
+    // Siempre reinicializar las líneas al entrar en la vista
+    window.pdLineas=Array.from({length:20},()=>({cant:'',desc:''}));
     const today=new Date().toISOString().split('T')[0];
     const f=document.getElementById('pd-fecha-input');if(f&&!f.value)f.value=today;
     renderPedidoLineas();
