@@ -462,38 +462,45 @@ tbody td{padding:7px 10px;vertical-align:middle}
         </div>
 
         <div class="card">
-          <div class="card-header"><div class="card-title">📁 Estados proyecto</div></div>
-          <div class="card-body">
-            <div class="lista-item">Nuevo lead</div><div class="lista-item">Presupuesto enviado</div><div class="lista-item">Aprobado</div><div class="lista-item">En ejecución</div><div class="lista-item">Finalizado</div><div class="lista-item">Facturado</div><div class="lista-item">Cobrado</div><div class="lista-item">Cancelado</div>
-          </div>
+          <div class="card-header"><div class="card-title">📁 Estados proyecto</div><button class="btn btn-ghost btn-sm" onclick="addListItem('estados-list','estado')">＋ Añadir</button></div>
+          <div class="card-body" id="estados-list"></div>
         </div>
 
         <div class="card">
-          <div class="card-header"><div class="card-title">🏗 Tipos proyecto</div></div>
-          <div class="card-body">
-            <div class="lista-item">Obra nueva</div><div class="lista-item">Rehabilitación integral</div><div class="lista-item">Reforma parcial</div><div class="lista-item">Cocina</div><div class="lista-item">Baño</div><div class="lista-item">Interiorismo</div><div class="lista-item">Mobiliario</div><div class="lista-item">Electricidad</div><div class="lista-item">Fontanería</div><div class="lista-item">Pintura</div><div class="lista-item">Otros</div>
-          </div>
+          <div class="card-header"><div class="card-title">🏗 Tipos proyecto</div><button class="btn btn-ghost btn-sm" onclick="addListItem('tipos-proyecto-list','tipo')">＋ Añadir</button></div>
+          <div class="card-body" id="tipos-proyecto-list"></div>
         </div>
 
         <div class="card">
-          <div class="card-header"><div class="card-title">💶 IVA</div></div>
+          <div class="card-header"><div class="card-title">💶 IVA</div><small style="color:var(--text-light);font-size:10px">Fijo por ley</small></div>
           <div class="card-body">
             <div class="lista-item">Exento</div><div class="lista-item">4%</div><div class="lista-item">10%</div><div class="lista-item">21%</div>
           </div>
         </div>
 
         <div class="card">
-          <div class="card-header"><div class="card-title">💳 Formas de pago</div></div>
-          <div class="card-body">
-            <div class="lista-item">Transferencia</div><div class="lista-item">Efectivo</div><div class="lista-item">Giro</div><div class="lista-item">Domiciliación</div><div class="lista-item">Confirming</div><div class="lista-item">Pagaré</div>
-          </div>
+          <div class="card-header"><div class="card-title">💳 Formas de pago</div><button class="btn btn-ghost btn-sm" onclick="addListItem('formas-pago-list','forma pago')">＋ Añadir</button></div>
+          <div class="card-body" id="formas-pago-list"></div>
         </div>
 
         <div class="card">
-          <div class="card-header"><div class="card-title">🏭 Tipos proveedor</div></div>
-          <div class="card-body">
-            <div class="lista-item">Proveedor</div><div class="lista-item">Subcontrata</div><div class="lista-item">Alquiler</div><div class="lista-item">Servicio</div><div class="lista-item">Transporte</div><div class="lista-item">Otros</div>
-          </div>
+          <div class="card-header"><div class="card-title">🏭 Tipos proveedor</div><button class="btn btn-ghost btn-sm" onclick="addListItem('tipos-proveedor-list','tipo')">＋ Añadir</button></div>
+          <div class="card-body" id="tipos-proveedor-list"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-title">👥 Tipos cliente</div><button class="btn btn-ghost btn-sm" onclick="addListItem('tipos-cliente-list','tipo cliente')">＋ Añadir</button></div>
+          <div class="card-body" id="tipos-cliente-list"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-title">🛋 Estancias</div><button class="btn btn-ghost btn-sm" onclick="addListItem('estancias-list','estancia')">＋ Añadir</button></div>
+          <div class="card-body" id="estancias-list"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-title">🏷 Categorías tarifario</div><button class="btn btn-ghost btn-sm" onclick="addListItem('categorias-list','categoría')">＋ Añadir</button></div>
+          <div class="card-body" id="categorias-list"></div>
         </div>
 
         <div class="card" style="grid-column:1/-1">
@@ -747,10 +754,7 @@ tbody td{padding:7px 10px;vertical-align:middle}
     <!-- ═══ CONTROL HORARIO ═══ -->
     <div class="view" id="view-control_horario">
       <div class="search-bar">
-        <select class="form-input" style="width:160px" id="ch-trab-sel" onchange="loadControlHorario()">
-          <option value="Paco">Paco</option><option value="Raúl">Raúl</option><option value="Boro">Boro</option>
-          <option value="Julio">Julio</option><option value="Pau">Pau</option><option value="Jose Asins">Jose Asins</option>
-        </select>
+        <select class="form-input" style="width:160px" id="ch-trab-sel" onchange="loadControlHorario()"><option value="">Seleccionar trabajador…</option></select>
         <select class="form-input" style="width:100px" id="ch-year-sel" onchange="loadControlHorario()">
           <option value="2025">2025</option><option value="2026" selected>2026</option><option value="2027">2027</option>
         </select>
@@ -954,7 +958,7 @@ tbody td{padding:7px 10px;vertical-align:middle}
       <div class="form-group"><label class="form-label">Nombre del proyecto *</label><input class="form-input" id="p-nombre"></div>
       <div class="form-group"><label class="form-label">Tipo</label><select class="form-input" id="p-tipo"><option>Obra nueva</option><option>Rehabilitación integral</option><option>Reforma parcial</option><option>Cocina</option><option>Baño</option><option>Interiorismo</option><option>Mobiliario</option><option>Otros</option></select></div>
       <div class="form-group"><label class="form-label">Estado</label><select class="form-input" id="p-estado"><option>Nuevo lead</option><option>Presupuesto enviado</option><option>Aprobado</option><option>En ejecución</option><option>Finalizado</option><option>Facturado</option><option>Cobrado</option><option>Cancelado</option></select></div>
-      <div class="form-group"><label class="form-label">Responsable</label><select class="form-input" id="p-resp"><option>Jose Asins</option><option>Pau</option><option>Paco</option><option>Raúl</option><option>Boro</option><option>Julio</option></select></div>
+      <div class="form-group"><label class="form-label">Responsable</label><select class="form-input" id="p-resp"><option value="">Seleccionar…</option></select></div>
       <div class="form-group"><label class="form-label">Fecha inicio</label><input class="form-input" id="p-fecha" type="date"></div>
       <div class="form-group fg-full"><label class="form-label">Dirección de obra</label><input class="form-input" id="p-dir"></div>
       <div class="form-group fg-full"><label class="form-label">Notas</label><textarea class="form-input" id="p-notas" rows="2"></textarea></div>
@@ -1127,7 +1131,7 @@ tbody td{padding:7px 10px;vertical-align:middle}
     <div class="form-grid">
       <div class="form-group"><label class="form-label">Fecha</label><input class="form-input" id="h-fecha" type="date"></div>
       <div class="form-group"><label class="form-label">Proyecto</label><select class="form-input" id="h-proyecto"><option value="">Seleccionar…</option></select></div>
-      <div class="form-group"><label class="form-label">Trabajador</label><select class="form-input" id="h-trab"><option>Paco</option><option>Raúl</option><option>Boro</option><option>Julio</option><option>Pau</option><option>Jose Asins</option></select></div>
+      <div class="form-group"><label class="form-label">Trabajador</label><select class="form-input" id="h-trab"><option value="">Seleccionar…</option></select></div>
       <div class="form-group"><label class="form-label">Horas</label><input class="form-input" id="h-horas" type="number" step="0.5" placeholder="8"></div>
       <div class="form-group"><label class="form-label">€/hora</label><input class="form-input" id="h-coste" type="number" value="18"></div>
       <div class="form-group fg-full"><label class="form-label">Descripción</label><input class="form-input" id="h-desc"></div>
@@ -1334,15 +1338,29 @@ async function loadPedidoDoc(){
 // ═══════════════════════════════════════════
 // LISTAS
 // ═══════════════════════════════════════════
-function addListItem(listId, tipo){
-  const val=prompt(`Nuevo valor para ${tipo}:`);
+async function addListItem(listId, tipo){
+  const val=prompt(`Nuevo ${tipo}:`);
   if(!val||!val.trim())return;
+  const v=val.trim();
   const list=document.getElementById(listId);
   const div=document.createElement('div');
-  div.className='lista-item';
-  div.textContent=val.trim();
+  div.className='lista-item';div.dataset.val=v;div.textContent=v;
   list.appendChild(div);
-  toast(`"${val.trim()}" añadido ✅`);
+  const clave=LISTA_MAP[listId];
+  if(clave){
+    if(clave==='trabajadores'){if(!TRABAJADORES.includes(v))TRABAJADORES.push(v);populateTrabajadores();}
+    else if(LISTAS[clave]){if(!LISTAS[clave].includes(v))LISTAS[clave].push(v);populateAllListas();}
+    const arr=clave==='trabajadores'?TRABAJADORES:(LISTAS[clave]||[]);
+    const val2=arr.join(',');
+    try{
+      const ex=await sbGet('configuracion',`?clave=eq.${clave}`);
+      if(ex&&ex.length>0){await fetch(`${SB_URL}/rest/v1/configuracion?clave=eq.${clave}`,{method:'PATCH',headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({valor:val2})});}
+      else{await sbPost('configuracion',{clave,valor:val2,descripcion:'Lista editable'});}
+      toast(`"${v}" guardado — disponible en toda la app ✅`);
+    }catch(e){toast(`"${v}" añadido (error: ${e.message})`,'error');}
+  } else {
+    toast(`"${v}" añadido ✅`);
+  }
 }
 
 // ═══════════════════════════════════════════
@@ -1461,10 +1479,39 @@ function filterTable(tbId,inId){const q=document.getElementById(inId)?.value.toL
 // CACHES
 // ═══════════════════════════════════════════
 let CC=[],PC=[],TC=[],ProvC=[],IntC=[],CoC=[],ScC=[],HC=[],FC=[],PedC=[],CmpC=[],PresC=[],CyCache=[];
+let TRABAJADORES=['Paco','Raúl','Boro','Julio','Pau','Jose Asins'];
+let LISTAS={
+  estados_proyecto:['Nuevo lead','Presupuesto enviado','Aprobado','En ejecución','Finalizado','Facturado','Cobrado','Cancelado'],
+  tipos_proyecto:['Obra nueva','Rehabilitación integral','Reforma parcial','Cocina','Baño','Interiorismo','Mobiliario','Electricidad','Fontanería','Pintura','Otros'],
+  formas_pago:['Transferencia','Efectivo','Giro','Domiciliación','Confirming','Pagaré'],
+  tipos_cliente:['Particular','Empresa','Promotora','Administración','Otros'],
+  tipos_proveedor:['Proveedor','Subcontrata','Alquiler','Servicio','Transporte','Otros'],
+  estancias:['Salón','Cocina','Dormitorio','Baño','Terraza','Despacho','Comedor','Pasillo','Entrada','Otros'],
+  categorias_tarifario:['Mobiliario','Sanitarios','Griferías','Cocina','Carpintería','Pavimentos','Revestimientos','Instalaciones','Otros'],
+};
+const LISTA_MAP={'trabajadores-list':'trabajadores','estados-list':'estados_proyecto','tipos-proyecto-list':'tipos_proyecto','formas-pago-list':'formas_pago','tipos-cliente-list':'tipos_cliente','tipos-proveedor-list':'tipos_proveedor','estancias-list':'estancias','categorias-list':'categorias_tarifario'};
 
 // ═══════════════════════════════════════════
 // POPULATE SELECTS
 // ═══════════════════════════════════════════
+function populateAllListas(){
+  const map={estados_proyecto:['p-estado'],tipos_proyecto:['p-tipo'],formas_pago:['c-pago','pv-pago','f-pago'],tipos_cliente:['c-tipo'],tipos_proveedor:['pv-tipo'],estancias:['i-estancia'],categorias_tarifario:['t-cat']};
+  Object.entries(map).forEach(([key,ids])=>{
+    const vals=LISTAS[key]||[];
+    ids.forEach(id=>{const el=document.getElementById(id);if(!el)return;const cur=el.value;el.innerHTML='<option value="">Seleccionar…</option>'+vals.map(v=>`<option value="${v}">${v}</option>`).join('');if(cur&&vals.includes(cur))el.value=cur;});
+  });
+}
+function populateTrabajadores(){
+  const ids=['h-trab','ch-trab-sel','p-resp'];
+  ids.forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    const cur=el.value;
+    const placeholder=id==='ch-trab-sel'?'Seleccionar trabajador…':'Seleccionar…';
+    el.innerHTML=`<option value="">${placeholder}</option>`+TRABAJADORES.map(t=>`<option value="${t}">${t}</option>`).join('');
+    if(cur&&TRABAJADORES.includes(cur))el.value=cur;
+  });
+}
 async function populateSelects(){
   if(!CC.length)CC=await sbGet('clientes').catch(()=>[]);
   if(!PC.length)PC=await sbGet('proyectos').catch(()=>[]);
@@ -1582,7 +1629,7 @@ async function loadGerencia(){
     }).join('');
 
     const s=document.getElementById('conn-status');s.style.background='var(--green-soft)';s.style.color='var(--green)';s.textContent='🟢 Conectado';
-    populateSelects();populateIntCatalog();
+    populateSelects();populateIntCatalog();populateTrabajadores();
   }catch(e){
     console.error(e);
     const s=document.getElementById('conn-status');s.style.background='var(--red-soft)';s.style.color='var(--red)';s.textContent='🔴 Error';
@@ -2099,7 +2146,17 @@ const loaders={
     const sel=document.getElementById('pd-pedido-sel');
     sel.innerHTML='<option value="">Seleccionar pedido…</option>'+PedC.map(p=>`<option value="${p.id}">${p.num_pedido||'Sin nº'} · ${p.proveedor||'—'} · ${p.importe?p.importe.toFixed(2)+'€':'—'}</option>`).join('');
   },
-  listas:()=>{},
+  listas:()=>{
+    const r=(id,arr)=>{const el=document.getElementById(id);if(el)el.innerHTML=arr.map(t=>`<div class="lista-item" data-val="${t}">${t}</div>`).join('');};
+    r('trabajadores-list',TRABAJADORES);
+    r('estados-list',LISTAS.estados_proyecto);
+    r('tipos-proyecto-list',LISTAS.tipos_proyecto);
+    r('formas-pago-list',LISTAS.formas_pago);
+    r('tipos-cliente-list',LISTAS.tipos_cliente);
+    r('tipos-proveedor-list',LISTAS.tipos_proveedor);
+    r('estancias-list',LISTAS.estancias);
+    r('categorias-list',LISTAS.categorias_tarifario);
+  },
 };
 
 // ═══════════════════════════════════════════
@@ -2111,8 +2168,19 @@ async function init(){
   await loadGerencia();
   // Cargar proveedores al inicio para tenerlos siempre disponibles
   try{ ProvC=await sbGet('proveedores','?order=nombre.asc'); }catch(e){ ProvC=[]; }
+  // Cargar trabajadores personalizados desde Supabase
+  try{
+    const allCfg=await sbGet('configuracion','?clave=in.(trabajadores,estados_proyecto,tipos_proyecto,formas_pago,tipos_cliente,tipos_proveedor,estancias,categorias_tarifario)');
+    allCfg.forEach(row=>{
+      const vals=row.valor.split(',').map(t=>t.trim()).filter(Boolean);
+      if(row.clave==='trabajadores') TRABAJADORES=vals;
+      else if(LISTAS[row.clave]) LISTAS[row.clave]=vals;
+    });
+  }catch(e){}
   populateSelects();
   populateIntCatalog();
+  populateTrabajadores();
+  populateAllListas();
 }
 </script>
 </body>
