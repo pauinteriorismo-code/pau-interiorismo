@@ -165,6 +165,10 @@ tbody td{padding:7px 10px;vertical-align:middle}
    PRINT STYLES
 ══════════════════════════════ */
 @media print {
+  .no-print { display: none !important; }
+  input, textarea { border: none !important; background: transparent !important; outline: none !important; resize: none !important; }
+  input::placeholder, textarea::placeholder { color: transparent !important; }
+
   /* Hide everything except the document */
   .sidebar, .topbar, .search-bar, .btn, 
   .nav-item, .overlay, .toast, .confirm-overlay,
@@ -399,46 +403,63 @@ tbody td{padding:7px 10px;vertical-align:middle}
 
     <!-- ═══ PEDIDO DOC ═══ -->
     <div class="view" id="view-pedido_doc">
-      <div class="search-bar">
-        <select class="form-input" style="width:270px" id="pd-pedido-sel" onchange="loadPedidoDoc()"><option value="">Seleccionar pedido…</option></select>
+      <div class="search-bar" style="flex-wrap:wrap;gap:8px">
         <button class="btn btn-primary" onclick="window.print()">🖨️ Imprimir / PDF</button>
       </div>
-      <div id="pd-doc" style="background:white;max-width:700px;margin:0 auto;padding:32px 40px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;font-family:Arial,sans-serif">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid #1a2a3a">
+      <!-- DOCUMENTO PEDIDO EDITABLE + IMPRIMIBLE -->
+      <div id="pd-doc" style="background:white;max-width:720px;margin:0 auto;padding:32px 40px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;font-family:Arial,sans-serif">
+        <!-- CABECERA -->
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;padding-bottom:14px;border-bottom:2px solid #1a2a3a">
           <div>
             <div style="font-size:18px;font-weight:700;color:#1a2a3a">PAU INTERIORISMO S.L.</div>
-            <div style="color:#666;font-size:11px">C/ Tomás y Valiente Nº 6 Bajo, 46290 Alcàsser</div>
-            <div style="color:#666;font-size:11px">info@pauinteriorismo.com · Tel: 961 20 01 87 · CIF: B-56909641</div>
+            <div style="color:#666;font-size:10px">C/ Tomás y Valiente Nº 6 Bajo · 46290 Alcàsser (Valencia)</div>
+            <div style="color:#666;font-size:10px">info@pauinteriorismo.com · Tel: 961 20 01 87 · CIF: B-56909641</div>
           </div>
           <div style="text-align:right">
             <div style="font-size:20px;font-weight:700;color:#b87333">PEDIDO</div>
-            <div id="pd-num" style="font-size:13px;font-weight:700"></div>
-            <div id="pd-fecha" style="color:#666;font-size:11px"></div>
+            <div style="font-size:11px;color:#666">Nº <input id="pd-num-input" style="border:none;border-bottom:1px solid #ccc;width:100px;font-size:11px;text-align:right" placeholder="PED-001"></div>
+            <div style="font-size:11px;color:#666">Fecha <input id="pd-fecha-input" type="date" style="border:none;border-bottom:1px solid #ccc;font-size:11px"></div>
           </div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
-          <div style="background:#f7f4ef;padding:12px;border-radius:4px">
-            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#8a9aaa;margin-bottom:6px">PROVEEDOR</div>
-            <div id="pd-prov-nombre" style="font-weight:700"></div>
-            <div id="pd-prov-tel" style="color:#666"></div>
-            <div id="pd-prov-email" style="color:#666"></div>
+        <!-- PROVEEDOR / PROYECTO -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px">
+          <div style="background:#f7f4ef;padding:10px;border-radius:4px">
+            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#8a9aaa;margin-bottom:5px">PROVEEDOR / EMPRESA</div>
+            <input id="pd-prov-input" style="border:none;background:transparent;width:100%;font-weight:700;font-size:12px" placeholder="Nombre proveedor">
+            <input id="pd-prov-tel-input" style="border:none;background:transparent;width:100%;color:#666;font-size:11px;margin-top:3px" placeholder="Teléfono">
           </div>
-          <div style="background:#f7f4ef;padding:12px;border-radius:4px">
-            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#8a9aaa;margin-bottom:6px">PROYECTO</div>
-            <div id="pd-proyecto" style="font-weight:700"></div>
-            <div id="pd-tipo" style="color:#666"></div>
+          <div style="background:#f7f4ef;padding:10px;border-radius:4px">
+            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#8a9aaa;margin-bottom:5px">PROYECTO / REFERENCIA</div>
+            <input id="pd-proyecto-input" style="border:none;background:transparent;width:100%;font-weight:700;font-size:12px" placeholder="Nombre o referencia del proyecto">
+            <input id="pd-obs-input" style="border:none;background:transparent;width:100%;color:#666;font-size:11px;margin-top:3px" placeholder="Observaciones">
           </div>
         </div>
-        <table style="width:100%;border-collapse:collapse;margin-bottom:20px">
-          <thead><tr style="background:#1a2a3a;color:white"><th style="padding:8px;text-align:left">Descripción / Concepto</th><th style="padding:8px;text-align:right;width:100px">Importe</th></tr></thead>
-          <tbody>
-            <tr style="border-bottom:1px solid #eee"><td style="padding:10px" id="pd-concepto">—</td><td style="padding:10px;text-align:right;font-weight:700" id="pd-importe">—</td></tr>
+        <!-- TABLA DE LÍNEAS -->
+        <table style="width:100%;border-collapse:collapse;margin-bottom:16px" id="pd-lineas-table">
+          <thead>
+            <tr style="background:#1a2a3a;color:white">
+              <th style="padding:7px 10px;text-align:center;width:60px">Cant.</th>
+              <th style="padding:7px 10px;text-align:left">Descripción / Concepto</th>
+            </tr>
+          </thead>
+          <tbody id="pd-lineas-body">
+            <!-- Líneas generadas dinámicamente -->
           </tbody>
         </table>
-        <div style="padding:12px;background:#fff2cc;border-radius:4px;font-size:11px;color:#7d6608;margin-bottom:20px">
-          <strong>NOTA:</strong> <span id="pd-obs">Servir lo antes posible. Dirección de entrega: <em id="pd-proyecto-dir"></em></span>
+        <div class="no-print" style="margin-bottom:16px">
+          <button class="btn btn-ghost btn-sm" onclick="addPedidoLinea()">＋ Añadir línea</button>
+          <button class="btn btn-ghost btn-sm" onclick="clearPedidoLineas()">🗑 Limpiar todo</button>
         </div>
-        <div style="color:#666;font-size:10px;text-align:center;border-top:1px solid #eee;padding-top:12px">
+        <!-- NOTA / INSTRUCCIONES FIJAS -->
+        <div style="border:1px solid #ddd;padding:10px;border-radius:4px;margin-bottom:14px;font-size:11px">
+          <textarea id="pd-nota-input" style="border:none;width:100%;resize:none;font-size:11px;font-family:Arial" rows="3" placeholder="Instrucciones de entrega...">SERVIR LO ANTES POSIBLE.
+
+DIRECCIÓN DE ENTREGA AV. DIPUTACIÓN Nº 24 - ALCASSER 46290 (VALENCIA)
+HORARIO DE DESCARGA DE 10:00 - 14:00 Y DE 16:30 A 19:00 H.
+TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
+        </div>
+        <!-- PIE -->
+        <div style="color:#666;font-size:10px;text-align:center;border-top:1px solid #eee;padding-top:10px">
           PAU INTERIORISMO S.L. · CIF B-56909641 · info@pauinteriorismo.com
         </div>
       </div>
@@ -1846,7 +1867,7 @@ async function loadCompras(){
     CoC=await sbGet('compras','?order=fecha.desc');
     document.getElementById('compras-count').textContent=CoC.length+' registros';
     if(!CoC.length){tb.innerHTML=`<tr><td colspan="9"><div class="empty"><div class="empty-icon">🛒</div><div class="empty-text">Sin compras</div><button class="btn btn-primary" onclick="openModal('m-compra')">＋ Nueva</button></div></td></tr>`;return;}
-    tb.innerHTML=CoC.map(c=>{const tot=c.base_imponible*(1+ivaPct(c.iva_pct)/100);return`<tr data-search="${(c.proyecto_id+c.proveedor_id+c.concepto).toLowerCase()}"><td>${fmtD(c.fecha)}</td><td class="td-mono" style="color:var(--text-soft)">${c.proyecto_id||'—'}</td><td>${c.proveedor_id||'—'}</td><td>${c.concepto||'—'}</td><td class="td-mono">${fmt(c.base_imponible)}</td><td class="td-mono">${c.iva_pct}</td><td class="td-mono" style="font-weight:700">${fmt(tot)}</td><td>${bE(c.estado_pago)}</td><td style="display:flex;gap:4px"><button class="btn btn-ghost btn-icon btn-sm" onclick="editCompra('${c.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('compras','${c.id}','${(c.concepto||'compra').replace(/'/g,"\\'")}')">🗑</button></td></tr>`;}).join('');
+    tb.innerHTML=CoC.map(c=>{const tot=c.base_imponible*(1+ivaPct(c.iva_pct)/100);return`<tr data-search="${(c.proyecto_id+c.proveedor_id+c.concepto).toLowerCase()}"><td>${fmtD(c.fecha)}</td><td class="td-mono" style="color:var(--text-soft)">${c.proyecto_id||'—'}</td><td>${c.proveedor_id||'—'}</td><td>${c.concepto||'—'}</td><td class="td-mono">${fmt(c.base_imponible)}</td><td class="td-mono">${c.iva_pct}</td><td class="td-mono" style="font-weight:700">${fmt(tot)}</td><td>${bE(c.estado_pago)}</td><td style="display:flex;gap:4px"><button class="btn btn-ghost btn-icon btn-sm" onclick="editCompra('${c.id}')" style="font-size:11px">Editar</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('compras','${c.id}','${(c.concepto||'compra').replace(/'/g,"\\'")}')">🗑</button></td></tr>`;}).join('');
   }catch(e){tb.innerHTML=`<tr><td colspan="9" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
 }
 async function saveCompra(){
@@ -1870,7 +1891,7 @@ async function loadSubcontratas(){
     ScC=await sbGet('subcontratas','?order=fecha.desc');
     document.getElementById('subcontratas-count').textContent=ScC.length+' registros';
     if(!ScC.length){tb.innerHTML=`<tr><td colspan="9"><div class="empty"><div class="empty-icon">👷</div><div class="empty-text">Sin subcontratas</div><button class="btn btn-primary" onclick="openModal('m-subcontrata')">＋ Nueva</button></div></td></tr>`;return;}
-    tb.innerHTML=ScC.map(s=>{const tot=s.importe*(1+ivaPct(s.iva_pct)/100);return`<tr data-search="${(s.proyecto_id+s.proveedor_id+s.trabajo).toLowerCase()}"><td>${fmtD(s.fecha)}</td><td class="td-mono" style="color:var(--text-soft)">${s.proyecto_id||'—'}</td><td>${s.proveedor_id||'—'}</td><td>${s.trabajo||'—'}</td><td class="td-mono">${fmt(s.importe)}</td><td class="td-mono">${s.iva_pct}</td><td class="td-mono" style="font-weight:700">${fmt(tot)}</td><td>${bE(s.estado_pago)}</td><td style="display:flex;gap:4px"><button class="btn btn-ghost btn-icon btn-sm" onclick="editSubcontrata('${s.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('subcontratas','${s.id}','${(s.trabajo||'subcontrata').replace(/'/g,"\\'")}')">🗑</button></td></tr>`;}).join('');
+    tb.innerHTML=ScC.map(s=>{const tot=s.importe*(1+ivaPct(s.iva_pct)/100);return`<tr data-search="${(s.proyecto_id+s.proveedor_id+s.trabajo).toLowerCase()}"><td>${fmtD(s.fecha)}</td><td class="td-mono" style="color:var(--text-soft)">${s.proyecto_id||'—'}</td><td>${s.proveedor_id||'—'}</td><td>${s.trabajo||'—'}</td><td class="td-mono">${fmt(s.importe)}</td><td class="td-mono">${s.iva_pct}</td><td class="td-mono" style="font-weight:700">${fmt(tot)}</td><td>${bE(s.estado_pago)}</td><td style="display:flex;gap:4px"><button class="btn btn-ghost btn-icon btn-sm" onclick="editSubcontrata('${s.id}')" style="font-size:11px">Editar</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('subcontratas','${s.id}','${(s.trabajo||'subcontrata').replace(/'/g,"\\'")}')">🗑</button></td></tr>`;}).join('');
   }catch(e){tb.innerHTML=`<tr><td colspan="9" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
 }
 async function saveSubcontrata(){
@@ -1894,8 +1915,40 @@ async function loadHoras(){
     HC=await sbGet('horas','?order=fecha.desc');
     document.getElementById('horas-count').textContent=HC.length+' registros';
     if(!HC.length){tb.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="empty-icon">⏱</div><div class="empty-text">Sin horas registradas</div><button class="btn btn-primary" onclick="openModal('m-hora')">＋ Registrar</button></div></td></tr>`;return;}
-    tb.innerHTML=HC.map(h=>`<tr data-search="${(h.proyecto_id+h.trabajador+h.descripcion).toLowerCase()}"><td>${fmtD(h.fecha)}</td><td class="td-mono" style="color:var(--text-soft)">${h.proyecto_id||'—'}</td><td><strong>${h.trabajador||'—'}</strong></td><td class="td-mono">${h.horas}h</td><td class="td-mono">${fmt(h.coste_hora)}</td><td class="td-mono" style="font-weight:700">${fmt(h.total)}</td><td style="color:var(--text-soft)">${h.descripcion||'—'}</td><td style="display:flex;gap:4px"><button class="btn btn-ghost btn-icon btn-sm" onclick="editHora('${h.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('horas','${h.id}','horas ${h.trabajador}')">🗑</button></td></tr>`).join('');
+    tb.innerHTML=HC.map(h=>`<tr data-search="${(h.proyecto_id+h.trabajador+h.descripcion).toLowerCase()}"><td>${fmtD(h.fecha)}</td><td class="td-mono" style="color:var(--text-soft)">${h.proyecto_id||'—'}</td><td><strong>${h.trabajador||'—'}</strong></td><td class="td-mono">${h.horas}h</td><td class="td-mono">${fmt(h.coste_hora)}</td><td class="td-mono" style="font-weight:700">${fmt(h.total)}</td><td style="color:var(--text-soft)">${h.descripcion||'—'}</td><td><button class="btn btn-ghost btn-sm" style="margin-right:4px;font-size:11px" onclick="editHora('${h.id}')">Editar</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('horas','${h.id}','horas ${h.trabajador}')">🗑</button></td></tr>`).join('');
   }catch(e){tb.innerHTML=`<tr><td colspan="8" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
+}
+// ═══ PEDIDO DOCUMENTO - LÍNEAS EDITABLES ═══
+function renderPedidoLineas(){
+  const tbody=document.getElementById('pd-lineas-body');
+  if(!tbody)return;
+  if(!window.pdLineas||!window.pdLineas.length){
+    window.pdLineas=[{cant:'',desc:''},{cant:'',desc:''},{cant:'',desc:''},{cant:'',desc:''},{cant:'',desc:''},{cant:'',desc:''},{cant:'',desc:''},{cant:'',desc:''},{cant:'',desc:''},{cant:'',desc:''},{cant:'',desc:''},{cant:'',desc:''},{cant:'',desc:''},{cant:'',desc:''},{cant:'',desc:''},{cant:'',desc:''},{cant:'',desc:''},{cant:'',desc:''},{cant:'',desc:''},{cant:'',desc:''}];
+  }
+  tbody.innerHTML=window.pdLineas.map((l,i)=>`
+    <tr style="border-bottom:1px solid #eee">
+      <td style="padding:2px 4px;text-align:center;border-right:1px solid #eee">
+        <input value="${l.cant}" onchange="window.pdLineas[${i}].cant=this.value" style="border:none;width:52px;text-align:center;font-size:12px;background:transparent" placeholder="">
+      </td>
+      <td style="padding:2px 4px">
+        <input value="${l.desc}" onchange="window.pdLineas[${i}].desc=this.value" style="border:none;width:100%;font-size:12px;background:transparent" placeholder="">
+      </td>
+    </tr>`).join('');
+}
+function addPedidoLinea(){
+  if(!window.pdLineas)window.pdLineas=[];
+  window.pdLineas.push({cant:'',desc:''});
+  renderPedidoLineas();
+}
+function clearPedidoLineas(){
+  window.pdLineas=null;
+  renderPedidoLineas();
+  // Reset header fields
+  ['pd-num-input','pd-prov-input','pd-prov-tel-input','pd-proyecto-input','pd-obs-input'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const today=new Date().toISOString().split('T')[0];
+  const f=document.getElementById('pd-fecha-input');if(f)f.value=today;
+  const n=document.getElementById('pd-nota-input');
+  if(n)n.value='SERVIR LO ANTES POSIBLE.\n\nDIRECCIÓN DE ENTREGA AV. DIPUTACIÓN Nº 24 - ALCASSER 46290 (VALENCIA)\nHORARIO DE DESCARGA DE 10:00 - 14:00 Y DE 16:30 A 19:00 H.\nTELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.';
 }
 // ═══ EDITAR HORAS ═══
 function editHora(id){
@@ -2257,11 +2310,9 @@ const loaders={
     }
   },
   pedido_doc:async()=>{
-    PedC=await sbGet('pedidos','?order=fecha.desc').catch(()=>[]);
-    if(!ProvC.length)ProvC=await sbGet('proveedores','?order=nombre.asc').catch(()=>[]);
-    if(!PC.length)PC=await sbGet('proyectos').catch(()=>[]);
-    const sel=document.getElementById('pd-pedido-sel');
-    sel.innerHTML='<option value="">Seleccionar pedido…</option>'+PedC.map(p=>`<option value="${p.id}">${p.num_pedido||'Sin nº'} · ${p.proveedor||'—'} · ${p.importe?p.importe.toFixed(2)+'€':'—'}</option>`).join('');
+    const today=new Date().toISOString().split('T')[0];
+    const f=document.getElementById('pd-fecha-input');if(f&&!f.value)f.value=today;
+    renderPedidoLineas();
   },
   listas:()=>{
     const r=(id,arr)=>{const el=document.getElementById(id);if(el)el.innerHTML=arr.map(t=>`<div class="lista-item" data-val="${t}">${t}</div>`).join('');};
