@@ -227,7 +227,7 @@ tbody td{padding:7px 10px;vertical-align:middle}
 <!-- APP -->
 <div class="app">
 <nav class="sidebar">
-  <div class="sidebar-logo"><div class="brand">PAU INTERIORISMO</div><div class="brand-sub">Sistema de gestión · <span style="color:#b87333">v23</span></div></div>
+  <div class="sidebar-logo"><div class="brand">PAU INTERIORISMO</div><div class="brand-sub">Sistema de gestión · <span style="color:#b87333">v24</span></div></div>
   <div class="nav-section">
     <div class="nav-label">Principal</div>
     <div class="nav-item active" data-view="gerencia"><span class="ni">🏠</span><span>Gerencia</span></div>
@@ -641,8 +641,11 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 
     <!-- ═══ PROYECTOS ═══ -->
     <div class="view" id="view-proyectos">
-      <div class="search-bar">
-        <div class="search-wrap"><span class="search-icon">🔍</span><input class="form-input" id="search-proyectos" placeholder="Buscar proyecto…" oninput="filterTable('proyectos-tbody','search-proyectos')"></div>
+      <div class="search-bar" style="gap:8px;flex-wrap:wrap">
+        <select class="form-input" style="width:240px;flex-shrink:0" id="filter-cliente-proyectos" onchange="filtrarProyectosPorCliente()">
+          <option value="">👤 Todos los clientes</option>
+        </select>
+        <div class="search-wrap" style="flex:1;min-width:180px"><span class="search-icon">🔍</span><input class="form-input" id="search-proyectos" placeholder="Buscar proyecto…" oninput="filterTable('proyectos-tbody','search-proyectos')"></div>
         <button class="btn btn-primary" onclick="openModal('m-proyecto')">＋ Nuevo proyecto</button>
       </div>
       <div class="card">
@@ -1567,6 +1570,49 @@ function populateAllListas(){
   });
 }
 // ═══════════════════════════════════════════
+// FILTRO POR CLIENTE EN PROYECTOS
+// ═══════════════════════════════════════════
+function poblarFiltroClientes(){
+  const sel=document.getElementById('filter-cliente-proyectos');
+  if(!sel)return;
+  const cur=sel.value;
+  sel.innerHTML='<option value="">👤 Todos los clientes</option>'
+    +CC.map(c=>`<option value="${c.cliente_id}">${c.nombre}</option>`).join('');
+  if(cur)sel.value=cur;
+}
+
+function filtrarProyectosPorCliente(){
+  const sel=document.getElementById('filter-cliente-proyectos');
+  const clienteId=sel?sel.value:'';
+  const tbody=document.getElementById('proyectos-tbody');
+  if(!tbody)return;
+  const rows=tbody.querySelectorAll('tr');
+  let visible=0;
+  rows.forEach(tr=>{
+    const ds=tr.dataset.search||'';
+    // cliente_id is 3rd part of data-search: proyecto_id+nombre+cliente_id+tipo+estado
+    const show=!clienteId||ds.includes(clienteId.toLowerCase());
+    tr.style.display=show?'':'none';
+    if(show)visible++;
+  });
+  // Update count
+  const count=document.getElementById('proyectos-count');
+  if(count){
+    const clienteNombre=clienteId
+      ?(CC.find(c=>c.cliente_id===clienteId)||{}).nombre||clienteId
+      :'';
+    count.textContent=clienteId
+      ?`${visible} proyecto${visible!==1?'s':''} · ${clienteNombre}`
+      :`${rows.length} proyectos`;
+  }
+  // Auto-set cliente in new proyecto modal
+  if(clienteId){
+    const f=document.getElementById('p-cliente');
+    if(f)f.value=clienteId;
+  }
+}
+
+// ═══════════════════════════════════════════
 // FILTRO POR PROYECTO EN MÓDULOS
 // ═══════════════════════════════════════════
 function poblarFiltrosProyecto(){
@@ -1738,7 +1784,7 @@ async function loadGerencia(){
     }).join('');
 
     const s=document.getElementById('conn-status');s.style.background='var(--green-soft)';s.style.color='var(--green)';s.textContent='🟢 Conectado';
-    populateSelects();populateIntCatalog();populateTrabajadores();poblarFiltrosProyecto();
+    populateSelects();populateIntCatalog();populateTrabajadores();poblarFiltrosProyecto();poblarFiltroClientes();
   }catch(e){
     console.error(e);
     const s=document.getElementById('conn-status');s.style.background='var(--red-soft)';s.style.color='var(--red)';s.textContent='🔴 Error';
@@ -1777,6 +1823,8 @@ async function loadProyectos(){
     if(!PC.length){tb.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="empty-icon">📁</div><div class="empty-text">Sin proyectos</div><button class="btn btn-primary" onclick="openModal('m-proyecto')">＋ Nuevo</button></div></td></tr>`;return;}
     tb.innerHTML=PC.map(p=>`<tr data-search="${(p.proyecto_id+p.nombre+p.cliente_id+p.tipo+p.estado).toLowerCase()}"><td class="td-mono" style="color:var(--text-soft)">${p.proyecto_id||'—'}</td><td><strong>${p.nombre}</strong></td><td>${p.cliente_id||'—'}</td><td>${bE(p.tipo)}</td><td>${bE(p.estado)}</td><td>${p.responsable||'—'}</td><td>${fmtD(p.fecha_inicio)}</td><td><div class="td-actions"><button class="btn btn-ghost btn-icon btn-sm" onclick="editProyecto('${p.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('proyectos','${p.id}','${p.nombre.replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`).join('');
     populateSelects();
+    poblarFiltroClientes();
+    filtrarProyectosPorCliente();
   }catch(e){tb.innerHTML=`<tr><td colspan="8" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
 }
 function editProyecto(id){const p=PC.find(x=>x.id===id);if(!p)return;document.getElementById('m-proyecto-title').textContent='Editar proyecto';document.getElementById('p-id').value=p.id;document.getElementById('p-nombre').value=p.nombre||'';document.getElementById('p-cliente').value=p.cliente_id||'';document.getElementById('p-tipo').value=p.tipo||'Obra nueva';document.getElementById('p-estado').value=p.estado||'Nuevo lead';document.getElementById('p-resp').value=p.responsable||'Jose Asins';document.getElementById('p-fecha').value=p.fecha_inicio||'';document.getElementById('p-dir').value=p.direccion_obra||'';document.getElementById('p-notas').value=p.notas||'';openModal('m-proyecto');}
@@ -2324,6 +2372,8 @@ async function loadProveedores(){
     if(!ProvC.length){tb.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="empty-icon">🏭</div><div class="empty-text">Sin proveedores</div></div></td></tr>`;return;}
     tb.innerHTML=ProvC.map(p=>`<tr data-search="${(p.nombre+p.cif+p.especialidad+p.tipo).toLowerCase()}"><td><strong>${p.nombre}</strong></td><td class="td-mono">${p.cif||'—'}</td><td>${bE(p.tipo)}</td><td>${p.especialidad||'—'}</td><td>${p.telefono||'—'}</td><td style="color:var(--navy-mid)">${p.email||'—'}</td><td>${p.forma_pago||'—'}</td><td><div class="td-actions"><button class="btn btn-ghost btn-icon btn-sm" onclick="editProveedor('${p.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('proveedores','${p.id}','${p.nombre.replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`).join('');
     populateSelects();
+    poblarFiltroClientes();
+    filtrarProyectosPorCliente();
   }catch(e){tb.innerHTML=`<tr><td colspan="8" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
 }
 function editProveedor(id){const p=ProvC.find(x=>x.id===id);if(!p)return;document.getElementById('pv-id').value=p.id;document.getElementById('pv-nombre').value=p.nombre||'';document.getElementById('pv-cif').value=p.cif||'';document.getElementById('pv-tipo').value=p.tipo||'Proveedor';document.getElementById('pv-tel').value=p.telefono||'';document.getElementById('pv-email').value=p.email||'';document.getElementById('pv-esp').value=p.especialidad||'';document.getElementById('pv-pago').value=p.forma_pago||'Transferencia';document.getElementById('pv-iban').value=p.iban||'';document.getElementById('pv-notas').value=p.notas||'';openModal('m-proveedor');}
@@ -2573,6 +2623,7 @@ async function init(){
   populateTrabajadores();
   populateAllListas();
   poblarFiltrosProyecto();
+  poblarFiltroClientes();
 }
 </script>
 </body>
