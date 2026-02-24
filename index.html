@@ -227,7 +227,7 @@ tbody td{padding:7px 10px;vertical-align:middle}
 <!-- APP -->
 <div class="app">
 <nav class="sidebar">
-  <div class="sidebar-logo"><div class="brand">PAU INTERIORISMO</div><div class="brand-sub">Sistema de gestión · <span style="color:#b87333">v25</span></div></div>
+  <div class="sidebar-logo"><div class="brand">PAU INTERIORISMO</div><div class="brand-sub">Sistema de gestión · <span style="color:#b87333">v26</span></div></div>
   <div class="nav-section">
     <div class="nav-label">Principal</div>
     <div class="nav-item active" data-view="gerencia"><span class="ni">🏠</span><span>Gerencia</span></div>
@@ -1702,28 +1702,55 @@ function filtrarModuloPorProyecto(mod){
   const proyId=proySel?proySel.value:'';
   const tbody=document.getElementById(`${mod}-tbody`);
   if(!tbody)return;
-  const rows=tbody.querySelectorAll('tr');
+  const count=document.getElementById(`${mod}-count`);
+
+  // Sin proyecto seleccionado → tabla vacía con mensaje
+  if(!proyId){
+    tbody.innerHTML=`<tr id="${mod}-empty-state"><td colspan="20" style="text-align:center;padding:40px;color:var(--text-soft)">
+      <div style="font-size:32px;margin-bottom:10px">📁</div>
+      <div style="font-size:14px;font-weight:600;margin-bottom:6px">Selecciona un cliente y proyecto</div>
+      <div style="font-size:12px">Los registros aparecerán aquí una vez seleccionado el proyecto</div>
+    </td></tr>`;
+    if(count) count.textContent='—';
+    return;
+  }
+
+  // Con proyecto seleccionado → mostrar solo sus registros
+  // Primero restaurar filas ocultas (pueden estar hidden de filtro anterior)
+  tbody.querySelectorAll('tr').forEach(tr=>{
+    if(tr.id===`${mod}-empty-state`) tr.remove();
+  });
+
+  const rows=tbody.querySelectorAll('tr[data-search]');
   let visible=0;
   rows.forEach(tr=>{
     const ds=tr.dataset.search||'';
-    const show=!proyId||ds.includes(proyId.toLowerCase());
+    const show=ds.includes(proyId.toLowerCase());
     tr.style.display=show?'':'none';
     if(show)visible++;
   });
-  // Update count badge
-  const count=document.getElementById(`${mod}-count`);
-  if(count){
-    count.textContent=proyId
-      ?`${visible} registros · ${proyId}`
-      :`${rows.length} registros`;
-  }
-  // Auto-set proyecto in new record modal
-  if(proyId){
-    const fieldId=MOD_PROYECTO_FIELD[mod];
-    if(fieldId && fieldId!=='pres-proyecto-sel'){
-      const f=document.getElementById(fieldId);
-      if(f)f.value=proyId;
+
+  // Si no hay registros para este proyecto
+  if(visible===0){
+    const empty=tbody.querySelector(`#${mod}-empty-state`);
+    if(!empty){
+      const tr=document.createElement('tr');
+      tr.id=`${mod}-empty-state`;
+      tr.innerHTML=`<td colspan="20" style="text-align:center;padding:40px;color:var(--text-soft)">
+        <div style="font-size:28px;margin-bottom:8px">📋</div>
+        <div style="font-size:13px">Sin registros para <strong>${proyId}</strong></div>
+      </td>`;
+      tbody.appendChild(tr);
     }
+  }
+
+  if(count) count.textContent=`${visible} registro${visible!==1?'s':''} · ${proyId}`;
+
+  // Auto-set proyecto en modal de nuevo registro
+  const fieldId=MOD_PROYECTO_FIELD[mod];
+  if(fieldId && fieldId!=='pres-proyecto-sel'){
+    const f=document.getElementById(fieldId);
+    if(f)f.value=proyId;
   }
 }
 
@@ -1919,7 +1946,11 @@ async function loadPresupuesto(){
   const proy=document.getElementById('pres-proyecto-sel').value;
   const ver=document.getElementById('pres-version-sel').value;
   const tbody=document.getElementById('pres-tbody');
-  if(!proy){tbody.innerHTML=`<tr><td colspan="11"><div class="empty"><div class="empty-icon">💰</div><div class="empty-text">Selecciona un proyecto</div></div></td></tr>`;document.getElementById('pres-resumen').style.display='none';return;}
+  if(!proy){tbody.innerHTML=`<tr><td colspan="11" style="text-align:center;padding:40px;color:var(--text-soft)">
+      <div style="font-size:32px;margin-bottom:10px">📁</div>
+      <div style="font-size:14px;font-weight:600;margin-bottom:6px">Selecciona un cliente y proyecto</div>
+      <div style="font-size:12px">El presupuesto aparecerá aquí una vez seleccionado el proyecto</div>
+    </td></tr>`;document.getElementById('pres-resumen').style.display='none';return;}
   try{
     PresC=await sbGet('presupuesto_lineas',`?proyecto_id=eq.${proy}&version=eq.${ver}&order=orden.asc`);
     renderPresupuesto();
