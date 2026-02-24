@@ -1833,24 +1833,36 @@ function fillProvSelect(selId){
     +ProvC.map(p=>`<option value="${p.nombre}">${p.nombre}${p.tipo?' ('+p.tipo+')':''}</option>`).join('');
 }
 async function openPedidoModal(){
-  // Siempre cargar proveedores frescos antes de abrir
-  try{
-    ProvC=await sbGet('proveedores','?order=nombre.asc');
-    toast('','success'); // clear any error
-  }catch(e){
-    toast('Error cargando proveedores: '+e.message,'error');
-    ProvC=[];
-  }
-  // Reset fields
+  // Abrir modal primero
   document.getElementById('ped-id').value='';
   document.getElementById('ped-num').value='PED-'+String((PedC.length||0)+1).padStart(3,'0');
   document.getElementById('ped-fecha').value=new Date().toISOString().split('T')[0];
   document.getElementById('ped-obs').value='';
   document.getElementById('ped-importe').value='';
-  document.getElementById('ped-estado').value='Pendiente';
-  // Fill select BEFORE opening modal
-  fillProvSelect('ped-prov');
   openModal('m-pedido');
+  // Cargar proveedores con fetch directo
+  const sel=document.getElementById('ped-prov');
+  sel.innerHTML='<option value="">⏳ Cargando proveedores…</option>';
+  try{
+    const resp=await fetch(`${SB_URL}/rest/v1/proveedores?order=nombre.asc`,{
+      headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`}
+    });
+    if(!resp.ok) throw new Error(`HTTP ${resp.status}: ${await resp.text()}`);
+    const provs=await resp.json();
+    ProvC=provs;
+    if(!provs||provs.length===0){
+      sel.innerHTML='<option value="">⚠️ Sin proveedores en BD</option>';
+      toast('No hay proveedores registrados. Ve a Proveedores y añade uno.','error');
+      return;
+    }
+    sel.innerHTML='<option value="">Seleccionar proveedor…</option>'
+      +provs.map(p=>`<option value="${p.nombre}">${p.nombre}${p.tipo?' · '+p.tipo:''}</option>`).join('');
+    toast(`${provs.length} proveedores cargados`,'success');
+  }catch(err){
+    sel.innerHTML='<option value="">❌ Error: '+err.message+'</option>';
+    toast('Error cargando proveedores: '+err.message,'error');
+    console.error('openPedidoModal error:',err);
+  }
 }
 async function savePedido(){const d={num_pedido:document.getElementById('ped-num').value,fecha:document.getElementById('ped-fecha').value||new Date().toISOString().split('T')[0],proyecto_id:document.getElementById('ped-proyecto').value||null,tipo:document.getElementById('ped-tipo').value,proveedor:document.getElementById('ped-prov').value,importe:parseFloat(document.getElementById('ped-importe').value)||0,estado:document.getElementById('ped-estado').value,observaciones:document.getElementById('ped-obs').value};try{await sbPost('pedidos',d);toast('Pedido registrado ✅');closeModal('m-pedido');loadPedidos();}catch(e){toast('Error: '+e.message,'error');}
 }
