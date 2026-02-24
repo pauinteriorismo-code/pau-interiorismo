@@ -227,7 +227,7 @@ tbody td{padding:7px 10px;vertical-align:middle}
 <!-- APP -->
 <div class="app">
 <nav class="sidebar">
-  <div class="sidebar-logo"><div class="brand">PAU INTERIORISMO</div><div class="brand-sub">Sistema de gestión · <span style="color:#b87333">v24</span></div></div>
+  <div class="sidebar-logo"><div class="brand">PAU INTERIORISMO</div><div class="brand-sub">Sistema de gestión · <span style="color:#b87333">v25</span></div></div>
   <div class="nav-section">
     <div class="nav-label">Principal</div>
     <div class="nav-item active" data-view="gerencia"><span class="ni">🏠</span><span>Gerencia</span></div>
@@ -657,8 +657,11 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 
     <!-- ═══ PRESUPUESTO ═══ -->
     <div class="view" id="view-presupuesto">
-      <div class="search-bar">
-        <select class="form-input" style="width:260px" id="pres-proyecto-sel" onchange="loadPresupuesto()"><option value="">Seleccionar proyecto…</option></select>
+      <div class="search-bar" style="gap:8px;flex-wrap:wrap;align-items:center">
+        <select class="form-input" style="width:200px;flex-shrink:0" id="filter-cliente-presupuesto" onchange="cascadaClienteProyecto('presupuesto')">
+          <option value="">👤 Cliente…</option>
+        </select>
+        <select class="form-input" style="width:220px" id="pres-proyecto-sel" onchange="loadPresupuesto()"><option value="">📁 Proyecto…</option></select>
         <select class="form-input" style="width:75px" id="pres-version-sel" onchange="loadPresupuesto()"><option value="v1">v1</option><option value="v2">v2</option><option value="v3">v3</option></select>
         <button class="btn btn-primary" onclick="addLineaPresupuesto()">＋ Línea</button>
         <button class="btn btn-ghost" onclick="addCapituloPresupuesto()">＋ Capítulo</button>
@@ -729,11 +732,14 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 
     <!-- ═══ COMPRAS ═══ -->
     <div class="view" id="view-compras">
-      <div class="search-bar" style="gap:8px;flex-wrap:wrap">
-        <select class="form-input" style="width:240px;flex-shrink:0" id="filter-proyecto-compras" onchange="filtrarModuloPorProyecto('compras')">
-          <option value="">📁 Todos los proyectos</option>
+      <div class="search-bar" style="gap:8px;flex-wrap:wrap;align-items:center">
+        <select class="form-input" style="width:200px;flex-shrink:0" id="filter-cliente-compras" onchange="cascadaClienteProyecto('compras')">
+          <option value="">👤 Cliente…</option>
         </select>
-        <div class="search-wrap" style="flex:1;min-width:180px"><span class="search-icon">🔍</span><input class="form-input" id="search-compras" placeholder="Buscar…" oninput="filterTable('compras-tbody','search-compras')"></div>
+        <select class="form-input" style="width:220px;flex-shrink:0" id="filter-proyecto-compras" onchange="filtrarModuloPorProyecto('compras')">
+          <option value="">📁 Proyecto…</option>
+        </select>
+        <div class="search-wrap" style="flex:1;min-width:160px"><span class="search-icon">🔍</span><input class="form-input" id="search-compras" placeholder="Buscar…" oninput="filterTable('compras-tbody','search-compras')"></div>
         <button class="btn btn-primary" onclick="openModal('m-compra')">＋ Nueva compra</button>
       </div>
       <div class="card">
@@ -745,11 +751,14 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 
     <!-- ═══ SUBCONTRATAS ═══ -->
     <div class="view" id="view-subcontratas">
-      <div class="search-bar" style="gap:8px;flex-wrap:wrap">
-        <select class="form-input" style="width:240px;flex-shrink:0" id="filter-proyecto-subcontratas" onchange="filtrarModuloPorProyecto('subcontratas')">
-          <option value="">📁 Todos los proyectos</option>
+      <div class="search-bar" style="gap:8px;flex-wrap:wrap;align-items:center">
+        <select class="form-input" style="width:200px;flex-shrink:0" id="filter-cliente-subcontratas" onchange="cascadaClienteProyecto('subcontratas')">
+          <option value="">👤 Cliente…</option>
         </select>
-        <div class="search-wrap" style="flex:1;min-width:180px"><span class="search-icon">🔍</span><input class="form-input" id="search-subcontratas" placeholder="Buscar…" oninput="filterTable('subcontratas-tbody','search-subcontratas')"></div>
+        <select class="form-input" style="width:220px;flex-shrink:0" id="filter-proyecto-subcontratas" onchange="filtrarModuloPorProyecto('subcontratas')">
+          <option value="">📁 Proyecto…</option>
+        </select>
+        <div class="search-wrap" style="flex:1;min-width:160px"><span class="search-icon">🔍</span><input class="form-input" id="search-subcontratas" placeholder="Buscar…" oninput="filterTable('subcontratas-tbody','search-subcontratas')"></div>
         <button class="btn btn-primary" onclick="openModal('m-subcontrata')">＋ Nueva subcontrata</button>
       </div>
       <div class="card">
@@ -761,11 +770,14 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 
     <!-- ═══ HORAS ═══ -->
     <div class="view" id="view-horas">
-      <div class="search-bar" style="gap:8px;flex-wrap:wrap">
-        <select class="form-input" style="width:240px;flex-shrink:0" id="filter-proyecto-horas" onchange="filtrarModuloPorProyecto('horas')">
-          <option value="">📁 Todos los proyectos</option>
+      <div class="search-bar" style="gap:8px;flex-wrap:wrap;align-items:center">
+        <select class="form-input" style="width:200px;flex-shrink:0" id="filter-cliente-horas" onchange="cascadaClienteProyecto('horas')">
+          <option value="">👤 Cliente…</option>
         </select>
-        <div class="search-wrap" style="flex:1;min-width:180px"><span class="search-icon">🔍</span><input class="form-input" id="search-horas" placeholder="Buscar…" oninput="filterTable('horas-tbody','search-horas')"></div>
+        <select class="form-input" style="width:220px;flex-shrink:0" id="filter-proyecto-horas" onchange="filtrarModuloPorProyecto('horas')">
+          <option value="">📁 Proyecto…</option>
+        </select>
+        <div class="search-wrap" style="flex:1;min-width:160px"><span class="search-icon">🔍</span><input class="form-input" id="search-horas" placeholder="Buscar…" oninput="filterTable('horas-tbody','search-horas')"></div>
         <button class="btn btn-primary" onclick="openModal('m-hora')">＋ Registrar horas</button>
       </div>
       <div class="card">
@@ -777,11 +789,14 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 
     <!-- ═══ PEDIDOS ═══ -->
     <div class="view" id="view-pedidos">
-      <div class="search-bar" style="gap:8px;flex-wrap:wrap">
-        <select class="form-input" style="width:240px;flex-shrink:0" id="filter-proyecto-pedidos" onchange="filtrarModuloPorProyecto('pedidos')">
-          <option value="">📁 Todos los proyectos</option>
+      <div class="search-bar" style="gap:8px;flex-wrap:wrap;align-items:center">
+        <select class="form-input" style="width:200px;flex-shrink:0" id="filter-cliente-pedidos" onchange="cascadaClienteProyecto('pedidos')">
+          <option value="">👤 Cliente…</option>
         </select>
-        <div class="search-wrap" style="flex:1;min-width:180px"><span class="search-icon">🔍</span><input class="form-input" id="search-pedidos" placeholder="Buscar…" oninput="filterTable('pedidos-tbody','search-pedidos')"></div>
+        <select class="form-input" style="width:220px;flex-shrink:0" id="filter-proyecto-pedidos" onchange="filtrarModuloPorProyecto('pedidos')">
+          <option value="">📁 Proyecto…</option>
+        </select>
+        <div class="search-wrap" style="flex:1;min-width:160px"><span class="search-icon">🔍</span><input class="form-input" id="search-pedidos" placeholder="Buscar…" oninput="filterTable('pedidos-tbody','search-pedidos')"></div>
         <button class="btn btn-primary" onclick="openPedidoModal()">＋ Nuevo pedido</button>
       </div>
       <div class="card">
@@ -1572,14 +1587,7 @@ function populateAllListas(){
 // ═══════════════════════════════════════════
 // FILTRO POR CLIENTE EN PROYECTOS
 // ═══════════════════════════════════════════
-function poblarFiltroClientes(){
-  const sel=document.getElementById('filter-cliente-proyectos');
-  if(!sel)return;
-  const cur=sel.value;
-  sel.innerHTML='<option value="">👤 Todos los clientes</option>'
-    +CC.map(c=>`<option value="${c.cliente_id}">${c.nombre}</option>`).join('');
-  if(cur)sel.value=cur;
-}
+
 
 function filtrarProyectosPorCliente(){
   const sel=document.getElementById('filter-cliente-proyectos');
@@ -1613,46 +1621,109 @@ function filtrarProyectosPorCliente(){
 }
 
 // ═══════════════════════════════════════════
-// FILTRO POR PROYECTO EN MÓDULOS
+// CASCADA CLIENTE → PROYECTO EN MÓDULOS
 // ═══════════════════════════════════════════
-function poblarFiltrosProyecto(){
-  const mods=['compras','subcontratas','horas','pedidos'];
-  mods.forEach(mod=>{
-    const sel=document.getElementById(`filter-proyecto-${mod}`);
+
+// Módulos con cascada cliente→proyecto
+const CASCADA_MODS = ['presupuesto','compras','subcontratas','horas','pedidos'];
+
+// Prefijo del campo proyecto en el modal de cada módulo
+const MOD_PROYECTO_FIELD = {
+  presupuesto: 'pres-proyecto-sel',  // special: usa su propio selector
+  compras:     'co-proyecto',
+  subcontratas:'sc-proyecto',
+  horas:       'h-proyecto',
+  pedidos:     'ped-proyecto',
+};
+
+// Poblar selector de clientes en todos los módulos
+function poblarFiltrosCliente(){
+  // Cascada en módulos (compras, horas, etc.) + página proyectos
+  const sels = CASCADA_MODS.map(m=>`filter-cliente-${m}`)
+    .concat(['filter-cliente-proyectos']);
+  sels.forEach(selId=>{
+    const sel=document.getElementById(selId);
     if(!sel)return;
     const cur=sel.value;
-    sel.innerHTML='<option value="">📁 Todos los proyectos</option>'
-      +PC.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
+    const isProyectos = selId==='filter-cliente-proyectos';
+    sel.innerHTML=`<option value="">${isProyectos?'👤 Todos los clientes':'👤 Cliente…'}</option>`
+      +CC.map(c=>`<option value="${c.cliente_id}">${c.nombre}</option>`).join('');
     if(cur)sel.value=cur;
   });
 }
 
+// Cuando cambia el cliente: filtrar proyectos en cascada
+function cascadaClienteProyecto(mod){
+  const clienteSel=document.getElementById(`filter-cliente-${mod}`);
+  const clienteId=clienteSel?clienteSel.value:'';
+
+  // Filtrar selector de proyectos según cliente
+  const proySel = mod==='presupuesto'
+    ? document.getElementById('pres-proyecto-sel')
+    : document.getElementById(`filter-proyecto-${mod}`);
+
+  if(proySel){
+    const proyectosFiltrados = clienteId
+      ? PC.filter(p=>p.cliente_id===clienteId)
+      : PC;
+    const placeholder = mod==='presupuesto' ? '📁 Proyecto…' : '📁 Proyecto…';
+    proySel.innerHTML=`<option value="">${placeholder}</option>`
+      +proyectosFiltrados.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
+  }
+
+  // Limpiar filtro de proyecto y re-filtrar tabla (excepto presupuesto que carga solo)
+  if(mod!=='presupuesto'){
+    filtrarModuloPorProyecto(mod);
+  }
+}
+
+// Poblar todos los filtros proyecto (para init)
+function poblarFiltrosProyecto(){
+  CASCADA_MODS.filter(m=>m!=='presupuesto').forEach(mod=>{
+    const sel=document.getElementById(`filter-proyecto-${mod}`);
+    if(!sel)return;
+    const cur=sel.value;
+    sel.innerHTML='<option value="">📁 Proyecto…</option>'
+      +PC.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
+    if(cur)sel.value=cur;
+  });
+  // Presupuesto: poblar su propio selector
+  const presSel=document.getElementById('pres-proyecto-sel');
+  if(presSel){
+    const cur=presSel.value;
+    presSel.innerHTML='<option value="">📁 Proyecto…</option>'
+      +PC.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
+    if(cur)presSel.value=cur;
+  }
+}
+
 function filtrarModuloPorProyecto(mod){
-  const sel=document.getElementById(`filter-proyecto-${mod}`);
-  const proyId=sel?sel.value:'';
+  const proySel=document.getElementById(`filter-proyecto-${mod}`);
+  const proyId=proySel?proySel.value:'';
   const tbody=document.getElementById(`${mod}-tbody`);
   if(!tbody)return;
   const rows=tbody.querySelectorAll('tr');
   let visible=0;
   rows.forEach(tr=>{
-    // data-search contains proyecto_id as first part
     const ds=tr.dataset.search||'';
-    const show = !proyId || ds.startsWith(proyId.toLowerCase()) || ds.includes(proyId.toLowerCase());
+    const show=!proyId||ds.includes(proyId.toLowerCase());
     tr.style.display=show?'':'none';
     if(show)visible++;
   });
   // Update count badge
   const count=document.getElementById(`${mod}-count`);
   if(count){
-    const total=rows.length;
     count.textContent=proyId
-      ? `${visible} de ${total} registros · ${proyId}`
-      : `${total} registros`;
+      ?`${visible} registros · ${proyId}`
+      :`${rows.length} registros`;
   }
-  // Auto-set proyecto in new record modal when filter active
+  // Auto-set proyecto in new record modal
   if(proyId){
-    const modalField=document.getElementById(`${mod==='compras'?'co':mod==='subcontratas'?'sc':mod==='horas'?'h':'ped'}-proyecto`);
-    if(modalField)modalField.value=proyId;
+    const fieldId=MOD_PROYECTO_FIELD[mod];
+    if(fieldId && fieldId!=='pres-proyecto-sel'){
+      const f=document.getElementById(fieldId);
+      if(f)f.value=proyId;
+    }
   }
 }
 
@@ -1784,7 +1855,7 @@ async function loadGerencia(){
     }).join('');
 
     const s=document.getElementById('conn-status');s.style.background='var(--green-soft)';s.style.color='var(--green)';s.textContent='🟢 Conectado';
-    populateSelects();populateIntCatalog();populateTrabajadores();poblarFiltrosProyecto();poblarFiltroClientes();
+    populateSelects();populateIntCatalog();populateTrabajadores();poblarFiltrosProyecto();poblarFiltrosCliente();
   }catch(e){
     console.error(e);
     const s=document.getElementById('conn-status');s.style.background='var(--red-soft)';s.style.color='var(--red)';s.textContent='🔴 Error';
@@ -1823,7 +1894,7 @@ async function loadProyectos(){
     if(!PC.length){tb.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="empty-icon">📁</div><div class="empty-text">Sin proyectos</div><button class="btn btn-primary" onclick="openModal('m-proyecto')">＋ Nuevo</button></div></td></tr>`;return;}
     tb.innerHTML=PC.map(p=>`<tr data-search="${(p.proyecto_id+p.nombre+p.cliente_id+p.tipo+p.estado).toLowerCase()}"><td class="td-mono" style="color:var(--text-soft)">${p.proyecto_id||'—'}</td><td><strong>${p.nombre}</strong></td><td>${p.cliente_id||'—'}</td><td>${bE(p.tipo)}</td><td>${bE(p.estado)}</td><td>${p.responsable||'—'}</td><td>${fmtD(p.fecha_inicio)}</td><td><div class="td-actions"><button class="btn btn-ghost btn-icon btn-sm" onclick="editProyecto('${p.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('proyectos','${p.id}','${p.nombre.replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`).join('');
     populateSelects();
-    poblarFiltroClientes();
+    poblarFiltrosCliente();
     filtrarProyectosPorCliente();
   }catch(e){tb.innerHTML=`<tr><td colspan="8" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
 }
@@ -2372,7 +2443,7 @@ async function loadProveedores(){
     if(!ProvC.length){tb.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="empty-icon">🏭</div><div class="empty-text">Sin proveedores</div></div></td></tr>`;return;}
     tb.innerHTML=ProvC.map(p=>`<tr data-search="${(p.nombre+p.cif+p.especialidad+p.tipo).toLowerCase()}"><td><strong>${p.nombre}</strong></td><td class="td-mono">${p.cif||'—'}</td><td>${bE(p.tipo)}</td><td>${p.especialidad||'—'}</td><td>${p.telefono||'—'}</td><td style="color:var(--navy-mid)">${p.email||'—'}</td><td>${p.forma_pago||'—'}</td><td><div class="td-actions"><button class="btn btn-ghost btn-icon btn-sm" onclick="editProveedor('${p.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('proveedores','${p.id}','${p.nombre.replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`).join('');
     populateSelects();
-    poblarFiltroClientes();
+    poblarFiltrosCliente();
     filtrarProyectosPorCliente();
   }catch(e){tb.innerHTML=`<tr><td colspan="8" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
 }
@@ -2623,7 +2694,7 @@ async function init(){
   populateTrabajadores();
   populateAllListas();
   poblarFiltrosProyecto();
-  poblarFiltroClientes();
+  poblarFiltrosCliente();
 }
 </script>
 </body>
