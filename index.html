@@ -2172,20 +2172,27 @@ async function loadPedidoDoc(){
 // LISTAS
 // ═══════════════════════════════════════════
 async function upsertConfig(clave, valor){
-  // Upsert usando Supabase: si existe actualiza, si no inserta
-  const resp = await fetch(`${SB_URL}/rest/v1/configuracion`, {
-    method: 'POST',
-    headers: {
-      'apikey': SB_KEY,
-      'Authorization': `Bearer ${SB_KEY}`,
-      'Content-Type': 'application/json',
-      'Prefer': 'resolution=merge-duplicates,return=minimal'
-    },
-    body: JSON.stringify({clave, valor, descripcion:'Lista editable'})
+  // GET para ver si ya existe
+  const check = await fetch(SB_URL+'/rest/v1/configuracion?clave=eq.'+encodeURIComponent(clave)+'&select=id', {
+    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}
   });
-  if(!resp.ok){
-    const err = await resp.text();
-    throw new Error(err);
+  const existing = check.ok ? await check.json() : [];
+  if(existing.length > 0){
+    // PATCH - actualizar
+    const resp = await fetch(SB_URL+'/rest/v1/configuracion?clave=eq.'+encodeURIComponent(clave), {
+      method:'PATCH',
+      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+      body:JSON.stringify({valor})
+    });
+    if(!resp.ok){const e=await resp.text();throw new Error(e);}
+  } else {
+    // POST - insertar nuevo
+    const resp = await fetch(SB_URL+'/rest/v1/configuracion', {
+      method:'POST',
+      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+      body:JSON.stringify({clave, valor, descripcion:'Configuracion'})
+    });
+    if(!resp.ok){const e=await resp.text();throw new Error(e);}
   }
 }
 
@@ -4292,10 +4299,8 @@ function abrirNuevaFactura(tipo){
   document.getElementById('f-estado').innerHTML=esC
     ?'<option>Pendiente</option><option>Pagada</option><option>Parcial</option><option>Vencida</option><option>Anulada</option>'
     :'<option>Pendiente</option><option>Cobrada</option><option>Parcial</option><option>Vencida</option><option>Anulada</option>';
-  // Auto-generar número de factura único
-  const hoy = new Date();
-  const anyo = hoy.getFullYear();
-  const prefijo = esC ? `FRA-${anyo}-` : `FAC-${anyo}-`;
+  // Auto-generar número de factura único (formato FAC-001 / FRA-001)
+  const prefijo = esC ? 'FRA-' : 'FAC-';
   // Buscar el mayor número existente para este prefijo
   const nums = FC
     .map(f=>(f.num_factura||''))
