@@ -232,7 +232,7 @@ tbody td{padding:7px 10px;vertical-align:middle}
 <!-- APP -->
 <div class="app">
 <nav class="sidebar">
-  <div class="sidebar-logo"><div class="brand">PAU INTERIORISMO</div><div class="brand-sub">Sistema de gestión · <span style="color:#b87333">v30</span></div></div>
+  <div class="sidebar-logo"><div class="brand">PAU INTERIORISMO</div><div class="brand-sub">Sistema de gestión · <span style="color:#b87333">v32</span></div></div>
   <div class="nav-section">
     <div class="nav-label">Principal</div>
     <div class="nav-item active" data-view="gerencia"><span class="ni">🏠</span><span>Gerencia</span></div>
@@ -260,6 +260,7 @@ tbody td{padding:7px 10px;vertical-align:middle}
     <div class="nav-label">Cierre</div>
     <div class="nav-item" data-view="rentabilidad"><span class="ni">📈</span><span>Rentabilidad</span></div>
     <div class="nav-item" data-view="facturas"><span class="ni">🧾</span><span>Facturas</span></div>
+    <div class="nav-item" data-view="conciliacion"><span class="ni">🏦</span><span>Conciliación bancaria</span></div>
     <div class="nav-item" data-view="contabilidad"><span class="ni">📊</span><span>Contabilidad</span></div>
     <div class="nav-item" data-view="informe_mensual"><span class="ni">📅</span><span>Informe mensual</span></div>
   </div>
@@ -929,25 +930,191 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 
     <!-- ═══ FACTURAS ═══ -->
     <div class="view" id="view-facturas">
-      <div id="fac-kpis" class="kpi-grid" style="margin-bottom:12px">
-        <div class="kpi blue"><div class="kpi-label">Total Facturado</div><div class="kpi-value" id="fk-total">—</div></div>
-        <div class="kpi green"><div class="kpi-label">Cobrado</div><div class="kpi-value" id="fk-cobrado">—</div></div>
-        <div class="kpi amber"><div class="kpi-label">Pendiente</div><div class="kpi-value" id="fk-pendiente">—</div></div>
-        <div class="kpi red"><div class="kpi-label">Vencidas</div><div class="kpi-value" id="fk-vencidas">—</div></div>
+
+      <!-- ═══ PANEL RESUMEN ═══ -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px">
+        <!-- VENTAS -->
+        <div class="card" style="border-top:3px solid var(--green)">
+          <div class="card-body" style="padding:12px">
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--green);margin-bottom:8px">📤 Facturas de Venta</div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+              <span style="font-size:11px;color:var(--text-soft)">Total facturado</span>
+              <span style="font-size:13px;font-weight:700" id="fk-v-total">—</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+              <span style="font-size:11px;color:var(--text-soft)">Cobrado</span>
+              <span style="font-size:12px;font-weight:700;color:var(--green)" id="fk-v-cobrado">—</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+              <span style="font-size:11px;color:var(--text-soft)">Pendiente cobro</span>
+              <span style="font-size:12px;font-weight:700;color:var(--amber)" id="fk-v-pendiente">—</span>
+            </div>
+            <div style="display:flex;justify-content:space-between">
+              <span style="font-size:11px;color:var(--text-soft)">Vencidas</span>
+              <span style="font-size:12px;font-weight:700;color:var(--red)" id="fk-v-vencidas">—</span>
+            </div>
+          </div>
+        </div>
+        <!-- COMPRAS -->
+        <div class="card" style="border-top:3px solid var(--red)">
+          <div class="card-body" style="padding:12px">
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--red);margin-bottom:8px">📥 Facturas de Compra</div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+              <span style="font-size:11px;color:var(--text-soft)">Total recibido</span>
+              <span style="font-size:13px;font-weight:700" id="fk-c-total">—</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+              <span style="font-size:11px;color:var(--text-soft)">Pagado</span>
+              <span style="font-size:12px;font-weight:700;color:var(--green)" id="fk-c-pagado">—</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+              <span style="font-size:11px;color:var(--text-soft)">Pendiente pago</span>
+              <span style="font-size:12px;font-weight:700;color:var(--amber)" id="fk-c-pendiente">—</span>
+            </div>
+            <div style="display:flex;justify-content:space-between">
+              <span style="font-size:11px;color:var(--text-soft)">IVA soportado</span>
+              <span style="font-size:12px;font-weight:700;color:var(--copper)" id="fk-c-iva">—</span>
+            </div>
+          </div>
+        </div>
+        <!-- BALANCE -->
+        <div class="card" style="border-top:3px solid var(--navy)">
+          <div class="card-body" style="padding:12px">
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--navy);margin-bottom:8px">⚖️ Balance</div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+              <span style="font-size:11px;color:var(--text-soft)">Beneficio bruto</span>
+              <span style="font-size:14px;font-weight:700" id="fk-b-beneficio">—</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+              <span style="font-size:11px;color:var(--text-soft)">Margen</span>
+              <span style="font-size:13px;font-weight:700" id="fk-b-margen">—</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+              <span style="font-size:11px;color:var(--text-soft)">IVA a liquidar</span>
+              <span style="font-size:12px;font-weight:700;color:var(--copper)" id="fk-b-iva">—</span>
+            </div>
+            <div style="background:var(--border);border-radius:4px;height:8px;overflow:hidden">
+              <div id="fk-b-bar" style="height:8px;width:0%;background:var(--green);border-radius:4px;transition:width .4s"></div>
+            </div>
+            <div style="font-size:10px;color:var(--text-soft);margin-top:3px" id="fk-b-bar-lbl">Gastos sobre ingresos</div>
+          </div>
+        </div>
       </div>
-      <div class="search-bar">
-        <div class="search-wrap"><span class="search-icon">🔍</span><input class="form-input" id="search-facturas" placeholder="Buscar…" oninput="filterTable('facturas-tbody','search-facturas')"></div>
-        <button class="btn btn-primary" onclick="openModal('m-factura')">＋ Nueva factura</button>
+
+      <!-- ═══ TABS + BÚSQUEDA ═══ -->
+      <div class="search-bar" style="gap:8px;flex-wrap:wrap;margin-bottom:10px">
+        <div style="display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden">
+          <button id="ftab-todas"  class="btn" style="border-radius:0;background:var(--navy);color:white;font-size:12px;padding:6px 12px" onclick="filtrarTabFacturas('todas')">Todas</button>
+          <button id="ftab-venta"  class="btn btn-ghost" style="border-radius:0;font-size:12px;padding:6px 12px" onclick="filtrarTabFacturas('Venta')">📤 Ventas</button>
+          <button id="ftab-compra" class="btn btn-ghost" style="border-radius:0;font-size:12px;padding:6px 12px" onclick="filtrarTabFacturas('Compra')">📥 Compras</button>
+        </div>
+        <div class="search-wrap" style="flex:1;min-width:160px"><span class="search-icon">🔍</span>
+          <input class="form-input" id="search-facturas" placeholder="Buscar…" oninput="filterTable('facturas-tbody','search-facturas')">
+        </div>
+        <button class="btn btn-primary" onclick="abrirNuevaFactura('Venta')">📤 Nueva venta</button>
+        <button class="btn" style="background:#fdecea;color:var(--red);border:1px solid #f5c6c6" onclick="abrirNuevaFactura('Compra')">📥 Nueva compra</button>
       </div>
+
+      <!-- ═══ TABLA ═══ -->
       <div class="card">
-        <div class="card-header"><div class="card-title">🧾 Facturas<span id="facturas-count" style="font-size:11px;font-weight:400;color:var(--text-soft);margin-left:6px"></span></div></div>
-        <div class="table-wrap"><table><thead><tr><th>Nº Factura</th><th>Fecha</th><th>Vto.</th><th>Cliente</th><th>Proyecto</th><th>Base Imp.</th><th>IVA%</th><th>Total IVA</th><th>Cobrado</th><th>Pendiente</th><th>Estado</th><th></th></tr></thead>
-        <tbody id="facturas-tbody"><tr><td colspan="12" class="loading">Cargando…</td></tr></tbody></table></div>
+        <div class="card-header">
+          <div class="card-title">🧾 Facturas <span id="facturas-count" style="font-size:11px;font-weight:400;color:var(--text-soft);margin-left:6px"></span></div>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr>
+            <th>Tipo</th><th>Nº Factura</th><th>Fecha</th><th>Vto.</th>
+            <th>Cliente / Proveedor</th><th>Proyecto</th>
+            <th>Base imp.</th><th>IVA%</th><th>Total</th>
+            <th>Cobrado/Pagado</th><th>Pendiente</th><th>Estado</th><th></th>
+          </tr></thead>
+          <tbody id="facturas-tbody"><tr><td colspan="13" class="loading">Cargando…</td></tr></tbody>
+        </table></div>
       </div>
     </div>
 
     <!-- ═══ CONTABILIDAD ═══ -->
-    <div class="view" id="view-contabilidad">
+    <div class="view" id="view-conciliacion">
+
+  <!-- ═══ PANEL SUPERIOR: ESTADO GIROS ═══ -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:14px">
+    <div class="kpi red"><div class="kpi-label">⏰ Vencen esta semana</div><div class="kpi-value" id="conc-semana">—</div></div>
+    <div class="kpi amber"><div class="kpi-label">📅 Vencen este mes</div><div class="kpi-value" id="conc-mes">—</div></div>
+    <div class="kpi blue"><div class="kpi-label">📋 Pendientes de pago</div><div class="kpi-value" id="conc-pendientes">—</div></div>
+    <div class="kpi green"><div class="kpi-label">✅ Pagadas este mes</div><div class="kpi-value" id="conc-pagadas">—</div></div>
+  </div>
+
+  <!-- ═══ PRÓXIMOS VENCIMIENTOS ═══ -->
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-header">
+      <div class="card-title">⏰ Próximos vencimientos <span id="venc-count" style="font-size:11px;font-weight:400;color:var(--text-soft);margin-left:6px"></span></div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <select class="form-input" id="venc-filtro" style="width:160px;font-size:12px" onchange="loadConciliacion()">
+          <option value="30">Próximos 30 días</option>
+          <option value="60">Próximos 60 días</option>
+          <option value="90">Próximos 90 días</option>
+          <option value="todos">Todos pendientes</option>
+        </select>
+      </div>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr>
+        <th>Vencimiento</th><th>Días</th><th>Proveedor</th><th>Concepto</th>
+        <th>Forma pago</th><th>Proyecto</th><th>Base imp.</th><th>Total</th><th>Estado</th><th></th>
+      </tr></thead>
+      <tbody id="venc-tbody"><tr><td colspan="10" class="loading">Cargando…</td></tr></tbody>
+    </table></div>
+  </div>
+
+  <!-- ═══ IMPORTAR EXTRACTO ═══ -->
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-header">
+      <div class="card-title">🏦 Importar extracto bancario (CSV)</div>
+    </div>
+    <div class="card-body">
+      <div class="info-box" style="margin-bottom:12px">
+        📥 Descarga el extracto de tu banco en formato CSV (BBVA: Mis cuentas → Exportar / CaixaBank: Movimientos → Descargar CSV). 
+        El sistema cruzará automáticamente los movimientos con tus facturas pendientes por <strong>importe y fecha</strong>.
+      </div>
+      <div style="display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap">
+        <div style="flex:1;min-width:200px">
+          <label class="form-label">Banco / Formato</label>
+          <select class="form-input" id="banco-formato" style="margin-bottom:10px">
+            <option value="bbva">BBVA</option>
+            <option value="caixabank">CaixaBank</option>
+            <option value="santander">Santander</option>
+            <option value="sabadell">Banco Sabadell</option>
+            <option value="generico">Genérico (fecha, concepto, importe)</option>
+          </select>
+          <label class="form-label">Archivo CSV del extracto</label>
+          <input type="file" id="csv-input" accept=".csv,.txt" class="form-input" onchange="procesarCSV()" style="padding:6px">
+        </div>
+        <div style="flex:2;min-width:280px">
+          <div id="csv-preview" style="display:none;background:var(--bg);border-radius:6px;padding:10px;font-size:11px;max-height:120px;overflow-y:auto;font-family:monospace;color:var(--text-soft);border:1px solid var(--border)"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ RESULTADOS CONCILIACIÓN ═══ -->
+  <div id="conc-resultados" style="display:none">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🔍 Resultado de la conciliación <span id="conc-res-count" style="font-size:11px;font-weight:400;color:var(--text-soft);margin-left:6px"></span></div>
+        <button class="btn btn-primary" onclick="aplicarConciliacion()" id="btn-aplicar-conc" style="display:none">✅ Aplicar pagos detectados</button>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr>
+          <th></th><th>Fecha banco</th><th>Concepto banco</th><th>Importe banco</th>
+          <th>Factura detectada</th><th>Proveedor</th><th>Diferencia</th><th>Confianza</th>
+        </tr></thead>
+        <tbody id="conc-tbody"></tbody>
+      </table></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="view" id="view-contabilidad">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
         <div class="card">
           <div class="card-header"><div class="card-title">📊 Cuenta de Resultados</div></div>
@@ -1024,6 +1191,33 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           </div>
         </div>
       </div>
+        <!-- DÍAS DE PAGO -->
+        <div class="card" style="margin-top:14px">
+          <div class="card-header">
+            <div class="card-title">📅 Días de pago</div>
+            <button class="btn btn-ghost btn-sm" onclick="saveDiasPago()">💾 Guardar</button>
+          </div>
+          <div class="card-body">
+            <div class="info-box">Estos son los días del mes en que se realizan los pagos. Se usan para calcular automáticamente el vencimiento en facturas de compra con giro.</div>
+            <div class="form-grid" style="margin-bottom:12px">
+              <div class="form-group">
+                <label class="form-label">Día de pago 1</label>
+                <input class="form-input" id="cfg-dia1" type="number" min="1" max="31" value="5" placeholder="5">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Día de pago 2</label>
+                <input class="form-input" id="cfg-dia2" type="number" min="1" max="31" value="20" placeholder="20">
+              </div>
+            </div>
+            <div style="background:var(--bg);border-radius:6px;padding:10px;font-size:12px;color:var(--text-soft)">
+              <strong style="color:var(--navy)">¿Cómo funciona?</strong><br>
+              Al seleccionar <em>Giro 30/60/90/120 días</em> en una factura, el sistema calcula la fecha de vencimiento 
+              sumando los días al plazo y ajustando al siguiente día de pago configurado (día 5 o 20).<br><br>
+              <strong>Ejemplo:</strong> Factura con fecha 10/03 + Giro 30 días = vencimiento 09/04 → ajusta al <strong>20/04</strong>
+            </div>
+          </div>
+        </div>
+
         <div class="card" style="margin-top:14px">
           <div class="card-header"><div class="card-title">📁 Categorías de partidas</div></div>
           <div class="card-body">
@@ -1062,7 +1256,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="form-group"><label class="form-label">Teléfono</label><input class="form-input" id="c-tel"></div>
       <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="c-email" type="email"></div>
       <div class="form-group"><label class="form-label">Tipo</label><select class="form-input" id="c-tipo"><option>Particular</option><option>Empresa</option><option>Promotora</option><option>Administración</option><option>Otros</option></select></div>
-      <div class="form-group"><label class="form-label">Forma de pago</label><select class="form-input" id="c-pago"><option>Transferencia</option><option>Efectivo</option><option>Giro</option><option>Domiciliación</option><option>Confirming</option><option>Pagaré</option></select></div>
+      <div class="form-group"><label class="form-label">Forma de pago</label><select class="form-input" id="c-pago"><option>Transferencia</option><option>Efectivo</option><option>Domiciliación</option><option>Confirming</option><option>Pagaré</option><option>Giro 30 días</option><option>Giro 60 días</option><option>Giro 90 días</option><option>Giro 120 días</option></select></div>
       <div class="form-group fg-full"><label class="form-label">Dirección</label><input class="form-input" id="c-dir"></div>
       <div class="form-group fg-full"><label class="form-label">Notas</label><textarea class="form-input" id="c-notas" rows="2"></textarea></div>
     </div>
@@ -1123,41 +1317,164 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 </div></div>
 
 <!-- COMPARATIVA OFERTAS -->
-<div class="overlay" id="m-comparativa"><div class="modal" style="width:700px">
+<div class="overlay" id="m-comparativa"><div class="modal" style="width:780px;max-width:96vw">
   <div class="modal-head"><div class="modal-title">⚖️ Nueva comparativa de ofertas</div><button class="modal-close" onclick="closeModal('m-comparativa')">×</button></div>
   <div class="modal-body"><input type="hidden" id="cmp-id">
-    <div class="form-grid" style="margin-bottom:14px">
+    <!-- Cabecera: proyecto + trabajo + modo de cálculo -->
+    <div class="form-grid" style="margin-bottom:10px">
       <div class="form-group"><label class="form-label">Proyecto *</label><select class="form-input" id="cmp-proyecto"><option value="">Seleccionar…</option></select></div>
       <div class="form-group"><label class="form-label">Trabajo / Material *</label><input class="form-input" id="cmp-trabajo" placeholder="Ej: Instalación fontanería cocina"></div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
-      <div><div class="modal-section">OFERTA 1</div>
-        <div class="form-group" style="margin-bottom:7px"><label class="form-label">Proveedor</label><input class="form-input" id="o1-prov"></div>
-        <div class="form-group" style="margin-bottom:7px"><label class="form-label">PVP €</label><input class="form-input" id="o1-pvp" type="number" step="0.01" oninput="calcOferta(1)"></div>
-        <div class="form-group" style="margin-bottom:7px"><label class="form-label">Dto. %</label><input class="form-input" id="o1-dto" type="number" value="0" oninput="calcOferta(1)"></div>
-        <div class="form-group" style="margin-bottom:7px"><label class="form-label">Markup %</label><input class="form-input" id="o1-mk" type="number" value="0" oninput="calcOferta(1)"></div>
-        <div class="form-group" style="margin-bottom:7px"><label class="form-label">Precio Final</label><input class="form-input calc" id="o1-final" readonly></div>
-        <div class="form-group"><label class="form-label">Notas</label><input class="form-input" id="o1-notas"></div>
+    <!-- Modo de cálculo -->
+    <div style="display:flex;gap:8px;margin-bottom:14px;background:var(--bg);border-radius:6px;padding:8px 10px;align-items:center">
+      <span style="font-size:12px;font-weight:600;color:var(--text-soft);margin-right:4px">Modo:</span>
+      <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px">
+        <input type="radio" name="cmp-modo" value="pvp" checked onchange="cambiarModoComparativa()"> 
+        <span>📉 PVP catálogo − descuento</span>
+      </label>
+      <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;margin-left:12px">
+        <input type="radio" name="cmp-modo" value="coste" onchange="cambiarModoComparativa()"> 
+        <span>📈 Precio coste + margen</span>
+      </label>
+    </div>
+    <!-- Las 3 ofertas -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px" id="cmp-ofertas-grid">
+      <div id="cmp-col-1" style="border:1px solid var(--border);border-radius:6px;padding:10px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-soft);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--border)">OFERTA 1</div>
+        <div class="form-group" style="margin-bottom:6px"><label class="form-label">Proveedor</label>
+          <select class="form-input" id="o1-prov"><option value="">Seleccionar…</option></select>
+        </div>
+        <div id="o1-modo-pvp">
+          <div class="form-group" style="margin-bottom:6px"><label class="form-label">PVP catálogo €</label>
+            <input class="form-input" id="o1-pvp" type="number" step="0.01" placeholder="0.00" oninput="calcOferta(1)">
+          </div>
+          <div class="form-group" style="margin-bottom:6px"><label class="form-label">Descuento %</label>
+            <input class="form-input" id="o1-dto" type="number" value="0" step="0.1" oninput="calcOferta(1)">
+          </div>
+        </div>
+        <div id="o1-modo-coste" style="display:none">
+          <div class="form-group" style="margin-bottom:6px"><label class="form-label">Precio coste €</label>
+            <input class="form-input" id="o1-costebase" type="number" step="0.01" placeholder="0.00" oninput="calcOferta(1)">
+          </div>
+          <div class="form-group" style="margin-bottom:6px"><label class="form-label">Margen venta %</label>
+            <input class="form-input" id="o1-mk" type="number" value="0" step="0.1" oninput="calcOferta(1)">
+          </div>
+        </div>
+        <div style="background:var(--bg);border-radius:4px;padding:8px;margin-top:6px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+            <span style="font-size:11px;color:var(--text-soft)">Precio coste</span>
+            <span style="font-size:12px;font-weight:700" id="o1-res-coste">—</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+            <span style="font-size:11px;color:var(--text-soft)">Precio venta</span>
+            <span style="font-size:13px;font-weight:700;color:var(--navy)" id="o1-res-venta">—</span>
+          </div>
+          <div style="display:flex;justify-content:space-between">
+            <span style="font-size:11px;color:var(--text-soft)">Margen €</span>
+            <span style="font-size:12px;font-weight:700;color:var(--green)" id="o1-res-margen">—</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:2px">
+            <span style="font-size:11px;color:var(--text-soft)">Margen %</span>
+            <span style="font-size:12px;font-weight:700;color:var(--green)" id="o1-res-pct">—</span>
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:6px"><label class="form-label">Notas</label>
+          <input class="form-input" id="o1-notas" placeholder="Plazo, condiciones…">
+        </div>
       </div>
-      <div><div class="modal-section">OFERTA 2</div>
-        <div class="form-group" style="margin-bottom:7px"><label class="form-label">Proveedor</label><input class="form-input" id="o2-prov"></div>
-        <div class="form-group" style="margin-bottom:7px"><label class="form-label">PVP €</label><input class="form-input" id="o2-pvp" type="number" step="0.01" oninput="calcOferta(2)"></div>
-        <div class="form-group" style="margin-bottom:7px"><label class="form-label">Dto. %</label><input class="form-input" id="o2-dto" type="number" value="0" oninput="calcOferta(2)"></div>
-        <div class="form-group" style="margin-bottom:7px"><label class="form-label">Markup %</label><input class="form-input" id="o2-mk" type="number" value="0" oninput="calcOferta(2)"></div>
-        <div class="form-group" style="margin-bottom:7px"><label class="form-label">Precio Final</label><input class="form-input calc" id="o2-final" readonly></div>
-        <div class="form-group"><label class="form-label">Notas</label><input class="form-input" id="o2-notas"></div>
+      <div id="cmp-col-2" style="border:1px solid var(--border);border-radius:6px;padding:10px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-soft);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--border)">OFERTA 2</div>
+        <div class="form-group" style="margin-bottom:6px"><label class="form-label">Proveedor</label>
+          <select class="form-input" id="o2-prov"><option value="">Seleccionar…</option></select>
+        </div>
+        <div id="o2-modo-pvp">
+          <div class="form-group" style="margin-bottom:6px"><label class="form-label">PVP catálogo €</label>
+            <input class="form-input" id="o2-pvp" type="number" step="0.01" placeholder="0.00" oninput="calcOferta(2)">
+          </div>
+          <div class="form-group" style="margin-bottom:6px"><label class="form-label">Descuento %</label>
+            <input class="form-input" id="o2-dto" type="number" value="0" step="0.1" oninput="calcOferta(2)">
+          </div>
+        </div>
+        <div id="o2-modo-coste" style="display:none">
+          <div class="form-group" style="margin-bottom:6px"><label class="form-label">Precio coste €</label>
+            <input class="form-input" id="o2-costebase" type="number" step="0.01" placeholder="0.00" oninput="calcOferta(2)">
+          </div>
+          <div class="form-group" style="margin-bottom:6px"><label class="form-label">Margen venta %</label>
+            <input class="form-input" id="o2-mk" type="number" value="0" step="0.1" oninput="calcOferta(2)">
+          </div>
+        </div>
+        <div style="background:var(--bg);border-radius:4px;padding:8px;margin-top:6px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+            <span style="font-size:11px;color:var(--text-soft)">Precio coste</span>
+            <span style="font-size:12px;font-weight:700" id="o2-res-coste">—</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+            <span style="font-size:11px;color:var(--text-soft)">Precio venta</span>
+            <span style="font-size:13px;font-weight:700;color:var(--navy)" id="o2-res-venta">—</span>
+          </div>
+          <div style="display:flex;justify-content:space-between">
+            <span style="font-size:11px;color:var(--text-soft)">Margen €</span>
+            <span style="font-size:12px;font-weight:700;color:var(--green)" id="o2-res-margen">—</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:2px">
+            <span style="font-size:11px;color:var(--text-soft)">Margen %</span>
+            <span style="font-size:12px;font-weight:700;color:var(--green)" id="o2-res-pct">—</span>
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:6px"><label class="form-label">Notas</label>
+          <input class="form-input" id="o2-notas" placeholder="Plazo, condiciones…">
+        </div>
       </div>
-      <div><div class="modal-section">OFERTA 3</div>
-        <div class="form-group" style="margin-bottom:7px"><label class="form-label">Proveedor</label><input class="form-input" id="o3-prov"></div>
-        <div class="form-group" style="margin-bottom:7px"><label class="form-label">PVP €</label><input class="form-input" id="o3-pvp" type="number" step="0.01" oninput="calcOferta(3)"></div>
-        <div class="form-group" style="margin-bottom:7px"><label class="form-label">Dto. %</label><input class="form-input" id="o3-dto" type="number" value="0" oninput="calcOferta(3)"></div>
-        <div class="form-group" style="margin-bottom:7px"><label class="form-label">Markup %</label><input class="form-input" id="o3-mk" type="number" value="0" oninput="calcOferta(3)"></div>
-        <div class="form-group" style="margin-bottom:7px"><label class="form-label">Precio Final</label><input class="form-input calc" id="o3-final" readonly></div>
-        <div class="form-group"><label class="form-label">Notas</label><input class="form-input" id="o3-notas"></div>
+      <div id="cmp-col-3" style="border:1px solid var(--border);border-radius:6px;padding:10px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-soft);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--border)">OFERTA 3</div>
+        <div class="form-group" style="margin-bottom:6px"><label class="form-label">Proveedor</label>
+          <select class="form-input" id="o3-prov"><option value="">Seleccionar…</option></select>
+        </div>
+        <div id="o3-modo-pvp">
+          <div class="form-group" style="margin-bottom:6px"><label class="form-label">PVP catálogo €</label>
+            <input class="form-input" id="o3-pvp" type="number" step="0.01" placeholder="0.00" oninput="calcOferta(3)">
+          </div>
+          <div class="form-group" style="margin-bottom:6px"><label class="form-label">Descuento %</label>
+            <input class="form-input" id="o3-dto" type="number" value="0" step="0.1" oninput="calcOferta(3)">
+          </div>
+        </div>
+        <div id="o3-modo-coste" style="display:none">
+          <div class="form-group" style="margin-bottom:6px"><label class="form-label">Precio coste €</label>
+            <input class="form-input" id="o3-costebase" type="number" step="0.01" placeholder="0.00" oninput="calcOferta(3)">
+          </div>
+          <div class="form-group" style="margin-bottom:6px"><label class="form-label">Margen venta %</label>
+            <input class="form-input" id="o3-mk" type="number" value="0" step="0.1" oninput="calcOferta(3)">
+          </div>
+        </div>
+        <div style="background:var(--bg);border-radius:4px;padding:8px;margin-top:6px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+            <span style="font-size:11px;color:var(--text-soft)">Precio coste</span>
+            <span style="font-size:12px;font-weight:700" id="o3-res-coste">—</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+            <span style="font-size:11px;color:var(--text-soft)">Precio venta</span>
+            <span style="font-size:13px;font-weight:700;color:var(--navy)" id="o3-res-venta">—</span>
+          </div>
+          <div style="display:flex;justify-content:space-between">
+            <span style="font-size:11px;color:var(--text-soft)">Margen €</span>
+            <span style="font-size:12px;font-weight:700;color:var(--green)" id="o3-res-margen">—</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:2px">
+            <span style="font-size:11px;color:var(--text-soft)">Margen %</span>
+            <span style="font-size:12px;font-weight:700;color:var(--green)" id="o3-res-pct">—</span>
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:6px"><label class="form-label">Notas</label>
+          <input class="form-input" id="o3-notas" placeholder="Plazo, condiciones…">
+        </div>
       </div>
     </div>
-    <div class="form-group" style="margin-top:14px"><label class="form-label">Oferta elegida</label>
-      <select class="form-input" id="cmp-elegida" style="width:200px"><option value="1">Oferta 1</option><option value="2">Oferta 2</option><option value="3">Oferta 3</option></select>
+    <div style="display:flex;align-items:center;gap:10px;margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">
+      <label class="form-label" style="margin:0;white-space:nowrap">Oferta elegida:</label>
+      <select class="form-input" id="cmp-elegida" style="width:160px">
+        <option value="1">Oferta 1</option><option value="2">Oferta 2</option><option value="3">Oferta 3</option>
+      </select>
+      <span id="cmp-ganadora-info" style="font-size:12px;color:var(--green)"></span>
     </div>
   </div>
   <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('m-comparativa')">Cancelar</button><button class="btn btn-primary" onclick="saveComparativa()">💾 Guardar</button></div>
@@ -1291,7 +1608,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="form-group"><label class="form-label">Teléfono</label><input class="form-input" id="pv-tel"></div>
       <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="pv-email" type="email"></div>
       <div class="form-group"><label class="form-label">Especialidad</label><input class="form-input" id="pv-esp"></div>
-      <div class="form-group"><label class="form-label">Forma de pago</label><select class="form-input" id="pv-pago"><option>Transferencia</option><option>Efectivo</option><option>Giro</option><option>Domiciliación</option><option>Confirming</option><option>Pagaré</option></select></div>
+      <div class="form-group"><label class="form-label">Forma de pago</label><select class="form-input" id="pv-pago"><option>Transferencia</option><option>Efectivo</option><option>Domiciliación</option><option>Confirming</option><option>Pagaré</option><option>Giro 30 días</option><option>Giro 60 días</option><option>Giro 90 días</option><option>Giro 120 días</option></select></div>
       <div class="form-group"><label class="form-label">IBAN</label><input class="form-input" id="pv-iban"></div>
       <div class="form-group fg-full"><label class="form-label">Notas</label><textarea class="form-input" id="pv-notas" rows="2"></textarea></div>
     </div>
@@ -1300,24 +1617,66 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 </div></div>
 
 <!-- FACTURA -->
-<div class="overlay" id="m-factura"><div class="modal">
-  <div class="modal-head"><div class="modal-title">🧾 Nueva factura</div><button class="modal-close" onclick="closeModal('m-factura')">×</button></div>
-  <div class="modal-body"><input type="hidden" id="f-id">
+<div class="overlay" id="m-factura"><div class="modal" style="width:640px;max-width:96vw">
+  <div class="modal-head">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="modal-title" id="f-modal-title">🧾 Nueva factura</div>
+      <span id="f-tipo-badge" style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;background:#e8f5ee;color:var(--green)">📤 VENTA</span>
+    </div>
+    <button class="modal-close" onclick="closeModal('m-factura')">×</button>
+  </div>
+  <div class="modal-body">
+    <input type="hidden" id="f-id">
+    <input type="hidden" id="f-tipo" value="Venta">
     <div class="form-grid">
-      <div class="form-group"><label class="form-label">Nº Factura</label><input class="form-input" id="f-num" placeholder="FAC-2026-001"></div>
+      <div class="form-group"><label class="form-label">Nº Factura *</label><input class="form-input" id="f-num" placeholder="FAC-2026-001"></div>
       <div class="form-group"><label class="form-label">Fecha emisión</label><input class="form-input" id="f-fecha" type="date"></div>
-      <div class="form-group"><label class="form-label">Cliente</label><select class="form-input" id="f-cliente"><option value="">Seleccionar…</option></select></div>
-      <div class="form-group"><label class="form-label">Proyecto</label><select class="form-input" id="f-proyecto"><option value="">Seleccionar…</option></select></div>
-      <div class="form-group"><label class="form-label">Base imponible €</label><input class="form-input" id="f-base" type="number" step="0.01"></div>
-      <div class="form-group"><label class="form-label">IVA</label><select class="form-input" id="f-iva"><option>10%</option><option>21%</option><option>4%</option><option>Exento</option></select></div>
-      <div class="form-group"><label class="form-label">Forma de pago</label><select class="form-input" id="f-pago"><option>Transferencia</option><option>Efectivo</option><option>Giro</option><option>Domiciliación</option></select></div>
-      <div class="form-group"><label class="form-label">Fecha vencimiento</label><input class="form-input" id="f-vto" type="date"></div>
-      <div class="form-group"><label class="form-label">Estado</label><select class="form-input" id="f-estado"><option>Pendiente</option><option>Cobrada</option><option>Parcial</option><option>Vencida</option></select></div>
-      <div class="form-group"><label class="form-label">Importe cobrado €</label><input class="form-input" id="f-cobrado" type="number" step="0.01" value="0"></div>
-      <div class="form-group fg-full"><label class="form-label">Concepto</label><input class="form-input" id="f-concepto"></div>
+      <!-- Venta → Cliente | Compra → Proveedor -->
+      <div class="form-group" id="f-grp-cliente"><label class="form-label">Cliente</label>
+        <select class="form-input" id="f-cliente"><option value="">Seleccionar…</option></select>
+      </div>
+      <div class="form-group" id="f-grp-proveedor" style="display:none"><label class="form-label">Proveedor</label>
+        <select class="form-input" id="f-proveedor"><option value="">Seleccionar…</option></select>
+      </div>
+      <div class="form-group"><label class="form-label">Proyecto</label>
+        <select class="form-input" id="f-proyecto"><option value="">Seleccionar…</option></select>
+      </div>
+      <div class="form-group fg-full"><label class="form-label">Concepto / Descripción</label>
+        <input class="form-input" id="f-concepto" placeholder="Descripción del trabajo o material…">
+      </div>
+      <div class="form-group"><label class="form-label">Base imponible €</label>
+        <input class="form-input" id="f-base" type="number" step="0.01" oninput="calcTotalFac()">
+      </div>
+      <div class="form-group"><label class="form-label">IVA</label>
+        <select class="form-input" id="f-iva" onchange="calcTotalFac()">
+          <option>21%</option><option>10%</option><option>4%</option><option>Exento</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Total con IVA</label>
+        <input class="form-input" id="f-total-display" readonly style="background:var(--bg);font-weight:700;color:var(--navy)">
+      </div>
+      <div class="form-group"><label class="form-label">Fecha vencimiento</label>
+        <input class="form-input" id="f-vto" type="date">
+      </div>
+      <div class="form-group"><label class="form-label">Forma de pago</label>
+        <select class="form-input" id="f-pago" onchange="onFormaPagoChange()">
+          <option>Transferencia</option><option>Efectivo</option><option>Domiciliación</option><option>Confirming</option><option>Cheque</option><option>Giro 30 días</option><option>Giro 60 días</option><option>Giro 90 días</option><option>Giro 120 días</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label" id="f-cobrado-lbl">Importe cobrado €</label>
+        <input class="form-input" id="f-cobrado" type="number" step="0.01" value="0">
+      </div>
+      <div class="form-group"><label class="form-label">Estado</label>
+        <select class="form-input" id="f-estado">
+          <option>Pendiente</option><option>Cobrada</option><option>Parcial</option><option>Vencida</option><option>Anulada</option>
+        </select>
+      </div>
     </div>
   </div>
-  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('m-factura')">Cancelar</button><button class="btn btn-primary" onclick="saveFactura()">💾 Guardar</button></div>
+  <div class="modal-foot">
+    <button class="btn btn-ghost" onclick="closeModal('m-factura')">Cancelar</button>
+    <button class="btn btn-primary" onclick="saveFactura()">💾 Guardar</button>
+  </div>
 </div></div>
 
 <!-- QUICK -->
@@ -1600,6 +1959,7 @@ const META={
   horas:{t:'Control de horas',b:''},pedidos:{t:'Registro de pedidos',b:''},
   control_horario:{t:'Control horario anual',b:'Ficha por trabajador'},
   proveedores:{t:'Proveedores',b:'32 proveedores importados'},
+  conciliacion:{t:'Conciliación bancaria',b:'Vencimientos · Importar extracto · Conciliar pagos automáticamente'},
   rentabilidad:{t:'Rentabilidad por proyecto',b:'Presupuesto vs Coste real'},
   facturas:{t:'Facturas emitidas',b:'Seguimiento de cobros'},
   contabilidad:{t:'Contabilidad',b:'Cuenta de resultados · IVA · Balance'},
@@ -1634,7 +1994,8 @@ function genId(pre,list,key){const ns=list.map(x=>parseInt((x[key||pre.toLowerCa
 function ivaPct(s){return s==='Exento'?0:parseFloat(s)||21}
 let toastT;
 function toast(msg,type='success'){const el=document.getElementById('toast');el.textContent=msg;el.className=`toast show ${type}`;clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),3200);}
-function openModal(id){document.getElementById(id)?.classList.add('open')}
+function openModal(id){
+  if(id==='m-comparativa'){ poblarProveedoresComparativa(); }document.getElementById(id)?.classList.add('open')}
 function closeModal(id){document.getElementById(id)?.classList.remove('open')}
 document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open')}));
 let pendingDel=null;
@@ -2223,7 +2584,83 @@ async function saveCapitulo(){const nombre=document.getElementById('cap-nombre')
 // ═══════════════════════════════════════════
 // COMPARATIVA OFERTAS
 // ═══════════════════════════════════════════
-function calcOferta(n){const pvp=parseFloat(document.getElementById(`o${n}-pvp`).value)||0,dto=parseFloat(document.getElementById(`o${n}-dto`).value)||0,mk=parseFloat(document.getElementById(`o${n}-mk`).value)||0;const coste=pvp*(1-dto/100),final=coste*(1+mk/100);document.getElementById(`o${n}-final`).value=final>0?final.toFixed(2)+' €':'—';}
+function calcOferta(n){
+  const modo = document.querySelector('input[name="cmp-modo"]:checked')?.value || 'pvp';
+  let coste=0, venta=0;
+  if(modo==='pvp'){
+    const pvp = parseFloat(document.getElementById(`o${n}-pvp`)?.value)||0;
+    const dto = parseFloat(document.getElementById(`o${n}-dto`)?.value)||0;
+    coste = pvp*(1-dto/100);
+    // venta = coste (sin markup adicional en modo PVP - el precio de venta = coste neto para nosotros)
+    venta = coste;
+  } else {
+    coste = parseFloat(document.getElementById(`o${n}-costebase`)?.value)||0;
+    const mk = parseFloat(document.getElementById(`o${n}-mk`)?.value)||0;
+    venta = coste>0 ? coste/(1-mk/100) : 0;
+  }
+  const margenE = venta - coste;
+  const margenPct = venta>0 ? (margenE/venta)*100 : 0;
+  const set=(id,v)=>{ const el=document.getElementById(id); if(el) el.textContent=v; };
+  set(`o${n}-res-coste`, coste>0 ? fmt(coste) : '—');
+  set(`o${n}-res-venta`, venta>0 ? fmt(venta) : '—');
+  set(`o${n}-res-margen`, margenE>0 ? fmt(margenE) : '—');
+  const pctEl = document.getElementById(`o${n}-res-pct`);
+  if(pctEl){
+    pctEl.textContent = margenPct>0 ? fmtP(margenPct) : '—';
+    pctEl.style.color = margenPct>=20?'var(--green)':margenPct>=10?'var(--amber)':'var(--red)';
+  }
+  // Highlight mejor oferta
+  destacarMejorOferta();
+}
+
+function cambiarModoComparativa(){
+  const modo = document.querySelector('input[name="cmp-modo"]:checked')?.value || 'pvp';
+  [1,2,3].forEach(n=>{
+    const pvpDiv   = document.getElementById(`o${n}-modo-pvp`);
+    const costeDiv = document.getElementById(`o${n}-modo-coste`);
+    if(pvpDiv)   pvpDiv.style.display   = modo==='pvp'   ? '' : 'none';
+    if(costeDiv) costeDiv.style.display = modo==='coste' ? '' : 'none';
+    calcOferta(n);
+  });
+}
+
+function destacarMejorOferta(){
+  // Find lowest coste among filled offers
+  let mejor = null, menorCoste = Infinity;
+  [1,2,3].forEach(n=>{
+    const modo = document.querySelector('input[name="cmp-modo"]:checked')?.value||'pvp';
+    let coste=0;
+    if(modo==='pvp'){
+      const pvp=parseFloat(document.getElementById(`o${n}-pvp`)?.value)||0;
+      const dto=parseFloat(document.getElementById(`o${n}-dto`)?.value)||0;
+      coste=pvp*(1-dto/100);
+    } else {
+      coste=parseFloat(document.getElementById(`o${n}-costebase`)?.value)||0;
+    }
+    const col = document.getElementById(`cmp-col-${n}`);
+    if(col) col.style.borderColor='var(--border)';
+    if(coste>0 && coste<menorCoste){ menorCoste=coste; mejor=n; }
+  });
+  if(mejor){
+    const col=document.getElementById(`cmp-col-${mejor}`);
+    if(col) col.style.borderColor='var(--green)';
+    const info=document.getElementById('cmp-ganadora-info');
+    if(info) info.textContent=`✅ Oferta ${mejor} es la más económica (${fmt(menorCoste)})`;
+    const sel=document.getElementById('cmp-elegida');
+    if(sel) sel.value=String(mejor);
+  }
+}
+
+function poblarProveedoresComparativa(){
+  [1,2,3].forEach(n=>{
+    const sel=document.getElementById(`o${n}-prov`);
+    if(!sel)return;
+    const cur=sel.value;
+    sel.innerHTML='<option value="">Seleccionar…</option>'
+      +ProvC.map(p=>`<option value="${p.nombre}">${p.nombre}</option>`).join('');
+    if(cur)sel.value=cur;
+  });
+}
 async function initComparativa(){if(!PC.length)PC=await sbGet('proyectos').catch(()=>[]);populateSelects();}
 async function loadComparativa(){
   const proy=document.getElementById('comp-proyecto-sel').value;
@@ -2242,7 +2679,25 @@ async function saveComparativa(){
   const proy=document.getElementById('cmp-proyecto').value,trabajo=document.getElementById('cmp-trabajo').value.trim();
   if(!proy||!trabajo){toast('Proyecto y trabajo son obligatorios','error');return;}
   const d={proyecto_id:proy,trabajo};
-  [1,2,3].forEach(n=>{const pvp=parseFloat(document.getElementById(`o${n}-pvp`).value)||0,dto=parseFloat(document.getElementById(`o${n}-dto`).value)||0,mk=parseFloat(document.getElementById(`o${n}-mk`).value)||0;d[`o${n}_proveedor`]=document.getElementById(`o${n}-prov`).value;d[`o${n}_pvp`]=pvp;d[`o${n}_dto`]=dto;d[`o${n}_markup`]=mk;d[`o${n}_coste`]=pvp*(1-dto/100);d[`o${n}_precio_final`]=pvp*(1-dto/100)*(1+mk/100);d[`o${n}_notas`]=document.getElementById(`o${n}-notas`).value;});
+  const modo = document.querySelector('input[name="cmp-modo"]:checked')?.value||'pvp';
+  d.modo_calculo = modo;
+  [1,2,3].forEach(n=>{
+    d[`o${n}_proveedor`] = document.getElementById(`o${n}-prov`)?.value||'';
+    d[`o${n}_notas`]     = document.getElementById(`o${n}-notas`)?.value||'';
+    if(modo==='pvp'){
+      const pvp=parseFloat(document.getElementById(`o${n}-pvp`)?.value)||0;
+      const dto=parseFloat(document.getElementById(`o${n}-dto`)?.value)||0;
+      d[`o${n}_pvp`]=pvp; d[`o${n}_dto`]=dto; d[`o${n}_markup`]=0;
+      d[`o${n}_coste`]=pvp*(1-dto/100);
+      d[`o${n}_precio_final`]=pvp*(1-dto/100);
+    } else {
+      const coste=parseFloat(document.getElementById(`o${n}-costebase`)?.value)||0;
+      const mk=parseFloat(document.getElementById(`o${n}-mk`)?.value)||0;
+      d[`o${n}_pvp`]=0; d[`o${n}_dto`]=0; d[`o${n}_markup`]=mk;
+      d[`o${n}_coste`]=coste;
+      d[`o${n}_precio_final`]=coste>0?coste/(1-mk/100):0;
+    }
+  });
   d.oferta_elegida=parseInt(document.getElementById('cmp-elegida').value)||1;
   try{await sbPost('comparativa_ofertas',d);toast('Comparativa guardada ✅');closeModal('m-comparativa');loadComparativa();}catch(e){toast('Error: '+e.message,'error');}
 }
@@ -2864,20 +3319,173 @@ async function loadFacturas(){
   const tb=document.getElementById('facturas-tbody');
   try{
     FC=await sbGet('facturas','?order=fecha_emision.desc');
+    // Poblar proveedor select en modal
+    const fProv=document.getElementById('f-proveedor');
+    if(fProv){
+      const cur=fProv.value;
+      fProv.innerHTML='<option value="">Seleccionar…</option>'+ProvC.map(p=>`<option value="${p.nombre}">${p.nombre}</option>`).join('');
+      if(cur)fProv.value=cur;
+    }
+    // KPIs
+    let vTotal=0,vCob=0,vPdte=0,vVenc=0;
+    let cTotal=0,cPag=0,cPdte=0,cIva=0;
+    FC.forEach(f=>{
+      const base=f.base_imponible||0;
+      const tot=base*(1+ivaPct(f.iva_pct)/100);
+      const pag=f.importe_cobrado||0;
+      const pdte=tot-pag;
+      const tipo=f.tipo_factura||'Venta';
+      if(tipo==='Compra'){
+        cTotal+=tot; cPag+=pag; cPdte+=pdte;
+        cIva+=base*ivaPct(f.iva_pct)/100;
+      } else {
+        vTotal+=tot; vCob+=pag; vPdte+=pdte;
+        if(f.estado==='Vencida') vVenc+=pdte;
+      }
+    });
+    // Set venta KPIs
+    const sv=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+    sv('fk-v-total',fmt(vTotal)); sv('fk-v-cobrado',fmt(vCob));
+    sv('fk-v-pendiente',fmt(vPdte)); sv('fk-v-vencidas',fmt(vVenc));
+    // Set compra KPIs
+    sv('fk-c-total',fmt(cTotal)); sv('fk-c-pagado',fmt(cPag));
+    sv('fk-c-pendiente',fmt(cPdte)); sv('fk-c-iva',fmt(cIva));
+    // Balance
+    const beneficio=vTotal-cTotal;
+    const margen=vTotal>0?(beneficio/vTotal)*100:0;
+    const ivaLiquidar=FC.reduce((s,f)=>{
+      const base=f.base_imponible||0, iva=base*ivaPct(f.iva_pct)/100;
+      return s+((f.tipo_factura||'Venta')==='Venta'?iva:-iva);
+    },0);
+    const bEl=document.getElementById('fk-b-beneficio');
+    if(bEl){bEl.textContent=fmt(beneficio);bEl.style.color=beneficio>=0?'var(--green)':'var(--red)';}
+    const mEl=document.getElementById('fk-b-margen');
+    if(mEl){mEl.textContent=fmtP(margen);mEl.style.color=margen>=20?'var(--green)':margen>=10?'var(--amber)':'var(--red)';}
+    sv('fk-b-iva',fmt(ivaLiquidar));
+    const pct=vTotal>0?Math.min(cTotal/vTotal*100,100):0;
+    const bar=document.getElementById('fk-b-bar');
+    if(bar){bar.style.width=pct+'%';bar.style.background=pct<60?'var(--green)':pct<85?'var(--amber)':'var(--red)';}
+    sv('fk-b-bar-lbl',`Gastos: ${pct.toFixed(0)}% sobre ingresos`);
+    // Count
     document.getElementById('facturas-count').textContent=FC.length+' facturas';
-    let totFact=0,totCob=0,totPdte=0,totVenc=0;
-    FC.forEach(f=>{const tot=(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100),cob=f.importe_cobrado||0,pdte=tot-cob;totFact+=tot;totCob+=cob;totPdte+=pdte;if(f.estado==='Vencida')totVenc+=pdte;});
-    document.getElementById('fk-total').textContent=fmt(totFact);document.getElementById('fk-cobrado').textContent=fmt(totCob);document.getElementById('fk-pendiente').textContent=fmt(totPdte);document.getElementById('fk-vencidas').textContent=fmt(totVenc);
-    if(!FC.length){tb.innerHTML=`<tr><td colspan="12"><div class="empty"><div class="empty-icon">🧾</div><div class="empty-text">Sin facturas</div><button class="btn btn-primary" onclick="openModal('m-factura')">＋ Nueva</button></div></td></tr>`;return;}
-    tb.innerHTML=FC.map(f=>{const tot=(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100),cob=f.importe_cobrado||0,pdte=tot-cob;return`<tr data-search="${(f.num_factura+f.cliente_id+f.proyecto_id+f.concepto).toLowerCase()}"><td class="td-mono" style="font-weight:700">${f.num_factura||'—'}</td><td>${fmtD(f.fecha_emision)}</td><td>${fmtD(f.fecha_vencimiento)}</td><td>${f.cliente_id||'—'}</td><td class="td-mono" style="color:var(--text-soft)">${f.proyecto_id||'—'}</td><td class="td-mono">${fmt(f.base_imponible)}</td><td class="td-mono">${f.iva_pct}</td><td class="td-mono" style="font-weight:700">${fmt(tot)}</td><td class="td-mono" style="color:var(--green)">${fmt(cob)}</td><td class="td-mono" style="color:${pdte>0?'var(--amber)':'var(--green)'}">${fmt(pdte)}</td><td>${bE(f.estado)}</td><td><button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px" onclick="marcarFacturaCobrada('${f.id}')">✅</button><button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px" onclick="marcarFacturaParcial('${f.id}')">💶</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('facturas','${f.id}','${(f.num_factura||'factura').replace(/'/g,"\\'")}')">🗑</button></td></tr>`;}).join('');
-  }catch(e){tb.innerHTML=`<tr><td colspan="12" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
-}
-async function saveFactura(){const d={num_factura:document.getElementById('f-num').value,fecha_emision:document.getElementById('f-fecha').value||new Date().toISOString().split('T')[0],cliente_id:document.getElementById('f-cliente').value||null,proyecto_id:document.getElementById('f-proyecto').value||null,base_imponible:parseFloat(document.getElementById('f-base').value)||0,iva_pct:document.getElementById('f-iva').value,forma_pago:document.getElementById('f-pago').value,fecha_vencimiento:document.getElementById('f-vto').value||null,estado:document.getElementById('f-estado').value,importe_cobrado:parseFloat(document.getElementById('f-cobrado').value)||0,concepto:document.getElementById('f-concepto').value};try{await sbPost('facturas',d);toast('Factura guardada ✅');closeModal('m-factura');loadFacturas();}catch(e){toast('Error: '+e.message,'error');}
+    if(!FC.length){
+      tb.innerHTML=`<tr><td colspan="13"><div class="empty"><div class="empty-icon">🧾</div><div class="empty-text">Sin facturas</div>
+        <button class="btn btn-primary" onclick="abrirNuevaFactura('Venta')">📤 Nueva venta</button>
+        <button class="btn btn-ghost" onclick="abrirNuevaFactura('Compra')" style="margin-left:6px">📥 Nueva compra</button>
+      </div></td></tr>`;return;
+    }
+    // Render rows
+    tb.innerHTML=FC.map(f=>{
+      const base=f.base_imponible||0;
+      const tot=base*(1+ivaPct(f.iva_pct)/100);
+      const pag=f.importe_cobrado||0, pdte=tot-pag;
+      const tipo=f.tipo_factura||'Venta';
+      const esC=tipo==='Compra';
+      const badge=esC
+        ?'<span style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:8px;background:#fdecea;color:var(--red)">📥 Compra</span>'
+        :'<span style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:8px;background:#e8f5ee;color:var(--green)">📤 Venta</span>';
+      const contra=esC?(f.proveedor_id||f.cliente_id||'—'):(f.cliente_id||'—');
+      return `<tr data-tipo="${tipo}" data-search="${tipo.toLowerCase()} ${(f.num_factura||'')} ${contra} ${f.proyecto_id||''} ${f.concepto||''}".toLowerCase()>
+        <td>${badge}</td>
+        <td class="td-mono" style="font-weight:700">${f.num_factura||'—'}</td>
+        <td>${fmtD(f.fecha_emision)}</td>
+        <td>${fmtD(f.fecha_vencimiento)}</td>
+        <td>${contra}</td>
+        <td class="td-mono" style="color:var(--text-soft)">${f.proyecto_id||'—'}</td>
+        <td class="td-mono">${fmt(base)}</td>
+        <td class="td-mono">${f.iva_pct||'—'}</td>
+        <td class="td-mono" style="font-weight:700">${fmt(tot)}</td>
+        <td class="td-mono" style="color:var(--green)">${fmt(pag)}</td>
+        <td class="td-mono" style="color:${pdte>0?'var(--amber)':'var(--green)'}">${fmt(pdte)}</td>
+        <td>${bE(f.estado)}</td>
+        <td style="display:flex;gap:3px">
+          ${!esC?`<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px" onclick="marcarFacturaCobrada('${f.id}')">✅</button>
+          <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px" onclick="marcarFacturaParcial('${f.id}')">💶</button>`:''}
+          <button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('facturas','${f.id}','${(f.num_factura||'factura').replace(/'/g,"\\'")}')">🗑</button>
+        </td>
+      </tr>`;
+    }).join('');
+    // Re-apply active tab filter
+    const activeTab=document.querySelector('[id^="ftab-"][style*="background:var(--navy)"]');
+    if(activeTab) filtrarTabFacturas(activeTab.id.replace('ftab-',''));
+  }catch(e){tb.innerHTML=`<tr><td colspan="13" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
 }
 
-// ═══════════════════════════════════════════
-// CONTABILIDAD
-// ═══════════════════════════════════════════
+function filtrarTabFacturas(tipo){
+  // Update tab styles
+  ['todas','venta','compra'].forEach(t=>{
+    const el=document.getElementById(`ftab-${t}`);
+    if(!el)return;
+    const active=(tipo==='todas'&&t==='todas')||(tipo!=='todas'&&t===tipo.toLowerCase());
+    el.style.background=active?'var(--navy)':'';
+    el.style.color=active?'white':'';
+  });
+  // Filter rows
+  const rows=document.querySelectorAll('#facturas-tbody tr[data-tipo]');
+  rows.forEach(tr=>{
+    tr.style.display=(tipo==='todas'||tr.dataset.tipo===tipo)?'':'none';
+  });
+}
+
+function abrirNuevaFactura(tipo){
+  const esC=tipo==='Compra';
+  document.getElementById('f-id').value='';
+  document.getElementById('f-tipo').value=tipo;
+  document.getElementById('f-modal-title').textContent=esC?'📥 Nueva factura de compra':'📤 Nueva factura de venta';
+  const badge=document.getElementById('f-tipo-badge');
+  if(badge){badge.textContent=esC?'📥 COMPRA':'📤 VENTA';badge.style.background=esC?'#fdecea':'#e8f5ee';badge.style.color=esC?'var(--red)':'var(--green)';}
+  document.getElementById('f-grp-cliente').style.display=esC?'none':'';
+  document.getElementById('f-grp-proveedor').style.display=esC?'':'none';
+  document.getElementById('f-cobrado-lbl').textContent=esC?'Importe pagado €':'Importe cobrado €';
+  document.getElementById('f-estado').innerHTML=esC
+    ?'<option>Pendiente</option><option>Pagada</option><option>Parcial</option><option>Vencida</option><option>Anulada</option>'
+    :'<option>Pendiente</option><option>Cobrada</option><option>Parcial</option><option>Vencida</option><option>Anulada</option>';
+  // Clear & set defaults
+  ['f-num','f-concepto'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('f-base').value='';
+  document.getElementById('f-cobrado').value='0';
+  document.getElementById('f-total-display').value='';
+  document.getElementById('f-fecha').value=new Date().toISOString().split('T')[0];
+  openModal('m-factura');
+}
+
+function calcTotalFac(){
+  const base=parseFloat(document.getElementById('f-base')?.value)||0;
+  const iva=ivaPct(document.getElementById('f-iva')?.value||'21%');
+  const total=base*(1+iva/100);
+  const el=document.getElementById('f-total-display');
+  if(el)el.value=total>0?fmt(total):'';
+}
+
+async function saveFactura(){
+  const tipo=document.getElementById('f-tipo').value||'Venta';
+  const id=document.getElementById('f-id').value;
+  const esC=tipo==='Compra';
+  const d={
+    tipo_factura:   tipo,
+    num_factura:    document.getElementById('f-num').value,
+    fecha_emision:  document.getElementById('f-fecha').value||new Date().toISOString().split('T')[0],
+    cliente_id:     esC?null:(document.getElementById('f-cliente').value||null),
+    proveedor_id:   esC?(document.getElementById('f-proveedor').value||null):null,
+    proyecto_id:    document.getElementById('f-proyecto').value||null,
+    base_imponible: parseFloat(document.getElementById('f-base').value)||0,
+    iva_pct:        document.getElementById('f-iva').value,
+    forma_pago:     document.getElementById('f-pago').value,
+    fecha_vencimiento:document.getElementById('f-vto').value||null,
+    estado:         document.getElementById('f-estado').value,
+    importe_cobrado:parseFloat(document.getElementById('f-cobrado').value)||0,
+    concepto:       document.getElementById('f-concepto').value
+  };
+  try{
+    if(id){await sb('facturas','PATCH',d,null,`?id=eq.${id}`);toast('Factura actualizada ✅');}
+    else  {await sbPost('facturas',d);toast('Factura guardada ✅');}
+    document.getElementById('f-id').value='';
+    closeModal('m-factura');
+    loadFacturas();
+  }catch(e){toast('Error: '+e.message,'error');}
+}
+
+
 async function loadContabilidad(){
   try{
     const[comp,subc,hor,fac]=await Promise.all([sbGet('compras'),sbGet('subcontratas'),sbGet('horas'),sbGet('facturas')]);
@@ -2951,6 +3559,7 @@ async function loadConfiguracion(){
     document.getElementById('cfg-total-ci').value=total.toFixed(1)+'%';
     ['cfg-ci','cfg-gg','cfg-bi'].forEach(id=>{document.getElementById(id).addEventListener('input',()=>{const ci=parseFloat(document.getElementById('cfg-ci').value)||0,gg=parseFloat(document.getElementById('cfg-gg').value)||0,bi=parseFloat(document.getElementById('cfg-bi').value)||0;document.getElementById('cfg-total-ci').value=(ci+gg+bi).toFixed(1)+'%';});});
   }catch(e){toast('Configura la tabla configuracion ejecutando el SQL de nuevas tablas','error');}
+  await loadDiasPago();
 }
 async function saveConfig(){
   const updates=[
@@ -2988,7 +3597,7 @@ const loaders={
   pedidos:loadPedidos,control_horario:loadControlHorario,
   proveedores:loadProveedores,
   rentabilidad:()=>{initRentabilidad();if(document.getElementById('rent-proyecto-sel').value)loadRentabilidad();},
-  facturas:loadFacturas,contabilidad:loadContabilidad,configuracion:loadConfiguracion,
+  facturas:loadFacturas,contabilidad:loadContabilidad,conciliacion:loadConciliacion,configuracion:loadConfiguracion,
   pres_final:async()=>{
     const sel=document.getElementById('pf-proyecto-sel');
     sel.innerHTML='<option value="">Cargando proyectos…</option>';
@@ -3294,6 +3903,403 @@ async function generarInformeMensual(){
         </div>
       </div>`;
   }catch(e){ body.innerHTML=`<div style="color:var(--red);padding:12px">Error: ${e.message}</div>`; }
+}
+
+// ════════════════════════════════════════════════════════════════
+// DÍAS DE PAGO & CÁLCULO VENCIMIENTO GIRO
+// ════════════════════════════════════════════════════════════════
+
+// Días de pago globales (por defecto 5 y 20, editables en Configuración)
+let DIAS_PAGO = [5, 20];
+
+async function loadDiasPago(){
+  try{
+    const cfg = await sbGet('configuracion','?clave=in.(dia_pago_1,dia_pago_2)');
+    cfg.forEach(row=>{
+      if(row.clave==='dia_pago_1') DIAS_PAGO[0]=parseInt(row.valor)||5;
+      if(row.clave==='dia_pago_2') DIAS_PAGO[1]=parseInt(row.valor)||20;
+    });
+    const d1=document.getElementById('cfg-dia1'), d2=document.getElementById('cfg-dia2');
+    if(d1) d1.value=DIAS_PAGO[0];
+    if(d2) d2.value=DIAS_PAGO[1];
+  }catch(e){}
+}
+
+async function saveDiasPago(){
+  const d1=parseInt(document.getElementById('cfg-dia1')?.value)||5;
+  const d2=parseInt(document.getElementById('cfg-dia2')?.value)||20;
+  DIAS_PAGO=[d1,d2];
+  try{
+    await upsertConfig('dia_pago_1',String(d1));
+    await upsertConfig('dia_pago_2',String(d2));
+    toast(`Días de pago guardados: ${d1} y ${d2} de cada mes ✅`);
+  }catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+// Calcula fecha vencimiento según forma de pago y días de pago configurados
+function calcularVencimientoGiro(fechaEmision, formaPago){
+  if(!fechaEmision) return null;
+  const base = new Date(fechaEmision);
+  let diasPlazo = 0;
+  if(formaPago==='Giro 30 días')  diasPlazo=30;
+  else if(formaPago==='Giro 60 días')  diasPlazo=60;
+  else if(formaPago==='Giro 90 días')  diasPlazo=90;
+  else if(formaPago==='Giro 120 días') diasPlazo=120;
+  else return null; // No es giro
+
+  // Sumar días al plazo
+  const fechaBase = new Date(base);
+  fechaBase.setDate(fechaBase.getDate() + diasPlazo);
+
+  // Buscar el siguiente día de pago (5 o 20) igual o posterior
+  const dias = [...DIAS_PAGO].sort((a,b)=>a-b);
+  let mejor = null;
+  // Buscar en el mes actual y siguiente
+  for(let deltaM=0; deltaM<=2; deltaM++){
+    const mes = fechaBase.getMonth() + deltaM;
+    const anyo = fechaBase.getFullYear() + Math.floor((fechaBase.getMonth()+deltaM)/12);
+    const mesReal = mes % 12;
+    for(const dia of dias){
+      const candidata = new Date(anyo, mesReal, dia);
+      if(candidata >= fechaBase){
+        if(!mejor || candidata < mejor) mejor = candidata;
+      }
+    }
+    if(mejor) break;
+  }
+  if(!mejor) return null;
+  return mejor.toISOString().split('T')[0];
+}
+
+// Auto-calcular vencimiento al cambiar forma de pago en modal factura
+function onFormaPagoChange(){
+  const forma = document.getElementById('f-pago')?.value;
+  const fecha = document.getElementById('f-fecha')?.value;
+  const vtoEl = document.getElementById('f-vto');
+  if(!vtoEl) return;
+  const vto = calcularVencimientoGiro(fecha, forma);
+  if(vto){
+    vtoEl.value = vto;
+    toast(`Vencimiento calculado: ${fmtD(vto)} (${forma} · días de pago: ${DIAS_PAGO.join(' y ')})`);
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// CONCILIACIÓN BANCARIA
+// ════════════════════════════════════════════════════════════════
+
+async function loadConciliacion(){
+  const dias = document.getElementById('venc-filtro')?.value || '30';
+  const tbody = document.getElementById('venc-tbody');
+  const hoy = new Date();
+
+  try{
+    // Cargar todas las facturas de compra pendientes
+    const facturas = await sbGet('facturas','?tipo_factura=eq.Compra&estado=in.(Pendiente,Parcial,Vencida)&order=fecha_vencimiento.asc');
+    // Cargar también compras pendientes
+    const compras  = await sbGet('compras','?estado_pago=in.(Pendiente,Parcial,Vencido)&order=fecha_vencimiento.asc');
+
+    // Combinar ambas fuentes como "pagos pendientes"
+    const pendientes = [
+      ...facturas.map(f=>({
+        id: f.id, tipo:'factura',
+        proveedor: f.proveedor_id||'—',
+        concepto:  f.concepto||f.num_factura||'—',
+        forma_pago: f.forma_pago||'—',
+        proyecto:  f.proyecto_id||'—',
+        base:      f.base_imponible||0,
+        total:     (f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100),
+        vto:       f.fecha_vencimiento,
+        estado:    f.estado,
+        num:       f.num_factura||'—',
+        iva_pct:   f.iva_pct||'21%'
+      })),
+      ...compras.map(c=>({
+        id: c.id, tipo:'compra',
+        proveedor: c.proveedor_id||'—',
+        concepto:  c.concepto||'—',
+        forma_pago:'—',
+        proyecto:  c.proyecto_id||'—',
+        base:      c.base_imponible||0,
+        total:     (c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100),
+        vto:       c.fecha_vencimiento,
+        estado:    c.estado_pago,
+        num:       '(Compra)',
+        iva_pct:   c.iva_pct||'21%'
+      }))
+    ].sort((a,b)=>{
+      if(!a.vto) return 1; if(!b.vto) return -1;
+      return new Date(a.vto)-new Date(b.vto);
+    });
+
+    // Filtrar según selección
+    const limite = dias==='todos' ? null : new Date(hoy.getTime()+parseInt(dias)*86400000);
+    const filtrados = limite ? pendientes.filter(p=>p.vto && new Date(p.vto)<=limite) : pendientes;
+
+    // KPIs
+    const semana = new Date(hoy.getTime()+7*86400000);
+    const mesEnd  = new Date(hoy.getFullYear(), hoy.getMonth()+1, 0);
+    const kSemana  = pendientes.filter(p=>p.vto&&new Date(p.vto)<=semana).reduce((s,p)=>s+p.total,0);
+    const kMes     = pendientes.filter(p=>p.vto&&new Date(p.vto)<=mesEnd).reduce((s,p)=>s+p.total,0);
+    const kPend    = pendientes.reduce((s,p)=>s+p.total,0);
+
+    const sv=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+    sv('conc-semana', fmt(kSemana));
+    sv('conc-mes',    fmt(kMes));
+    sv('conc-pendientes', fmt(kPend));
+    sv('venc-count', `${filtrados.length} pagos`);
+
+    // Facturas pagadas este mes
+    const mesStart = new Date(hoy.getFullYear(), hoy.getMonth(), 1).toISOString().split('T')[0];
+    const pagadasMes = await sbGet('facturas',`?tipo_factura=eq.Compra&estado=eq.Pagada&fecha_vencimiento=gte.${mesStart}`);
+    sv('conc-pagadas', fmt(pagadasMes.reduce((s,f)=>s+(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100),0)));
+
+    if(!filtrados.length){
+      tbody.innerHTML=`<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--text-soft)">
+        <div style="font-size:28px;margin-bottom:8px">✅</div>
+        <div>Sin vencimientos en este periodo</div>
+      </td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = filtrados.map(p=>{
+      const vtoDate = p.vto ? new Date(p.vto) : null;
+      const diffDias = vtoDate ? Math.round((vtoDate-hoy)/86400000) : null;
+      let urgencia='', urgColor='';
+      if(diffDias!==null){
+        if(diffDias<0){  urgencia=`<span style="color:var(--red);font-weight:700">Vencida hace ${Math.abs(diffDias)}d</span>`; urgColor='var(--red)'; }
+        else if(diffDias<=7){ urgencia=`<span style="color:var(--red);font-weight:700">En ${diffDias}d 🔴</span>`; urgColor='var(--red)'; }
+        else if(diffDias<=30){ urgencia=`<span style="color:var(--amber);font-weight:700">En ${diffDias}d 🟠</span>`; urgColor='var(--amber)'; }
+        else { urgencia=`<span style="color:var(--text-soft)">En ${diffDias}d</span>`; urgColor=''; }
+      }
+      return `<tr style="border-bottom:1px solid var(--border);${urgColor?'background:#fff9f9':''}">
+        <td style="padding:8px 10px;font-weight:700;color:${urgColor||'var(--navy)'}">
+          ${p.vto?fmtD(p.vto):'Sin fecha'}
+        </td>
+        <td style="padding:8px 6px">${urgencia}</td>
+        <td style="padding:8px 6px">${p.proveedor}</td>
+        <td style="padding:8px 6px;font-size:11px;color:var(--text-soft)">${p.concepto}</td>
+        <td style="padding:8px 6px"><span class="badge b-gray" style="font-size:10px">${p.forma_pago}</span></td>
+        <td style="padding:8px 6px;color:var(--text-soft);font-size:11px">${p.proyecto}</td>
+        <td style="padding:8px 6px" class="td-mono">${fmt(p.base)}</td>
+        <td style="padding:8px 6px" class="td-mono" style="font-weight:700">${fmt(p.total)}</td>
+        <td>${bE(p.estado)}</td>
+        <td style="padding:8px 6px">
+          <button class="btn btn-ghost btn-sm" style="font-size:10px;color:var(--green)" 
+            onclick="marcarPagado('${p.tipo}','${p.id}',${p.total.toFixed(2)})">✅ Pagado</button>
+        </td>
+      </tr>`;
+    }).join('');
+
+  }catch(e){
+    tbody.innerHTML=`<tr><td colspan="10" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;
+  }
+}
+
+async function marcarPagado(tipo, id, total){
+  if(!confirm(`¿Confirmar pago de ${fmt(total)}?`)) return;
+  try{
+    if(tipo==='factura'){
+      await sb('facturas','PATCH',{estado:'Pagada',importe_cobrado:total},null,`?id=eq.${id}`);
+    } else {
+      await sb('compras','PATCH',{estado_pago:'Pagado'},null,`?id=eq.${id}`);
+    }
+    toast('Pago registrado ✅');
+    loadConciliacion();
+  }catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+// ── IMPORTAR CSV ─────────────────────────────────────────────────────
+let movimientosBanco = [];
+let conciliacionPendiente = [];
+
+function procesarCSV(){
+  const file = document.getElementById('csv-input')?.files[0];
+  const formato = document.getElementById('banco-formato')?.value || 'generico';
+  if(!file){ return; }
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const text = e.target.result;
+    const preview = document.getElementById('csv-preview');
+    if(preview){
+      preview.style.display='block';
+      preview.textContent = text.split('\n').slice(0,5).join('\n');
+    }
+    movimientosBanco = parsearCSV(text, formato);
+    if(!movimientosBanco.length){
+      toast('No se encontraron movimientos en el CSV','error'); return;
+    }
+    toast(`${movimientosBanco.length} movimientos detectados. Conciliando…`);
+    await conciliarMovimientos();
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+function parsearCSV(texto, formato){
+  const lineas = texto.split('\n').map(l=>l.trim()).filter(l=>l.length>0);
+  const movimientos = [];
+  // Detectar separador
+  const sep = texto.includes(';') ? ';' : ',';
+
+  for(let i=1; i<lineas.length; i++){
+    const cols = lineas[i].split(sep).map(c=>c.replace(/"/g,'').trim());
+    if(cols.length<3) continue;
+    let fecha='', concepto='', importe=0;
+    try{
+      if(formato==='bbva'){
+        // BBVA: Fecha, Concepto, Importe, Disponible
+        fecha   = normalizarFecha(cols[0]);
+        concepto= cols[1]||'';
+        importe = parseFloat((cols[2]||'0').replace('.','').replace(',','.').replace(/[^0-9.-]/g,''))||0;
+      } else if(formato==='caixabank'){
+        // CaixaBank: Fecha operación, Fecha valor, Descripción, Importe, Saldo
+        fecha   = normalizarFecha(cols[0]);
+        concepto= cols[2]||'';
+        importe = parseFloat((cols[3]||'0').replace('.','').replace(',','.').replace(/[^0-9.-]/g,''))||0;
+      } else if(formato==='santander'){
+        // Santander: Fecha, Concepto, Cargo, Abono, Saldo
+        fecha   = normalizarFecha(cols[0]);
+        concepto= cols[1]||'';
+        const cargo = parseFloat((cols[2]||'0').replace('.','').replace(',','.').replace(/[^0-9.-]/g,''))||0;
+        const abono = parseFloat((cols[3]||'0').replace('.','').replace(',','.').replace(/[^0-9.-]/g,''))||0;
+        importe = abono - cargo;
+      } else if(formato==='sabadell'){
+        // Sabadell: Fecha, Descripción, Importe, Saldo
+        fecha   = normalizarFecha(cols[0]);
+        concepto= cols[1]||'';
+        importe = parseFloat((cols[2]||'0').replace('.','').replace(',','.').replace(/[^0-9.-]/g,''))||0;
+      } else {
+        // Genérico: fecha, concepto, importe
+        fecha   = normalizarFecha(cols[0]);
+        concepto= cols[1]||'';
+        importe = parseFloat((cols[2]||'0').replace('.','').replace(',','.').replace(/[^0-9.-]/g,''))||0;
+      }
+      if(fecha && importe<0){ // Solo cargos (pagos salientes)
+        movimientos.push({ fecha, concepto, importe: Math.abs(importe) });
+      }
+    }catch(err){}
+  }
+  return movimientos;
+}
+
+function normalizarFecha(str){
+  if(!str) return '';
+  // dd/mm/yyyy → yyyy-mm-dd
+  const m1 = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+  if(m1) return `${m1[3]}-${m1[2].padStart(2,'0')}-${m1[1].padStart(2,'0')}`;
+  // yyyy-mm-dd ya correcto
+  const m2 = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(m2) return str;
+  return str;
+}
+
+async function conciliarMovimientos(){
+  if(!movimientosBanco.length) return;
+  // Cargar facturas de compra pendientes
+  const facturas = await sbGet('facturas','?tipo_factura=eq.Compra&estado=in.(Pendiente,Parcial,Vencida)');
+  const compras  = await sbGet('compras','?estado_pago=in.(Pendiente,Parcial,Vencido)');
+  const pendientes = [
+    ...facturas.map(f=>({
+      id:f.id, tipo:'factura', num:f.num_factura||'—',
+      proveedor:f.proveedor_id||'—', total:(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100),
+      vto:f.fecha_vencimiento
+    })),
+    ...compras.map(c=>({
+      id:c.id, tipo:'compra', num:'(Compra)',
+      proveedor:c.proveedor_id||'—', total:(c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100),
+      vto:c.fecha_vencimiento
+    }))
+  ];
+
+  conciliacionPendiente = [];
+  const resultados = [];
+
+  for(const mov of movimientosBanco){
+    // Buscar factura con importe similar (±2% tolerancia) y fecha próxima (±15 días)
+    const movFecha = new Date(mov.fecha);
+    let mejor = null, mejorScore = 0;
+
+    for(const pend of pendientes){
+      // Score por importe
+      const diff = Math.abs(mov.importe - pend.total);
+      const pctDiff = pend.total>0 ? diff/pend.total : 1;
+      if(pctDiff > 0.05) continue; // Más del 5% de diferencia → descartamos
+
+      // Score por fecha (cuanto más cercana al vencimiento, mejor)
+      let scoreFecha = 0.5;
+      if(pend.vto){
+        const vtoFecha = new Date(pend.vto);
+        const diasDiff = Math.abs((movFecha-vtoFecha)/86400000);
+        if(diasDiff<=3) scoreFecha=1.0;
+        else if(diasDiff<=7) scoreFecha=0.9;
+        else if(diasDiff<=15) scoreFecha=0.7;
+        else if(diasDiff<=30) scoreFecha=0.5;
+        else scoreFecha=0.2;
+      }
+      const score = (1-pctDiff)*0.6 + scoreFecha*0.4;
+      if(score > mejorScore){ mejorScore=score; mejor=pend; }
+    }
+
+    const confianza = mejorScore>=0.85?'Alta':mejorScore>=0.65?'Media':mejorScore>=0.4?'Baja':null;
+    resultados.push({ mov, factura:mejor, score:mejorScore, confianza });
+    if(mejor && confianza && confianza!=='Baja'){
+      conciliacionPendiente.push({ movimiento:mov, factura:mejor, confianza });
+    }
+  }
+
+  // Renderizar resultados
+  const tbody = document.getElementById('conc-tbody');
+  const resDiv = document.getElementById('conc-resultados');
+  const btnAplicar = document.getElementById('btn-aplicar-conc');
+  const resCount = document.getElementById('conc-res-count');
+  if(resDiv) resDiv.style.display='block';
+  const matchCount = resultados.filter(r=>r.factura).length;
+  if(resCount) resCount.textContent=`${movimientosBanco.length} movimientos · ${matchCount} coincidencias encontradas`;
+  if(btnAplicar) btnAplicar.style.display = conciliacionPendiente.length ? '' : 'none';
+
+  tbody.innerHTML = resultados.map((r,i)=>{
+    const confianzaColor = r.confianza==='Alta'?'var(--green)':r.confianza==='Media'?'var(--amber)':'var(--red)';
+    const diff = r.factura ? (r.mov.importe - r.factura.total) : null;
+    return `<tr style="border-bottom:1px solid var(--border);${r.confianza==='Alta'?'background:#f0faf4':r.confianza==='Media'?'background:#fffbf0':''}">
+      <td style="padding:8px 10px">
+        <input type="checkbox" id="conc-chk-${i}" ${r.confianza&&r.confianza!=='Baja'?'checked':''} 
+          data-idx="${i}" style="width:16px;height:16px;cursor:pointer">
+      </td>
+      <td style="padding:8px 8px;font-size:12px">${fmtD(r.mov.fecha)}</td>
+      <td style="padding:8px 8px;font-size:11px;color:var(--text-soft);max-width:200px">${r.mov.concepto}</td>
+      <td style="padding:8px 8px" class="td-mono"><strong>${fmt(r.mov.importe)}</strong></td>
+      <td style="padding:8px 8px;font-size:11px">${r.factura?`${r.factura.num} (${r.factura.tipo})`:'<span style="color:var(--text-soft)">Sin coincidencia</span>'}</td>
+      <td style="padding:8px 8px;font-size:11px">${r.factura?r.factura.proveedor:'—'}</td>
+      <td style="padding:8px 8px;font-size:11px" class="td-mono">${diff!==null?`<span style="color:${Math.abs(diff)<0.01?'var(--green)':'var(--amber)'}">
+        ${diff>=0?'+':''}${fmt(diff)}</span>`:'—'}</td>
+      <td style="padding:8px 8px">${r.confianza?`<span style="font-weight:700;color:${confianzaColor}">${r.confianza}</span>`:'<span style="color:var(--text-soft)">—</span>'}</td>
+    </tr>`;
+  }).join('');
+}
+
+async function aplicarConciliacion(){
+  const checkboxes = document.querySelectorAll('[id^="conc-chk-"]:checked');
+  const idxs = [...checkboxes].map(cb=>parseInt(cb.dataset.idx));
+  // Rebuild from current results
+  const tbody = document.getElementById('conc-tbody');
+  const rows = tbody.querySelectorAll('tr');
+  let aplicados = 0;
+  for(const c of conciliacionPendiente){
+    try{
+      if(c.factura.tipo==='factura'){
+        await sb('facturas','PATCH',{estado:'Pagada',importe_cobrado:c.factura.total},null,`?id=eq.${c.factura.id}`);
+      } else {
+        await sb('compras','PATCH',{estado_pago:'Pagado'},null,`?id=eq.${c.factura.id}`);
+      }
+      aplicados++;
+    }catch(e){}
+  }
+  toast(`${aplicados} pago(s) marcados como pagados ✅`);
+  conciliacionPendiente=[];
+  document.getElementById('conc-resultados').style.display='none';
+  document.getElementById('csv-input').value='';
+  document.getElementById('csv-preview').style.display='none';
+  loadConciliacion();
 }
 
 // ═══ PWA SERVICE WORKER ═══
