@@ -1481,12 +1481,27 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         </div>
       </div>
     </div>
-    <div style="display:flex;align-items:center;gap:10px;margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">
+    <div style="display:flex;align-items:center;gap:10px;margin-top:12px;padding-top:10px;border-top:1px solid var(--border);flex-wrap:wrap">
       <label class="form-label" style="margin:0;white-space:nowrap">Oferta elegida:</label>
       <select class="form-input" id="cmp-elegida" style="width:160px">
         <option value="1">Oferta 1</option><option value="2">Oferta 2</option><option value="3">Oferta 3</option>
       </select>
-      <span id="cmp-ganadora-info" style="font-size:12px;color:var(--green)"></span>
+      <span id="cmp-ganadora-info" style="font-size:12px;flex:1"></span>
+    </div>
+    <!-- Resumen comparativo -->
+    <div id="cmp-resumen" style="display:none;margin-top:8px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+      <div style="background:#e8f5ee;border-radius:6px;padding:8px 12px;font-size:11px">
+        <div style="color:var(--text-soft);margin-bottom:2px">💰 Menor coste</div>
+        <div id="cmp-res-precio" style="font-weight:700;color:var(--green)">—</div>
+      </div>
+      <div style="background:#fff5e6;border-radius:6px;padding:8px 12px;font-size:11px">
+        <div style="color:var(--text-soft);margin-bottom:2px">📈 Mayor margen</div>
+        <div id="cmp-res-margen" style="font-weight:700;color:var(--copper)">—</div>
+      </div>
+      <div style="background:var(--bg);border-radius:6px;padding:8px 12px;font-size:11px">
+        <div style="color:var(--text-soft);margin-bottom:2px">📊 Diferencia max-min</div>
+        <div id="cmp-res-diff" style="font-weight:700;color:var(--navy)">—</div>
+      </div>
     </div>
   </div>
   <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('m-comparativa')">Cancelar</button><button class="btn btn-primary" onclick="saveComparativa()">💾 Guardar</button></div>
@@ -2615,15 +2630,19 @@ function calcOferta(n){
   const modo = document.querySelector('input[name="cmp-modo"]:checked')?.value || 'pvp';
   let coste=0, venta=0;
   if(modo==='pvp'){
+    // PVP catálogo = precio que el proveedor nos cobra "sin descuento"
+    // Coste para nosotros = PVP * (1 - descuento%) → lo que pagamos al proveedor
+    // Precio de venta al cliente = PVP (precio catálogo sin descuento)
+    // Margen = PVP - coste = el descuento que nos da el proveedor = nuestro beneficio
     const pvp = parseFloat(document.getElementById(`o${n}-pvp`)?.value)||0;
     const dto = parseFloat(document.getElementById(`o${n}-dto`)?.value)||0;
     coste = pvp*(1-dto/100);
-    // venta = coste (sin markup adicional en modo PVP - el precio de venta = coste neto para nosotros)
-    venta = coste;
+    venta = pvp; // vendemos al cliente al precio de catálogo
   } else {
+    // Modo coste: sabemos lo que nos cuesta y aplicamos nuestro margen de venta
     coste = parseFloat(document.getElementById(`o${n}-costebase`)?.value)||0;
     const mk = parseFloat(document.getElementById(`o${n}-mk`)?.value)||0;
-    venta = coste>0 ? coste/(1-mk/100) : 0;
+    venta = coste>0 && mk<100 ? coste/(1-mk/100) : coste;
   }
   const margenE = venta - coste;
   const margenPct = venta>0 ? (margenE/venta)*100 : 0;
@@ -2652,29 +2671,91 @@ function cambiarModoComparativa(){
 }
 
 function destacarMejorOferta(){
-  // Find lowest coste among filled offers
-  let mejor = null, menorCoste = Infinity;
+  const modo = document.querySelector('input[name="cmp-modo"]:checked')?.value||'pvp';
+  let mejorPrecio=null, menorCoste=Infinity;
+  let mejorMargen=null, mayorMargenPct=-Infinity;
+
   [1,2,3].forEach(n=>{
-    const modo = document.querySelector('input[name="cmp-modo"]:checked')?.value||'pvp';
-    let coste=0;
+    let coste=0, venta=0, margenPct=0;
     if(modo==='pvp'){
       const pvp=parseFloat(document.getElementById(`o${n}-pvp`)?.value)||0;
       const dto=parseFloat(document.getElementById(`o${n}-dto`)?.value)||0;
       coste=pvp*(1-dto/100);
+      venta=pvp;
     } else {
       coste=parseFloat(document.getElementById(`o${n}-costebase`)?.value)||0;
+      const mk=parseFloat(document.getElementById(`o${n}-mk`)?.value)||0;
+      venta=coste>0&&mk<100?coste/(1-mk/100):coste;
     }
-    const col = document.getElementById(`cmp-col-${n}`);
-    if(col) col.style.borderColor='var(--border)';
-    if(coste>0 && coste<menorCoste){ menorCoste=coste; mejor=n; }
+    margenPct = venta>0 ? ((venta-coste)/venta)*100 : 0;
+
+    // Reset border
+    const col=document.getElementById(`cmp-col-${n}`);
+    if(col){ col.style.borderColor='var(--border)'; col.style.borderWidth='1px'; }
+
+    if(coste>0 && coste<menorCoste){ menorCoste=coste; mejorPrecio=n; }
+    if(margenPct>0 && margenPct>mayorMargenPct){ mayorMargenPct=margenPct; mejorMargen=n; }
   });
-  if(mejor){
-    const col=document.getElementById(`cmp-col-${mejor}`);
-    if(col) col.style.borderColor='var(--green)';
-    const info=document.getElementById('cmp-ganadora-info');
-    if(info) info.textContent=`✅ Oferta ${mejor} es la más económica (${fmt(menorCoste)})`;
-    const sel=document.getElementById('cmp-elegida');
-    if(sel) sel.value=String(mejor);
+
+  // Marcar mejor precio (borde verde)
+  if(mejorPrecio){
+    const col=document.getElementById(`cmp-col-${mejorPrecio}`);
+    if(col){ col.style.borderColor='var(--green)'; col.style.borderWidth='2px'; }
+  }
+  // Marcar mejor margen (borde cobre/naranja) - puede coincidir con mejor precio
+  if(mejorMargen && mejorMargen!==mejorPrecio){
+    const col=document.getElementById(`cmp-col-${mejorMargen}`);
+    if(col){ col.style.borderColor='var(--copper)'; col.style.borderWidth='2px'; }
+  }
+
+  // Actualizar info
+  const info=document.getElementById('cmp-ganadora-info');
+  if(info){
+    let txt='';
+    if(mejorPrecio) txt+=`<span style="color:var(--green)">💰 Oferta ${mejorPrecio} menor coste (${fmt(menorCoste)})</span>`;
+    if(mejorMargen && mejorMargen!==mejorPrecio)
+      txt+=`<span style="color:var(--copper);margin-left:12px">📈 Oferta ${mejorMargen} mayor margen (${mayorMargenPct.toFixed(1)}%)</span>`;
+    else if(mejorMargen && mejorMargen===mejorPrecio)
+      txt+=`<span style="color:var(--green);margin-left:8px">· ${mayorMargenPct.toFixed(1)}% margen</span>`;
+    info.innerHTML=txt;
+  }
+
+  // Auto-seleccionar mejor precio en el desplegable
+  const sel=document.getElementById('cmp-elegida');
+  if(sel && mejorPrecio) sel.value=String(mejorPrecio);
+
+  // Actualizar panel resumen
+  const resPrecio=document.getElementById('cmp-res-precio');
+  const resMargen=document.getElementById('cmp-res-margen');
+  const resDiff  =document.getElementById('cmp-res-diff');
+  const resPanel =document.getElementById('cmp-resumen');
+
+  // Recoger todos los costes y márgenes para calcular diferencia
+  const costes=[]; const margenes=[];
+  [1,2,3].forEach(n=>{
+    const modo2=document.querySelector('input[name="cmp-modo"]:checked')?.value||'pvp';
+    let c=0,v=0;
+    if(modo2==='pvp'){
+      const pvp2=parseFloat(document.getElementById(`o${n}-pvp`)?.value)||0;
+      const dto2=parseFloat(document.getElementById(`o${n}-dto`)?.value)||0;
+      c=pvp2*(1-dto2/100); v=pvp2;
+    } else {
+      c=parseFloat(document.getElementById(`o${n}-costebase`)?.value)||0;
+      const mk2=parseFloat(document.getElementById(`o${n}-mk`)?.value)||0;
+      v=c>0&&mk2<100?c/(1-mk2/100):c;
+    }
+    if(c>0){ costes.push(c); margenes.push(v>0?((v-c)/v)*100:0); }
+  });
+
+  if(costes.length>=2){
+    const minC=Math.min(...costes), maxC=Math.max(...costes);
+    const maxM=Math.max(...margenes);
+    if(resPrecio) resPrecio.textContent=`Oferta ${mejorPrecio} · ${fmt(minC)}`;
+    if(resMargen) resMargen.textContent=`Oferta ${mejorMargen} · ${maxM.toFixed(1)}%`;
+    if(resDiff)   resDiff.textContent  =`${fmt(maxC-minC)} (${(((maxC-minC)/minC)*100).toFixed(1)}%)`;
+    if(resPanel)  resPanel.style.display='grid';
+  } else {
+    if(resPanel) resPanel.style.display='none';
   }
 }
 
@@ -2740,7 +2821,7 @@ async function saveComparativa(){
       const dto=parseFloat(document.getElementById(`o${n}-dto`)?.value)||0;
       d[`o${n}_pvp`]=pvp; d[`o${n}_dto`]=dto; d[`o${n}_markup`]=0;
       d[`o${n}_coste`]=pvp*(1-dto/100);
-      d[`o${n}_precio_final`]=pvp*(1-dto/100);
+      d[`o${n}_precio_final`]=pvp; // precio de venta al cliente = PVP catálogo
     } else {
       const coste=parseFloat(document.getElementById(`o${n}-costebase`)?.value)||0;
       const mk=parseFloat(document.getElementById(`o${n}-mk`)?.value)||0;
@@ -4002,15 +4083,56 @@ function cascadaClienteComparativa(){
 }
 
 function abrirNuevaComparativa(){
-  const proyId = document.getElementById('comp-proyecto-sel')?.value;
-  const cmpProy = document.getElementById('cmp-proyecto');
-  // Pre-set proyecto y cliente en el modal de comparativa
-  if(cmpProy && proyId) cmpProy.value = proyId;
-  // Pre-set cliente en modal
-  const clienteId = document.getElementById('filter-cliente-comparativa')?.value;
+  const proyId   = document.getElementById('comp-proyecto-sel')?.value;
+  const clienteId= document.getElementById('filter-cliente-comparativa')?.value;
+
+  // 1. Poblar clientes en el modal PRIMERO
+  poblarClientesModalCmp();
+
+  // 2. Setear cliente seleccionado
   const cmpCliente = document.getElementById('cmp-cliente');
-  if(cmpCliente && clienteId) cmpCliente.value = clienteId;
+  if(cmpCliente && clienteId){
+    cmpCliente.value = clienteId;
+    // 3. Filtrar proyectos por ese cliente
+    cascadaClienteModalCmp();
+  } else {
+    // Si no hay cliente, poblar todos los proyectos
+    const proySel = document.getElementById('cmp-proyecto');
+    if(proySel){
+      proySel.innerHTML='<option value="">Seleccionar…</option>'
+        +PC.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
+    }
+  }
+
+  // 4. Setear proyecto seleccionado
+  const cmpProy = document.getElementById('cmp-proyecto');
+  if(cmpProy && proyId){
+    cmpProy.value = proyId;
+  }
+
+  // 5. Poblar proveedores
   poblarProveedoresComparativa();
+
+  // 6. Reset campos del formulario
+  document.getElementById('cmp-id').value='';
+  document.getElementById('cmp-trabajo').value='';
+  [1,2,3].forEach(n=>{
+    const pvpEl=document.getElementById(`o${n}-pvp`);     if(pvpEl) pvpEl.value='';
+    const dtoEl=document.getElementById(`o${n}-dto`);     if(dtoEl) dtoEl.value='0';
+    const cbEl =document.getElementById(`o${n}-costebase`);if(cbEl) cbEl.value='';
+    const mkEl =document.getElementById(`o${n}-mk`);      if(mkEl)  mkEl.value='0';
+    const notEl=document.getElementById(`o${n}-notas`);   if(notEl) notEl.value='';
+    // Reset resultados
+    ['res-coste','res-venta','res-margen','res-pct'].forEach(k=>{
+      const el=document.getElementById(`o${n}-${k}`); if(el) el.textContent='—';
+    });
+    // Reset border
+    const col=document.getElementById(`cmp-col-${n}`);
+    if(col){ col.style.borderColor='var(--border)'; col.style.borderWidth='1px'; }
+  });
+  const info=document.getElementById('cmp-ganadora-info');
+  if(info) info.innerHTML='';
+
   openModal('m-comparativa');
 }
 
