@@ -1688,7 +1688,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <!-- Vencimiento único (ventas) / múltiple (compras) -->
       <div class="form-group" id="f-grp-vto-simple">
         <label class="form-label">Fecha vencimiento</label>
-        <input class="form-input" id="f-vto" type="date">
+        <input class="form-input" id="f-vto-venta" type="date">
       </div>
       <!-- Vencimientos múltiples solo para compras -->
       <div class="form-group fg-full" id="f-grp-vtos-compra" style="display:none">
@@ -3708,7 +3708,11 @@ function editFactura(id){
   document.getElementById('f-estado').value  = f.estado||'Pendiente';
 
   // 5. Vencimiento(s)
-  document.getElementById('f-vto').value = f.fecha_vencimiento||'';
+  if(esC){
+    document.getElementById('f-vto').value = f.fecha_vencimiento||'';
+  } else {
+    document.getElementById('f-vto-venta').value = f.fecha_vencimiento||'';
+  }
   if(esC){
     const vtoIds = ['f-vto2','f-vto3','f-vto4'];
     vtoIds.forEach((vid,i)=>{
@@ -3761,7 +3765,9 @@ async function saveFactura(){
     base_imponible:  parseFloat(document.getElementById('f-base').value)||0,
     iva_pct:         document.getElementById('f-iva').value,
     forma_pago:      document.getElementById('f-pago').value,
-    fecha_vencimiento: document.getElementById('f-vto').value||null,
+    fecha_vencimiento: esC
+      ? (document.getElementById('f-vto')?.value||null)
+      : (document.getElementById('f-vto-venta')?.value||null),
     estado:          document.getElementById('f-estado').value||'Pendiente',
     importe_cobrado: parseFloat(document.getElementById('f-cobrado').value)||0,
     concepto:        document.getElementById('f-concepto').value,
@@ -4464,7 +4470,10 @@ function onFormaPagoChange(){
   if(!vtoEl) return;
   const vto = calcularVencimientoGiro(fecha, forma);
   if(vto){
-    vtoEl.value = vto;
+    const tipoFac = document.getElementById('f-tipo')?.value;
+    const targetVtoId = tipoFac==='Compra' ? 'f-vto' : 'f-vto-venta';
+    const targetVtoEl = document.getElementById(targetVtoId);
+    if(targetVtoEl) targetVtoEl.value = vto;
     toast(`Vencimiento calculado: ${fmtD(vto)} (${forma} · días de pago: ${DIAS_PAGO.join(' y ')})`);
   }
 }
