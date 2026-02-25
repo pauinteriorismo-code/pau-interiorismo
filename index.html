@@ -746,10 +746,15 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     <div class="view" id="view-comparativa">
       <div class="info-box">⚖️ Compara hasta 3 ofertas de distintos proveedores para cada trabajo o material. Elige la más ventajosa.</div>
       <div class="search-bar">
-        <select class="form-input" style="width:260px" id="comp-proyecto-sel" onchange="loadComparativa()"><option value="">Seleccionar proyecto…</option></select>
-        <button class="btn btn-primary" onclick="openModal('m-comparativa')">＋ Nueva comparativa</button>
+        <select class="form-input" style="width:200px" id="filter-cliente-comparativa" onchange="cascadaClienteComparativa()">
+          <option value="">👤 Cliente…</option>
+        </select>
+        <select class="form-input" style="width:240px" id="comp-proyecto-sel" onchange="loadComparativa()">
+          <option value="">📁 Proyecto…</option>
+        </select>
+        <button class="btn btn-primary" id="btn-nueva-comparativa" onclick="abrirNuevaComparativa()" style="display:none">＋ Nueva comparativa</button>
       </div>
-      <div id="comp-list"></div>
+      <div id="comp-list"><div class="empty"><div class="empty-icon">⚖️</div><div class="empty-text">Selecciona un cliente y proyecto</div></div></div>
     </div>
 
     <!-- ═══ TARIFARIO ═══ -->
@@ -1322,8 +1327,15 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
   <div class="modal-body"><input type="hidden" id="cmp-id">
     <!-- Cabecera: proyecto + trabajo + modo de cálculo -->
     <div class="form-grid" style="margin-bottom:10px">
-      <div class="form-group"><label class="form-label">Proyecto *</label><select class="form-input" id="cmp-proyecto"><option value="">Seleccionar…</option></select></div>
-      <div class="form-group"><label class="form-label">Trabajo / Material *</label><input class="form-input" id="cmp-trabajo" placeholder="Ej: Instalación fontanería cocina"></div>
+      <div class="form-group"><label class="form-label">Cliente</label>
+        <select class="form-input" id="cmp-cliente" onchange="cascadaClienteModalCmp()"><option value="">Seleccionar…</option></select>
+      </div>
+      <div class="form-group"><label class="form-label">Proyecto *</label>
+        <select class="form-input" id="cmp-proyecto"><option value="">Seleccionar…</option></select>
+      </div>
+      <div class="form-group fg-full"><label class="form-label">Trabajo / Material *</label>
+        <input class="form-input" id="cmp-trabajo" placeholder="Ej: Instalación fontanería cocina">
+      </div>
     </div>
     <!-- Modo de cálculo -->
     <div style="display:flex;gap:8px;margin-bottom:14px;background:var(--bg);border-radius:6px;padding:8px 10px;align-items:center">
@@ -1633,13 +1645,14 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="form-group"><label class="form-label">Fecha emisión</label><input class="form-input" id="f-fecha" type="date"></div>
       <!-- Venta → Cliente | Compra → Proveedor -->
       <div class="form-group" id="f-grp-cliente"><label class="form-label">Cliente</label>
-        <select class="form-input" id="f-cliente"><option value="">Seleccionar…</option></select>
+        <select class="form-input" id="f-cliente" onchange="cascadaClienteFactura()"><option value="">Seleccionar…</option></select>
       </div>
       <div class="form-group" id="f-grp-proveedor" style="display:none"><label class="form-label">Proveedor</label>
         <select class="form-input" id="f-proveedor"><option value="">Seleccionar…</option></select>
       </div>
-      <div class="form-group"><label class="form-label">Proyecto</label>
-        <select class="form-input" id="f-proyecto"><option value="">Seleccionar…</option></select>
+      <div class="form-group" id="f-grp-proyecto">
+        <label class="form-label">Proyecto <span style="font-size:10px;color:var(--text-soft);font-weight:400">(opcional)</span></label>
+        <select class="form-input" id="f-proyecto"><option value="">— Sin proyecto —</option></select>
       </div>
       <div class="form-group fg-full"><label class="form-label">Concepto / Descripción</label>
         <input class="form-input" id="f-concepto" placeholder="Descripción del trabajo o material…">
@@ -1995,7 +2008,20 @@ function ivaPct(s){return s==='Exento'?0:parseFloat(s)||21}
 let toastT;
 function toast(msg,type='success'){const el=document.getElementById('toast');el.textContent=msg;el.className=`toast show ${type}`;clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),3200);}
 function openModal(id){
-  if(id==='m-comparativa'){ poblarProveedoresComparativa(); }document.getElementById(id)?.classList.add('open')}
+  if(id==='m-comparativa'){
+    poblarProveedoresComparativa();
+    poblarClientesModalCmp();
+    // Poblar proyectos también
+    const proySel=document.getElementById('cmp-proyecto');
+    const clienteId=document.getElementById('cmp-cliente')?.value;
+    if(proySel){
+      const filtrados=clienteId?PC.filter(p=>p.cliente_id===clienteId):PC;
+      proySel.innerHTML='<option value="">Seleccionar…</option>'
+        +filtrados.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
+    }
+  }
+  document.getElementById(id)?.classList.add('open');
+}
 function closeModal(id){document.getElementById(id)?.classList.remove('open')}
 document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open')}));
 let pendingDel=null;
@@ -2216,6 +2242,7 @@ function poblarClientesDocumentos(){
 
 // Módulos con cascada cliente→proyecto
 const CASCADA_MODS = ['presupuesto','compras','subcontratas','horas','pedidos','interiorismo'];
+// Comparativa uses its own cascade function (poblarClientesComparativa)
 
 // Prefijo del campo proyecto en el modal de cada módulo
 const MOD_PROYECTO_FIELD = {
@@ -2472,7 +2499,7 @@ async function loadGerencia(){
     }).join('');
 
     const s=document.getElementById('conn-status');s.style.background='var(--green-soft)';s.style.color='var(--green)';s.textContent='🟢 Conectado';
-    populateSelects();populateIntCatalog();populateTrabajadores();poblarFiltrosProyecto();poblarFiltrosCliente();
+    populateSelects();populateIntCatalog();populateTrabajadores();poblarFiltrosProyecto();poblarFiltrosCliente();poblarClientesComparativa();
   }catch(e){
     console.error(e);
     const s=document.getElementById('conn-status');s.style.background='var(--red-soft)';s.style.color='var(--red)';s.textContent='🔴 Error';
@@ -2651,6 +2678,25 @@ function destacarMejorOferta(){
   }
 }
 
+function cascadaClienteModalCmp(){
+  const clienteId = document.getElementById('cmp-cliente')?.value;
+  const proySel   = document.getElementById('cmp-proyecto');
+  if(!proySel) return;
+  const filtrados = clienteId ? PC.filter(p=>p.cliente_id===clienteId) : PC;
+  proySel.innerHTML='<option value="">Seleccionar…</option>'
+    +filtrados.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
+  if(clienteId && filtrados.length===1) proySel.value=filtrados[0].proyecto_id;
+}
+
+function poblarClientesModalCmp(){
+  const sel=document.getElementById('cmp-cliente');
+  if(!sel)return;
+  const cur=sel.value;
+  sel.innerHTML='<option value="">Seleccionar…</option>'
+    +CC.map(c=>`<option value="${c.cliente_id}">${c.nombre}</option>`).join('');
+  if(cur)sel.value=cur;
+}
+
 function poblarProveedoresComparativa(){
   [1,2,3].forEach(n=>{
     const sel=document.getElementById(`o${n}-prov`);
@@ -2661,7 +2707,12 @@ function poblarProveedoresComparativa(){
     if(cur)sel.value=cur;
   });
 }
-async function initComparativa(){if(!PC.length)PC=await sbGet('proyectos').catch(()=>[]);populateSelects();}
+async function initComparativa(){
+  if(!PC.length)PC=await sbGet('proyectos').catch(()=>[]);
+  if(!CC.length)CC=await sbGet('clientes').catch(()=>[]);
+  populateSelects();
+  poblarClientesComparativa();
+}
 async function loadComparativa(){
   const proy=document.getElementById('comp-proyecto-sel').value;
   const el=document.getElementById('comp-list');
@@ -3446,6 +3497,12 @@ function abrirNuevaFactura(tipo){
   document.getElementById('f-cobrado').value='0';
   document.getElementById('f-total-display').value='';
   document.getElementById('f-fecha').value=new Date().toISOString().split('T')[0];
+  // Reset proyecto select (será filtrado al elegir cliente)
+  const fProy=document.getElementById('f-proyecto');
+  if(fProy){
+    fProy.innerHTML='<option value="">— Sin proyecto —</option>'
+      +PC.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
+  }
   openModal('m-factura');
 }
 
@@ -3903,6 +3960,77 @@ async function generarInformeMensual(){
         </div>
       </div>`;
   }catch(e){ body.innerHTML=`<div style="color:var(--red);padding:12px">Error: ${e.message}</div>`; }
+}
+
+// ════════════════════════════════════════════════════════════════
+// CASCADA CLIENTE → PROYECTO EN MODAL FACTURA
+// ════════════════════════════════════════════════════════════════
+
+function cascadaClienteFactura(){
+  const clienteId = document.getElementById('f-cliente')?.value;
+  const proyEl    = document.getElementById('f-proyecto');
+  if(!proyEl) return;
+  const filtrados = clienteId ? PC.filter(p=>p.cliente_id===clienteId) : PC;
+  proyEl.innerHTML = '<option value="">— Sin proyecto —</option>'
+    + filtrados.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
+  // Si solo hay un proyecto para ese cliente, seleccionarlo automáticamente
+  if(clienteId && filtrados.length===1){
+    proyEl.value = filtrados[0].proyecto_id;
+  }
+}
+
+// Llamar también al abrir el modal para que el proyecto ya esté filtrado
+const _origAbrirNuevaFactura = abrirNuevaFactura;
+
+// ════════════════════════════════════════════════════════════════
+// CASCADA CLIENTE → PROYECTO EN COMPARATIVA OFERTAS
+// ════════════════════════════════════════════════════════════════
+
+function cascadaClienteComparativa(){
+  const clienteSel = document.getElementById('filter-cliente-comparativa');
+  const clienteId  = clienteSel ? clienteSel.value : '';
+  const proySel    = document.getElementById('comp-proyecto-sel');
+  if(!proySel) return;
+  const filtrados = clienteId ? PC.filter(p=>p.cliente_id===clienteId) : PC;
+  proySel.innerHTML = '<option value="">📁 Proyecto…</option>'
+    + filtrados.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
+  // Reset lista
+  const btn = document.getElementById('btn-nueva-comparativa');
+  if(btn) btn.style.display='none';
+  document.getElementById('comp-list').innerHTML=
+    '<div class="empty"><div class="empty-icon">⚖️</div><div class="empty-text">Selecciona un proyecto</div></div>';
+}
+
+function abrirNuevaComparativa(){
+  const proyId = document.getElementById('comp-proyecto-sel')?.value;
+  const cmpProy = document.getElementById('cmp-proyecto');
+  // Pre-set proyecto y cliente en el modal de comparativa
+  if(cmpProy && proyId) cmpProy.value = proyId;
+  // Pre-set cliente en modal
+  const clienteId = document.getElementById('filter-cliente-comparativa')?.value;
+  const cmpCliente = document.getElementById('cmp-cliente');
+  if(cmpCliente && clienteId) cmpCliente.value = clienteId;
+  poblarProveedoresComparativa();
+  openModal('m-comparativa');
+}
+
+// Override loadComparativa para también mostrar botón nueva comparativa
+const _origLoadComparativa = loadComparativa;
+async function loadComparativa(){
+  const proy = document.getElementById('comp-proyecto-sel')?.value;
+  const btn  = document.getElementById('btn-nueva-comparativa');
+  if(btn) btn.style.display = proy ? '' : 'none';
+  await _origLoadComparativa();
+}
+
+// Poblar clientes en comparativa al inicializar
+function poblarClientesComparativa(){
+  const sel = document.getElementById('filter-cliente-comparativa');
+  if(!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">👤 Cliente…</option>'
+    + CC.map(c=>`<option value="${c.cliente_id}">${c.nombre}</option>`).join('');
+  if(cur) sel.value = cur;
 }
 
 // ════════════════════════════════════════════════════════════════
