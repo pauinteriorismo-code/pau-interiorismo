@@ -4308,6 +4308,15 @@ function abrirNuevaFactura(tipo){
   openModal('m-factura');
 }
 
+
+function calcTotalFac(){
+  const base=parseFloat(document.getElementById('f-base')?.value)||0;
+  const iva=ivaPct(document.getElementById('f-iva')?.value||'21%');
+  const total=base*(1+iva/100);
+  const el=document.getElementById('f-total-display');
+  if(el) el.value=total>0?Number(total).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€':'';
+}
+
 // ── LÍNEAS DE FACTURA ─────────────────────────────────────
 let _facLineas = []; // array de líneas en edición
 
