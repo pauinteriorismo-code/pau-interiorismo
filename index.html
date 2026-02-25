@@ -1222,8 +1222,8 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
             <div class="cuenta-row" style="background:var(--red-soft);font-weight:700;margin-top:4px"><span>GASTOS</span><span></span><span></span></div>
             <div class="cuenta-row"><span>Compras (base imp.) — Facturas recibidas</span><span style="color:var(--text-soft)">600</span><span id="cnt-compras">—</span></div>
             <div class="cuenta-row"><span>IVA Soportado compras</span><span style="color:var(--text-soft)">472</span><span id="cnt-iva-comp">—</span></div>
-            <div class="cuenta-row total"><span>TOTAL GASTOS (s/IVA)</span><span></span><span id="cnt-gastos-tot">—</span></div>
-            <div class="cuenta-row result" id="cnt-result-row"><span>RESULTADO BRUTO</span><span></span><span id="cnt-result">—</span></div>
+            <div class="cuenta-row total"><span>TOTAL GASTOS c/IVA</span><span></span><span id="cnt-gastos-tot">—</span></div>
+            <div class="cuenta-row result" id="cnt-result-row"><span>RESULTADO NETO (base imp.)</span><span></span><span id="cnt-result">—</span></div>
             <div class="cuenta-row"><span>Margen bruto %</span><span></span><span id="cnt-margen">—</span></div>
           </div>
         </div>
@@ -3981,7 +3981,7 @@ async function loadContabilidad(){
     document.getElementById('cnt-ing-tot').textContent    = fmt(ingTot);
     document.getElementById('cnt-compras').textContent    = fmt(comprasB);
     document.getElementById('cnt-iva-comp').textContent   = fmt(ivaComp);
-    document.getElementById('cnt-gastos-tot').textContent = fmt(comprasB);
+    document.getElementById('cnt-gastos-tot').textContent = fmt(comprasB + ivaComp);
     document.getElementById('cnt-result').textContent     = fmt(resultado);
     document.getElementById('cnt-margen').textContent     = fmtP(margen);
     document.getElementById('cnt-result-row').className   = 'cuenta-row result'+(resultado<0?' neg':'');
