@@ -4228,6 +4228,7 @@ async function loadFacturas(){
                <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px" onclick="marcarFacturaParcial('${f.id}')">💶</button>`
             : `<button class="btn btn-sm ${yaCobrada?'btn-green':'btn-ghost'}" style="font-size:10px;padding:2px 6px" title="${yaCobrada?'Ya pagada':'Marcar como pagada'}" onclick="marcarFacturaPagada('${f.id}')">💳</button>`
           }
+          ${!esC ? `<button class="btn btn-ghost btn-sm" style="font-size:11px;padding:2px 5px;${f.email_enviado?'color:var(--green)':''}" title="${f.email_enviado?'📬 Enviada el '+fmtD(f.fecha_envio):'📧 Enviar por email'}" onclick="enviarFacturaEmail('${f.id}')">${f.email_enviado?'📬':'📧'}</button>` : ''}
           <button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('facturas','${f.id}','${(f.num_factura||'factura').replace(/'/g,"\\'")}')" >🗑</button>
         </td>
       </tr>`;
@@ -4560,7 +4561,7 @@ function previsualizarFactura(){
       +'<div class="fnum">'
         +'<div class="ftipo">'+d.tipoLabel+'</div>'
         +'<h2>'+escH(d.num)+'</h2>'
-        +'<span class="badge">'+escH(d.estado)+'</span>'
+        // estado omitido en PDF — es información interna
       +'</div>'
     +'</div>'
     +'<div class="iband">'
@@ -5222,6 +5223,127 @@ async function abrirComparativa(){
 // ════════════════════════════════════════════════════════════════
 // MEJORA 4: ESTADO DE COBRO VISUAL EN FACTURAS
 // ════════════════════════════════════════════════════════════════
+async function enviarFacturaEmail(id){
+  const f = FC.find(x=>String(x.id)===String(id));
+  if(!f){ toast('Factura no encontrada','error'); return; }
+  if((f.tipo_factura||'Venta')==='Compra'){ toast('Solo se pueden enviar facturas de venta','error'); return; }
+
+  // Buscar email del cliente
+  const cli = CC.find(c=>String(c.id)===String(f.cliente_id)||c.cliente_id===f.cliente_id);
+  const emailCliente = cli?.email||'';
+
+  // Mostrar modal de confirmación
+  const emailDest = prompt(
+    `Enviar factura ${f.num_factura} por email\n\nCliente: ${cli?.nombre||'—'}\nEmail detectado: ${emailCliente||'(sin email registrado)'}\n\nConfirma o modifica el email de destino:`,
+    emailCliente
+  );
+  if(!emailDest||!emailDest.trim()){ return; }
+  if(!emailDest.includes('@')){ toast('Email no válido','error'); return; }
+
+  // Construir HTML de la factura para el cuerpo del email
+  const d = _buildFacturaPDF();
+  const base = f.base_imponible||0;
+  const ivaN = ivaPct(f.iva_pct||'21%');
+  const total = base*(1+ivaN/100);
+  const pie = _getPieHtml();
+
+  const htmlFactura = `
+    <div style="font-family:Arial,sans-serif;max-width:700px;margin:0 auto">
+      <div style="background:#1a2a3a;color:white;padding:20px 24px;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:18px;font-weight:900">PAU INTERIORISMO S.L.</div>
+          <div style="font-size:10px;opacity:.65;margin-top:4px">CIF B-56909641 · C/ Tomás y Valiente Nº 6 Bajo · 46290 Alcàsser (Valencia)</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:10px;opacity:.6;text-transform:uppercase">Factura de venta</div>
+          <div style="font-size:22px;font-weight:900">${f.num_factura}</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:3px solid #1a2a3a">
+        <div style="padding:14px 16px;border-right:1px solid #eee">
+          <div style="font-size:9px;text-transform:uppercase;font-weight:700;color:#888;margin-bottom:4px">Cliente</div>
+          <div style="font-size:13px;font-weight:700;color:#1a2a3a">${escH(d.contra)}</div>
+          ${d.contraCIF?`<div style="font-size:10px;color:#888">CIF/NIF: ${escH(d.contraCIF)}</div>`:''}
+        </div>
+        <div style="padding:14px 16px;border-right:1px solid #eee">
+          <div style="font-size:9px;text-transform:uppercase;font-weight:700;color:#888;margin-bottom:4px">Fechas</div>
+          <div style="font-size:13px;font-weight:700;color:#1a2a3a">Emisión: ${fmtD(f.fecha_emision)}</div>
+          ${f.fecha_vencimiento?`<div style="font-size:10px;color:#888">Vencimiento: ${fmtD(f.fecha_vencimiento)}</div>`:''}
+        </div>
+        <div style="padding:14px 16px">
+          <div style="font-size:9px;text-transform:uppercase;font-weight:700;color:#888;margin-bottom:4px">Forma de pago</div>
+          <div style="font-size:13px;font-weight:700;color:#1a2a3a">${escH(f.forma_pago||'—')}</div>
+        </div>
+      </div>
+      <div style="padding:16px 16px 0">
+        <table style="width:100%;border-collapse:collapse">
+          <thead><tr style="background:#1a2a3a;color:white">
+            <th style="padding:8px;text-align:left;font-size:10px">Descripción</th>
+            <th style="padding:8px;text-align:center;font-size:10px">Ud.</th>
+            <th style="padding:8px;text-align:right;font-size:10px">Cant.</th>
+            <th style="padding:8px;text-align:right;font-size:10px">P. Unit.</th>
+            <th style="padding:8px;text-align:center;font-size:10px">IVA</th>
+            <th style="padding:8px;text-align:right;font-size:10px">Subtotal</th>
+          </tr></thead>
+          <tbody>${d.filasLineas||`<tr><td colspan="6" style="padding:12px;text-align:center;color:#888">${escH(f.concepto||'—')}</td></tr>`}</tbody>
+        </table>
+      </div>
+      <div style="background:#f5f7fa;border-top:2px solid #1a2a3a;padding:14px 16px">
+        <div style="max-width:250px;margin-left:auto">
+          <div style="display:flex;justify-content:space-between;padding:3px 0;font-size:12px"><span>Base imponible</span><span>${fmtE(base)}</span></div>
+          <div style="display:flex;justify-content:space-between;padding:3px 0;font-size:12px"><span>IVA (${f.iva_pct||'21%'})</span><span>${fmtE(base*ivaN/100)}</span></div>
+          <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:16px;font-weight:900;color:#1a2a3a;border-top:1px solid #ccc;margin-top:4px"><span>TOTAL</span><span>${fmtE(total)}</span></div>
+        </div>
+      </div>
+      ${pie ? `<div style="padding:12px 16px">${pie}</div>` : ''}
+      <div style="text-align:center;color:#aaa;font-size:10px;padding:12px 16px;border-top:1px solid #eee">
+        PAU INTERIORISMO S.L. · CIF B-56909641 · C/ Tomás y Valiente Nº 6 Bajo · 46290 Alcàsser (Valencia) · Tel: 961 20 01 87
+      </div>
+    </div>
+  `;
+
+  toast('Enviando factura...','info');
+
+  try{
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        messages:[{role:'user',content:`Send an email using Gmail MCP.
+To: ${emailDest.trim()}
+From: administracion@pauinteriorismo.es  
+Subject: Factura ${f.num_factura} - PAU INTERIORISMO S.L.
+Body (HTML): ${htmlFactura}
+
+Please send this email now using the Gmail tool.`}],
+        mcp_servers:[{type:'url',url:'https://gmail.mcp.claude.com/mcp',name:'gmail-mcp'}]
+      })
+    });
+
+    if(response.ok){
+      // Registrar en BD
+      const hoy = new Date().toISOString().split('T')[0];
+      await sb('facturas','PATCH',{email_enviado:true, fecha_envio:hoy},null,`?id=eq.${id}`);
+      // Actualizar caché local
+      const idx = FC.findIndex(x=>String(x.id)===String(id));
+      if(idx>=0){ FC[idx].email_enviado=true; FC[idx].fecha_envio=hoy; }
+      renderFacturas();
+      toast(`📬 Factura enviada a ${emailDest}`,'success');
+    } else {
+      const err = await response.text();
+      throw new Error('API error: '+err.substring(0,100));
+    }
+  } catch(e){
+    // Fallback: abrir cliente de correo
+    const asunto = encodeURIComponent(`Factura ${f.num_factura} - PAU INTERIORISMO S.L.`);
+    const cuerpo = encodeURIComponent(`Estimado/a ${d.contra},\n\nAdjunto la factura ${f.num_factura} por importe de ${fmtE(total)}.\n\nQuedo a su disposición para cualquier consulta.\n\nAtentamente,\nPAU INTERIORISMO S.L.\nTel: 961 20 01 87`);
+    window.open(`mailto:${emailDest}?subject=${asunto}&body=${cuerpo}`);
+    toast('Abriendo cliente de email (fallback)','info');
+  }
+}
+
 function marcarFacturaPagada(id){
   const f = FC.find(x=>x.id===id); if(!f) return;
   const tot = (f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100);
