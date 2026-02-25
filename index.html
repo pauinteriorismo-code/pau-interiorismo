@@ -4392,6 +4392,15 @@ function renderFacLineas(){
 
 function recalcFacLineas(){ renderFacLineas(); }
 
+function addFacLinea(){
+  _facLineas.push({desc:'',ud:'Ud',cantidad:1,precio:0,iva:'21%'});
+  renderFacLineas();
+  setTimeout(()=>{
+    const rows=document.querySelectorAll('#f-lineas-tbody tr');
+    if(rows.length){ const last=rows[rows.length-1]; const inp=last.querySelector('input'); if(inp) inp.focus(); }
+  },30);
+}
+
 function _buildFacturaPDF(){
   const esC = document.getElementById('f-tipo').value==='Compra';
   const num  = document.getElementById('f-num').value||'BORRADOR';
