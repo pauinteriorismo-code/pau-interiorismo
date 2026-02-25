@@ -214,6 +214,7 @@ tbody td{padding:7px 10px;vertical-align:middle}
   }
 }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -1016,6 +1017,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <div class="search-wrap" style="flex:1;min-width:160px"><span class="search-icon">🔍</span>
           <input class="form-input" id="search-facturas" placeholder="Buscar…" oninput="filterTable('facturas-tbody','search-facturas')">
         </div>
+        <button class="btn btn-ghost btn-sm" onclick="openModal('m-importar-holded')" style="border:1px dashed var(--border)">📤 Importar Holded</button>
         <button class="btn btn-primary" onclick="abrirNuevaFactura('Venta')">📤 Nueva venta</button>
         <button class="btn" style="background:#fdecea;color:var(--red);border:1px solid #f5c6c6" onclick="abrirNuevaFactura('Compra')">📥 Nueva compra</button>
       </div>
@@ -4785,6 +4787,294 @@ async function aplicarConciliacion(){
   loadConciliacion();
 }
 
+// ════════════════════════════════════════════════════════════════
+// IMPORTADOR HOLDED - FACTURAS DE COMPRA
+// ════════════════════════════════════════════════════════════════
+
+let holdedRows = []; // Filas parseadas del archivo Holded
+
+// Poblar selector de proyecto en modal Holded al abrir
+function initImportHolded(){
+  const sel = document.getElementById('holded-proyecto-default');
+  if(!sel) return;
+  sel.innerHTML = '<option value="">— Sin proyecto por defecto —</option>'
+    + PC.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
+}
+
+// Override openModal para inicializar el importador
+const _origOpenModalBase = openModal;
+// (openModal ya fue overrideado antes para comparativa — encadenamos)
+const _prevOpenModal = openModal;
+openModal = function(id){
+  if(id === 'm-importar-holded') initImportHolded();
+  _prevOpenModal(id);
+};
+
+async function procesarArchivoHolded(){
+  const file = document.getElementById('holded-file')?.files[0];
+  if(!file) return;
+
+  const ext = file.name.split('.').pop().toLowerCase();
+  let rows = [];
+
+  if(ext === 'csv'){
+    const text = await file.text();
+    rows = parsearCSVHolded(text);
+  } else if(ext === 'xlsx' || ext === 'xls'){
+    rows = await parsearXLSXHolded(file);
+  } else {
+    toast('Formato no soportado. Usa Excel (.xlsx) o CSV.', 'error');
+    return;
+  }
+
+  if(!rows.length){
+    toast('No se encontraron facturas en el archivo.', 'error');
+    return;
+  }
+
+  holdedRows = rows;
+  renderPreviewHolded(rows);
+}
+
+function parsearCSVHolded(text){
+  const lineas = text.split('
+').map(l=>l.trim()).filter(l=>l);
+  if(lineas.length < 2) return [];
+  const sep = text.includes(';') ? ';' : ',';
+  const headers = lineas[0].split(sep).map(h=>h.replace(/"/g,'').trim().toLowerCase());
+  const rows = [];
+  for(let i=1;i<lineas.length;i++){
+    const cols = lineas[i].split(sep).map(c=>c.replace(/"/g,'').trim());
+    const obj = {};
+    headers.forEach((h,j)=>{ obj[h]=cols[j]||''; });
+    rows.push(mapearCamposHolded(obj));
+  }
+  return rows.filter(r=>r.num_factura);
+}
+
+async function parsearXLSXHolded(file){
+  // Usar SheetJS si está disponible, sino leer como CSV
+  return new Promise((resolve)=>{
+    const reader = new FileReader();
+    reader.onload = (e)=>{
+      try{
+        // Intentar parsear como CSV primero (Holded a veces exporta CSV con extensión xls)
+        const text = e.target.result;
+        if(typeof text === 'string'){
+          resolve(parsearCSVHolded(text));
+          return;
+        }
+        // Si es binario, usar SheetJS
+        const data = new Uint8Array(e.target.result);
+        if(typeof XLSX !== 'undefined'){
+          const wb = XLSX.read(data, {type:'array', cellDates:true});
+          const ws = wb.Sheets[wb.SheetNames[0]];
+          const json = XLSX.utils.sheet_to_json(ws, {raw:false, dateNF:'yyyy-mm-dd'});
+          const rows = json.map(obj=>{
+            const lower = {};
+            Object.keys(obj).forEach(k=>{ lower[k.toLowerCase().trim()]=String(obj[k]||'').trim(); });
+            return mapearCamposHolded(lower);
+          }).filter(r=>r.num_factura);
+          resolve(rows);
+        } else {
+          toast('Para archivos .xlsx instala SheetJS. Usa la exportación CSV de Holded.','error');
+          resolve([]);
+        }
+      }catch(e){ resolve([]); }
+    };
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+// Mapear columnas de Holded a nuestro esquema
+// Holded exporta columnas como: Número, Fecha, Proveedor, Concepto/Descripción,
+// Base imponible, %IVA, Cuota IVA, Total, Fecha vencimiento, Estado
+function mapearCamposHolded(obj){
+  // Buscar campos con distintos nombres posibles que usa Holded
+  const get = (...keys) => {
+    for(const k of keys){
+      const val = obj[k] || obj[k.toLowerCase()] || obj[k.toUpperCase()];
+      if(val && val.toString().trim()) return val.toString().trim();
+    }
+    return '';
+  };
+
+  const num    = get('número','numero','number','num. factura','nº factura','invoice number','factura','doc. number','docnumber','nº','num');
+  const fecha  = normalizarFechaHolded(get('fecha','date','fecha emision','fecha emisión','fecha factura','issue date'));
+  const prov   = get('proveedor','supplier','contact','contacto','nombre proveedor','vendor','empresa');
+  const conc   = get('concepto','descripción','descripcion','description','concept','línea','linea');
+  const base   = parseFloat(get('base imponible','base','taxable base','importe','subtotal','base imp.').replace(',','.').replace(/[^0-9.-]/g,''))||0;
+  const ivaPctRaw = get('%iva','iva %','tax %','iva','vat','tax rate','tipo iva');
+  const ivaPct = ivaPctRaw ? (ivaPctRaw.includes('%')?ivaPctRaw:(ivaPctRaw+'%')) : '21%';
+  const total  = parseFloat(get('total','importe total','amount','total factura').replace(',','.').replace(/[^0-9.-]/g,''))||0;
+  const vto    = normalizarFechaHolded(get('vencimiento','fecha vencimiento','due date','fecha vto'));
+  const estado = mapearEstadoHolded(get('estado','status','estado pago'));
+
+  return { num_factura:num, fecha_emision:fecha, proveedor_id:prov,
+           concepto:conc, base_imponible:base, iva_pct:ivaPct,
+           total_calculado:total, fecha_vencimiento:vto, estado, tipo_factura:'Compra' };
+}
+
+function normalizarFechaHolded(str){
+  if(!str) return '';
+  // dd/mm/yyyy
+  const m1 = str.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);
+  if(m1) return `${m1[3]}-${m1[2].padStart(2,'0')}-${m1[1].padStart(2,'0')}`;
+  // yyyy-mm-dd
+  const m2 = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(m2) return str.substring(0,10);
+  // mm/dd/yyyy (formato americano)
+  const m3 = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if(m3) return `${m3[3]}-${m3[1].padStart(2,'0')}-${m3[2].padStart(2,'0')}`;
+  return str;
+}
+
+function mapearEstadoHolded(s){
+  const lower = (s||'').toLowerCase();
+  if(lower.includes('pag') || lower.includes('paid') || lower.includes('cobr')) return 'Pagada';
+  if(lower.includes('parci') || lower.includes('partial')) return 'Parcial';
+  if(lower.includes('venc') || lower.includes('overdue') || lower.includes('expir')) return 'Vencida';
+  if(lower.includes('anul') || lower.includes('cancel')) return 'Anulada';
+  return 'Pendiente';
+}
+
+function renderPreviewHolded(rows){
+  const tbody   = document.getElementById('holded-tbody');
+  const preview = document.getElementById('holded-preview');
+  const resumen = document.getElementById('holded-resumen');
+  const btnImp  = document.getElementById('btn-importar-holded');
+  const proyDef = document.getElementById('holded-proyecto-default')?.value || '';
+
+  if(preview) preview.style.display = '';
+  if(btnImp)  btnImp.style.display  = '';
+
+  // Detectar duplicados (num_factura ya existe en FC)
+  const existentes = new Set(FC.map(f=>f.num_factura));
+
+  const totalBase  = rows.reduce((s,r)=>s+r.base_imponible,0);
+  const duplicados = rows.filter(r=>existentes.has(r.num_factura)).length;
+
+  if(resumen) resumen.innerHTML =
+    `<span style="color:var(--navy)">${rows.length} facturas encontradas</span>
+     · Base total: <strong>${fmt(totalBase)}</strong>
+     ${duplicados ? `· <span style="color:var(--amber)">⚠️ ${duplicados} ya existen (se omitirán)</span>` : '· <span style="color:var(--green)">✅ Sin duplicados</span>'}`;
+
+  tbody.innerHTML = rows.map((r,i)=>{
+    const dup = existentes.has(r.num_factura);
+    const provConocido = ProvC.some(p=>p.nombre.toLowerCase()===r.proveedor_id.toLowerCase());
+    return `<tr style="${dup?'opacity:0.4;background:#fff5e6':''}">
+      <td><input type="checkbox" class="holded-chk" data-idx="${i}" ${dup?'':'checked'} style="width:15px;height:15px"></td>
+      <td style="font-size:11px;font-weight:700">${r.num_factura||'—'}</td>
+      <td style="font-size:11px">${fmtD(r.fecha_emision)}</td>
+      <td style="font-size:11px;max-width:140px">
+        ${provConocido
+          ? r.proveedor_id
+          : `<span style="color:var(--amber)" title="Proveedor nuevo — se creará">⚠️ ${r.proveedor_id||'—'}</span>`}
+      </td>
+      <td style="font-size:11px;color:var(--text-soft);max-width:160px">${r.concepto||'—'}</td>
+      <td class="td-mono" style="font-size:11px">${fmt(r.base_imponible)}</td>
+      <td style="font-size:11px">${r.iva_pct}</td>
+      <td class="td-mono" style="font-size:11px;font-weight:700">${fmt(r.total_calculado||r.base_imponible*(1+ivaPct(r.iva_pct)/100))}</td>
+      <td style="font-size:11px">${fmtD(r.fecha_vencimiento)}</td>
+      <td>${bE(r.estado)}</td>
+      <td style="font-size:10px">
+        <select class="form-input" style="font-size:10px;padding:2px 4px;min-width:100px" data-proy="${i}">
+          <option value="${proyDef}">${proyDef||'Sin proyecto'}</option>
+          ${PC.filter(p=>proyDef?p.proyecto_id!==proyDef:true).map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id}</option>`).join('')}
+        </select>
+      </td>
+    </tr>`;
+  }).join('');
+
+  // Alertas
+  const alertas = document.getElementById('holded-alertas');
+  const nuevosProvs = [...new Set(rows
+    .filter(r=>r.proveedor_id && !ProvC.some(p=>p.nombre.toLowerCase()===r.proveedor_id.toLowerCase()))
+    .map(r=>r.proveedor_id))];
+  if(alertas && nuevosProvs.length){
+    alertas.innerHTML = `<div class="info-box" style="background:#fff9e6;border-color:var(--amber)">
+      ⚠️ <strong>${nuevosProvs.length} proveedores nuevos</strong> detectados — se crearán automáticamente al importar:<br>
+      <span style="font-size:11px;color:var(--text-soft)">${nuevosProvs.join(', ')}</span>
+    </div>`;
+  } else if(alertas){
+    alertas.innerHTML = '';
+  }
+}
+
+function toggleAllHolded(checked){
+  document.querySelectorAll('.holded-chk').forEach(cb=>{ cb.checked = checked; });
+}
+
+async function ejecutarImportHolded(){
+  const checkboxes = document.querySelectorAll('.holded-chk:checked');
+  if(!checkboxes.length){ toast('Selecciona al menos una factura','error'); return; }
+
+  const idxs = [...checkboxes].map(cb=>parseInt(cb.dataset.idx));
+  const selRows = idxs.map(i=>holdedRows[i]);
+  const proySelects = document.querySelectorAll('[data-proy]');
+
+  const btn = document.getElementById('btn-importar-holded');
+  if(btn){ btn.disabled=true; btn.textContent='Importando…'; }
+
+  let ok=0, errores=0;
+  const existentes = new Set(FC.map(f=>f.num_factura));
+
+  for(let i=0;i<selRows.length;i++){
+    const r = selRows[i];
+    const realIdx = idxs[i];
+    if(existentes.has(r.num_factura)){ continue; } // Saltar duplicados
+
+    // Obtener proyecto asignado a esta fila
+    const proySelect = document.querySelector(`[data-proy="${realIdx}"]`);
+    const proyId = proySelect?.value || '';
+
+    // Crear proveedor si no existe
+    if(r.proveedor_id){
+      const yaExiste = ProvC.some(p=>p.nombre.toLowerCase()===r.proveedor_id.toLowerCase());
+      if(!yaExiste){
+        try{
+          await sbPost('proveedores',{ nombre:r.proveedor_id, tipo:'Proveedor', activo:true });
+          ProvC.push({ nombre:r.proveedor_id, tipo:'Proveedor' });
+        }catch(e){}
+      }
+    }
+
+    // Insertar factura
+    const d = {
+      tipo_factura:   'Compra',
+      num_factura:    r.num_factura,
+      fecha_emision:  r.fecha_emision || null,
+      proveedor_id:   r.proveedor_id || null,
+      proyecto_id:    proyId || null,
+      concepto:       r.concepto || '',
+      base_imponible: r.base_imponible || 0,
+      iva_pct:        r.iva_pct || '21%',
+      forma_pago:     'Transferencia',
+      fecha_vencimiento: r.fecha_vencimiento || null,
+      estado:         r.estado || 'Pendiente',
+      importe_cobrado: r.estado==='Pagada' ? (r.total_calculado||r.base_imponible) : 0,
+    };
+
+    try{
+      await sbPost('facturas', d);
+      ok++;
+    }catch(e){
+      errores++;
+      console.warn('Error importando', r.num_factura, e.message);
+    }
+  }
+
+  if(btn){ btn.disabled=false; btn.textContent='📥 Importar facturas seleccionadas'; }
+
+  toast(`✅ ${ok} facturas importadas${errores?` · ⚠️ ${errores} errores`:''}`, errores?'warn':'ok');
+  closeModal('m-importar-holded');
+  document.getElementById('holded-file').value='';
+  document.getElementById('holded-preview').style.display='none';
+  holdedRows=[];
+  await loadFacturas();
+  await loadProveedores();
+}
+
 // ═══ PWA SERVICE WORKER ═══
 if('serviceWorker' in navigator){
   window.addEventListener('load', ()=>{
@@ -4792,5 +5082,67 @@ if('serviceWorker' in navigator){
   });
 }
 </script>
+
+<!-- ═══ MODAL IMPORTAR HOLDED ═══ -->
+<div class="modal-overlay" id="m-importar-holded">
+<div class="modal" style="width:780px;max-width:96vw">
+  <div class="modal-head">
+    <div class="modal-title">📤 Importar facturas de compra desde Holded</div>
+    <button class="modal-close" onclick="closeModal('m-importar-holded')">×</button>
+  </div>
+  <div class="modal-body">
+
+    <!-- INSTRUCCIONES -->
+    <div class="info-box" style="margin-bottom:14px">
+      <strong>¿Cómo exportar desde Holded?</strong><br>
+      1. Ve a <strong>Gastos → Facturas de compra</strong><br>
+      2. Filtra por el periodo que quieras importar<br>
+      3. Pulsa el <strong>icono ⬇ Exportar</strong> (arriba derecha) → <strong>Excel o CSV</strong><br>
+      4. Sube el archivo aquí abajo
+    </div>
+
+    <!-- UPLOAD -->
+    <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:14px;flex-wrap:wrap">
+      <div style="flex:1;min-width:220px">
+        <label class="form-label">Archivo exportado de Holded (.xlsx o .csv)</label>
+        <input type="file" id="holded-file" accept=".xlsx,.xls,.csv" class="form-input"
+          onchange="procesarArchivoHolded()" style="padding:6px">
+      </div>
+      <div style="flex:1;min-width:200px">
+        <label class="form-label">Asignar a proyecto <span style="font-size:10px;color:var(--text-soft)">(opcional — puedes cambiar por factura)</span></label>
+        <select class="form-input" id="holded-proyecto-default">
+          <option value="">— Sin proyecto por defecto —</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- PREVIEW TABLE -->
+    <div id="holded-preview" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div id="holded-resumen" style="font-size:13px;font-weight:600;color:var(--navy)"></div>
+        <div style="font-size:11px;color:var(--text-soft)">Desmarca las que no quieras importar</div>
+      </div>
+      <div class="table-wrap" style="max-height:320px;overflow-y:auto"><table>
+        <thead><tr>
+          <th><input type="checkbox" id="holded-chk-all" onchange="toggleAllHolded(this.checked)" checked style="width:15px;height:15px"></th>
+          <th>Nº Factura</th><th>Fecha</th><th>Proveedor</th>
+          <th>Concepto</th><th>Base imp.</th><th>IVA</th><th>Total</th>
+          <th>Vencimiento</th><th>Estado</th><th>Proyecto</th>
+        </tr></thead>
+        <tbody id="holded-tbody"></tbody>
+      </table></div>
+
+      <!-- ALERTAS -->
+      <div id="holded-alertas" style="margin-top:10px"></div>
+    </div>
+
+  </div>
+  <div class="modal-foot">
+    <button class="btn btn-ghost" onclick="closeModal('m-importar-holded')">Cancelar</button>
+    <button class="btn btn-primary" id="btn-importar-holded" style="display:none"
+      onclick="ejecutarImportHolded()">📥 Importar facturas seleccionadas</button>
+  </div>
+</div>
+</div>
 </body>
 </html>
