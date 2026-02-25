@@ -1212,19 +1212,16 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 <div class="view" id="view-contabilidad">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
         <div class="card">
-          <div class="card-header"><div class="card-title">📊 Cuenta de Resultados</div></div>
+          <div class="card-header"><div class="card-title">📊 Cuenta de Resultados</div><span style="font-size:10px;color:var(--text-soft);font-weight:400">Basado en facturas emitidas y recibidas</span></div>
           <div class="card-body" style="padding:0">
             <div class="cuenta-row header"><span>Concepto</span><span>Cta PGC</span><span>Importe €</span></div>
             <div class="cuenta-row" style="background:var(--blue-light);font-weight:700"><span>INGRESOS</span><span></span><span></span></div>
-            <div class="cuenta-row"><span>Ventas ejecutadas (base imp.)</span><span style="color:var(--text-soft)">700</span><span id="cnt-ventas">—</span></div>
+            <div class="cuenta-row"><span>Ventas (base imp.) — Facturas emitidas</span><span style="color:var(--text-soft)">700</span><span id="cnt-ventas">—</span></div>
             <div class="cuenta-row"><span>IVA Repercutido</span><span style="color:var(--text-soft)">477</span><span id="cnt-iva-rep">—</span></div>
             <div class="cuenta-row total"><span>TOTAL INGRESOS c/IVA</span><span></span><span id="cnt-ing-tot">—</span></div>
             <div class="cuenta-row" style="background:var(--red-soft);font-weight:700;margin-top:4px"><span>GASTOS</span><span></span><span></span></div>
-            <div class="cuenta-row"><span>Compras materiales (base)</span><span style="color:var(--text-soft)">600</span><span id="cnt-compras">—</span></div>
+            <div class="cuenta-row"><span>Compras (base imp.) — Facturas recibidas</span><span style="color:var(--text-soft)">600</span><span id="cnt-compras">—</span></div>
             <div class="cuenta-row"><span>IVA Soportado compras</span><span style="color:var(--text-soft)">472</span><span id="cnt-iva-comp">—</span></div>
-            <div class="cuenta-row"><span>Subcontratas (base imp.)</span><span style="color:var(--text-soft)">621</span><span id="cnt-subcs">—</span></div>
-            <div class="cuenta-row"><span>IVA Soportado subcontratas</span><span style="color:var(--text-soft)">472</span><span id="cnt-iva-sub">—</span></div>
-            <div class="cuenta-row"><span>Mano de obra propia</span><span style="color:var(--text-soft)">640</span><span id="cnt-mo">—</span></div>
             <div class="cuenta-row total"><span>TOTAL GASTOS (s/IVA)</span><span></span><span id="cnt-gastos-tot">—</span></div>
             <div class="cuenta-row result" id="cnt-result-row"><span>RESULTADO BRUTO</span><span></span><span id="cnt-result">—</span></div>
             <div class="cuenta-row"><span>Margen bruto %</span><span></span><span id="cnt-margen">—</span></div>
@@ -1234,10 +1231,8 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <div class="card" style="margin-bottom:14px">
             <div class="card-header"><div class="card-title">🧾 Liquidación IVA Trimestral</div></div>
             <div class="card-body" style="padding:0">
-              <div class="cuenta-row"><span>IVA Repercutido (ventas)</span><span id="iva-rep">—</span><span></span></div>
-              <div class="cuenta-row"><span>IVA Soportado (compras)</span><span id="iva-comp">—</span><span></span></div>
-              <div class="cuenta-row"><span>IVA Soportado (subcontr.)</span><span id="iva-sub">—</span><span></span></div>
-              <div class="cuenta-row total"><span>TOTAL IVA SOPORTADO</span><span id="iva-sop-tot">—</span><span></span></div>
+              <div class="cuenta-row"><span>IVA Repercutido (facturas venta)</span><span id="iva-rep">—</span><span></span></div>
+              <div class="cuenta-row"><span>IVA Soportado (facturas compra)</span><span id="iva-comp">—</span><span></span></div>
               <div class="cuenta-row result" id="iva-result-row"><span>IVA NETO A INGRESAR</span><span id="iva-neto">—</span><span></span></div>
             </div>
           </div>
@@ -1248,8 +1243,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
               <div class="cuenta-row"><span>Clientes (pendiente cobro)</span><span id="bal-cli">—</span><span></span></div>
               <div class="cuenta-row header" style="margin-top:4px"><span>PASIVO</span><span>€</span><span></span></div>
               <div class="cuenta-row"><span>IVA a liquidar (Hacienda)</span><span id="bal-iva">—</span><span></span></div>
-              <div class="cuenta-row"><span>Pendiente proveedores</span><span id="bal-prov">—</span><span></span></div>
-              <div class="cuenta-row"><span>Pendiente subcontratas</span><span id="bal-sub">—</span><span></span></div>
+              <div class="cuenta-row"><span>Pendiente proveedores (fact. compra)</span><span id="bal-prov">—</span><span></span></div>
             </div>
           </div>
         </div>
@@ -3962,50 +3956,59 @@ async function saveFactura(){
 
 async function loadContabilidad(){
   try{
-    const[comp,subc,hor,fac]=await Promise.all([sbGet('compras'),sbGet('subcontratas'),sbGet('horas'),sbGet('facturas')]);
-    const ventas=fac.reduce((s,f)=>s+(f.base_imponible||0),0);
-    const ivaRep=fac.reduce((s,f)=>s+(f.base_imponible||0)*ivaPct(f.iva_pct)/100,0);
-    const comprasB=comp.reduce((s,c)=>s+(c.base_imponible||0),0);
-    const ivaComp=comp.reduce((s,c)=>s+(c.base_imponible||0)*ivaPct(c.iva_pct)/100,0);
-    const subcsB=subc.reduce((s,c)=>s+(c.importe||0),0);
-    const ivaSub=subc.reduce((s,c)=>s+(c.importe||0)*ivaPct(c.iva_pct)/100,0);
-    const mo=hor.reduce((s,h)=>s+(h.total||0),0);
-    const gastos=comprasB+subcsB+mo;
-    const resultado=ventas-gastos;
-    const margen=ventas>0?(resultado/ventas)*100:0;
+    // SOLO facturas — ni compras, ni subcontratas, ni horas
+    const fac = await sbGet('facturas');
 
-    // Cuenta resultados
-    document.getElementById('cnt-ventas').textContent=fmt(ventas);
-    document.getElementById('cnt-iva-rep').textContent=fmt(ivaRep);
-    document.getElementById('cnt-ing-tot').textContent=fmt(ventas+ivaRep);
-    document.getElementById('cnt-compras').textContent=fmt(comprasB);
-    document.getElementById('cnt-iva-comp').textContent=fmt(ivaComp);
-    document.getElementById('cnt-subcs').textContent=fmt(subcsB);
-    document.getElementById('cnt-iva-sub').textContent=fmt(ivaSub);
-    document.getElementById('cnt-mo').textContent=fmt(mo);
-    document.getElementById('cnt-gastos-tot').textContent=fmt(gastos);
-    document.getElementById('cnt-result').textContent=fmt(resultado);
-    document.getElementById('cnt-margen').textContent=fmtP(margen);
-    const rr=document.getElementById('cnt-result-row');rr.className='cuenta-row result'+(resultado<0?' neg':'');
+    const facVenta  = fac.filter(f=>(f.tipo_factura||'Venta')==='Venta');
+    const facCompra = fac.filter(f=>(f.tipo_factura||'Venta')==='Compra');
 
-    // IVA
-    document.getElementById('iva-rep').textContent=fmt(ivaRep);
-    document.getElementById('iva-comp').textContent=fmt(ivaComp);
-    document.getElementById('iva-sub').textContent=fmt(ivaSub);
-    document.getElementById('iva-sop-tot').textContent=fmt(ivaComp+ivaSub);
-    const ivaNeto=ivaRep-ivaComp-ivaSub;
-    document.getElementById('iva-neto').textContent=fmt(ivaNeto);
-    document.getElementById('iva-result-row').className='cuenta-row result'+(ivaNeto<0?' neg':'');
+    // ── INGRESOS ──
+    const ventas    = facVenta.reduce((s,f)=>s+(f.base_imponible||0), 0);
+    const ivaRep    = facVenta.reduce((s,f)=>s+(f.base_imponible||0)*ivaPct(f.iva_pct)/100, 0);
+    const ingTot    = ventas + ivaRep;
 
-    // Balance
-    const pendCobro=fac.filter(f=>f.estado!=='Cobrada').reduce((s,f)=>s+(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100)-(f.importe_cobrado||0),0);
-    const pendProv=comp.filter(c=>c.estado_pago!=='Pagado').reduce((s,c)=>s+(c.base_imponible||0),0);
-    const pendSub=subc.filter(c=>c.estado_pago!=='Pagado').reduce((s,c)=>s+(c.importe||0),0);
-    document.getElementById('bal-cli').textContent=fmt(pendCobro);
-    document.getElementById('bal-iva').textContent=fmt(Math.max(0,ivaNeto));
-    document.getElementById('bal-prov').textContent=fmt(pendProv);
-    document.getElementById('bal-sub').textContent=fmt(pendSub);
-  }catch(e){toast('Error cargando contabilidad: '+e.message,'error');}
+    // ── GASTOS ──
+    const comprasB  = facCompra.reduce((s,f)=>s+(f.base_imponible||0), 0);
+    const ivaComp   = facCompra.reduce((s,f)=>s+(f.base_imponible||0)*ivaPct(f.iva_pct)/100, 0);
+
+    // ── RESULTADO ──
+    const resultado = ventas - comprasB;
+    const margen    = ventas > 0 ? (resultado / ventas) * 100 : 0;
+
+    // ── Cuenta de Resultados ──
+    document.getElementById('cnt-ventas').textContent     = fmt(ventas);
+    document.getElementById('cnt-iva-rep').textContent    = fmt(ivaRep);
+    document.getElementById('cnt-ing-tot').textContent    = fmt(ingTot);
+    document.getElementById('cnt-compras').textContent    = fmt(comprasB);
+    document.getElementById('cnt-iva-comp').textContent   = fmt(ivaComp);
+    document.getElementById('cnt-gastos-tot').textContent = fmt(comprasB);
+    document.getElementById('cnt-result').textContent     = fmt(resultado);
+    document.getElementById('cnt-margen').textContent     = fmtP(margen);
+    document.getElementById('cnt-result-row').className   = 'cuenta-row result'+(resultado<0?' neg':'');
+
+    // ── IVA Trimestral ──
+    const ivaNeto = ivaRep - ivaComp;
+    document.getElementById('iva-rep').textContent        = fmt(ivaRep);
+    document.getElementById('iva-comp').textContent       = fmt(ivaComp);
+    document.getElementById('iva-neto').textContent       = fmt(ivaNeto);
+    document.getElementById('iva-result-row').className   = 'cuenta-row result'+(ivaNeto<0?' neg':'');
+
+    // ── Balance ──
+    // Activo: lo que nos deben los clientes (facturas venta no cobradas)
+    const pendCobro = facVenta
+      .filter(f=>f.estado!=='Cobrada')
+      .reduce((s,f)=>s+(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100)-(f.importe_cobrado||0), 0);
+
+    // Pasivo: lo que debemos a proveedores (facturas compra no pagadas)
+    const pendProv = facCompra
+      .filter(f=>f.estado!=='Pagada')
+      .reduce((s,f)=>s+(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100)-(f.importe_cobrado||0), 0);
+
+    document.getElementById('bal-cli').textContent  = fmt(pendCobro);
+    document.getElementById('bal-iva').textContent  = fmt(Math.max(0, ivaNeto));
+    document.getElementById('bal-prov').textContent = fmt(pendProv);
+
+  }catch(e){ toast('Error cargando contabilidad: '+e.message,'error'); }
 }
 
 
