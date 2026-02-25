@@ -268,6 +268,7 @@ tbody td{padding:7px 10px;vertical-align:middle}
     <div class="nav-item" data-view="conciliacion"><span class="ni">🏦</span><span>Conciliación bancaria</span></div>
     <div class="nav-item" data-view="contabilidad"><span class="ni">📊</span><span>Contabilidad</span></div>
     <div class="nav-item" data-view="informe_mensual"><span class="ni">📅</span><span>Informe mensual</span></div>
+    <div class="nav-item" data-view="rrhh"><span class="ni">👤</span><span>RR.HH. · Nóminas</span></div>
   </div>
   <div class="nav-section">
     <div class="nav-label">Sistema</div>
@@ -673,8 +674,8 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <!-- Rentabilidad por proyecto tabla -->
       <div class="card">
         <div class="card-header"><div class="card-title">📈 Rentabilidad por proyecto</div></div>
-        <div class="table-wrap"><table><thead><tr><th>ID</th><th>Proyecto</th><th>Estado</th><th>Ventas</th><th>Coste Compras</th><th>Coste Subcontr.</th><th>Coste MO</th><th>Coste Total</th><th>Margen €</th><th>Margen %</th></tr></thead>
-        <tbody id="g-rent-table"><tr><td colspan="10" class="loading">Cargando…</td></tr></tbody></table></div>
+        <div class="table-wrap"><table><thead><tr><th>ID</th><th>Proyecto</th><th>Estado</th><th>Ventas (base)</th><th>Costes (base)</th><th>Beneficio Neto</th><th>Margen %</th></tr></thead>
+        <tbody id="g-rent-table"><tr><td colspan="7" class="loading">Cargando…</td></tr></tbody></table></div>
       </div>
 
       <!-- ═══ PANEL DE ALERTAS ═══ -->
@@ -1251,6 +1252,56 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
               <div class="cuenta-row"><span>Pendiente proveedores (fact. compra)</span><span id="bal-prov">—</span><span></span></div>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ RR.HH. · NÓMINAS ═══ -->
+    <div class="view" id="view-rrhh">
+      <!-- KPIs -->
+      <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr)">
+        <div class="kpi blue"><div class="kpi-label">👤 Trabajadores</div><div class="kpi-value" id="rrhh-kpi-total">—</div><div class="kpi-sub">En plantilla</div></div>
+        <div class="kpi red"><div class="kpi-label">💶 Coste nóminas/mes</div><div class="kpi-value" id="rrhh-kpi-coste">—</div><div class="kpi-sub">Bruto + SS empresa</div></div>
+        <div class="kpi amber"><div class="kpi-label">🏛 SS empresa/mes</div><div class="kpi-value" id="rrhh-kpi-ss">—</div><div class="kpi-sub">~30% s/bruto</div></div>
+        <div class="kpi green"><div class="kpi-label">📅 Coste anual total</div><div class="kpi-value" id="rrhh-kpi-anual">—</div><div class="kpi-sub">12 pagas</div></div>
+      </div>
+
+      <div class="search-bar">
+        <button class="btn btn-primary" onclick="abrirModalTrabajador()">＋ Nuevo trabajador</button>
+        <div class="search-wrap" style="flex:1;max-width:300px"><span class="search-icon">🔍</span>
+          <input class="form-input" id="search-rrhh" placeholder="Buscar trabajador…" oninput="filtrarRRHH()">
+        </div>
+      </div>
+
+      <!-- Tabla trabajadores -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">👤 Plantilla y nóminas <span id="rrhh-count" style="font-size:11px;font-weight:400;color:var(--text-soft);margin-left:6px"></span></div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Trabajador</th><th>DNI/NIE</th><th>Categoría</th><th>Fecha alta</th>
+              <th>Salario bruto/mes</th><th>IRPF %</th><th>SS trabajador</th><th>Neto/mes</th>
+              <th>SS empresa (~30%)</th><th>Coste total empresa</th><th>Estado</th><th></th>
+            </tr></thead>
+            <tbody id="rrhh-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Resumen mensual -->
+      <div class="card" style="margin-top:14px">
+        <div class="card-header"><div class="card-title">📊 Resumen coste mensual empresa</div></div>
+        <div class="card-body" style="padding:0">
+          <div class="cuenta-row header"><span>Concepto</span><span>Importe €</span><span></span></div>
+          <div class="cuenta-row"><span>Suma salarios brutos</span><span id="rrhh-sum-bruto">—</span><span></span></div>
+          <div class="cuenta-row"><span>Suma IRPF retenido (trabajadores)</span><span id="rrhh-sum-irpf">—</span><span></span></div>
+          <div class="cuenta-row"><span>Suma SS trabajadores</span><span id="rrhh-sum-ss-trab">—</span><span></span></div>
+          <div class="cuenta-row"><span>Suma neto pagado a trabajadores</span><span id="rrhh-sum-neto">—</span><span></span></div>
+          <div class="cuenta-row"><span>Seguridad Social empresa (~30%)</span><span id="rrhh-sum-ss-emp">—</span><span></span></div>
+          <div class="cuenta-row total"><span>COSTE TOTAL EMPRESA / MES</span><span id="rrhh-sum-total">—</span><span></span></div>
+          <div class="cuenta-row result"><span>COSTE TOTAL EMPRESA / AÑO (×12)</span><span id="rrhh-sum-anual">—</span><span></span></div>
         </div>
       </div>
     </div>
@@ -2135,6 +2186,7 @@ const META={
   contrato:{t:'Contrato de obra',b:'Plantilla de contrato autorellenable'},
   pedido_doc:{t:'Documento de pedido',b:'Hoja de pedido a proveedor imprimible'},
   listas:{t:'Listas · Gestión de desplegables',b:'Edita trabajadores, estados, partidas y más'},
+  rrhh:{t:'RR.HH. · Nóminas',b:'Fichas de trabajadores · Nóminas · Coste empresa'},
   configuracion:{t:'Configuración',b:'Empresa · CI+GG+BI · Parámetros'},
 };
 document.querySelectorAll('.nav-item[data-view]').forEach(el=>el.addEventListener('click',()=>navTo(el.dataset.view)));
@@ -2642,19 +2694,25 @@ async function loadGerencia(){
     document.getElementById('gi-sub').textContent=fmt(totalIvaSub);
     document.getElementById('gi-neto').textContent=fmt(totalIvaRep-totalIvaComp);
 
-    // Rentabilidad por proyecto
-    const compByProy={},subByProy={},horByProy={},facByProy={};
-    comp.forEach(c=>{compByProy[c.proyecto_id]=(compByProy[c.proyecto_id]||0)+(c.base_imponible||0);});
-    subc.forEach(c=>{subByProy[c.proyecto_id]=(subByProy[c.proyecto_id]||0)+(c.importe||0);});
-    hor.forEach(h=>{horByProy[h.proyecto_id]=(horByProy[h.proyecto_id]||0)+(h.total||0);});
-    fac.forEach(f=>{facByProy[f.proyecto_id]=(facByProy[f.proyecto_id]||0)+(f.base_imponible||0);});
+    // Rentabilidad por proyecto — SOLO facturas (venta=ingresos, compra=costes)
+    const ventasByProy={}, costesByProy={};
+    facVenta.forEach(f=>{ventasByProy[f.proyecto_id]=(ventasByProy[f.proyecto_id]||0)+(f.base_imponible||0);});
+    facCompra.forEach(f=>{costesByProy[f.proyecto_id]=(costesByProy[f.proyecto_id]||0)+(f.base_imponible||0);});
 
     const tbody=document.getElementById('g-rent-table');
-    if(!pr.length){tbody.innerHTML='<tr><td colspan="10"><div class="empty"><div class="empty-icon">📁</div><div class="empty-text">Sin proyectos</div></div></td></tr>';return;}
+    if(!pr.length){tbody.innerHTML='<tr><td colspan="7"><div class="empty"><div class="empty-icon">📁</div><div class="empty-text">Sin proyectos</div></div></td></tr>';return;}
     tbody.innerHTML=pr.map(p=>{
-      const v=facByProy[p.proyecto_id]||0,cc=compByProy[p.proyecto_id]||0,sc=subByProy[p.proyecto_id]||0,mo=horByProy[p.proyecto_id]||0;
-      const tot=cc+sc+mo,ben=v-tot,mg=v>0?(ben/v)*100:0;
-      return`<tr><td class="td-mono" style="color:var(--text-soft)">${p.proyecto_id}</td><td><strong>${p.nombre}</strong></td><td>${bE(p.estado)}</td><td class="td-mono">${fmt(v)}</td><td class="td-mono">${fmt(cc)}</td><td class="td-mono">${fmt(sc)}</td><td class="td-mono">${fmt(mo)}</td><td class="td-mono" style="font-weight:700">${fmt(tot)}</td><td class="td-mono" style="${ben>=0?'color:var(--green)':'color:var(--red)'}">${fmt(ben)}</td><td class="td-mono" style="${mg>=15?'color:var(--green)':mg>=0?'color:var(--amber)':'color:var(--red)'}">${fmtP(mg)}</td></tr>`;
+      const v=ventasByProy[p.proyecto_id]||0, c=costesByProy[p.proyecto_id]||0;
+      const ben=v-c, mg=v>0?(ben/v)*100:0;
+      return`<tr>
+        <td class="td-mono" style="color:var(--text-soft)">${p.proyecto_id}</td>
+        <td><strong>${p.nombre}</strong></td>
+        <td>${bE(p.estado)}</td>
+        <td class="td-mono" style="color:var(--green);font-weight:700">${v>0?fmt(v):'—'}</td>
+        <td class="td-mono" style="color:var(--red)">${c>0?fmt(c):'—'}</td>
+        <td class="td-mono" style="font-weight:700;${ben>=0?'color:var(--green)':'color:var(--red)'}">${(v||c)?fmt(ben):'—'}</td>
+        <td class="td-mono" style="${mg>=15?'color:var(--green)':mg>=0?'color:var(--amber)':'color:var(--red)'}">${v>0?fmtP(mg):'—'}</td>
+      </tr>`;
     }).join('');
 
     const s=document.getElementById('conn-status');s.style.background='var(--green-soft)';s.style.color='var(--green)';s.textContent='🟢 Conectado';
@@ -4127,7 +4185,7 @@ const loaders={
   pedidos:loadPedidos,control_horario:loadControlHorario,
   proveedores:loadProveedores,
   rentabilidad:async()=>{await initRentabilidad();const p=document.getElementById('rent-proyecto-sel')?.value;if(p)loadRentabilidad();},
-  facturas:loadFacturas,contabilidad:loadContabilidad,conciliacion:loadConciliacion,configuracion:loadConfiguracion,
+  facturas:loadFacturas,contabilidad:loadContabilidad,conciliacion:loadConciliacion,rrhh:loadRRHH,configuracion:loadConfiguracion,
   pres_final:async()=>{
     const sel=document.getElementById('pf-proyecto-sel');
     sel.innerHTML='<option value="">Cargando proyectos…</option>';
@@ -5549,6 +5607,174 @@ async function ejecutarImportProveedores(){
 
 
 // ════════════════════════════════════════════════════════════════
+// RR.HH. · NÓMINAS
+// ════════════════════════════════════════════════════════════════
+let TrabC = [];
+
+async function loadRRHH(){
+  const tbody = document.getElementById('rrhh-tbody');
+  if(!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="12" class="loading">Cargando…</td></tr>';
+  try{
+    TrabC = await sbGet('trabajadores_rrhh','?order=nombre.asc');
+    renderRRHH();
+  }catch(e){
+    tbody.innerHTML=`<tr><td colspan="12" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}<br><small>Ejecuta el SQL de creación de tabla primero</small></td></tr>`;
+  }
+}
+
+function renderRRHH(){
+  const tbody = document.getElementById('rrhh-tbody');
+  if(!tbody) return;
+  const q = (document.getElementById('search-rrhh')?.value||'').toLowerCase();
+  const items = q ? TrabC.filter(t=>(t.nombre||'').toLowerCase().includes(q)) : TrabC;
+
+  // KPIs y resumen
+  const activos = TrabC.filter(t=>t.estado==='Activo');
+  let sumBruto=0, sumIrpf=0, sumSsTrab=0, sumNeto=0, sumSsEmp=0;
+  activos.forEach(t=>{
+    const bruto=t.salario_bruto||0;
+    const irpfAmt=bruto*(t.irpf_pct||0)/100;
+    const ssTrabAmt=bruto*(t.ss_trab_pct||6.35)/100;
+    const neto=bruto-irpfAmt-ssTrabAmt;
+    const ssEmpAmt=bruto*(t.ss_emp_pct||30)/100;
+    sumBruto+=bruto; sumIrpf+=irpfAmt; sumSsTrab+=ssTrabAmt;
+    sumNeto+=neto; sumSsEmp+=ssEmpAmt;
+  });
+  const sumTotal=sumBruto+sumSsEmp;
+  document.getElementById('rrhh-kpi-total').textContent=activos.length;
+  document.getElementById('rrhh-kpi-coste').textContent=fmt(sumTotal);
+  document.getElementById('rrhh-kpi-ss').textContent=fmt(sumSsEmp);
+  document.getElementById('rrhh-kpi-anual').textContent=fmt(sumTotal*12);
+  document.getElementById('rrhh-sum-bruto').textContent=fmt(sumBruto);
+  document.getElementById('rrhh-sum-irpf').textContent=fmt(sumIrpf);
+  document.getElementById('rrhh-sum-ss-trab').textContent=fmt(sumSsTrab);
+  document.getElementById('rrhh-sum-neto').textContent=fmt(sumNeto);
+  document.getElementById('rrhh-sum-ss-emp').textContent=fmt(sumSsEmp);
+  document.getElementById('rrhh-sum-total').textContent=fmt(sumTotal);
+  document.getElementById('rrhh-sum-anual').textContent=fmt(sumTotal*12);
+  document.getElementById('rrhh-count').textContent=TrabC.length+' trabajadores';
+
+  if(!items.length){
+    tbody.innerHTML='<tr><td colspan="12"><div class="empty"><div class="empty-icon">👤</div><div class="empty-text">Sin trabajadores registrados</div><button class="btn btn-primary btn-sm" onclick="abrirModalTrabajador()">＋ Añadir</button></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = items.map(t=>{
+    const bruto=t.salario_bruto||0;
+    const irpfAmt=bruto*(t.irpf_pct||0)/100;
+    const ssTrabAmt=bruto*(t.ss_trab_pct||6.35)/100;
+    const neto=bruto-irpfAmt-ssTrabAmt;
+    const ssEmpAmt=bruto*(t.ss_emp_pct||30)/100;
+    const total=bruto+ssEmpAmt;
+    const estadoColor=t.estado==='Activo'?'b-green':t.estado==='Baja temporal'?'b-amber':'b-gray';
+    return `<tr data-search="${(t.nombre||'').toLowerCase()}">
+      <td><strong>${t.nombre||'—'}</strong>${t.categoria?`<div style="font-size:11px;color:var(--text-soft)">${t.categoria}</div>`:''}</td>
+      <td class="td-mono" style="color:var(--text-soft)">${t.dni||'—'}</td>
+      <td style="font-size:11px">${t.categoria||'—'}</td>
+      <td class="td-mono" style="font-size:11px">${fmtD(t.fecha_alta)}</td>
+      <td class="td-mono" style="font-weight:700">${fmt(bruto)}</td>
+      <td class="td-mono">${t.irpf_pct||0}%</td>
+      <td class="td-mono" style="color:var(--amber)">${fmt(ssTrabAmt)}</td>
+      <td class="td-mono" style="color:var(--green);font-weight:700">${fmt(neto)}</td>
+      <td class="td-mono" style="color:var(--amber)">${fmt(ssEmpAmt)}</td>
+      <td class="td-mono" style="color:var(--red);font-weight:700">${fmt(total)}</td>
+      <td><span class="badge ${estadoColor}">${t.estado||'—'}</span></td>
+      <td><div class="td-actions">
+        <button class="btn btn-ghost btn-icon btn-sm" onclick="editTrabajador('${t.id}')">✏️</button>
+        <button class="btn btn-danger btn-icon btn-sm" onclick="confirmDelete('trabajadores_rrhh','${t.id}','${(t.nombre||'').replace(/'/g,'')}')">🗑</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+function filtrarRRHH(){ renderRRHH(); }
+
+function calcNomina(){
+  const bruto=parseFloat(document.getElementById('trab-bruto')?.value)||0;
+  const irpf=parseFloat(document.getElementById('trab-irpf')?.value)||0;
+  const ssTrab=parseFloat(document.getElementById('trab-ss-trab')?.value)||6.35;
+  const ssEmp=parseFloat(document.getElementById('trab-ss-emp')?.value)||30;
+  const irpfAmt=bruto*irpf/100;
+  const ssTrabAmt=bruto*ssTrab/100;
+  const neto=bruto-irpfAmt-ssTrabAmt;
+  const ssEmpAmt=bruto*ssEmp/100;
+  const total=bruto+ssEmpAmt;
+  document.getElementById('trab-calc-bruto').textContent=bruto>0?fmt(bruto):'—';
+  document.getElementById('trab-calc-neto').textContent=bruto>0?fmt(neto):'—';
+  document.getElementById('trab-calc-ss-emp').textContent=bruto>0?fmt(ssEmpAmt):'—';
+  document.getElementById('trab-calc-total').textContent=bruto>0?fmt(total):'—';
+}
+
+function abrirModalTrabajador(){
+  document.getElementById('trab-id').value='';
+  document.getElementById('m-trab-title').textContent='👤 Nuevo trabajador';
+  ['trab-nombre','trab-dni','trab-tel','trab-email','trab-dir','trab-nss','trab-iban','trab-notas','trab-bruto'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('trab-irpf').value='15';
+  document.getElementById('trab-ss-trab').value='6.35';
+  document.getElementById('trab-ss-emp').value='30';
+  document.getElementById('trab-alta').value=new Date().toISOString().split('T')[0];
+  document.getElementById('trab-estado').value='Activo';
+  calcNomina();
+  openModal('m-trabajador');
+}
+
+function editTrabajador(id){
+  const t=TrabC.find(x=>x.id==id); if(!t) return;
+  document.getElementById('trab-id').value=t.id;
+  document.getElementById('m-trab-title').textContent='✏️ Editar trabajador';
+  document.getElementById('trab-nombre').value=t.nombre||'';
+  document.getElementById('trab-dni').value=t.dni||'';
+  document.getElementById('trab-tel').value=t.telefono||'';
+  document.getElementById('trab-email').value=t.email||'';
+  document.getElementById('trab-dir').value=t.direccion||'';
+  document.getElementById('trab-nss').value=t.num_ss||'';
+  document.getElementById('trab-iban').value=t.iban||'';
+  document.getElementById('trab-categoria').value=t.categoria||'Oficial 1ª';
+  document.getElementById('trab-contrato').value=t.tipo_contrato||'Indefinido';
+  document.getElementById('trab-alta').value=t.fecha_alta||'';
+  document.getElementById('trab-estado').value=t.estado||'Activo';
+  document.getElementById('trab-bruto').value=t.salario_bruto||'';
+  document.getElementById('trab-irpf').value=t.irpf_pct||15;
+  document.getElementById('trab-ss-trab').value=t.ss_trab_pct||6.35;
+  document.getElementById('trab-ss-emp').value=t.ss_emp_pct||30;
+  document.getElementById('trab-notas').value=t.notas||'';
+  calcNomina();
+  openModal('m-trabajador');
+}
+
+async function saveTrabajador(){
+  const nombre=document.getElementById('trab-nombre').value.trim();
+  if(!nombre){ toast('El nombre es obligatorio','error'); return; }
+  const id=document.getElementById('trab-id').value;
+  const d={
+    nombre,
+    dni:       document.getElementById('trab-dni').value||null,
+    telefono:  document.getElementById('trab-tel').value||null,
+    email:     document.getElementById('trab-email').value||null,
+    direccion: document.getElementById('trab-dir').value||null,
+    num_ss:    document.getElementById('trab-nss').value||null,
+    iban:      document.getElementById('trab-iban').value||null,
+    categoria: document.getElementById('trab-categoria').value,
+    tipo_contrato: document.getElementById('trab-contrato').value,
+    fecha_alta: document.getElementById('trab-alta').value||null,
+    estado:    document.getElementById('trab-estado').value,
+    salario_bruto: parseFloat(document.getElementById('trab-bruto').value)||null,
+    irpf_pct:  parseFloat(document.getElementById('trab-irpf').value)||15,
+    ss_trab_pct: parseFloat(document.getElementById('trab-ss-trab').value)||6.35,
+    ss_emp_pct: parseFloat(document.getElementById('trab-ss-emp').value)||30,
+    notas:     document.getElementById('trab-notas').value||null,
+  };
+  try{
+    if(id){ await sb('trabajadores_rrhh','PATCH',d,null,`?id=eq.${id}`); toast('Trabajador actualizado ✅'); }
+    else  { await sbPost('trabajadores_rrhh',d); toast('Trabajador guardado ✅'); }
+    closeModal('m-trabajador');
+    await loadRRHH();
+  }catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+// ════════════════════════════════════════════════════════════════
 // AGENDA · AVISOS Y NOTIFICACIONES
 // ════════════════════════════════════════════════════════════════
 let AgC = [];
@@ -5881,6 +6107,129 @@ if('serviceWorker' in navigator){
     <button class="btn btn-ghost" onclick="closeModal('m-importar-holded')">Cancelar</button>
     <button class="btn btn-primary" id="btn-importar-holded" style="display:none"
       onclick="ejecutarImportHolded()">📥 Importar facturas seleccionadas</button>
+  </div>
+</div>
+</div>
+
+<!-- ═══ MODAL TRABAJADOR ═══ -->
+<div class="overlay" id="m-trabajador">
+<div class="modal" style="width:620px">
+  <div class="modal-head">
+    <div class="modal-title" id="m-trab-title">👤 Nuevo trabajador</div>
+    <button class="modal-close" onclick="closeModal('m-trabajador')">×</button>
+  </div>
+  <div class="modal-body">
+    <input type="hidden" id="trab-id">
+    <div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)">DATOS PERSONALES</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Nombre completo *</label>
+        <input class="form-input" id="trab-nombre" placeholder="Nombre Apellidos">
+      </div>
+      <div class="form-group">
+        <label class="form-label">DNI / NIE</label>
+        <input class="form-input" id="trab-dni" placeholder="12345678A">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Teléfono</label>
+        <input class="form-input" id="trab-tel" placeholder="600 000 000">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" id="trab-email" type="email" placeholder="trabajador@email.com">
+      </div>
+      <div class="form-group fg-full">
+        <label class="form-label">Dirección</label>
+        <input class="form-input" id="trab-dir" placeholder="Calle, número, ciudad…">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nº Seg. Social</label>
+        <input class="form-input" id="trab-nss" placeholder="000000000000">
+      </div>
+      <div class="form-group">
+        <label class="form-label">IBAN</label>
+        <input class="form-input" id="trab-iban" placeholder="ES00 0000 0000 0000 0000 0000">
+      </div>
+    </div>
+
+    <div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;margin:14px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)">DATOS LABORALES</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Categoría profesional</label>
+        <select class="form-input" id="trab-categoria">
+          <option>Oficial 1ª</option><option>Oficial 2ª</option><option>Oficial 3ª</option>
+          <option>Peón especialista</option><option>Peón ordinario</option>
+          <option>Administrativo</option><option>Técnico</option><option>Jefe de obra</option><option>Otro</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tipo contrato</label>
+        <select class="form-input" id="trab-contrato">
+          <option>Indefinido</option><option>Temporal</option><option>Obra y servicio</option>
+          <option>Prácticas</option><option>Parcial</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Fecha de alta</label>
+        <input class="form-input" type="date" id="trab-alta">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Estado</label>
+        <select class="form-input" id="trab-estado">
+          <option>Activo</option><option>Baja temporal</option><option>Baja definitiva</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;margin:14px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)">NÓMINA MENSUAL</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Salario bruto / mes €</label>
+        <input class="form-input" type="number" id="trab-bruto" step="0.01" placeholder="2000.00" oninput="calcNomina()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">IRPF % (retención)</label>
+        <input class="form-input" type="number" id="trab-irpf" step="0.1" placeholder="15" value="15" oninput="calcNomina()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">SS trabajador % </label>
+        <input class="form-input" type="number" id="trab-ss-trab" step="0.1" placeholder="6.35" value="6.35" oninput="calcNomina()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">SS empresa %</label>
+        <input class="form-input" type="number" id="trab-ss-emp" step="0.1" placeholder="30" value="30" oninput="calcNomina()">
+      </div>
+    </div>
+
+    <!-- Resumen cálculo nómina -->
+    <div style="background:var(--blue-light);border-radius:8px;padding:12px;margin-top:8px">
+      <div style="font-size:11px;font-weight:700;color:var(--navy);margin-bottom:8px">📋 Resumen nómina calculado</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px">
+        <div style="text-align:center">
+          <div style="font-size:10px;color:var(--text-soft)">Bruto/mes</div>
+          <div style="font-weight:700;font-size:14px" id="trab-calc-bruto">—</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:10px;color:var(--text-soft)">Neto/mes</div>
+          <div style="font-weight:700;font-size:14px;color:var(--green)" id="trab-calc-neto">—</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:10px;color:var(--text-soft)">SS empresa/mes</div>
+          <div style="font-weight:700;font-size:14px;color:var(--amber)" id="trab-calc-ss-emp">—</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:10px;color:var(--text-soft)">Coste empresa/mes</div>
+          <div style="font-weight:700;font-size:16px;color:var(--red)" id="trab-calc-total">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;margin:14px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)">NOTAS</div>
+    <textarea class="form-input" id="trab-notas" rows="2" placeholder="Observaciones, condiciones especiales…"></textarea>
+  </div>
+  <div class="modal-foot">
+    <button class="btn btn-ghost" onclick="closeModal('m-trabajador')">Cancelar</button>
+    <button class="btn btn-primary" onclick="saveTrabajador()">💾 Guardar</button>
   </div>
 </div>
 </div>
