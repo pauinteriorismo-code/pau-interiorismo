@@ -1224,7 +1224,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
             <div class="cuenta-row"><span>IVA Soportado compras</span><span style="color:var(--text-soft)">472</span><span id="cnt-iva-comp">—</span></div>
             <div class="cuenta-row total"><span>TOTAL GASTOS c/IVA</span><span></span><span id="cnt-gastos-tot">—</span></div>
             <div class="cuenta-row result" id="cnt-result-row"><span>RESULTADO NETO (base imp.)</span><span></span><span id="cnt-result">—</span></div>
-            <div class="cuenta-row"><span>Margen bruto %</span><span></span><span id="cnt-margen">—</span></div>
+            <div class="cuenta-row"><span>Margen neto %</span><span></span><span id="cnt-margen">—</span></div>
           </div>
         </div>
         <div>
@@ -3692,8 +3692,11 @@ async function loadFacturas(){
         <td>${bE(f.estado)}</td>
         <td style="display:flex;gap:3px;align-items:center">
           <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px" onclick="editFactura('${f.id}')">✏️</button>
-          ${!esC?`<button class="btn btn-sm ${yaCobrada?'btn-green':'btn-ghost'}" style="font-size:10px;padding:2px 6px" title="${yaCobrada?'Ya cobrada':'Marcar como cobrada'}" onclick="marcarFacturaCobrada('${f.id}')">✅</button>
-          <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px" onclick="marcarFacturaParcial('${f.id}')">💶</button>`:''}
+          ${!esC
+            ? `<button class="btn btn-sm ${yaCobrada?'btn-green':'btn-ghost'}" style="font-size:10px;padding:2px 6px" title="${yaCobrada?'Ya cobrada':'Marcar como cobrada'}" onclick="marcarFacturaCobrada('${f.id}')">✅</button>
+               <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px" onclick="marcarFacturaParcial('${f.id}')">💶</button>`
+            : `<button class="btn btn-sm ${yaCobrada?'btn-green':'btn-ghost'}" style="font-size:10px;padding:2px 6px" title="${yaCobrada?'Ya pagada':'Marcar como pagada'}" onclick="marcarFacturaPagada('${f.id}')">💳</button>`
+          }
           <button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('facturas','${f.id}','${(f.num_factura||'factura').replace(/'/g,"\\'")}')" >🗑</button>
         </td>
       </tr>`;
@@ -4272,6 +4275,19 @@ async function abrirComparativa(){
 // ════════════════════════════════════════════════════════════════
 // MEJORA 4: ESTADO DE COBRO VISUAL EN FACTURAS
 // ════════════════════════════════════════════════════════════════
+function marcarFacturaPagada(id){
+  const f = FC.find(x=>x.id===id); if(!f) return;
+  const tot = (f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100);
+  if(f.estado==='Pagada'){
+    toast(`${f.num_factura} ya está marcada como pagada`,'error'); return;
+  }
+  if(confirm(`¿Marcar factura ${f.num_factura} como PAGADA (${fmt(tot)})?`)){
+    sb('facturas','PATCH',{estado:'Pagada',importe_cobrado:tot},null,`?id=eq.${id}`)
+      .then(()=>{ toast('Factura marcada como pagada 💳'); loadFacturas(); })
+      .catch(e=>toast('Error: '+e.message,'error'));
+  }
+}
+
 function marcarFacturaCobrada(id){
   const f = FC.find(x=>x.id===id); if(!f) return;
   const tot = (f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100);
@@ -4947,27 +4963,37 @@ async function conciliarMovimientos(){
 
 async function aplicarConciliacion(){
   const checkboxes = document.querySelectorAll('[id^="conc-chk-"]:checked');
-  const idxs = [...checkboxes].map(cb=>parseInt(cb.dataset.idx));
-  // Rebuild from current results
-  const tbody = document.getElementById('conc-tbody');
-  const rows = tbody.querySelectorAll('tr');
+  const idxsSeleccionados = new Set([...checkboxes].map(cb=>parseInt(cb.dataset.idx)));
+  if(!idxsSeleccionados.size){ toast('Selecciona al menos una coincidencia','error'); return; }
+
   let aplicados = 0;
-  for(const c of conciliacionPendiente){
+  conciliacionPendiente.forEach((c,i)=>{
+    if(!idxsSeleccionados.has(i)) return; // solo los marcados
+  });
+
+  for(let i=0; i<conciliacionPendiente.length; i++){
+    if(!idxsSeleccionados.has(i)) continue;
+    const c = conciliacionPendiente[i];
     try{
       if(c.factura.tipo==='factura'){
+        // Factura de compra → estado Pagada
         await sb('facturas','PATCH',{estado:'Pagada',importe_cobrado:c.factura.total},null,`?id=eq.${c.factura.id}`);
+        // Actualizar cache local para que el botón 💳 se ponga verde inmediatamente
+        const fLocal = FC.find(f=>f.id===c.factura.id);
+        if(fLocal){ fLocal.estado='Pagada'; fLocal.importe_cobrado=c.factura.total; }
       } else {
         await sb('compras','PATCH',{estado_pago:'Pagado'},null,`?id=eq.${c.factura.id}`);
       }
       aplicados++;
-    }catch(e){}
+    }catch(e){ console.warn('Error conciliando',e); }
   }
-  toast(`${aplicados} pago(s) marcados como pagados ✅`);
+  toast(`✅ ${aplicados} pago(s) marcados como pagados automáticamente`);
   conciliacionPendiente=[];
   document.getElementById('conc-resultados').style.display='none';
   document.getElementById('csv-input').value='';
   document.getElementById('csv-preview').style.display='none';
   loadConciliacion();
+  loadFacturas(); // refrescar tabla de facturas para que se vea 💳 en verde
 }
 
 // ════════════════════════════════════════════════════════════════
