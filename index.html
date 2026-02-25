@@ -3639,16 +3639,18 @@ async function loadFacturas(){
     const bar=document.getElementById('fk-b-bar');
     if(bar){bar.style.width=pct+'%';bar.style.background=pct<60?'var(--green)':pct<85?'var(--amber)':'var(--red)';}
     sv('fk-b-bar-lbl',`Gastos: ${pct.toFixed(0)}% sobre ingresos`);
-    // Poblar filtros desplegables
-    const contras = [...new Set(FC.map(f=>{
+    // Poblar filtros desplegables con nombres reales
+    const contrasNombres = [...new Set(FC.map(f=>{
       const esC=(f.tipo_factura||'Venta')==='Compra';
-      return esC?(f.proveedor_id||f.cliente_id||''):(f.cliente_id||'');
+      return esC
+        ?(ProvC.find(p=>p.nombre===f.proveedor_id)?.nombre || f.proveedor_id || '')
+        :(CC.find(c=>c.cliente_id===f.cliente_id)?.nombre || f.cliente_id || '');
     }).filter(Boolean))].sort();
     const selContra = document.getElementById('filt-fac-contra');
     if(selContra){
       const cur=selContra.value;
       selContra.innerHTML='<option value="">— Cliente / Proveedor —</option>'+
-        contras.map(c=>`<option value="${c.toLowerCase()}">${c}</option>`).join('');
+        contrasNombres.map(c=>`<option value="${c.toLowerCase()}">${c}</option>`).join('');
       if(cur) selContra.value=cur;
     }
     const vtos = [...new Set(FC.map(f=>f.fecha_vencimiento).filter(Boolean))].sort();
@@ -3677,7 +3679,9 @@ async function loadFacturas(){
       const badge=esC
         ?'<span style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:8px;background:#fdecea;color:var(--red)">📥 Compra</span>'
         :'<span style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:8px;background:#e8f5ee;color:var(--green)">📤 Venta</span>';
-      const contra=esC?(f.proveedor_id||f.cliente_id||'—'):(f.cliente_id||'—');
+      const contra=esC
+        ?(ProvC.find(p=>p.nombre===f.proveedor_id)?.nombre || f.proveedor_id || '—')
+        :(CC.find(c=>c.cliente_id===f.cliente_id)?.nombre || f.cliente_id || '—');
       const yaCobrada = f.estado==='Cobrada'||f.estado==='Pagada';
       return `<tr data-tipo="${tipo}" data-contra="${contra.toLowerCase()}" data-vto="${f.fecha_vencimiento||''}" data-estado="${f.estado||''}" data-search="${tipo.toLowerCase()} ${(f.num_factura||'')} ${contra} ${f.proyecto_id||''} ${f.concepto||''}".toLowerCase()>
         <td>${badge}</td>
