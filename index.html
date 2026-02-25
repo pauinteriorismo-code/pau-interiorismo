@@ -240,6 +240,7 @@ tbody td{padding:7px 10px;vertical-align:middle}
   <div class="nav-section">
     <div class="nav-label">Principal</div>
     <div class="nav-item active" data-view="gerencia"><span class="ni">🏠</span><span>Gerencia</span></div>
+    <div class="nav-item" data-view="agenda"><span class="ni">🔔</span><span>Agenda</span><span class="nav-badge" id="agenda-badge" style="display:none">0</span></div>
     <div class="nav-item" data-view="clientes"><span class="ni">🤝</span><span>Clientes</span></div>
     <div class="nav-item" data-view="proyectos"><span class="ni">📁</span><span>Proyectos</span></div>
   </div>
@@ -688,7 +689,77 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       </div>
     </div>
 
+    <!-- ═══ AGENDA ═══ -->
+    <div class="view" id="view-agenda">
+      <div class="search-bar">
+        <button class="btn btn-primary" onclick="openAgendaModal()">＋ Nuevo aviso</button>
+        <div style="display:flex;gap:6px;margin-left:auto;align-items:center">
+          <select class="form-input" style="width:140px" id="ag-filtro" onchange="renderAgenda()">
+            <option value="todos">Todos</option>
+            <option value="pendiente">Pendientes</option>
+            <option value="hoy">Hoy</option>
+            <option value="esta_semana">Esta semana</option>
+            <option value="completado">Completados</option>
+          </select>
+          <button class="btn btn-ghost btn-sm" onclick="loadAgenda()">🔄</button>
+        </div>
+      </div>
+
+      <!-- KPIs -->
+      <div class="kpi-grid-3" style="grid-template-columns:repeat(3,1fr)">
+        <div class="kpi amber">
+          <div class="kpi-label">⏳ Pendientes</div>
+          <div class="kpi-value" id="ag-kpi-pendientes">—</div>
+          <div class="kpi-sub">Por completar</div>
+        </div>
+        <div class="kpi red">
+          <div class="kpi-label">🔴 Vencidos</div>
+          <div class="kpi-value" id="ag-kpi-vencidos">—</div>
+          <div class="kpi-sub">Ya pasaron</div>
+        </div>
+        <div class="kpi green">
+          <div class="kpi-label">✅ Completados</div>
+          <div class="kpi-value" id="ag-kpi-completados">—</div>
+          <div class="kpi-sub">Este mes</div>
+        </div>
+      </div>
+
+      <!-- HOY -->
+      <div class="card" id="ag-card-hoy" style="border-left:4px solid var(--copper);display:none">
+        <div class="card-header">
+          <div class="card-title">📅 Hoy</div>
+        </div>
+        <div class="card-body" id="ag-hoy-list"></div>
+      </div>
+
+      <!-- PRÓXIMOS -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🔔 Avisos y citas</div>
+        </div>
+        <div class="card-body" style="padding:0">
+          <div class="table-wrap">
+            <table>
+              <thead><tr>
+                <th style="width:40px"></th>
+                <th>Descripción</th>
+                <th>Fecha</th>
+                <th>Hora</th>
+                <th>Tipo</th>
+                <th>Proyecto</th>
+                <th>Prioridad</th>
+                <th>Estado</th>
+                <th style="width:90px"></th>
+              </tr></thead>
+              <tbody id="ag-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ═══ CLIENTES ═══ -->
+
     <div class="view" id="view-clientes">
       <div class="search-bar">
         <div class="search-wrap"><span class="search-icon">🔍</span><input class="form-input" id="search-clientes" placeholder="Buscar cliente…" oninput="filterTable('clientes-tbody','search-clientes')"></div>
@@ -2033,6 +2104,7 @@ const sbDelete=(t,id)=>sb(t,'DELETE',null,id);
 // ═══════════════════════════════════════════
 const META={
   gerencia:{t:'Gerencia · Panel ejecutivo',b:'Datos en tiempo real · Todos los proyectos'},
+  agenda:{t:'Agenda · Recordatorios',b:'Avisos y citas con notificación'},
   clientes:{t:'Clientes',b:'Base de datos centralizada'},
   proyectos:{t:'Proyectos',b:'Todos los proyectos'},
   presupuesto:{t:'Presupuesto · Constructor',b:'Búsqueda CYPE + Tarifario propio'},
@@ -3924,7 +3996,7 @@ async function saveConfig(){
 // LOADERS MAP
 // ═══════════════════════════════════════════
 const loaders={
-  gerencia:loadGerencia,clientes:loadClientes,proyectos:loadProyectos,
+  gerencia:loadGerencia,agenda:loadAgenda,clientes:loadClientes,proyectos:loadProyectos,
   presupuesto:()=>{initPresupuesto();if(document.getElementById('pres-proyecto-sel').value)loadPresupuesto();},
   comparativa:()=>{initComparativa();if(document.getElementById('comp-proyecto-sel').value)loadComparativa();},
   tarifario:loadTarifario,cype:loadCype,interiorismo:loadInteriorismo,
@@ -5310,6 +5382,273 @@ async function ejecutarImportProveedores(){
 }
 
 
+// ════════════════════════════════════════════════════════════════
+// AGENDA · AVISOS Y NOTIFICACIONES
+// ════════════════════════════════════════════════════════════════
+let AgC = [];
+let agendaTimer = null;
+
+const AG_TIPOS = {
+  'Reunión':'🤝','Visita obra':'🏗','Llamada':'📞','Entrega':'📦',
+  'Pago':'💶','Recordatorio':'📌','Otro':'📋'
+};
+
+async function loadAgenda(){
+  const tbody = document.getElementById('ag-tbody');
+  if(!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="9" class="loading">Cargando…</td></tr>';
+  try{
+    AgC = await sbGet('agenda','?order=fecha.asc,hora.asc');
+    renderAgenda();
+    actualizarBadgeAgenda();
+    // Poblar proyecto en modal
+    const sel = document.getElementById('ag-proyecto');
+    if(sel){
+      if(!PC.length) PC = await sbGet('proyectos').catch(()=>[]);
+      sel.innerHTML = '<option value="">— Sin proyecto —</option>'+
+        PC.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
+    }
+  }catch(e){
+    tbody.innerHTML=`<tr><td colspan="9" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;
+  }
+}
+
+function renderAgenda(){
+  const tbody = document.getElementById('ag-tbody');
+  if(!tbody) return;
+  const filtro = document.getElementById('ag-filtro')?.value || 'todos';
+  const hoy = new Date().toISOString().split('T')[0];
+  const ahora = new Date();
+
+  // Calcular fin de semana
+  const finSemana = new Date(ahora);
+  finSemana.setDate(ahora.getDate() + 7);
+  const finSemanaStr = finSemana.toISOString().split('T')[0];
+
+  let items = [...AgC];
+
+  // Filtrar
+  if(filtro === 'pendiente') items = items.filter(a => a.estado !== 'Completado' && a.fecha >= hoy);
+  else if(filtro === 'hoy') items = items.filter(a => a.fecha === hoy);
+  else if(filtro === 'esta_semana') items = items.filter(a => a.fecha >= hoy && a.fecha <= finSemanaStr);
+  else if(filtro === 'completado') items = items.filter(a => a.estado === 'Completado');
+
+  // KPIs
+  const pendientes = AgC.filter(a => a.estado !== 'Completado' && a.fecha >= hoy).length;
+  const vencidos = AgC.filter(a => a.estado !== 'Completado' && a.fecha < hoy).length;
+  const mesActual = new Date().toISOString().slice(0,7);
+  const completados = AgC.filter(a => a.estado === 'Completado' && (a.fecha||'').startsWith(mesActual)).length;
+  document.getElementById('ag-kpi-pendientes').textContent = pendientes;
+  document.getElementById('ag-kpi-vencidos').textContent = vencidos;
+  document.getElementById('ag-kpi-completados').textContent = completados;
+
+  // Sección HOY
+  const cardHoy = document.getElementById('ag-card-hoy');
+  const listHoy = document.getElementById('ag-hoy-list');
+  const itemsHoy = AgC.filter(a => a.fecha === hoy && a.estado !== 'Completado');
+  if(itemsHoy.length > 0 && cardHoy){
+    cardHoy.style.display = '';
+    listHoy.innerHTML = itemsHoy.map(a => `
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+        <span style="font-size:20px">${AG_TIPOS[a.tipo]||'📋'}</span>
+        <div style="flex:1">
+          <div style="font-weight:700;font-size:13px">${a.descripcion}</div>
+          <div style="font-size:11px;color:var(--text-soft)">${a.hora?'⏰ '+a.hora:''} ${a.proyecto_id?'· 📁 '+a.proyecto_id:''}</div>
+        </div>
+        ${a.prioridad==='alta'?'<span class="badge b-red">🔴 Alta</span>':''}
+        <button class="btn btn-green btn-sm" onclick="completarAgenda('${a.id}')">✅ Hecho</button>
+      </div>`).join('');
+  } else if(cardHoy){
+    cardHoy.style.display = 'none';
+  }
+
+  // Tabla principal
+  if(!items.length){
+    tbody.innerHTML='<tr><td colspan="9"><div class="empty"><div class="empty-icon">🔔</div><div class="empty-text">Sin avisos'+
+      (filtro!=='todos'?' con este filtro':'')+'</div><button class="btn btn-primary btn-sm" onclick="openModal(\'m-agenda\')">＋ Crear aviso</button></div></td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = items.map(a => {
+    const esVencido = a.fecha < hoy && a.estado !== 'Completado';
+    const esHoy = a.fecha === hoy;
+    const rowStyle = esVencido ? 'background:#fff5f5' : esHoy ? 'background:#fffbf0' : '';
+    const prioBadge = a.prioridad==='alta'?'<span class="badge b-red">Alta</span>':
+                      a.prioridad==='baja'?'<span class="badge b-gray">Baja</span>':
+                      '<span class="badge b-blue">Normal</span>';
+    const estadoBadge = a.estado==='Completado'?'<span class="badge b-green">✅ Hecho</span>':
+                        esVencido?'<span class="badge b-red">⚠️ Vencido</span>':
+                        esHoy?'<span class="badge b-amber">📅 Hoy</span>':
+                        '<span class="badge b-gray">Pendiente</span>';
+    return `<tr style="${rowStyle}" data-search="${(a.descripcion+a.tipo+a.proyecto_id).toLowerCase()}">
+      <td style="font-size:18px;text-align:center">${AG_TIPOS[a.tipo]||'📋'}</td>
+      <td><strong>${a.descripcion||'—'}</strong>${a.notas?`<div style="font-size:11px;color:var(--text-soft)">${a.notas}</div>`:''}</td>
+      <td class="td-mono">${fmtD(a.fecha)}</td>
+      <td class="td-mono" style="font-weight:${a.hora?'700':'400'};color:${a.hora?'var(--navy)':'var(--text-soft)'}">${a.hora||'—'}</td>
+      <td>${a.tipo||'—'}</td>
+      <td class="td-mono" style="color:var(--text-soft)">${a.proyecto_id||'—'}</td>
+      <td>${prioBadge}</td>
+      <td>${estadoBadge}</td>
+      <td><div class="td-actions">
+        ${a.estado!=='Completado'?`<button class="btn btn-green btn-icon btn-sm" title="Completar" onclick="completarAgenda('${a.id}')">✅</button>`:''}
+        <button class="btn btn-ghost btn-icon btn-sm" title="Editar" onclick="editAgenda('${a.id}')">✏️</button>
+        <button class="btn btn-danger btn-icon btn-sm" title="Eliminar" onclick="confirmDelete('agenda','${a.id}','${(a.descripcion||'').replace(/'/g,'')}')">🗑</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+function openAgendaModal(){
+  document.getElementById('ag-id').value='';
+  document.getElementById('ag-desc').value='';
+  document.getElementById('ag-fecha').value=new Date().toISOString().split('T')[0];
+  document.getElementById('ag-hora').value='';
+  document.getElementById('ag-tipo').value='Reunión';
+  document.getElementById('ag-prioridad').value='normal';
+  document.getElementById('ag-notas').value='';
+  document.getElementById('ag-notif').checked=true;
+  openModal('m-agenda');
+}
+
+function editAgenda(id){
+  const a = AgC.find(x=>x.id==id);
+  if(!a) return;
+  document.getElementById('ag-id').value=a.id;
+  document.getElementById('ag-desc').value=a.descripcion||'';
+  document.getElementById('ag-fecha').value=a.fecha||'';
+  document.getElementById('ag-hora').value=a.hora||'';
+  document.getElementById('ag-tipo').value=a.tipo||'Reunión';
+  document.getElementById('ag-prioridad').value=a.prioridad||'normal';
+  document.getElementById('ag-notas').value=a.notas||'';
+  document.getElementById('ag-notif').checked=a.notificacion!==false;
+  if(document.getElementById('ag-proyecto')) document.getElementById('ag-proyecto').value=a.proyecto_id||'';
+  openModal('m-agenda');
+}
+
+async function saveAgenda(){
+  const desc = document.getElementById('ag-desc').value.trim();
+  if(!desc){ toast('La descripción es obligatoria','error'); return; }
+  const fecha = document.getElementById('ag-fecha').value;
+  if(!fecha){ toast('La fecha es obligatoria','error'); return; }
+  const id = document.getElementById('ag-id').value;
+  const d = {
+    descripcion: desc,
+    fecha,
+    hora: document.getElementById('ag-hora').value||null,
+    tipo: document.getElementById('ag-tipo').value,
+    prioridad: document.getElementById('ag-prioridad').value,
+    proyecto_id: document.getElementById('ag-proyecto')?.value||null,
+    notas: document.getElementById('ag-notas').value||null,
+    notificacion: document.getElementById('ag-notif').checked,
+    estado: 'Pendiente',
+  };
+  try{
+    if(id){
+      await sb('agenda','PATCH',d,null,`?id=eq.${id}`);
+      toast('Aviso actualizado ✅');
+    } else {
+      await sbPost('agenda',d);
+      toast('Aviso guardado ✅');
+    }
+    closeModal('m-agenda');
+    await loadAgenda();
+    solicitarPermisosNotificacion();
+  }catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+async function completarAgenda(id){
+  try{
+    await sb('agenda','PATCH',{estado:'Completado'},null,`?id=eq.${id}`);
+    toast('✅ Marcado como completado');
+    await loadAgenda();
+  }catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+function actualizarBadgeAgenda(){
+  const hoy = new Date().toISOString().split('T')[0];
+  const pendHoy = AgC.filter(a => a.estado !== 'Completado' && a.fecha <= hoy).length;
+  const badge = document.getElementById('agenda-badge');
+  if(badge){
+    badge.textContent = pendHoy;
+    badge.style.display = pendHoy > 0 ? '' : 'none';
+  }
+}
+
+// ── NOTIFICACIONES ──
+function solicitarPermisosNotificacion(){
+  if('Notification' in window && Notification.permission === 'default'){
+    Notification.requestPermission();
+  }
+}
+
+function reproducirSonidoAviso(){
+  try{
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    // Secuencia de 3 tonos
+    [0, 0.3, 0.6].forEach((t, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.value = i===0?880:i===1?1046:1318;
+      osc.type = 'sine';
+      gain.gain.setValueAtTime(0.4, ctx.currentTime+t);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+t+0.25);
+      osc.start(ctx.currentTime+t);
+      osc.stop(ctx.currentTime+t+0.3);
+    });
+  }catch(e){ console.warn('Audio no disponible'); }
+}
+
+function lanzarNotificacion(aviso){
+  reproducirSonidoAviso();
+  if('Notification' in window && Notification.permission === 'granted'){
+    const n = new Notification(`🔔 ${aviso.tipo||'Aviso'}: ${aviso.descripcion}`, {
+      body: `${aviso.hora||''} ${aviso.proyecto_id?'· Proyecto: '+aviso.proyecto_id:''}`,
+      icon: '/favicon.ico',
+      badge: '/favicon.ico',
+      tag: 'agenda-'+aviso.id,
+      requireInteraction: true,
+    });
+    n.onclick = ()=>{ window.focus(); navTo('agenda'); n.close(); };
+  } else {
+    // Fallback: toast visible
+    toast(`🔔 AVISO: ${aviso.descripcion}`, 'success');
+  }
+}
+
+function iniciarCheckerAgenda(){
+  // Comprobar cada 30 segundos si hay avisos que lanzar
+  if(agendaTimer) clearInterval(agendaTimer);
+  agendaTimer = setInterval(async ()=>{
+    const ahora = new Date();
+    const hoy = ahora.toISOString().split('T')[0];
+    const horaActual = ahora.getHours().toString().padStart(2,'0')+':'+ahora.getMinutes().toString().padStart(2,'0');
+    // Recargar desde BD cada 2 min (cada 4 ticks)
+    if(ahora.getMinutes() % 2 === 0 && ahora.getSeconds() < 35){
+      try{ AgC = await sbGet('agenda','?order=fecha.asc'); actualizarBadgeAgenda(); }catch(e){}
+    }
+    // Buscar avisos que coincidan ahora
+    AgC.filter(a =>
+      a.estado !== 'Completado' &&
+      a.notificacion !== false &&
+      a.fecha === hoy &&
+      a.hora === horaActual
+    ).forEach(a => {
+      lanzarNotificacion(a);
+      // Marcamos como notificado en memoria para no repetir
+      a._notificado = true;
+    });
+  }, 30000);
+}
+
+// Sobrescribir openModal para agenda
+const _origOpenModal = openModal;
+// Patch para agenda-badge al abrir modal
+document.addEventListener('DOMContentLoaded', ()=>{
+  solicitarPermisosNotificacion();
+  iniciarCheckerAgenda();
+});
+
 // ═══ PWA SERVICE WORKER ═══
 if('serviceWorker' in navigator){
   window.addEventListener('load', ()=>{
@@ -5376,6 +5715,76 @@ if('serviceWorker' in navigator){
     <button class="btn btn-ghost" onclick="closeModal('m-importar-holded')">Cancelar</button>
     <button class="btn btn-primary" id="btn-importar-holded" style="display:none"
       onclick="ejecutarImportHolded()">📥 Importar facturas seleccionadas</button>
+  </div>
+</div>
+</div>
+
+<!-- ═══ MODAL AGENDA ═══ -->
+<div class="overlay" id="m-agenda">
+<div class="modal" style="width:540px">
+  <div class="modal-head">
+    <div class="modal-title">🔔 Nuevo aviso / Cita</div>
+    <button class="modal-close" onclick="closeModal('m-agenda')">×</button>
+  </div>
+  <div class="modal-body">
+    <input type="hidden" id="ag-id">
+    <div class="form-grid">
+      <div class="form-group fg-full">
+        <label class="form-label">Descripción *</label>
+        <input class="form-input" id="ag-desc" placeholder="Ej: Reunión con cliente · Visita obra · Llamada…">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Fecha *</label>
+        <input class="form-input" type="date" id="ag-fecha">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Hora aviso</label>
+        <input class="form-input" type="time" id="ag-hora" placeholder="HH:MM">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tipo</label>
+        <select class="form-input" id="ag-tipo">
+          <option>Reunión</option>
+          <option>Visita obra</option>
+          <option>Llamada</option>
+          <option>Entrega</option>
+          <option>Pago</option>
+          <option>Recordatorio</option>
+          <option>Otro</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Prioridad</label>
+        <select class="form-input" id="ag-prioridad">
+          <option value="normal">Normal</option>
+          <option value="alta">Alta 🔴</option>
+          <option value="baja">Baja</option>
+        </select>
+      </div>
+      <div class="form-group fg-full">
+        <label class="form-label">Proyecto (opcional)</label>
+        <select class="form-input" id="ag-proyecto">
+          <option value="">— Sin proyecto —</option>
+        </select>
+      </div>
+      <div class="form-group fg-full">
+        <label class="form-label">Notas</label>
+        <textarea class="form-input" id="ag-notas" rows="2" placeholder="Detalles adicionales…"></textarea>
+      </div>
+      <div class="form-group fg-full">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text-mid)">
+          <input type="checkbox" id="ag-notif" checked style="width:16px;height:16px">
+          🔔 Activar notificación cuando llegue la hora
+        </label>
+        <div style="font-size:11px;color:var(--text-soft);margin-top:4px">
+          El navegador/móvil emitirá un aviso sonoro en la hora indicada. Debes mantener la app abierta o en segundo plano.
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-foot">
+    <button class="btn btn-ghost" onclick="closeModal('m-agenda')">Cancelar</button>
+    <button class="btn btn-primary" onclick="saveAgenda()">💾 Guardar aviso</button>
   </div>
 </div>
 </div>
