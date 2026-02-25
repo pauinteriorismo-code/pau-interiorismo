@@ -4159,10 +4159,11 @@ async function loadFacturas(){
         ?'<span style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:8px;background:#fdecea;color:var(--red)">📥 Compra</span>'
         :'<span style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:8px;background:#e8f5ee;color:var(--green)">📤 Venta</span>';
       const contra=esC
-        ?(ProvC.find(p=>p.nombre===f.proveedor_id)?.nombre || f.proveedor_id || '—')
-        :(CC.find(c=>c.cliente_id===f.cliente_id)?.nombre || f.cliente_id || '—');
+        ?(ProvC.find(p=>String(p.id)===String(f.proveedor_id))?.nombre || f.proveedor_id || '—')
+        :(CC.find(c=>String(c.id)===String(f.cliente_id)||c.cliente_id===f.cliente_id)?.nombre || f.cliente_id || '—');
       const yaCobrada = f.estado==='Cobrada'||f.estado==='Pagada';
-      return `<tr data-tipo="${tipo}" data-contra="${contra.toLowerCase()}" data-vto="${f.fecha_vencimiento||''}" data-estado="${f.estado||''}" data-search="${tipo.toLowerCase()} ${(f.num_factura||'')} ${contra} ${f.proyecto_id||''} ${f.concepto||''}".toLowerCase()>
+      const srch=(tipo+' '+(f.num_factura||'')+' '+contra+' '+(f.proyecto_id||'')+' '+(f.concepto||'')).toLowerCase();
+      return `<tr data-tipo="${tipo}" data-contra="${contra.toLowerCase()}" data-vto="${f.fecha_vencimiento||''}" data-estado="${f.estado||''}" data-search="${srch}">
         <td>${badge}</td>
         <td class="td-mono" style="font-weight:700">${f.num_factura||'—'}</td>
         <td>${fmtD(f.fecha_emision)}</td>
@@ -4423,7 +4424,7 @@ async function importarLineasPresupuesto(){
 }
 
 function editFactura(id){
-  const f = FC.find(x=>x.id===id); if(!f) return;
+  const f = FC.find(x=>String(x.id)===String(id)); if(!f){ toast('Factura no encontrada','error'); return; }
   const esC = (f.tipo_factura||'Venta')==='Compra';
 
   // 1. Configurar tipo en el modal (SIN limpiar campos, SIN abrir)
