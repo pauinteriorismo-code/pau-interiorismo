@@ -1994,12 +1994,21 @@ function setUserDisplay(u){
   document.getElementById('user-name').textContent=n;
   document.getElementById('user-av').textContent=n.substring(0,2).toUpperCase();
 }
-document.getElementById('login-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
-if(sessionStorage.getItem('pau-auth')==='1'){
-  document.getElementById('login-screen').style.display='none';
+// ── ARRANQUE: esperar a que el DOM esté listo ──
+function arrancar(){
+  const passEl = document.getElementById('login-pass');
+  if(passEl) passEl.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+  // Auto-login: siempre entrar directamente sin contraseña
+  const loginScreen = document.getElementById('login-screen');
+  if(loginScreen) loginScreen.style.display='none';
   setUserDisplay(sessionStorage.getItem('pau-user')||'jose');
-  document.addEventListener('DOMContentLoaded',init);
-  if(document.readyState!=='loading')init();
+  sessionStorage.setItem('pau-auth','1');
+  init();
+}
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded', arrancar);
+} else {
+  arrancar();
 }
 
 // ═══════════════════════════════════════════
