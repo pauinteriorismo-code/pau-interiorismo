@@ -1398,6 +1398,43 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         </div>
 
         <div class="card" style="margin-top:14px">
+          <div class="card-header">
+            <div class="card-title">🧾 Pie de factura</div>
+            <button class="btn btn-ghost btn-sm" onclick="savePieFactura()">💾 Guardar</button>
+          </div>
+          <div class="card-body">
+            <div class="info-box">Este texto aparecerá automáticamente en el pie de todas las facturas de venta. Indícalo una vez y se aplicará siempre.</div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">Número de cuenta (IBAN)</label>
+                <input class="form-input" id="cfg-iban" placeholder="ES00 0000 0000 0000 0000 0000">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Banco / Entidad</label>
+                <input class="form-input" id="cfg-banco" placeholder="Ej: CaixaBank, Sabadell…">
+              </div>
+              <div class="form-group fg-full">
+                <label class="form-label">Condiciones de pago</label>
+                <input class="form-input" id="cfg-condiciones-pago" placeholder="Ej: Pago a 30 días desde la fecha de factura mediante transferencia bancaria">
+              </div>
+              <div class="form-group fg-full">
+                <label class="form-label">Texto legal / Nota adicional</label>
+                <textarea class="form-input" id="cfg-nota-legal" rows="3" placeholder="Ej: En caso de impago se aplicarán los intereses de demora previstos en la Ley 3/2004. Los datos del presente documento son confidenciales…"></textarea>
+              </div>
+              <div class="form-group fg-full">
+                <label class="form-label">Texto libre adicional</label>
+                <textarea class="form-input" id="cfg-pie-extra" rows="2" placeholder="Cualquier otro texto que quieras incluir en el pie de factura…"></textarea>
+              </div>
+            </div>
+            <!-- Preview -->
+            <div style="margin-top:12px;border:1px solid var(--border);border-radius:6px;padding:12px;background:var(--bg)">
+              <div style="font-size:10px;font-weight:700;color:var(--text-soft);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em">Vista previa del pie</div>
+              <div id="cfg-pie-preview" style="font-size:11px;color:var(--navy)">—</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:14px">
           <div class="card-header"><div class="card-title">📁 Categorías de partidas</div></div>
           <div class="card-body">
             <div class="info-box">Define si cada categoría aplica CI+GG+BI por defecto al añadirla al presupuesto.</div>
@@ -4555,6 +4592,7 @@ function previsualizarFactura(){
     +(d.pdte>0.01?'<div class="tr" style="color:#e67e22;font-weight:700"><span>Pendiente</span><span>'+fmtE(d.pdte)+'</span></div>':'')
     +'</div>'
     +'</div>'
+    +'<div style="padding:12px 28px 0">'+_getPieHtml()+'</div>'
     +'<div class="foot">PAU INTERIORISMO S.L. · CIF B-56909641 · C/ Tomás y Valiente Nº 6 Bajo · 46290 Alcàsser (Valencia) · Tel: 961 20 01 87</div>'
   +'</div>'
   +'</body></html>';
@@ -4863,6 +4901,16 @@ async function loadConfiguracion(){
     const total=(parseFloat(map.ci_pct)||3)+(parseFloat(map.gg_pct)||13)+(parseFloat(map.bi_pct)||6);
     document.getElementById('cfg-total-ci').value=total.toFixed(1)+'%';
     ['cfg-ci','cfg-gg','cfg-bi'].forEach(id=>{document.getElementById(id).addEventListener('input',()=>{const ci=parseFloat(document.getElementById('cfg-ci').value)||0,gg=parseFloat(document.getElementById('cfg-gg').value)||0,bi=parseFloat(document.getElementById('cfg-bi').value)||0;document.getElementById('cfg-total-ci').value=(ci+gg+bi).toFixed(1)+'%';});});
+    // ── PIE DE FACTURA ──
+    document.getElementById('cfg-iban').value           = map.pie_iban||'';
+    document.getElementById('cfg-banco').value          = map.pie_banco||'';
+    document.getElementById('cfg-condiciones-pago').value = map.pie_condiciones||'';
+    document.getElementById('cfg-nota-legal').value     = map.pie_nota_legal||'';
+    document.getElementById('cfg-pie-extra').value      = map.pie_extra||'';
+    actualizarPreviewPie();
+    // Live preview
+    ['cfg-iban','cfg-banco','cfg-condiciones-pago','cfg-nota-legal','cfg-pie-extra']
+      .forEach(id=>document.getElementById(id)?.addEventListener('input', actualizarPreviewPie));
   }catch(e){toast('Configura la tabla configuracion ejecutando el SQL de nuevas tablas','error');}
   await loadDiasPago();
 }
@@ -4890,9 +4938,78 @@ async function saveConfig(){
   }
 }
 
-// ═══════════════════════════════════════════
-// LOADERS MAP
-// ═══════════════════════════════════════════
+// ── PIE DE FACTURA ────────────────────────────────────────
+let _PIE_FACTURA = {};
+
+async function loadPieFactura(){
+  try{
+    const data=await sbGet('configuracion','?clave=in.(pie_iban,pie_banco,pie_condiciones,pie_nota_legal,pie_extra)');
+    data.forEach(d=>{ _PIE_FACTURA[d.clave]=d.valor; });
+  }catch(e){}
+}
+
+function actualizarPreviewPie(){
+  const iban  = document.getElementById('cfg-iban')?.value||'';
+  const banco = document.getElementById('cfg-banco')?.value||'';
+  const cond  = document.getElementById('cfg-condiciones-pago')?.value||'';
+  const legal = document.getElementById('cfg-nota-legal')?.value||'';
+  const extra = document.getElementById('cfg-pie-extra')?.value||'';
+  const prev  = document.getElementById('cfg-pie-preview');
+  if(!prev) return;
+  let html='';
+  if(iban||banco) html+=`<div style="margin-bottom:4px"><strong>Cuenta bancaria:</strong> ${iban}${banco?' · '+banco:''}</div>`;
+  if(cond)  html+=`<div style="margin-bottom:4px"><strong>Condiciones de pago:</strong> ${cond}</div>`;
+  if(legal) html+=`<div style="margin-bottom:4px;color:#666">${legal}</div>`;
+  if(extra) html+=`<div style="color:#666">${extra}</div>`;
+  prev.innerHTML = html||'<span style="color:var(--text-soft)">Rellena los campos para ver la vista previa</span>';
+}
+
+async function savePieFactura(){
+  const campos=[
+    ['pie_iban',        document.getElementById('cfg-iban')?.value||''],
+    ['pie_banco',       document.getElementById('cfg-banco')?.value||''],
+    ['pie_condiciones', document.getElementById('cfg-condiciones-pago')?.value||''],
+    ['pie_nota_legal',  document.getElementById('cfg-nota-legal')?.value||''],
+    ['pie_extra',       document.getElementById('cfg-pie-extra')?.value||''],
+  ];
+  try{
+    for(const[k,v] of campos) await upsertConfig(k,v);
+    // Actualizar caché global
+    campos.forEach(([k,v])=>{ _PIE_FACTURA[k]=v; });
+    toast('Pie de factura guardado ✅');
+    actualizarPreviewPie();
+  }catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+function _getPieHtml(){
+  const iban  = _PIE_FACTURA.pie_iban||'';
+  const banco = _PIE_FACTURA.pie_banco||'';
+  const cond  = _PIE_FACTURA.pie_condiciones||'';
+  const legal = _PIE_FACTURA.pie_nota_legal||'';
+  const extra = _PIE_FACTURA.pie_extra||'';
+  if(!iban&&!banco&&!cond&&!legal&&!extra) return '';
+  let html='<div style="border-top:1px solid #ddd;padding-top:12px;margin-top:8px;font-size:10px;color:#555">';
+  if(iban||banco){
+    html+='<div style="display:flex;gap:24px;margin-bottom:6px;flex-wrap:wrap">';
+    if(iban)  html+=`<span><strong style="color:#1a2a3a">Cuenta bancaria:</strong> ${escH(iban)}</span>`;
+    if(banco) html+=`<span><strong style="color:#1a2a3a">Banco:</strong> ${escH(banco)}</span>`;
+    html+='</div>';
+  }
+  if(cond)  html+=`<div style="margin-bottom:5px"><strong style="color:#1a2a3a">Condiciones de pago:</strong> ${escH(cond)}</div>`;
+  if(legal) html+=`<div style="margin-bottom:5px;color:#777">${escH(legal)}</div>`;
+  if(extra) html+=`<div style="color:#777">${escH(extra)}</div>`;
+  html+='</div>';
+  return html;
+}
+
+// ── Cargar pie al inicializar app ─────────────────────────
+const _origInit = init;
+async function init(){
+  await _origInit.call(this,...arguments);
+  await loadPieFactura();
+}
+
+
 const loaders={
   gerencia:loadGerencia,agenda:loadAgenda,clientes:loadClientes,proyectos:loadProyectos,
   presupuesto:()=>{initPresupuesto();if(document.getElementById('pres-proyecto-sel').value)loadPresupuesto();},
