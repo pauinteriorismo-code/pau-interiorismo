@@ -3403,7 +3403,7 @@ function cargarPedidoEnDoc(){
   setVal('pd-obs-input', p.observaciones);
   setVal('pd-ref-doc-input', p.referencia);
   // Datos del cliente en el documento
-  const cli = CC.find(c=>String(c.id)===String(p.cliente_id)||c.nombre===p.cliente_nombre);
+  const cli = CC.find(c=>String(c.cliente_id)===String(p.cliente_id)||String(c.id)===String(p.cliente_id)||c.nombre===p.cliente_nombre);
   if(cli){
     setVal('pd-cliente-nombre-input', cli.nombre||'');
     setVal('pd-cliente-dir-input', cli.direccion||'');
@@ -3698,7 +3698,7 @@ function editPedido(id){
   document.getElementById('ped-estado').value=p.estado||'Pendiente';
   document.getElementById('ped-obs').value=p.observaciones||'';
   // Cliente / Proyecto (hidden fields + display)
-  const cliObj = CC.find(c=>String(c.id)===String(p.cliente_id)||c.nombre===p.cliente_nombre);
+  const cliObj = CC.find(c=>String(c.cliente_id)===String(p.cliente_id)||String(c.id)===String(p.cliente_id)||c.nombre===p.cliente_nombre);
   const proyObj = PC.find(x=>x.proyecto_id===p.proyecto_id);
   document.getElementById('ped-cliente-id').value  = p.cliente_id||'';
   document.getElementById('ped-cliente-val').value = cliObj?.nombre||p.cliente_nombre||'';
@@ -3726,7 +3726,7 @@ function openPedidoModal(){
   const proySel = document.getElementById('filter-proyecto-pedidos');
   const cliId   = cliSel?.value||'';
   const proyId  = proySel?.value||'';
-  const cliObj  = CC.find(c=>String(c.id)===String(cliId));
+  const cliObj  = CC.find(c=>String(c.cliente_id)===String(cliId) || String(c.id)===String(cliId));
   const proyObj = PC.find(p=>p.proyecto_id===proyId);
 
   // Pre-rellenar campos ocultos (se guardarán en save)
