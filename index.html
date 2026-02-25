@@ -1779,44 +1779,35 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 </div></div>
 
 <!-- PEDIDO -->
-<div class="overlay" id="m-pedido"><div class="modal" style="width:620px">
+<div class="overlay" id="m-pedido"><div class="modal" style="width:580px">
   <div class="modal-head"><div class="modal-title">📦 Nuevo pedido</div><button class="modal-close" onclick="closeModal('m-pedido')">×</button></div>
   <div class="modal-body"><input type="hidden" id="ped-id">
+    <input type="hidden" id="ped-cliente-id">
+    <input type="hidden" id="ped-cliente-val">
+    <input type="hidden" id="ped-proyecto-id">
+    <input type="hidden" id="ped-proyecto-val">
+
+    <!-- Info cliente/proyecto pre-cargada (solo lectura) -->
+    <div style="background:var(--blue-light);border-radius:6px;padding:10px 12px;margin-bottom:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div>
+        <div style="font-size:10px;font-weight:700;color:var(--navy);text-transform:uppercase;margin-bottom:2px">Cliente</div>
+        <div id="ped-modal-cli-info" style="font-size:12px;font-weight:600;color:var(--text)">— Sin cliente seleccionado</div>
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:700;color:var(--navy);text-transform:uppercase;margin-bottom:2px">Proyecto</div>
+        <div id="ped-modal-proy-info" style="font-size:12px;font-weight:600;color:var(--text)">— Sin proyecto</div>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--text-soft);margin-bottom:10px">Para cambiar cliente/proyecto, cierra y usa los filtros de la página superior izquierda.</div>
+
     <div class="form-grid">
       <div class="form-group"><label class="form-label">Nº Pedido</label><input class="form-input" id="ped-num" placeholder="PED-001"></div>
       <div class="form-group"><label class="form-label">Fecha</label><input class="form-input" id="ped-fecha" type="date"></div>
-
-      <!-- Cliente buscable -->
-      <div class="form-group fg-full">
-        <label class="form-label">👤 Cliente <span style="color:var(--text-soft);font-weight:400">(escribe iniciales para filtrar)</span></label>
-        <div style="position:relative">
-          <input class="form-input" id="ped-cliente-search" placeholder="Buscar cliente…" autocomplete="off"
-            oninput="filtrarSearchSelect('ped-cliente-search','ped-cliente-dd','ped-cliente-id','ped-cliente-val',CC,'nombre','id')"
-            onfocus="abrirSearchDd('ped-cliente-dd')" onblur="setTimeout(()=>cerrarSearchDd('ped-cliente-dd'),200)">
-          <input type="hidden" id="ped-cliente-id">
-          <input type="hidden" id="ped-cliente-val">
-          <div id="ped-cliente-dd" class="search-dd" style="display:none"></div>
-        </div>
-      </div>
-
-      <!-- Proyecto buscable (cascada desde cliente) -->
-      <div class="form-group fg-full">
-        <label class="form-label">📁 Proyecto <span style="color:var(--text-soft);font-weight:400">(escribe para filtrar)</span></label>
-        <div style="position:relative">
-          <input class="form-input" id="ped-proyecto-search" placeholder="Buscar proyecto…" autocomplete="off"
-            oninput="filtrarSearchSelect('ped-proyecto-search','ped-proyecto-dd','ped-proyecto-id','ped-proyecto-val',_pedProysFilt(),'nombre','proyecto_id')"
-            onfocus="abrirSearchDd('ped-proyecto-dd')" onblur="setTimeout(()=>cerrarSearchDd('ped-proyecto-dd'),200)">
-          <input type="hidden" id="ped-proyecto-id">
-          <input type="hidden" id="ped-proyecto-val">
-          <div id="ped-proyecto-dd" class="search-dd" style="display:none"></div>
-        </div>
-      </div>
-
       <div class="form-group"><label class="form-label">Tipo</label><select class="form-input" id="ped-tipo"><option>Material</option><option>Mobiliario</option><option>Subcontrata</option><option>Herramienta</option><option>Otros</option></select></div>
 
       <!-- Proveedor buscable -->
       <div class="form-group">
-        <label class="form-label">🏭 Proveedor</label>
+        <label class="form-label">🏭 Proveedor <span style="color:var(--text-soft);font-weight:400">(escribe para filtrar)</span></label>
         <div style="position:relative">
           <input class="form-input" id="ped-prov-search" placeholder="Buscar proveedor…" autocomplete="off"
             oninput="filtrarSearchSelect('ped-prov-search','ped-prov-dd','ped-prov-id','ped-prov-val',ProvC,'nombre','id')"
@@ -3706,16 +3697,17 @@ function editPedido(id){
   document.getElementById('ped-importe').value=p.importe||'';
   document.getElementById('ped-estado').value=p.estado||'Pendiente';
   document.getElementById('ped-obs').value=p.observaciones||'';
-  // Cliente
-  const cli = CC.find(c=>String(c.id)===String(p.cliente_id)||c.nombre===p.cliente_nombre);
-  document.getElementById('ped-cliente-search').value = cli?.nombre||p.cliente_nombre||'';
-  document.getElementById('ped-cliente-id').value = cli?.id||p.cliente_id||'';
-  document.getElementById('ped-cliente-val').value = cli?.nombre||p.cliente_nombre||'';
-  // Proyecto
-  const proy = PC.find(x=>x.proyecto_id===p.proyecto_id);
-  document.getElementById('ped-proyecto-search').value = proy?.nombre||p.proyecto_id||'';
+  // Cliente / Proyecto (hidden fields + display)
+  const cliObj = CC.find(c=>String(c.id)===String(p.cliente_id)||c.nombre===p.cliente_nombre);
+  const proyObj = PC.find(x=>x.proyecto_id===p.proyecto_id);
+  document.getElementById('ped-cliente-id').value  = p.cliente_id||'';
+  document.getElementById('ped-cliente-val').value = cliObj?.nombre||p.cliente_nombre||'';
   document.getElementById('ped-proyecto-id').value = p.proyecto_id||'';
-  document.getElementById('ped-proyecto-val').value = proy?.nombre||p.proyecto_id||'';
+  document.getElementById('ped-proyecto-val').value= proyObj?.nombre||p.proyecto_id||'';
+  const infoCli  = document.getElementById('ped-modal-cli-info');
+  const infoProy = document.getElementById('ped-modal-proy-info');
+  if(infoCli)  infoCli.textContent  = cliObj  ? '👤 '+cliObj.nombre  : p.cliente_nombre||'— Sin cliente';
+  if(infoProy) infoProy.textContent = proyObj  ? '📁 '+proyObj.nombre+' ('+p.proyecto_id+')' : p.proyecto_id||'— Sin proyecto';
   // Proveedor
   document.getElementById('ped-prov-search').value = p.proveedor||'';
   document.getElementById('ped-prov-val').value = p.proveedor||'';
@@ -3728,10 +3720,29 @@ function openPedidoModal(){
   document.getElementById('ped-fecha').value=new Date().toISOString().split('T')[0];
   document.getElementById('ped-obs').value='';
   document.getElementById('ped-importe').value='';
-  // Reset searchable fields
-  ['ped-cliente-search','ped-cliente-id','ped-cliente-val',
-   'ped-proyecto-search','ped-proyecto-id','ped-proyecto-val',
-   'ped-prov-search','ped-prov-id','ped-prov-val'].forEach(id=>{
+
+  // Leer cliente y proyecto ya seleccionados en los filtros de la página
+  const cliSel  = document.getElementById('filter-cliente-pedidos');
+  const proySel = document.getElementById('filter-proyecto-pedidos');
+  const cliId   = cliSel?.value||'';
+  const proyId  = proySel?.value||'';
+  const cliObj  = CC.find(c=>String(c.id)===String(cliId));
+  const proyObj = PC.find(p=>p.proyecto_id===proyId);
+
+  // Pre-rellenar campos ocultos (se guardarán en save)
+  document.getElementById('ped-cliente-id').value  = cliId;
+  document.getElementById('ped-cliente-val').value = cliObj?.nombre||'';
+  document.getElementById('ped-proyecto-id').value = proyId;
+  document.getElementById('ped-proyecto-val').value= proyObj?.nombre||proyId||'';
+
+  // Mostrar info pre-cargada en el modal
+  const infoCli  = document.getElementById('ped-modal-cli-info');
+  const infoProy = document.getElementById('ped-modal-proy-info');
+  if(infoCli)  infoCli.textContent  = cliObj  ? '👤 '+cliObj.nombre  : '— Sin cliente seleccionado';
+  if(infoProy) infoProy.textContent = proyObj  ? '📁 '+proyObj.nombre+' ('+proyId+')' : proyId ? '📁 '+proyId : '— Sin proyecto';
+
+  // Reset proveedor
+  ['ped-prov-search','ped-prov-id','ped-prov-val'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.value='';
   });
   document.querySelector('#m-pedido .modal-title').textContent='📦 Nuevo pedido';
