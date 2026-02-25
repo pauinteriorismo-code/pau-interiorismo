@@ -5785,14 +5785,20 @@ async function saveTrabajador(){
     else  { await sbPost('trabajadores_rrhh',d); toast('Trabajador guardado ✅'); }
 
     // ── Sincronizar nombre con lista global TRABAJADORES ──
-    // Cargamos todos los trabajadores activos y actualizamos la lista
-    const todosRRHH = await sbGet('trabajadores_rrhh','?estado=eq.Activo&order=nombre.asc');
-    const nombresActivos = todosRRHH.map(t=>t.nombre).filter(Boolean);
-    // Actualizar array en memoria
-    TRABAJADORES = nombresActivos;
-    // Guardar en configuracion (misma clave que usa la página Listas)
-    await upsertConfig('trabajadores', JSON.stringify(nombresActivos));
-    populateTrabajadores();
+    try{
+      const todosRRHH = await sbGet('trabajadores_rrhh','?estado=eq.Activo&order=nombre.asc');
+      const nombresActivos = todosRRHH.map(t=>t.nombre).filter(Boolean);
+      TRABAJADORES = nombresActivos;
+      // Guardar como lista separada por comas (mismo formato que usa la página Listas)
+      await upsertConfig('trabajadores', nombresActivos.join(','));
+      populateTrabajadores();
+    }catch(syncErr){
+      // Si falla la sincronización no bloqueamos — el trabajador ya se guardó
+      console.warn('Sincronización lista trabajadores:', syncErr.message);
+      // Actualizar solo en memoria
+      if(!TRABAJADORES.includes(nombre)) TRABAJADORES.push(nombre);
+      populateTrabajadores();
+    }
 
     closeModal('m-trabajador');
     await loadRRHH();
