@@ -4316,72 +4316,87 @@ function renderFacLineas(){
   const totEl = document.getElementById('f-lineas-total');
   if(!tbody) return;
   if(!_facLineas.length){
-    tbody.innerHTML=`<tr><td colspan="7" style="padding:12px;text-align:center;color:var(--text-soft);font-size:11px">
-      Sin líneas — pulsa "＋ Añadir línea" o importa desde presupuesto</td></tr>`;
+    tbody.innerHTML='<tr><td colspan="7" style="padding:12px;text-align:center;color:var(--text-soft);font-size:11px">Sin líneas — pulsa ＋ Añadir línea o importa desde presupuesto</td></tr>';
     if(totEl) totEl.textContent='0,00 € / 0,00 €';
-    document.getElementById('f-base').value='';
-    document.getElementById('f-total-display').value='';
+    const bEl=document.getElementById('f-base'); if(bEl) bEl.value='';
+    const tEl=document.getElementById('f-total-display'); if(tEl) tEl.value='';
     return;
   }
   let totalBase=0, totalConIva=0;
-  tbody.innerHTML = _facLineas.map((l,i)=>{
-    const cant = parseFloat(l.cantidad)||0;
-    const prec = parseFloat(l.precio)||0;
-    const sub  = cant * prec;
-    const ivaV = ivaPct(l.iva||'21%');
-    totalBase   += sub;
-    totalConIva += sub*(1+ivaV/100);
-    const ivaOpts=['21%','10%','4%','Exento'].map(v=>`<option${(l.iva||'21%')===v?' selected':''}>${v}</option>`).join('');
-    return `<tr style="border-bottom:1px solid var(--border)">
-      <td style="padding:4px 6px;min-width:200px">
-        <input class="form-input" style="font-size:11px;padding:3px 6px;width:100%;min-width:180px" value="${(l.desc||'').replace(/"/g,'&quot;')}"
-          oninput="_facLineas[${i}].desc=this.value" placeholder="Descripción del concepto…">
-      </td>
-      <td style="padding:4px 6px">
-        <input class="form-input" style="font-size:11px;padding:3px 6px;width:50px;text-align:center" value="${l.ud||'Ud'}"
-          oninput="_facLineas[${i}].ud=this.value">
-      </td>
-      <td style="padding:4px 6px">
-        <input class="form-input" style="font-size:11px;padding:3px 6px;width:62px;text-align:right" type="number" step="0.01" value="${cant}"
-          oninput="_facLineas[${i}].cantidad=parseFloat(this.value)||0;renderFacLineas()">
-      </td>
-      <td style="padding:4px 6px">
-        <input class="form-input" style="font-size:11px;padding:3px 6px;width:82px;text-align:right" type="number" step="0.01" value="${prec}"
-          oninput="_facLineas[${i}].precio=parseFloat(this.value)||0;renderFacLineas()">
-      </td>
-      <td style="padding:4px 6px">
-        <select class="form-input" style="font-size:11px;padding:3px 4px;width:64px" onchange="_facLineas[${i}].iva=this.value;renderFacLineas()">${ivaOpts}</select>
-      </td>
-      <td style="padding:4px 6px;text-align:right;font-weight:700;font-size:11px;color:var(--navy);white-space:nowrap;min-width:72px">${fmt(sub)}</td>
-      <td style="padding:4px 2px;text-align:center">
-        <button type="button" onclick="_facLineas.splice(${i},1);renderFacLineas()"
-          style="background:none;border:none;cursor:pointer;color:var(--red);font-size:13px;padding:2px 4px">🗑</button>
-      </td>
-    </tr>`;
-  }).join('');
+  // Calcular totales SIN rerenderizar si el foco está en la tabla
+  const focused = document.activeElement;
+  const inTable = tbody.contains(focused);
 
-  if(totEl) totEl.textContent=`${fmt(totalBase)} / ${fmt(totalConIva)}`;
-  document.getElementById('f-base').value = totalBase.toFixed(2);
+  _facLineas.forEach((l,i)=>{
+    const cant=parseFloat(l.cantidad)||0;
+    const prec=parseFloat(l.precio)||0;
+    totalBase   += cant*prec;
+    totalConIva += cant*prec*(1+ivaPct(l.iva||'21%')/100);
+  });
+
+  if(inTable){
+    // Solo actualizar totales, no rerenderizar filas (mantiene el foco)
+    _facLineas.forEach((l,i)=>{
+      const cant=parseFloat(l.cantidad)||0;
+      const prec=parseFloat(l.precio)||0;
+      const sub=cant*prec;
+      const cell=tbody.querySelector(`tr:nth-child(${i+1}) td:nth-child(6)`);
+      if(cell) cell.textContent=sub>0?Number(sub).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€':'0,00€';
+    });
+  } else {
+    // Rerenderizar completo
+    tbody.innerHTML = _facLineas.map((l,i)=>{
+      const cant=parseFloat(l.cantidad)||0;
+      const prec=parseFloat(l.precio)||0;
+      const sub=cant*prec;
+      const ivaOpts=['21%','10%','4%','Exento'].map(v=>'<option'+(((l.iva||'21%')===v)?' selected':'')+'>'+v+'</option>').join('');
+      return '<tr style="border-bottom:1px solid var(--border)">'
+        +'<td style="padding:4px 6px">'
+          +'<input class="form-input" style="font-size:11px;padding:3px 6px;width:100%;min-width:180px"'
+          +' value="'+(l.desc||'').replace(/"/g,'&quot;')+'"'
+          +' oninput="_facLineas['+i+'].desc=this.value" placeholder="Descripción…">'
+        +'</td>'
+        +'<td style="padding:4px 6px">'
+          +'<input class="form-input" style="font-size:11px;padding:3px 6px;width:50px;text-align:center"'
+          +' value="'+(l.ud||'Ud')+'" oninput="_facLineas['+i+'].ud=this.value">'
+        +'</td>'
+        +'<td style="padding:4px 6px">'
+          +'<input class="form-input" style="font-size:11px;padding:3px 6px;width:62px;text-align:right"'
+          +' type="number" step="0.01" value="'+cant+'"'
+          +' oninput="_facLineas['+i+'].cantidad=parseFloat(this.value)||0;renderFacLineas()">'
+        +'</td>'
+        +'<td style="padding:4px 6px">'
+          +'<input class="form-input" style="font-size:11px;padding:3px 6px;width:82px;text-align:right"'
+          +' type="number" step="0.01" value="'+prec+'"'
+          +' oninput="_facLineas['+i+'].precio=parseFloat(this.value)||0;renderFacLineas()">'
+        +'</td>'
+        +'<td style="padding:4px 6px">'
+          +'<select class="form-input" style="font-size:11px;padding:3px 4px;width:64px"'
+          +' onchange="_facLineas['+i+'].iva=this.value;renderFacLineas()">'+ivaOpts+'</select>'
+        +'</td>'
+        +'<td style="padding:4px 6px;text-align:right;font-weight:700;font-size:12px;color:var(--navy);white-space:nowrap;min-width:80px">'
+          +(sub>0?Number(sub).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€':'0,00€')
+        +'</td>'
+        +'<td style="padding:4px 2px;text-align:center">'
+          +'<button type="button" onclick="_facLineas.splice('+i+',1);renderFacLineas()"'
+          +' style="background:none;border:none;cursor:pointer;color:var(--red);font-size:13px;padding:2px 4px">🗑</button>'
+        +'</td>'
+      +'</tr>';
+    }).join('');
+  }
+
+  if(totEl) totEl.textContent=Number(totalBase).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€ / '+Number(totalConIva).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€';
+  const bEl=document.getElementById('f-base'); if(bEl) bEl.value=totalBase.toFixed(2);
   calcTotalFac();
 }
 
 function recalcFacLineas(){ renderFacLineas(); }
 
-function addFacLinea(){
-  _facLineas.push({desc:'',ud:'Ud',cantidad:1,precio:0,iva:'21%'});
-  renderFacLineas();
-  // Focus último input descripción
-  setTimeout(()=>{
-    const inputs=document.querySelectorAll('#f-lineas-tbody input');
-    if(inputs.length) inputs[inputs.length-4].focus();
-  },50);
-}
-
-function previsualizarFactura(){
+function _buildFacturaPDF(){
   const esC = document.getElementById('f-tipo').value==='Compra';
   const num  = document.getElementById('f-num').value||'BORRADOR';
   const fecha= document.getElementById('f-fecha').value;
-  const vto  = esC ? document.getElementById('f-vto')?.value : document.getElementById('f-vto-venta')?.value;
+  const vto  = esC ? (document.getElementById('f-vto')?.value||'') : (document.getElementById('f-vto-venta')?.value||'');
   const base = parseFloat(document.getElementById('f-base').value)||0;
   const ivaSel = document.getElementById('f-iva').value;
   const ivaN = ivaPct(ivaSel);
@@ -4392,7 +4407,6 @@ function previsualizarFactura(){
   const concepto=document.getElementById('f-concepto').value||'';
   const fpago = document.getElementById('f-pago').value;
 
-  // Cliente/Proveedor
   let contra='—', contraDir='', contraCIF='';
   if(!esC){
     const cliId=document.getElementById('f-cliente').value;
@@ -4404,127 +4418,153 @@ function previsualizarFactura(){
     if(prov){ contra=prov.nombre||'—'; contraCIF=prov.cif||''; }
   }
 
-  // Líneas
   let filasLineas='';
-  let lineasBase=0;
   if(_facLineas.length){
-    filasLineas = _facLineas.map(l=>{
+    filasLineas=_facLineas.map(l=>{
       const cant=parseFloat(l.cantidad)||0;
       const prec=parseFloat(l.precio)||0;
       const sub=cant*prec;
-      lineasBase+=sub;
-      return `<tr style="border-bottom:1px solid #eee;font-size:12px">
-        <td style="padding:7px 8px">${l.desc||'—'}</td>
-        <td style="padding:7px 8px;text-align:center">${l.ud||'Ud'}</td>
-        <td style="padding:7px 8px;text-align:right">${cant}</td>
-        <td style="padding:7px 8px;text-align:right">${fmt(prec)}</td>
-        <td style="padding:7px 8px;text-align:center">${l.iva||'21%'}</td>
-        <td style="padding:7px 8px;text-align:right;font-weight:700">${fmt(sub)}</td>
-      </tr>`;
+      return '<tr style="border-bottom:1px solid #eee">'
+        +'<td style="padding:8px">'+escH(l.desc||'—')+'</td>'
+        +'<td style="padding:8px;text-align:center">'+escH(l.ud||'Ud')+'</td>'
+        +'<td style="padding:8px;text-align:right">'+cant+'</td>'
+        +'<td style="padding:8px;text-align:right">'+Number(prec).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€</td>'
+        +'<td style="padding:8px;text-align:center">'+(l.iva||'21%')+'</td>'
+        +'<td style="padding:8px;text-align:right;font-weight:700">'+Number(sub).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€</td>'
+      +'</tr>';
     }).join('');
   } else {
-    filasLineas=`<tr><td colspan="6" style="padding:12px;text-align:center;color:#888;font-size:12px">${concepto||'Sin líneas detalladas'}</td></tr>`;
+    filasLineas='<tr><td colspan="6" style="padding:14px;text-align:center;color:#888">'+(concepto||'Sin líneas detalladas')+'</td></tr>';
   }
 
-  const ivaImporte = base * ivaN / 100;
-  const hoy = new Date().toLocaleDateString('es-ES');
-  const tipoLabel = esC ? '📥 FACTURA DE COMPRA' : '📤 FACTURA DE VENTA';
-  const estColor = estado==='Cobrada'||estado==='Pagada'?'#27ae60':estado==='Vencida'?'#e74c3c':'#e67e22';
+  const ivaImporte=base*ivaN/100;
+  const estColor=estado==='Cobrada'||estado==='Pagada'?'#27ae60':estado==='Vencida'?'#e74c3c':'#e67e22';
+  const tipoLabel=esC?'FACTURA DE COMPRA':'FACTURA DE VENTA';
+  const hoy=new Date().toLocaleDateString('es-ES');
 
-  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8">
-  <title>Factura ${num} - PAU INTERIORISMO</title>
-  <style>
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:Arial,sans-serif;font-size:12px;color:#222;background:#f5f5f5}
-    @media print{body{background:white}@page{size:A4;margin:15mm}.no-print{display:none}}
-    .page{background:white;max-width:794px;margin:20px auto;padding:0;box-shadow:0 2px 12px rgba(0,0,0,.12)}
-    .header{background:#1a2a3a;color:white;padding:24px 28px;display:flex;justify-content:space-between;align-items:flex-start}
-    .logo{font-size:18px;font-weight:900;letter-spacing:-.5px}
-    .logo sub{font-size:10px;opacity:.7;display:block;font-weight:400;margin-top:2px}
-    .fac-num{text-align:right}
-    .fac-num h2{font-size:22px;font-weight:900;margin-bottom:4px}
-    .fac-num .tipo{font-size:10px;opacity:.7;text-transform:uppercase;letter-spacing:1px}
-    .info-band{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;border-bottom:3px solid #1a2a3a}
-    .info-cell{padding:14px 20px;border-right:1px solid #eee}
-    .info-cell:last-child{border-right:none}
-    .info-label{font-size:9px;text-transform:uppercase;font-weight:700;color:#888;margin-bottom:6px;letter-spacing:.06em}
-    .info-value{font-size:13px;font-weight:700;color:#1a2a3a}
-    .info-sub{font-size:10px;color:#888;margin-top:2px}
-    .section{padding:20px 28px}
-    table{width:100%;border-collapse:collapse}
-    thead tr{background:#1a2a3a;color:white}
-    thead th{padding:8px 8px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
-    thead th:nth-child(n+3){text-align:right}
-    .totals{background:#f8f8f8;border-top:2px solid #1a2a3a;padding:16px 28px}
-    .total-row{display:flex;justify-content:space-between;padding:4px 0;font-size:12px}
-    .total-final{font-size:15px;font-weight:900;color:#1a2a3a;border-top:1px solid #ccc;padding-top:8px;margin-top:4px}
-    .footer{text-align:center;color:#aaa;font-size:10px;padding:12px 28px 16px;border-top:1px solid #eee}
-    .estado-badge{display:inline-block;padding:3px 10px;border-radius:10px;font-size:10px;font-weight:700;background:#f0f4f8;color:${estColor};border:1px solid ${estColor}}
-    .btn-print{display:block;margin:0 auto 16px;padding:8px 24px;background:#1a2a3a;color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:700}
-  </style></head><body>
-  <button class="btn-print no-print" onclick="window.print()">🖨️ Imprimir / Guardar PDF</button>
-  <div class="page">
-    <div class="header">
-      <div>
-        <div class="logo">PAU INTERIORISMO S.L.<sub>CIF B-56909641</sub></div>
-        <div style="font-size:10px;opacity:.7;margin-top:6px">C/ Tomás y Valiente Nº 6 Bajo · 46290 Alcàsser (Valencia)<br>Tel: 961 20 01 87 · info@pauinteriorismo.com</div>
-      </div>
-      <div class="fac-num">
-        <div class="tipo">${tipoLabel}</div>
-        <h2>${num}</h2>
-        <div class="estado-badge">${estado}</div>
-      </div>
-    </div>
+  return {num,fecha,vto,base,ivaSel,ivaN,total,cobrado,pdte,estado,concepto,fpago,
+          contra,contraDir,contraCIF,filasLineas,ivaImporte,estColor,tipoLabel,hoy};
+}
 
-    <div class="info-band">
-      <div class="info-cell">
-        <div class="info-label">${esC?'Proveedor':'Cliente'}</div>
-        <div class="info-value">${contra}</div>
-        ${contraCIF?`<div class="info-sub">CIF/NIF: ${contraCIF}</div>`:''}
-        ${contraDir?`<div class="info-sub">${contraDir}</div>`:''}
-      </div>
-      <div class="info-cell">
-        <div class="info-label">Fechas</div>
-        <div class="info-value">Emisión: ${fmtD(fecha)||hoy}</div>
-        ${vto?`<div class="info-sub">Vencimiento: ${fmtD(vto)}</div>`:''}
-      </div>
-      <div class="info-cell">
-        <div class="info-label">Forma de pago</div>
-        <div class="info-value">${fpago||'—'}</div>
-        ${concepto?`<div class="info-sub" style="margin-top:4px">${concepto}</div>`:''}
-      </div>
-    </div>
+function escH(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-    <div class="section" style="padding-bottom:0">
-      <table>
-        <thead><tr>
-          <th style="width:45%">Descripción</th>
-          <th style="text-align:center;width:7%">Ud.</th>
-          <th style="text-align:right;width:8%">Cant.</th>
-          <th style="text-align:right;width:13%">P. Unit.</th>
-          <th style="text-align:center;width:7%">IVA</th>
-          <th style="text-align:right;width:13%">Subtotal</th>
-        </tr></thead>
-        <tbody>${filasLineas}</tbody>
-      </table>
-    </div>
+function fmtE(n){ return Number(n).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€'; }
 
-    <div class="totals">
-      <div style="max-width:280px;margin-left:auto">
-        <div class="total-row"><span>Base imponible</span><span>${fmt(base)}</span></div>
-        <div class="total-row"><span>IVA (${ivaSel})</span><span>${fmt(ivaImporte)}</span></div>
-        <div class="total-row total-final"><span>TOTAL</span><span>${fmt(total)}</span></div>
-        ${cobrado>0?`<div class="total-row" style="color:#27ae60"><span>Cobrado / Pagado</span><span>${fmt(cobrado)}</span></div>`:''}
-        ${pdte>0.01?`<div class="total-row" style="color:#e67e22;font-weight:700"><span>Pendiente</span><span>${fmt(pdte)}</span></div>`:''}
-      </div>
-    </div>
-    <div class="footer">PAU INTERIORISMO S.L. · CIF B-56909641 · C/ Tomás y Valiente Nº 6 Bajo · 46290 Alcàsser (Valencia) · Tel: 961 20 01 87</div>
-  </div>
-  </body></html>`;
+function previsualizarFactura(){
+  const d=_buildFacturaPDF();
+  const html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Factura '+d.num+' - PAU INTERIORISMO</title>'
+  +'<style>'
+  +'*{box-sizing:border-box;margin:0;padding:0}'
+  +'body{font-family:Arial,sans-serif;font-size:12px;color:#222;background:#eef1f4}'
+  +'@media print{body{background:white}.toolbar{display:none}@page{size:A4;margin:12mm}}'
+  +'.toolbar{display:flex;gap:10px;justify-content:center;padding:14px;background:#1a2a3a}'
+  +'.btn{padding:9px 22px;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:700}'
+  +'.btn-print{background:#fff;color:#1a2a3a}'
+  +'.btn-pdf{background:#27ae60;color:#fff}'
+  +'.btn-close{background:rgba(255,255,255,.15);color:#fff}'
+  +'.page{background:white;max-width:794px;margin:16px auto;box-shadow:0 2px 16px rgba(0,0,0,.15)}'
+  +'.hdr{background:#1a2a3a;color:white;padding:24px 28px;display:flex;justify-content:space-between;align-items:flex-start}'
+  +'.logo{font-size:17px;font-weight:900}'
+  +'.logo small{font-size:10px;opacity:.65;display:block;font-weight:400;margin-top:3px}'
+  +'.fnum{text-align:right}'
+  +'.fnum h2{font-size:24px;font-weight:900;margin-bottom:5px}'
+  +'.ftipo{font-size:10px;opacity:.6;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}'
+  +'.badge{display:inline-block;padding:3px 10px;border-radius:10px;font-size:10px;font-weight:700;border:1px solid '+d.estColor+';color:'+d.estColor+';background:#f8f8f8}'
+  +'.iband{display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:3px solid #1a2a3a}'
+  +'.icell{padding:14px 20px;border-right:1px solid #eee}'
+  +'.icell:last-child{border-right:none}'
+  +'.ilbl{font-size:9px;text-transform:uppercase;font-weight:700;color:#999;margin-bottom:5px;letter-spacing:.06em}'
+  +'.ival{font-size:13px;font-weight:700;color:#1a2a3a}'
+  +'.isub{font-size:10px;color:#888;margin-top:3px}'
+  +'.sec{padding:20px 28px 0}'
+  +'table{width:100%;border-collapse:collapse}'
+  +'thead tr{background:#1a2a3a;color:white}'
+  +'thead th{padding:8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;text-align:left}'
+  +'tbody tr:nth-child(even){background:#fafafa}'
+  +'.tot{background:#f5f7fa;border-top:2px solid #1a2a3a;padding:16px 28px}'
+  +'.tr{display:flex;justify-content:space-between;padding:4px 0;font-size:12px}'
+  +'.tf{font-size:16px;font-weight:900;color:#1a2a3a;border-top:1px solid #ccc;padding-top:8px;margin-top:5px}'
+  +'.foot{text-align:center;color:#aaa;font-size:10px;padding:14px 28px;border-top:1px solid #eee}'
+  +'</style></head><body>'
+  +'<div class="toolbar">'
+  +'<button class="btn btn-print" onclick="window.print()">🖨️ Imprimir</button>'
+  +'<button class="btn btn-pdf" id="btn-pdf" onclick="dlPDF()">📥 Guardar PDF</button>'
+  +'<button class="btn btn-close" onclick="window.close()">✕ Cerrar</button>'
+  +'</div>'
+  +'<div class="page" id="fpdf">'
+    +'<div class="hdr">'
+      +'<div>'
+        +'<div class="logo">PAU INTERIORISMO S.L.<small>CIF B-56909641</small></div>'
+        +'<div style="font-size:10px;opacity:.65;margin-top:8px">C/ Tomás y Valiente Nº 6 Bajo · 46290 Alcàsser (Valencia)<br>Tel: 961 20 01 87 · info@pauinteriorismo.com</div>'
+      +'</div>'
+      +'<div class="fnum">'
+        +'<div class="ftipo">'+d.tipoLabel+'</div>'
+        +'<h2>'+escH(d.num)+'</h2>'
+        +'<span class="badge">'+escH(d.estado)+'</span>'
+      +'</div>'
+    +'</div>'
+    +'<div class="iband">'
+      +'<div class="icell"><div class="ilbl">'+(d.esC?'Proveedor':'Cliente')+'</div><div class="ival">'+escH(d.contra)+'</div>'
+        +(d.contraCIF?'<div class="isub">CIF/NIF: '+escH(d.contraCIF)+'</div>':'')
+        +(d.contraDir?'<div class="isub">'+escH(d.contraDir)+'</div>':'')
+      +'</div>'
+      +'<div class="icell"><div class="ilbl">Fechas</div><div class="ival">Emisión: '+fmtD(d.fecha)+'</div>'
+        +(d.vto?'<div class="isub">Vencimiento: '+fmtD(d.vto)+'</div>':'')
+      +'</div>'
+      +'<div class="icell"><div class="ilbl">Forma de pago</div><div class="ival">'+escH(d.fpago||'—')+'</div>'
+        +(d.concepto?'<div class="isub">'+escH(d.concepto)+'</div>':'')
+      +'</div>'
+    +'</div>'
+    +'<div class="sec">'
+    +'<table>'
+    +'<thead><tr>'
+    +'<th style="width:44%">Descripción</th>'
+    +'<th style="text-align:center;width:7%">Ud.</th>'
+    +'<th style="text-align:right;width:8%">Cant.</th>'
+    +'<th style="text-align:right;width:14%">P. Unit.</th>'
+    +'<th style="text-align:center;width:7%">IVA</th>'
+    +'<th style="text-align:right;width:14%">Subtotal</th>'
+    +'</tr></thead>'
+    +'<tbody>'+d.filasLineas+'</tbody>'
+    +'</table>'
+    +'</div>'
+    +'<div class="tot">'
+    +'<div style="max-width:270px;margin-left:auto">'
+    +'<div class="tr"><span>Base imponible</span><span>'+fmtE(d.base)+'</span></div>'
+    +'<div class="tr"><span>IVA ('+escH(d.ivaSel)+')</span><span>'+fmtE(d.ivaImporte)+'</span></div>'
+    +'<div class="tr tf"><span>TOTAL</span><span>'+fmtE(d.total)+'</span></div>'
+    +(d.cobrado>0?'<div class="tr" style="color:#27ae60"><span>Cobrado/Pagado</span><span>'+fmtE(d.cobrado)+'</span></div>':'')
+    +(d.pdte>0.01?'<div class="tr" style="color:#e67e22;font-weight:700"><span>Pendiente</span><span>'+fmtE(d.pdte)+'</span></div>':'')
+    +'</div>'
+    +'</div>'
+    +'<div class="foot">PAU INTERIORISMO S.L. · CIF B-56909641 · C/ Tomás y Valiente Nº 6 Bajo · 46290 Alcàsser (Valencia) · Tel: 961 20 01 87</div>'
+  +'</div>'
+  +'</body></html>';
 
-  const win=window.open('','_blank','width=860,height:900');
+  const win=window.open('','_blank','width=870,height=900');
+  if(!win){ toast('Activa las ventanas emergentes para ver la previsualización','error'); return; }
   win.document.write(html);
   win.document.close();
+  // Inyectar html2pdf y función dlPDF via script element
+  const s=win.document.createElement('script');
+  s.src='https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+  s.onload=function(){
+    const s2=win.document.createElement('script');
+    s2.textContent='function dlPDF(){'
+      +'var btn=document.getElementById("btn-pdf");'
+      +'btn.textContent="⏳ Generando…";btn.disabled=true;'
+      +'html2pdf().set({'
+      +'margin:8,'
+      +'filename:"Factura_'+d.num.replace(/[^a-zA-Z0-9_-]/g,'_')+'_PAU_INTERIORISMO.pdf",'
+      +'image:{type:"jpeg",quality:0.98},'
+      +'html2canvas:{scale:2,useCORS:true,logging:false},'
+      +'jsPDF:{unit:"mm",format:"a4",orientation:"portrait"}'
+      +'}).from(document.getElementById("fpdf")).save().then(function(){'
+      +'btn.textContent="📥 Guardar PDF";btn.disabled=false;'
+      +'});}';
+    win.document.head.appendChild(s2);
+  };
+  win.document.head.appendChild(s);
 }
 
 async function onFacProyectoChange(){
