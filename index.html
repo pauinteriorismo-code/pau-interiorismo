@@ -95,6 +95,11 @@ tbody td{padding:7px 10px;vertical-align:middle}
 .form-group{display:flex;flex-direction:column;gap:4px}
 .form-label{font-size:11px;font-weight:600;color:var(--text-mid)}
 .form-input{padding:7px 9px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;color:var(--text);background:var(--white);outline:none;transition:border-color .15s;width:100%}
+.search-dd{position:absolute;top:100%;left:0;right:0;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-sm);box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:9999;max-height:220px;overflow-y:auto;margin-top:2px}
+.search-dd-item{padding:8px 10px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--border-light,#f0f0f0)}
+.search-dd-item:hover{background:var(--blue-light)}
+.search-dd-item strong{color:var(--navy)}
+.search-dd-empty{padding:10px;color:var(--text-soft);font-size:12px;text-align:center}
 .form-input:focus{border-color:var(--navy-mid);box-shadow:0 0 0 3px rgba(39,64,91,.1)}
 .form-input[readonly]{background:var(--sand);color:var(--text-soft)}
 .form-input.calc{background:var(--green-soft);color:var(--green);font-weight:700}
@@ -452,7 +457,7 @@ tbody td{padding:7px 10px;vertical-align:middle}
             <div style="font-size:11px;color:#666">Fecha <input id="pd-fecha-input" type="date" style="border:none;border-bottom:1px solid #ccc;font-size:11px"></div>
           </div>
         </div>
-        <!-- PROVEEDOR / PROYECTO -->
+        <!-- PROVEEDOR / PROYECTO / CLIENTE -->
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px">
           <div style="background:#f7f4ef;padding:10px;border-radius:4px">
             <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#8a9aaa;margin-bottom:5px">PROVEEDOR / EMPRESA</div>
@@ -462,6 +467,20 @@ tbody td{padding:7px 10px;vertical-align:middle}
             <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#8a9aaa;margin-bottom:5px">PROYECTO / REFERENCIA</div>
             <input id="pd-proyecto-input" style="border:none;background:transparent;width:100%;font-weight:700;font-size:12px" placeholder="Nombre o referencia del proyecto">
             <input id="pd-ref-doc-input" style="border:none;background:transparent;width:100%;color:#b87333;font-size:11px;font-weight:600;margin-top:3px" placeholder="Referencia del pedido (ej: Azulejo baño modelo X)">
+          </div>
+        </div>
+        <!-- CLIENTE -->
+        <div id="pd-cliente-block" style="background:#eef6ff;padding:10px;border-radius:4px;margin-bottom:18px;border-left:3px solid #2a6aad">
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#2a6aad;margin-bottom:6px">CLIENTE FINAL</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div>
+              <input id="pd-cliente-nombre-input" style="border:none;background:transparent;width:100%;font-weight:700;font-size:12px" placeholder="Nombre cliente">
+              <input id="pd-cliente-dir-input" style="border:none;background:transparent;width:100%;font-size:11px;color:#555;margin-top:2px" placeholder="Dirección">
+            </div>
+            <div>
+              <input id="pd-cliente-nif-input" style="border:none;background:transparent;width:100%;font-size:11px;color:#555" placeholder="NIF/CIF">
+              <input id="pd-cliente-tel-input" style="border:none;background:transparent;width:100%;font-size:11px;color:#555;margin-top:2px" placeholder="Teléfono">
+            </div>
           </div>
         </div>
         <!-- TABLA DE LÍNEAS -->
@@ -1760,15 +1779,54 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 </div></div>
 
 <!-- PEDIDO -->
-<div class="overlay" id="m-pedido"><div class="modal">
+<div class="overlay" id="m-pedido"><div class="modal" style="width:620px">
   <div class="modal-head"><div class="modal-title">📦 Nuevo pedido</div><button class="modal-close" onclick="closeModal('m-pedido')">×</button></div>
   <div class="modal-body"><input type="hidden" id="ped-id">
     <div class="form-grid">
       <div class="form-group"><label class="form-label">Nº Pedido</label><input class="form-input" id="ped-num" placeholder="PED-001"></div>
       <div class="form-group"><label class="form-label">Fecha</label><input class="form-input" id="ped-fecha" type="date"></div>
-      <div class="form-group"><label class="form-label">Proyecto</label><select class="form-input" id="ped-proyecto"><option value="">Seleccionar…</option></select></div>
+
+      <!-- Cliente buscable -->
+      <div class="form-group fg-full">
+        <label class="form-label">👤 Cliente <span style="color:var(--text-soft);font-weight:400">(escribe iniciales para filtrar)</span></label>
+        <div style="position:relative">
+          <input class="form-input" id="ped-cliente-search" placeholder="Buscar cliente…" autocomplete="off"
+            oninput="filtrarSearchSelect('ped-cliente-search','ped-cliente-dd','ped-cliente-id','ped-cliente-val',CC,'nombre','id')"
+            onfocus="abrirSearchDd('ped-cliente-dd')" onblur="setTimeout(()=>cerrarSearchDd('ped-cliente-dd'),200)">
+          <input type="hidden" id="ped-cliente-id">
+          <input type="hidden" id="ped-cliente-val">
+          <div id="ped-cliente-dd" class="search-dd" style="display:none"></div>
+        </div>
+      </div>
+
+      <!-- Proyecto buscable (cascada desde cliente) -->
+      <div class="form-group fg-full">
+        <label class="form-label">📁 Proyecto <span style="color:var(--text-soft);font-weight:400">(escribe para filtrar)</span></label>
+        <div style="position:relative">
+          <input class="form-input" id="ped-proyecto-search" placeholder="Buscar proyecto…" autocomplete="off"
+            oninput="filtrarSearchSelect('ped-proyecto-search','ped-proyecto-dd','ped-proyecto-id','ped-proyecto-val',_pedProysFilt(),'nombre','proyecto_id')"
+            onfocus="abrirSearchDd('ped-proyecto-dd')" onblur="setTimeout(()=>cerrarSearchDd('ped-proyecto-dd'),200)">
+          <input type="hidden" id="ped-proyecto-id">
+          <input type="hidden" id="ped-proyecto-val">
+          <div id="ped-proyecto-dd" class="search-dd" style="display:none"></div>
+        </div>
+      </div>
+
       <div class="form-group"><label class="form-label">Tipo</label><select class="form-input" id="ped-tipo"><option>Material</option><option>Mobiliario</option><option>Subcontrata</option><option>Herramienta</option><option>Otros</option></select></div>
-      <div class="form-group fg-full"><label class="form-label">Empresa/Proveedor</label><select class="form-input" id="ped-prov"><option value="">Seleccionar proveedor…</option></select></div>
+
+      <!-- Proveedor buscable -->
+      <div class="form-group">
+        <label class="form-label">🏭 Proveedor</label>
+        <div style="position:relative">
+          <input class="form-input" id="ped-prov-search" placeholder="Buscar proveedor…" autocomplete="off"
+            oninput="filtrarSearchSelect('ped-prov-search','ped-prov-dd','ped-prov-id','ped-prov-val',ProvC,'nombre','id')"
+            onfocus="abrirSearchDd('ped-prov-dd')" onblur="setTimeout(()=>cerrarSearchDd('ped-prov-dd'),200)">
+          <input type="hidden" id="ped-prov-id">
+          <input type="hidden" id="ped-prov-val">
+          <div id="ped-prov-dd" class="search-dd" style="display:none"></div>
+        </div>
+      </div>
+
       <div class="form-group fg-full"><label class="form-label">Referencia / Descripción</label><input class="form-input" id="ped-ref" placeholder="Ej: Azulejo baño modelo X, Mueble cocina ref.123..."></div>
       <div class="form-group"><label class="form-label">Importe €</label><input class="form-input" id="ped-importe" type="number" step="0.01"></div>
       <div class="form-group"><label class="form-label">Estado</label><select class="form-input" id="ped-estado"><option>Pendiente</option><option>Solicitado</option><option>Confirmado</option><option>En tránsito</option><option>Recibido</option><option>Pagado</option><option>Cancelado</option></select></div>
@@ -2686,6 +2744,64 @@ function toggleGrentExpand(){
   renderGrentTable(window._grentFiltro||'activos');
 }
 
+// ════════════════════════════════════════════
+// SEARCHABLE SELECT — reutilizable
+// ════════════════════════════════════════════
+function filtrarSearchSelect(inputId, ddId, hiddenId, hiddenValId, arr, labelField, valueField){
+  const input = document.getElementById(inputId);
+  const dd    = document.getElementById(ddId);
+  const q     = (input?.value||'').toLowerCase().trim();
+  if(!dd) return;
+  const items = q ? arr.filter(x=>(x[labelField]||'').toLowerCase().includes(q)) : arr;
+  if(!items.length){
+    dd.innerHTML=`<div class="search-dd-empty">Sin resultados para "${q}"</div>`;
+    dd.style.display='';
+    return;
+  }
+  dd.innerHTML = items.slice(0,40).map(x=>{
+    const lbl = x[labelField]||'—';
+    const val = x[valueField]||'';
+    const sub = x.cif ? `<span style="color:var(--text-soft);font-size:11px"> · ${x.cif}</span>` :
+                x.tipo ? `<span style="color:var(--text-soft);font-size:11px"> · ${x.tipo}</span>` :
+                x.proyecto_id ? `<span style="color:var(--text-soft);font-size:11px"> ${x.proyecto_id}</span>` : '';
+    return `<div class="search-dd-item" onmousedown="selecSearchDd('${inputId}','${ddId}','${hiddenId}','${hiddenValId}','${val}','${lbl.replace(/'/g,"\\'")}')">
+      <strong>${lbl}</strong>${sub}
+    </div>`;
+  }).join('');
+  dd.style.display='';
+}
+function selecSearchDd(inputId, ddId, hiddenId, hiddenValId, val, lbl){
+  const inp = document.getElementById(inputId);
+  const hid = document.getElementById(hiddenId);
+  const hv  = document.getElementById(hiddenValId);
+  if(inp) inp.value = lbl;
+  if(hid) hid.value = val;
+  if(hv)  hv.value  = lbl;
+  cerrarSearchDd(ddId);
+  // Trigger cascada proyecto si cambió cliente
+  if(inputId === 'ped-cliente-search') pedClienteChanged();
+}
+function abrirSearchDd(ddId){
+  const dd = document.getElementById(ddId);
+  if(dd && dd.innerHTML) dd.style.display='';
+}
+function cerrarSearchDd(ddId){
+  const dd = document.getElementById(ddId);
+  if(dd) dd.style.display='none';
+}
+function _pedProysFilt(){
+  const cid = document.getElementById('ped-cliente-id')?.value;
+  if(!cid) return PC;
+  return PC.filter(p=>String(p.cliente_id)===String(cid));
+}
+function pedClienteChanged(){
+  // Reset proyecto al cambiar cliente
+  const ps = document.getElementById('ped-proyecto-search');
+  const pi = document.getElementById('ped-proyecto-id');
+  const pv = document.getElementById('ped-proyecto-val');
+  if(ps) ps.value=''; if(pi) pi.value=''; if(pv) pv.value='';
+}
+
 async function loadGerencia(){
   try{
     const [cl,pr,ta,cy,comp,subc,hor,fac]=await Promise.all([
@@ -3287,19 +3403,28 @@ function cargarPedidoEnDoc(){
   const p = PedC.find(x=>String(x.id)===String(sel.value));
   if(!p) return;
   window.pdPedidoId = p.id;
-  // Cabecera
   const setVal=(id,v)=>{ const el=document.getElementById(id); if(el) el.value=v||''; };
+  const setText=(id,v)=>{ const el=document.getElementById(id); if(el) el.textContent=v||''; };
   setVal('pd-num-input', p.num_pedido);
   setVal('pd-fecha-input', p.fecha);
   setVal('pd-prov-input', p.proveedor);
-  // pd-prov-tel-input removed
   setVal('pd-proyecto-input', p.proyecto_id);
   setVal('pd-obs-input', p.observaciones);
   setVal('pd-ref-doc-input', p.referencia);
+  // Datos del cliente en el documento
+  const cli = CC.find(c=>String(c.id)===String(p.cliente_id)||c.nombre===p.cliente_nombre);
+  if(cli){
+    setVal('pd-cliente-nombre-input', cli.nombre||'');
+    setVal('pd-cliente-dir-input', cli.direccion||'');
+    setVal('pd-cliente-tel-input', cli.telefono||'');
+    setVal('pd-cliente-nif-input', cli.cif||'');
+    document.getElementById('pd-cliente-block')?.style && (document.getElementById('pd-cliente-block').style.display='');
+  } else {
+    document.getElementById('pd-cliente-block')?.style && (document.getElementById('pd-cliente-block').style.display='none');
+  }
   // Líneas
   if(p.lineas && Array.isArray(p.lineas) && p.lineas.length){
     window.pdLineas = p.lineas;
-    // Pad to minimum 20 lines
     while(window.pdLineas.length < 20) window.pdLineas.push({cant:'',desc:''});
   } else {
     window.pdLineas = Array.from({length:20}, ()=>({cant:'',desc:''}));
@@ -3576,19 +3701,24 @@ function editPedido(id){
   document.getElementById('ped-id').value=p.id;
   document.getElementById('ped-num').value=p.num_pedido||'';
   document.getElementById('ped-fecha').value=p.fecha||'';
-  document.getElementById('ped-proyecto').value=p.proyecto_id||'';
   document.getElementById('ped-tipo').value=p.tipo||'Material';
-  document.getElementById('ped-prov').value=p.proveedor||'';
   if(document.getElementById('ped-ref')) document.getElementById('ped-ref').value=p.referencia||'';
   document.getElementById('ped-importe').value=p.importe||'';
   document.getElementById('ped-estado').value=p.estado||'Pendiente';
   document.getElementById('ped-obs').value=p.observaciones||'';
-  // Fill proveedor select
-  const sel=document.getElementById('ped-prov');
-  if(ProvC&&ProvC.length){
-    sel.innerHTML='<option value="">Seleccionar proveedor…</option>'+ProvC.map(pv=>`<option value="${pv.nombre}">${pv.nombre}${pv.tipo?' · '+pv.tipo:''}</option>`).join('');
-    sel.value=p.proveedor||'';
-  }
+  // Cliente
+  const cli = CC.find(c=>String(c.id)===String(p.cliente_id)||c.nombre===p.cliente_nombre);
+  document.getElementById('ped-cliente-search').value = cli?.nombre||p.cliente_nombre||'';
+  document.getElementById('ped-cliente-id').value = cli?.id||p.cliente_id||'';
+  document.getElementById('ped-cliente-val').value = cli?.nombre||p.cliente_nombre||'';
+  // Proyecto
+  const proy = PC.find(x=>x.proyecto_id===p.proyecto_id);
+  document.getElementById('ped-proyecto-search').value = proy?.nombre||p.proyecto_id||'';
+  document.getElementById('ped-proyecto-id').value = p.proyecto_id||'';
+  document.getElementById('ped-proyecto-val').value = proy?.nombre||p.proyecto_id||'';
+  // Proveedor
+  document.getElementById('ped-prov-search').value = p.proveedor||'';
+  document.getElementById('ped-prov-val').value = p.proveedor||'';
   document.querySelector('#m-pedido .modal-title').textContent='✏️ Editar pedido';
   openModal('m-pedido');
 }
@@ -3598,14 +3728,13 @@ function openPedidoModal(){
   document.getElementById('ped-fecha').value=new Date().toISOString().split('T')[0];
   document.getElementById('ped-obs').value='';
   document.getElementById('ped-importe').value='';
-  // Rellenar proveedores desde caché (cargados en init)
-  const sel=document.getElementById('ped-prov');
-  if(ProvC && ProvC.length>0){
-    sel.innerHTML='<option value="">Seleccionar proveedor…</option>'
-      +ProvC.map(p=>`<option value="${p.nombre}">${p.nombre}${p.tipo?' · '+p.tipo:''}</option>`).join('');
-  } else {
-    sel.innerHTML='<option value="">Sin proveedores — añade en menú Proveedores</option>';
-  }
+  // Reset searchable fields
+  ['ped-cliente-search','ped-cliente-id','ped-cliente-val',
+   'ped-proyecto-search','ped-proyecto-id','ped-proyecto-val',
+   'ped-prov-search','ped-prov-id','ped-prov-val'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  document.querySelector('#m-pedido .modal-title').textContent='📦 Nuevo pedido';
   openModal('m-pedido');
 }
 async function savePedido(){
@@ -3613,9 +3742,11 @@ async function savePedido(){
   const d={
     num_pedido:   document.getElementById('ped-num').value,
     fecha:        document.getElementById('ped-fecha').value||new Date().toISOString().split('T')[0],
-    proyecto_id:  document.getElementById('ped-proyecto').value||null,
+    cliente_id:   document.getElementById('ped-cliente-id')?.value||null,
+    cliente_nombre: document.getElementById('ped-cliente-val')?.value||null,
+    proyecto_id:  document.getElementById('ped-proyecto-id')?.value||null,
     tipo:         document.getElementById('ped-tipo').value,
-    proveedor:    document.getElementById('ped-prov').value,
+    proveedor:    document.getElementById('ped-prov-val')?.value||document.getElementById('ped-prov-search')?.value||'',
     referencia:   document.getElementById('ped-ref')?.value||'',
     importe:      parseFloat(document.getElementById('ped-importe').value)||0,
     estado:       document.getElementById('ped-estado').value,
