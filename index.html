@@ -4305,12 +4305,6 @@ function abrirNuevaFactura(tipo){
   if(presSel) presSel.innerHTML='<option value="">— Seleccionar presupuesto —</option>';
   openModal('m-factura');
 }
-  const base=parseFloat(document.getElementById('f-base')?.value)||0;
-  const iva=ivaPct(document.getElementById('f-iva')?.value||'21%');
-  const total=base*(1+iva/100);
-  const el=document.getElementById('f-total-display');
-  if(el)el.value=total>0?fmt(total):'';
-}
 
 // ── LÍNEAS DE FACTURA ─────────────────────────────────────
 let _facLineas = []; // array de líneas en edición
