@@ -4044,6 +4044,7 @@ async function loadFacturas(){
 }
 
 function filtrarTabFacturas(tipo){
+  window._facTabActivo = tipo;
   ['todas','venta','compra'].forEach(t=>{
     const el=document.getElementById(`ftab-${t}`);
     if(!el)return;
@@ -4059,8 +4060,7 @@ function filtrarFacturas(){
   const contra=(document.getElementById('filt-fac-contra')?.value||'').toLowerCase();
   const vto=document.getElementById('filt-fac-vto')?.value||'';
   const estado=document.getElementById('filt-fac-estado')?.value||'';
-  const activeTab=document.querySelector('[id^="ftab-"][style*="background:var(--navy)"]');
-  const tipo=activeTab?activeTab.id.replace('ftab-',''):'todas';
+  const tipo=(window._facTabActivo||'todas');
 
   let visible=0;
   document.querySelectorAll('#facturas-tbody tr[data-tipo]').forEach(tr=>{
