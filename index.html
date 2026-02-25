@@ -215,6 +215,9 @@ tbody td{padding:7px 10px;vertical-align:middle}
 }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  #login-screen { display: none !important; }
+</style>
 </head>
 <body>
 
@@ -307,7 +310,7 @@ tbody td{padding:7px 10px;vertical-align:middle}
           <div>
             <div style="font-size:18px;font-weight:700;color:#1a2a3a">PAU INTERIORISMO S.L.</div>
             <div style="color:#666;margin-top:3px">C/ Tomás y Valiente Nº 6 Bajo, 46290 Alcàsser (Valencia)</div>
-            <div style="color:#666">Tel: 961 20 01 87 · info@pauinteriorismo.com</div>
+            <div style="color:#666">Tel: 961 20 01 87 · <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="5f363139301f2f3e2a36312b3a2d36302d362c3230713c3032">[email&#160;protected]</a></div>
             <div style="color:#666">CIF: B-56909641</div>
           </div>
           <div style="text-align:right">
@@ -439,7 +442,7 @@ tbody td{padding:7px 10px;vertical-align:middle}
           <div>
             <div style="font-size:18px;font-weight:700;color:#1a2a3a">PAU INTERIORISMO S.L.</div>
             <div style="color:#666;font-size:10px">C/ Tomás y Valiente Nº 6 Bajo · 46290 Alcàsser (Valencia)</div>
-            <div style="color:#666;font-size:10px">info@pauinteriorismo.com · Tel: 961 20 01 87 · CIF: B-56909641</div>
+            <div style="color:#666;font-size:10px"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="650c0b030a251504100c0b1100170c0a170c16080a4b060a08">[email&#160;protected]</a> · Tel: 961 20 01 87 · CIF: B-56909641</div>
           </div>
           <div style="text-align:right">
             <div style="font-size:20px;font-weight:700;color:#b87333">PEDIDO</div>
@@ -485,7 +488,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         </div>
         <!-- PIE -->
         <div style="color:#666;font-size:10px;text-align:center;border-top:1px solid #eee;padding-top:10px">
-          PAU INTERIORISMO S.L. · CIF B-56909641 · info@pauinteriorismo.com
+          PAU INTERIORISMO S.L. · CIF B-56909641 · <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="d1b8bfb7be91a1b0a4b8bfa5b4a3b8bea3b8a2bcbeffb2bebc">[email&#160;protected]</a>
         </div>
       </div>
     </div>
@@ -1798,7 +1801,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 
 <div class="toast" id="toast"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script>
 
 // ═══════════════════════════════════════════
@@ -5442,18 +5445,4 @@ if('serviceWorker' in navigator){
       <div class="table-wrap" style="max-height:340px;overflow-y:auto"><table>
         <thead><tr>
           <th><input type="checkbox" id="prov-chk-all" onchange="toggleAll('prov-chk',this.checked)" checked style="width:15px;height:15px"></th>
-          <th>Nombre</th><th>CIF/NIF</th><th>Teléfono</th><th>Email</th><th>Especialidad</th><th>Forma pago</th><th>IBAN</th><th>Estado</th>
-        </tr></thead>
-        <tbody id="prov-import-tbody"></tbody>
-      </table></div>
-    </div>
-  </div>
-  <div class="modal-foot">
-    <button class="btn btn-ghost" onclick="closeModal('m-import-proveedores')">Cancelar</button>
-    <button class="btn btn-primary" id="btn-import-proveedores" style="display:none"
-      onclick="ejecutarImportProveedores()">🏭 Importar proveedores seleccionados</button>
-  </div>
-</div>
-</div>
-</body>
-</html>
+          <th>Nombre</th><th>CIF/NIF</th><th>Teléfono</th><th>Email</th><th>Especialidad</th><th>Forma
