@@ -689,6 +689,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     <div class="view" id="view-clientes">
       <div class="search-bar">
         <div class="search-wrap"><span class="search-icon">🔍</span><input class="form-input" id="search-clientes" placeholder="Buscar cliente…" oninput="filterTable('clientes-tbody','search-clientes')"></div>
+        <button class="btn btn-ghost btn-sm" onclick="openModal('m-import-clientes')" style="border:1px dashed var(--border)">📤 Importar Holded</button>
         <button class="btn btn-primary" onclick="openModal('m-cliente')">＋ Nuevo cliente</button>
       </div>
       <div class="card">
@@ -895,6 +896,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     <div class="view" id="view-proveedores">
       <div class="search-bar">
         <div class="search-wrap"><span class="search-icon">🔍</span><input class="form-input" id="search-proveedores" placeholder="Buscar…" oninput="filterTable('proveedores-tbody','search-proveedores')"></div>
+        <button class="btn btn-ghost btn-sm" onclick="openModal('m-import-proveedores')" style="border:1px dashed var(--border)">📤 Importar Holded</button>
         <button class="btn btn-primary" onclick="openModal('m-proveedor')">＋ Nuevo proveedor</button>
       </div>
       <div class="card">
@@ -5084,6 +5086,221 @@ async function ejecutarImportHolded(){
   await loadProveedores();
 }
 
+// ════════════════════════════════════════════════════════════════
+// IMPORTADOR HOLDED — CLIENTES
+// ════════════════════════════════════════════════════════════════
+
+let holdedCli = [];
+
+function toggleAll(cls, checked){
+  document.querySelectorAll('.' + cls).forEach(cb => cb.checked = checked);
+}
+
+async function leerArchivoHolded(file){
+  const ext = file.name.split('.').pop().toLowerCase();
+  if(ext === 'csv'){
+    const text = await file.text();
+    return parsearCSVGenerico(text);
+  } else {
+    return new Promise(resolve => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          if(typeof XLSX !== 'undefined'){
+            const wb = XLSX.read(new Uint8Array(e.target.result), {type:'array', cellDates:true});
+            const ws = wb.Sheets[wb.SheetNames[0]];
+            const json = XLSX.utils.sheet_to_json(ws, {raw:false, dateNF:'yyyy-mm-dd'});
+            resolve(json.map(row => {
+              const r = {};
+              Object.keys(row).forEach(k => r[k.toLowerCase().trim()] = String(row[k]||'').trim());
+              return r;
+            }));
+          } else { resolve([]); }
+        } catch(e){ resolve([]); }
+      };
+      reader.readAsArrayBuffer(file);
+    });
+  }
+}
+
+function parsearCSVGenerico(text){
+  const sep = text.includes(';') ? ';' : ',';
+  const lines = text.split('\n').map(l=>l.trim()).filter(l=>l);
+  if(lines.length < 2) return [];
+  const headers = lines[0].split(sep).map(h=>h.replace(/"/g,'').toLowerCase().trim());
+  return lines.slice(1).map(line => {
+    const cols = line.split(sep).map(c=>c.replace(/"/g,'').trim());
+    const obj = {};
+    headers.forEach((h,i) => obj[h] = cols[i]||'');
+    return obj;
+  }).filter(r => Object.values(r).some(v=>v));
+}
+
+function getField(obj, ...keys){
+  for(const k of keys){
+    const v = obj[k] || obj[k.toLowerCase()] || obj[k.toUpperCase()];
+    if(v && String(v).trim()) return String(v).trim();
+  }
+  return '';
+}
+
+function mapearFormaPago(s){
+  const l = (s||'').toLowerCase();
+  if(l.includes('transfer')) return 'Transferencia';
+  if(l.includes('efect') || l.includes('cash')) return 'Efectivo';
+  if(l.includes('domic')) return 'Domiciliación';
+  if(l.includes('confirm')) return 'Confirming';
+  if(l.includes('cheque') || l.includes('check')) return 'Cheque';
+  if(l.includes('giro') || l.includes('30')) return 'Giro 30 días';
+  if(l.includes('60')) return 'Giro 60 días';
+  if(l.includes('90')) return 'Giro 90 días';
+  if(l.includes('120')) return 'Giro 120 días';
+  return 'Transferencia';
+}
+
+async function procesarImportClientes(){
+  const file = document.getElementById('cli-holded-file')?.files[0];
+  if(!file) return;
+  const rows = await leerArchivoHolded(file);
+  if(!rows.length){ toast('No se encontraron datos en el archivo','error'); return; }
+
+  holdedCli = rows.map(r => ({
+    nombre:    getField(r,'nombre','name','razón social','razon social','empresa','company','client','cliente'),
+    cif:       getField(r,'cif','nif','tax id','tax number','vat','cif/nif','nif/cif','número fiscal','num. fiscal'),
+    telefono:  getField(r,'teléfono','telefono','phone','tel','móvil','movil','mobile'),
+    email:     getField(r,'email','e-mail','correo','mail'),
+    direccion: getField(r,'dirección','direccion','address','domicilio','calle','dir.'),
+    forma_pago:mapearFormaPago(getField(r,'forma pago','forma de pago','payment method','método pago','vencimiento')),
+    notas:     getField(r,'notas','notes','observaciones','comentarios'),
+  })).filter(r => r.nombre);
+
+  renderImportPreview('cli', holdedCli, CC, 'nombre',
+    ['nombre','cif','telefono','email','direccion','forma_pago'],
+    ['Nombre','CIF/NIF','Teléfono','Email','Dirección','Forma pago']);
+}
+
+function renderImportPreview(prefix, rows, existing, matchKey, fields, labels){
+  const existSet = new Set(existing.map(e => (e[matchKey]||'').toLowerCase().trim()));
+  const preview  = document.getElementById(`${prefix}-import-preview`);
+  const resumen  = document.getElementById(`${prefix}-import-resumen`);
+  const tbody    = document.getElementById(`${prefix}-import-tbody`);
+  const btn      = document.getElementById(`btn-import-${prefix==='cli'?'clientes':'proveedores'}`);
+
+  if(preview) preview.style.display = '';
+  if(btn)     btn.style.display     = '';
+
+  const nuevos = rows.filter(r => !existSet.has((r[matchKey]||'').toLowerCase().trim())).length;
+  const dups   = rows.length - nuevos;
+
+  if(resumen) resumen.innerHTML =
+    `<span style="color:var(--navy)">${rows.length} registros en el archivo</span>
+     · <span style="color:var(--green)">✅ ${nuevos} nuevos</span>
+     ${dups ? `· <span style="color:var(--amber)">⚠️ ${dups} ya existen (marcados en naranja — se omitirán)</span>` : ''}`;
+
+  tbody.innerHTML = rows.map((r,i) => {
+    const dup = existSet.has((r[matchKey]||'').toLowerCase().trim());
+    const tds = fields.map(f => `<td style="font-size:11px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r[f]||'—'}</td>`).join('');
+    return `<tr style="${dup?'background:#fff9e6;opacity:0.6':''}">
+      <td><input type="checkbox" class="${prefix}-chk" data-idx="${i}" ${dup?'':'checked'} style="width:15px;height:15px"></td>
+      ${tds}
+      <td style="font-size:10px;font-weight:700;color:${dup?'var(--amber)':'var(--green)'}">
+        ${dup ? '⚠️ Ya existe' : '🆕 Nuevo'}
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function ejecutarImportClientes(){
+  const checked = [...document.querySelectorAll('.cli-chk:checked')];
+  if(!checked.length){ toast('Selecciona al menos un cliente','error'); return; }
+  const btn = document.getElementById('btn-import-clientes');
+  if(btn){ btn.disabled=true; btn.textContent='Importando…'; }
+
+  const existSet = new Set(CC.map(c=>(c.nombre||'').toLowerCase().trim()));
+  let ok=0, omitidos=0;
+
+  for(const cb of checked){
+    const r = holdedCli[parseInt(cb.dataset.idx)];
+    if(existSet.has((r.nombre||'').toLowerCase().trim())){ omitidos++; continue; }
+    try{
+      const d = { ...r, cliente_id: genId('CLI', CC, 'cliente_id'), tipo:'Cliente', activo:true };
+      await sbPost('clientes', d);
+      CC.push(d);
+      ok++;
+    } catch(e){ console.warn('Error cliente', r.nombre, e.message); }
+  }
+
+  if(btn){ btn.disabled=false; btn.textContent='👤 Importar clientes seleccionados'; }
+  toast(`✅ ${ok} clientes importados${omitidos?` · ${omitidos} ya existían (omitidos)`:''}` );
+  closeModal('m-import-clientes');
+  document.getElementById('cli-holded-file').value='';
+  document.getElementById('cli-import-preview').style.display='none';
+  holdedCli=[];
+  await loadClientes();
+  populateSelects();
+}
+
+// ════════════════════════════════════════════════════════════════
+// IMPORTADOR HOLDED — PROVEEDORES
+// ════════════════════════════════════════════════════════════════
+
+let holdedProv = [];
+
+async function procesarImportProveedores(){
+  const file = document.getElementById('prov-holded-file')?.files[0];
+  if(!file) return;
+  const rows = await leerArchivoHolded(file);
+  if(!rows.length){ toast('No se encontraron datos en el archivo','error'); return; }
+
+  holdedProv = rows.map(r => ({
+    nombre:      getField(r,'nombre','name','razón social','razon social','empresa','company','proveedor','supplier','vendor'),
+    cif:         getField(r,'cif','nif','tax id','vat','cif/nif','número fiscal'),
+    telefono:    getField(r,'teléfono','telefono','phone','tel','móvil','movil'),
+    email:       getField(r,'email','e-mail','correo','mail'),
+    especialidad:getField(r,'especialidad','specialty','categoría','categoria','tipo servicio','servicio'),
+    forma_pago:  mapearFormaPago(getField(r,'forma pago','forma de pago','payment method','vencimiento')),
+    iban:        getField(r,'iban','cuenta','account','bank account','número cuenta'),
+    notas:       getField(r,'notas','notes','observaciones','comentarios'),
+    tipo:        'Proveedor',
+    activo:      true,
+  })).filter(r => r.nombre);
+
+  renderImportPreview('prov', holdedProv, ProvC, 'nombre',
+    ['nombre','cif','telefono','email','especialidad','forma_pago','iban'],
+    ['Nombre','CIF/NIF','Teléfono','Email','Especialidad','Forma pago','IBAN']);
+}
+
+async function ejecutarImportProveedores(){
+  const checked = [...document.querySelectorAll('.prov-chk:checked')];
+  if(!checked.length){ toast('Selecciona al menos un proveedor','error'); return; }
+  const btn = document.getElementById('btn-import-proveedores');
+  if(btn){ btn.disabled=true; btn.textContent='Importando…'; }
+
+  const existSet = new Set(ProvC.map(p=>(p.nombre||'').toLowerCase().trim()));
+  let ok=0, omitidos=0;
+
+  for(const cb of checked){
+    const r = holdedProv[parseInt(cb.dataset.idx)];
+    if(existSet.has((r.nombre||'').toLowerCase().trim())){ omitidos++; continue; }
+    try{
+      const d = { ...r, proveedor_id: genId('PRV', ProvC, 'proveedor_id') };
+      await sbPost('proveedores', d);
+      ProvC.push(d);
+      ok++;
+    } catch(e){ console.warn('Error proveedor', r.nombre, e.message); }
+  }
+
+  if(btn){ btn.disabled=false; btn.textContent='🏭 Importar proveedores seleccionados'; }
+  toast(`✅ ${ok} proveedores importados${omitidos?` · ${omitidos} ya existían (omitidos)`:''}` );
+  closeModal('m-import-proveedores');
+  document.getElementById('prov-holded-file').value='';
+  document.getElementById('prov-import-preview').style.display='none';
+  holdedProv=[];
+  await loadProveedores();
+  populateSelects();
+}
+
+
 // ═══ PWA SERVICE WORKER ═══
 if('serviceWorker' in navigator){
   window.addEventListener('load', ()=>{
@@ -5150,6 +5367,84 @@ if('serviceWorker' in navigator){
     <button class="btn btn-ghost" onclick="closeModal('m-importar-holded')">Cancelar</button>
     <button class="btn btn-primary" id="btn-importar-holded" style="display:none"
       onclick="ejecutarImportHolded()">📥 Importar facturas seleccionadas</button>
+  </div>
+</div>
+</div>
+
+<!-- ═══ MODAL IMPORTAR CLIENTES HOLDED ═══ -->
+<div class="modal-overlay" id="m-import-clientes">
+<div class="modal" style="width:820px;max-width:96vw">
+  <div class="modal-head">
+    <div class="modal-title">👤 Importar clientes desde Holded</div>
+    <button class="modal-close" onclick="closeModal('m-import-clientes')">×</button>
+  </div>
+  <div class="modal-body">
+    <div class="info-box" style="margin-bottom:14px">
+      <strong>¿Cómo exportar desde Holded?</strong><br>
+      Ve a <strong>Contactos → Clientes</strong> · Pulsa <strong>⬇ Exportar → Excel o CSV</strong>
+    </div>
+    <div style="margin-bottom:14px">
+      <label class="form-label">Archivo exportado de Holded (.xlsx o .csv)</label>
+      <input type="file" id="cli-holded-file" accept=".xlsx,.xls,.csv" class="form-input"
+        onchange="procesarImportClientes()" style="padding:6px">
+    </div>
+    <div id="cli-import-preview" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div id="cli-import-resumen" style="font-size:13px;font-weight:600;color:var(--navy)"></div>
+        <div style="font-size:11px;color:var(--text-soft)">Desmarca los que no quieras importar</div>
+      </div>
+      <div class="table-wrap" style="max-height:340px;overflow-y:auto"><table>
+        <thead><tr>
+          <th><input type="checkbox" id="cli-chk-all" onchange="toggleAll('cli-chk',this.checked)" checked style="width:15px;height:15px"></th>
+          <th>Nombre</th><th>CIF/NIF</th><th>Teléfono</th><th>Email</th><th>Dirección</th><th>Forma pago</th><th>Estado</th>
+        </tr></thead>
+        <tbody id="cli-import-tbody"></tbody>
+      </table></div>
+    </div>
+  </div>
+  <div class="modal-foot">
+    <button class="btn btn-ghost" onclick="closeModal('m-import-clientes')">Cancelar</button>
+    <button class="btn btn-primary" id="btn-import-clientes" style="display:none"
+      onclick="ejecutarImportClientes()">👤 Importar clientes seleccionados</button>
+  </div>
+</div>
+</div>
+
+<!-- ═══ MODAL IMPORTAR PROVEEDORES HOLDED ═══ -->
+<div class="modal-overlay" id="m-import-proveedores">
+<div class="modal" style="width:820px;max-width:96vw">
+  <div class="modal-head">
+    <div class="modal-title">🏭 Importar proveedores desde Holded</div>
+    <button class="modal-close" onclick="closeModal('m-import-proveedores')">×</button>
+  </div>
+  <div class="modal-body">
+    <div class="info-box" style="margin-bottom:14px">
+      <strong>¿Cómo exportar desde Holded?</strong><br>
+      Ve a <strong>Contactos → Proveedores</strong> · Pulsa <strong>⬇ Exportar → Excel o CSV</strong>
+    </div>
+    <div style="margin-bottom:14px">
+      <label class="form-label">Archivo exportado de Holded (.xlsx o .csv)</label>
+      <input type="file" id="prov-holded-file" accept=".xlsx,.xls,.csv" class="form-input"
+        onchange="procesarImportProveedores()" style="padding:6px">
+    </div>
+    <div id="prov-import-preview" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div id="prov-import-resumen" style="font-size:13px;font-weight:600;color:var(--navy)"></div>
+        <div style="font-size:11px;color:var(--text-soft)">Desmarca los que no quieras importar</div>
+      </div>
+      <div class="table-wrap" style="max-height:340px;overflow-y:auto"><table>
+        <thead><tr>
+          <th><input type="checkbox" id="prov-chk-all" onchange="toggleAll('prov-chk',this.checked)" checked style="width:15px;height:15px"></th>
+          <th>Nombre</th><th>CIF/NIF</th><th>Teléfono</th><th>Email</th><th>Especialidad</th><th>Forma pago</th><th>IBAN</th><th>Estado</th>
+        </tr></thead>
+        <tbody id="prov-import-tbody"></tbody>
+      </table></div>
+    </div>
+  </div>
+  <div class="modal-foot">
+    <button class="btn btn-ghost" onclick="closeModal('m-import-proveedores')">Cancelar</button>
+    <button class="btn btn-primary" id="btn-import-proveedores" style="display:none"
+      onclick="ejecutarImportProveedores()">🏭 Importar proveedores seleccionados</button>
   </div>
 </div>
 </div>
