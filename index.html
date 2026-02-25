@@ -4858,8 +4858,7 @@ async function procesarArchivoHolded(){
 }
 
 function parsearCSVHolded(text){
-  const lineas = text.split('
-').map(l=>l.trim()).filter(l=>l);
+  const lineas = text.split('\n').map(l=>l.trim()).filter(l=>l);
   if(lineas.length < 2) return [];
   const sep = text.includes(';') ? ';' : ',';
   const headers = lineas[0].split(sep).map(h=>h.replace(/"/g,'').trim().toLowerCase());
