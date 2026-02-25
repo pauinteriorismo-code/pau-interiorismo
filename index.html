@@ -4450,28 +4450,42 @@ function sugerirDiasPago(){
     if(cursor.getMonth() > ref.getMonth() + 12) break; // safety
   }
 
-  // Rellenar los campos de vencimiento en gris (placeholder visual)
-  const ids = ['f-vto','f-vto2','f-vto3','f-vto4'];
-  sugerencias.forEach((fecha, i) => {
-    const el = document.getElementById(ids[i]);
-    if(el){ el.value = fecha; el.style.color='var(--text-soft)'; }
+  // Contar cuántos vencimientos tiene ya el usuario rellenados (fechas con valor)
+  const idsVto = ['f-vto','f-vto2','f-vto3','f-vto4'];
+  const vtoConValor = idsVto.filter(id => {
+    const el = document.getElementById(id);
+    return el && el.value;
+  });
+  // Si ya tiene fechas puestas, respetar cuántas son; si no, sugerir solo 1
+  const numVtos = vtoConValor.length || 1;
+
+  // Solo rellenar fechas en los vencimientos visibles QUE ESTÉN VACÍOS
+  // (si el usuario ya puso fechas, no las tocamos)
+  sugerencias.slice(0, numVtos).forEach((fecha, i) => {
+    const el = document.getElementById(idsVto[i]);
+    if(el && !el.value){ el.value = fecha; el.style.color='var(--text-soft)'; }
   });
 
-  // Distribuir importe total en partes iguales
+  // Distribuir importe total SOLO entre los vencimientos visibles
   const base2 = parseFloat(document.getElementById('f-base')?.value)||0;
   const iva   = ivaPct(document.getElementById('f-iva')?.value||'21%');
   const total = base2*(1+iva/100);
   if(total > 0){
-    const parte = (total / sugerencias.length).toFixed(2);
+    const parte = (total / numVtos).toFixed(2);
     ['f-importe-vto1','f-importe-vto2','f-importe-vto3','f-importe-vto4'].forEach((id,i)=>{
       const el=document.getElementById(id);
-      if(el && i < sugerencias.length){
-        el.value = i < sugerencias.length-1 ? parte : (total - parte*(sugerencias.length-1)).toFixed(2);
+      if(!el) return;
+      if(i < numVtos){
+        // Último vencimiento absorbe el redondeo
+        el.value = i < numVtos-1 ? parte : (total - parseFloat(parte)*(numVtos-1)).toFixed(2);
         el.style.color='var(--text-soft)';
+      } else {
+        // Limpiar vencimientos que no aplican
+        el.value = '';
       }
     });
   }
-  toast(`Sugeridos ${sugerencias.length} vencimientos: días ${DIAS_PAGO[0]} y ${DIAS_PAGO[1]} ✅`);
+  toast(`💡 Importe dividido en ${numVtos} vencimiento${numVtos>1?'s':''} ✅`);
 }
 
 // Confirmar vencimiento (quitar estilo gris cuando el usuario hace click)
