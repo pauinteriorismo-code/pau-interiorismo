@@ -2694,15 +2694,26 @@ async function loadGerencia(){
     document.getElementById('gi-sub').textContent=fmt(totalIvaSub);
     document.getElementById('gi-neto').textContent=fmt(totalIvaRep-totalIvaComp);
 
-    // Rentabilidad por proyecto — SOLO facturas (venta=ingresos, compra=costes)
+    // Rentabilidad por proyecto — SOLO facturas con proyecto asignado
+    // Comparación explícita: Compra === 'Compra', cualquier otra cosa = Venta
     const ventasByProy={}, costesByProy={};
-    facVenta.forEach(f=>{ventasByProy[f.proyecto_id]=(ventasByProy[f.proyecto_id]||0)+(f.base_imponible||0);});
-    facCompra.forEach(f=>{costesByProy[f.proyecto_id]=(costesByProy[f.proyecto_id]||0)+(f.base_imponible||0);});
+    fac.forEach(f=>{
+      const pid=(f.proyecto_id||'').trim();
+      if(!pid) return; // ignorar facturas sin proyecto
+      const base=parseFloat(f.base_imponible)||0;
+      if(f.tipo_factura==='Compra'){
+        costesByProy[pid]=(costesByProy[pid]||0)+base;
+      } else {
+        // Venta, o null/undefined -> venta por defecto
+        ventasByProy[pid]=(ventasByProy[pid]||0)+base;
+      }
+    });
 
     const tbody=document.getElementById('g-rent-table');
     if(!pr.length){tbody.innerHTML='<tr><td colspan="7"><div class="empty"><div class="empty-icon">📁</div><div class="empty-text">Sin proyectos</div></div></td></tr>';return;}
     tbody.innerHTML=pr.map(p=>{
-      const v=ventasByProy[p.proyecto_id]||0, c=costesByProy[p.proyecto_id]||0;
+      const pid=(p.proyecto_id||'').trim();
+      const v=ventasByProy[pid]||0, c=costesByProy[pid]||0;
       const ben=v-c, mg=v>0?(ben/v)*100:0;
       return`<tr>
         <td class="td-mono" style="color:var(--text-soft)">${p.proyecto_id}</td>
@@ -5617,6 +5628,9 @@ async function loadRRHH(){
   tbody.innerHTML = '<tr><td colspan="12" class="loading">Cargando…</td></tr>';
   try{
     TrabC = await sbGet('trabajadores_rrhh','?order=nombre.asc');
+    // Sincronizar lista activos con TRABAJADORES global
+    const activos = TrabC.filter(t=>t.estado==='Activo').map(t=>t.nombre).filter(Boolean);
+    if(activos.length){ TRABAJADORES = activos; populateTrabajadores(); }
     renderRRHH();
   }catch(e){
     tbody.innerHTML=`<tr><td colspan="12" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}<br><small>Ejecuta el SQL de creación de tabla primero</small></td></tr>`;
@@ -5769,6 +5783,17 @@ async function saveTrabajador(){
   try{
     if(id){ await sb('trabajadores_rrhh','PATCH',d,null,`?id=eq.${id}`); toast('Trabajador actualizado ✅'); }
     else  { await sbPost('trabajadores_rrhh',d); toast('Trabajador guardado ✅'); }
+
+    // ── Sincronizar nombre con lista global TRABAJADORES ──
+    // Cargamos todos los trabajadores activos y actualizamos la lista
+    const todosRRHH = await sbGet('trabajadores_rrhh','?estado=eq.Activo&order=nombre.asc');
+    const nombresActivos = todosRRHH.map(t=>t.nombre).filter(Boolean);
+    // Actualizar array en memoria
+    TRABAJADORES = nombresActivos;
+    // Guardar en configuracion (misma clave que usa la página Listas)
+    await upsertConfig('trabajadores', JSON.stringify(nombresActivos));
+    populateTrabajadores();
+
     closeModal('m-trabajador');
     await loadRRHH();
   }catch(e){ toast('Error: '+e.message,'error'); }
