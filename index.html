@@ -4594,8 +4594,7 @@ function previsualizarFactura(){
     +'<div class="tr"><span>Base imponible</span><span>'+fmtE(d.base)+'</span></div>'
     +'<div class="tr"><span>IVA ('+escH(d.ivaSel)+')</span><span>'+fmtE(d.ivaImporte)+'</span></div>'
     +'<div class="tr tf"><span>TOTAL</span><span>'+fmtE(d.total)+'</span></div>'
-    +(d.cobrado>0?'<div class="tr" style="color:#27ae60"><span>Cobrado/Pagado</span><span>'+fmtE(d.cobrado)+'</span></div>':'')
-    +(d.pdte>0.01?'<div class="tr" style="color:#e67e22;font-weight:700"><span>Pendiente</span><span>'+fmtE(d.pdte)+'</span></div>':'')
+    // cobrado/pendiente omitidos — son información interna
     +'</div>'
     +'</div>'
     +'<div style="padding:12px 28px 0">'+_getPieHtml()+'</div>'
