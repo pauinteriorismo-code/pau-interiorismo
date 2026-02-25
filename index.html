@@ -601,9 +601,9 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     <div class="view active" id="view-gerencia">
       <div class="kpi-grid">
         <div class="kpi blue"><div class="kpi-label">Total Ventas (Base Imp.)</div><div class="kpi-value" id="g-ventas">—</div><div class="kpi-sub">Facturas emitidas</div></div>
-        <div class="kpi red"><div class="kpi-label">Total Costes</div><div class="kpi-value" id="g-costes">—</div><div class="kpi-sub">Compras + Subcontr. + MO</div></div>
-        <div class="kpi green"><div class="kpi-label">Beneficio Real</div><div class="kpi-value" id="g-benef">—</div><div class="kpi-sub">Ventas − Costes</div></div>
-        <div class="kpi amber"><div class="kpi-label">Margen Real %</div><div class="kpi-value" id="g-margen">—</div><div class="kpi-sub">Sobre ventas</div></div>
+        <div class="kpi red"><div class="kpi-label">Total Costes (Base Imp.)</div><div class="kpi-value" id="g-costes">—</div><div class="kpi-sub">Facturas recibidas</div></div>
+        <div class="kpi green"><div class="kpi-label">Beneficio Neto</div><div class="kpi-value" id="g-benef">—</div><div class="kpi-sub">Ventas − Costes (base imp.)</div></div>
+        <div class="kpi amber"><div class="kpi-label">Margen Neto %</div><div class="kpi-value" id="g-margen">—</div><div class="kpi-sub">Sobre base imponible</div></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
         <!-- Resumen económico -->
@@ -613,11 +613,11 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
             <div class="cuenta-row header"><span>Concepto</span><span>Importe €</span><span>%</span></div>
             <div class="cuenta-row"><span>Total Ventas (Base Imp.)</span><span id="ge-ventas">—</span><span>100%</span></div>
             <div class="cuenta-row"><span>IVA Repercutido</span><span id="ge-iva-rep">—</span><span></span></div>
-            <div class="cuenta-row"><span style="color:var(--text-soft)">— Compras materiales</span><span id="ge-compras">—</span><span id="ge-compras-pct">—</span></div>
-            <div class="cuenta-row"><span style="color:var(--text-soft)">— Subcontratas</span><span id="ge-subcs">—</span><span id="ge-subcs-pct">—</span></div>
-            <div class="cuenta-row"><span style="color:var(--text-soft)">— Mano de obra propia</span><span id="ge-mo">—</span><span id="ge-mo-pct">—</span></div>
-            <div class="cuenta-row total"><span>TOTAL COSTES</span><span id="ge-costes-tot">—</span><span id="ge-costes-pct">—</span></div>
-            <div class="cuenta-row result" id="ge-result-row"><span>BENEFICIO BRUTO</span><span id="ge-beneficio">—</span><span id="ge-benef-pct">—</span></div>
+            <div class="cuenta-row"><span style="color:var(--text-soft)">— Compras (fact. recibidas)</span><span id="ge-compras">—</span><span id="ge-compras-pct">—</span></div>
+            <div class="cuenta-row" style="display:none"><span></span><span id="ge-subcs">—</span><span id="ge-subcs-pct"></span></div>
+            <div class="cuenta-row" style="display:none"><span></span><span id="ge-mo">—</span><span id="ge-mo-pct"></span></div>
+            <div class="cuenta-row total"><span>TOTAL COSTES (Base Imp.)</span><span id="ge-costes-tot">—</span><span id="ge-costes-pct">—</span></div>
+            <div class="cuenta-row result" id="ge-result-row"><span>BENEFICIO NETO</span><span id="ge-beneficio">—</span><span id="ge-benef-pct">—</span></div>
           </div>
         </div>
         <!-- Proyectos por estado -->
@@ -983,7 +983,12 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     <!-- ═══ RENTABILIDAD ═══ -->
     <div class="view" id="view-rentabilidad">
       <div class="search-bar">
-        <select class="form-input" style="width:300px" id="rent-proyecto-sel" onchange="loadRentabilidad()"><option value="">Seleccionar proyecto…</option></select>
+        <select class="form-input" style="width:220px" id="rent-cliente-sel" onchange="filtrarProyectosRentabilidad()">
+          <option value="">📁 Seleccionar cliente…</option>
+        </select>
+        <select class="form-input" style="width:280px" id="rent-proyecto-sel" onchange="loadRentabilidad()" disabled>
+          <option value="">— Selecciona cliente primero —</option>
+        </select>
         <select class="form-input" style="width:75px" id="rent-version-sel" onchange="loadRentabilidad()"><option value="v1">v1</option><option value="v2">v2</option><option value="v3">v3</option></select>
       </div>
       <div id="rent-kpis" style="display:none">
@@ -1007,7 +1012,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         </div>
         <div class="card"><div class="card-header"><div class="card-title">🧾 Facturas emitidas</div><div id="rk-fact-total" style="font-weight:700;color:var(--green)"></div></div><div class="table-wrap"><table><thead><tr><th>Nº Factura</th><th>Fecha</th><th>Base Imp.</th><th>Total c/IVA</th><th>Estado</th></tr></thead><tbody id="rk-fact-list"></tbody></table></div></div>
       </div>
-      <div id="rent-empty" class="empty"><div class="empty-icon">📈</div><div class="empty-text">Selecciona un proyecto para ver su rentabilidad</div></div>
+      <div id="rent-empty" class="empty"><div class="empty-icon">📁</div><div class="empty-text">Selecciona un cliente y luego el proyecto para ver su rentabilidad</div></div>
     </div>
 
     <!-- ═══ FACTURAS ═══ -->
@@ -2558,41 +2563,45 @@ async function loadGerencia(){
     CC=cl;PC=pr;TC=ta;CoC=comp;ScC=subc;HC=hor;FC=fac;
     document.getElementById('cype-badge').textContent=cy.length;
 
-    // Cálculos
-    const totalVentas=fac.reduce((s,f)=>s+(f.base_imponible||0),0);
-    const totalIvaRep=fac.reduce((s,f)=>s+(f.base_imponible||0)*ivaPct(f.iva_pct)/100,0);
+    // KPIs superiores y resumen: SOLO facturas emitidas y recibidas (base imponible)
+    const facVenta  = fac.filter(f=>(f.tipo_factura||'Venta')==='Venta');
+    const facCompra = fac.filter(f=>(f.tipo_factura||'Venta')==='Compra');
+    const kpiVentas = facVenta.reduce((s,f)=>s+(f.base_imponible||0),0);
+    const kpiCostes = facCompra.reduce((s,f)=>s+(f.base_imponible||0),0);
+    const kpiBenef  = kpiVentas - kpiCostes;
+    const kpiMargen = kpiVentas>0?(kpiBenef/kpiVentas)*100:0;
+    const totalIvaRep=facVenta.reduce((s,f)=>s+(f.base_imponible||0)*ivaPct(f.iva_pct)/100,0);
+    const totalIvaComp=facCompra.reduce((s,f)=>s+(f.base_imponible||0)*ivaPct(f.iva_pct)/100,0);
+
+    // KPIs top — solo facturas, base imponible
+    document.getElementById('g-ventas').textContent=fmt(kpiVentas);
+    document.getElementById('g-costes').textContent=fmt(kpiCostes);
+    document.getElementById('g-benef').textContent=fmt(kpiBenef);
+    document.getElementById('g-benef').style.color=kpiBenef>=0?'var(--green)':'var(--red)';
+    document.getElementById('g-margen').textContent=fmtP(kpiMargen);
+
+    // Resumen económico — solo facturas, base imponible
+    const pv=kpiVentas>0;
+    document.getElementById('ge-ventas').textContent=fmt(kpiVentas);
+    document.getElementById('ge-iva-rep').textContent=fmt(totalIvaRep);
+    document.getElementById('ge-compras').textContent=fmt(kpiCostes);
+    document.getElementById('ge-compras-pct').textContent=pv?fmtP(kpiCostes/kpiVentas*100):'—';
+    document.getElementById('ge-subcs').textContent='—';
+    document.getElementById('ge-subcs-pct').textContent='';
+    document.getElementById('ge-mo').textContent='—';
+    document.getElementById('ge-mo-pct').textContent='';
+    document.getElementById('ge-costes-tot').textContent=fmt(kpiCostes);
+    document.getElementById('ge-costes-pct').textContent=pv?fmtP(kpiCostes/kpiVentas*100):'—';
+    document.getElementById('ge-beneficio').textContent=fmt(kpiBenef);
+    document.getElementById('ge-benef-pct').textContent=pv?fmtP(kpiMargen):'—';
+    document.getElementById('ge-result-row').className='cuenta-row result'+(kpiBenef<0?' neg':'');
+
+    // Variables auxiliares para tarjetas inferiores (seguimiento pagos/horas/IVA) — NO afectan KPIs
     const totalCompras=comp.reduce((s,c)=>s+(c.base_imponible||0),0);
-    const totalIvaComp=comp.reduce((s,c)=>s+(c.base_imponible||0)*ivaPct(c.iva_pct)/100,0);
+    const totalIvaComp2=comp.reduce((s,c)=>s+(c.base_imponible||0)*ivaPct(c.iva_pct)/100,0);
     const totalSubcs=subc.reduce((s,c)=>s+(c.importe||0),0);
     const totalIvaSub=subc.reduce((s,c)=>s+(c.importe||0)*ivaPct(c.iva_pct)/100,0);
     const totalMO=hor.reduce((s,h)=>s+(h.total||0),0);
-    const totalCostes=totalCompras+totalSubcs+totalMO;
-    const beneficio=totalVentas-totalCostes;
-    const margen=totalVentas>0?(beneficio/totalVentas)*100:0;
-
-    // KPIs top
-    document.getElementById('g-ventas').textContent=fmt(totalVentas);
-    document.getElementById('g-costes').textContent=fmt(totalCostes);
-    document.getElementById('g-benef').textContent=fmt(beneficio);
-    document.getElementById('g-benef').style.color=beneficio>=0?'var(--green)':'var(--red)';
-    document.getElementById('g-margen').textContent=fmtP(margen);
-
-    // Resumen económico
-    const pv=totalVentas>0;
-    document.getElementById('ge-ventas').textContent=fmt(totalVentas);
-    document.getElementById('ge-iva-rep').textContent=fmt(totalIvaRep);
-    document.getElementById('ge-compras').textContent=fmt(totalCompras);
-    document.getElementById('ge-compras-pct').textContent=pv?fmtP(totalCompras/totalVentas*100):'—';
-    document.getElementById('ge-subcs').textContent=fmt(totalSubcs);
-    document.getElementById('ge-subcs-pct').textContent=pv?fmtP(totalSubcs/totalVentas*100):'—';
-    document.getElementById('ge-mo').textContent=fmt(totalMO);
-    document.getElementById('ge-mo-pct').textContent=pv?fmtP(totalMO/totalVentas*100):'—';
-    document.getElementById('ge-costes-tot').textContent=fmt(totalCostes);
-    document.getElementById('ge-costes-pct').textContent=pv?fmtP(totalCostes/totalVentas*100):'—';
-    document.getElementById('ge-beneficio').textContent=fmt(beneficio);
-    document.getElementById('ge-benef-pct').textContent=pv?fmtP(margen):'—';
-    const rr=document.getElementById('ge-result-row');
-    rr.className='cuenta-row result'+(beneficio<0?' neg':'');
 
     // Proyectos por estado
     const estados=['Nuevo lead','Presupuesto enviado','Aprobado','En ejecución','Finalizado','Facturado','Cobrado','Cancelado'];
@@ -2631,7 +2640,7 @@ async function loadGerencia(){
     document.getElementById('gi-rep').textContent=fmt(totalIvaRep);
     document.getElementById('gi-comp').textContent=fmt(totalIvaComp);
     document.getElementById('gi-sub').textContent=fmt(totalIvaSub);
-    document.getElementById('gi-neto').textContent=fmt(totalIvaRep-totalIvaComp-totalIvaSub);
+    document.getElementById('gi-neto').textContent=fmt(totalIvaRep-totalIvaComp);
 
     // Rentabilidad por proyecto
     const compByProy={},subByProy={},horByProy={},facByProy={};
@@ -3546,11 +3555,52 @@ async function saveProveedor(){const nombre=document.getElementById('pv-nombre')
 // ═══════════════════════════════════════════
 // RENTABILIDAD
 // ═══════════════════════════════════════════
-async function initRentabilidad(){if(!PC.length)PC=await sbGet('proyectos').catch(()=>[]);populateSelects();}
+async function initRentabilidad(){
+  if(!PC.length) PC=await sbGet('proyectos').catch(()=>[]);
+  if(!CC.length) CC=await sbGet('clientes').catch(()=>[]);
+  // Poblar clientes
+  const selCli=document.getElementById('rent-cliente-sel');
+  if(selCli){
+    const cur=selCli.value;
+    selCli.innerHTML='<option value="">📁 Seleccionar cliente…</option>'
+      +CC.map(c=>`<option value="${c.cliente_id}">${c.nombre}</option>`).join('');
+    if(cur) selCli.value=cur;
+  }
+  // Poblar otros selects del sistema
+  populateSelects();
+}
+
+function filtrarProyectosRentabilidad(){
+  const clienteId=document.getElementById('rent-cliente-sel')?.value;
+  const selProy=document.getElementById('rent-proyecto-sel');
+  if(!selProy) return;
+  if(!clienteId){
+    selProy.innerHTML='<option value="">— Selecciona cliente primero —</option>';
+    selProy.disabled=true;
+    // Ocultar datos
+    document.getElementById('rent-kpis').style.display='none';
+    document.getElementById('rent-empty').style.display='block';
+    return;
+  }
+  const proyCliente=PC.filter(p=>p.cliente_id===clienteId);
+  selProy.innerHTML='<option value="">Seleccionar proyecto…</option>'
+    +proyCliente.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
+  selProy.disabled=false;
+  // Si solo hay uno, seleccionarlo
+  if(proyCliente.length===1){
+    selProy.value=proyCliente[0].proyecto_id;
+    loadRentabilidad();
+  } else {
+    document.getElementById('rent-kpis').style.display='none';
+    document.getElementById('rent-empty').style.display='block';
+  }
+}
 async function loadRentabilidad(){
   const proy=document.getElementById('rent-proyecto-sel').value,ver=document.getElementById('rent-version-sel').value;
-  document.getElementById('rent-kpis').style.display='none';document.getElementById('rent-empty').style.display=proy?'none':'block';
-  if(!proy)return;
+  const clienteId=document.getElementById('rent-cliente-sel')?.value;
+  document.getElementById('rent-kpis').style.display='none';
+  document.getElementById('rent-empty').style.display=(!clienteId||!proy)?'block':'none';
+  if(!clienteId||!proy) return;
   try{
     const[lineas,compras,subcs,horas,facturas]=await Promise.all([sbGet('presupuesto_lineas',`?proyecto_id=eq.${proy}&version=eq.${ver}`),sbGet('compras',`?proyecto_id=eq.${proy}`),sbGet('subcontratas',`?proyecto_id=eq.${proy}`),sbGet('horas',`?proyecto_id=eq.${proy}`),sbGet('facturas',`?proyecto_id=eq.${proy}`)]);
     const totalPres=lineas.filter(l=>!l.es_capitulo).reduce((s,l)=>s+(l.subtotal||0),0);
@@ -4076,7 +4126,7 @@ const loaders={
   compras:loadCompras,subcontratas:loadSubcontratas,horas:loadHoras,
   pedidos:loadPedidos,control_horario:loadControlHorario,
   proveedores:loadProveedores,
-  rentabilidad:()=>{initRentabilidad();if(document.getElementById('rent-proyecto-sel').value)loadRentabilidad();},
+  rentabilidad:async()=>{await initRentabilidad();const p=document.getElementById('rent-proyecto-sel')?.value;if(p)loadRentabilidad();},
   facturas:loadFacturas,contabilidad:loadContabilidad,conciliacion:loadConciliacion,configuracion:loadConfiguracion,
   pres_final:async()=>{
     const sel=document.getElementById('pf-proyecto-sel');
