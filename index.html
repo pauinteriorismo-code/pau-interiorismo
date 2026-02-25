@@ -4064,7 +4064,7 @@ function filtrarFacturas(){
 
   let visible=0;
   document.querySelectorAll('#facturas-tbody tr[data-tipo]').forEach(tr=>{
-    const matchTipo = tipo==='todas' || tr.dataset.tipo===tipo;
+    const matchTipo = tipo==='todas' || (tr.dataset.tipo||'').toLowerCase()===tipo.toLowerCase();
     const matchQ = !q || (tr.dataset.search||'').toLowerCase().includes(q);
     const matchContra = !contra || (tr.dataset.contra||'').includes(contra);
     const matchVto = !vto || tr.dataset.vto===vto;
