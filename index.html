@@ -1300,8 +1300,10 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <div class="cuenta-row"><span>Suma SS trabajadores</span><span id="rrhh-sum-ss-trab">—</span><span></span></div>
           <div class="cuenta-row"><span>Suma neto pagado a trabajadores</span><span id="rrhh-sum-neto">—</span><span></span></div>
           <div class="cuenta-row"><span>Seguridad Social empresa (~30%)</span><span id="rrhh-sum-ss-emp">—</span><span></span></div>
-          <div class="cuenta-row total"><span>COSTE TOTAL EMPRESA / MES</span><span id="rrhh-sum-total">—</span><span></span></div>
-          <div class="cuenta-row result"><span>COSTE TOTAL EMPRESA / AÑO (×12)</span><span id="rrhh-sum-anual">—</span><span></span></div>
+          <div class="cuenta-row total"><span>COSTE NÓMINAS / MES</span><span id="rrhh-sum-total">—</span><span></span></div>
+          <div class="cuenta-row"><span style="color:var(--text-soft)">+ Pagas extras anuales (total)</span><span id="rrhh-sum-pagas">—</span><span></span></div>
+          <div class="cuenta-row"><span style="color:var(--text-soft)">+ Compensaciones / Bonus anuales</span><span id="rrhh-sum-bonus">—</span><span></span></div>
+          <div class="cuenta-row result"><span>COSTE TOTAL EMPRESA / AÑO</span><span id="rrhh-sum-anual">—</span><span></span></div>
         </div>
       </div>
     </div>
@@ -5645,7 +5647,7 @@ function renderRRHH(){
 
   // KPIs y resumen
   const activos = TrabC.filter(t=>t.estado==='Activo');
-  let sumBruto=0, sumIrpf=0, sumSsTrab=0, sumNeto=0, sumSsEmp=0;
+  let sumBruto=0, sumIrpf=0, sumSsTrab=0, sumNeto=0, sumSsEmp=0, sumPagasAnual=0, sumBonusAnual=0;
   activos.forEach(t=>{
     const bruto=t.salario_bruto||0;
     const irpfAmt=bruto*(t.irpf_pct||0)/100;
@@ -5654,19 +5656,29 @@ function renderRRHH(){
     const ssEmpAmt=bruto*(t.ss_emp_pct||30)/100;
     sumBruto+=bruto; sumIrpf+=irpfAmt; sumSsTrab+=ssTrabAmt;
     sumNeto+=neto; sumSsEmp+=ssEmpAmt;
+    // Pagas extra: coste bruto × num pagas
+    sumPagasAnual+=(t.paga_extra||0)*(t.num_pagas_extra||0);
+    // Bonus anual: mensual×12, trimestral×4, anual×1, puntual×0
+    const periodoMult={mensual:12,trimestral:4,anual:1,puntual:0};
+    const mult=periodoMult[t.bonus_periodo||'mensual']||0;
+    const bonusConIva=(t.bonus||0)*(1+(t.bonus_iva_pct||0)/100);
+    sumBonusAnual+=bonusConIva*mult;
   });
   const sumTotal=sumBruto+sumSsEmp;
+  const sumAnualTotal=sumTotal*12+sumPagasAnual+sumBonusAnual;
   document.getElementById('rrhh-kpi-total').textContent=activos.length;
   document.getElementById('rrhh-kpi-coste').textContent=fmt(sumTotal);
   document.getElementById('rrhh-kpi-ss').textContent=fmt(sumSsEmp);
-  document.getElementById('rrhh-kpi-anual').textContent=fmt(sumTotal*12);
+  document.getElementById('rrhh-kpi-anual').textContent=fmt(sumAnualTotal);
   document.getElementById('rrhh-sum-bruto').textContent=fmt(sumBruto);
   document.getElementById('rrhh-sum-irpf').textContent=fmt(sumIrpf);
   document.getElementById('rrhh-sum-ss-trab').textContent=fmt(sumSsTrab);
   document.getElementById('rrhh-sum-neto').textContent=fmt(sumNeto);
   document.getElementById('rrhh-sum-ss-emp').textContent=fmt(sumSsEmp);
   document.getElementById('rrhh-sum-total').textContent=fmt(sumTotal);
-  document.getElementById('rrhh-sum-anual').textContent=fmt(sumTotal*12);
+  document.getElementById('rrhh-sum-pagas')?.textContent && (document.getElementById('rrhh-sum-pagas').textContent=sumPagasAnual>0?fmt(sumPagasAnual):'—');
+  document.getElementById('rrhh-sum-bonus')?.textContent && (document.getElementById('rrhh-sum-bonus').textContent=sumBonusAnual>0?fmt(sumBonusAnual):'—');
+  document.getElementById('rrhh-sum-anual').textContent=fmt(sumAnualTotal);
   document.getElementById('rrhh-count').textContent=TrabC.length+' trabajadores';
 
   if(!items.length){
@@ -5713,21 +5725,50 @@ function calcNomina(){
   const neto=bruto-irpfAmt-ssTrabAmt;
   const ssEmpAmt=bruto*ssEmp/100;
   const total=bruto+ssEmpAmt;
+
+  // Paga extra
+  const pagaExtra=parseFloat(document.getElementById('trab-paga-extra')?.value)||0;
+  const numPagas=parseInt(document.getElementById('trab-num-pagas')?.value)||0;
+  const pagaIrpf=parseFloat(document.getElementById('trab-paga-irpf')?.value)||0;
+  const pagaNetoUnit=pagaExtra - pagaExtra*pagaIrpf/100;
+  const pagaAnual=pagaNetoUnit*numPagas;
+
+  // Bonus / compensación
+  const bonus=parseFloat(document.getElementById('trab-bonus')?.value)||0;
+  const bonusIvaPct=parseFloat(document.getElementById('trab-bonus-iva')?.value)||0;
+  const bonusTotal=bonus*(1+bonusIvaPct/100);
+
+  // Coste anual
+  const costoMensualEmp=total; // bruto + SS empresa
+  const costoAnualNom=costoMensualEmp*12;
+  const costoAnualPagas=pagaExtra*numPagas; // pagas al coste bruto para la empresa
+  const costoAnualTotal=costoAnualNom+costoAnualPagas;
+
+  // Actualizar UI
   document.getElementById('trab-calc-bruto').textContent=bruto>0?fmt(bruto):'—';
   document.getElementById('trab-calc-neto').textContent=bruto>0?fmt(neto):'—';
   document.getElementById('trab-calc-ss-emp').textContent=bruto>0?fmt(ssEmpAmt):'—';
   document.getElementById('trab-calc-total').textContent=bruto>0?fmt(total):'—';
+  document.getElementById('trab-calc-paga-neto').textContent=(pagaExtra>0&&numPagas>0)?fmt(pagaNetoUnit)+' × '+numPagas:'—';
+  document.getElementById('trab-calc-bonus').textContent=bonus>0?fmt(bonusTotal)+(bonusIvaPct>0?` (${bonusIvaPct}% IVA inc.)`:'  exento'):'—';
+  document.getElementById('trab-calc-anual-nom').textContent=bruto>0?fmt(costoAnualNom):'—';
+  document.getElementById('trab-calc-anual-pagas').textContent=(pagaExtra>0&&numPagas>0)?fmt(costoAnualPagas):'—';
+  document.getElementById('trab-calc-anual-total').textContent=bruto>0?fmt(costoAnualTotal):'—';
 }
 
 function abrirModalTrabajador(){
   document.getElementById('trab-id').value='';
   document.getElementById('m-trab-title').textContent='👤 Nuevo trabajador';
-  ['trab-nombre','trab-dni','trab-tel','trab-email','trab-dir','trab-nss','trab-iban','trab-notas','trab-bruto'].forEach(id=>{
+  ['trab-nombre','trab-dni','trab-tel','trab-email','trab-dir','trab-nss','trab-iban','trab-notas','trab-bruto','trab-paga-extra','trab-bonus'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.value='';
   });
   document.getElementById('trab-irpf').value='15';
   document.getElementById('trab-ss-trab').value='6.35';
   document.getElementById('trab-ss-emp').value='30';
+  document.getElementById('trab-paga-irpf').value='15';
+  document.getElementById('trab-num-pagas').value='2';
+  document.getElementById('trab-bonus-iva').value='0';
+  document.getElementById('trab-bonus-periodo').value='mensual';
   document.getElementById('trab-alta').value=new Date().toISOString().split('T')[0];
   document.getElementById('trab-estado').value='Activo';
   calcNomina();
@@ -5753,6 +5794,12 @@ function editTrabajador(id){
   document.getElementById('trab-irpf').value=t.irpf_pct||15;
   document.getElementById('trab-ss-trab').value=t.ss_trab_pct||6.35;
   document.getElementById('trab-ss-emp').value=t.ss_emp_pct||30;
+  document.getElementById('trab-paga-extra').value=t.paga_extra||'';
+  document.getElementById('trab-num-pagas').value=t.num_pagas_extra??2;
+  document.getElementById('trab-paga-irpf').value=t.paga_extra_irpf||15;
+  document.getElementById('trab-bonus').value=t.bonus||'';
+  document.getElementById('trab-bonus-periodo').value=t.bonus_periodo||'mensual';
+  document.getElementById('trab-bonus-iva').value=t.bonus_iva_pct??0;
   document.getElementById('trab-notas').value=t.notas||'';
   calcNomina();
   openModal('m-trabajador');
@@ -5778,6 +5825,12 @@ async function saveTrabajador(){
     irpf_pct:  parseFloat(document.getElementById('trab-irpf').value)||15,
     ss_trab_pct: parseFloat(document.getElementById('trab-ss-trab').value)||6.35,
     ss_emp_pct: parseFloat(document.getElementById('trab-ss-emp').value)||30,
+    paga_extra: parseFloat(document.getElementById('trab-paga-extra').value)||null,
+    num_pagas_extra: parseInt(document.getElementById('trab-num-pagas').value)||0,
+    paga_extra_irpf: parseFloat(document.getElementById('trab-paga-irpf').value)||15,
+    bonus: parseFloat(document.getElementById('trab-bonus').value)||null,
+    bonus_periodo: document.getElementById('trab-bonus-periodo').value||'mensual',
+    bonus_iva_pct: parseFloat(document.getElementById('trab-bonus-iva').value)||0,
     notas:     document.getElementById('trab-notas').value||null,
   };
   try{
@@ -6251,6 +6304,84 @@ if('serviceWorker' in navigator){
         <div style="text-align:center">
           <div style="font-size:10px;color:var(--text-soft)">Coste empresa/mes</div>
           <div style="font-weight:700;font-size:16px;color:var(--red)" id="trab-calc-total">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;margin:14px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)">🎁 PAGA EXTRA</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Importe paga extra €</label>
+        <input class="form-input" type="number" id="trab-paga-extra" step="0.01" placeholder="0.00" oninput="calcNomina()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nº pagas extras / año</label>
+        <select class="form-input" id="trab-num-pagas" onchange="calcNomina()">
+          <option value="0">Sin paga extra</option>
+          <option value="1">1 paga extra</option>
+          <option value="2" selected>2 pagas extras (verano + navidad)</option>
+          <option value="3">3 pagas extras</option>
+          <option value="4">4 pagas extras</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">IRPF paga extra %</label>
+        <input class="form-input" type="number" id="trab-paga-irpf" step="0.1" placeholder="15" value="15" oninput="calcNomina()">
+      </div>
+      <div class="form-group" style="display:flex;align-items:flex-end">
+        <div style="background:var(--green-soft);border-radius:6px;padding:8px 12px;width:100%">
+          <div style="font-size:10px;color:var(--text-soft)">Neto paga extra</div>
+          <div style="font-weight:700;font-size:14px;color:var(--green)" id="trab-calc-paga-neto">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;margin:14px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)">⭐ COMPENSACIÓN POR ACTITUD / BONUS</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Importe compensación €</label>
+        <input class="form-input" type="number" id="trab-bonus" step="0.01" placeholder="0.00" oninput="calcNomina()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Periodicidad</label>
+        <select class="form-input" id="trab-bonus-periodo">
+          <option value="mensual">Mensual</option>
+          <option value="trimestral">Trimestral</option>
+          <option value="anual">Anual</option>
+          <option value="puntual">Puntual / a criterio</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">IVA compensación</label>
+        <select class="form-input" id="trab-bonus-iva" onchange="calcNomina()">
+          <option value="0">Exento de IVA</option>
+          <option value="21">21% IVA</option>
+          <option value="10">10% IVA</option>
+        </select>
+      </div>
+      <div class="form-group" style="display:flex;align-items:flex-end">
+        <div style="background:var(--amber-soft);border-radius:6px;padding:8px 12px;width:100%">
+          <div style="font-size:10px;color:var(--text-soft)">Total compensación c/IVA</div>
+          <div style="font-weight:700;font-size:14px;color:var(--copper)" id="trab-calc-bonus">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resumen total anual -->
+    <div style="background:#f0faf4;border:1px solid #c3e6cb;border-radius:8px;padding:12px;margin-top:4px">
+      <div style="font-size:11px;font-weight:700;color:var(--green);margin-bottom:8px">💶 COSTE TOTAL EMPRESA / AÑO</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+        <div style="text-align:center">
+          <div style="font-size:10px;color:var(--text-soft)">Nóminas (12 meses)</div>
+          <div style="font-weight:700;font-size:13px" id="trab-calc-anual-nom">—</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:10px;color:var(--text-soft)">Pagas extras</div>
+          <div style="font-weight:700;font-size:13px" id="trab-calc-anual-pagas">—</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:10px;color:var(--text-soft)">COSTE ANUAL TOTAL</div>
+          <div style="font-weight:700;font-size:16px;color:var(--red)" id="trab-calc-anual-total">—</div>
         </div>
       </div>
     </div>
