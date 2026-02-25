@@ -673,9 +673,21 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       </div>
       <!-- Rentabilidad por proyecto tabla -->
       <div class="card">
-        <div class="card-header"><div class="card-title">📈 Rentabilidad por proyecto</div></div>
+        <div class="card-header" style="flex-wrap:wrap;gap:8px">
+          <div class="card-title">📈 Rentabilidad por proyecto</div>
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+            <span style="font-size:11px;color:var(--text-soft)">Mostrar:</span>
+            <button id="grent-btn-activos" class="btn btn-primary btn-sm" style="font-size:11px" onclick="filtrarGrentTable('activos')">En ejecución</button>
+            <button id="grent-btn-alerta" class="btn btn-ghost btn-sm" style="font-size:11px" onclick="filtrarGrentTable('alerta')">⚠️ Con alerta</button>
+            <button id="grent-btn-todos" class="btn btn-ghost btn-sm" style="font-size:11px" onclick="filtrarGrentTable('todos')">Todos</button>
+            <span id="grent-count" style="font-size:11px;color:var(--text-soft);margin-left:4px"></span>
+          </div>
+        </div>
         <div class="table-wrap"><table><thead><tr><th>ID</th><th>Proyecto</th><th>Estado</th><th>Ventas (base)</th><th>Costes (base)</th><th>Beneficio Neto</th><th>Margen %</th></tr></thead>
         <tbody id="g-rent-table"><tr><td colspan="7" class="loading">Cargando…</td></tr></tbody></table></div>
+        <div id="grent-expand-wrap" style="display:none;text-align:center;padding:8px;border-top:1px solid var(--border)">
+          <button class="btn btn-ghost btn-sm" id="grent-expand-btn" onclick="toggleGrentExpand()" style="font-size:11px">▼ Ver todos los proyectos</button>
+        </div>
       </div>
 
       <!-- ═══ PANEL DE ALERTAS ═══ -->
@@ -2607,6 +2619,73 @@ async function populateIntCatalog(){
 // ═══════════════════════════════════════════
 // GERENCIA
 // ═══════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════
+// GERENCIA · RENTABILIDAD FILTRO
+// ════════════════════════════════════════════════════════════════
+const GRENT_MAX = 6; // proyectos visibles antes del "Ver todos"
+let _grentExpanded = false;
+
+function renderGrentTable(filtro){
+  window._grentFiltro = filtro;
+  _grentExpanded = false;
+  const tbody = document.getElementById('g-rent-table');
+  const countEl = document.getElementById('grent-count');
+  const expandWrap = document.getElementById('grent-expand-wrap');
+  const expandBtn = document.getElementById('grent-expand-btn');
+  if(!tbody || !window._grentData) return;
+
+  // Botones estado
+  ['activos','alerta','todos'].forEach(k=>{
+    const btn=document.getElementById(`grent-btn-${k}`);
+    if(btn) btn.className='btn btn-sm '+(k===filtro?'btn-primary':'btn-ghost');
+  });
+
+  const ACTIVOS=['Aprobado','En ejecución','En Ejecución','en ejecución','Aprobado'];
+  let datos = window._grentData;
+  if(filtro==='activos')  datos = datos.filter(d=>ACTIVOS.some(e=>e.toLowerCase()===( d.p.estado||'').toLowerCase()));
+  if(filtro==='alerta')   datos = datos.filter(d=>d.mg<0||(d.c>0&&d.v===0));
+
+  if(!datos.length){
+    tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--text-soft)">
+      ${filtro==='activos'?'No hay proyectos en ejecución':filtro==='alerta'?'✅ Sin proyectos en alerta':'Sin proyectos'}
+    </td></tr>`;
+    if(countEl) countEl.textContent='';
+    if(expandWrap) expandWrap.style.display='none';
+    return;
+  }
+
+  const mostrar = _grentExpanded ? datos : datos.slice(0, GRENT_MAX);
+  if(countEl) countEl.textContent = `${datos.length} proyecto${datos.length!==1?'s':''}`;
+
+  tbody.innerHTML = mostrar.map(({p,v,c,ben,mg})=>`<tr>
+    <td class="td-mono" style="color:var(--text-soft);font-size:11px">${p.proyecto_id}</td>
+    <td><strong>${p.nombre}</strong></td>
+    <td>${bE(p.estado)}</td>
+    <td class="td-mono" style="color:var(--green);font-weight:700">${v>0?fmt(v):'—'}</td>
+    <td class="td-mono" style="color:var(--red)">${c>0?fmt(c):'—'}</td>
+    <td class="td-mono" style="font-weight:700;${ben>=0?'color:var(--green)':'color:var(--red)'}">${(v||c)?fmt(ben):'—'}</td>
+    <td class="td-mono" style="${mg>=15?'color:var(--green)':mg>=0?'color:var(--amber)':'color:var(--red)'}">${v>0?fmtP(mg):'—'}</td>
+  </tr>`).join('');
+
+  // Botón expandir
+  if(datos.length > GRENT_MAX && !_grentExpanded){
+    if(expandWrap) expandWrap.style.display='';
+    if(expandBtn) expandBtn.textContent=`▼ Ver los ${datos.length - GRENT_MAX} proyectos restantes`;
+  } else if(_grentExpanded && datos.length > GRENT_MAX){
+    if(expandWrap) expandWrap.style.display='';
+    if(expandBtn) expandBtn.textContent='▲ Colapsar';
+  } else {
+    if(expandWrap) expandWrap.style.display='none';
+  }
+}
+
+function filtrarGrentTable(filtro){ renderGrentTable(filtro); }
+
+function toggleGrentExpand(){
+  _grentExpanded = !_grentExpanded;
+  renderGrentTable(window._grentFiltro||'activos');
+}
+
 async function loadGerencia(){
   try{
     const [cl,pr,ta,cy,comp,subc,hor,fac]=await Promise.all([
@@ -2711,22 +2790,17 @@ async function loadGerencia(){
       }
     });
 
-    const tbody=document.getElementById('g-rent-table');
-    if(!pr.length){tbody.innerHTML='<tr><td colspan="7"><div class="empty"><div class="empty-icon">📁</div><div class="empty-text">Sin proyectos</div></div></td></tr>';return;}
-    tbody.innerHTML=pr.map(p=>{
+    // Construir datos completos y delegar a renderGrentTable
+    const GRENT_ACTIVOS=['Aprobado','En ejecución','En Ejecución','en ejecución'];
+    window._grentData = pr.map(p=>{
       const pid=(p.proyecto_id||'').trim();
       const v=ventasByProy[pid]||0, c=costesByProy[pid]||0;
       const ben=v-c, mg=v>0?(ben/v)*100:0;
-      return`<tr>
-        <td class="td-mono" style="color:var(--text-soft)">${p.proyecto_id}</td>
-        <td><strong>${p.nombre}</strong></td>
-        <td>${bE(p.estado)}</td>
-        <td class="td-mono" style="color:var(--green);font-weight:700">${v>0?fmt(v):'—'}</td>
-        <td class="td-mono" style="color:var(--red)">${c>0?fmt(c):'—'}</td>
-        <td class="td-mono" style="font-weight:700;${ben>=0?'color:var(--green)':'color:var(--red)'}">${(v||c)?fmt(ben):'—'}</td>
-        <td class="td-mono" style="${mg>=15?'color:var(--green)':mg>=0?'color:var(--amber)':'color:var(--red)'}">${v>0?fmtP(mg):'—'}</td>
-      </tr>`;
-    }).join('');
+      return { p, pid, v, c, ben, mg };
+    });
+    window._grentFiltro = 'activos';
+    renderGrentTable('activos');
+
 
     const s=document.getElementById('conn-status');s.style.background='var(--green-soft)';s.style.color='var(--green)';s.textContent='🟢 Conectado';
     populateSelects();populateIntCatalog();populateTrabajadores();poblarFiltrosProyecto();poblarFiltrosCliente();poblarClientesComparativa();
@@ -6138,15 +6212,35 @@ function actualizarBadgeAgenda(){
 
 // ── NOTIFICACIONES ──
 function solicitarPermisosNotificacion(){
-  if('Notification' in window && Notification.permission === 'default'){
-    Notification.requestPermission();
+  if(!('Notification' in window)) return;
+  if(Notification.permission === 'default'){
+    // Necesitamos un gesto del usuario en móvil — pedimos al hacer click en cualquier sitio
+    Notification.requestPermission().then(p=>{
+      if(p==='granted') toast('✅ Notificaciones activadas','success');
+    });
   }
+}
+
+// Botón visible para activar notificaciones si están denegadas/pendientes
+function mostrarBotonNotif(){
+  if(!('Notification' in window)) return;
+  if(Notification.permission === 'granted') return;
+  const btn = document.createElement('button');
+  btn.className = 'btn btn-amber btn-sm';
+  btn.style.cssText='position:fixed;bottom:16px;right:16px;z-index:9999;box-shadow:0 2px 8px rgba(0,0,0,0.2)';
+  btn.textContent = '🔔 Activar notificaciones';
+  btn.onclick = ()=>{
+    Notification.requestPermission().then(p=>{
+      if(p==='granted'){ toast('✅ Notificaciones activadas'); btn.remove(); }
+      else toast('Notificaciones bloqueadas en el navegador','error');
+    });
+  };
+  document.body.appendChild(btn);
 }
 
 function reproducirSonidoAviso(){
   try{
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    // Secuencia de 3 tonos
     [0, 0.3, 0.6].forEach((t, i) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
@@ -6159,48 +6253,72 @@ function reproducirSonidoAviso(){
       osc.stop(ctx.currentTime+t+0.3);
     });
   }catch(e){ console.warn('Audio no disponible'); }
+  // Vibración en móvil
+  if('vibrate' in navigator) navigator.vibrate([200,100,200]);
 }
 
 function lanzarNotificacion(aviso){
   reproducirSonidoAviso();
+  // Toast siempre visible (independiente de permisos)
+  toast(`🔔 ${aviso.tipo||'Aviso'}: ${aviso.descripcion}`, 'success');
   if('Notification' in window && Notification.permission === 'granted'){
-    const n = new Notification(`🔔 ${aviso.tipo||'Aviso'}: ${aviso.descripcion}`, {
-      body: `${aviso.hora||''} ${aviso.proyecto_id?'· Proyecto: '+aviso.proyecto_id:''}`,
-      icon: '/favicon.ico',
-      badge: '/favicon.ico',
-      tag: 'agenda-'+aviso.id,
-      requireInteraction: true,
-    });
-    n.onclick = ()=>{ window.focus(); navTo('agenda'); n.close(); };
-  } else {
-    // Fallback: toast visible
-    toast(`🔔 AVISO: ${aviso.descripcion}`, 'success');
+    try{
+      const n = new Notification(`🔔 ${aviso.tipo||'Aviso'}: ${aviso.descripcion}`, {
+        body: `${aviso.hora||''} ${aviso.proyecto_id?'· Proyecto: '+aviso.proyecto_id:''}`,
+        icon: '/favicon.ico',
+        badge: '/favicon.ico',
+        tag: 'agenda-'+aviso.id,
+        requireInteraction: true,
+        silent: false,
+      });
+      n.onclick = ()=>{ window.focus(); navTo('agenda'); n.close(); };
+    }catch(e){ console.warn('Notification error:', e); }
   }
 }
 
+const _notificadosIds = new Set(); // IDs ya notificados esta sesión
+
 function iniciarCheckerAgenda(){
-  // Comprobar cada 30 segundos si hay avisos que lanzar
   if(agendaTimer) clearInterval(agendaTimer);
-  agendaTimer = setInterval(async ()=>{
+
+  const checkear = async () => {
     const ahora = new Date();
     const hoy = ahora.toISOString().split('T')[0];
-    const horaActual = ahora.getHours().toString().padStart(2,'0')+':'+ahora.getMinutes().toString().padStart(2,'0');
-    // Recargar desde BD cada 2 min (cada 4 ticks)
-    if(ahora.getMinutes() % 2 === 0 && ahora.getSeconds() < 35){
+    const hh = ahora.getHours();
+    const mm = ahora.getMinutes();
+
+    // Recargar BD cada 2 min
+    if(mm % 2 === 0 && ahora.getSeconds() < 35){
       try{ AgC = await sbGet('agenda','?order=fecha.asc'); actualizarBadgeAgenda(); }catch(e){}
     }
-    // Buscar avisos que coincidan ahora
-    AgC.filter(a =>
-      a.estado !== 'Completado' &&
-      a.notificacion !== false &&
-      a.fecha === hoy &&
-      a.hora === horaActual
-    ).forEach(a => {
+
+    // Buscar avisos — ventana de ±4 minutos para no perder el tick
+    AgC.filter(a => {
+      if(a.estado === 'Completado') return false;
+      if(a.notificacion === false) return false;
+      if(!a.hora) return false;
+      if(a.fecha !== hoy) return false;
+      if(_notificadosIds.has(a.id)) return false; // ya avisado
+      // Comparar hora con ventana de ±4 min
+      const [ah, am] = a.hora.split(':').map(Number);
+      const minAviso = ah*60 + am;
+      const minActual = hh*60 + mm;
+      return minActual >= minAviso && minActual <= minAviso + 4;
+    }).forEach(a => {
+      _notificadosIds.add(a.id); // marcar para no repetir
       lanzarNotificacion(a);
-      // Marcamos como notificado en memoria para no repetir
-      a._notificado = true;
     });
-  }, 30000);
+  };
+
+  // Primer check inmediato
+  checkear();
+  // Luego cada 60 segundos (antes era 30s pero no comprobaba _notificado)
+  agendaTimer = setInterval(checkear, 60000);
+
+  // Reactivar checker si la página vuelve a ser visible (móvil)
+  document.addEventListener('visibilitychange', ()=>{
+    if(!document.hidden) checkear();
+  });
 }
 
 // Sobrescribir openModal para agenda
@@ -6208,6 +6326,7 @@ const _origOpenModal = openModal;
 // Patch para agenda-badge al abrir modal
 document.addEventListener('DOMContentLoaded', ()=>{
   solicitarPermisosNotificacion();
+  setTimeout(mostrarBotonNotif, 2000); // mostrar botón si no hay permisos
   iniciarCheckerAgenda();
 });
 
