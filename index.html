@@ -4312,11 +4312,12 @@ let _facLineas = []; // array de líneas en edición
 
 function renderFacLineas(){
   const tbody = document.getElementById('f-lineas-tbody');
+  const totEl = document.getElementById('f-lineas-total');
   if(!tbody) return;
   if(!_facLineas.length){
     tbody.innerHTML=`<tr><td colspan="7" style="padding:12px;text-align:center;color:var(--text-soft);font-size:11px">
       Sin líneas — pulsa "＋ Añadir línea" o importa desde presupuesto</td></tr>`;
-    document.getElementById('f-lineas-total').textContent='0,00 € / 0,00 €';
+    if(totEl) totEl.textContent='0,00 € / 0,00 €';
     return;
   }
   tbody.innerHTML = _facLineas.map((l,i)=>{
@@ -4364,8 +4365,7 @@ function recalcFacLineas(){
     totalConIva += sub*(1+ivaV/100);
   });
   const el=document.getElementById('f-lineas-total');
-  if(el) el.textContent=`${fmt(totalBase)} / ${fmt(totalConIva)}`;
-  // Auto-rellenar base imponible del campo principal
+  if(el) el.textContent=`${fmt(totalBase)} / ${fmt(totalConIva)}`;  // Auto-rellenar base imponible del campo principal
   if(_facLineas.length){
     document.getElementById('f-base').value=totalBase.toFixed(2);
     calcTotalFac();
@@ -4424,7 +4424,9 @@ async function importarLineasPresupuesto(){
 }
 
 function editFactura(id){
-  const f = FC.find(x=>String(x.id)===String(id)); if(!f){ toast('Factura no encontrada','error'); return; }
+  try{
+  const f = FC.find(x=>String(x.id)===String(id));
+  if(!f){ toast('Factura no encontrada (id: '+id+')','error'); return; }
   const esC = (f.tipo_factura||'Venta')==='Compra';
 
   // 1. Configurar tipo en el modal (SIN limpiar campos, SIN abrir)
@@ -4501,11 +4503,12 @@ function editFactura(id){
   try{ _facLineas = f.lineas_json ? JSON.parse(f.lineas_json) : []; }
   catch(e){ _facLineas=[]; }
   renderFacLineas();
-  // Poblar presupuestos si hay proyecto
-  if(!esC && f.proyecto_id) poblarFacPresupuestos(f.proyecto_id);
+  // Poblar presupuestos si hay proyecto (async, no bloqueante)
+  if(!esC && f.proyecto_id) poblarFacPresupuestos(f.proyecto_id).catch(()=>{});
 
   calcTotalFac();
   openModal('m-factura');
+  }catch(e){ toast('Error al abrir factura: '+e.message,'error'); console.error('editFactura error:',e); }
 }
 
 async function saveFactura(){
