@@ -1683,42 +1683,51 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="form-group"><label class="form-label">Total con IVA</label>
         <input class="form-input" id="f-total-display" readonly style="background:var(--bg);font-weight:700;color:var(--navy)">
       </div>
-      <!-- Vencimiento único (ventas) / Múltiples vencimientos (compras) -->
+      <!-- Vencimiento único (ventas) / múltiple (compras) -->
       <div class="form-group" id="f-grp-vto-simple">
         <label class="form-label">Fecha vencimiento</label>
         <input class="form-input" id="f-vto" type="date">
       </div>
-      <div class="form-group fg-full" id="f-grp-vtos-multi" style="display:none">
-        <label class="form-label" style="margin-bottom:6px">
-          Vencimientos <span style="font-size:10px;color:var(--text-soft);font-weight:400">(hasta 4 · click en sugerencia para aceptar)</span>
+      <!-- Vencimientos múltiples solo para compras -->
+      <div class="form-group fg-full" id="f-grp-vtos-compra" style="display:none">
+        <label class="form-label">Vencimientos <span style="font-size:10px;color:var(--text-soft);font-weight:400">— hasta 4 plazos (pulsa 💡 para sugerir días de pago)</span>
+          <button type="button" onclick="sugerirDiasPago()" style="background:none;border:none;cursor:pointer;font-size:14px;padding:0 4px;vertical-align:middle" title="Sugerir días de pago">💡</button>
         </label>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px">
-          <div style="background:var(--bg);border-radius:6px;padding:8px;border:1px solid var(--border)">
-            <div style="font-size:10px;color:var(--text-soft);margin-bottom:4px;font-weight:600">Vto. 1</div>
-            <input class="form-input" id="f-vto1" type="date" style="margin-bottom:4px;font-size:11px" oninput="checkVtosTotales()">
-            <input class="form-input" id="f-vto1-imp" type="number" step="0.01" placeholder="Importe €" style="font-size:11px" oninput="checkVtosTotales()">
-            <div id="f-vto1-sug" style="font-size:10px;color:var(--navy);margin-top:4px;cursor:pointer;padding:3px 6px;background:#e8f0fe;border-radius:4px;display:none" onclick="confirmarVtoSugerido(1)"></div>
+        <div style="display:grid;grid-template-columns:1fr 120px 1fr 120px 1fr 120px 1fr 120px;gap:6px;align-items:center">
+          <div>
+            <div style="font-size:10px;color:var(--text-soft);margin-bottom:2px;text-align:center">Vto. 1</div>
+            <input class="form-input" id="f-vto" type="date" onclick="confirmarVto('f-vto')" onchange="confirmarVto('f-vto')">
           </div>
-          <div style="background:var(--bg);border-radius:6px;padding:8px;border:1px solid var(--border)">
-            <div style="font-size:10px;color:var(--text-soft);margin-bottom:4px;font-weight:600">Vto. 2 <span style="font-weight:300">(opcional)</span></div>
-            <input class="form-input" id="f-vto2" type="date" style="margin-bottom:4px;font-size:11px" oninput="checkVtosTotales()">
-            <input class="form-input" id="f-vto2-imp" type="number" step="0.01" placeholder="Importe €" style="font-size:11px" oninput="checkVtosTotales()">
-            <div id="f-vto2-sug" style="font-size:10px;color:var(--navy);margin-top:4px;cursor:pointer;padding:3px 6px;background:#e8f0fe;border-radius:4px;display:none" onclick="confirmarVtoSugerido(2)"></div>
+          <div>
+            <div style="font-size:10px;color:var(--text-soft);margin-bottom:2px;text-align:center">Importe</div>
+            <input class="form-input" id="f-importe-vto1" type="number" step="0.01" placeholder="€" onclick="confirmarVto('f-importe-vto1')" onchange="confirmarVto('f-importe-vto1')">
           </div>
-          <div style="background:var(--bg);border-radius:6px;padding:8px;border:1px solid var(--border)">
-            <div style="font-size:10px;color:var(--text-soft);margin-bottom:4px;font-weight:600">Vto. 3 <span style="font-weight:300">(opcional)</span></div>
-            <input class="form-input" id="f-vto3" type="date" style="margin-bottom:4px;font-size:11px" oninput="checkVtosTotales()">
-            <input class="form-input" id="f-vto3-imp" type="number" step="0.01" placeholder="Importe €" style="font-size:11px" oninput="checkVtosTotales()">
-            <div id="f-vto3-sug" style="font-size:10px;color:var(--navy);margin-top:4px;cursor:pointer;padding:3px 6px;background:#e8f0fe;border-radius:4px;display:none" onclick="confirmarVtoSugerido(3)"></div>
+          <div>
+            <div style="font-size:10px;color:var(--text-soft);margin-bottom:2px;text-align:center">Vto. 2</div>
+            <input class="form-input" id="f-vto2" type="date" onclick="confirmarVto('f-vto2')" onchange="confirmarVto('f-vto2')">
           </div>
-          <div style="background:var(--bg);border-radius:6px;padding:8px;border:1px solid var(--border)">
-            <div style="font-size:10px;color:var(--text-soft);margin-bottom:4px;font-weight:600">Vto. 4 <span style="font-weight:300">(opcional)</span></div>
-            <input class="form-input" id="f-vto4" type="date" style="margin-bottom:4px;font-size:11px" oninput="checkVtosTotales()">
-            <input class="form-input" id="f-vto4-imp" type="number" step="0.01" placeholder="Importe €" style="font-size:11px" oninput="checkVtosTotales()">
-            <div id="f-vto4-sug" style="font-size:10px;color:var(--navy);margin-top:4px;cursor:pointer;padding:3px 6px;background:#e8f0fe;border-radius:4px;display:none" onclick="confirmarVtoSugerido(4)"></div>
+          <div>
+            <div style="font-size:10px;color:var(--text-soft);margin-bottom:2px;text-align:center">Importe</div>
+            <input class="form-input" id="f-importe-vto2" type="number" step="0.01" placeholder="€" onclick="confirmarVto('f-importe-vto2')" onchange="confirmarVto('f-importe-vto2')">
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--text-soft);margin-bottom:2px;text-align:center">Vto. 3</div>
+            <input class="form-input" id="f-vto3" type="date" onclick="confirmarVto('f-vto3')" onchange="confirmarVto('f-vto3')">
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--text-soft);margin-bottom:2px;text-align:center">Importe</div>
+            <input class="form-input" id="f-importe-vto3" type="number" step="0.01" placeholder="€" onclick="confirmarVto('f-importe-vto3')" onchange="confirmarVto('f-importe-vto3')">
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--text-soft);margin-bottom:2px;text-align:center">Vto. 4</div>
+            <input class="form-input" id="f-vto4" type="date" onclick="confirmarVto('f-vto4')" onchange="confirmarVto('f-vto4')">
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--text-soft);margin-bottom:2px;text-align:center">Importe</div>
+            <input class="form-input" id="f-importe-vto4" type="number" step="0.01" placeholder="€" onclick="confirmarVto('f-importe-vto4')" onchange="confirmarVto('f-importe-vto4')">
           </div>
         </div>
-        <div id="vtos-total-check" style="font-size:11px;margin-top:6px;text-align:right"></div>
+        <div style="font-size:10px;color:var(--text-soft);margin-top:4px">💡 Días de pago configurados: <span id="f-dias-pago-info">5 y 20 de cada mes</span></div>
       </div>
       <div class="form-group"><label class="form-label">Forma de pago</label>
         <select class="form-input" id="f-pago" onchange="onFormaPagoChange()">
@@ -2236,7 +2245,7 @@ function cascadaModulo(mod, proySelId, loadFn){
   const proySel    = document.getElementById(proySelId);
   if(!proySel) return;
   const cur = proySel.value;
-  const filtrados = clienteId ? PC.filter(p=>p.cliente_id&&String(p.cliente_id)===String(clienteId)) : PC;
+  const filtrados = clienteId ? PC.filter(p=>p.cliente_id===clienteId) : PC;
   proySel.innerHTML = '<option value="">📁 Proyecto…</option>'
     + filtrados.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
   // Restore selection if still valid
@@ -2250,7 +2259,7 @@ function cascadaDocPedido(){
   const clienteId  = clienteSel ? clienteSel.value : '';
   const proySel    = document.getElementById('filter-proyecto-pedido_doc');
   if(!proySel) return;
-  const filtrados = clienteId ? PC.filter(p=>p.cliente_id&&String(p.cliente_id)===String(clienteId)) : PC;
+  const filtrados = clienteId ? PC.filter(p=>p.cliente_id===clienteId) : PC;
   proySel.innerHTML = '<option value="">📁 Proyecto…</option>'
     + filtrados.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
   // Reset pedido selector and doc
@@ -2797,7 +2806,7 @@ function cascadaClienteModalCmp(){
   const clienteId = document.getElementById('cmp-cliente')?.value;
   const proySel   = document.getElementById('cmp-proyecto');
   if(!proySel) return;
-  const filtrados = clienteId ? PC.filter(p=>p.cliente_id&&String(p.cliente_id)===String(clienteId)) : PC;
+  const filtrados = clienteId ? PC.filter(p=>p.cliente_id===clienteId) : PC;
   proySel.innerHTML='<option value="">Seleccionar…</option>'
     +filtrados.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
   if(clienteId && filtrados.length===1) proySel.value=filtrados[0].proyecto_id;
@@ -3564,11 +3573,11 @@ async function loadFacturas(){
         <td class="td-mono" style="color:var(--green)">${fmt(pag)}</td>
         <td class="td-mono" style="color:${pdte>0?'var(--amber)':'var(--green)'}">${fmt(pdte)}</td>
         <td>${bE(f.estado)}</td>
-        <td style="display:flex;gap:3px">
+        <td style="display:flex;gap:3px;align-items:center">
           <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px" onclick="editFactura('${f.id}')">✏️</button>
           ${!esC?`<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px" onclick="marcarFacturaCobrada('${f.id}')">✅</button>
           <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px" onclick="marcarFacturaParcial('${f.id}')">💶</button>`:''}
-          <button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('facturas','${f.id}','${(f.num_factura||'factura').replace(/'/g,"\\'")}')">🗑</button>
+          <button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('facturas','${f.id}','${(f.num_factura||'factura').replace(/'/g,"\\'")}')" >🗑</button>
         </td>
       </tr>`;
     }).join('');
@@ -3603,47 +3612,51 @@ function abrirNuevaFactura(tipo){
   if(badge){badge.textContent=esC?'📥 COMPRA':'📤 VENTA';badge.style.background=esC?'#fdecea':'#e8f5ee';badge.style.color=esC?'var(--red)':'var(--green)';}
   document.getElementById('f-grp-cliente').style.display=esC?'none':'';
   document.getElementById('f-grp-proveedor').style.display=esC?'':'none';
-  switchVtoMode(esC); // Mostrar vencimientos múltiples solo en compras
   document.getElementById('f-cobrado-lbl').textContent=esC?'Importe pagado €':'Importe cobrado €';
+  // Mostrar vencimientos múltiples solo en compras
+  const vtoSimple=document.getElementById('f-grp-vto-simple');
+  const vtoMulti =document.getElementById('f-grp-vtos-compra');
+  if(vtoSimple) vtoSimple.style.display=esC?'none':'';
+  if(vtoMulti)  vtoMulti.style.display =esC?'':'none';
+  // Actualizar texto días de pago en modal
+  const dpInfo=document.getElementById('f-dias-pago-info');
+  if(dpInfo) dpInfo.textContent=`día ${DIAS_PAGO[0]} y día ${DIAS_PAGO[1]} de cada mes`;
   document.getElementById('f-estado').innerHTML=esC
     ?'<option>Pendiente</option><option>Pagada</option><option>Parcial</option><option>Vencida</option><option>Anulada</option>'
     :'<option>Pendiente</option><option>Cobrada</option><option>Parcial</option><option>Vencida</option><option>Anulada</option>';
-  // Clear & set defaults
-  ['f-num','f-concepto'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  // Auto-generar número de factura único
+  const hoy = new Date();
+  const anyo = hoy.getFullYear();
+  const prefijo = esC ? `FRA-${anyo}-` : `FAC-${anyo}-`;
+  // Buscar el mayor número existente para este prefijo
+  const nums = FC
+    .map(f=>(f.num_factura||''))
+    .filter(n=>n.startsWith(prefijo))
+    .map(n=>parseInt(n.replace(prefijo,''))||0);
+  const siguiente = (nums.length ? Math.max(...nums) : 0) + 1;
+  document.getElementById('f-num').value = prefijo + String(siguiente).padStart(3,'0');
+  // Clear otros campos
+  document.getElementById('f-concepto').value='';
   document.getElementById('f-base').value='';
   document.getElementById('f-cobrado').value='0';
-  // Forzar estado Pendiente por defecto en nueva factura
-  const estadoEl2=document.getElementById('f-estado');
-  if(estadoEl2) estadoEl2.value='Pendiente';
-  // Reset vencimientos múltiples
-  [1,2,3,4].forEach(n=>{
-    const vi=document.getElementById(`f-vto${n}`); if(vi){vi.value='';vi.style.borderColor='';}
-    const ii=document.getElementById(`f-vto${n}-imp`); if(ii) ii.value='';
-    const si=document.getElementById(`f-vto${n}-sug`); if(si) si.style.display='none';
-  });
-  const vtc=document.getElementById('vtos-total-check'); if(vtc) vtc.textContent='';
   document.getElementById('f-total-display').value='';
+  document.getElementById('f-vto').value='';
   document.getElementById('f-fecha').value=new Date().toISOString().split('T')[0];
-  // Auto-generar número de factura único
-  const esCompra = tipo==='Compra';
-  const prefijo = esCompra ? 'FCP' : 'FAC';
-  const anyo = new Date().getFullYear();
-  const existentes = FC.filter(f=>(f.num_factura||'').startsWith(`${prefijo}-${anyo}-`));
-  let maxNum = 0;
-  existentes.forEach(f=>{
-    const parts = (f.num_factura||'').split('-');
-    const n = parseInt(parts[parts.length-1])||0;
-    if(n>maxNum) maxNum=n;
-  });
-  const numEl = document.getElementById('f-num');
-  if(numEl) numEl.value = `${prefijo}-${anyo}-${String(maxNum+1).padStart(3,'0')}`;
-
-  // Reset proyecto select (será filtrado al elegir cliente)
+  document.getElementById('f-estado').value='Pendiente'; // Siempre Pendiente por defecto
+  // Reset cliente/proyecto
+  const fCliente=document.getElementById('f-cliente');
+  if(fCliente) fCliente.value='';
+  const fProv=document.getElementById('f-proveedor');
+  if(fProv) fProv.value='';
+  // Reset proyecto select (se filtrará al elegir cliente)
   const fProy=document.getElementById('f-proyecto');
   if(fProy){
     fProy.innerHTML='<option value="">— Sin proyecto —</option>'
       +PC.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
   }
+  // Reset vencimientos compra
+  ['f-vto2','f-vto3','f-vto4'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['f-importe-vto1','f-importe-vto2','f-importe-vto3','f-importe-vto4'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   openModal('m-factura');
 }
 
@@ -3659,93 +3672,132 @@ function editFactura(id){
   const f = FC.find(x=>x.id===id); if(!f) return;
   const esC = (f.tipo_factura||'Venta')==='Compra';
 
-  // Configurar modal según tipo
-  abrirNuevaFactura(f.tipo_factura||'Venta');
+  // 1. Configurar tipo en el modal (SIN limpiar campos, SIN abrir)
+  document.getElementById('f-tipo').value = f.tipo_factura||'Venta';
+  document.getElementById('f-modal-title').textContent = esC?'✏️ Editar factura de compra':'✏️ Editar factura de venta';
+  const badge=document.getElementById('f-tipo-badge');
+  if(badge){badge.textContent=esC?'📥 COMPRA':'📤 VENTA';badge.style.background=esC?'#fdecea':'#e8f5ee';badge.style.color=esC?'var(--red)':'var(--green)';}
+  document.getElementById('f-grp-cliente').style.display   = esC?'none':'';
+  document.getElementById('f-grp-proveedor').style.display = esC?'':'none';
+  document.getElementById('f-cobrado-lbl').textContent = esC?'Importe pagado €':'Importe cobrado €';
 
-  // Rellenar campos
-  document.getElementById('f-id').value   = f.id;
-  document.getElementById('f-num').value  = f.num_factura||'';
-  document.getElementById('f-fecha').value= f.fecha_emision||'';
-  document.getElementById('f-concepto').value = f.concepto||'';
-  document.getElementById('f-base').value = f.base_imponible||'';
-  document.getElementById('f-cobrado').value  = f.importe_cobrado||'0';
-  document.getElementById('f-vto').value  = f.fecha_vencimiento||'';
+  // 2. Mostrar/ocultar sección vencimientos
+  const vtoSimple = document.getElementById('f-grp-vto-simple');
+  const vtoMulti  = document.getElementById('f-grp-vtos-compra');
+  if(vtoSimple) vtoSimple.style.display = esC ? 'none' : '';
+  if(vtoMulti)  vtoMulti.style.display  = esC ? ''     : 'none';
+  const dpInfo=document.getElementById('f-dias-pago-info');
+  if(dpInfo) dpInfo.textContent=`día ${DIAS_PAGO[0]} y día ${DIAS_PAGO[1]} de cada mes`;
 
-  // IVA
-  const ivaEl = document.getElementById('f-iva');
-  if(ivaEl) ivaEl.value = f.iva_pct||'21%';
-  calcTotalFac();
+  // 3. Rellenar estados del select
+  document.getElementById('f-estado').innerHTML = esC
+    ?'<option>Pendiente</option><option>Pagada</option><option>Parcial</option><option>Vencida</option><option>Anulada</option>'
+    :'<option>Pendiente</option><option>Cobrada</option><option>Parcial</option><option>Vencida</option><option>Anulada</option>';
 
-  // Forma pago y estado
-  const pagoEl   = document.getElementById('f-pago');
-  const estadoEl = document.getElementById('f-estado');
-  if(pagoEl)   pagoEl.value   = f.forma_pago||'Transferencia';
-  if(estadoEl) estadoEl.value = f.estado||'Pendiente';
+  // 4. Rellenar todos los campos con datos de la factura
+  document.getElementById('f-id').value      = f.id;
+  document.getElementById('f-num').value     = f.num_factura||'';
+  document.getElementById('f-fecha').value   = f.fecha_emision||'';
+  document.getElementById('f-concepto').value= f.concepto||'';
+  document.getElementById('f-base').value    = f.base_imponible||'';
+  document.getElementById('f-iva').value     = f.iva_pct||'21%';
+  document.getElementById('f-pago').value    = f.forma_pago||'Transferencia';
+  document.getElementById('f-cobrado').value = f.importe_cobrado||'0';
+  document.getElementById('f-estado').value  = f.estado||'Pendiente';
 
-  // Cliente o Proveedor
+  // 5. Vencimiento(s)
+  document.getElementById('f-vto').value = f.fecha_vencimiento||'';
   if(esC){
-    const provEl = document.getElementById('f-proveedor');
-    if(provEl) provEl.value = f.proveedor_id||'';
+    const vtoIds = ['f-vto2','f-vto3','f-vto4'];
+    vtoIds.forEach((vid,i)=>{
+      const el=document.getElementById(vid);
+      if(el){ el.value=f[`fecha_vto${i+2}`]||''; el.style.color=''; }
+    });
+    const impIds=['f-importe-vto1','f-importe-vto2','f-importe-vto3','f-importe-vto4'];
+    impIds.forEach((vid,i)=>{
+      const el=document.getElementById(vid);
+      if(el){ el.value=f[`importe_vto${i+1}`]||''; el.style.color=''; }
+    });
+  }
+
+  // 6. Cliente/proveedor y cascada proyecto
+  if(esC){
+    const fpEl=document.getElementById('f-proveedor');
+    if(fpEl) fpEl.value=f.proveedor_id||'';
   } else {
-    const cliEl = document.getElementById('f-cliente');
-    if(cliEl){
-      cliEl.value = f.cliente_id||'';
-      cascadaClienteFactura(); // Filtra proyectos por cliente
+    const fcEl=document.getElementById('f-cliente');
+    if(fcEl){
+      fcEl.value=f.cliente_id||'';
+      cascadaClienteFactura();
+      setTimeout(()=>{ document.getElementById('f-proyecto').value=f.proyecto_id||''; },50);
     }
   }
 
-  // Proyecto (después de la cascada)
-  setTimeout(()=>{
-    const proyEl = document.getElementById('f-proyecto');
-    if(proyEl) proyEl.value = f.proyecto_id||'';
-  }, 50);
-
-  // Título del modal
-  document.getElementById('f-modal-title').textContent = esC ? '📥 Editar factura de compra' : '📤 Editar factura de venta';
+  calcTotalFac();
+  openModal('m-factura');
 }
 
 async function saveFactura(){
   const tipo=document.getElementById('f-tipo').value||'Venta';
   const id=document.getElementById('f-id').value;
   const esC=tipo==='Compra';
-  // Para compras: usar primer vto del modo multi, o el campo simple
-  const vto1 = esC
-    ? (document.getElementById('f-vto1')?.value || document.getElementById('f-vto')?.value || null)
-    : (document.getElementById('f-vto')?.value || null);
-  const d={
-    tipo_factura:   tipo,
-    num_factura:    document.getElementById('f-num').value,
-    fecha_emision:  document.getElementById('f-fecha').value||new Date().toISOString().split('T')[0],
-    cliente_id:     esC?null:(document.getElementById('f-cliente').value||null),
-    proveedor_id:   esC?(document.getElementById('f-proveedor').value||null):null,
-    proyecto_id:    document.getElementById('f-proyecto').value||null,
-    base_imponible: parseFloat(document.getElementById('f-base').value)||0,
-    iva_pct:        document.getElementById('f-iva').value,
-    forma_pago:     document.getElementById('f-pago').value,
-    fecha_vencimiento: vto1,
-    estado:         document.getElementById('f-estado').value,
-    importe_cobrado:parseFloat(document.getElementById('f-cobrado').value)||0,
-    concepto:       document.getElementById('f-concepto').value
-  };
-  // Añadir vencimientos 2-4 si existen (columnas opcionales)
-  if(esC){
-    [2,3,4].forEach(n=>{
-      const v=document.getElementById(`f-vto${n}`)?.value||null;
-      const i=parseFloat(document.getElementById(`f-vto${n}-imp`)?.value)||null;
-      if(v){ d[`fecha_vencimiento_${n}`]=v; }
-      if(i){ d[`importe_vto_${n}`]=i; }
-    });
-    // Importe vto 1
-    const i1=parseFloat(document.getElementById('f-vto1-imp')?.value)||null;
-    if(i1) d.importe_vto_1=i1;
+  const numFac=document.getElementById('f-num').value.trim();
+
+  // Validar que el número no esté duplicado (solo en facturas nuevas)
+  if(!id){
+    const duplicado = FC.find(f=>f.num_factura===numFac);
+    if(duplicado){ toast(`El número "${numFac}" ya existe. Modifícalo.`,'error'); return; }
   }
+
+  const d={
+    tipo_factura:    tipo,
+    num_factura:     numFac,
+    fecha_emision:   document.getElementById('f-fecha').value||new Date().toISOString().split('T')[0],
+    cliente_id:      esC?null:(document.getElementById('f-cliente').value||null),
+    proveedor_id:    esC?(document.getElementById('f-proveedor').value||null):null,
+    proyecto_id:     document.getElementById('f-proyecto').value||null,
+    base_imponible:  parseFloat(document.getElementById('f-base').value)||0,
+    iva_pct:         document.getElementById('f-iva').value,
+    forma_pago:      document.getElementById('f-pago').value,
+    fecha_vencimiento: document.getElementById('f-vto').value||null,
+    estado:          document.getElementById('f-estado').value||'Pendiente',
+    importe_cobrado: parseFloat(document.getElementById('f-cobrado').value)||0,
+    concepto:        document.getElementById('f-concepto').value,
+    // Vencimientos múltiples (solo compras)
+    fecha_vto2: esC?(document.getElementById('f-vto2')?.value||null):null,
+    fecha_vto3: esC?(document.getElementById('f-vto3')?.value||null):null,
+    fecha_vto4: esC?(document.getElementById('f-vto4')?.value||null):null,
+    importe_vto1: esC?(parseFloat(document.getElementById('f-importe-vto1')?.value)||null):null,
+    importe_vto2: esC?(parseFloat(document.getElementById('f-importe-vto2')?.value)||null):null,
+    importe_vto3: esC?(parseFloat(document.getElementById('f-importe-vto3')?.value)||null):null,
+    importe_vto4: esC?(parseFloat(document.getElementById('f-importe-vto4')?.value)||null):null,
+  };
+
+  // Si no hay importe_vto1 pero hay fecha, poner el total como importe
+  if(esC && d.fecha_vencimiento && !d.importe_vto1){
+    const base=parseFloat(document.getElementById('f-base').value)||0;
+    d.importe_vto1 = base*(1+ivaPct(d.iva_pct)/100);
+  }
+
   try{
-    if(id){await sb('facturas','PATCH',d,null,`?id=eq.${id}`);toast('Factura actualizada ✅');}
-    else  {await sbPost('facturas',d);toast('Factura guardada ✅');}
+    if(id){
+      await sb('facturas','PATCH',d,null,`?id=eq.${id}`);
+      toast('Factura actualizada ✅');
+    } else {
+      await sbPost('facturas',d);
+      toast('Factura guardada ✅');
+    }
     document.getElementById('f-id').value='';
     closeModal('m-factura');
     loadFacturas();
-  }catch(e){toast('Error: '+e.message,'error');}
+  }catch(e){
+    // Mensaje de error más claro para duplicado
+    if(e.message && e.message.includes('duplicate')){
+      toast(`Número de factura duplicado. Cambia "${numFac}" por otro.`,'error');
+    } else {
+      toast('Error: '+e.message,'error');
+    }
+  }
 }
 
 
@@ -4176,19 +4228,12 @@ function cascadaClienteFactura(){
   const clienteId = document.getElementById('f-cliente')?.value;
   const proyEl    = document.getElementById('f-proyecto');
   if(!proyEl) return;
-  // Filtrar proyectos por cliente - comparar como string para evitar type mismatch
-  const filtrados = clienteId
-    ? PC.filter(p => p.cliente_id && String(p.cliente_id) === String(clienteId))
-    : PC;
+  const filtrados = clienteId ? PC.filter(p=>p.cliente_id===clienteId) : PC;
   proyEl.innerHTML = '<option value="">— Sin proyecto —</option>'
     + filtrados.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
   // Si solo hay un proyecto para ese cliente, seleccionarlo automáticamente
   if(clienteId && filtrados.length===1){
     proyEl.value = filtrados[0].proyecto_id;
-  }
-  // Debug en consola para diagnosticar si hay problema de tipos
-  if(clienteId && filtrados.length===0 && PC.length>0){
-    console.log('⚠️ cascadaClienteFactura: sin proyectos para clienteId=', clienteId, 'Tipos disponibles:', [...new Set(PC.map(p=>typeof p.cliente_id))]);
   }
 }
 
@@ -4204,7 +4249,7 @@ function cascadaClienteComparativa(){
   const clienteId  = clienteSel ? clienteSel.value : '';
   const proySel    = document.getElementById('comp-proyecto-sel');
   if(!proySel) return;
-  const filtrados = clienteId ? PC.filter(p=>p.cliente_id&&String(p.cliente_id)===String(clienteId)) : PC;
+  const filtrados = clienteId ? PC.filter(p=>p.cliente_id===clienteId) : PC;
   proySel.innerHTML = '<option value="">📁 Proyecto…</option>'
     + filtrados.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
   // Reset lista
@@ -4291,86 +4336,56 @@ function poblarClientesComparativa(){
 // VENCIMIENTOS MÚLTIPLES EN FACTURAS DE COMPRA
 // ════════════════════════════════════════════════════════════════
 
-function switchVtoMode(esCompra){
-  const simple = document.getElementById('f-grp-vto-simple');
-  const multi  = document.getElementById('f-grp-vtos-multi');
-  if(!simple||!multi) return;
-  if(esCompra){
-    simple.style.display='none';
-    multi.style.display='';
-    sugerirVencimientos(); // Sugerir días 5/20 automáticamente
-  } else {
-    simple.style.display='';
-    multi.style.display='none';
-  }
-}
+// Sugiere los próximos días de pago (5 y 20) a partir de hoy
+function sugerirDiasPago(){
+  const baseInput = document.getElementById('f-fecha');
+  const baseVal   = baseInput?.value || new Date().toISOString().split('T')[0];
+  const base      = new Date(baseVal);
+  const hoy       = new Date();
+  const ref        = base > hoy ? base : hoy;
 
-// Sugerir fechas de vencimiento: día 5 y 20 del próximo mes
-function sugerirVencimientos(){
-  const fechaStr = document.getElementById('f-fecha')?.value;
-  const base = fechaStr ? new Date(fechaStr) : new Date();
-  const total = parseFloat(document.getElementById('f-base')?.value)||0;
-  const iva   = (total * ivaPct(document.getElementById('f-iva')?.value||'21%')/100);
-  const totalConIva = total + iva;
-
-  [1,2,3,4].forEach(n=>{
-    const sug = document.getElementById(`f-vto${n}-sug`);
-    if(!sug) return;
-    // Calcular próximo día de pago para cada vencimiento (30 días apart)
-    const offset = (n-1)*30;
-    const fechaObj = new Date(base);
-    fechaObj.setDate(fechaObj.getDate() + 30 + offset);
-    const sugerida = calcularVencimientoGiro(base.toISOString().split('T')[0], `Giro ${30+offset} días`);
-    if(sugerida){
-      sug.style.display='block';
-      sug.textContent = `💡 ${fmtD(sugerida)}  (click para aceptar)`;
-      sug.dataset.fecha = sugerida;
+  // Generar los próximos 4 días de pago a partir de ref
+  const sugerencias = [];
+  let cursor = new Date(ref);
+  while(sugerencias.length < 4){
+    for(const dia of [...DIAS_PAGO].sort((a,b)=>a-b)){
+      const candidata = new Date(cursor.getFullYear(), cursor.getMonth(), dia);
+      if(candidata > ref && sugerencias.length < 4){
+        sugerencias.push(candidata.toISOString().split('T')[0]);
+      }
     }
+    cursor.setMonth(cursor.getMonth()+1);
+    if(cursor.getMonth() > ref.getMonth() + 12) break; // safety
+  }
+
+  // Rellenar los campos de vencimiento en gris (placeholder visual)
+  const ids = ['f-vto','f-vto2','f-vto3','f-vto4'];
+  sugerencias.forEach((fecha, i) => {
+    const el = document.getElementById(ids[i]);
+    if(el){ el.value = fecha; el.style.color='var(--text-soft)'; }
   });
 
-  // Sugerir importe: dividir en partes iguales si solo un vto
-  if(totalConIva>0){
-    const imp1 = document.getElementById('f-vto1-imp');
-    if(imp1 && !imp1.value) imp1.value = totalConIva.toFixed(2);
+  // Distribuir importe total en partes iguales
+  const base2 = parseFloat(document.getElementById('f-base')?.value)||0;
+  const iva   = ivaPct(document.getElementById('f-iva')?.value||'21%');
+  const total = base2*(1+iva/100);
+  if(total > 0){
+    const parte = (total / sugerencias.length).toFixed(2);
+    ['f-importe-vto1','f-importe-vto2','f-importe-vto3','f-importe-vto4'].forEach((id,i)=>{
+      const el=document.getElementById(id);
+      if(el && i < sugerencias.length){
+        el.value = i < sugerencias.length-1 ? parte : (total - parte*(sugerencias.length-1)).toFixed(2);
+        el.style.color='var(--text-soft)';
+      }
+    });
   }
+  toast(`Sugeridos ${sugerencias.length} vencimientos: días ${DIAS_PAGO[0]} y ${DIAS_PAGO[1]} ✅`);
 }
 
-function confirmarVtoSugerido(n){
-  const sug = document.getElementById(`f-vto${n}-sug`);
-  const fecha = sug?.dataset.fecha;
-  if(!fecha) return;
-  const input = document.getElementById(`f-vto${n}`);
-  if(input){
-    input.value = fecha;
-    sug.style.display='none';
-    // Cambiar estilo para indicar confirmado
-    input.style.borderColor='var(--green)';
-    toast(`Vencimiento ${n} confirmado: ${fmtD(fecha)}`);
-    checkVtosTotales();
-  }
-}
-
-function checkVtosTotales(){
-  const totalFac = (() => {
-    const base=parseFloat(document.getElementById('f-base')?.value)||0;
-    const iva=ivaPct(document.getElementById('f-iva')?.value||'21%');
-    return base*(1+iva/100);
-  })();
-
-  let sumVtos = 0;
-  [1,2,3,4].forEach(n=>{
-    const imp = parseFloat(document.getElementById(`f-vto${n}-imp`)?.value)||0;
-    sumVtos += imp;
-  });
-
-  const el = document.getElementById('vtos-total-check');
-  if(!el) return;
-  if(sumVtos===0){ el.textContent=''; return; }
-  const diff = sumVtos - totalFac;
-  const ok = Math.abs(diff)<0.02;
-  el.innerHTML = ok
-    ? `<span style="color:var(--green)">✅ Vencimientos = ${fmt(sumVtos)} · coincide con total factura</span>`
-    : `<span style="color:var(--amber)">⚠️ Suma vtos: ${fmt(sumVtos)} · Total factura: ${fmt(totalFac)} · Diferencia: ${fmt(Math.abs(diff))}</span>`;
+// Confirmar vencimiento (quitar estilo gris cuando el usuario hace click)
+function confirmarVto(id){
+  const el = document.getElementById(id);
+  if(el) el.style.color = '';
 }
 
 // ════════════════════════════════════════════════════════════════
