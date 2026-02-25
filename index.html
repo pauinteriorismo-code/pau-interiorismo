@@ -5658,11 +5658,19 @@ function renderRRHH(){
     sumNeto+=neto; sumSsEmp+=ssEmpAmt;
     // Pagas extra: coste bruto × num pagas
     sumPagasAnual+=(t.paga_extra||0)*(t.num_pagas_extra||0);
-    // Bonus anual: mensual×12, trimestral×4, anual×1, puntual×0
-    const periodoMult={mensual:12,trimestral:4,anual:1,puntual:0};
-    const mult=periodoMult[t.bonus_periodo||'mensual']||0;
-    const bonusConIva=(t.bonus||0)*(1+(t.bonus_iva_pct||0)/100);
-    sumBonusAnual+=bonusConIva*mult;
+    // Bonus anual
+    let bonusTrab=0;
+    if(t.bonus_modo==='puntual' || (!t.bonus_modo && t.bonus_pagos_json)){
+      // Pagos puntuales: sumar todos
+      const pagos=Array.isArray(t.bonus_pagos_json)?t.bonus_pagos_json:(t.bonus_pagos_json?JSON.parse(t.bonus_pagos_json):[]);
+      bonusTrab=pagos.reduce((s,p)=>s+(p.importe||0)*(1+(p.iva||0)/100),0);
+    } else {
+      // Recurrente
+      const periodoMult={mensual:12,trimestral:4,anual:1};
+      const mult=periodoMult[t.bonus_periodo||'mensual']||12;
+      bonusTrab=(t.bonus||0)*(1+(t.bonus_iva_pct||0)/100)*mult;
+    }
+    sumBonusAnual+=bonusTrab;
   });
   const sumTotal=sumBruto+sumSsEmp;
   const sumAnualTotal=sumTotal*12+sumPagasAnual+sumBonusAnual;
@@ -5715,6 +5723,59 @@ function renderRRHH(){
 
 function filtrarRRHH(){ renderRRHH(); }
 
+let bonusPagos = []; // array de pagos puntuales en memoria del modal
+let bonusModo = 'recurrente'; // 'recurrente' | 'puntual'
+
+function setModoBonus(modo){
+  bonusModo = modo;
+  document.getElementById('bonus-modo-recurrente').style.display = modo==='recurrente' ? '' : 'none';
+  document.getElementById('bonus-modo-puntual').style.display = modo==='puntual' ? '' : 'none';
+  document.getElementById('btn-modo-recurrente').className = 'btn btn-sm ' + (modo==='recurrente'?'btn-primary':'btn-ghost');
+  document.getElementById('btn-modo-puntual').className = 'btn btn-sm ' + (modo==='puntual'?'btn-primary':'btn-ghost');
+  calcNomina();
+}
+
+function addBonusPago(){
+  const concepto = document.getElementById('bp-concepto').value.trim();
+  const fecha = document.getElementById('bp-fecha').value;
+  const importe = parseFloat(document.getElementById('bp-importe').value)||0;
+  const iva = parseFloat(document.getElementById('bp-iva').value)||0;
+  if(!concepto){ toast('Escribe un concepto','error'); return; }
+  if(importe<=0){ toast('Importe no válido','error'); return; }
+  bonusPagos.push({ concepto, fecha, importe, iva });
+  document.getElementById('bp-concepto').value='';
+  document.getElementById('bp-fecha').value='';
+  document.getElementById('bp-importe').value='';
+  document.getElementById('bp-iva').value='0';
+  renderBonusPagos();
+  calcNomina();
+}
+
+function removeBonusPago(idx){
+  bonusPagos.splice(idx,1);
+  renderBonusPagos();
+  calcNomina();
+}
+
+function renderBonusPagos(){
+  const lista = document.getElementById('bp-lista');
+  if(!lista) return;
+  if(!bonusPagos.length){
+    lista.innerHTML='<div style="text-align:center;color:var(--text-soft);padding:8px;font-size:11px">Sin pagos registrados — añade con el botón ＋</div>';
+    return;
+  }
+  lista.innerHTML = bonusPagos.map((p,i)=>{
+    const total = p.importe*(1+p.iva/100);
+    return `<div style="display:grid;grid-template-columns:2fr 1.2fr 1fr 1fr auto;gap:6px;align-items:center;padding:5px 0;border-bottom:1px solid var(--border)">
+      <span style="font-weight:600">${p.concepto}</span>
+      <span style="color:var(--text-soft)">${p.fecha?fmtD(p.fecha):'Sin fecha'}</span>
+      <span class="td-mono">${fmt(p.importe)}</span>
+      <span class="td-mono" style="color:var(--copper)">${p.iva>0?fmt(total)+' ('+p.iva+'% IVA)':'Exento'}</span>
+      <button class="btn btn-danger btn-icon btn-sm" onclick="removeBonusPago(${i})" style="padding:2px 6px;font-size:11px">🗑</button>
+    </div>`;
+  }).join('');
+}
+
 function calcNomina(){
   const bruto=parseFloat(document.getElementById('trab-bruto')?.value)||0;
   const irpf=parseFloat(document.getElementById('trab-irpf')?.value)||0;
@@ -5731,28 +5792,42 @@ function calcNomina(){
   const numPagas=parseInt(document.getElementById('trab-num-pagas')?.value)||0;
   const pagaIrpf=parseFloat(document.getElementById('trab-paga-irpf')?.value)||0;
   const pagaNetoUnit=pagaExtra - pagaExtra*pagaIrpf/100;
-  const pagaAnual=pagaNetoUnit*numPagas;
+  const pagaAnual=pagaExtra*numPagas; // coste bruto empresa
 
   // Bonus / compensación
-  const bonus=parseFloat(document.getElementById('trab-bonus')?.value)||0;
-  const bonusIvaPct=parseFloat(document.getElementById('trab-bonus-iva')?.value)||0;
-  const bonusTotal=bonus*(1+bonusIvaPct/100);
+  let bonusAnual=0;
+  if(bonusModo==='recurrente'){
+    const bonus=parseFloat(document.getElementById('trab-bonus')?.value)||0;
+    const bonusIvaPct=parseFloat(document.getElementById('trab-bonus-iva')?.value)||0;
+    const bonusConIva=bonus*(1+bonusIvaPct/100);
+    const periodoMult={mensual:12,trimestral:4,anual:1};
+    const mult=periodoMult[document.getElementById('trab-bonus-periodo')?.value||'mensual']||12;
+    bonusAnual=bonusConIva*mult;
+    const calcBonusEl=document.getElementById('trab-calc-bonus');
+    if(calcBonusEl) calcBonusEl.textContent=bonus>0?fmt(bonusAnual)+'/año'+(bonusIvaPct>0?` (${bonusIvaPct}% IVA)`:'  exento'):'—';
+  } else {
+    // Pagos puntuales: suma de todos con IVA
+    bonusAnual=bonusPagos.reduce((s,p)=>s+p.importe*(1+p.iva/100),0);
+    const el=document.getElementById('trab-calc-bonus-puntual');
+    if(el) el.textContent=bonusAnual>0?fmt(bonusAnual):'—';
+  }
 
-  // Coste anual
-  const costoMensualEmp=total; // bruto + SS empresa
+  // Coste anual total
+  const costoMensualEmp=total;
   const costoAnualNom=costoMensualEmp*12;
-  const costoAnualPagas=pagaExtra*numPagas; // pagas al coste bruto para la empresa
-  const costoAnualTotal=costoAnualNom+costoAnualPagas;
+  const costoAnualTotal=costoAnualNom+pagaAnual+bonusAnual;
 
   // Actualizar UI
   document.getElementById('trab-calc-bruto').textContent=bruto>0?fmt(bruto):'—';
   document.getElementById('trab-calc-neto').textContent=bruto>0?fmt(neto):'—';
   document.getElementById('trab-calc-ss-emp').textContent=bruto>0?fmt(ssEmpAmt):'—';
   document.getElementById('trab-calc-total').textContent=bruto>0?fmt(total):'—';
-  document.getElementById('trab-calc-paga-neto').textContent=(pagaExtra>0&&numPagas>0)?fmt(pagaNetoUnit)+' × '+numPagas:'—';
-  document.getElementById('trab-calc-bonus').textContent=bonus>0?fmt(bonusTotal)+(bonusIvaPct>0?` (${bonusIvaPct}% IVA inc.)`:'  exento'):'—';
+  const pagaEl=document.getElementById('trab-calc-paga-neto');
+  if(pagaEl) pagaEl.textContent=(pagaExtra>0&&numPagas>0)?fmt(pagaNetoUnit)+' × '+numPagas:'—';
   document.getElementById('trab-calc-anual-nom').textContent=bruto>0?fmt(costoAnualNom):'—';
-  document.getElementById('trab-calc-anual-pagas').textContent=(pagaExtra>0&&numPagas>0)?fmt(costoAnualPagas):'—';
+  document.getElementById('trab-calc-anual-pagas').textContent=(pagaExtra>0&&numPagas>0)?fmt(pagaAnual):'—';
+  const anualBonusEl=document.getElementById('trab-calc-anual-bonus');
+  if(anualBonusEl) anualBonusEl.textContent=bonusAnual>0?fmt(bonusAnual):'—';
   document.getElementById('trab-calc-anual-total').textContent=bruto>0?fmt(costoAnualTotal):'—';
 }
 
@@ -5771,6 +5846,9 @@ function abrirModalTrabajador(){
   document.getElementById('trab-bonus-periodo').value='mensual';
   document.getElementById('trab-alta').value=new Date().toISOString().split('T')[0];
   document.getElementById('trab-estado').value='Activo';
+  bonusPagos=[]; bonusModo='recurrente';
+  setModoBonus('recurrente');
+  renderBonusPagos();
   calcNomina();
   openModal('m-trabajador');
 }
@@ -5800,6 +5878,12 @@ function editTrabajador(id){
   document.getElementById('trab-bonus').value=t.bonus||'';
   document.getElementById('trab-bonus-periodo').value=t.bonus_periodo||'mensual';
   document.getElementById('trab-bonus-iva').value=t.bonus_iva_pct??0;
+  // Cargar modo bonus y pagos puntuales
+  bonusPagos = Array.isArray(t.bonus_pagos_json) ? t.bonus_pagos_json : (t.bonus_pagos_json ? JSON.parse(t.bonus_pagos_json) : []);
+  const modoGuardado = t.bonus_modo || (bonusPagos.length>0 ? 'puntual' : 'recurrente');
+  bonusModo = modoGuardado;
+  setModoBonus(modoGuardado);
+  renderBonusPagos();
   document.getElementById('trab-notas').value=t.notas||'';
   calcNomina();
   openModal('m-trabajador');
@@ -5828,9 +5912,11 @@ async function saveTrabajador(){
     paga_extra: parseFloat(document.getElementById('trab-paga-extra').value)||null,
     num_pagas_extra: parseInt(document.getElementById('trab-num-pagas').value)||0,
     paga_extra_irpf: parseFloat(document.getElementById('trab-paga-irpf').value)||15,
-    bonus: parseFloat(document.getElementById('trab-bonus').value)||null,
-    bonus_periodo: document.getElementById('trab-bonus-periodo').value||'mensual',
-    bonus_iva_pct: parseFloat(document.getElementById('trab-bonus-iva').value)||0,
+    bonus: bonusModo==='recurrente' ? (parseFloat(document.getElementById('trab-bonus').value)||null) : null,
+    bonus_periodo: bonusModo==='recurrente' ? document.getElementById('trab-bonus-periodo').value : null,
+    bonus_iva_pct: bonusModo==='recurrente' ? (parseFloat(document.getElementById('trab-bonus-iva').value)||0) : 0,
+    bonus_modo: bonusModo,
+    bonus_pagos_json: bonusModo==='puntual' ? JSON.stringify(bonusPagos) : null,
     notas:     document.getElementById('trab-notas').value||null,
   };
   try{
@@ -6337,40 +6423,84 @@ if('serviceWorker' in navigator){
     </div>
 
     <div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;margin:14px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)">⭐ COMPENSACIÓN POR ACTITUD / BONUS</div>
-    <div class="form-grid">
-      <div class="form-group">
-        <label class="form-label">Importe compensación €</label>
-        <input class="form-input" type="number" id="trab-bonus" step="0.01" placeholder="0.00" oninput="calcNomina()">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Periodicidad</label>
-        <select class="form-input" id="trab-bonus-periodo">
-          <option value="mensual">Mensual</option>
-          <option value="trimestral">Trimestral</option>
-          <option value="anual">Anual</option>
-          <option value="puntual">Puntual / a criterio</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="form-label">IVA compensación</label>
-        <select class="form-input" id="trab-bonus-iva" onchange="calcNomina()">
-          <option value="0">Exento de IVA</option>
-          <option value="21">21% IVA</option>
-          <option value="10">10% IVA</option>
-        </select>
-      </div>
-      <div class="form-group" style="display:flex;align-items:flex-end">
-        <div style="background:var(--amber-soft);border-radius:6px;padding:8px 12px;width:100%">
-          <div style="font-size:10px;color:var(--text-soft)">Total compensación c/IVA</div>
-          <div style="font-weight:700;font-size:14px;color:var(--copper)" id="trab-calc-bonus">—</div>
+
+    <!-- Selector modo -->
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <button type="button" id="btn-modo-recurrente" class="btn btn-primary btn-sm" onclick="setModoBonus('recurrente')" style="font-size:11px">🔁 Recurrente</button>
+      <button type="button" id="btn-modo-puntual" class="btn btn-ghost btn-sm" onclick="setModoBonus('puntual')" style="font-size:11px">📅 Pagos puntuales</button>
+    </div>
+
+    <!-- MODO RECURRENTE -->
+    <div id="bonus-modo-recurrente">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Importe compensación €</label>
+          <input class="form-input" type="number" id="trab-bonus" step="0.01" placeholder="0.00" oninput="calcNomina()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Periodicidad</label>
+          <select class="form-input" id="trab-bonus-periodo" onchange="calcNomina()">
+            <option value="mensual">Mensual (×12/año)</option>
+            <option value="trimestral">Trimestral (×4/año)</option>
+            <option value="anual">Anual (×1/año)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">IVA compensación</label>
+          <select class="form-input" id="trab-bonus-iva" onchange="calcNomina()">
+            <option value="0">Exento de IVA</option>
+            <option value="21">21% IVA</option>
+            <option value="10">10% IVA</option>
+          </select>
+        </div>
+        <div class="form-group" style="display:flex;align-items:flex-end">
+          <div style="background:var(--amber-soft);border-radius:6px;padding:8px 12px;width:100%">
+            <div style="font-size:10px;color:var(--text-soft)">Total compensación c/IVA / año</div>
+            <div style="font-weight:700;font-size:14px;color:var(--copper)" id="trab-calc-bonus">—</div>
+          </div>
         </div>
       </div>
     </div>
 
+    <!-- MODO PAGOS PUNTUALES -->
+    <div id="bonus-modo-puntual" style="display:none">
+      <div style="background:var(--bg-alt);border-radius:8px;padding:10px;margin-bottom:8px">
+        <div style="display:grid;grid-template-columns:2fr 1.2fr 1fr 1fr auto;gap:6px;align-items:end;margin-bottom:6px">
+          <div>
+            <label class="form-label" style="font-size:10px">Concepto</label>
+            <input class="form-input" id="bp-concepto" placeholder="Ej: Bonus verano, Navidad…" style="font-size:12px">
+          </div>
+          <div>
+            <label class="form-label" style="font-size:10px">Fecha pago</label>
+            <input class="form-input" type="date" id="bp-fecha" style="font-size:12px">
+          </div>
+          <div>
+            <label class="form-label" style="font-size:10px">Importe €</label>
+            <input class="form-input" type="number" id="bp-importe" step="0.01" placeholder="0.00" style="font-size:12px">
+          </div>
+          <div>
+            <label class="form-label" style="font-size:10px">IVA</label>
+            <select class="form-input" id="bp-iva" style="font-size:12px">
+              <option value="0">Exento</option>
+              <option value="21">21%</option>
+              <option value="10">10%</option>
+            </select>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm" onclick="addBonusPago()" style="padding:6px 12px;font-size:12px">＋</button>
+        </div>
+        <!-- Lista de pagos puntuales -->
+        <div id="bp-lista" style="font-size:12px"></div>
+      </div>
+      <div style="background:var(--amber-soft);border-radius:6px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:11px;color:var(--text-soft)">Total compensaciones puntuales c/IVA:</span>
+        <span style="font-weight:700;font-size:15px;color:var(--copper)" id="trab-calc-bonus-puntual">—</span>
+      </div>
+    </div>
+
     <!-- Resumen total anual -->
-    <div style="background:#f0faf4;border:1px solid #c3e6cb;border-radius:8px;padding:12px;margin-top:4px">
+    <div style="background:#f0faf4;border:1px solid #c3e6cb;border-radius:8px;padding:12px;margin-top:10px">
       <div style="font-size:11px;font-weight:700;color:var(--green);margin-bottom:8px">💶 COSTE TOTAL EMPRESA / AÑO</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px">
         <div style="text-align:center">
           <div style="font-size:10px;color:var(--text-soft)">Nóminas (12 meses)</div>
           <div style="font-weight:700;font-size:13px" id="trab-calc-anual-nom">—</div>
@@ -6378,6 +6508,10 @@ if('serviceWorker' in navigator){
         <div style="text-align:center">
           <div style="font-size:10px;color:var(--text-soft)">Pagas extras</div>
           <div style="font-weight:700;font-size:13px" id="trab-calc-anual-pagas">—</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:10px;color:var(--text-soft)">Bonus / Compensaciones</div>
+          <div style="font-weight:700;font-size:13px;color:var(--copper)" id="trab-calc-anual-bonus">—</div>
         </div>
         <div style="text-align:center">
           <div style="font-size:10px;color:var(--text-soft)">COSTE ANUAL TOTAL</div>
