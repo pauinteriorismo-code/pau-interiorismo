@@ -894,6 +894,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="search-bar" style="margin-bottom:12px">
         <div class="search-wrap" style="flex:1"><span class="search-icon">🔍</span><input class="form-input" id="search-tarifario" placeholder="Buscar en todo el tarifario…" oninput="buscarTarifario()"></div>
         <button class="btn btn-primary" onclick="abrirNuevoTarifario()">＋ Nuevo artículo</button>
+        <button class="btn btn-ghost" onclick="if(confirm('¿Importar 7 electrodomésticos Opción 3 Mundobaño (Cocina/Electrodomésticos) al tarifario?'))importarOpcion3Mundobano()" title="Importar Opción 3 Mundobaño" style="border:1px dashed var(--copper);color:var(--copper)">📥 Importar Opción 3 Mundobaño</button>
       </div>
       <!-- Layout árbol + contenido -->
       <div style="display:flex;gap:12px;align-items:flex-start">
@@ -4106,6 +4107,34 @@ async function saveTarifario(){
 }
 
 
+
+// ═══════════════════════════════════════════
+// IMPORTAR OPCION 3 MUNDOBAÑO
+// ═══════════════════════════════════════════
+async function importarOpcion3Mundobano(){
+  const productos = [
+    {codigo:"3CB5159N3",descripcion:"Horno compacto, 60 x 45 cm, Cristal negro",unidad:"Ud",precio_coste:453.76,margen_pct:35,precio_venta:698.0923,categoria:"Cocina",familia:"Electrodomésticos",marca:"Mundobaño",notas:"Opción 3 - Pres. 2025/00799"},
+    {codigo:"3HB5131N3",descripcion:"Horno, 60 x 60 cm, Cristal negro",unidad:"Ud",precio_coste:284.5,margen_pct:35,precio_venta:437.6923,categoria:"Cocina",familia:"Electrodomésticos",marca:"Mundobaño",notas:"Opción 3 - Pres. 2025/00799"},
+    {codigo:"3CG5172N2",descripcion:"Microondas integrable 38cm 20 l. grill. Inox y negro",unidad:"Ud",precio_coste:173.05,margen_pct:35,precio_venta:266.2308,categoria:"Cocina",familia:"Electrodomésticos",marca:"Mundobaño",notas:"Opción 3 - Pres. 2025/00799"},
+    {codigo:"3VF5012NP",descripcion:"Lavavajillas integrable, 60 cm. 12 CUB",unidad:"Ud",precio_coste:333.73,margen_pct:35,precio_venta:513.4308,categoria:"Cocina",familia:"Electrodomésticos",marca:"Mundobaño",notas:"Opción 3 - Pres. 2025/00799"},
+    {codigo:"3VT4031NA",descripcion:"Lavavajillas, E, Totalmente integrable, 45 x 81,5 cm., 10 servicios, HC, Negro",unidad:"Ud",precio_coste:339.2,margen_pct:35,precio_venta:521.8462,categoria:"Cocina",familia:"Electrodomésticos",marca:"Mundobaño",notas:"Opción 3 - Pres. 2025/00799"},
+    {codigo:"3KID834F",descripcion:"Frigorífico combi integrable, 193.5 x 55.8 cm, Sistema de integración de puerta fija",unidad:"Ud",precio_coste:957.43,margen_pct:35,precio_venta:1472.9692,categoria:"Cocina",familia:"Electrodomésticos",marca:"Mundobaño",notas:"Opción 3 - Pres. 2025/00799"},
+    {codigo:"3TI979B",descripcion:"Lavadora totalmente integrable, 7 kg, máx. 1200 rpm, Blanco",unidad:"Ud",precio_coste:497.86,margen_pct:35,precio_venta:765.9385,categoria:"Cocina",familia:"Electrodomésticos",marca:"Mundobaño",notas:"Opción 3 - Pres. 2025/00799"}
+  ];
+  let ok=0, err=0;
+  for(const p of productos){
+    try{
+      await sbPost('tarifario', p);
+      ok++;
+    }catch(e){
+      console.error('Error insertando '+p.codigo, e);
+      err++;
+    }
+  }
+  toast(`✅ ${ok} productos importados${err>0?' · '+err+' errores':''}`, ok>0?'success':'error');
+  TC=[];
+  await loadTarifario();
+}
 // ═══════════════════════════════════════════
 // CYPE
 // ═══════════════════════════════════════════
