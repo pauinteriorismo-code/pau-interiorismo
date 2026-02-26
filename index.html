@@ -218,6 +218,10 @@ tbody td{padding:7px 10px;vertical-align:middle}
     margin: 0;
   }
 }
+.tarif-tree-item{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;cursor:pointer;border-bottom:1px solid var(--border);font-size:12px;font-weight:600;color:var(--navy);transition:background .15s}
+.tarif-tree-item:hover{background:var(--sand)}
+.tarif-fam-item{font-weight:400}
+.tarif-fam-item:hover{background:#eef3fb}
 </style>
 <script src="./PAU INTERIORISMO · Gestión_files/xlsx.full.min.js.descargar"></script>
 </head>
@@ -3774,8 +3778,8 @@ function renderTarifTree(){
 }
 
 function toggleTarifCat(cat){
-  const famsEl = document.getElementById('tarif-fams-' + CSS.escape(cat));
-  const arrow  = document.getElementById('tarif-arrow-' + CSS.escape(cat));
+  const famsEl = document.getElementById('ts-' + cat);
+  const arrow  = document.getElementById('ta-' + cat);
   if(!famsEl) return;
   const open = famsEl.style.display !== 'none';
   famsEl.style.display = open ? 'none' : 'block';
@@ -3797,7 +3801,7 @@ function selTarifCat(cat){
 function selTarifFam(cat, fam){
   document.querySelectorAll('.tarif-fam-item').forEach(el => el.style.background = '');
   // highlight
-  const filtered = TC.filter(t=>(t.categoria||'Sin categoría')===cat && (t.familia||'Sin familia')===fam);
+  const filtered = TC.filter(t=>(t.categoria||'Sin categoría')===cat && (t.familia||'Sin subcategoría')===fam);
   renderTarifPanel(filtered, cat, fam);
 }
 
