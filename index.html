@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
+<!-- saved from url=(0036)https://pau-interiorismo.vercel.app/ -->
+<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#1a2a3a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="PAU Gestión">
-<link rel="manifest" href="manifest.json">
+<link rel="manifest" href="https://pau-interiorismo.vercel.app/manifest.json">
 <title>PAU INTERIORISMO · Gestión</title>
 <style>
 :root{--navy:#1a2a3a;--navy-mid:#27405b;--navy-light:#3d5a78;--blue-soft:#b8cce4;--blue-light:#e8f4ff;--cream:#f7f4ef;--sand:#ede8df;--copper:#b87333;--copper-light:#f4e8da;--green:#1e6b3d;--green-soft:#d5e8d4;--amber:#7d6608;--amber-soft:#fff2cc;--red:#7b241c;--red-soft:#fce8e6;--white:#fff;--text:#1a2a3a;--text-mid:#4a5f72;--text-soft:#8a9aaa;--border:#dce6f0;--radius:8px;--radius-sm:4px;--shadow:0 1px 3px rgba(26,42,58,.08),0 4px 16px rgba(26,42,58,.06);--shadow-lg:0 8px 32px rgba(26,42,58,.14);--sidebar:220px;--header:56px}
@@ -219,34 +219,34 @@ tbody td{padding:7px 10px;vertical-align:middle}
   }
 }
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="./PAU INTERIORISMO · Gestión_files/xlsx.full.min.js.descargar"></script>
 </head>
 <body>
 
 <!-- LOGIN -->
-<div id="login-screen" class="login-screen">
+<div id="login-screen" class="login-screen" style="display: none; z-index: 9999;">
   <div class="login-box">
     <div class="login-logo">PAU INTERIORISMO S.L.</div>
     <div class="login-sub">Sistema de gestión · Acceso privado</div>
-    <div class="login-error" id="login-error">Usuario o contraseña incorrectos</div>
+    <div class="login-error" id="login-error" style="display: none;">Usuario o contraseña incorrectos</div>
     <div class="form-group" style="margin-bottom:11px;text-align:left"><label class="form-label">Usuario</label>
     <select class="form-input" id="login-user" autocomplete="username">
       <option value="jose">Jose</option>
       <option value="pau">Pau</option>
     </select></div>
-    <div class="form-group" style="margin-bottom:18px;text-align:left"><label class="form-label">Contraseña</label><input class="form-input" id="login-pass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div class="form-group" style="margin-bottom:18px;text-align:left"><label class="form-label">Contraseña</label><input class="form-input" id="login-pass" type="password" placeholder="••••••••" onkeydown="if(event.key===&#39;Enter&#39;)doLogin()"></div>
     <button class="btn btn-primary" style="width:100%;justify-content:center;padding:10px" onclick="doLogin()">Entrar →</button>
   </div>
 </div>
 
 <!-- APP -->
-<div class="app">
+<div class="app" style="display: flex;">
 <nav class="sidebar">
   <div class="sidebar-logo"><div class="brand">PAU INTERIORISMO</div><div class="brand-sub">Sistema de gestión · <span style="color:#b87333">v50</span></div></div>
   <div class="nav-section">
     <div class="nav-label">Principal</div>
     <div class="nav-item active" data-view="gerencia"><span class="ni">🏠</span><span>Gerencia</span></div>
-    <div class="nav-item" data-view="agenda"><span class="ni">🔔</span><span>Agenda</span><span class="nav-badge" id="agenda-badge" style="display:none">0</span></div>
+    <div class="nav-item" data-view="agenda"><span class="ni">🔔</span><span>Agenda</span><span class="nav-badge" id="agenda-badge" style="">1</span></div>
     <div class="nav-item" data-view="clientes"><span class="ni">🤝</span><span>Clientes</span></div>
     <div class="nav-item" data-view="proyectos"><span class="ni">📁</span><span>Proyectos</span></div>
   </div>
@@ -285,7 +285,7 @@ tbody td{padding:7px 10px;vertical-align:middle}
     <div class="nav-item" data-view="configuracion"><span class="ni">⚙️</span><span>Configuración</span></div>
   </div>
   <div class="sidebar-bottom">
-    <div class="user-card"><div class="user-av" id="user-av">JA</div><div><div class="user-name" id="user-name">Jose</div><div class="user-role">Administrador</div></div></div>
+    <div class="user-card"><div class="user-av" id="user-av">JO</div><div><div class="user-name" id="user-name">Jose</div><div class="user-role">Administrador</div></div></div>
   </div>
 </nav>
 
@@ -293,9 +293,9 @@ tbody td{padding:7px 10px;vertical-align:middle}
   <div class="topbar">
     <div><div class="topbar-title" id="tb-title">Gerencia · Panel ejecutivo</div><div class="topbar-bc" id="tb-bc">Datos en tiempo real</div></div>
     <div class="topbar-right">
-      <div id="conn-status" style="font-size:11px;padding:3px 9px;border-radius:10px;background:var(--amber-soft);color:var(--amber);font-weight:600">⏳ Conectando…</div>
+      <div id="conn-status" style="font-size: 11px; padding: 3px 9px; border-radius: 10px; background: var(--red-soft); color: var(--red); font-weight: 600;"></div>
       <button class="btn btn-ghost btn-sm" onclick="doLogout()">Salir</button>
-      <button class="btn btn-primary btn-sm" onclick="openModal('m-quick')">＋ Nuevo</button>
+      <button class="btn btn-primary btn-sm" onclick="openModal(&#39;m-quick&#39;)">＋ Nuevo</button>
     </div>
   </div>
 
@@ -305,9 +305,7 @@ tbody td{padding:7px 10px;vertical-align:middle}
     <!-- ═══ PRESUPUESTO FINAL ═══ -->
     <div class="view" id="view-pres_final">
       <div class="search-bar" style="gap:8px;flex-wrap:wrap;align-items:center">
-        <select class="form-input" style="width:195px;flex-shrink:0" id="filter-cliente-pres_final" onchange="cascadaModulo('pres_final','pf-proyecto-sel',loadPresupuestoFinal)">
-          <option value="">👤 Cliente…</option>
-        </select>
+        <select class="form-input" style="width:195px;flex-shrink:0" id="filter-cliente-pres_final" onchange="cascadaModulo(&#39;pres_final&#39;,&#39;pf-proyecto-sel&#39;,loadPresupuestoFinal)"><option value="">👤 Cliente…</option><option value="CLI-001">Miguel Zaragozá Garzón</option><option value="CLI-002">Vicenta Folch Gil</option><option value="CLI-033">Estudi Encis SL</option><option value="CLI-034">Vicenta Baixauli Hernandez</option><option value="CLI-H002">Mª PAU BRAVO JOSE</option><option value="CLI-H001">ROSA CHANZA SOLER</option><option value="CLI-H003">DESIRE NAVARRO MARI</option><option value="CLI-H004">CARMELO RODRIGUEZ VILA</option><option value="CLI-H032">Daniel palma gallardo</option><option value="CLI-H023">Miguel Zaragozá Garzón</option><option value="CLI-H006">Vicenta Folch Gil</option><option value="CLI-H008">VICENT MARI SERRA</option><option value="CLI-H009">FERNANDO JOSE SAN GERMAN IBORRA</option><option value="CLI-H010">REME IBORRA GIL</option><option value="CLI-H011">TONI TATAY DAVID</option><option value="CLI-H019">Jose Antonio Martos Ortiz</option><option value="CLI-H021">MERCEDES HIGUERAS GOMEZ</option><option value="CLI-H024">MICHELL BENITO</option><option value="CLI-H026">Ana María Palau Sastre</option><option value="CLI-H028">Lara Blasco - Lara Blasco Iborra</option><option value="CLI-H027">Laura Doria Gomez</option><option value="CLI-H031">Belinda</option><option value="CLI-H005">PATRI</option><option value="CLI-H012">Júlia Fabregat Mestre</option><option value="CLI-H013">Jose Manuel Garcia Seller Nº 7 Pta 4</option><option value="CLI-H014">4G daniel Dominguez</option><option value="CLI-H016">Sara Muñoz Abella</option><option value="CLI-H018">Amparo Forner Pastor</option><option value="CLI-H017">Yasmina Cabezuelo Alaminos</option><option value="CLI-H020">Rafael Francés Llàcer</option><option value="CLI-H022">Miguel cocina</option><option value="CLI-H007">Juanmi</option><option value="CLI-H015">4F Fernando</option><option value="CLI-H029">Francisco Navarro Garcia</option><option value="CLI-H025">URKO Y FRANCESC</option><option value="CLI-H030">Jose Manuel Pinzón Valbuena</option></select>
         <select class="form-input" style="width:220px" id="pf-proyecto-sel" onchange="loadPresupuestoFinal()"><option value="">📁 Proyecto…</option></select>
         <select class="form-input" style="width:75px" id="pf-version-sel" onchange="loadPresupuestoFinal()"><option value="v1">v1</option><option value="v2">v2</option><option value="v3">v3</option></select>
         <button class="btn btn-primary" onclick="window.print()">🖨️ Imprimir / PDF</button>
@@ -318,7 +316,7 @@ tbody td{padding:7px 10px;vertical-align:middle}
           <div>
             <div style="font-size:18px;font-weight:700;color:#1a2a3a">PAU INTERIORISMO S.L.</div>
             <div style="color:#666;margin-top:3px">C/ Tomás y Valiente Nº 6 Bajo, 46290 Alcàsser (Valencia)</div>
-            <div style="color:#666">Tel: 961 20 01 87 · <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="5f363139301f2f3e2a36312b3a2d36302d362c3230713c3032">[email&#160;protected]</a></div>
+            <div style="color:#666">Tel: 961 20 01 87 · <a href="https://pau-interiorismo.vercel.app/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="5f363139301f2f3e2a36312b3a2d36302d362c3230713c3032">[email&nbsp;protected]</a></div>
             <div style="color:#666">CIF: B-56909641</div>
           </div>
           <div style="text-align:right">
@@ -378,9 +376,7 @@ tbody td{padding:7px 10px;vertical-align:middle}
     <!-- ═══ CONTRATO ═══ -->
     <div class="view" id="view-contrato">
       <div class="search-bar" style="gap:8px;flex-wrap:wrap;align-items:center">
-        <select class="form-input" style="width:195px;flex-shrink:0" id="filter-cliente-contrato" onchange="cascadaModulo('contrato','ct-proyecto-sel',loadContrato)">
-          <option value="">👤 Cliente…</option>
-        </select>
+        <select class="form-input" style="width:195px;flex-shrink:0" id="filter-cliente-contrato" onchange="cascadaModulo(&#39;contrato&#39;,&#39;ct-proyecto-sel&#39;,loadContrato)"><option value="">👤 Cliente…</option><option value="CLI-001">Miguel Zaragozá Garzón</option><option value="CLI-002">Vicenta Folch Gil</option><option value="CLI-033">Estudi Encis SL</option><option value="CLI-034">Vicenta Baixauli Hernandez</option><option value="CLI-H002">Mª PAU BRAVO JOSE</option><option value="CLI-H001">ROSA CHANZA SOLER</option><option value="CLI-H003">DESIRE NAVARRO MARI</option><option value="CLI-H004">CARMELO RODRIGUEZ VILA</option><option value="CLI-H032">Daniel palma gallardo</option><option value="CLI-H023">Miguel Zaragozá Garzón</option><option value="CLI-H006">Vicenta Folch Gil</option><option value="CLI-H008">VICENT MARI SERRA</option><option value="CLI-H009">FERNANDO JOSE SAN GERMAN IBORRA</option><option value="CLI-H010">REME IBORRA GIL</option><option value="CLI-H011">TONI TATAY DAVID</option><option value="CLI-H019">Jose Antonio Martos Ortiz</option><option value="CLI-H021">MERCEDES HIGUERAS GOMEZ</option><option value="CLI-H024">MICHELL BENITO</option><option value="CLI-H026">Ana María Palau Sastre</option><option value="CLI-H028">Lara Blasco - Lara Blasco Iborra</option><option value="CLI-H027">Laura Doria Gomez</option><option value="CLI-H031">Belinda</option><option value="CLI-H005">PATRI</option><option value="CLI-H012">Júlia Fabregat Mestre</option><option value="CLI-H013">Jose Manuel Garcia Seller Nº 7 Pta 4</option><option value="CLI-H014">4G daniel Dominguez</option><option value="CLI-H016">Sara Muñoz Abella</option><option value="CLI-H018">Amparo Forner Pastor</option><option value="CLI-H017">Yasmina Cabezuelo Alaminos</option><option value="CLI-H020">Rafael Francés Llàcer</option><option value="CLI-H022">Miguel cocina</option><option value="CLI-H007">Juanmi</option><option value="CLI-H015">4F Fernando</option><option value="CLI-H029">Francisco Navarro Garcia</option><option value="CLI-H025">URKO Y FRANCESC</option><option value="CLI-H030">Jose Manuel Pinzón Valbuena</option></select>
         <select class="form-input" style="width:220px" id="ct-proyecto-sel" onchange="loadContrato()"><option value="">📁 Proyecto…</option></select>
         <select class="form-input" style="width:180px" id="ct-pres-sel"><option value="">Presupuesto vinculado…</option></select>
         <button class="btn btn-primary" onclick="window.print()">🖨️ Imprimir / PDF</button>
@@ -429,9 +425,7 @@ tbody td{padding:7px 10px;vertical-align:middle}
     <!-- ═══ PEDIDO DOC ═══ -->
     <div class="view" id="view-pedido_doc">
       <div class="search-bar" style="flex-wrap:wrap;gap:8px;align-items:center">
-        <select class="form-input" style="width:195px;flex-shrink:0" id="filter-cliente-pedido_doc" onchange="cascadaDocPedido()">
-          <option value="">👤 Cliente…</option>
-        </select>
+        <select class="form-input" style="width:195px;flex-shrink:0" id="filter-cliente-pedido_doc" onchange="cascadaDocPedido()"><option value="">👤 Cliente…</option><option value="CLI-001">Miguel Zaragozá Garzón</option><option value="CLI-002">Vicenta Folch Gil</option><option value="CLI-033">Estudi Encis SL</option><option value="CLI-034">Vicenta Baixauli Hernandez</option><option value="CLI-H002">Mª PAU BRAVO JOSE</option><option value="CLI-H001">ROSA CHANZA SOLER</option><option value="CLI-H003">DESIRE NAVARRO MARI</option><option value="CLI-H004">CARMELO RODRIGUEZ VILA</option><option value="CLI-H032">Daniel palma gallardo</option><option value="CLI-H023">Miguel Zaragozá Garzón</option><option value="CLI-H006">Vicenta Folch Gil</option><option value="CLI-H008">VICENT MARI SERRA</option><option value="CLI-H009">FERNANDO JOSE SAN GERMAN IBORRA</option><option value="CLI-H010">REME IBORRA GIL</option><option value="CLI-H011">TONI TATAY DAVID</option><option value="CLI-H019">Jose Antonio Martos Ortiz</option><option value="CLI-H021">MERCEDES HIGUERAS GOMEZ</option><option value="CLI-H024">MICHELL BENITO</option><option value="CLI-H026">Ana María Palau Sastre</option><option value="CLI-H028">Lara Blasco - Lara Blasco Iborra</option><option value="CLI-H027">Laura Doria Gomez</option><option value="CLI-H031">Belinda</option><option value="CLI-H005">PATRI</option><option value="CLI-H012">Júlia Fabregat Mestre</option><option value="CLI-H013">Jose Manuel Garcia Seller Nº 7 Pta 4</option><option value="CLI-H014">4G daniel Dominguez</option><option value="CLI-H016">Sara Muñoz Abella</option><option value="CLI-H018">Amparo Forner Pastor</option><option value="CLI-H017">Yasmina Cabezuelo Alaminos</option><option value="CLI-H020">Rafael Francés Llàcer</option><option value="CLI-H022">Miguel cocina</option><option value="CLI-H007">Juanmi</option><option value="CLI-H015">4F Fernando</option><option value="CLI-H029">Francisco Navarro Garcia</option><option value="CLI-H025">URKO Y FRANCESC</option><option value="CLI-H030">Jose Manuel Pinzón Valbuena</option></select>
         <select class="form-input" style="width:210px" id="filter-proyecto-pedido_doc" onchange="filtrarPedidosPorProyecto()">
           <option value="">📁 Proyecto…</option>
         </select>
@@ -439,7 +433,7 @@ tbody td{padding:7px 10px;vertical-align:middle}
           <option value="">— Pedido… —</option>
         </select>
         <button class="btn btn-primary" onclick="guardarDocPedido()">💾 Guardar</button>
-        <button class="btn btn-primary" onclick="exportarPDF('pd-doc', (document.getElementById('pd-num-input')?.value||'pedido')+'.pdf')">⬇️ PDF</button>
+        <button class="btn btn-primary" onclick="exportarPDF(&#39;pd-doc&#39;, (document.getElementById(&#39;pd-num-input&#39;)?.value||&#39;pedido&#39;)+&#39;.pdf&#39;)">⬇️ PDF</button>
         <button class="btn btn-ghost" onclick="window.print()">🖨️ Imprimir</button>
         <button class="btn btn-ghost btn-sm" onclick="nuevoPedidoDoc()">＋ Nuevo</button>
       </div>
@@ -450,7 +444,7 @@ tbody td{padding:7px 10px;vertical-align:middle}
           <div>
             <div style="font-size:18px;font-weight:700;color:#1a2a3a">PAU INTERIORISMO S.L.</div>
             <div style="color:#666;font-size:10px">C/ Tomás y Valiente Nº 6 Bajo · 46290 Alcàsser (Valencia)</div>
-            <div style="color:#666;font-size:10px"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="650c0b030a251504100c0b1100170c0a170c16080a4b060a08">[email&#160;protected]</a> · Tel: 961 20 01 87 · CIF: B-56909641</div>
+            <div style="color:#666;font-size:10px"><a href="https://pau-interiorismo.vercel.app/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="650c0b030a251504100c0b1100170c0a170c16080a4b060a08">[email&nbsp;protected]</a> · Tel: 961 20 01 87 · CIF: B-56909641</div>
           </div>
           <div style="text-align:right">
             <div style="font-size:20px;font-weight:700;color:#b87333">PEDIDO</div>
@@ -510,7 +504,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         </div>
         <!-- PIE -->
         <div style="color:#666;font-size:10px;text-align:center;border-top:1px solid #eee;padding-top:10px">
-          PAU INTERIORISMO S.L. · CIF B-56909641 · <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="d1b8bfb7be91a1b0a4b8bfa5b4a3b8bea3b8a2bcbeffb2bebc">[email&#160;protected]</a>
+          PAU INTERIORISMO S.L. · CIF B-56909641 · <a href="https://pau-interiorismo.vercel.app/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="d1b8bfb7be91a1b0a4b8bfa5b4a3b8bea3b8a2bcbeffb2bebc">[email&nbsp;protected]</a>
         </div>
       </div>
     </div>
@@ -527,10 +521,10 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <option value="11">Noviembre</option><option value="12">Diciembre</option>
         </select>
         <select class="form-input" style="width:90px" id="inf-anyo">
-          <option>2024</option><option>2025</option><option selected>2026</option><option>2027</option>
+          <option>2024</option><option>2025</option><option selected="">2026</option><option>2027</option>
         </select>
         <button class="btn btn-primary" onclick="generarInformeMensual()">📊 Generar informe</button>
-        <button class="btn btn-ghost" onclick="exportarPDF(document.getElementById('inf-body').firstElementChild,'Informe_'+document.getElementById('inf-mes').value+'_'+document.getElementById('inf-anyo').value+'.pdf')">⬇️ PDF</button>
+        <button class="btn btn-ghost" onclick="exportarPDF(document.getElementById(&#39;inf-body&#39;).firstElementChild,&#39;Informe_&#39;+document.getElementById(&#39;inf-mes&#39;).value+&#39;_&#39;+document.getElementById(&#39;inf-anyo&#39;).value+&#39;.pdf&#39;)">⬇️ PDF</button>
       </div>
       <div class="card" style="margin-top:12px">
         <div class="card-body" id="inf-body">
@@ -548,7 +542,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
         
         <div class="card">
-          <div class="card-header"><div class="card-title">👷 Trabajadores</div><button class="btn btn-ghost btn-sm" onclick="addListItem('trabajadores-list','trabajador')">＋ Añadir</button></div>
+          <div class="card-header"><div class="card-title">👷 Trabajadores</div><button class="btn btn-ghost btn-sm" onclick="addListItem(&#39;trabajadores-list&#39;,&#39;trabajador&#39;)">＋ Añadir</button></div>
           <div class="card-body" id="trabajadores-list">
             <div class="lista-item" data-val="Paco">Paco</div>
             <div class="lista-item" data-val="Raúl">Raúl</div>
@@ -560,12 +554,12 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         </div>
 
         <div class="card">
-          <div class="card-header"><div class="card-title">📁 Estados proyecto</div><button class="btn btn-ghost btn-sm" onclick="addListItem('estados-list','estado')">＋ Añadir</button></div>
+          <div class="card-header"><div class="card-title">📁 Estados proyecto</div><button class="btn btn-ghost btn-sm" onclick="addListItem(&#39;estados-list&#39;,&#39;estado&#39;)">＋ Añadir</button></div>
           <div class="card-body" id="estados-list"></div>
         </div>
 
         <div class="card">
-          <div class="card-header"><div class="card-title">🏗 Tipos proyecto</div><button class="btn btn-ghost btn-sm" onclick="addListItem('tipos-proyecto-list','tipo')">＋ Añadir</button></div>
+          <div class="card-header"><div class="card-title">🏗 Tipos proyecto</div><button class="btn btn-ghost btn-sm" onclick="addListItem(&#39;tipos-proyecto-list&#39;,&#39;tipo&#39;)">＋ Añadir</button></div>
           <div class="card-body" id="tipos-proyecto-list"></div>
         </div>
 
@@ -577,27 +571,27 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         </div>
 
         <div class="card">
-          <div class="card-header"><div class="card-title">💳 Formas de pago</div><button class="btn btn-ghost btn-sm" onclick="addListItem('formas-pago-list','forma pago')">＋ Añadir</button></div>
+          <div class="card-header"><div class="card-title">💳 Formas de pago</div><button class="btn btn-ghost btn-sm" onclick="addListItem(&#39;formas-pago-list&#39;,&#39;forma pago&#39;)">＋ Añadir</button></div>
           <div class="card-body" id="formas-pago-list"></div>
         </div>
 
         <div class="card">
-          <div class="card-header"><div class="card-title">🏭 Tipos proveedor</div><button class="btn btn-ghost btn-sm" onclick="addListItem('tipos-proveedor-list','tipo')">＋ Añadir</button></div>
+          <div class="card-header"><div class="card-title">🏭 Tipos proveedor</div><button class="btn btn-ghost btn-sm" onclick="addListItem(&#39;tipos-proveedor-list&#39;,&#39;tipo&#39;)">＋ Añadir</button></div>
           <div class="card-body" id="tipos-proveedor-list"></div>
         </div>
 
         <div class="card">
-          <div class="card-header"><div class="card-title">👥 Tipos cliente</div><button class="btn btn-ghost btn-sm" onclick="addListItem('tipos-cliente-list','tipo cliente')">＋ Añadir</button></div>
+          <div class="card-header"><div class="card-title">👥 Tipos cliente</div><button class="btn btn-ghost btn-sm" onclick="addListItem(&#39;tipos-cliente-list&#39;,&#39;tipo cliente&#39;)">＋ Añadir</button></div>
           <div class="card-body" id="tipos-cliente-list"></div>
         </div>
 
         <div class="card">
-          <div class="card-header"><div class="card-title">🛋 Estancias</div><button class="btn btn-ghost btn-sm" onclick="addListItem('estancias-list','estancia')">＋ Añadir</button></div>
+          <div class="card-header"><div class="card-title">🛋 Estancias</div><button class="btn btn-ghost btn-sm" onclick="addListItem(&#39;estancias-list&#39;,&#39;estancia&#39;)">＋ Añadir</button></div>
           <div class="card-body" id="estancias-list"></div>
         </div>
 
         <div class="card">
-          <div class="card-header"><div class="card-title">🏷 Categorías tarifario</div><button class="btn btn-ghost btn-sm" onclick="addListItem('categorias-list','categoría')">＋ Añadir</button></div>
+          <div class="card-header"><div class="card-title">🏷 Categorías tarifario</div><button class="btn btn-ghost btn-sm" onclick="addListItem(&#39;categorias-list&#39;,&#39;categoría&#39;)">＋ Añadir</button></div>
           <div class="card-body" id="categorias-list"></div>
         </div>
 
@@ -612,7 +606,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         </div>
 
         <div class="card" style="grid-column:1/-1">
-          <div class="card-header"><div class="card-title">📂 Partidas presupuesto</div><button class="btn btn-ghost btn-sm" onclick="addListItem('partidas-list','partida')">＋ Añadir</button></div>
+          <div class="card-header"><div class="card-title">📂 Partidas presupuesto</div><button class="btn btn-ghost btn-sm" onclick="addListItem(&#39;partidas-list&#39;,&#39;partida&#39;)">＋ Añadir</button></div>
           <div class="card-body" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px" id="partidas-list">
             <div class="lista-item">01.Demoliciones</div><div class="lista-item">02.Albañilería</div><div class="lista-item">03.Instalaciones</div><div class="lista-item">04.Revestimientos</div><div class="lista-item">05.Fontanería</div><div class="lista-item">06.Electricidad</div><div class="lista-item">07.Carpintería</div><div class="lista-item">08.Pintura</div><div class="lista-item">09.Estructura</div><div class="lista-item">10.Cubierta</div><div class="lista-item">11.Fachada</div><div class="lista-item">12.Mobiliario</div><div class="lista-item">13.Climatización</div><div class="lista-item">14.Varios</div><div class="lista-item">15.Otros</div>
           </div>
@@ -631,10 +625,10 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     <!-- ═══ GERENCIA ═══ -->
     <div class="view active" id="view-gerencia">
       <div class="kpi-grid">
-        <div class="kpi blue"><div class="kpi-label">Total Ventas (Base Imp.)</div><div class="kpi-value" id="g-ventas">—</div><div class="kpi-sub">Facturas emitidas</div></div>
-        <div class="kpi red"><div class="kpi-label">Total Costes (Base Imp.)</div><div class="kpi-value" id="g-costes">—</div><div class="kpi-sub">Facturas recibidas</div></div>
-        <div class="kpi green"><div class="kpi-label">Beneficio Neto</div><div class="kpi-value" id="g-benef">—</div><div class="kpi-sub">Ventas − Costes (base imp.)</div></div>
-        <div class="kpi amber"><div class="kpi-label">Margen Neto %</div><div class="kpi-value" id="g-margen">—</div><div class="kpi-sub">Sobre base imponible</div></div>
+        <div class="kpi blue"><div class="kpi-label">Total Ventas (Base Imp.)</div><div class="kpi-value" id="g-ventas">34.573,36€</div><div class="kpi-sub">Facturas emitidas</div></div>
+        <div class="kpi red"><div class="kpi-label">Total Costes (Base Imp.)</div><div class="kpi-value" id="g-costes">44.513,81€</div><div class="kpi-sub">Facturas recibidas</div></div>
+        <div class="kpi green"><div class="kpi-label">Beneficio Neto</div><div class="kpi-value" id="g-benef" style="color: var(--red);">-9940,45€</div><div class="kpi-sub">Ventas − Costes (base imp.)</div></div>
+        <div class="kpi amber"><div class="kpi-label">Margen Neto %</div><div class="kpi-value" id="g-margen">-28.8%</div><div class="kpi-sub">Sobre base imponible</div></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
         <!-- Resumen económico -->
@@ -642,13 +636,13 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <div class="card-header"><div class="card-title">📊 Resumen económico</div></div>
           <div class="card-body" style="padding:0">
             <div class="cuenta-row header"><span>Concepto</span><span>Importe €</span><span>%</span></div>
-            <div class="cuenta-row"><span>Total Ventas (Base Imp.)</span><span id="ge-ventas">—</span><span>100%</span></div>
-            <div class="cuenta-row"><span>IVA Repercutido</span><span id="ge-iva-rep">—</span><span></span></div>
-            <div class="cuenta-row"><span style="color:var(--text-soft)">— Compras (fact. recibidas)</span><span id="ge-compras">—</span><span id="ge-compras-pct">—</span></div>
+            <div class="cuenta-row"><span>Total Ventas (Base Imp.)</span><span id="ge-ventas">34.573,36€</span><span>100%</span></div>
+            <div class="cuenta-row"><span>IVA Repercutido</span><span id="ge-iva-rep">7002,46€</span><span></span></div>
+            <div class="cuenta-row"><span style="color:var(--text-soft)">— Compras (fact. recibidas)</span><span id="ge-compras">44.513,81€</span><span id="ge-compras-pct">128.8%</span></div>
             <div class="cuenta-row" style="display:none"><span></span><span id="ge-subcs">—</span><span id="ge-subcs-pct"></span></div>
             <div class="cuenta-row" style="display:none"><span></span><span id="ge-mo">—</span><span id="ge-mo-pct"></span></div>
-            <div class="cuenta-row total"><span>TOTAL COSTES (Base Imp.)</span><span id="ge-costes-tot">—</span><span id="ge-costes-pct">—</span></div>
-            <div class="cuenta-row result" id="ge-result-row"><span>BENEFICIO NETO</span><span id="ge-beneficio">—</span><span id="ge-benef-pct">—</span></div>
+            <div class="cuenta-row total"><span>TOTAL COSTES (Base Imp.)</span><span id="ge-costes-tot">44.513,81€</span><span id="ge-costes-pct">128.8%</span></div>
+            <div class="cuenta-row result neg" id="ge-result-row"><span>BENEFICIO NETO</span><span id="ge-beneficio">-9940,45€</span><span id="ge-benef-pct">-28.8%</span></div>
           </div>
         </div>
         <!-- Proyectos por estado -->
@@ -707,9 +701,9 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <div class="card-title">📈 Rentabilidad por proyecto</div>
           <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
             <span style="font-size:11px;color:var(--text-soft)">Mostrar:</span>
-            <button id="grent-btn-activos" class="btn btn-primary btn-sm" style="font-size:11px" onclick="filtrarGrentTable('activos')">En ejecución</button>
-            <button id="grent-btn-alerta" class="btn btn-ghost btn-sm" style="font-size:11px" onclick="filtrarGrentTable('alerta')">⚠️ Con alerta</button>
-            <button id="grent-btn-todos" class="btn btn-ghost btn-sm" style="font-size:11px" onclick="filtrarGrentTable('todos')">Todos</button>
+            <button id="grent-btn-activos" class="btn btn-primary btn-sm" style="font-size:11px" onclick="filtrarGrentTable(&#39;activos&#39;)">En ejecución</button>
+            <button id="grent-btn-alerta" class="btn btn-ghost btn-sm" style="font-size:11px" onclick="filtrarGrentTable(&#39;alerta&#39;)">⚠️ Con alerta</button>
+            <button id="grent-btn-todos" class="btn btn-ghost btn-sm" style="font-size:11px" onclick="filtrarGrentTable(&#39;todos&#39;)">Todos</button>
             <span id="grent-count" style="font-size:11px;color:var(--text-soft);margin-left:4px"></span>
           </div>
         </div>
@@ -805,9 +799,9 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 
     <div class="view" id="view-clientes">
       <div class="search-bar">
-        <div class="search-wrap"><span class="search-icon">🔍</span><input class="form-input" id="search-clientes" placeholder="Buscar cliente…" oninput="filterTable('clientes-tbody','search-clientes')"></div>
-        <button class="btn btn-ghost btn-sm" onclick="openModal('m-import-clientes')" style="border:1px dashed var(--border)">📤 Importar Holded</button>
-        <button class="btn btn-primary" onclick="openModal('m-cliente')">＋ Nuevo cliente</button>
+        <div class="search-wrap"><span class="search-icon">🔍</span><input class="form-input" id="search-clientes" placeholder="Buscar cliente…" oninput="filterTable(&#39;clientes-tbody&#39;,&#39;search-clientes&#39;)"></div>
+        <button class="btn btn-ghost btn-sm" onclick="openModal(&#39;m-import-clientes&#39;)" style="border:1px dashed var(--border)">📤 Importar Holded</button>
+        <button class="btn btn-primary" onclick="openModal(&#39;m-cliente&#39;)">＋ Nuevo cliente</button>
       </div>
       <div class="card">
         <div class="card-header"><div class="card-title">🤝 Clientes<span id="clientes-count" style="font-size:11px;font-weight:400;color:var(--text-soft);margin-left:6px"></span></div></div>
@@ -819,11 +813,9 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     <!-- ═══ PROYECTOS ═══ -->
     <div class="view" id="view-proyectos">
       <div class="search-bar" style="gap:8px;flex-wrap:wrap">
-        <select class="form-input" style="width:240px;flex-shrink:0" id="filter-cliente-proyectos" onchange="filtrarProyectosPorCliente()">
-          <option value="">👤 Todos los clientes</option>
-        </select>
-        <div class="search-wrap" style="flex:1;min-width:180px"><span class="search-icon">🔍</span><input class="form-input" id="search-proyectos" placeholder="Buscar proyecto…" oninput="filterTable('proyectos-tbody','search-proyectos')"></div>
-        <button class="btn btn-primary" onclick="openModal('m-proyecto')">＋ Nuevo proyecto</button>
+        <select class="form-input" style="width:240px;flex-shrink:0" id="filter-cliente-proyectos" onchange="filtrarProyectosPorCliente()"><option value="">👤 Todos los clientes</option><option value="CLI-001">Miguel Zaragozá Garzón</option><option value="CLI-002">Vicenta Folch Gil</option><option value="CLI-033">Estudi Encis SL</option><option value="CLI-034">Vicenta Baixauli Hernandez</option><option value="CLI-H002">Mª PAU BRAVO JOSE</option><option value="CLI-H001">ROSA CHANZA SOLER</option><option value="CLI-H003">DESIRE NAVARRO MARI</option><option value="CLI-H004">CARMELO RODRIGUEZ VILA</option><option value="CLI-H032">Daniel palma gallardo</option><option value="CLI-H023">Miguel Zaragozá Garzón</option><option value="CLI-H006">Vicenta Folch Gil</option><option value="CLI-H008">VICENT MARI SERRA</option><option value="CLI-H009">FERNANDO JOSE SAN GERMAN IBORRA</option><option value="CLI-H010">REME IBORRA GIL</option><option value="CLI-H011">TONI TATAY DAVID</option><option value="CLI-H019">Jose Antonio Martos Ortiz</option><option value="CLI-H021">MERCEDES HIGUERAS GOMEZ</option><option value="CLI-H024">MICHELL BENITO</option><option value="CLI-H026">Ana María Palau Sastre</option><option value="CLI-H028">Lara Blasco - Lara Blasco Iborra</option><option value="CLI-H027">Laura Doria Gomez</option><option value="CLI-H031">Belinda</option><option value="CLI-H005">PATRI</option><option value="CLI-H012">Júlia Fabregat Mestre</option><option value="CLI-H013">Jose Manuel Garcia Seller Nº 7 Pta 4</option><option value="CLI-H014">4G daniel Dominguez</option><option value="CLI-H016">Sara Muñoz Abella</option><option value="CLI-H018">Amparo Forner Pastor</option><option value="CLI-H017">Yasmina Cabezuelo Alaminos</option><option value="CLI-H020">Rafael Francés Llàcer</option><option value="CLI-H022">Miguel cocina</option><option value="CLI-H007">Juanmi</option><option value="CLI-H015">4F Fernando</option><option value="CLI-H029">Francisco Navarro Garcia</option><option value="CLI-H025">URKO Y FRANCESC</option><option value="CLI-H030">Jose Manuel Pinzón Valbuena</option></select>
+        <div class="search-wrap" style="flex:1;min-width:180px"><span class="search-icon">🔍</span><input class="form-input" id="search-proyectos" placeholder="Buscar proyecto…" oninput="filterTable(&#39;proyectos-tbody&#39;,&#39;search-proyectos&#39;)"></div>
+        <button class="btn btn-primary" onclick="openModal(&#39;m-proyecto&#39;)">＋ Nuevo proyecto</button>
       </div>
       <div class="card">
         <div class="card-header"><div class="card-title">📁 Proyectos<span id="proyectos-count" style="font-size:11px;font-weight:400;color:var(--text-soft);margin-left:6px"></span></div></div>
@@ -835,10 +827,8 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     <!-- ═══ PRESUPUESTO ═══ -->
     <div class="view" id="view-presupuesto">
       <div class="search-bar" style="gap:8px;flex-wrap:wrap;align-items:center">
-        <select class="form-input" style="width:200px;flex-shrink:0" id="filter-cliente-presupuesto" onchange="cascadaClienteProyecto('presupuesto')">
-          <option value="">👤 Cliente…</option>
-        </select>
-        <select class="form-input" style="width:220px" id="pres-proyecto-sel" onchange="loadPresupuesto()"><option value="">📁 Proyecto…</option></select>
+        <select class="form-input" style="width:200px;flex-shrink:0" id="filter-cliente-presupuesto" onchange="cascadaClienteProyecto(&#39;presupuesto&#39;)"><option value="">👤 Cliente…</option><option value="CLI-001">Miguel Zaragozá Garzón</option><option value="CLI-002">Vicenta Folch Gil</option><option value="CLI-033">Estudi Encis SL</option><option value="CLI-034">Vicenta Baixauli Hernandez</option><option value="CLI-H002">Mª PAU BRAVO JOSE</option><option value="CLI-H001">ROSA CHANZA SOLER</option><option value="CLI-H003">DESIRE NAVARRO MARI</option><option value="CLI-H004">CARMELO RODRIGUEZ VILA</option><option value="CLI-H032">Daniel palma gallardo</option><option value="CLI-H023">Miguel Zaragozá Garzón</option><option value="CLI-H006">Vicenta Folch Gil</option><option value="CLI-H008">VICENT MARI SERRA</option><option value="CLI-H009">FERNANDO JOSE SAN GERMAN IBORRA</option><option value="CLI-H010">REME IBORRA GIL</option><option value="CLI-H011">TONI TATAY DAVID</option><option value="CLI-H019">Jose Antonio Martos Ortiz</option><option value="CLI-H021">MERCEDES HIGUERAS GOMEZ</option><option value="CLI-H024">MICHELL BENITO</option><option value="CLI-H026">Ana María Palau Sastre</option><option value="CLI-H028">Lara Blasco - Lara Blasco Iborra</option><option value="CLI-H027">Laura Doria Gomez</option><option value="CLI-H031">Belinda</option><option value="CLI-H005">PATRI</option><option value="CLI-H012">Júlia Fabregat Mestre</option><option value="CLI-H013">Jose Manuel Garcia Seller Nº 7 Pta 4</option><option value="CLI-H014">4G daniel Dominguez</option><option value="CLI-H016">Sara Muñoz Abella</option><option value="CLI-H018">Amparo Forner Pastor</option><option value="CLI-H017">Yasmina Cabezuelo Alaminos</option><option value="CLI-H020">Rafael Francés Llàcer</option><option value="CLI-H022">Miguel cocina</option><option value="CLI-H007">Juanmi</option><option value="CLI-H015">4F Fernando</option><option value="CLI-H029">Francisco Navarro Garcia</option><option value="CLI-H025">URKO Y FRANCESC</option><option value="CLI-H030">Jose Manuel Pinzón Valbuena</option></select>
+        <select class="form-input" style="width:220px" id="pres-proyecto-sel" onchange="loadPresupuesto()"><option value="">📁 Proyecto…</option><option value="PRY-001">PRY-001 · Mobiliario de cocina</option><option value="PRY-002">PRY-002 · Rehabilitación lateral fachada</option><option value="PRY-003">PRY-003 · Pavimento/revestimiento vivienda.</option><option value="PRY-004">PRY-004 · Rehabilitación estudio</option><option value="PRY-005">PRY-005 · Trabajos en terraza</option></select>
         <select class="form-input" style="width:75px" id="pres-version-sel" onchange="loadPresupuesto()"><option value="v1">v1</option><option value="v2">v2</option><option value="v3">v3</option></select>
         <button class="btn btn-primary" onclick="addLineaPresupuesto()">＋ Línea</button>
         <button class="btn btn-ghost" onclick="addCapituloPresupuesto()">＋ Capítulo</button>
@@ -868,9 +858,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <select class="form-input" style="width:200px" id="filter-cliente-comparativa" onchange="cascadaClienteComparativa()">
           <option value="">👤 Cliente…</option>
         </select>
-        <select class="form-input" style="width:240px" id="comp-proyecto-sel" onchange="loadComparativa()">
-          <option value="">📁 Proyecto…</option>
-        </select>
+        <select class="form-input" style="width:240px" id="comp-proyecto-sel" onchange="loadComparativa()"><option value="">Seleccionar…</option><option value="PRY-001">PRY-001 · Mobiliario de cocina</option><option value="PRY-002">PRY-002 · Rehabilitación lateral fachada</option><option value="PRY-003">PRY-003 · Pavimento/revestimiento vivienda.</option><option value="PRY-004">PRY-004 · Rehabilitación estudio</option><option value="PRY-005">PRY-005 · Trabajos en terraza</option></select>
         <button class="btn btn-primary" id="btn-nueva-comparativa" onclick="abrirNuevaComparativa()" style="display:none">＋ Nueva comparativa</button>
       </div>
       <div id="comp-list"><div class="empty"><div class="empty-icon">⚖️</div><div class="empty-text">Selecciona un cliente y proyecto</div></div></div>
@@ -896,7 +884,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <!-- Panel principal -->
         <div style="flex:1;min-width:0">
           <div id="tarif-breadcrumb" style="font-size:12px;color:var(--text-soft);margin-bottom:8px;padding:6px 10px;background:white;border-radius:8px;border:1px solid var(--border)">
-            📋 Tarifario completo &mdash; <span id="tarifario-count" style="color:var(--navy);font-weight:700"></span>
+            📋 Tarifario completo — <span id="tarifario-count" style="color:var(--navy);font-weight:700"></span>
           </div>
           <div id="tarif-main-panel"></div>
         </div>
@@ -919,17 +907,13 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     <!-- ═══ INTERIORISMO ═══ -->
     <div class="view" id="view-interiorismo">
       <div class="search-bar" style="gap:8px;flex-wrap:wrap;align-items:center">
-        <select class="form-input" style="width:195px;flex-shrink:0" id="filter-cliente-interiorismo" onchange="cascadaModuloInt()">
-          <option value="">👤 Cliente…</option>
-        </select>
-        <select class="form-input" style="width:215px;flex-shrink:0" id="filter-proyecto-interiorismo" onchange="filtrarInteriorismo()">
-          <option value="">📁 Proyecto…</option>
-        </select>
-        <div class="search-wrap" style="flex:1;min-width:160px"><span class="search-icon">🔍</span><input class="form-input" id="search-interiorismo" placeholder="Buscar…" oninput="filterTable('interiorismo-tbody','search-interiorismo')"></div>
-        <button class="btn btn-copper" onclick="openModal('m-interiorismo')">＋ Añadir artículo</button>
+        <select class="form-input" style="width:195px;flex-shrink:0" id="filter-cliente-interiorismo" onchange="cascadaModuloInt()"><option value="">👤 Cliente…</option><option value="CLI-001">Miguel Zaragozá Garzón</option><option value="CLI-002">Vicenta Folch Gil</option><option value="CLI-033">Estudi Encis SL</option><option value="CLI-034">Vicenta Baixauli Hernandez</option><option value="CLI-H002">Mª PAU BRAVO JOSE</option><option value="CLI-H001">ROSA CHANZA SOLER</option><option value="CLI-H003">DESIRE NAVARRO MARI</option><option value="CLI-H004">CARMELO RODRIGUEZ VILA</option><option value="CLI-H032">Daniel palma gallardo</option><option value="CLI-H023">Miguel Zaragozá Garzón</option><option value="CLI-H006">Vicenta Folch Gil</option><option value="CLI-H008">VICENT MARI SERRA</option><option value="CLI-H009">FERNANDO JOSE SAN GERMAN IBORRA</option><option value="CLI-H010">REME IBORRA GIL</option><option value="CLI-H011">TONI TATAY DAVID</option><option value="CLI-H019">Jose Antonio Martos Ortiz</option><option value="CLI-H021">MERCEDES HIGUERAS GOMEZ</option><option value="CLI-H024">MICHELL BENITO</option><option value="CLI-H026">Ana María Palau Sastre</option><option value="CLI-H028">Lara Blasco - Lara Blasco Iborra</option><option value="CLI-H027">Laura Doria Gomez</option><option value="CLI-H031">Belinda</option><option value="CLI-H005">PATRI</option><option value="CLI-H012">Júlia Fabregat Mestre</option><option value="CLI-H013">Jose Manuel Garcia Seller Nº 7 Pta 4</option><option value="CLI-H014">4G daniel Dominguez</option><option value="CLI-H016">Sara Muñoz Abella</option><option value="CLI-H018">Amparo Forner Pastor</option><option value="CLI-H017">Yasmina Cabezuelo Alaminos</option><option value="CLI-H020">Rafael Francés Llàcer</option><option value="CLI-H022">Miguel cocina</option><option value="CLI-H007">Juanmi</option><option value="CLI-H015">4F Fernando</option><option value="CLI-H029">Francisco Navarro Garcia</option><option value="CLI-H025">URKO Y FRANCESC</option><option value="CLI-H030">Jose Manuel Pinzón Valbuena</option></select>
+        <select class="form-input" style="width:215px;flex-shrink:0" id="filter-proyecto-interiorismo" onchange="filtrarInteriorismo()"><option value="">📁 Proyecto…</option><option value="PRY-001">PRY-001 · Mobiliario de cocina</option><option value="PRY-002">PRY-002 · Rehabilitación lateral fachada</option><option value="PRY-003">PRY-003 · Pavimento/revestimiento vivienda.</option><option value="PRY-004">PRY-004 · Rehabilitación estudio</option><option value="PRY-005">PRY-005 · Trabajos en terraza</option></select>
+        <div class="search-wrap" style="flex:1;min-width:160px"><span class="search-icon">🔍</span><input class="form-input" id="search-interiorismo" placeholder="Buscar…" oninput="filterTable(&#39;interiorismo-tbody&#39;,&#39;search-interiorismo&#39;)"></div>
+        <button class="btn btn-copper" onclick="openModal(&#39;m-interiorismo&#39;)">＋ Añadir artículo</button>
       </div>
       <div class="card">
-        <div class="card-header"><div class="card-title">🛋 Interiorismo & Mobiliario<span id="interiorismo-count" style="font-size:11px;font-weight:400;color:var(--text-soft);margin-left:6px"></span></div></div>
+        <div class="card-header"><div class="card-title">🛋 Interiorismo &amp; Mobiliario<span id="interiorismo-count" style="font-size:11px;font-weight:400;color:var(--text-soft);margin-left:6px"></span></div></div>
         <div class="table-wrap"><table><thead><tr><th>Proyecto</th><th>Estancia</th><th>Ref.</th><th>Descripción</th><th>Cant.</th><th>PVP Neto</th><th>Margen</th><th>Est. Prop.</th><th>Est. Pedido</th><th></th></tr></thead>
         <tbody id="interiorismo-tbody"><tr><td colspan="10" class="loading">Cargando…</td></tr></tbody></table></div>
       </div>
@@ -938,14 +922,10 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     <!-- ═══ COMPRAS ═══ -->
     <div class="view" id="view-compras">
       <div class="search-bar" style="gap:8px;flex-wrap:wrap;align-items:center">
-        <select class="form-input" style="width:200px;flex-shrink:0" id="filter-cliente-compras" onchange="cascadaClienteProyecto('compras')">
-          <option value="">👤 Cliente…</option>
-        </select>
-        <select class="form-input" style="width:220px;flex-shrink:0" id="filter-proyecto-compras" onchange="filtrarModuloPorProyecto('compras')">
-          <option value="">📁 Proyecto…</option>
-        </select>
-        <div class="search-wrap" style="flex:1;min-width:160px"><span class="search-icon">🔍</span><input class="form-input" id="search-compras" placeholder="Buscar…" oninput="filterTable('compras-tbody','search-compras')"></div>
-        <button class="btn btn-primary" onclick="openModal('m-compra')">＋ Nueva compra</button>
+        <select class="form-input" style="width:200px;flex-shrink:0" id="filter-cliente-compras" onchange="cascadaClienteProyecto(&#39;compras&#39;)"><option value="">👤 Cliente…</option><option value="CLI-001">Miguel Zaragozá Garzón</option><option value="CLI-002">Vicenta Folch Gil</option><option value="CLI-033">Estudi Encis SL</option><option value="CLI-034">Vicenta Baixauli Hernandez</option><option value="CLI-H002">Mª PAU BRAVO JOSE</option><option value="CLI-H001">ROSA CHANZA SOLER</option><option value="CLI-H003">DESIRE NAVARRO MARI</option><option value="CLI-H004">CARMELO RODRIGUEZ VILA</option><option value="CLI-H032">Daniel palma gallardo</option><option value="CLI-H023">Miguel Zaragozá Garzón</option><option value="CLI-H006">Vicenta Folch Gil</option><option value="CLI-H008">VICENT MARI SERRA</option><option value="CLI-H009">FERNANDO JOSE SAN GERMAN IBORRA</option><option value="CLI-H010">REME IBORRA GIL</option><option value="CLI-H011">TONI TATAY DAVID</option><option value="CLI-H019">Jose Antonio Martos Ortiz</option><option value="CLI-H021">MERCEDES HIGUERAS GOMEZ</option><option value="CLI-H024">MICHELL BENITO</option><option value="CLI-H026">Ana María Palau Sastre</option><option value="CLI-H028">Lara Blasco - Lara Blasco Iborra</option><option value="CLI-H027">Laura Doria Gomez</option><option value="CLI-H031">Belinda</option><option value="CLI-H005">PATRI</option><option value="CLI-H012">Júlia Fabregat Mestre</option><option value="CLI-H013">Jose Manuel Garcia Seller Nº 7 Pta 4</option><option value="CLI-H014">4G daniel Dominguez</option><option value="CLI-H016">Sara Muñoz Abella</option><option value="CLI-H018">Amparo Forner Pastor</option><option value="CLI-H017">Yasmina Cabezuelo Alaminos</option><option value="CLI-H020">Rafael Francés Llàcer</option><option value="CLI-H022">Miguel cocina</option><option value="CLI-H007">Juanmi</option><option value="CLI-H015">4F Fernando</option><option value="CLI-H029">Francisco Navarro Garcia</option><option value="CLI-H025">URKO Y FRANCESC</option><option value="CLI-H030">Jose Manuel Pinzón Valbuena</option></select>
+        <select class="form-input" style="width:220px;flex-shrink:0" id="filter-proyecto-compras" onchange="filtrarModuloPorProyecto(&#39;compras&#39;)"><option value="">📁 Proyecto…</option><option value="PRY-001">PRY-001 · Mobiliario de cocina</option><option value="PRY-002">PRY-002 · Rehabilitación lateral fachada</option><option value="PRY-003">PRY-003 · Pavimento/revestimiento vivienda.</option><option value="PRY-004">PRY-004 · Rehabilitación estudio</option><option value="PRY-005">PRY-005 · Trabajos en terraza</option></select>
+        <div class="search-wrap" style="flex:1;min-width:160px"><span class="search-icon">🔍</span><input class="form-input" id="search-compras" placeholder="Buscar…" oninput="filterTable(&#39;compras-tbody&#39;,&#39;search-compras&#39;)"></div>
+        <button class="btn btn-primary" onclick="openModal(&#39;m-compra&#39;)">＋ Nueva compra</button>
       </div>
       <div class="card">
         <div class="card-header"><div class="card-title">🛒 Compras<span id="compras-count" style="font-size:11px;font-weight:400;color:var(--text-soft);margin-left:6px"></span></div></div>
@@ -957,14 +937,10 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     <!-- ═══ SUBCONTRATAS ═══ -->
     <div class="view" id="view-subcontratas">
       <div class="search-bar" style="gap:8px;flex-wrap:wrap;align-items:center">
-        <select class="form-input" style="width:200px;flex-shrink:0" id="filter-cliente-subcontratas" onchange="cascadaClienteProyecto('subcontratas')">
-          <option value="">👤 Cliente…</option>
-        </select>
-        <select class="form-input" style="width:220px;flex-shrink:0" id="filter-proyecto-subcontratas" onchange="filtrarModuloPorProyecto('subcontratas')">
-          <option value="">📁 Proyecto…</option>
-        </select>
-        <div class="search-wrap" style="flex:1;min-width:160px"><span class="search-icon">🔍</span><input class="form-input" id="search-subcontratas" placeholder="Buscar…" oninput="filterTable('subcontratas-tbody','search-subcontratas')"></div>
-        <button class="btn btn-primary" onclick="openModal('m-subcontrata')">＋ Nueva subcontrata</button>
+        <select class="form-input" style="width:200px;flex-shrink:0" id="filter-cliente-subcontratas" onchange="cascadaClienteProyecto(&#39;subcontratas&#39;)"><option value="">👤 Cliente…</option><option value="CLI-001">Miguel Zaragozá Garzón</option><option value="CLI-002">Vicenta Folch Gil</option><option value="CLI-033">Estudi Encis SL</option><option value="CLI-034">Vicenta Baixauli Hernandez</option><option value="CLI-H002">Mª PAU BRAVO JOSE</option><option value="CLI-H001">ROSA CHANZA SOLER</option><option value="CLI-H003">DESIRE NAVARRO MARI</option><option value="CLI-H004">CARMELO RODRIGUEZ VILA</option><option value="CLI-H032">Daniel palma gallardo</option><option value="CLI-H023">Miguel Zaragozá Garzón</option><option value="CLI-H006">Vicenta Folch Gil</option><option value="CLI-H008">VICENT MARI SERRA</option><option value="CLI-H009">FERNANDO JOSE SAN GERMAN IBORRA</option><option value="CLI-H010">REME IBORRA GIL</option><option value="CLI-H011">TONI TATAY DAVID</option><option value="CLI-H019">Jose Antonio Martos Ortiz</option><option value="CLI-H021">MERCEDES HIGUERAS GOMEZ</option><option value="CLI-H024">MICHELL BENITO</option><option value="CLI-H026">Ana María Palau Sastre</option><option value="CLI-H028">Lara Blasco - Lara Blasco Iborra</option><option value="CLI-H027">Laura Doria Gomez</option><option value="CLI-H031">Belinda</option><option value="CLI-H005">PATRI</option><option value="CLI-H012">Júlia Fabregat Mestre</option><option value="CLI-H013">Jose Manuel Garcia Seller Nº 7 Pta 4</option><option value="CLI-H014">4G daniel Dominguez</option><option value="CLI-H016">Sara Muñoz Abella</option><option value="CLI-H018">Amparo Forner Pastor</option><option value="CLI-H017">Yasmina Cabezuelo Alaminos</option><option value="CLI-H020">Rafael Francés Llàcer</option><option value="CLI-H022">Miguel cocina</option><option value="CLI-H007">Juanmi</option><option value="CLI-H015">4F Fernando</option><option value="CLI-H029">Francisco Navarro Garcia</option><option value="CLI-H025">URKO Y FRANCESC</option><option value="CLI-H030">Jose Manuel Pinzón Valbuena</option></select>
+        <select class="form-input" style="width:220px;flex-shrink:0" id="filter-proyecto-subcontratas" onchange="filtrarModuloPorProyecto(&#39;subcontratas&#39;)"><option value="">📁 Proyecto…</option><option value="PRY-001">PRY-001 · Mobiliario de cocina</option><option value="PRY-002">PRY-002 · Rehabilitación lateral fachada</option><option value="PRY-003">PRY-003 · Pavimento/revestimiento vivienda.</option><option value="PRY-004">PRY-004 · Rehabilitación estudio</option><option value="PRY-005">PRY-005 · Trabajos en terraza</option></select>
+        <div class="search-wrap" style="flex:1;min-width:160px"><span class="search-icon">🔍</span><input class="form-input" id="search-subcontratas" placeholder="Buscar…" oninput="filterTable(&#39;subcontratas-tbody&#39;,&#39;search-subcontratas&#39;)"></div>
+        <button class="btn btn-primary" onclick="openModal(&#39;m-subcontrata&#39;)">＋ Nueva subcontrata</button>
       </div>
       <div class="card">
         <div class="card-header"><div class="card-title">👷 Subcontratas<span id="subcontratas-count" style="font-size:11px;font-weight:400;color:var(--text-soft);margin-left:6px"></span></div></div>
@@ -976,14 +952,10 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     <!-- ═══ HORAS ═══ -->
     <div class="view" id="view-horas">
       <div class="search-bar" style="gap:8px;flex-wrap:wrap;align-items:center">
-        <select class="form-input" style="width:200px;flex-shrink:0" id="filter-cliente-horas" onchange="cascadaClienteProyecto('horas')">
-          <option value="">👤 Cliente…</option>
-        </select>
-        <select class="form-input" style="width:220px;flex-shrink:0" id="filter-proyecto-horas" onchange="filtrarModuloPorProyecto('horas')">
-          <option value="">📁 Proyecto…</option>
-        </select>
-        <div class="search-wrap" style="flex:1;min-width:160px"><span class="search-icon">🔍</span><input class="form-input" id="search-horas" placeholder="Buscar…" oninput="filterTable('horas-tbody','search-horas')"></div>
-        <button class="btn btn-primary" onclick="openModal('m-hora')">＋ Registrar horas</button>
+        <select class="form-input" style="width:200px;flex-shrink:0" id="filter-cliente-horas" onchange="cascadaClienteProyecto(&#39;horas&#39;)"><option value="">👤 Cliente…</option><option value="CLI-001">Miguel Zaragozá Garzón</option><option value="CLI-002">Vicenta Folch Gil</option><option value="CLI-033">Estudi Encis SL</option><option value="CLI-034">Vicenta Baixauli Hernandez</option><option value="CLI-H002">Mª PAU BRAVO JOSE</option><option value="CLI-H001">ROSA CHANZA SOLER</option><option value="CLI-H003">DESIRE NAVARRO MARI</option><option value="CLI-H004">CARMELO RODRIGUEZ VILA</option><option value="CLI-H032">Daniel palma gallardo</option><option value="CLI-H023">Miguel Zaragozá Garzón</option><option value="CLI-H006">Vicenta Folch Gil</option><option value="CLI-H008">VICENT MARI SERRA</option><option value="CLI-H009">FERNANDO JOSE SAN GERMAN IBORRA</option><option value="CLI-H010">REME IBORRA GIL</option><option value="CLI-H011">TONI TATAY DAVID</option><option value="CLI-H019">Jose Antonio Martos Ortiz</option><option value="CLI-H021">MERCEDES HIGUERAS GOMEZ</option><option value="CLI-H024">MICHELL BENITO</option><option value="CLI-H026">Ana María Palau Sastre</option><option value="CLI-H028">Lara Blasco - Lara Blasco Iborra</option><option value="CLI-H027">Laura Doria Gomez</option><option value="CLI-H031">Belinda</option><option value="CLI-H005">PATRI</option><option value="CLI-H012">Júlia Fabregat Mestre</option><option value="CLI-H013">Jose Manuel Garcia Seller Nº 7 Pta 4</option><option value="CLI-H014">4G daniel Dominguez</option><option value="CLI-H016">Sara Muñoz Abella</option><option value="CLI-H018">Amparo Forner Pastor</option><option value="CLI-H017">Yasmina Cabezuelo Alaminos</option><option value="CLI-H020">Rafael Francés Llàcer</option><option value="CLI-H022">Miguel cocina</option><option value="CLI-H007">Juanmi</option><option value="CLI-H015">4F Fernando</option><option value="CLI-H029">Francisco Navarro Garcia</option><option value="CLI-H025">URKO Y FRANCESC</option><option value="CLI-H030">Jose Manuel Pinzón Valbuena</option></select>
+        <select class="form-input" style="width:220px;flex-shrink:0" id="filter-proyecto-horas" onchange="filtrarModuloPorProyecto(&#39;horas&#39;)"><option value="">📁 Proyecto…</option><option value="PRY-001">PRY-001 · Mobiliario de cocina</option><option value="PRY-002">PRY-002 · Rehabilitación lateral fachada</option><option value="PRY-003">PRY-003 · Pavimento/revestimiento vivienda.</option><option value="PRY-004">PRY-004 · Rehabilitación estudio</option><option value="PRY-005">PRY-005 · Trabajos en terraza</option></select>
+        <div class="search-wrap" style="flex:1;min-width:160px"><span class="search-icon">🔍</span><input class="form-input" id="search-horas" placeholder="Buscar…" oninput="filterTable(&#39;horas-tbody&#39;,&#39;search-horas&#39;)"></div>
+        <button class="btn btn-primary" onclick="openModal(&#39;m-hora&#39;)">＋ Registrar horas</button>
       </div>
       <div class="card">
         <div class="card-header"><div class="card-title">⏱ Horas<span id="horas-count" style="font-size:11px;font-weight:400;color:var(--text-soft);margin-left:6px"></span></div></div>
@@ -995,13 +967,9 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     <!-- ═══ PEDIDOS ═══ -->
     <div class="view" id="view-pedidos">
       <div class="search-bar" style="gap:8px;flex-wrap:wrap;align-items:center">
-        <select class="form-input" style="width:200px;flex-shrink:0" id="filter-cliente-pedidos" onchange="cascadaClienteProyecto('pedidos')">
-          <option value="">👤 Cliente…</option>
-        </select>
-        <select class="form-input" style="width:220px;flex-shrink:0" id="filter-proyecto-pedidos" onchange="filtrarModuloPorProyecto('pedidos')">
-          <option value="">📁 Proyecto…</option>
-        </select>
-        <div class="search-wrap" style="flex:1;min-width:160px"><span class="search-icon">🔍</span><input class="form-input" id="search-pedidos" placeholder="Buscar…" oninput="filterTable('pedidos-tbody','search-pedidos')"></div>
+        <select class="form-input" style="width:200px;flex-shrink:0" id="filter-cliente-pedidos" onchange="cascadaClienteProyecto(&#39;pedidos&#39;)"><option value="">👤 Cliente…</option><option value="CLI-001">Miguel Zaragozá Garzón</option><option value="CLI-002">Vicenta Folch Gil</option><option value="CLI-033">Estudi Encis SL</option><option value="CLI-034">Vicenta Baixauli Hernandez</option><option value="CLI-H002">Mª PAU BRAVO JOSE</option><option value="CLI-H001">ROSA CHANZA SOLER</option><option value="CLI-H003">DESIRE NAVARRO MARI</option><option value="CLI-H004">CARMELO RODRIGUEZ VILA</option><option value="CLI-H032">Daniel palma gallardo</option><option value="CLI-H023">Miguel Zaragozá Garzón</option><option value="CLI-H006">Vicenta Folch Gil</option><option value="CLI-H008">VICENT MARI SERRA</option><option value="CLI-H009">FERNANDO JOSE SAN GERMAN IBORRA</option><option value="CLI-H010">REME IBORRA GIL</option><option value="CLI-H011">TONI TATAY DAVID</option><option value="CLI-H019">Jose Antonio Martos Ortiz</option><option value="CLI-H021">MERCEDES HIGUERAS GOMEZ</option><option value="CLI-H024">MICHELL BENITO</option><option value="CLI-H026">Ana María Palau Sastre</option><option value="CLI-H028">Lara Blasco - Lara Blasco Iborra</option><option value="CLI-H027">Laura Doria Gomez</option><option value="CLI-H031">Belinda</option><option value="CLI-H005">PATRI</option><option value="CLI-H012">Júlia Fabregat Mestre</option><option value="CLI-H013">Jose Manuel Garcia Seller Nº 7 Pta 4</option><option value="CLI-H014">4G daniel Dominguez</option><option value="CLI-H016">Sara Muñoz Abella</option><option value="CLI-H018">Amparo Forner Pastor</option><option value="CLI-H017">Yasmina Cabezuelo Alaminos</option><option value="CLI-H020">Rafael Francés Llàcer</option><option value="CLI-H022">Miguel cocina</option><option value="CLI-H007">Juanmi</option><option value="CLI-H015">4F Fernando</option><option value="CLI-H029">Francisco Navarro Garcia</option><option value="CLI-H025">URKO Y FRANCESC</option><option value="CLI-H030">Jose Manuel Pinzón Valbuena</option></select>
+        <select class="form-input" style="width:220px;flex-shrink:0" id="filter-proyecto-pedidos" onchange="filtrarModuloPorProyecto(&#39;pedidos&#39;)"><option value="">📁 Proyecto…</option><option value="PRY-001">PRY-001 · Mobiliario de cocina</option><option value="PRY-002">PRY-002 · Rehabilitación lateral fachada</option><option value="PRY-003">PRY-003 · Pavimento/revestimiento vivienda.</option><option value="PRY-004">PRY-004 · Rehabilitación estudio</option><option value="PRY-005">PRY-005 · Trabajos en terraza</option></select>
+        <div class="search-wrap" style="flex:1;min-width:160px"><span class="search-icon">🔍</span><input class="form-input" id="search-pedidos" placeholder="Buscar…" oninput="filterTable(&#39;pedidos-tbody&#39;,&#39;search-pedidos&#39;)"></div>
         <button class="btn btn-primary" onclick="openPedidoModal()">＋ Nuevo pedido</button>
       </div>
       <div class="card">
@@ -1014,9 +982,9 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     <!-- ═══ CONTROL HORARIO ═══ -->
     <div class="view" id="view-control_horario">
       <div class="search-bar">
-        <select class="form-input" style="width:160px" id="ch-trab-sel" onchange="loadControlHorario()"><option value="">Seleccionar trabajador…</option></select>
+        <select class="form-input" style="width:160px" id="ch-trab-sel" onchange="loadControlHorario()"><option value="">Seleccionar trabajador…</option><option value="Francisco Gascón Gil">Francisco Gascón Gil</option><option value="Jose Asins Primo">Jose Asins Primo</option><option value="Julio Alemany Fort">Julio Alemany Fort</option><option value="María Paz Primo Iborra">María Paz Primo Iborra</option><option value="Raúl Gascón Gil">Raúl Gascón Gil</option><option value="Salvador Aguado Simó">Salvador Aguado Simó</option></select>
         <select class="form-input" style="width:100px" id="ch-year-sel" onchange="loadControlHorario()">
-          <option value="2025">2025</option><option value="2026" selected>2026</option><option value="2027">2027</option>
+          <option value="2025">2025</option><option value="2026" selected="">2026</option><option value="2027">2027</option>
         </select>
         <div id="ch-resumen" style="margin-left:auto;font-size:12px;color:var(--text-soft)"></div>
       </div>
@@ -1026,8 +994,8 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     <!-- ═══ PROVEEDORES ═══ -->
     <div class="view" id="view-proveedores">
       <div class="search-bar">
-        <div class="search-wrap"><span class="search-icon">🔍</span><input class="form-input" id="search-proveedores" placeholder="Buscar…" oninput="filterTable('proveedores-tbody','search-proveedores')"></div>
-        <button class="btn btn-ghost btn-sm" onclick="openModal('m-import-proveedores')" style="border:1px dashed var(--border)">📤 Importar Holded</button>
+        <div class="search-wrap"><span class="search-icon">🔍</span><input class="form-input" id="search-proveedores" placeholder="Buscar…" oninput="filterTable(&#39;proveedores-tbody&#39;,&#39;search-proveedores&#39;)"></div>
+        <button class="btn btn-ghost btn-sm" onclick="openModal(&#39;m-import-proveedores&#39;)" style="border:1px dashed var(--border)">📤 Importar Holded</button>
         <button class="btn btn-primary" onclick="abrirNuevoProveedor()">＋ Nuevo proveedor</button>
       </div>
       <div class="card">
@@ -1043,9 +1011,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <select class="form-input" style="width:220px" id="rent-cliente-sel" onchange="filtrarProyectosRentabilidad()">
           <option value="">📁 Seleccionar cliente…</option>
         </select>
-        <select class="form-input" style="width:280px" id="rent-proyecto-sel" onchange="loadRentabilidad()" disabled>
-          <option value="">— Selecciona cliente primero —</option>
-        </select>
+        <select class="form-input" style="width:280px" id="rent-proyecto-sel" onchange="loadRentabilidad()" disabled=""><option value="">Seleccionar…</option><option value="PRY-001">PRY-001 · Mobiliario de cocina</option><option value="PRY-002">PRY-002 · Rehabilitación lateral fachada</option><option value="PRY-003">PRY-003 · Pavimento/revestimiento vivienda.</option><option value="PRY-004">PRY-004 · Rehabilitación estudio</option><option value="PRY-005">PRY-005 · Trabajos en terraza</option></select>
         <select class="form-input" style="width:75px" id="rent-version-sel" onchange="loadRentabilidad()"><option value="v1">v1</option><option value="v2">v2</option><option value="v3">v3</option></select>
       </div>
       <div id="rent-kpis" style="display:none">
@@ -1148,9 +1114,9 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <!-- ═══ TABS + BÚSQUEDA ═══ -->
       <div class="search-bar" style="gap:8px;flex-wrap:wrap;margin-bottom:10px">
         <div style="display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden">
-          <button id="ftab-todas"  class="btn" style="border-radius:0;background:var(--navy);color:white;font-size:12px;padding:6px 12px" onclick="filtrarTabFacturas('todas')">Todas</button>
-          <button id="ftab-venta"  class="btn btn-ghost" style="border-radius:0;font-size:12px;padding:6px 12px" onclick="filtrarTabFacturas('Venta')">📤 Ventas</button>
-          <button id="ftab-compra" class="btn btn-ghost" style="border-radius:0;font-size:12px;padding:6px 12px" onclick="filtrarTabFacturas('Compra')">📥 Compras</button>
+          <button id="ftab-todas" class="btn" style="border-radius:0;background:var(--navy);color:white;font-size:12px;padding:6px 12px" onclick="filtrarTabFacturas(&#39;todas&#39;)">Todas</button>
+          <button id="ftab-venta" class="btn btn-ghost" style="border-radius:0;font-size:12px;padding:6px 12px" onclick="filtrarTabFacturas(&#39;Venta&#39;)">📤 Ventas</button>
+          <button id="ftab-compra" class="btn btn-ghost" style="border-radius:0;font-size:12px;padding:6px 12px" onclick="filtrarTabFacturas(&#39;Compra&#39;)">📥 Compras</button>
         </div>
         <div class="search-wrap" style="flex:1;min-width:160px"><span class="search-icon">🔍</span>
           <input class="form-input" id="search-facturas" placeholder="Buscar nº, cliente, proveedor…" oninput="filtrarFacturas()">
@@ -1167,10 +1133,10 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <option>Parcial</option><option>Vencida</option><option>Anulada</option>
         </select>
         <button class="btn btn-ghost btn-sm" onclick="limpiarFiltrosFacturas()">✕ Limpiar</button>
-        <button class="btn btn-ghost btn-sm" onclick="openModal('m-importar-holded')" style="border:1px dashed var(--border)">📤 Importar Holded</button>
+        <button class="btn btn-ghost btn-sm" onclick="openModal(&#39;m-importar-holded&#39;)" style="border:1px dashed var(--border)">📤 Importar Holded</button>
         <button class="btn btn-ghost btn-sm" onclick="exportarInformeFacturas()" style="border:1px solid var(--border)">📄 Exportar PDF</button>
-        <button class="btn btn-primary" onclick="abrirNuevaFactura('Venta')">📤 Nueva venta</button>
-        <button class="btn" style="background:#fdecea;color:var(--red);border:1px solid #f5c6c6" onclick="abrirNuevaFactura('Compra')">📥 Nueva compra</button>
+        <button class="btn btn-primary" onclick="abrirNuevaFactura(&#39;Venta&#39;)">📤 Nueva venta</button>
+        <button class="btn" style="background:#fdecea;color:var(--red);border:1px solid #f5c6c6" onclick="abrirNuevaFactura(&#39;Compra&#39;)">📥 Nueva compra</button>
       </div>
 
       <!-- ═══ TABLA ═══ -->
@@ -1389,7 +1355,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
               <div class="form-group"><label class="form-label">CI - Costes Indirectos %</label><input class="form-input" id="cfg-ci" type="number" step="0.1"></div>
               <div class="form-group"><label class="form-label">GG - Gastos Generales %</label><input class="form-input" id="cfg-gg" type="number" step="0.1"></div>
               <div class="form-group"><label class="form-label">BI - Beneficio Industrial %</label><input class="form-input" id="cfg-bi" type="number" step="0.1"></div>
-              <div class="form-group"><label class="form-label">TOTAL CI+GG+BI %</label><input class="form-input calc" id="cfg-total-ci" readonly></div>
+              <div class="form-group"><label class="form-label">TOTAL CI+GG+BI %</label><input class="form-input calc" id="cfg-total-ci" readonly=""></div>
               <div class="form-group"><label class="form-label">Coste hora defecto (€)</label><input class="form-input" id="cfg-hora" type="number" step="0.5"></div>
             </div>
           </div>
@@ -1481,7 +1447,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 
   </div><!-- /content -->
 </div><!-- /main -->
-</div><!-- /app -->
+<!-- /app -->
 
 <!-- ════════════════════════════════════════
      MODALES
@@ -1489,50 +1455,50 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 
 <!-- CLIENTE -->
 <div class="overlay" id="m-cliente"><div class="modal">
-  <div class="modal-head"><div class="modal-title">🤝 <span id="m-cliente-title">Nuevo cliente</span></div><button class="modal-close" onclick="closeModal('m-cliente')">×</button></div>
+  <div class="modal-head"><div class="modal-title">🤝 <span id="m-cliente-title">Nuevo cliente</span></div><button class="modal-close" onclick="closeModal(&#39;m-cliente&#39;)">×</button></div>
   <div class="modal-body"><input type="hidden" id="c-id">
     <div class="form-grid">
       <div class="form-group fg-full"><label class="form-label">Nombre *</label><input class="form-input" id="c-nombre"></div>
       <div class="form-group"><label class="form-label">CIF/NIF</label><input class="form-input" id="c-cif"></div>
       <div class="form-group"><label class="form-label">Teléfono</label><input class="form-input" id="c-tel"></div>
       <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="c-email" type="email"></div>
-      <div class="form-group"><label class="form-label">Tipo</label><select class="form-input" id="c-tipo"><option>Particular</option><option>Empresa</option><option>Promotora</option><option>Administración</option><option>Otros</option></select></div>
-      <div class="form-group"><label class="form-label">Forma de pago</label><select class="form-input" id="c-pago"><option>Transferencia</option><option>Efectivo</option><option>Domiciliación</option><option>Confirming</option><option>Pagaré</option><option>Giro 30 días</option><option>Giro 60 días</option><option>Giro 90 días</option><option>Giro 120 días</option></select></div>
+      <div class="form-group"><label class="form-label">Tipo</label><select class="form-input" id="c-tipo"><option value="">Seleccionar…</option><option value="Particular">Particular</option><option value="Empresa">Empresa</option><option value="Promotora">Promotora</option><option value="Administración">Administración</option><option value="Otros">Otros</option><option value="Proveedor">Proveedor</option></select></div>
+      <div class="form-group"><label class="form-label">Forma de pago</label><select class="form-input" id="c-pago"><option value="">Seleccionar…</option><option value="Transferencia">Transferencia</option><option value="Efectivo">Efectivo</option><option value="Giro">Giro</option><option value="Domiciliación">Domiciliación</option><option value="Confirming">Confirming</option><option value="Pagaré">Pagaré</option></select></div>
       <div class="form-group fg-full"><label class="form-label">Dirección</label><input class="form-input" id="c-dir"></div>
       <div class="form-group fg-full"><label class="form-label">Notas</label><textarea class="form-input" id="c-notas" rows="2"></textarea></div>
     </div>
   </div>
-  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('m-cliente')">Cancelar</button><button class="btn btn-primary" onclick="saveCliente()">💾 Guardar</button></div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal(&#39;m-cliente&#39;)">Cancelar</button><button class="btn btn-primary" onclick="saveCliente()">💾 Guardar</button></div>
 </div></div>
 
 <!-- PROYECTO -->
 <div class="overlay" id="m-proyecto"><div class="modal">
-  <div class="modal-head"><div class="modal-title">📁 <span id="m-proyecto-title">Nuevo proyecto</span></div><button class="modal-close" onclick="closeModal('m-proyecto')">×</button></div>
+  <div class="modal-head"><div class="modal-title">📁 <span id="m-proyecto-title">Nuevo proyecto</span></div><button class="modal-close" onclick="closeModal(&#39;m-proyecto&#39;)">×</button></div>
   <div class="modal-body"><input type="hidden" id="p-id">
     <div class="form-grid">
-      <div class="form-group"><label class="form-label">Cliente</label><select class="form-input" id="p-cliente"><option value="">Seleccionar…</option></select></div>
+      <div class="form-group"><label class="form-label">Cliente</label><select class="form-input" id="p-cliente"><option value="">Seleccionar…</option><option value="CLI-001">Miguel Zaragozá Garzón</option><option value="CLI-002">Vicenta Folch Gil</option><option value="CLI-033">Estudi Encis SL</option><option value="CLI-034">Vicenta Baixauli Hernandez</option><option value="CLI-H002">Mª PAU BRAVO JOSE</option><option value="CLI-H001">ROSA CHANZA SOLER</option><option value="CLI-H003">DESIRE NAVARRO MARI</option><option value="CLI-H004">CARMELO RODRIGUEZ VILA</option><option value="CLI-H032">Daniel palma gallardo</option><option value="CLI-H023">Miguel Zaragozá Garzón</option><option value="CLI-H006">Vicenta Folch Gil</option><option value="CLI-H008">VICENT MARI SERRA</option><option value="CLI-H009">FERNANDO JOSE SAN GERMAN IBORRA</option><option value="CLI-H010">REME IBORRA GIL</option><option value="CLI-H011">TONI TATAY DAVID</option><option value="CLI-H019">Jose Antonio Martos Ortiz</option><option value="CLI-H021">MERCEDES HIGUERAS GOMEZ</option><option value="CLI-H024">MICHELL BENITO</option><option value="CLI-H026">Ana María Palau Sastre</option><option value="CLI-H028">Lara Blasco - Lara Blasco Iborra</option><option value="CLI-H027">Laura Doria Gomez</option><option value="CLI-H031">Belinda</option><option value="CLI-H005">PATRI</option><option value="CLI-H012">Júlia Fabregat Mestre</option><option value="CLI-H013">Jose Manuel Garcia Seller Nº 7 Pta 4</option><option value="CLI-H014">4G daniel Dominguez</option><option value="CLI-H016">Sara Muñoz Abella</option><option value="CLI-H018">Amparo Forner Pastor</option><option value="CLI-H017">Yasmina Cabezuelo Alaminos</option><option value="CLI-H020">Rafael Francés Llàcer</option><option value="CLI-H022">Miguel cocina</option><option value="CLI-H007">Juanmi</option><option value="CLI-H015">4F Fernando</option><option value="CLI-H029">Francisco Navarro Garcia</option><option value="CLI-H025">URKO Y FRANCESC</option><option value="CLI-H030">Jose Manuel Pinzón Valbuena</option></select></div>
       <div class="form-group"><label class="form-label">Nombre del proyecto *</label><input class="form-input" id="p-nombre"></div>
-      <div class="form-group"><label class="form-label">Tipo</label><select class="form-input" id="p-tipo"><option>Obra nueva</option><option>Rehabilitación integral</option><option>Reforma parcial</option><option>Cocina</option><option>Baño</option><option>Interiorismo</option><option>Mobiliario</option><option>Otros</option></select></div>
-      <div class="form-group"><label class="form-label">Estado</label><select class="form-input" id="p-estado"><option>Nuevo lead</option><option>Presupuesto enviado</option><option>Aprobado</option><option>En ejecución</option><option>Finalizado</option><option>Facturado</option><option>Cobrado</option><option>Cancelado</option></select></div>
-      <div class="form-group"><label class="form-label">Responsable</label><select class="form-input" id="p-resp"><option value="">Seleccionar…</option></select></div>
+      <div class="form-group"><label class="form-label">Tipo</label><select class="form-input" id="p-tipo"><option value="">Seleccionar…</option><option value="Obra nueva">Obra nueva</option><option value="Rehabilitación integral">Rehabilitación integral</option><option value="Reforma parcial">Reforma parcial</option><option value="Cocina">Cocina</option><option value="Baño">Baño</option><option value="Interiorismo">Interiorismo</option><option value="Mobiliario">Mobiliario</option><option value="Electricidad">Electricidad</option><option value="Fontanería">Fontanería</option><option value="Pintura">Pintura</option><option value="Otros">Otros</option></select></div>
+      <div class="form-group"><label class="form-label">Estado</label><select class="form-input" id="p-estado"><option value="">Seleccionar…</option><option value="Nuevo lead">Nuevo lead</option><option value="Presupuesto enviado">Presupuesto enviado</option><option value="Aprobado">Aprobado</option><option value="En ejecución">En ejecución</option><option value="Finalizado">Finalizado</option><option value="Facturado">Facturado</option><option value="Cobrado">Cobrado</option><option value="Cancelado">Cancelado</option></select></div>
+      <div class="form-group"><label class="form-label">Responsable</label><select class="form-input" id="p-resp"><option value="">Seleccionar…</option><option value="Francisco Gascón Gil">Francisco Gascón Gil</option><option value="Jose Asins Primo">Jose Asins Primo</option><option value="Julio Alemany Fort">Julio Alemany Fort</option><option value="María Paz Primo Iborra">María Paz Primo Iborra</option><option value="Raúl Gascón Gil">Raúl Gascón Gil</option><option value="Salvador Aguado Simó">Salvador Aguado Simó</option></select></div>
       <div class="form-group"><label class="form-label">Fecha inicio</label><input class="form-input" id="p-fecha" type="date"></div>
       <div class="form-group fg-full"><label class="form-label">Dirección de obra</label><input class="form-input" id="p-dir"></div>
       <div class="form-group fg-full"><label class="form-label">Notas</label><textarea class="form-input" id="p-notas" rows="2"></textarea></div>
     </div>
   </div>
-  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('m-proyecto')">Cancelar</button><button class="btn btn-primary" onclick="saveProyecto()">💾 Guardar</button></div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal(&#39;m-proyecto&#39;)">Cancelar</button><button class="btn btn-primary" onclick="saveProyecto()">💾 Guardar</button></div>
 </div></div>
 
 <!-- PRESUPUESTO LINEA -->
 <div class="overlay" id="m-pres-linea"><div class="modal" style="width:600px">
-  <div class="modal-head"><div class="modal-title">💰 <span id="m-pres-title">Nueva línea</span></div><button class="modal-close" onclick="closeModal('m-pres-linea')">×</button></div>
+  <div class="modal-head"><div class="modal-title">💰 <span id="m-pres-title">Nueva línea</span></div><button class="modal-close" onclick="closeModal(&#39;m-pres-linea&#39;)">×</button></div>
   <div class="modal-body"><input type="hidden" id="pl-id">
     <div class="form-group" style="margin-bottom:10px"><label class="form-label">🔍 Buscar en CYPE 2026</label>
       <input class="form-input" id="pl-cype-search" placeholder="Escribe para buscar partida CYPE…" oninput="searchCypeLinea()">
       <div id="pl-cype-results" style="max-height:140px;overflow-y:auto;border:1px solid var(--border);border-top:none;border-radius:0 0 4px 4px;display:none;background:white;position:relative;z-index:10"></div>
     </div>
     <div class="form-group" style="margin-bottom:12px"><label class="form-label">📋 O seleccionar del tarifario propio</label>
-      <select class="form-input" id="pl-tarif-sel" onchange="loadTarifLinea()"><option value="">— Seleccionar del tarifario —</option></select>
+      <select class="form-input" id="pl-tarif-sel" onchange="loadTarifLinea()"><option value="">— Seleccionar del tarifario —</option><option value="6c08d760-3e93-4764-90b6-551bfeee2bf9">RL00060010BKRT · REJILLA AIRZONE LINEAL LAMA FIJA 600X100 BLANCO CON REGULACION</option><option value="12861e98-87d9-4d59-8aaa-4701535670d0">RL00080010BKRT · REJILLA AIRZONE LINEAL LAMA FIJA 800X100 BLANCO CON REGULACION</option><option value="be0b88a6-47d5-46e2-8911-408eff64ca38">79B000RL10 · REJILLA AIRZONE LINEAL LAMA FIJA 1000X100 BLANCO CON REGULACION</option><option value="9a9cbb45-7acb-4099-91dd-05fe5d1b4f12">RL00150010BKX · REJILLA AIRZONE LINEAL LAMA FIJA 1500X100 BLANCO</option><option value="d231d767-b51f-4122-9942-59a7b7686849">RL00200010BKX · REJILLA AIRZONE LINEAL LAMA FIJA 2000X100 BLANCO</option><option value="3081dc03-900a-4741-8fa6-4ebea580a14b">RL00100010BKX · REJILLA AIRZONE LINEAL LAMA FIJA 1000X100 BLANCO</option></select>
     </div>
     <div class="form-grid">
       <div class="form-group fg-full"><label class="form-label">Descripción *</label><input class="form-input" id="pl-desc"></div>
@@ -1541,25 +1507,25 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="form-group"><label class="form-label">Precio Base (coste)</label><input class="form-input" id="pl-precio" type="number" step="0.01" oninput="calcLineaPres()"></div>
       <div class="form-group"><label class="form-label">Margen %</label><input class="form-input" id="pl-margen" type="number" step="0.1" value="0" oninput="calcLineaPres()"></div>
       <div class="form-group"><label class="form-label">CI+GG+BI %</label><input class="form-input" id="pl-ci" type="number" step="0.1" value="0" oninput="calcLineaPres()"></div>
-      <div class="form-group"><label class="form-label">Precio Venta</label><input class="form-input calc" id="pl-pventa" readonly></div>
-      <div class="form-group"><label class="form-label">Subtotal</label><input class="form-input calc" id="pl-subtotal" readonly></div>
+      <div class="form-group"><label class="form-label">Precio Venta</label><input class="form-input calc" id="pl-pventa" readonly=""></div>
+      <div class="form-group"><label class="form-label">Subtotal</label><input class="form-input calc" id="pl-subtotal" readonly=""></div>
       <div class="form-group"><label class="form-label">IVA</label><select class="form-input" id="pl-iva"><option>10%</option><option>21%</option><option>4%</option><option>Exento</option></select></div>
       <div class="form-group"><label class="form-label">Capítulo / Partida</label><input class="form-input" id="pl-partida"></div>
     </div>
   </div>
-  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('m-pres-linea')">Cancelar</button><button class="btn btn-primary" onclick="saveLineaPresupuesto()">💾 Guardar</button></div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal(&#39;m-pres-linea&#39;)">Cancelar</button><button class="btn btn-primary" onclick="saveLineaPresupuesto()">💾 Guardar</button></div>
 </div></div>
 
 <!-- PRESUPUESTO CAPÍTULO -->
 <div class="overlay" id="m-pres-cap"><div class="modal" style="width:400px">
-  <div class="modal-head"><div class="modal-title">📂 Nuevo capítulo</div><button class="modal-close" onclick="closeModal('m-pres-cap')">×</button></div>
+  <div class="modal-head"><div class="modal-title">📂 Nuevo capítulo</div><button class="modal-close" onclick="closeModal(&#39;m-pres-cap&#39;)">×</button></div>
   <div class="modal-body"><div class="form-group"><label class="form-label">Nombre del capítulo</label><input class="form-input" id="cap-nombre" placeholder="01. Demoliciones y trabajos previos"></div></div>
-  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('m-pres-cap')">Cancelar</button><button class="btn btn-primary" onclick="saveCapitulo()">💾 Guardar</button></div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal(&#39;m-pres-cap&#39;)">Cancelar</button><button class="btn btn-primary" onclick="saveCapitulo()">💾 Guardar</button></div>
 </div></div>
 
 <!-- COMPARATIVA OFERTAS -->
 <div class="overlay" id="m-comparativa"><div class="modal" style="width:780px;max-width:96vw">
-  <div class="modal-head"><div class="modal-title">⚖️ Nueva comparativa de ofertas</div><button class="modal-close" onclick="closeModal('m-comparativa')">×</button></div>
+  <div class="modal-head"><div class="modal-title">⚖️ Nueva comparativa de ofertas</div><button class="modal-close" onclick="closeModal(&#39;m-comparativa&#39;)">×</button></div>
   <div class="modal-body"><input type="hidden" id="cmp-id">
     <!-- Cabecera: proyecto + trabajo + modo de cálculo -->
     <div class="form-grid" style="margin-bottom:10px">
@@ -1567,7 +1533,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <select class="form-input" id="cmp-cliente" onchange="cascadaClienteModalCmp()"><option value="">Seleccionar…</option></select>
       </div>
       <div class="form-group"><label class="form-label">Proyecto *</label>
-        <select class="form-input" id="cmp-proyecto"><option value="">Seleccionar…</option></select>
+        <select class="form-input" id="cmp-proyecto"><option value="">Seleccionar…</option><option value="PRY-001">PRY-001 · Mobiliario de cocina</option><option value="PRY-002">PRY-002 · Rehabilitación lateral fachada</option><option value="PRY-003">PRY-003 · Pavimento/revestimiento vivienda.</option><option value="PRY-004">PRY-004 · Rehabilitación estudio</option><option value="PRY-005">PRY-005 · Trabajos en terraza</option></select>
       </div>
       <div class="form-group fg-full"><label class="form-label">Trabajo / Material *</label>
         <input class="form-input" id="cmp-trabajo" placeholder="Ej: Instalación fontanería cocina">
@@ -1577,7 +1543,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     <div style="display:flex;gap:8px;margin-bottom:14px;background:var(--bg);border-radius:6px;padding:8px 10px;align-items:center">
       <span style="font-size:12px;font-weight:600;color:var(--text-soft);margin-right:4px">Modo:</span>
       <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px">
-        <input type="radio" name="cmp-modo" value="pvp" checked onchange="cambiarModoComparativa()"> 
+        <input type="radio" name="cmp-modo" value="pvp" checked="" onchange="cambiarModoComparativa()"> 
         <span>📉 PVP catálogo − descuento</span>
       </label>
       <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;margin-left:12px">
@@ -1740,12 +1706,12 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       </div>
     </div>
   </div>
-  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('m-comparativa')">Cancelar</button><button class="btn btn-primary" onclick="saveComparativa()">💾 Guardar</button></div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal(&#39;m-comparativa&#39;)">Cancelar</button><button class="btn btn-primary" onclick="saveComparativa()">💾 Guardar</button></div>
 </div></div>
 
 <!-- TARIFARIO -->
 <div class="overlay" id="m-tarifario"><div class="modal" style="max-width:580px">
-  <div class="modal-head"><div class="modal-title">📋 <span id="m-tarif-title">Nuevo producto</span></div><button class="modal-close" onclick="closeModal('m-tarifario')">×</button></div>
+  <div class="modal-head"><div class="modal-title">📋 <span id="m-tarif-title">Nuevo producto</span></div><button class="modal-close" onclick="closeModal(&#39;m-tarifario&#39;)">×</button></div>
   <div class="modal-body"><input type="hidden" id="t-id">
 
     <!-- Ruta: Categoría > Subcategoría > Producto -->
@@ -1757,7 +1723,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <!-- Nivel 1: Categoría -->
       <div class="form-group">
         <label class="form-label" style="font-weight:800;color:var(--navy)">① Categoría</label>
-        <select class="form-input" id="t-cat" onchange="actualizarFamiliasModal()"><option value="">— Selecciona categoría —</option></select>
+        <select class="form-input" id="t-cat" onchange="actualizarFamiliasModal()"><option value="">— Selecciona categoría —</option><option value="Mobiliario">Mobiliario</option><option value="Sofas y tapizados">Sofas y tapizados</option><option value="Dormitorios">Dormitorios</option><option value="Colchones">Colchones</option><option value="Cocina">Cocina</option><option value="Banos">Banos</option><option value="Sanitarios">Sanitarios</option><option value="Monomandos">Monomandos</option><option value="Pavimentos">Pavimentos</option><option value="Revestimientos">Revestimientos</option><option value="Carpinteria">Carpinteria</option><option value="Puertas y ventanas">Puertas y ventanas</option><option value="Iluminacion">Iluminacion</option><option value="Climatizacion">Climatizacion</option><option value="Calefaccion">Calefaccion</option><option value="Instalaciones">Instalaciones</option><option value="Electricidad">Electricidad</option><option value="Fontaneria">Fontaneria</option><option value="Pintura">Pintura</option><option value="Varios">Varios</option><option value="Otros">Otros</option></select>
       </div>
 
       <!-- Nivel 2: Subcategoría -->
@@ -1788,7 +1754,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       </div>
       <div class="form-group">
         <label class="form-label">Precio venta s/IVA</label>
-        <input class="form-input calc" id="t-pventa" readonly style="background:#f0faf5;font-weight:800;color:var(--green)">
+        <input class="form-input calc" id="t-pventa" readonly="" style="background:#f0faf5;font-weight:800;color:var(--green)">
       </div>
 
       <!-- Extra -->
@@ -1811,26 +1777,26 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     </div>
   </div>
   <div class="modal-foot">
-    <button class="btn btn-ghost" onclick="closeModal('m-tarifario')">Cancelar</button>
+    <button class="btn btn-ghost" onclick="closeModal(&#39;m-tarifario&#39;)">Cancelar</button>
     <button class="btn btn-primary" onclick="saveTarifario()">💾 Guardar producto</button>
   </div>
 </div></div>
 
 <!-- INTERIORISMO -->
 <div class="overlay" id="m-interiorismo"><div class="modal">
-  <div class="modal-head"><div class="modal-title">🛋 Añadir artículo</div><button class="modal-close" onclick="closeModal('m-interiorismo')">×</button></div>
+  <div class="modal-head"><div class="modal-title">🛋 Añadir artículo</div><button class="modal-close" onclick="closeModal(&#39;m-interiorismo&#39;)">×</button></div>
   <div class="modal-body"><input type="hidden" id="i-id">
     <div class="form-grid">
-      <div class="form-group"><label class="form-label">Proyecto *</label><select class="form-input" id="i-proyecto"><option value="">Seleccionar…</option></select></div>
-      <div class="form-group"><label class="form-label">Estancia</label><select class="form-input" id="i-estancia"><option>Salón</option><option>Cocina</option><option>Dormitorio</option><option>Baño</option><option>Terraza</option><option>Despacho</option><option>Comedor</option><option>Pasillo</option><option>Entrada</option><option>Otros</option></select></div>
-      <div class="form-group"><label class="form-label">Ref. Tarifario</label><select class="form-input" id="i-ref" onchange="loadTarifarioItem()"><option value="">— descripción libre —</option></select></div>
+      <div class="form-group"><label class="form-label">Proyecto *</label><select class="form-input" id="i-proyecto"><option value="">Seleccionar…</option><option value="PRY-001">PRY-001 · Mobiliario de cocina</option><option value="PRY-002">PRY-002 · Rehabilitación lateral fachada</option><option value="PRY-003">PRY-003 · Pavimento/revestimiento vivienda.</option><option value="PRY-004">PRY-004 · Rehabilitación estudio</option><option value="PRY-005">PRY-005 · Trabajos en terraza</option></select></div>
+      <div class="form-group"><label class="form-label">Estancia</label><select class="form-input" id="i-estancia"><option value="">Seleccionar…</option><option value="Salón">Salón</option><option value="Cocina">Cocina</option><option value="Dormitorio">Dormitorio</option><option value="Baño">Baño</option><option value="Terraza">Terraza</option><option value="Despacho">Despacho</option><option value="Comedor">Comedor</option><option value="Pasillo">Pasillo</option><option value="Entrada">Entrada</option><option value="Otros">Otros</option></select></div>
+      <div class="form-group"><label class="form-label">Ref. Tarifario</label><select class="form-input" id="i-ref" onchange="loadTarifarioItem()"><option value="">— descripción libre —</option><option value="6c08d760-3e93-4764-90b6-551bfeee2bf9">RL00060010BKRT · REJILLA AIRZONE LINEAL LAMA FIJA 600X100 BLANCO CON REGULACION</option><option value="12861e98-87d9-4d59-8aaa-4701535670d0">RL00080010BKRT · REJILLA AIRZONE LINEAL LAMA FIJA 800X100 BLANCO CON REGULACION</option><option value="be0b88a6-47d5-46e2-8911-408eff64ca38">79B000RL10 · REJILLA AIRZONE LINEAL LAMA FIJA 1000X100 BLANCO CON REGULACION</option><option value="9a9cbb45-7acb-4099-91dd-05fe5d1b4f12">RL00150010BKX · REJILLA AIRZONE LINEAL LAMA FIJA 1500X100 BLANCO</option><option value="d231d767-b51f-4122-9942-59a7b7686849">RL00200010BKX · REJILLA AIRZONE LINEAL LAMA FIJA 2000X100 BLANCO</option><option value="3081dc03-900a-4741-8fa6-4ebea580a14b">RL00100010BKX · REJILLA AIRZONE LINEAL LAMA FIJA 1000X100 BLANCO</option></select></div>
       <div class="form-group"><label class="form-label">Descripción</label><input class="form-input" id="i-desc"></div>
       <div class="form-group"><label class="form-label">Marca</label><input class="form-input" id="i-marca"></div>
       <div class="form-group"><label class="form-label">Acabado</label><input class="form-input" id="i-acabado"></div>
       <div class="form-group"><label class="form-label">Cantidad</label><input class="form-input" id="i-cant" type="number" value="1" step="0.01" oninput="calcIntPvp()"></div>
       <div class="form-group"><label class="form-label">PVP unitario</label><input class="form-input" id="i-pvp" type="number" step="0.01" oninput="calcIntPvp()"></div>
       <div class="form-group"><label class="form-label">Dto. cliente %</label><input class="form-input" id="i-dto" type="number" value="0" oninput="calcIntPvp()"></div>
-      <div class="form-group"><label class="form-label">PVP Neto</label><input class="form-input calc" id="i-neto" readonly></div>
+      <div class="form-group"><label class="form-label">PVP Neto</label><input class="form-input calc" id="i-neto" readonly=""></div>
       <div class="form-group"><label class="form-label">Coste neto</label><input class="form-input" id="i-coste" type="number" step="0.01"></div>
       <div class="form-group"><label class="form-label">IVA</label><select class="form-input" id="i-iva"><option>21%</option><option>10%</option><option>4%</option><option>Exento</option></select></div>
       <div class="form-group"><label class="form-label">Estado propuesta</label><select class="form-input" id="i-eprop"><option>Borrador</option><option>Enviada</option><option>Aprobada</option><option>Rechazada</option><option>En pedido</option><option>Entregada</option></select></div>
@@ -1839,17 +1805,17 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="form-group"><label class="form-label">Notas</label><input class="form-input" id="i-notas"></div>
     </div>
   </div>
-  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('m-interiorismo')">Cancelar</button><button class="btn btn-copper" onclick="saveInteriorismo()">💾 Guardar</button></div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal(&#39;m-interiorismo&#39;)">Cancelar</button><button class="btn btn-copper" onclick="saveInteriorismo()">💾 Guardar</button></div>
 </div></div>
 
 <!-- COMPRA -->
 <div class="overlay" id="m-compra"><div class="modal">
-  <div class="modal-head"><div class="modal-title">🛒 Nueva compra</div><button class="modal-close" onclick="closeModal('m-compra')">×</button></div>
+  <div class="modal-head"><div class="modal-title">🛒 Nueva compra</div><button class="modal-close" onclick="closeModal(&#39;m-compra&#39;)">×</button></div>
   <div class="modal-body"><input type="hidden" id="co-id">
     <div class="form-grid">
       <div class="form-group"><label class="form-label">Fecha</label><input class="form-input" id="co-fecha" type="date"></div>
-      <div class="form-group"><label class="form-label">Proyecto</label><select class="form-input" id="co-proyecto"><option value="">Seleccionar…</option></select></div>
-      <div class="form-group"><label class="form-label">Proveedor</label><select class="form-input" id="co-prov"><option value="">Seleccionar…</option></select></div>
+      <div class="form-group"><label class="form-label">Proyecto</label><select class="form-input" id="co-proyecto"><option value="">Seleccionar…</option><option value="PRY-001">PRY-001 · Mobiliario de cocina</option><option value="PRY-002">PRY-002 · Rehabilitación lateral fachada</option><option value="PRY-003">PRY-003 · Pavimento/revestimiento vivienda.</option><option value="PRY-004">PRY-004 · Rehabilitación estudio</option><option value="PRY-005">PRY-005 · Trabajos en terraza</option></select></div>
+      <div class="form-group"><label class="form-label">Proveedor</label><select class="form-input" id="co-prov"><option value="">Seleccionar proveedor…</option><option value="ABDELHAK BOUZIZOUA SAID">ABDELHAK BOUZIZOUA SAID · Proveedor</option><option value="Aguas de Valencia - Aguas de Valencia SA">Aguas de Valencia - Aguas de Valencia SA · Proveedor</option><option value="Aquaservice - Viva Aqua Service Spain SA">Aquaservice - Viva Aqua Service Spain SA · Proveedor</option><option value="AROMAS DEL CAMPO - AROMAS DEL CAMPO LIGHTING S.L.U.">AROMAS DEL CAMPO - AROMAS DEL CAMPO LIGHTING S.L.U. · Proveedor</option><option value="Asesoría Jose Carmelo Palau - Jose Carmelo Palau S.L">Asesoría Jose Carmelo Palau - Jose Carmelo Palau S.L · Proveedor</option><option value="BATEIG PIEDRA NATURALBateig">BATEIG PIEDRA NATURALBateig · Proveedor</option><option value="BRICOLAJE BRICOMAN SLU">BRICOLAJE BRICOMAN SLU · Proveedor</option><option value="C.DOMA - SERVICIOS DE RECOGIDA ECOLOGICOS SLL">C.DOMA - SERVICIOS DE RECOGIDA ECOLOGICOS SLL · Proveedor</option><option value="Cafrán Norte SLU">Cafrán Norte SLU · Proveedor</option><option value="CAMENGO ESPAÑA SL">CAMENGO ESPAÑA SL · Proveedor</option><option value="CANALONES MEDITERRANEA">CANALONES MEDITERRANEA · Proveedor</option><option value="COMERCIAL Y DERIVADOS ELECTRICOS SL">COMERCIAL Y DERIVADOS ELECTRICOS SL · Proveedor</option><option value="Comercial y derivados eléctricos SL">Comercial y derivados eléctricos SL · Proveedor</option><option value="D Aqua Kitchen &amp; Living SL">D Aqua Kitchen &amp; Living SL · Proveedor</option><option value="Desarrollo y Técnicas del Baño SLU">Desarrollo y Técnicas del Baño SLU · Proveedor</option><option value="DESARROLLO Y TECNICAS DEL BAÑOS.L.U">DESARROLLO Y TECNICAS DEL BAÑOS.L.U · Proveedor</option><option value="DISCLIMA">DISCLIMA · Proveedor</option><option value="Disclima SL">Disclima SL · Proveedor</option><option value="Efecto Led - PRISMICA SLU">Efecto Led - PRISMICA SLU · Proveedor</option><option value="Emilio Montador - Emilio J. Monterde Sanchez">Emilio Montador - Emilio J. Monterde Sanchez · Proveedor</option><option value="F Franco e Hijos SL">F Franco e Hijos SL · Proveedor</option><option value="FERRETERIA TEN Y MONREAL S.L.">FERRETERIA TEN Y MONREAL S.L. · Proveedor</option><option value="Ferretería Ten y Monreal SL">Ferretería Ten y Monreal SL · Proveedor</option><option value="Fiora bath collections  SL">Fiora bath collections  SL · Proveedor</option><option value="FIORA BATH COLLECTIONS SOCIEDAD LIMITADA.">FIORA BATH COLLECTIONS SOCIEDAD LIMITADA. · Proveedor</option><option value="FNMT-RCM">FNMT-RCM · Proveedor</option><option value="Franca Grupo Inmobiliario">Franca Grupo Inmobiliario · Proveedor</option><option value="Franco Furniture - F Franco e Hijos SL">Franco Furniture - F Franco e Hijos SL · Proveedor</option><option value="Fustes Bonet Llopis SL">Fustes Bonet Llopis SL · Proveedor</option><option value="Garcia Zacares SL">Garcia Zacares SL · Proveedor</option><option value="Glicerio Chaves Hornero SL">Glicerio Chaves Hornero SL · Proveedor</option><option value="Grupo Mundobaño Electrokitchen SL">Grupo Mundobaño Electrokitchen SL · Proveedor</option><option value="Holded">Holded · Proveedor</option><option value="Iberdrola - Iberdrola clientes SAU">Iberdrola - Iberdrola clientes SAU · Proveedor</option><option value="Iván Millán Garcia">Iván Millán Garcia · Subcontratista</option><option value="IXIA REGAL SA">IXIA REGAL SA · Proveedor</option><option value="Jose Asins Primo">Jose Asins Primo · Proveedor</option><option value="Jose Ignacio Chilet Crespo">Jose Ignacio Chilet Crespo · Subcontratista</option><option value="Marmoles Santa Maria - MARMOLES SANTAMARIA SL">Marmoles Santa Maria - MARMOLES SANTAMARIA SL · Proveedor</option><option value="Mármoles Santa maría SL">Mármoles Santa maría SL · Proveedor</option><option value="Materiales Calabuig SL">Materiales Calabuig SL · Proveedor</option><option value="MERCEDES BENZ - MERCEDES BENZ ESPAÑA SOCIEDAD ANONIMA">MERCEDES BENZ - MERCEDES BENZ ESPAÑA SOCIEDAD ANONIMA · Proveedor</option><option value="Mercedes Benz - Mercedes Benz Financial services España EFC SA">Mercedes Benz - Mercedes Benz Financial services España EFC SA · Proveedor</option><option value="Moeve - Moeve Card Services, S.A.U.">Moeve - Moeve Card Services, S.A.U. · Proveedor</option><option value="Moeve - Moeve pro services SAU">Moeve - Moeve pro services SAU · Proveedor</option><option value="Mohammed Ghanouch">Mohammed Ghanouch · Subcontratista</option><option value="Movistar - Telefónica móviles España SAU">Movistar - Telefónica móviles España SAU · Proveedor</option><option value="NAVARRO RUBIO SILLERIA S. L.">NAVARRO RUBIO SILLERIA S. L. · Proveedor</option><option value="Navarro Rubio Silleria SL">Navarro Rubio Silleria SL · Proveedor</option><option value="NESTLE NESPRESSO SA OFICINA DE REPRESENTACION EN BARCELONA">NESTLE NESPRESSO SA OFICINA DE REPRESENTACION EN BARCELONA · Proveedor</option><option value="O.T.P. OFICINA TECNICA DE PREVENCION, S.A. - OTP-OFICINA TECNICA DE PREVENCION SL">O.T.P. OFICINA TECNICA DE PREVENCION, S.A. - OTP-OFICINA TECNICA DE PREVENCION SL · Proveedor</option><option value="Optica Alcasser - DOSMIRADAS2020,SL">Optica Alcasser - DOSMIRADAS2020,SL · Proveedor</option><option value="Otp-Oficina Técnica de Prevención SL">Otp-Oficina Técnica de Prevención SL · Proveedor</option><option value="Pinturas Gopidecor SL">Pinturas Gopidecor SL · Proveedor</option><option value="PINTURAS GOPIDECOR SOCIEDAD LIMITADA.">PINTURAS GOPIDECOR SOCIEDAD LIMITADA. · Proveedor</option><option value="Poalgi SL">Poalgi SL · Proveedor</option><option value="Prismica SLU">Prismica SLU · Proveedor</option><option value="PUERTAS SEVILLANO SL">PUERTAS SEVILLANO SL · Proveedor</option><option value="Pulidor - Jose Vicente Figueres Peris">Pulidor - Jose Vicente Figueres Peris · Proveedor</option><option value="Rafael Albert SL">Rafael Albert SL · Proveedor</option><option value="RAFAEL ALBERT, S.L.">RAFAEL ALBERT, S.L. · Proveedor</option><option value="Raúl Martín - Engenios Sanchez">Raúl Martín - Engenios Sanchez · Subcontratista</option><option value="Said Pladur - SAID LOUDYI">Said Pladur - SAID LOUDYI · Proveedor</option><option value="Saitra Cocinas SL">Saitra Cocinas SL · Proveedor</option><option value="Saniceramic Import And Export Sl">Saniceramic Import And Export Sl · Proveedor</option><option value="SIMO PINTOR - MOHAMMED GHANOUCH">SIMO PINTOR - MOHAMMED GHANOUCH · Proveedor</option><option value="Stanila Adrián Ioan">Stanila Adrián Ioan · Subcontrata</option><option value="Tancat Cerramientos - Raul Martín-Engenios Sänchez">Tancat Cerramientos - Raul Martín-Engenios Sänchez · Proveedor</option><option value="Techos Calabuig - MATERIALES CALABUIG SOCIEDAD LIMITADA.">Techos Calabuig - MATERIALES CALABUIG SOCIEDAD LIMITADA. · Proveedor</option><option value="TEXTILES INDUCAM">TEXTILES INDUCAM · Proveedor</option><option value="Tobisa Fabrica de Muebles SL">Tobisa Fabrica de Muebles SL · Proveedor</option><option value="TOBISA MUEBLES - TOBISA FABRICA DE MUEBLES SL">TOBISA MUEBLES - TOBISA FABRICA DE MUEBLES SL · Proveedor</option><option value="VENTANAS CORTIZO - VICMAN GLASS S.L.U.">VENTANAS CORTIZO - VICMAN GLASS S.L.U. · Proveedor</option><option value="Vicentclima SL">Vicentclima SL · Subcontratista</option><option value="Vicman Glass SLU">Vicman Glass SLU · Proveedor</option><option value="Vives Azulejos y Gres SA">Vives Azulejos y Gres SA · Proveedor</option><option value="VIVES AZULEJOS Y GRES, S.A. - VIVES AZULEJOS Y GRES SA">VIVES AZULEJOS Y GRES, S.A. - VIVES AZULEJOS Y GRES SA · Proveedor</option><option value="Vodafone España SAU">Vodafone España SAU · Proveedor</option></select></div>
       <div class="form-group"><label class="form-label">IVA</label><select class="form-input" id="co-iva"><option>21%</option><option>10%</option><option>4%</option><option>Exento</option></select></div>
       <div class="form-group fg-full"><label class="form-label">Concepto</label><input class="form-input" id="co-concepto"></div>
       <div class="form-group"><label class="form-label">Base imponible €</label><input class="form-input" id="co-base" type="number" step="0.01"></div>
@@ -1858,17 +1824,17 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="form-group fg-full"><label class="form-label">Notas</label><input class="form-input" id="co-notas"></div>
     </div>
   </div>
-  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('m-compra')">Cancelar</button><button class="btn btn-primary" onclick="saveCompra()">💾 Guardar</button></div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal(&#39;m-compra&#39;)">Cancelar</button><button class="btn btn-primary" onclick="saveCompra()">💾 Guardar</button></div>
 </div></div>
 
 <!-- SUBCONTRATA -->
 <div class="overlay" id="m-subcontrata"><div class="modal">
-  <div class="modal-head"><div class="modal-title">👷 Nueva subcontrata</div><button class="modal-close" onclick="closeModal('m-subcontrata')">×</button></div>
+  <div class="modal-head"><div class="modal-title">👷 Nueva subcontrata</div><button class="modal-close" onclick="closeModal(&#39;m-subcontrata&#39;)">×</button></div>
   <div class="modal-body"><input type="hidden" id="sc-id">
     <div class="form-grid">
       <div class="form-group"><label class="form-label">Fecha</label><input class="form-input" id="sc-fecha" type="date"></div>
-      <div class="form-group"><label class="form-label">Proyecto</label><select class="form-input" id="sc-proyecto"><option value="">Seleccionar…</option></select></div>
-      <div class="form-group"><label class="form-label">Subcontratista</label><select class="form-input" id="sc-prov"><option value="">Seleccionar…</option></select></div>
+      <div class="form-group"><label class="form-label">Proyecto</label><select class="form-input" id="sc-proyecto"><option value="">Seleccionar…</option><option value="PRY-001">PRY-001 · Mobiliario de cocina</option><option value="PRY-002">PRY-002 · Rehabilitación lateral fachada</option><option value="PRY-003">PRY-003 · Pavimento/revestimiento vivienda.</option><option value="PRY-004">PRY-004 · Rehabilitación estudio</option><option value="PRY-005">PRY-005 · Trabajos en terraza</option></select></div>
+      <div class="form-group"><label class="form-label">Subcontratista</label><select class="form-input" id="sc-prov"><option value="">Seleccionar proveedor…</option><option value="ABDELHAK BOUZIZOUA SAID">ABDELHAK BOUZIZOUA SAID · Proveedor</option><option value="Aguas de Valencia - Aguas de Valencia SA">Aguas de Valencia - Aguas de Valencia SA · Proveedor</option><option value="Aquaservice - Viva Aqua Service Spain SA">Aquaservice - Viva Aqua Service Spain SA · Proveedor</option><option value="AROMAS DEL CAMPO - AROMAS DEL CAMPO LIGHTING S.L.U.">AROMAS DEL CAMPO - AROMAS DEL CAMPO LIGHTING S.L.U. · Proveedor</option><option value="Asesoría Jose Carmelo Palau - Jose Carmelo Palau S.L">Asesoría Jose Carmelo Palau - Jose Carmelo Palau S.L · Proveedor</option><option value="BATEIG PIEDRA NATURALBateig">BATEIG PIEDRA NATURALBateig · Proveedor</option><option value="BRICOLAJE BRICOMAN SLU">BRICOLAJE BRICOMAN SLU · Proveedor</option><option value="C.DOMA - SERVICIOS DE RECOGIDA ECOLOGICOS SLL">C.DOMA - SERVICIOS DE RECOGIDA ECOLOGICOS SLL · Proveedor</option><option value="Cafrán Norte SLU">Cafrán Norte SLU · Proveedor</option><option value="CAMENGO ESPAÑA SL">CAMENGO ESPAÑA SL · Proveedor</option><option value="CANALONES MEDITERRANEA">CANALONES MEDITERRANEA · Proveedor</option><option value="COMERCIAL Y DERIVADOS ELECTRICOS SL">COMERCIAL Y DERIVADOS ELECTRICOS SL · Proveedor</option><option value="Comercial y derivados eléctricos SL">Comercial y derivados eléctricos SL · Proveedor</option><option value="D Aqua Kitchen &amp; Living SL">D Aqua Kitchen &amp; Living SL · Proveedor</option><option value="Desarrollo y Técnicas del Baño SLU">Desarrollo y Técnicas del Baño SLU · Proveedor</option><option value="DESARROLLO Y TECNICAS DEL BAÑOS.L.U">DESARROLLO Y TECNICAS DEL BAÑOS.L.U · Proveedor</option><option value="DISCLIMA">DISCLIMA · Proveedor</option><option value="Disclima SL">Disclima SL · Proveedor</option><option value="Efecto Led - PRISMICA SLU">Efecto Led - PRISMICA SLU · Proveedor</option><option value="Emilio Montador - Emilio J. Monterde Sanchez">Emilio Montador - Emilio J. Monterde Sanchez · Proveedor</option><option value="F Franco e Hijos SL">F Franco e Hijos SL · Proveedor</option><option value="FERRETERIA TEN Y MONREAL S.L.">FERRETERIA TEN Y MONREAL S.L. · Proveedor</option><option value="Ferretería Ten y Monreal SL">Ferretería Ten y Monreal SL · Proveedor</option><option value="Fiora bath collections  SL">Fiora bath collections  SL · Proveedor</option><option value="FIORA BATH COLLECTIONS SOCIEDAD LIMITADA.">FIORA BATH COLLECTIONS SOCIEDAD LIMITADA. · Proveedor</option><option value="FNMT-RCM">FNMT-RCM · Proveedor</option><option value="Franca Grupo Inmobiliario">Franca Grupo Inmobiliario · Proveedor</option><option value="Franco Furniture - F Franco e Hijos SL">Franco Furniture - F Franco e Hijos SL · Proveedor</option><option value="Fustes Bonet Llopis SL">Fustes Bonet Llopis SL · Proveedor</option><option value="Garcia Zacares SL">Garcia Zacares SL · Proveedor</option><option value="Glicerio Chaves Hornero SL">Glicerio Chaves Hornero SL · Proveedor</option><option value="Grupo Mundobaño Electrokitchen SL">Grupo Mundobaño Electrokitchen SL · Proveedor</option><option value="Holded">Holded · Proveedor</option><option value="Iberdrola - Iberdrola clientes SAU">Iberdrola - Iberdrola clientes SAU · Proveedor</option><option value="Iván Millán Garcia">Iván Millán Garcia · Subcontratista</option><option value="IXIA REGAL SA">IXIA REGAL SA · Proveedor</option><option value="Jose Asins Primo">Jose Asins Primo · Proveedor</option><option value="Jose Ignacio Chilet Crespo">Jose Ignacio Chilet Crespo · Subcontratista</option><option value="Marmoles Santa Maria - MARMOLES SANTAMARIA SL">Marmoles Santa Maria - MARMOLES SANTAMARIA SL · Proveedor</option><option value="Mármoles Santa maría SL">Mármoles Santa maría SL · Proveedor</option><option value="Materiales Calabuig SL">Materiales Calabuig SL · Proveedor</option><option value="MERCEDES BENZ - MERCEDES BENZ ESPAÑA SOCIEDAD ANONIMA">MERCEDES BENZ - MERCEDES BENZ ESPAÑA SOCIEDAD ANONIMA · Proveedor</option><option value="Mercedes Benz - Mercedes Benz Financial services España EFC SA">Mercedes Benz - Mercedes Benz Financial services España EFC SA · Proveedor</option><option value="Moeve - Moeve Card Services, S.A.U.">Moeve - Moeve Card Services, S.A.U. · Proveedor</option><option value="Moeve - Moeve pro services SAU">Moeve - Moeve pro services SAU · Proveedor</option><option value="Mohammed Ghanouch">Mohammed Ghanouch · Subcontratista</option><option value="Movistar - Telefónica móviles España SAU">Movistar - Telefónica móviles España SAU · Proveedor</option><option value="NAVARRO RUBIO SILLERIA S. L.">NAVARRO RUBIO SILLERIA S. L. · Proveedor</option><option value="Navarro Rubio Silleria SL">Navarro Rubio Silleria SL · Proveedor</option><option value="NESTLE NESPRESSO SA OFICINA DE REPRESENTACION EN BARCELONA">NESTLE NESPRESSO SA OFICINA DE REPRESENTACION EN BARCELONA · Proveedor</option><option value="O.T.P. OFICINA TECNICA DE PREVENCION, S.A. - OTP-OFICINA TECNICA DE PREVENCION SL">O.T.P. OFICINA TECNICA DE PREVENCION, S.A. - OTP-OFICINA TECNICA DE PREVENCION SL · Proveedor</option><option value="Optica Alcasser - DOSMIRADAS2020,SL">Optica Alcasser - DOSMIRADAS2020,SL · Proveedor</option><option value="Otp-Oficina Técnica de Prevención SL">Otp-Oficina Técnica de Prevención SL · Proveedor</option><option value="Pinturas Gopidecor SL">Pinturas Gopidecor SL · Proveedor</option><option value="PINTURAS GOPIDECOR SOCIEDAD LIMITADA.">PINTURAS GOPIDECOR SOCIEDAD LIMITADA. · Proveedor</option><option value="Poalgi SL">Poalgi SL · Proveedor</option><option value="Prismica SLU">Prismica SLU · Proveedor</option><option value="PUERTAS SEVILLANO SL">PUERTAS SEVILLANO SL · Proveedor</option><option value="Pulidor - Jose Vicente Figueres Peris">Pulidor - Jose Vicente Figueres Peris · Proveedor</option><option value="Rafael Albert SL">Rafael Albert SL · Proveedor</option><option value="RAFAEL ALBERT, S.L.">RAFAEL ALBERT, S.L. · Proveedor</option><option value="Raúl Martín - Engenios Sanchez">Raúl Martín - Engenios Sanchez · Subcontratista</option><option value="Said Pladur - SAID LOUDYI">Said Pladur - SAID LOUDYI · Proveedor</option><option value="Saitra Cocinas SL">Saitra Cocinas SL · Proveedor</option><option value="Saniceramic Import And Export Sl">Saniceramic Import And Export Sl · Proveedor</option><option value="SIMO PINTOR - MOHAMMED GHANOUCH">SIMO PINTOR - MOHAMMED GHANOUCH · Proveedor</option><option value="Stanila Adrián Ioan">Stanila Adrián Ioan · Subcontrata</option><option value="Tancat Cerramientos - Raul Martín-Engenios Sänchez">Tancat Cerramientos - Raul Martín-Engenios Sänchez · Proveedor</option><option value="Techos Calabuig - MATERIALES CALABUIG SOCIEDAD LIMITADA.">Techos Calabuig - MATERIALES CALABUIG SOCIEDAD LIMITADA. · Proveedor</option><option value="TEXTILES INDUCAM">TEXTILES INDUCAM · Proveedor</option><option value="Tobisa Fabrica de Muebles SL">Tobisa Fabrica de Muebles SL · Proveedor</option><option value="TOBISA MUEBLES - TOBISA FABRICA DE MUEBLES SL">TOBISA MUEBLES - TOBISA FABRICA DE MUEBLES SL · Proveedor</option><option value="VENTANAS CORTIZO - VICMAN GLASS S.L.U.">VENTANAS CORTIZO - VICMAN GLASS S.L.U. · Proveedor</option><option value="Vicentclima SL">Vicentclima SL · Subcontratista</option><option value="Vicman Glass SLU">Vicman Glass SLU · Proveedor</option><option value="Vives Azulejos y Gres SA">Vives Azulejos y Gres SA · Proveedor</option><option value="VIVES AZULEJOS Y GRES, S.A. - VIVES AZULEJOS Y GRES SA">VIVES AZULEJOS Y GRES, S.A. - VIVES AZULEJOS Y GRES SA · Proveedor</option><option value="Vodafone España SAU">Vodafone España SAU · Proveedor</option></select></div>
       <div class="form-group"><label class="form-label">IVA</label><select class="form-input" id="sc-iva"><option>21%</option><option>10%</option><option>4%</option><option>Exento</option></select></div>
       <div class="form-group fg-full"><label class="form-label">Trabajo</label><input class="form-input" id="sc-trabajo"></div>
       <div class="form-group"><label class="form-label">Importe base €</label><input class="form-input" id="sc-importe" type="number" step="0.01"></div>
@@ -1876,28 +1842,28 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="form-group"><label class="form-label">Fecha vencimiento</label><input class="form-input" id="sc-vto" type="date"></div>
     </div>
   </div>
-  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('m-subcontrata')">Cancelar</button><button class="btn btn-primary" onclick="saveSubcontrata()">💾 Guardar</button></div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal(&#39;m-subcontrata&#39;)">Cancelar</button><button class="btn btn-primary" onclick="saveSubcontrata()">💾 Guardar</button></div>
 </div></div>
 
 <!-- HORA -->
 <div class="overlay" id="m-hora"><div class="modal" style="width:420px">
-  <div class="modal-head"><div class="modal-title">⏱ Registrar horas</div><button class="modal-close" onclick="closeModal('m-hora')">×</button></div>
+  <div class="modal-head"><div class="modal-title">⏱ Registrar horas</div><button class="modal-close" onclick="closeModal(&#39;m-hora&#39;)">×</button></div>
   <div class="modal-body"><input type="hidden" id="h-id">
     <div class="form-grid">
       <div class="form-group"><label class="form-label">Fecha</label><input class="form-input" id="h-fecha" type="date"></div>
-      <div class="form-group"><label class="form-label">Proyecto</label><select class="form-input" id="h-proyecto"><option value="">Seleccionar…</option></select></div>
-      <div class="form-group"><label class="form-label">Trabajador</label><select class="form-input" id="h-trab"><option value="">Seleccionar…</option></select></div>
+      <div class="form-group"><label class="form-label">Proyecto</label><select class="form-input" id="h-proyecto"><option value="">Seleccionar…</option><option value="PRY-001">PRY-001 · Mobiliario de cocina</option><option value="PRY-002">PRY-002 · Rehabilitación lateral fachada</option><option value="PRY-003">PRY-003 · Pavimento/revestimiento vivienda.</option><option value="PRY-004">PRY-004 · Rehabilitación estudio</option><option value="PRY-005">PRY-005 · Trabajos en terraza</option></select></div>
+      <div class="form-group"><label class="form-label">Trabajador</label><select class="form-input" id="h-trab"><option value="">Seleccionar…</option><option value="Francisco Gascón Gil">Francisco Gascón Gil</option><option value="Jose Asins Primo">Jose Asins Primo</option><option value="Julio Alemany Fort">Julio Alemany Fort</option><option value="María Paz Primo Iborra">María Paz Primo Iborra</option><option value="Raúl Gascón Gil">Raúl Gascón Gil</option><option value="Salvador Aguado Simó">Salvador Aguado Simó</option></select></div>
       <div class="form-group"><label class="form-label">Horas</label><input class="form-input" id="h-horas" type="number" step="0.5" placeholder="8"></div>
       <div class="form-group"><label class="form-label">€/hora</label><input class="form-input" id="h-coste" type="number" value="18"></div>
       <div class="form-group fg-full"><label class="form-label">Descripción</label><input class="form-input" id="h-desc"></div>
     </div>
   </div>
-  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('m-hora')">Cancelar</button><button class="btn btn-primary" onclick="saveHora()">💾 Guardar</button></div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal(&#39;m-hora&#39;)">Cancelar</button><button class="btn btn-primary" onclick="saveHora()">💾 Guardar</button></div>
 </div></div>
 
 <!-- PEDIDO -->
 <div class="overlay" id="m-pedido"><div class="modal" style="width:580px">
-  <div class="modal-head"><div class="modal-title">📦 Nuevo pedido</div><button class="modal-close" onclick="closeModal('m-pedido')">×</button></div>
+  <div class="modal-head"><div class="modal-title">📦 Nuevo pedido</div><button class="modal-close" onclick="closeModal(&#39;m-pedido&#39;)">×</button></div>
   <div class="modal-body"><input type="hidden" id="ped-id">
     <input type="hidden" id="ped-cliente-id">
     <input type="hidden" id="ped-cliente-val">
@@ -1926,9 +1892,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="form-group">
         <label class="form-label">🏭 Proveedor <span style="color:var(--text-soft);font-weight:400">(escribe para filtrar)</span></label>
         <div style="position:relative">
-          <input class="form-input" id="ped-prov-search" placeholder="Buscar proveedor…" autocomplete="off"
-            oninput="filtrarSearchSelect('ped-prov-search','ped-prov-dd','ped-prov-id','ped-prov-val',ProvC,'nombre','id')"
-            onfocus="abrirSearchDd('ped-prov-dd')" onblur="setTimeout(()=>cerrarSearchDd('ped-prov-dd'),200)">
+          <input class="form-input" id="ped-prov-search" placeholder="Buscar proveedor…" autocomplete="off" oninput="filtrarSearchSelect(&#39;ped-prov-search&#39;,&#39;ped-prov-dd&#39;,&#39;ped-prov-id&#39;,&#39;ped-prov-val&#39;,ProvC,&#39;nombre&#39;,&#39;id&#39;)" onfocus="abrirSearchDd(&#39;ped-prov-dd&#39;)" onblur="setTimeout(()=&gt;cerrarSearchDd(&#39;ped-prov-dd&#39;),200)">
           <input type="hidden" id="ped-prov-id">
           <input type="hidden" id="ped-prov-val">
           <div id="ped-prov-dd" class="search-dd" style="display:none"></div>
@@ -1941,26 +1905,26 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="form-group fg-full"><label class="form-label">Observaciones</label><input class="form-input" id="ped-obs"></div>
     </div>
   </div>
-  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('m-pedido')">Cancelar</button><button class="btn btn-primary" onclick="savePedido()">💾 Guardar</button></div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal(&#39;m-pedido&#39;)">Cancelar</button><button class="btn btn-primary" onclick="savePedido()">💾 Guardar</button></div>
 </div></div>
 
 <!-- PROVEEDOR -->
 <div class="overlay" id="m-proveedor"><div class="modal">
-  <div class="modal-head"><div class="modal-title">🏭 Nuevo proveedor</div><button class="modal-close" onclick="closeModal('m-proveedor')">×</button></div>
+  <div class="modal-head"><div class="modal-title">🏭 Nuevo proveedor</div><button class="modal-close" onclick="closeModal(&#39;m-proveedor&#39;)">×</button></div>
   <div class="modal-body"><input type="hidden" id="pv-id">
     <div class="form-grid">
       <div class="form-group fg-full"><label class="form-label">Nombre *</label><input class="form-input" id="pv-nombre"></div>
       <div class="form-group"><label class="form-label">CIF</label><input class="form-input" id="pv-cif"></div>
-      <div class="form-group"><label class="form-label">Tipo</label><select class="form-input" id="pv-tipo"><option>Proveedor</option><option>Subcontrata</option><option>Alquiler</option><option>Servicio</option><option>Transporte</option><option>Otros</option></select></div>
+      <div class="form-group"><label class="form-label">Tipo</label><select class="form-input" id="pv-tipo"><option value="">Seleccionar…</option><option value="Proveedor">Proveedor</option><option value="Subcontrata">Subcontrata</option><option value="Alquiler">Alquiler</option><option value="Servicio">Servicio</option><option value="Transporte">Transporte</option><option value="Otros">Otros</option></select></div>
       <div class="form-group"><label class="form-label">Teléfono</label><input class="form-input" id="pv-tel"></div>
       <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="pv-email" type="email"></div>
       <div class="form-group"><label class="form-label">Especialidad</label><input class="form-input" id="pv-esp"></div>
-      <div class="form-group"><label class="form-label">Forma de pago</label><select class="form-input" id="pv-pago"><option>Transferencia</option><option>Efectivo</option><option>Domiciliación</option><option>Confirming</option><option>Pagaré</option><option>Giro 30 días</option><option>Giro 60 días</option><option>Giro 90 días</option><option>Giro 120 días</option></select></div>
+      <div class="form-group"><label class="form-label">Forma de pago</label><select class="form-input" id="pv-pago"><option value="">Seleccionar…</option><option value="Transferencia">Transferencia</option><option value="Efectivo">Efectivo</option><option value="Giro">Giro</option><option value="Domiciliación">Domiciliación</option><option value="Confirming">Confirming</option><option value="Pagaré">Pagaré</option></select></div>
       <div class="form-group"><label class="form-label">IBAN</label><input class="form-input" id="pv-iban"></div>
       <div class="form-group fg-full"><label class="form-label">Notas</label><textarea class="form-input" id="pv-notas" rows="2"></textarea></div>
     </div>
   </div>
-  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('m-proveedor')">Cancelar</button><button class="btn btn-primary" onclick="saveProveedor()">💾 Guardar</button></div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal(&#39;m-proveedor&#39;)">Cancelar</button><button class="btn btn-primary" onclick="saveProveedor()">💾 Guardar</button></div>
 </div></div>
 
 <!-- FACTURA -->
@@ -1970,7 +1934,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="modal-title" id="f-modal-title">🧾 Nueva factura</div>
       <span id="f-tipo-badge" style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;background:#e8f5ee;color:var(--green)">📤 VENTA</span>
     </div>
-    <button class="modal-close" onclick="closeModal('m-factura')">×</button>
+    <button class="modal-close" onclick="closeModal(&#39;m-factura&#39;)">×</button>
   </div>
   <div class="modal-body">
     <input type="hidden" id="f-id">
@@ -1980,14 +1944,14 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="form-group"><label class="form-label">Fecha emisión</label><input class="form-input" id="f-fecha" type="date"></div>
       <!-- Venta → Cliente | Compra → Proveedor -->
       <div class="form-group" id="f-grp-cliente"><label class="form-label">Cliente</label>
-        <select class="form-input" id="f-cliente" onchange="cascadaClienteFactura()"><option value="">Seleccionar…</option></select>
+        <select class="form-input" id="f-cliente" onchange="cascadaClienteFactura()"><option value="">Seleccionar…</option><option value="CLI-001">Miguel Zaragozá Garzón</option><option value="CLI-002">Vicenta Folch Gil</option><option value="CLI-033">Estudi Encis SL</option><option value="CLI-034">Vicenta Baixauli Hernandez</option><option value="CLI-H002">Mª PAU BRAVO JOSE</option><option value="CLI-H001">ROSA CHANZA SOLER</option><option value="CLI-H003">DESIRE NAVARRO MARI</option><option value="CLI-H004">CARMELO RODRIGUEZ VILA</option><option value="CLI-H032">Daniel palma gallardo</option><option value="CLI-H023">Miguel Zaragozá Garzón</option><option value="CLI-H006">Vicenta Folch Gil</option><option value="CLI-H008">VICENT MARI SERRA</option><option value="CLI-H009">FERNANDO JOSE SAN GERMAN IBORRA</option><option value="CLI-H010">REME IBORRA GIL</option><option value="CLI-H011">TONI TATAY DAVID</option><option value="CLI-H019">Jose Antonio Martos Ortiz</option><option value="CLI-H021">MERCEDES HIGUERAS GOMEZ</option><option value="CLI-H024">MICHELL BENITO</option><option value="CLI-H026">Ana María Palau Sastre</option><option value="CLI-H028">Lara Blasco - Lara Blasco Iborra</option><option value="CLI-H027">Laura Doria Gomez</option><option value="CLI-H031">Belinda</option><option value="CLI-H005">PATRI</option><option value="CLI-H012">Júlia Fabregat Mestre</option><option value="CLI-H013">Jose Manuel Garcia Seller Nº 7 Pta 4</option><option value="CLI-H014">4G daniel Dominguez</option><option value="CLI-H016">Sara Muñoz Abella</option><option value="CLI-H018">Amparo Forner Pastor</option><option value="CLI-H017">Yasmina Cabezuelo Alaminos</option><option value="CLI-H020">Rafael Francés Llàcer</option><option value="CLI-H022">Miguel cocina</option><option value="CLI-H007">Juanmi</option><option value="CLI-H015">4F Fernando</option><option value="CLI-H029">Francisco Navarro Garcia</option><option value="CLI-H025">URKO Y FRANCESC</option><option value="CLI-H030">Jose Manuel Pinzón Valbuena</option></select>
       </div>
       <div class="form-group" id="f-grp-proveedor" style="display:none"><label class="form-label">Proveedor</label>
         <select class="form-input" id="f-proveedor"><option value="">Seleccionar…</option></select>
       </div>
       <div class="form-group" id="f-grp-proyecto">
         <label class="form-label">Proyecto <span style="font-size:10px;color:var(--text-soft);font-weight:400">(opcional)</span></label>
-        <select class="form-input" id="f-proyecto" onchange="onFacProyectoChange()"><option value="">— Sin proyecto —</option></select>
+        <select class="form-input" id="f-proyecto" onchange="onFacProyectoChange()"><option value="">Seleccionar…</option><option value="PRY-001">PRY-001 · Mobiliario de cocina</option><option value="PRY-002">PRY-002 · Rehabilitación lateral fachada</option><option value="PRY-003">PRY-003 · Pavimento/revestimiento vivienda.</option><option value="PRY-004">PRY-004 · Rehabilitación estudio</option><option value="PRY-005">PRY-005 · Trabajos en terraza</option></select>
       </div>
       <!-- Importar desde presupuesto (solo ventas) -->
       <div class="form-group" id="f-grp-importar-pres">
@@ -2044,7 +2008,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         </select>
       </div>
       <div class="form-group"><label class="form-label">Total con IVA</label>
-        <input class="form-input" id="f-total-display" readonly style="background:var(--bg);font-weight:700;color:var(--navy)">
+        <input class="form-input" id="f-total-display" readonly="" style="background:var(--bg);font-weight:700;color:var(--navy)">
       </div>
       <!-- Vencimiento único (ventas) / múltiple (compras) -->
       <div class="form-group" id="f-grp-vto-simple">
@@ -2057,21 +2021,19 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <button type="button" onclick="sugerirDiasPago()" style="background:none;border:none;cursor:pointer;font-size:14px;padding:0 4px;vertical-align:middle" title="Sugerir días de pago">💡</button>
         </label>
         <div style="display:grid;grid-template-columns:1fr 120px 1fr 120px 1fr 120px 1fr 120px;gap:6px;align-items:center">
-          <div><div style="font-size:10px;color:var(--text-soft);margin-bottom:2px;text-align:center">Vto. 1</div><input class="form-input" id="f-vto" type="date" onclick="confirmarVto('f-vto')" onchange="confirmarVto('f-vto')"></div>
-          <div><div style="font-size:10px;color:var(--text-soft);margin-bottom:2px;text-align:center">Importe</div><input class="form-input" id="f-importe-vto1" type="number" step="0.01" placeholder="€" onclick="confirmarVto('f-importe-vto1')" onchange="confirmarVto('f-importe-vto1')"></div>
-          <div><div style="font-size:10px;color:var(--text-soft);margin-bottom:2px;text-align:center">Vto. 2</div><input class="form-input" id="f-vto2" type="date" onclick="confirmarVto('f-vto2')" onchange="confirmarVto('f-vto2')"></div>
-          <div><div style="font-size:10px;color:var(--text-soft);margin-bottom:2px;text-align:center">Importe</div><input class="form-input" id="f-importe-vto2" type="number" step="0.01" placeholder="€" onclick="confirmarVto('f-importe-vto2')" onchange="confirmarVto('f-importe-vto2')"></div>
-          <div><div style="font-size:10px;color:var(--text-soft);margin-bottom:2px;text-align:center">Vto. 3</div><input class="form-input" id="f-vto3" type="date" onclick="confirmarVto('f-vto3')" onchange="confirmarVto('f-vto3')"></div>
-          <div><div style="font-size:10px;color:var(--text-soft);margin-bottom:2px;text-align:center">Importe</div><input class="form-input" id="f-importe-vto3" type="number" step="0.01" placeholder="€" onclick="confirmarVto('f-importe-vto3')" onchange="confirmarVto('f-importe-vto3')"></div>
-          <div><div style="font-size:10px;color:var(--text-soft);margin-bottom:2px;text-align:center">Vto. 4</div><input class="form-input" id="f-vto4" type="date" onclick="confirmarVto('f-vto4')" onchange="confirmarVto('f-vto4')"></div>
-          <div><div style="font-size:10px;color:var(--text-soft);margin-bottom:2px;text-align:center">Importe</div><input class="form-input" id="f-importe-vto4" type="number" step="0.01" placeholder="€" onclick="confirmarVto('f-importe-vto4')" onchange="confirmarVto('f-importe-vto4')"></div>
+          <div><div style="font-size:10px;color:var(--text-soft);margin-bottom:2px;text-align:center">Vto. 1</div><input class="form-input" id="f-vto" type="date" onclick="confirmarVto(&#39;f-vto&#39;)" onchange="confirmarVto(&#39;f-vto&#39;)"></div>
+          <div><div style="font-size:10px;color:var(--text-soft);margin-bottom:2px;text-align:center">Importe</div><input class="form-input" id="f-importe-vto1" type="number" step="0.01" placeholder="€" onclick="confirmarVto(&#39;f-importe-vto1&#39;)" onchange="confirmarVto(&#39;f-importe-vto1&#39;)"></div>
+          <div><div style="font-size:10px;color:var(--text-soft);margin-bottom:2px;text-align:center">Vto. 2</div><input class="form-input" id="f-vto2" type="date" onclick="confirmarVto(&#39;f-vto2&#39;)" onchange="confirmarVto(&#39;f-vto2&#39;)"></div>
+          <div><div style="font-size:10px;color:var(--text-soft);margin-bottom:2px;text-align:center">Importe</div><input class="form-input" id="f-importe-vto2" type="number" step="0.01" placeholder="€" onclick="confirmarVto(&#39;f-importe-vto2&#39;)" onchange="confirmarVto(&#39;f-importe-vto2&#39;)"></div>
+          <div><div style="font-size:10px;color:var(--text-soft);margin-bottom:2px;text-align:center">Vto. 3</div><input class="form-input" id="f-vto3" type="date" onclick="confirmarVto(&#39;f-vto3&#39;)" onchange="confirmarVto(&#39;f-vto3&#39;)"></div>
+          <div><div style="font-size:10px;color:var(--text-soft);margin-bottom:2px;text-align:center">Importe</div><input class="form-input" id="f-importe-vto3" type="number" step="0.01" placeholder="€" onclick="confirmarVto(&#39;f-importe-vto3&#39;)" onchange="confirmarVto(&#39;f-importe-vto3&#39;)"></div>
+          <div><div style="font-size:10px;color:var(--text-soft);margin-bottom:2px;text-align:center">Vto. 4</div><input class="form-input" id="f-vto4" type="date" onclick="confirmarVto(&#39;f-vto4&#39;)" onchange="confirmarVto(&#39;f-vto4&#39;)"></div>
+          <div><div style="font-size:10px;color:var(--text-soft);margin-bottom:2px;text-align:center">Importe</div><input class="form-input" id="f-importe-vto4" type="number" step="0.01" placeholder="€" onclick="confirmarVto(&#39;f-importe-vto4&#39;)" onchange="confirmarVto(&#39;f-importe-vto4&#39;)"></div>
         </div>
         <div style="font-size:10px;color:var(--text-soft);margin-top:4px">💡 Días de pago configurados: <span id="f-dias-pago-info">5 y 20 de cada mes</span></div>
       </div>
       <div class="form-group"><label class="form-label">Forma de pago</label>
-        <select class="form-input" id="f-pago" onchange="onFormaPagoChange()">
-          <option>Transferencia</option><option>Efectivo</option><option>Domiciliación</option><option>Confirming</option><option>Cheque</option><option>Giro 30 días</option><option>Giro 60 días</option><option>Giro 90 días</option><option>Giro 120 días</option>
-        </select>
+        <select class="form-input" id="f-pago" onchange="onFormaPagoChange()"><option value="">Seleccionar…</option><option value="Transferencia">Transferencia</option><option value="Efectivo">Efectivo</option><option value="Giro">Giro</option><option value="Domiciliación">Domiciliación</option><option value="Confirming">Confirming</option><option value="Pagaré">Pagaré</option></select>
       </div>
       <div class="form-group"><label class="form-label" id="f-cobrado-lbl">Importe cobrado €</label>
         <input class="form-input" id="f-cobrado" type="number" step="0.01" value="0">
@@ -2084,7 +2046,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     </div>
   </div>
   <div class="modal-foot">
-    <button class="btn btn-ghost" onclick="closeModal('m-factura')">Cancelar</button>
+    <button class="btn btn-ghost" onclick="closeModal(&#39;m-factura&#39;)">Cancelar</button>
     <button class="btn btn-ghost" onclick="previsualizarFactura()" style="border:1px solid var(--border)">👁 Vista previa</button>
     <button class="btn btn-primary" onclick="saveFactura()">💾 Guardar</button>
   </div>
@@ -2092,16 +2054,16 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 
 <!-- QUICK -->
 <div class="overlay" id="m-quick"><div class="modal" style="width:320px">
-  <div class="modal-head"><div class="modal-title">＋ ¿Qué quieres crear?</div><button class="modal-close" onclick="closeModal('m-quick')">×</button></div>
+  <div class="modal-head"><div class="modal-title">＋ ¿Qué quieres crear?</div><button class="modal-close" onclick="closeModal(&#39;m-quick&#39;)">×</button></div>
   <div class="modal-body"><div style="display:flex;flex-direction:column;gap:7px">
-    <button class="btn btn-ghost" style="justify-content:flex-start;padding:12px 14px" onclick="closeModal('m-quick');openModal('m-cliente')">🤝 <strong style="margin-left:8px">Nuevo cliente</strong></button>
-    <button class="btn btn-ghost" style="justify-content:flex-start;padding:12px 14px" onclick="closeModal('m-quick');openModal('m-proyecto')">📁 <strong style="margin-left:8px">Nuevo proyecto</strong></button>
-    <button class="btn btn-ghost" style="justify-content:flex-start;padding:12px 14px" onclick="closeModal('m-quick');openModal('m-comparativa')">⚖️ <strong style="margin-left:8px">Comparativa ofertas</strong></button>
-    <button class="btn btn-ghost" style="justify-content:flex-start;padding:12px 14px" onclick="closeModal('m-quick');openModal('m-interiorismo')">🛋 <strong style="margin-left:8px">Propuesta interiorismo</strong></button>
-    <button class="btn btn-ghost" style="justify-content:flex-start;padding:12px 14px" onclick="closeModal('m-quick');openModal('m-compra')">🛒 <strong style="margin-left:8px">Registrar compra</strong></button>
-    <button class="btn btn-ghost" style="justify-content:flex-start;padding:12px 14px" onclick="closeModal('m-quick');openModal('m-hora')">⏱ <strong style="margin-left:8px">Registrar horas</strong></button>
-    <button class="btn btn-ghost" style="justify-content:flex-start;padding:12px 14px" onclick="closeModal('m-quick');openModal('m-pedido')">📦 <strong style="margin-left:8px">Nuevo pedido</strong></button>
-    <button class="btn btn-ghost" style="justify-content:flex-start;padding:12px 14px" onclick="closeModal('m-quick');openModal('m-factura')">🧾 <strong style="margin-left:8px">Emitir factura</strong></button>
+    <button class="btn btn-ghost" style="justify-content:flex-start;padding:12px 14px" onclick="closeModal(&#39;m-quick&#39;);openModal(&#39;m-cliente&#39;)">🤝 <strong style="margin-left:8px">Nuevo cliente</strong></button>
+    <button class="btn btn-ghost" style="justify-content:flex-start;padding:12px 14px" onclick="closeModal(&#39;m-quick&#39;);openModal(&#39;m-proyecto&#39;)">📁 <strong style="margin-left:8px">Nuevo proyecto</strong></button>
+    <button class="btn btn-ghost" style="justify-content:flex-start;padding:12px 14px" onclick="closeModal(&#39;m-quick&#39;);openModal(&#39;m-comparativa&#39;)">⚖️ <strong style="margin-left:8px">Comparativa ofertas</strong></button>
+    <button class="btn btn-ghost" style="justify-content:flex-start;padding:12px 14px" onclick="closeModal(&#39;m-quick&#39;);openModal(&#39;m-interiorismo&#39;)">🛋 <strong style="margin-left:8px">Propuesta interiorismo</strong></button>
+    <button class="btn btn-ghost" style="justify-content:flex-start;padding:12px 14px" onclick="closeModal(&#39;m-quick&#39;);openModal(&#39;m-compra&#39;)">🛒 <strong style="margin-left:8px">Registrar compra</strong></button>
+    <button class="btn btn-ghost" style="justify-content:flex-start;padding:12px 14px" onclick="closeModal(&#39;m-quick&#39;);openModal(&#39;m-hora&#39;)">⏱ <strong style="margin-left:8px">Registrar horas</strong></button>
+    <button class="btn btn-ghost" style="justify-content:flex-start;padding:12px 14px" onclick="closeModal(&#39;m-quick&#39;);openModal(&#39;m-pedido&#39;)">📦 <strong style="margin-left:8px">Nuevo pedido</strong></button>
+    <button class="btn btn-ghost" style="justify-content:flex-start;padding:12px 14px" onclick="closeModal(&#39;m-quick&#39;);openModal(&#39;m-factura&#39;)">🧾 <strong style="margin-left:8px">Emitir factura</strong></button>
   </div></div>
 </div></div>
 
@@ -2114,11 +2076,11 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
   </div>
 </div>
 <!-- MODAL COMPARATIVA VERSIONES -->
-<div class="overlay" id="m-comparativa" style="display:none" onclick="if(event.target===this)closeModal('m-comparativa')">
+<div class="overlay" id="m-comparativa" style="display:none" onclick="if(event.target===this)closeModal(&#39;m-comparativa&#39;)">
   <div class="modal" style="max-width:920px;width:96%">
     <div class="modal-header">
       <div class="modal-title">⚖️ Comparativa de versiones de presupuesto</div>
-      <button class="modal-close" onclick="closeModal('m-comparativa')">✕</button>
+      <button class="modal-close" onclick="closeModal(&#39;m-comparativa&#39;)">✕</button>
     </div>
     <div class="modal-body" style="padding:16px">
       <div id="comp-kpis" class="kpi-grid" style="margin-bottom:16px;grid-template-columns:repeat(auto-fit,minmax(140px,1fr))"></div>
@@ -2132,9 +2094,9 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
+<div class="toast error" id="toast">Error al cargar datos: </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script data-cfasync="false" src="./PAU INTERIORISMO · Gestión_files/email-decode.min.js.descargar"></script><script src="./PAU INTERIORISMO · Gestión_files/html2pdf.bundle.min.js.descargar"></script>
 <script>
 
 // ═══════════════════════════════════════════
@@ -2479,7 +2441,8 @@ async function navTo(v){
 
 // ═══════════════════════════════════════════
 // HELPERS
-// ═══════════════════════════════════════════onst bColors={'Nuevo lead':'b-gray','Presupuesto enviado':'b-amber','Aprobado':'b-blue','En ejecución':'b-blue','Finalizado':'b-green','Facturado':'b-green','Cobrado':'b-navy','Cancelado':'b-red','Pendiente':'b-amber','Pagado':'b-green','Cobrada':'b-green','Parcial':'b-copper','Vencido':'b-red','Vencida':'b-red','Borrador':'b-gray','Enviada':'b-amber','Aprobada':'b-green','Rechazada':'b-red','En pedido':'b-blue','Entregada':'b-navy','Solicitado':'b-amber','Confirmado':'b-blue','En tránsito':'b-blue','Recibido':'b-copper','Proveedor':'b-blue','Subcontrata':'b-green','Obra nueva':'b-navy','Rehabilitación integral':'b-green','Interiorismo':'b-copper','Particular':'b-blue','Empresa':'b-green','Promotora':'b-copper'};
+// ═══════════════════════════════════════════
+const bColors={'Nuevo lead':'b-gray','Presupuesto enviado':'b-amber','Aprobado':'b-blue','En ejecución':'b-blue','Finalizado':'b-green','Facturado':'b-green','Cobrado':'b-navy','Cancelado':'b-red','Pendiente':'b-amber','Pagado':'b-green','Cobrada':'b-green','Parcial':'b-copper','Vencido':'b-red','Vencida':'b-red','Borrador':'b-gray','Enviada':'b-amber','Aprobada':'b-green','Rechazada':'b-red','En pedido':'b-blue','Entregada':'b-navy','Solicitado':'b-amber','Confirmado':'b-blue','En tránsito':'b-blue','Recibido':'b-copper','Proveedor':'b-blue','Subcontrata':'b-green','Obra nueva':'b-navy','Rehabilitación integral':'b-green','Interiorismo':'b-copper','Particular':'b-blue','Empresa':'b-green','Promotora':'b-copper'};
 function bE(v){return`<span class="badge ${bColors[v]||'b-gray'}">${v||'—'}</span>`}
 function fmt(n){if(n===null||n===undefined||n==='')return'—';return Number(n).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€'}
 function fmtN(n){if(!n&&n!==0)return'—';return Number(n).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€'}
@@ -7947,7 +7910,7 @@ if('serviceWorker' in navigator){
 <div class="modal" style="width:780px;max-width:96vw">
   <div class="modal-head">
     <div class="modal-title">📤 Importar facturas de compra desde Holded</div>
-    <button class="modal-close" onclick="closeModal('m-importar-holded')">×</button>
+    <button class="modal-close" onclick="closeModal(&#39;m-importar-holded&#39;)">×</button>
   </div>
   <div class="modal-body">
 
@@ -7964,8 +7927,7 @@ if('serviceWorker' in navigator){
     <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:14px;flex-wrap:wrap">
       <div style="flex:1;min-width:220px">
         <label class="form-label">Archivo exportado de Holded (.xlsx o .csv)</label>
-        <input type="file" id="holded-file" accept=".xlsx,.xls,.csv" class="form-input"
-          onchange="procesarArchivoHolded()" style="padding:6px">
+        <input type="file" id="holded-file" accept=".xlsx,.xls,.csv" class="form-input" onchange="procesarArchivoHolded()" style="padding:6px">
       </div>
       <div style="flex:1;min-width:200px">
         <label class="form-label">Asignar a proyecto <span style="font-size:10px;color:var(--text-soft)">(opcional — puedes cambiar por factura)</span></label>
@@ -7983,7 +7945,7 @@ if('serviceWorker' in navigator){
       </div>
       <div class="table-wrap" style="max-height:320px;overflow-y:auto"><table>
         <thead><tr>
-          <th><input type="checkbox" id="holded-chk-all" onchange="toggleAllHolded(this.checked)" checked style="width:15px;height:15px"></th>
+          <th><input type="checkbox" id="holded-chk-all" onchange="toggleAllHolded(this.checked)" checked="" style="width:15px;height:15px"></th>
           <th>Nº Factura</th><th>Fecha</th><th>Proveedor</th>
           <th>Concepto</th><th>Base imp.</th><th>IVA</th><th>Total</th>
           <th>Vencimiento</th><th>Estado</th><th>Proyecto</th>
@@ -7997,9 +7959,8 @@ if('serviceWorker' in navigator){
 
   </div>
   <div class="modal-foot">
-    <button class="btn btn-ghost" onclick="closeModal('m-importar-holded')">Cancelar</button>
-    <button class="btn btn-primary" id="btn-importar-holded" style="display:none"
-      onclick="ejecutarImportHolded()">📥 Importar facturas seleccionadas</button>
+    <button class="btn btn-ghost" onclick="closeModal(&#39;m-importar-holded&#39;)">Cancelar</button>
+    <button class="btn btn-primary" id="btn-importar-holded" style="display:none" onclick="ejecutarImportHolded()">📥 Importar facturas seleccionadas</button>
   </div>
 </div>
 </div>
@@ -8009,7 +7970,7 @@ if('serviceWorker' in navigator){
 <div class="modal" style="width:620px">
   <div class="modal-head">
     <div class="modal-title" id="m-trab-title">👤 Nuevo trabajador</div>
-    <button class="modal-close" onclick="closeModal('m-trabajador')">×</button>
+    <button class="modal-close" onclick="closeModal(&#39;m-trabajador&#39;)">×</button>
   </div>
   <div class="modal-body">
     <input type="hidden" id="trab-id">
@@ -8128,7 +8089,7 @@ if('serviceWorker' in navigator){
         <select class="form-input" id="trab-num-pagas" onchange="calcNomina()">
           <option value="0">Sin paga extra</option>
           <option value="1">1 paga extra</option>
-          <option value="2" selected>2 pagas extras (verano + navidad)</option>
+          <option value="2" selected="">2 pagas extras (verano + navidad)</option>
           <option value="3">3 pagas extras</option>
           <option value="4">4 pagas extras</option>
         </select>
@@ -8149,8 +8110,8 @@ if('serviceWorker' in navigator){
 
     <!-- Selector modo -->
     <div style="display:flex;gap:8px;margin-bottom:10px">
-      <button type="button" id="btn-modo-recurrente" class="btn btn-primary btn-sm" onclick="setModoBonus('recurrente')" style="font-size:11px">🔁 Recurrente</button>
-      <button type="button" id="btn-modo-puntual" class="btn btn-ghost btn-sm" onclick="setModoBonus('puntual')" style="font-size:11px">📅 Pagos puntuales</button>
+      <button type="button" id="btn-modo-recurrente" class="btn btn-primary btn-sm" onclick="setModoBonus(&#39;recurrente&#39;)" style="font-size:11px">🔁 Recurrente</button>
+      <button type="button" id="btn-modo-puntual" class="btn btn-ghost btn-sm" onclick="setModoBonus(&#39;puntual&#39;)" style="font-size:11px">📅 Pagos puntuales</button>
     </div>
 
     <!-- MODO RECURRENTE -->
@@ -8247,7 +8208,7 @@ if('serviceWorker' in navigator){
     <textarea class="form-input" id="trab-notas" rows="2" placeholder="Observaciones, condiciones especiales…"></textarea>
   </div>
   <div class="modal-foot">
-    <button class="btn btn-ghost" onclick="closeModal('m-trabajador')">Cancelar</button>
+    <button class="btn btn-ghost" onclick="closeModal(&#39;m-trabajador&#39;)">Cancelar</button>
     <button class="btn btn-primary" onclick="saveTrabajador()">💾 Guardar</button>
   </div>
 </div>
@@ -8258,7 +8219,7 @@ if('serviceWorker' in navigator){
 <div class="modal" style="width:540px">
   <div class="modal-head">
     <div class="modal-title">🔔 Nuevo aviso / Cita</div>
-    <button class="modal-close" onclick="closeModal('m-agenda')">×</button>
+    <button class="modal-close" onclick="closeModal(&#39;m-agenda&#39;)">×</button>
   </div>
   <div class="modal-body">
     <input type="hidden" id="ag-id">
@@ -8307,7 +8268,7 @@ if('serviceWorker' in navigator){
       </div>
       <div class="form-group fg-full">
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text-mid)">
-          <input type="checkbox" id="ag-notif" checked style="width:16px;height:16px">
+          <input type="checkbox" id="ag-notif" checked="" style="width:16px;height:16px">
           🔔 Activar notificación cuando llegue la hora
         </label>
         <div style="font-size:11px;color:var(--text-soft);margin-top:4px">
@@ -8317,7 +8278,7 @@ if('serviceWorker' in navigator){
     </div>
   </div>
   <div class="modal-foot">
-    <button class="btn btn-ghost" onclick="closeModal('m-agenda')">Cancelar</button>
+    <button class="btn btn-ghost" onclick="closeModal(&#39;m-agenda&#39;)">Cancelar</button>
     <button class="btn btn-primary" onclick="saveAgenda()">💾 Guardar aviso</button>
   </div>
 </div>
@@ -8328,7 +8289,7 @@ if('serviceWorker' in navigator){
 <div class="modal" style="width:820px;max-width:96vw">
   <div class="modal-head">
     <div class="modal-title">👤 Importar clientes desde Holded</div>
-    <button class="modal-close" onclick="closeModal('m-import-clientes')">×</button>
+    <button class="modal-close" onclick="closeModal(&#39;m-import-clientes&#39;)">×</button>
   </div>
   <div class="modal-body">
     <div class="info-box" style="margin-bottom:14px">
@@ -8337,8 +8298,7 @@ if('serviceWorker' in navigator){
     </div>
     <div style="margin-bottom:14px">
       <label class="form-label">Archivo exportado de Holded (.xlsx o .csv)</label>
-      <input type="file" id="cli-holded-file" accept=".xlsx,.xls,.csv" class="form-input"
-        onchange="procesarImportClientes()" style="padding:6px">
+      <input type="file" id="cli-holded-file" accept=".xlsx,.xls,.csv" class="form-input" onchange="procesarImportClientes()" style="padding:6px">
     </div>
     <div id="cli-import-preview" style="display:none">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
@@ -8347,7 +8307,7 @@ if('serviceWorker' in navigator){
       </div>
       <div class="table-wrap" style="max-height:340px;overflow-y:auto"><table>
         <thead><tr>
-          <th><input type="checkbox" id="cli-chk-all" onchange="toggleAll('cli-chk',this.checked)" checked style="width:15px;height:15px"></th>
+          <th><input type="checkbox" id="cli-chk-all" onchange="toggleAll(&#39;cli-chk&#39;,this.checked)" checked="" style="width:15px;height:15px"></th>
           <th>Nombre</th><th>CIF/NIF</th><th>Teléfono</th><th>Email</th><th>Dirección</th><th>Forma pago</th><th>Estado</th>
         </tr></thead>
         <tbody id="cli-import-tbody"></tbody>
@@ -8355,9 +8315,8 @@ if('serviceWorker' in navigator){
     </div>
   </div>
   <div class="modal-foot">
-    <button class="btn btn-ghost" onclick="closeModal('m-import-clientes')">Cancelar</button>
-    <button class="btn btn-primary" id="btn-import-clientes" style="display:none"
-      onclick="ejecutarImportClientes()">👤 Importar clientes seleccionados</button>
+    <button class="btn btn-ghost" onclick="closeModal(&#39;m-import-clientes&#39;)">Cancelar</button>
+    <button class="btn btn-primary" id="btn-import-clientes" style="display:none" onclick="ejecutarImportClientes()">👤 Importar clientes seleccionados</button>
   </div>
 </div>
 </div>
@@ -8367,7 +8326,7 @@ if('serviceWorker' in navigator){
 <div class="modal" style="width:820px;max-width:96vw">
   <div class="modal-head">
     <div class="modal-title">🏭 Importar proveedores desde Holded</div>
-    <button class="modal-close" onclick="closeModal('m-import-proveedores')">×</button>
+    <button class="modal-close" onclick="closeModal(&#39;m-import-proveedores&#39;)">×</button>
   </div>
   <div class="modal-body">
     <div class="info-box" style="margin-bottom:14px">
@@ -8376,8 +8335,7 @@ if('serviceWorker' in navigator){
     </div>
     <div style="margin-bottom:14px">
       <label class="form-label">Archivo exportado de Holded (.xlsx o .csv)</label>
-      <input type="file" id="prov-holded-file" accept=".xlsx,.xls,.csv" class="form-input"
-        onchange="procesarImportProveedores()" style="padding:6px">
+      <input type="file" id="prov-holded-file" accept=".xlsx,.xls,.csv" class="form-input" onchange="procesarImportProveedores()" style="padding:6px">
     </div>
     <div id="prov-import-preview" style="display:none">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
@@ -8386,5 +8344,6 @@ if('serviceWorker' in navigator){
       </div>
       <div class="table-wrap" style="max-height:340px;overflow-y:auto"><table>
         <thead><tr>
-          <th><input type="checkbox" id="prov-chk-all" onchange="toggleAll('prov-chk',this.checked)" checked style="width:15px;height:15px"></th>
+          <th><input type="checkbox" id="prov-chk-all" onchange="toggleAll(&#39;prov-chk&#39;,this.checked)" checked="" style="width:15px;height:15px"></th>
           <th>Nombre</th><th>CIF/NIF</th><th>Teléfono</th><th>Email</th><th>Especialidad</th><th>Forma
+</th></tr></thead></table></div></div></div></div></div></body></html>
