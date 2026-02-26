@@ -241,7 +241,7 @@ tbody td{padding:7px 10px;vertical-align:middle}
 <!-- APP -->
 <div class="app">
 <nav class="sidebar">
-  <div class="sidebar-logo"><div class="brand">PAU INTERIORISMO</div><div class="brand-sub">Sistema de gestión · <span style="color:#b87333">v32</span></div></div>
+  <div class="sidebar-logo"><div class="brand">PAU INTERIORISMO</div><div class="brand-sub">Sistema de gestión · <span style="color:#b87333">v50</span></div></div>
   <div class="nav-section">
     <div class="nav-label">Principal</div>
     <div class="nav-item active" data-view="gerencia"><span class="ni">🏠</span><span>Gerencia</span></div>
@@ -2283,12 +2283,16 @@ function setUserDisplay(u){
 function arrancar(){
   const passEl = document.getElementById('login-pass');
   if(passEl) passEl.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
-  // Auto-login: siempre entrar directamente sin contraseña
   const loginScreen = document.getElementById('login-screen');
   if(loginScreen) loginScreen.style.display='none';
   setUserDisplay(sessionStorage.getItem('pau-user')||'jose');
   sessionStorage.setItem('pau-auth','1');
-  init();
+  init().catch(e=>{
+    console.error('INIT ERROR:', e);
+    document.body.insertAdjacentHTML('beforeend',
+      '<div style="position:fixed;top:0;left:0;right:0;background:#c0392b;color:white;padding:12px 16px;z-index:99999;font-size:13px;font-family:monospace">'
+      + '⚠️ Error de inicio: ' + e.message + '</div>');
+  });
 }
 if(document.readyState==='loading'){
   document.addEventListener('DOMContentLoaded', arrancar);
@@ -3675,7 +3679,6 @@ async function saveTarifario(){
   }catch(e){toast('Error: '+e.message,'error');}
 }
 
-}
 
 // ═══════════════════════════════════════════
 // CYPE
