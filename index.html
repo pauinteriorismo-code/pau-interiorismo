@@ -834,7 +834,8 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <button class="btn btn-primary" onclick="addLineaPresupuesto()">＋ Línea</button>
         <button class="btn btn-ghost" onclick="addCapituloPresupuesto()">＋ Capítulo</button>
         <button class="btn btn-ghost" id="btn-comparativa" style="display:none" onclick="abrirComparativa()">⚖️ Comparar</button>
-        <button class="btn btn-primary no-print" onclick="exportarPresupuestoPDF()">⬇️ Descargar PDF</button>
+        <button class="btn btn-primary no-print" onclick="previsualizarPresupuesto()">👁 Vista previa</button>
+        <button class="btn btn-ghost no-print" onclick="exportarPresupuestoPDF()">⬇️ PDF</button>
         <button class="btn btn-ghost no-print" onclick="window.print()">🖨️ Imprimir</button>
         <div id="pres-total-lbl" style="margin-left:auto;font-size:13px;font-weight:700;color:var(--navy)"></div>
       </div>
@@ -2161,7 +2162,7 @@ async function loadPresupuestoFinal(){
     let totalBase=0;
     const tbody=document.getElementById('pf-lineas');
     tbody.innerHTML=lineas.map((l,i)=>{
-      if(l.es_capitulo)return`<tr><td colspan="5" style="padding:10px 8px;font-weight:700;background:#27405b;color:white;font-size:12px">📂 ${l.descripcion}</td></tr>`;
+      if(l.es_capitulo)return`<tr><td colspan="5" style="padding:10px 8px;font-weight:700;background:#f7f4ef;color:#4a3728;font-size:12px;border-bottom:1px solid #b87333">📂 ${l.descripcion}</td></tr>`;
       const pv=l.precio_venta||0,ci=l.ci_gg_bi_pct||0,sub=(l.cantidad||0)*pv*(ci>0?(1+ci/100):1);
       totalBase+=sub;
       const bg=i%2===0?'white':'#f9f9f9';
@@ -4423,6 +4424,153 @@ async function exportarPresupuestoPDF(){
   const filename = `Presupuesto_${proy}_${ver}_${new Date().toISOString().split('T')[0]}.pdf`;
   await exportarPDF(printDiv.firstElementChild, filename);
   document.body.removeChild(printDiv);
+}
+
+function previsualizarPresupuesto(){
+  const proy = document.getElementById('pres-proyecto-sel')?.value;
+  const ver  = document.getElementById('pres-version-sel')?.value || 'v1';
+  if(!proy){ toast('Selecciona un proyecto primero','error'); return; }
+  if(!PresC||!PresC.length){ toast('El presupuesto está vacío','error'); return; }
+
+  const proyecto = PC.find(p=>p.proyecto_id===proy)||{};
+  const cliente  = CC.find(c=>c.cliente_id===proyecto.cliente_id)||{};
+
+  // Build line items from PresC data (client-facing: no margin/CI columns)
+  let totVenta=0;
+  const filasHtml = PresC.map((l,i)=>{
+    if(l.es_capitulo){
+      return '<tr style="background:#f7f4ef"><td colspan="6" style="padding:9px 10px;font-weight:700;color:#4a3728;border-bottom:1px solid #b87333;font-size:12px">'+escH(l.descripcion)+'</td></tr>';
+    }
+    const pv=l.precio_venta||0, ci=l.ci_gg_bi_pct||0;
+    const pvFinal = ci>0 ? pv*(1+ci/100) : pv;
+    const sub = (l.cantidad||0) * pvFinal;
+    totVenta += sub;
+    const bg = i%2===0 ? '#fff' : '#fdfcfa';
+    return '<tr style="background:'+bg+';border-bottom:1px solid #f0ece5">'
+      +'<td style="padding:7px 10px;font-size:11px">'+escH(l.descripcion||'—')
+        +(l.ref_cype?'<br><span style="font-size:9px;color:#aaa">'+escH(l.ref_cype)+'</span>':'')+'</td>'
+      +'<td style="padding:7px 8px;text-align:center;font-size:11px">'+(l.unidad||'Ud')+'</td>'
+      +'<td style="padding:7px 8px;text-align:right;font-size:11px">'+(l.cantidad||0)+'</td>'
+      +'<td style="padding:7px 8px;text-align:right;font-size:11px">'+Number(pvFinal).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€</td>'
+      +'<td style="padding:7px 8px;text-align:right;font-size:11px;font-weight:600;color:#4a3728">'+Number(sub).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€</td>'
+    +'</tr>';
+  }).join('');
+
+  const ivaPct = 10;
+  const ivaImporte = totVenta * ivaPct / 100;
+  const totalConIVA = totVenta + ivaImporte;
+  const fmtN = n => Number(n).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€';
+  const LOGO_URL = 'https://pauinteriorismo.es/img/logo2.png';
+  const hoy = new Date().toLocaleDateString('es-ES');
+  const filename = 'Presupuesto_'+proy+'_'+ver+'_'+new Date().toISOString().split('T')[0]+'.pdf';
+
+  const html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Presupuesto '+proy+' - PAU INTERIORISMO</title>'
+  +'<style>'
+  +'*{box-sizing:border-box;margin:0;padding:0}'
+  +'body{font-family:"Segoe UI",Arial,sans-serif;font-size:12px;color:#333;background:#f5f3ef}'
+  +'@media print{body{background:white}.toolbar{display:none!important}@page{size:A4;margin:12mm}}'
+  +'.toolbar{display:flex;gap:10px;justify-content:center;padding:14px;background:#4a3728}'
+  +'.btn{padding:9px 22px;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:700}'
+  +'.btn-print{background:#fff;color:#4a3728}'
+  +'.btn-pdf{background:#b87333;color:#fff}'
+  +'.btn-close{background:rgba(255,255,255,.15);color:#fff}'
+  +'.page{background:white;max-width:794px;margin:16px auto;padding:32px 36px;box-shadow:0 2px 16px rgba(0,0,0,.08)}'
+  +'table{width:100%;border-collapse:collapse}'
+  +'</style></head><body>'
+  +'<div class="toolbar">'
+  +'<button class="btn btn-print" onclick="window.print()">🖨️ Imprimir</button>'
+  +'<button class="btn btn-pdf" id="btn-pdf" onclick="dlPDF()">📥 Guardar PDF</button>'
+  +'<button class="btn btn-close" onclick="window.close()">✕ Cerrar</button>'
+  +'</div>'
+  +'<div class="page" id="fpdf">'
+    // HEADER
+    +'<div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #b87333;padding-bottom:14px;margin-bottom:18px">'
+      +'<div>'
+        +'<img src="'+LOGO_URL+'" style="height:55px;margin-bottom:6px" onerror="this.style.display=\'none\'">'
+        +'<div style="font-size:10px;color:#888">C/ Tomás y Valiente Nº 6 Bajo · 46290 Alcàsser (Valencia)</div>'
+        +'<div style="font-size:10px;color:#888">info@pauinteriorismo.es · Tel: 961 20 01 87 · CIF: B-56909641</div>'
+      +'</div>'
+      +'<div style="text-align:right">'
+        +'<div style="font-size:19px;font-weight:800;color:#b87333;letter-spacing:1px">PRESUPUESTO</div>'
+        +'<div style="font-size:12px;color:#4a3728;font-weight:700;margin-top:4px">'+escH(proy)+' · '+ver.toUpperCase()+'</div>'
+        +'<div style="font-size:11px;color:#888">'+hoy+'</div>'
+      +'</div>'
+    +'</div>'
+    // CLIENT / PROJECT
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px">'
+      +'<div style="background:#f7f4ef;padding:12px;border-radius:4px;border-left:3px solid #b87333">'
+        +'<div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#b87333;margin-bottom:5px">CLIENTE</div>'
+        +'<div style="font-weight:700;color:#4a3728;font-size:13px">'+escH(cliente.nombre||'—')+'</div>'
+        +(cliente.cif?'<div style="font-size:10px;color:#888;margin-top:2px">CIF: '+escH(cliente.cif)+'</div>':'')
+        +(cliente.direccion?'<div style="font-size:10px;color:#888">'+escH(cliente.direccion)+'</div>':'')
+        +(cliente.email?'<div style="font-size:10px;color:#888">'+escH(cliente.email)+' '+(cliente.telefono||'')+'</div>':'')
+      +'</div>'
+      +'<div style="background:#f7f4ef;padding:12px;border-radius:4px;border-left:3px solid #b87333">'
+        +'<div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#b87333;margin-bottom:5px">PROYECTO</div>'
+        +'<div style="font-weight:700;color:#4a3728;font-size:13px">'+escH(proyecto.nombre||proy)+'</div>'
+        +(proyecto.direccion_obra?'<div style="font-size:10px;color:#888;margin-top:2px">'+escH(proyecto.direccion_obra)+'</div>':'')
+        +(proyecto.tipo?'<div style="font-size:10px;color:#888">'+escH(proyecto.tipo)+'</div>':'')
+      +'</div>'
+    +'</div>'
+    // TABLE
+    +'<table style="margin-bottom:18px">'
+    +'<thead><tr style="background:#f7f4ef">'
+      +'<th style="padding:9px 10px;text-align:left;color:#4a3728;border-bottom:1px solid #e8e0d4;font-size:10px;text-transform:uppercase">Descripción</th>'
+      +'<th style="padding:9px 8px;text-align:center;color:#4a3728;border-bottom:1px solid #e8e0d4;font-size:10px;text-transform:uppercase;width:50px">Ud.</th>'
+      +'<th style="padding:9px 8px;text-align:right;color:#4a3728;border-bottom:1px solid #e8e0d4;font-size:10px;text-transform:uppercase;width:60px">Cant.</th>'
+      +'<th style="padding:9px 8px;text-align:right;color:#4a3728;border-bottom:1px solid #e8e0d4;font-size:10px;text-transform:uppercase;width:90px">P.Unitario</th>'
+      +'<th style="padding:9px 8px;text-align:right;color:#4a3728;border-bottom:1px solid #e8e0d4;font-size:10px;text-transform:uppercase;width:100px">Subtotal</th>'
+    +'</tr></thead>'
+    +'<tbody>'+filasHtml+'</tbody>'
+    +'</table>'
+    // TOTALS
+    +'<div style="background:#f7f4ef;border-top:2px solid #b87333;padding:16px 20px;border-radius:0 0 4px 4px">'
+      +'<div style="max-width:280px;margin-left:auto">'
+        +'<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px;color:#555"><span>Base imponible</span><span style="color:#4a3728;font-weight:600">'+fmtN(totVenta)+'</span></div>'
+        +'<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px;color:#555"><span>IVA ('+ivaPct+'%)</span><span style="color:#4a3728;font-weight:600">'+fmtN(ivaImporte)+'</span></div>'
+        +'<div style="display:flex;justify-content:space-between;padding:8px 0;font-size:17px;font-weight:900;color:#4a3728;border-top:1px solid #d4c8b8;margin-top:5px"><span>TOTAL</span><span>'+fmtN(totalConIVA)+'</span></div>'
+      +'</div>'
+    +'</div>'
+    // CONDITIONS
+    +'<div style="margin-top:18px;padding-top:14px;border-top:1px solid #e8e0d4;color:#999;font-size:10px;line-height:1.5">'
+      +'<strong style="color:#666">Condiciones:</strong> Presupuesto válido por 30 días desde su emisión. '
+      +'Los precios incluyen mano de obra y materiales salvo indicación contraria. IVA no incluido salvo indicación. '
+      +'En caso de aceptación, sírvase firmar y devolver una copia.'
+    +'</div>'
+    // SIGNATURES
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:30px">'
+      +'<div><div style="height:50px"></div><div style="border-top:1px solid #ccc;padding-top:6px;font-size:10px;color:#888">Firma PAU INTERIORISMO S.L.</div></div>'
+      +'<div><div style="height:50px"></div><div style="border-top:1px solid #ccc;padding-top:6px;font-size:10px;color:#888">Firma y conformidad del cliente</div></div>'
+    +'</div>'
+    // FOOTER
+    +'<div style="text-align:center;color:#bbb;font-size:9px;padding-top:14px;margin-top:18px;border-top:1px solid #e8e0d4">'
+      +'PAU INTERIORISMO S.L. · CIF B-56909641 · C/ Tomás y Valiente Nº 6 Bajo · 46290 Alcàsser (Valencia) · Tel: 961 20 01 87'
+    +'</div>'
+  +'</div></body></html>';
+
+  const win = window.open('','_blank','width=870,height=950');
+  if(!win){ toast('Activa las ventanas emergentes','error'); return; }
+  win.document.write(html);
+  win.document.close();
+  const s=win.document.createElement('script');
+  s.src='https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+  s.onload=function(){
+    const s2=win.document.createElement('script');
+    s2.textContent='function dlPDF(){'
+      +'var btn=document.getElementById("btn-pdf");'
+      +'btn.textContent="⏳ Generando…";btn.disabled=true;'
+      +'html2pdf().set({'
+      +'margin:8,'
+      +'filename:"'+filename.replace(/"/g,'')+'",'
+      +'image:{type:"jpeg",quality:0.98},'
+      +'html2canvas:{scale:2,useCORS:true,logging:false},'
+      +'jsPDF:{unit:"mm",format:"a4",orientation:"portrait"}'
+      +'}).from(document.getElementById("fpdf")).save().then(function(){'
+      +'btn.textContent="📥 Guardar PDF";btn.disabled=false;'
+      +'});}';
+    win.document.head.appendChild(s2);
+  };
+  win.document.head.appendChild(s);
 }
 // ═══ EDITAR HORAS ═══
 function editHora(id){
