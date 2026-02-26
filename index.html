@@ -1125,9 +1125,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <select class="form-input" style="width:160px" id="filt-fac-contra" onchange="filtrarFacturas()">
           <option value="">— Cliente / Proveedor —</option>
         </select>
-        <select class="form-input" style="width:150px" id="filt-fac-vto" onchange="filtrarFacturas()">
-          <option value="">— Vencimiento —</option>
-        </select>
+        <input class="form-input" type="date" style="width:150px" id="filt-fac-vto" onchange="filtrarFacturas()" title="Vencimiento hasta esta fecha">
         <select class="form-input" style="width:120px" id="filt-fac-estado" onchange="filtrarFacturas()">
           <option value="">— Estado —</option>
           <option>Pendiente</option><option>Cobrada</option><option>Pagada</option>
@@ -2036,8 +2034,27 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="form-group"><label class="form-label">Forma de pago</label>
         <select class="form-input" id="f-pago" onchange="onFormaPagoChange()"><option value="">Seleccionar…</option><option value="Transferencia">Transferencia</option><option value="Efectivo">Efectivo</option><option value="Giro">Giro</option><option value="Domiciliación">Domiciliación</option><option value="Confirming">Confirming</option><option value="Pagaré">Pagaré</option></select>
       </div>
-      <div class="form-group"><label class="form-label" id="f-cobrado-lbl">Importe cobrado €</label>
-        <input class="form-input" id="f-cobrado" type="number" step="0.01" value="0">
+      <div class="form-group">
+        <label class="form-label" id="f-cobrado-lbl">💶 Pagos a cuenta</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px;font-size:11px">
+          <div style="color:var(--text-soft);font-weight:600;padding-left:4px">Fecha</div>
+          <div style="color:var(--text-soft);font-weight:600;padding-left:4px">Importe €</div>
+          <div></div>
+          <input class="form-input" id="f-pago1-fecha" type="date" style="font-size:11px;padding:4px 6px" onchange="calcTotalPagos()">
+          <input class="form-input" id="f-pago1-importe" type="number" step="0.01" placeholder="0,00" style="font-size:11px;padding:4px 6px" oninput="calcTotalPagos()">
+          <span style="font-size:10px;color:var(--text-soft);padding-top:6px">Pago 1</span>
+          <input class="form-input" id="f-pago2-fecha" type="date" style="font-size:11px;padding:4px 6px" onchange="calcTotalPagos()">
+          <input class="form-input" id="f-pago2-importe" type="number" step="0.01" placeholder="0,00" style="font-size:11px;padding:4px 6px" oninput="calcTotalPagos()">
+          <span style="font-size:10px;color:var(--text-soft);padding-top:6px">Pago 2</span>
+          <input class="form-input" id="f-pago3-fecha" type="date" style="font-size:11px;padding:4px 6px" onchange="calcTotalPagos()">
+          <input class="form-input" id="f-pago3-importe" type="number" step="0.01" placeholder="0,00" style="font-size:11px;padding:4px 6px" oninput="calcTotalPagos()">
+          <span style="font-size:10px;color:var(--text-soft);padding-top:6px">Pago 3</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:6px;padding:6px 8px;background:var(--sand);border-radius:6px;font-size:12px;font-weight:700">
+          <span id="f-cobrado-lbl2">Total cobrado:</span>
+          <span id="f-total-pagos" style="color:var(--green)">0,00€</span>
+        </div>
+        <input type="hidden" id="f-cobrado" value="0">
       </div>
       <div class="form-group"><label class="form-label">Estado</label>
         <select class="form-input" id="f-estado">
@@ -4724,8 +4741,8 @@ async function loadFacturas(){
     const contrasNombres = [...new Set(FC.map(f=>{
       const esC=(f.tipo_factura||'Venta')==='Compra';
       return esC
-        ?(ProvC.find(p=>p.nombre===f.proveedor_id)?.nombre || f.proveedor_id || '')
-        :(CC.find(c=>c.cliente_id===f.cliente_id)?.nombre || f.cliente_id || '');
+        ?(ProvC.find(p=>String(p.id)===String(f.proveedor_id))?.nombre || f.proveedor_id || '')
+        :(CC.find(c=>String(c.id)===String(f.cliente_id)||c.cliente_id===f.cliente_id)?.nombre || f.cliente_id || '');
     }).filter(Boolean))].sort();
     const selContra = document.getElementById('filt-fac-contra');
     if(selContra){
@@ -4733,14 +4750,6 @@ async function loadFacturas(){
       selContra.innerHTML='<option value="">— Cliente / Proveedor —</option>'+
         contrasNombres.map(c=>`<option value="${c.toLowerCase()}">${c}</option>`).join('');
       if(cur) selContra.value=cur;
-    }
-    const vtos = [...new Set(FC.map(f=>f.fecha_vencimiento).filter(Boolean))].sort();
-    const selVto = document.getElementById('filt-fac-vto');
-    if(selVto){
-      const cur=selVto.value;
-      selVto.innerHTML='<option value="">— Vencimiento —</option>'+
-        vtos.map(v=>`<option value="${v}">${fmtD(v)}</option>`).join('');
-      if(cur) selVto.value=cur;
     }
     // Count
     document.getElementById('facturas-count').textContent=FC.length+' facturas';
@@ -4810,16 +4819,17 @@ function filtrarTabFacturas(tipo){
 function filtrarFacturas(){
   const q=(document.getElementById('search-facturas')?.value||'').toLowerCase();
   const contra=(document.getElementById('filt-fac-contra')?.value||'').toLowerCase();
-  const vto=document.getElementById('filt-fac-vto')?.value||'';
+  const vtoHasta=document.getElementById('filt-fac-vto')?.value||'';
   const estado=document.getElementById('filt-fac-estado')?.value||'';
   const tipo=(window._facTabActivo||'todas');
+  const hoy=new Date().toISOString().split('T')[0];
 
   let visible=0;
   document.querySelectorAll('#facturas-tbody tr[data-tipo]').forEach(tr=>{
     const matchTipo = tipo==='todas' || (tr.dataset.tipo||'').toLowerCase()===tipo.toLowerCase();
     const matchQ = !q || (tr.dataset.search||'').toLowerCase().includes(q);
     const matchContra = !contra || (tr.dataset.contra||'').includes(contra);
-    const matchVto = !vto || tr.dataset.vto===vto;
+    const matchVto = !vtoHasta || (tr.dataset.vto && tr.dataset.vto>=hoy && tr.dataset.vto<=vtoHasta);
     const matchEstado = !estado || tr.dataset.estado===estado;
     const show = matchTipo && matchQ && matchContra && matchVto && matchEstado;
     tr.style.display = show ? '' : 'none';
@@ -4833,6 +4843,11 @@ function limpiarFiltrosFacturas(){
   document.getElementById('filt-fac-contra').value='';
   document.getElementById('filt-fac-vto').value='';
   document.getElementById('filt-fac-estado').value='';
+  window._facTabActivo='todas';
+  ['todas','venta','compra'].forEach(t=>{
+    const el=document.getElementById(`ftab-${t}`);
+    if(el){el.style.background=t==='todas'?'var(--navy)':'';el.style.color=t==='todas'?'white':'';}
+  });
   filtrarFacturas();
 }
 
@@ -4845,7 +4860,7 @@ function abrirNuevaFactura(tipo){
   if(badge){badge.textContent=esC?'📥 COMPRA':'📤 VENTA';badge.style.background=esC?'#fdecea':'#e8f5ee';badge.style.color=esC?'var(--red)':'var(--green)';}
   document.getElementById('f-grp-cliente').style.display=esC?'none':'';
   document.getElementById('f-grp-proveedor').style.display=esC?'':'none';
-  document.getElementById('f-cobrado-lbl').textContent=esC?'Importe pagado €':'Importe cobrado €';
+  document.getElementById('f-cobrado-lbl').textContent=esC?'💶 Pagos realizados':'💶 Pagos a cuenta';const lbl2=document.getElementById('f-cobrado-lbl2');if(lbl2) lbl2.textContent=esC?'Total pagado:':'Total cobrado:';
   // Mostrar vencimientos múltiples solo en compras
   const vtoSimple=document.getElementById('f-grp-vto-simple');
   const vtoMulti =document.getElementById('f-grp-vtos-compra');
@@ -4870,6 +4885,10 @@ function abrirNuevaFactura(tipo){
   document.getElementById('f-concepto').value='';
   document.getElementById('f-base').value='';
   document.getElementById('f-cobrado').value='0';
+  // Limpiar pagos a cuenta
+  ['f-pago1-fecha','f-pago2-fecha','f-pago3-fecha'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['f-pago1-importe','f-pago2-importe','f-pago3-importe'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const tpEl=document.getElementById('f-total-pagos'); if(tpEl) tpEl.textContent='0,00€';
   document.getElementById('f-total-display').value='';
   document.getElementById('f-vto').value='';
   document.getElementById('f-fecha').value=new Date().toISOString().split('T')[0];
@@ -4915,6 +4934,26 @@ function calcTotalFac(){
   const total=base*(1+iva/100);
   const el=document.getElementById('f-total-display');
   if(el) el.value=total>0?Number(total).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€':'';
+}
+
+function calcTotalPagos(){
+  const p1=parseFloat(document.getElementById('f-pago1-importe')?.value)||0;
+  const p2=parseFloat(document.getElementById('f-pago2-importe')?.value)||0;
+  const p3=parseFloat(document.getElementById('f-pago3-importe')?.value)||0;
+  const total=p1+p2+p3;
+  document.getElementById('f-cobrado').value=total.toFixed(2);
+  const lbl=document.getElementById('f-total-pagos');
+  if(lbl) lbl.textContent=fmt(total);
+  // Auto-update estado
+  const base=parseFloat(document.getElementById('f-base')?.value)||0;
+  const iva=ivaPct(document.getElementById('f-iva')?.value||'21%');
+  const totalFac=base*(1+iva/100);
+  const esC=(document.getElementById('f-tipo')?.value||'Venta')==='Compra';
+  if(total>=totalFac && totalFac>0){
+    document.getElementById('f-estado').value=esC?'Pagada':'Cobrada';
+  } else if(total>0){
+    document.getElementById('f-estado').value='Parcial';
+  }
 }
 
 // ── LÍNEAS DE FACTURA ─────────────────────────────────────
@@ -5263,6 +5302,14 @@ function editFactura(id){
   document.getElementById('f-iva').value     = f.iva_pct||'21%';
   document.getElementById('f-pago').value    = f.forma_pago||'Transferencia';
   document.getElementById('f-cobrado').value = f.importe_cobrado||'0';
+  // Cargar pagos a cuenta
+  document.getElementById('f-pago1-fecha').value = f.pago1_fecha||'';
+  document.getElementById('f-pago1-importe').value = f.pago1_importe||'';
+  document.getElementById('f-pago2-fecha').value = f.pago2_fecha||'';
+  document.getElementById('f-pago2-importe').value = f.pago2_importe||'';
+  document.getElementById('f-pago3-fecha').value = f.pago3_fecha||'';
+  document.getElementById('f-pago3-importe').value = f.pago3_importe||'';
+  calcTotalPagos();
   document.getElementById('f-estado').value  = f.estado||'Pendiente';
 
   // 5. Vencimiento(s)
@@ -5342,6 +5389,13 @@ async function saveFactura(){
     estado:          document.getElementById('f-estado').value||'Pendiente',
     importe_cobrado: parseFloat(document.getElementById('f-cobrado').value)||0,
     concepto:        document.getElementById('f-concepto').value,
+    // Pagos a cuenta (hasta 3 pagos parciales)
+    pago1_fecha:   document.getElementById('f-pago1-fecha')?.value||null,
+    pago1_importe: parseFloat(document.getElementById('f-pago1-importe')?.value)||0,
+    pago2_fecha:   document.getElementById('f-pago2-fecha')?.value||null,
+    pago2_importe: parseFloat(document.getElementById('f-pago2-importe')?.value)||0,
+    pago3_fecha:   document.getElementById('f-pago3-fecha')?.value||null,
+    pago3_importe: parseFloat(document.getElementById('f-pago3-importe')?.value)||0,
     // Líneas de factura (solo ventas)
     lineas_json: (!esC && _facLineas.length) ? JSON.stringify(_facLineas) : null,
     // Vencimientos múltiples (solo compras)
