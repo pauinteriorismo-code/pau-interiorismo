@@ -5019,11 +5019,8 @@ function _getPieHtml(){
 }
 
 // ── Cargar pie al inicializar app ─────────────────────────
-const _origInit = init;
-async function init(){
-  await _origInit.call(this,...arguments);
-  await loadPieFactura();
-}
+
+
 
 
 const loaders={
@@ -5112,6 +5109,8 @@ async function init(){
   poblarFiltrosProyecto();
   poblarFiltrosCliente();
   poblarClientesDocumentos();
+
+  await loadPieFactura();
 }
 
 
@@ -5578,12 +5577,7 @@ function abrirNuevaComparativa(){
 
 // Override loadComparativa para también mostrar botón nueva comparativa
 const _origLoadComparativa = loadComparativa;
-async function loadComparativa(){
-  const proy = document.getElementById('comp-proyecto-sel')?.value;
-  const btn  = document.getElementById('btn-nueva-comparativa');
-  if(btn) btn.style.display = proy ? '' : 'none';
-  await _origLoadComparativa();
-}
+
 
 // Poblar clientes en comparativa al inicializar
 function poblarClientesComparativa(){
@@ -7100,13 +7094,12 @@ function crearEnlaceGoogleCalendar({desc, fecha, hora, tipo, prioridad, proyecto
   }
   const titulo = '[PAU] ' + (tipo||'Aviso') + ': ' + desc + (proyecto_id?' · '+proyecto_id:'');
   const detalles = encodeURIComponent([
-    'Tipo: '+(tipo||'—'),
-    'Prioridad: '+(prioridad||'—'),
+    'Tipo: '+(tipo||'\u2014'),
+    'Prioridad: '+(prioridad||'\u2014'),
     proyecto_id ? 'Proyecto: '+proyecto_id : '',
     notas ? 'Notas: '+notas : '',
-    'PAU INTERIORISMO Gestión'
-  ].filter(Boolean).join('
-'));
+    'PAU INTERIORISMO Gestion'
+  ].filter(Boolean).join(' | '));
   return 'https://calendar.google.com/calendar/render?action=TEMPLATE'
     + '&text=' + encodeURIComponent(titulo)
     + '&dates=' + dates
@@ -7145,49 +7138,6 @@ async function crearEventoGoogleCalendar({desc, fecha, hora, tipo, prioridad, pr
   abrirEnGoogleCalendar({desc, fecha, hora, tipo, prioridad, proyecto_id, notas});
 }
 
-  const titulo = `[PAU] ${tipo||'Aviso'}: ${desc}${proyecto_id?' · '+proyecto_id:''}`;
-  const descripcion = [
-    `Tipo: ${tipo||'—'}`,
-    `Prioridad: ${prioridad||'—'}`,
-    proyecto_id ? `Proyecto: ${proyecto_id}` : '',
-    notas ? `Notas: ${notas}` : '',
-    '',
-    'Creado desde PAU INTERIORISMO Gestión'
-  ].filter(Boolean).join('\n');
-
-  // Llamar a la API de Anthropic con Google Calendar MCP
-  const resp = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1000,
-      messages: [{
-        role: 'user',
-        content: `Crea un evento en Google Calendar con estos datos exactos:
-- Título: ${titulo}
-- Inicio: ${startTime}
-- Fin: ${endTime}
-- Descripción: ${descripcion}
-- Recordatorio: 15 minutos antes
-
-Por favor créalo ahora mismo usando la herramienta de Google Calendar.`
-      }],
-      mcp_servers: [{type:'url', url:'https://gcal.mcp.claude.com/mcp', name:'gcal-mcp'}]
-    })
-  });
-
-  if(!resp.ok) throw new Error('API error '+resp.status);
-  const data = await resp.json();
-
-  // Comprobar si se creó correctamente
-  const textos = (data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join(' ');
-  if(textos.toLowerCase().includes('creado')||textos.toLowerCase().includes('created')||textos.toLowerCase().includes('event')){
-    toast('📅 Evento añadido a Google Calendar — recibirás notificación en el móvil', 'success');
-  } else {
-    toast('📅 Sincronizado con Google Calendar', 'success');
-  }
-}
 
 async function completarAgenda(id){
   try{
