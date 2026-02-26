@@ -1760,15 +1760,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <!-- Nivel 1: Categoría -->
       <div class="form-group">
         <label class="form-label" style="font-weight:800;color:var(--navy)">① Categoría</label>
-        <select class="form-input" id="t-cat" onchange="actualizarFamiliasModal()">
-          <option>Mobiliario</option><option>Sofas y tapizados</option><option>Dormitorios</option>
-          <option>Colchones</option><option>Cocina</option><option>Banos</option>
-          <option>Sanitarios</option><option>Griferias</option><option>Pavimentos</option>
-          <option>Revestimientos</option><option>Carpinteria</option><option>Puertas y ventanas</option>
-          <option>Iluminacion</option><option>Climatizacion</option><option>Calefaccion</option>
-          <option>Instalaciones</option><option>Electricidad</option><option>Fontaneria</option>
-          <option>Pintura</option><option>Varios</option><option>Otros</option>
-        </select>
+        <select class="form-input" id="t-cat" onchange="actualizarFamiliasModal()"><option value="">— Selecciona categoría —</option></select>
       </div>
 
       <!-- Nivel 2: Subcategoría -->
@@ -2379,6 +2371,8 @@ function doLogin(){
   const errEl=document.getElementById('login-error');
   if(PASS_OK && USER_OK){
     document.getElementById('login-screen').style.display='none';
+    const app = document.querySelector('.app');
+    if(app) app.style.display='';  // restore app visibility
     if(errEl) errEl.style.display='none';
     sessionStorage.setItem('pau-auth-v2','1');
     sessionStorage.setItem('pau-user',u);
@@ -2390,7 +2384,18 @@ function doLogin(){
     document.getElementById('login-pass').focus();
   }
 }
-function doLogout(){sessionStorage.clear();location.reload();}
+function doLogout(){
+  sessionStorage.clear();
+  // Ocultar la app, mostrar login
+  const app = document.querySelector('.app');
+  if(app) app.style.display='none';
+  const ls = document.getElementById('login-screen');
+  if(ls){ ls.style.display='flex'; }
+  const pw = document.getElementById('login-pass');
+  if(pw){ pw.value=''; setTimeout(()=>pw.focus(),100); }
+  const err = document.getElementById('login-error');
+  if(err) err.style.display='none';
+}
 function setUserDisplay(u){
   const n=u.charAt(0).toUpperCase()+u.slice(1);
   document.getElementById('user-name').textContent=n;
@@ -2685,11 +2690,20 @@ async function seleccionarOpcion(titulo, opciones){
 // POPULATE SELECTS
 // ═══════════════════════════════════════════
 function populateAllListas(){
-  const map={estados_proyecto:['p-estado'],tipos_proyecto:['p-tipo'],formas_pago:['c-pago','pv-pago','f-pago'],tipos_cliente:['c-tipo'],tipos_proveedor:['pv-tipo'],estancias:['i-estancia']}; // t-cat handled separately below
+  const map={estados_proyecto:['p-estado'],tipos_proyecto:['p-tipo'],formas_pago:['c-pago','pv-pago','f-pago'],tipos_cliente:['c-tipo'],tipos_proveedor:['pv-tipo'],estancias:['i-estancia']};
   Object.entries(map).forEach(([key,ids])=>{
     const vals=LISTAS[key]||[];
     ids.forEach(id=>{const el=document.getElementById(id);if(!el)return;const cur=el.value;el.innerHTML='<option value="">Seleccionar…</option>'+vals.map(v=>`<option value="${v}">${v}</option>`).join('');if(cur&&vals.includes(cur))el.value=cur;});
   });
+  // Poblar t-cat (categorías tarifario en modal de tarifario)
+  const cats = LISTAS.categorias_tarifario||[];
+  const catSel = document.getElementById('t-cat');
+  if(catSel && cats.length){
+    const cur = catSel.value;
+    catSel.innerHTML = '<option value="">— Selecciona categoría —</option>' +
+      cats.map(c=>`<option value="${c}">${c}</option>`).join('');
+    if(cur && cats.includes(cur)) catSel.value = cur;
+  }
 }
 // ═══════════════════════════════════════════
 // FILTRO POR CLIENTE EN PROYECTOS
@@ -3929,10 +3943,18 @@ function abrirNuevoTarifario(){
 }
 
 function actualizarFamiliasModal(){
-  const cat = document.getElementById('t-cat')?.value || '';
+  // Ensure t-cat has options (in case populateAllListas ran before LISTAS loaded)
+  const catSel = document.getElementById('t-cat');
+  if(catSel && catSel.options.length <= 1 && LISTAS.categorias_tarifario?.length){
+    const cur = catSel.value;
+    catSel.innerHTML = '<option value="">— Selecciona categoría —</option>' +
+      LISTAS.categorias_tarifario.map(c=>`<option value="${c}">${c}</option>`).join('');
+    if(cur) catSel.value = cur;
+  }
+  const cat = catSel?.value || '';
   const sel = document.getElementById('t-familia-sel');
   if(!sel) return;
-  // Subcategorías existentes en esta categoría
+  // Subcategorías existentes en esta categoría (de TC + configuracion)
   const subs = [...new Set(TC.filter(t=>(t.categoria||'')===cat && t.familia).map(t=>t.familia))].sort();
   sel.innerHTML = '<option value="">＋ Nueva subcategoría…</option>' +
     subs.map(s=>`<option value="${s}">${s}</option>`).join('');
