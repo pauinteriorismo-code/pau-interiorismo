@@ -60,6 +60,9 @@ button,input,select,textarea{font-family:inherit}button{cursor:pointer}
 .card-header{display:flex;align-items:center;justify-content:space-between;padding:11px 16px;border-bottom:1px solid var(--border)}
 .card-title{font-size:13px;font-weight:700;color:var(--navy);display:flex;align-items:center;gap:7px}
 .card-body{padding:14px 16px}
+.tarif-import-item{padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .12s}
+.tarif-import-item:last-child{border-bottom:none}
+.tarif-import-item:hover{background:var(--sand)}
 /* KPI */
 .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
 .kpi-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
@@ -894,8 +897,20 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="search-bar" style="margin-bottom:12px">
         <div class="search-wrap" style="flex:1"><span class="search-icon">🔍</span><input class="form-input" id="search-tarifario" placeholder="Buscar en todo el tarifario…" oninput="buscarTarifario()"></div>
         <button class="btn btn-primary" onclick="abrirNuevoTarifario()">＋ Nuevo artículo</button>
-        <button class="btn btn-ghost" onclick="if(confirm('¿Importar 7 electrodomésticos Opción 3 Mundobaño (Cocina/Electrodomésticos) al tarifario?'))importarOpcion3Mundobano()" title="Importar Opción 3 Mundobaño" style="border:1px dashed var(--copper);color:var(--copper)">📥 Opción 3 Mundobaño</button>
-        <button class="btn btn-ghost" onclick="if(confirm('¿Importar 6 productos Mundobaño (Pres.00820 + Fac.00157) al tarifario?'))importarProductosMundobano2()" title="Importar Placa+Extractor+Ósmosis+Grifo" style="border:1px dashed var(--copper);color:var(--copper)">📥 Placa/Extractor/Ósmosis/Grifo</button>
+        <div style="position:relative;display:inline-block" id="tarif-import-wrap">
+          <button class="btn btn-ghost" onclick="toggleImportMenu()" style="border:1px dashed var(--copper);color:var(--copper)">📥 Importar lote ▾</button>
+          <div id="tarif-import-menu" style="display:none;position:absolute;top:100%;left:0;margin-top:4px;background:white;border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:100;min-width:280px;overflow:hidden">
+            <div style="padding:8px 12px;font-size:10px;font-weight:700;text-transform:uppercase;color:var(--text-soft);background:var(--sand);border-bottom:1px solid var(--border)">Selecciona el lote a importar</div>
+            <div class="tarif-import-item" onclick="closeImportMenu();if(confirm('¿Importar 7 electrodomésticos Opción 3 Mundobaño?'))importarOpcion3Mundobano()">
+              <div style="font-weight:600;font-size:12px">Opción 3 Mundobaño</div>
+              <div style="font-size:11px;color:var(--text-soft)">7 productos · Pres. 2025/00799 · Cocina/Electrodomésticos</div>
+            </div>
+            <div class="tarif-import-item" onclick="closeImportMenu();if(confirm('¿Importar 6 productos Mundobaño (Pres.00820 + Fac.00157)?'))importarProductosMundobano2()">
+              <div style="font-weight:600;font-size:12px">Placa / Extractor / Ósmosis / Grifo</div>
+              <div style="font-size:11px;color:var(--text-soft)">6 productos · Pres. 2025/00820 + Fac. 2026/FC/00157</div>
+            </div>
+          </div>
+        </div>
       </div>
       <!-- Layout árbol + contenido -->
       <div style="display:flex;gap:12px;align-items:flex-start">
@@ -2421,6 +2436,24 @@ function setUserDisplay(u){
   document.getElementById('user-av').textContent=n.substring(0,2).toUpperCase();
 }
 // ── ARRANQUE: esperar a que el DOM esté listo ──
+function toggleImportMenu(){
+  const m=document.getElementById('tarif-import-menu');
+  if(!m) return;
+  const open = m.style.display==='block';
+  m.style.display = open?'none':'block';
+  if(!open){
+    // Close when clicking outside
+    setTimeout(()=>document.addEventListener('click', closeImportMenuOutside, {once:true}), 10);
+  }
+}
+function closeImportMenu(){
+  const m=document.getElementById('tarif-import-menu');
+  if(m) m.style.display='none';
+}
+function closeImportMenuOutside(e){
+  const wrap=document.getElementById('tarif-import-wrap');
+  if(wrap && !wrap.contains(e.target)) closeImportMenu();
+}
 function arrancar(){
   // Comprobar si ya hay sesión guardada (localStorage para persistir al refrescar)
   const savedUser = localStorage.getItem('pau-auth-user');
