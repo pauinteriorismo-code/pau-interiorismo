@@ -670,11 +670,9 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <div class="card">
           <div class="card-header"><div class="card-title">🏦 Seguimiento de pagos</div></div>
           <div class="card-body" style="padding:0">
-            <div class="cuenta-row"><span>Total Compras</span><span id="gp-compras">—</span><span></span></div>
-            <div class="cuenta-row"><span style="color:var(--green)">✅ Pagado proveedores</span><span id="gp-pagado-prov">—</span><span></span></div>
-            <div class="cuenta-row"><span style="color:var(--amber)">⏳ Pendiente proveedores</span><span id="gp-pdte-prov">—</span><span></span></div>
-            <div class="cuenta-row"><span>Total Subcontratas</span><span id="gp-subcs">—</span><span></span></div>
-            <div class="cuenta-row"><span style="color:var(--amber)">⏳ Pendiente subcontr.</span><span id="gp-pdte-sub">—</span><span></span></div>
+            <div class="cuenta-row"><span>Total Facturas de compra</span><span id="gp-compras">—</span><span></span></div>
+            <div class="cuenta-row"><span style="color:var(--green)">✅ Pagado</span><span id="gp-pagado-prov">—</span><span></span></div>
+            <div class="cuenta-row"><span style="color:var(--amber)">⏳ Pendiente pago</span><span id="gp-pdte-prov">—</span><span></span></div>
           </div>
         </div>
       </div>
@@ -694,7 +692,6 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <div class="card-body" style="padding:0">
             <div class="cuenta-row"><span>IVA Repercutido (ventas)</span><span id="gi-rep">—</span><span></span></div>
             <div class="cuenta-row"><span>IVA Soportado (compras)</span><span id="gi-comp">—</span><span></span></div>
-            <div class="cuenta-row"><span>IVA Soportado (subcontr.)</span><span id="gi-sub">—</span><span></span></div>
             <div class="cuenta-row total"><span>IVA NETO A INGRESAR</span><span id="gi-neto">—</span><span></span></div>
           </div>
         </div>
@@ -3317,9 +3314,11 @@ async function loadGerencia(){
     document.getElementById('ge-benef-pct').textContent=pv?fmtP(kpiMargen):'—';
     document.getElementById('ge-result-row').className='cuenta-row result'+(kpiBenef<0?' neg':'');
 
-    // Variables auxiliares para tarjetas inferiores (seguimiento pagos/horas/IVA) — NO afectan KPIs
-    const totalCompras=comp.reduce((s,c)=>s+(c.base_imponible||0),0);
-    const totalIvaComp2=comp.reduce((s,c)=>s+(c.base_imponible||0)*ivaPct(c.iva_pct)/100,0);
+    // Variables auxiliares para tarjetas inferiores (seguimiento pagos/horas/IVA)
+    // Seguimiento de pagos: basado en FACTURAS DE COMPRA (no en tabla compras/subcontratas internas)
+    const totalComprasFac=facCompra.reduce((s,f)=>s+(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100),0);
+    const pagadoFacCompra=facCompra.filter(f=>f.estado==='Pagada'||f.estado==='Pagado').reduce((s,f)=>s+(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100),0);
+    const pdteFacCompra=totalComprasFac-pagadoFacCompra;
     const totalSubcs=subc.reduce((s,c)=>s+(c.importe||0),0);
     const totalIvaSub=subc.reduce((s,c)=>s+(c.importe||0)*ivaPct(c.iva_pct)/100,0);
     const totalMO=hor.reduce((s,h)=>s+(h.total||0),0);
@@ -3342,14 +3341,11 @@ async function loadGerencia(){
     document.getElementById('gc-pendiente').textContent=fmt(totalFactIVA-cobrado);
     document.getElementById('gc-vencidas').textContent=fmt(vencidas);
 
-    // Pagos
-    const pagadoProv=comp.filter(c=>c.estado_pago==='Pagado').reduce((s,c)=>s+(c.base_imponible||0),0);
-    const pagadoSub=subc.filter(c=>c.estado_pago==='Pagado').reduce((s,c)=>s+(c.importe||0),0);
-    document.getElementById('gp-compras').textContent=fmt(totalCompras);
-    document.getElementById('gp-pagado-prov').textContent=fmt(pagadoProv);
-    document.getElementById('gp-pdte-prov').textContent=fmt(totalCompras-pagadoProv);
-    document.getElementById('gp-subcs').textContent=fmt(totalSubcs);
-    document.getElementById('gp-pdte-sub').textContent=fmt(totalSubcs-pagadoSub);
+    // Pagos (basado en facturas de compra)
+    document.getElementById('gp-compras').textContent=fmt(totalComprasFac);
+    document.getElementById('gp-pagado-prov').textContent=fmt(pagadoFacCompra);
+    document.getElementById('gp-pdte-prov').textContent=fmt(pdteFacCompra);
+    // Subcontratas eliminadas de seguimiento pagos (son datos internos de gestión de proyecto)
 
     // Horas
     const totH=hor.reduce((s,h)=>s+(h.horas||0),0);
@@ -3357,10 +3353,9 @@ async function loadGerencia(){
     document.getElementById('gh-coste').textContent=fmt(totalMO);
     document.getElementById('gh-medio').textContent=totH>0?fmt(totalMO/totH).replace('€','')+' €/h':'—';
 
-    // IVA
+    // IVA (solo basado en facturas)
     document.getElementById('gi-rep').textContent=fmt(totalIvaRep);
     document.getElementById('gi-comp').textContent=fmt(totalIvaComp);
-    document.getElementById('gi-sub').textContent=fmt(totalIvaSub);
     document.getElementById('gi-neto').textContent=fmt(totalIvaRep-totalIvaComp);
 
     // Rentabilidad por proyecto — SOLO facturas con proyecto asignado
