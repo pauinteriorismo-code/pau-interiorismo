@@ -870,7 +870,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         </div>
       </div>
       <div class="card">
-        <div class="table-wrap"><table><thead><tr style="background:#f7f4ef"><th style="color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">#</th><th style="color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Descripción</th><th style="color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Ud.</th><th style="color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Cant.</th><th style="color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Precio Base</th><th style="color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Margen %</th><th style="color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">CI+GG+BI</th><th style="color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">P.Venta</th><th style="color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Subtotal</th><th style="color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">IVA</th><th></th></tr></thead>
+        <div class="table-wrap"><table><thead><tr style="background:#f7f4ef"><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">#</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Descripción</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Ud.</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Cant.</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Precio Base</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Margen %</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">CI+GG+BI</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">P.Venta</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Subtotal</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">IVA</th><th></th></tr></thead>
         <tbody id="pres-tbody"><tr><td colspan="11"><div class="empty"><div class="empty-icon">💰</div><div class="empty-text">Selecciona un proyecto</div></div></td></tr></tbody></table></div>
       </div>
     </div>
@@ -2386,6 +2386,8 @@ function doLogin(){
     if(errEl) errEl.style.display='none';
     sessionStorage.setItem('pau-auth-v2','1');
     sessionStorage.setItem('pau-user',u);
+    localStorage.setItem('pau-auth-v2','1');
+    localStorage.setItem('pau-auth-user',u);
     setUserDisplay(u);
     init().catch(e=>{ console.error('INIT ERROR:',e); });
   } else {
@@ -2396,6 +2398,8 @@ function doLogin(){
 }
 function doLogout(){
   sessionStorage.clear();
+  localStorage.removeItem('pau-auth-v2');
+  localStorage.removeItem('pau-auth-user');
   // Cerrar TODOS los modales abiertos
   document.querySelectorAll('.overlay.open').forEach(el=>el.classList.remove('open'));
   // Ocultar la app completamente
@@ -2416,12 +2420,26 @@ function setUserDisplay(u){
 }
 // ── ARRANQUE: esperar a que el DOM esté listo ──
 function arrancar(){
+  // Comprobar si ya hay sesión guardada (localStorage para persistir al refrescar)
+  const savedUser = localStorage.getItem('pau-auth-user');
+  const savedAuth = localStorage.getItem('pau-auth-v2');
+  if(savedAuth === '1' && savedUser){
+    // Sesión válida - restaurar sin pedir contraseña
+    sessionStorage.setItem('pau-auth-v2','1');
+    sessionStorage.setItem('pau-user', savedUser);
+    const loginScreen = document.getElementById('login-screen');
+    if(loginScreen) loginScreen.style.display='none';
+    const app = document.querySelector('.app');
+    if(app) app.style.display='flex';
+    setUserDisplay(savedUser);
+    init().catch(e=>{ console.error('INIT ERROR:',e); });
+    return;
+  }
+  // Sin sesión - mostrar login
   sessionStorage.removeItem('pau-auth-v2');
-  // Cerrar todos los modales y ocultar app
   document.querySelectorAll('.overlay.open').forEach(el=>el.classList.remove('open'));
   const app = document.querySelector('.app');
   if(app) app.style.display='none';
-  // Mostrar pantalla de login
   const loginScreen = document.getElementById('login-screen');
   if(loginScreen){ loginScreen.style.display='flex'; loginScreen.style.zIndex='9999'; }
   const passEl = document.getElementById('login-pass');
