@@ -2339,7 +2339,7 @@ const META={
   configuracion:{t:'Configuración',b:'Empresa · CI+GG+BI · Parámetros'},
 };
 document.querySelectorAll('.nav-item[data-view]').forEach(el=>el.addEventListener('click',()=>navTo(el.dataset.view)));
-async function navTo(v){
+async async function navTo(v){
   document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
   document.querySelector(`[data-view="${v}"]`)?.classList.add('active');
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
@@ -2352,8 +2352,7 @@ async function navTo(v){
 
 // ═══════════════════════════════════════════
 // HELPERS
-// ═══════════════════════════════════════════
-const bColors={'Nuevo lead':'b-gray','Presupuesto enviado':'b-amber','Aprobado':'b-blue','En ejecución':'b-blue','Finalizado':'b-green','Facturado':'b-green','Cobrado':'b-navy','Cancelado':'b-red','Pendiente':'b-amber','Pagado':'b-green','Cobrada':'b-green','Parcial':'b-copper','Vencido':'b-red','Vencida':'b-red','Borrador':'b-gray','Enviada':'b-amber','Aprobada':'b-green','Rechazada':'b-red','En pedido':'b-blue','Entregada':'b-navy','Solicitado':'b-amber','Confirmado':'b-blue','En tránsito':'b-blue','Recibido':'b-copper','Proveedor':'b-blue','Subcontrata':'b-green','Obra nueva':'b-navy','Rehabilitación integral':'b-green','Interiorismo':'b-copper','Particular':'b-blue','Empresa':'b-green','Promotora':'b-copper'};
+// ═══════════════════════════════════════════onst bColors={'Nuevo lead':'b-gray','Presupuesto enviado':'b-amber','Aprobado':'b-blue','En ejecución':'b-blue','Finalizado':'b-green','Facturado':'b-green','Cobrado':'b-navy','Cancelado':'b-red','Pendiente':'b-amber','Pagado':'b-green','Cobrada':'b-green','Parcial':'b-copper','Vencido':'b-red','Vencida':'b-red','Borrador':'b-gray','Enviada':'b-amber','Aprobada':'b-green','Rechazada':'b-red','En pedido':'b-blue','Entregada':'b-navy','Solicitado':'b-amber','Confirmado':'b-blue','En tránsito':'b-blue','Recibido':'b-copper','Proveedor':'b-blue','Subcontrata':'b-green','Obra nueva':'b-navy','Rehabilitación integral':'b-green','Interiorismo':'b-copper','Particular':'b-blue','Empresa':'b-green','Promotora':'b-copper'};
 function bE(v){return`<span class="badge ${bColors[v]||'b-gray'}">${v||'—'}</span>`}
 function fmt(n){if(n===null||n===undefined||n==='')return'—';return Number(n).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€'}
 function fmtN(n){if(!n&&n!==0)return'—';return Number(n).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€'}
