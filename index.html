@@ -285,6 +285,7 @@ tbody td{padding:7px 10px;vertical-align:middle}
     <div class="nav-item" data-view="comparativa"><span class="ni">⚖️</span><span>Comparativa ofertas</span></div>
     <div class="nav-item" data-view="tarifario"><span class="ni">📋</span><span>Tarifario</span></div>
     <div class="nav-item" data-view="cype"><span class="ni">📐</span><span>CYPE 2026</span><span class="nav-badge" id="cype-badge">524</span></div>
+    <div class="nav-item" data-view="saitra"><span class="ni">🍳</span><span>Valorador Saitra</span></div>
     <div class="nav-item" data-view="interiorismo"><span class="ni">🛋</span><span>Interiorismo</span></div>
   </div>
   <div class="nav-section">
@@ -945,7 +946,201 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       </div>
     </div>
 
-    <!-- ═══ INTERIORISMO ═══ -->
+    
+    <!-- ═══ VALORADOR SAITRA ═══ -->
+    <div class="view" id="view-saitra">
+      <!-- TOOLBAR -->
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <label style="font-size:12px;font-weight:600;color:var(--text-soft)">Proyecto:</label>
+          <select class="form-input" id="s-proyecto" style="width:200px" onchange="saitraSetProyecto()">
+            <option value="">— Seleccionar —</option>
+          </select>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <label style="font-size:12px;font-weight:600;color:var(--text-soft)">Columna tarifa:</label>
+          <select class="form-input" id="s-col" style="width:80px" onchange="saitraRecalc()">
+            <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+            <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+            <option value="7">7</option><option value="8">8</option><option value="9">9</option>
+            <option value="10">10</option>
+          </select>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <label style="font-size:12px;font-weight:600;color:var(--text-soft)">Margen venta:</label>
+          <input type="number" class="form-input" id="s-margen" value="35" min="0" max="80" style="width:70px" oninput="saitraRecalc()">
+          <span style="font-size:12px;color:var(--text-soft)">%</span>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="saitraLimpiar()" style="margin-left:auto;color:var(--danger)">🗑 Limpiar todo</button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:340px 1fr;gap:14px;align-items:start">
+
+        <!-- PANEL IZQUIERDO: AÑADIR MÓDULOS -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+
+          <!-- MÓDULOS POR PUNTOS -->
+          <div class="card" style="padding:14px">
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--copper);margin-bottom:10px;letter-spacing:.05em">📦 Módulo (puntos × 0,99€)</div>
+            <div class="form-grid" style="grid-template-columns:1fr 1fr;gap:8px">
+              <div>
+                <label class="form-label">Referencia</label>
+                <select class="form-input" id="s-ref" onchange="saitraRefChange()">
+                  <optgroup label="── BASES H.78 ──">
+                    <option value="PBP">PBP · Base 1 puerta</option>
+                    <option value="PB2P">PB2P · Base 2 puertas</option>
+                  </optgroup>
+                  <optgroup label="── (más refs. próximamente) ──">
+                    <option value="" disabled>H.78 Colgantes...</option>
+                    <option value="" disabled>H.221 Columnas...</option>
+                  </optgroup>
+                </select>
+              </div>
+              <div>
+                <label class="form-label">Ancho (cm)</label>
+                <select class="form-input" id="s-ancho" onchange="saitraPuntosPreview()">
+                </select>
+              </div>
+            </div>
+            <div style="margin-top:8px;display:flex;align-items:center;gap:8px">
+              <div style="flex:1">
+                <label class="form-label">Descripción adicional</label>
+                <input type="text" class="form-input" id="s-desc-mod" placeholder="ej. Fondo especial, acabado...">
+              </div>
+              <div style="width:70px">
+                <label class="form-label">Cant.</label>
+                <input type="number" class="form-input" id="s-cant-mod" value="1" min="1" style="text-align:center">
+              </div>
+            </div>
+            <div id="s-puntos-preview" style="margin-top:8px;padding:7px 10px;background:var(--sand);border-radius:6px;font-size:12px;color:var(--navy);font-weight:600;display:none"></div>
+            <button class="btn btn-primary btn-sm" style="margin-top:10px;width:100%" onclick="saitraAddModulo()">＋ Añadir módulo</button>
+          </div>
+
+          <!-- ACCESORIOS POR PVP -->
+          <div class="card" style="padding:14px">
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--copper);margin-bottom:10px;letter-spacing:.05em">🔧 Accesorio (PVP × 0,64)</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <div>
+                <label class="form-label">Tipo</label>
+                <select class="form-input" id="s-acc-tipo" onchange="saitraAccTipoChange()">
+                  <optgroup label="── CUBERTEROS ──">
+                    <option value="CUBMN-60">CUBMN 60cm · Nogal</option>
+                    <option value="CUBMN-90">CUBMN 90cm · Nogal</option>
+                    <option value="CUBMN-120">CUBMN 120cm · Nogal</option>
+                  </optgroup>
+                  <optgroup label="── ILUMINACIÓN ──">
+                    <option value="LAMBDAC-45">LAMBDAC/N 45cm</option>
+                    <option value="LAMBDAC-60">LAMBDAC/N 60cm</option>
+                    <option value="LAMBDAC-80">LAMBDAC/N 80cm</option>
+                    <option value="LAMBDAC-90">LAMBDAC/N 90cm</option>
+                    <option value="LAMBDAC-120">LAMBDAC/N 120cm</option>
+                    <option value="LAMBDAC-200">LAMBDAC/N 200cm</option>
+                    <option value="LAMBDA45-100">LAMBDA45 100cm</option>
+                    <option value="LAMBDA45-200">LAMBDA45 200cm</option>
+                  </optgroup>
+                </select>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:4px">
+                <label class="form-label">Cant.</label>
+                <input type="number" class="form-input" id="s-cant-acc" value="1" min="1" style="text-align:center">
+              </div>
+            </div>
+            <div id="s-acc-preview" style="margin-top:8px;padding:7px 10px;background:var(--sand);border-radius:6px;font-size:12px;color:var(--navy);font-weight:600"></div>
+            <button class="btn btn-primary btn-sm" style="margin-top:10px;width:100%" onclick="saitraAddAccesorio()">＋ Añadir accesorio</button>
+          </div>
+
+          <!-- ZÓCALOS POR PUNTOS -->
+          <div class="card" style="padding:14px">
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--copper);margin-bottom:10px;letter-spacing:.05em">⬇ Zócalo (puntos × 0,99€)</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <div>
+                <label class="form-label">Referencia</label>
+                <select class="form-input" id="s-zoc-ref" onchange="saitraZocChange()">
+                  <option value="ZPVCAL-8">ZPVCAL Alto 8 · PVC Alu</option>
+                  <option value="ZPVCAL-10">ZPVCAL Alto 10 · PVC Alu</option>
+                  <option value="ZPVCAL-12">ZPVCAL Alto 12 · PVC Alu</option>
+                  <option value="ZPVCAL-15">ZPVCAL Alto 15 · PVC Alu</option>
+                  <option value="ZPVCIN-10">ZPVCIN Alto 10 · PVC Inox</option>
+                  <option value="ZPVCIN-12">ZPVCIN Alto 12 · PVC Inox</option>
+                  <option value="ZPVCIN-15">ZPVCIN Alto 15 · PVC Inox</option>
+                  <option value="ZPVCNM-10">ZPVCNM/BM Alto 10 · Negro/Blanco</option>
+                  <option value="ZPVCNM-12">ZPVCNM/BM Alto 12 · Negro/Blanco</option>
+                  <option value="ZPVCNM-15">ZPVCNM/BM Alto 15 · Negro/Blanco</option>
+                  <option value="ZAL-6">ZAL Alto 6 · Aluminio</option>
+                  <option value="ZAL-8">ZAL Alto 8 · Aluminio</option>
+                  <option value="ZAL-10">ZAL Alto 10 · Aluminio</option>
+                  <option value="ZAL-12">ZAL Alto 12 · Aluminio</option>
+                  <option value="ZAL-15">ZAL Alto 15 · Aluminio</option>
+                  <option value="ZAL-17">ZAL Alto 17 · Aluminio</option>
+                </select>
+              </div>
+              <div>
+                <label class="form-label">Longitud</label>
+                <select class="form-input" id="s-zoc-long" onchange="saitraZocChange()">
+                  <option value="4m">4 metros</option>
+                  <option value="2m">2 metros</option>
+                </select>
+              </div>
+            </div>
+            <div id="s-zoc-preview" style="margin-top:8px;padding:7px 10px;background:var(--sand);border-radius:6px;font-size:12px;color:var(--navy);font-weight:600"></div>
+            <button class="btn btn-primary btn-sm" style="margin-top:10px;width:100%" onclick="saitraAddZocalo()">＋ Añadir zócalo</button>
+          </div>
+
+        </div>
+
+        <!-- PANEL DERECHO: LISTA + TOTALES -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div class="card" style="padding:0;overflow:hidden">
+            <div style="padding:12px 16px;background:var(--navy);color:#fff;display:flex;justify-content:space-between;align-items:center">
+              <span style="font-weight:700;font-size:13px">📋 Valoración</span>
+              <span id="s-items-count" style="font-size:11px;opacity:.7">0 partidas</span>
+            </div>
+            <div style="overflow-x:auto">
+              <table style="width:100%;border-collapse:collapse;font-size:12px">
+                <thead>
+                  <tr style="background:#f7f4ef">
+                    <th style="background:#f7f4ef;color:#b87333;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 10px;border-bottom:1px solid #e8e0d4;text-align:left">Ref.</th>
+                    <th style="background:#f7f4ef;color:#b87333;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 10px;border-bottom:1px solid #e8e0d4;text-align:left">Descripción</th>
+                    <th style="background:#f7f4ef;color:#b87333;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4;text-align:center">Cant.</th>
+                    <th style="background:#f7f4ef;color:#b87333;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4;text-align:right">Puntos/PVP</th>
+                    <th style="background:#f7f4ef;color:#b87333;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4;text-align:right">Coste</th>
+                    <th style="background:#f7f4ef;color:#b87333;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4"></th>
+                  </tr>
+                </thead>
+                <tbody id="s-tabla-body">
+                  <tr><td colspan="6" style="padding:30px;text-align:center;color:var(--text-soft);font-size:13px">Añade módulos desde el panel izquierdo</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- TOTALES -->
+          <div class="card" style="padding:16px">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+              <div style="text-align:center;padding:12px;background:var(--sand);border-radius:8px">
+                <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--text-soft);margin-bottom:4px">Total puntos</div>
+                <div id="s-tot-puntos" style="font-size:20px;font-weight:800;color:var(--navy)">0</div>
+              </div>
+              <div style="text-align:center;padding:12px;background:var(--sand);border-radius:8px">
+                <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--text-soft);margin-bottom:4px">Coste total</div>
+                <div id="s-tot-coste" style="font-size:20px;font-weight:800;color:var(--navy)">0,00€</div>
+              </div>
+              <div style="text-align:center;padding:12px;background:#e8f5e9;border-radius:8px;border:2px solid #4caf50">
+                <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#388e3c;margin-bottom:4px">P. Venta (margen <span id="s-tot-margen-lbl">35</span>%)</div>
+                <div id="s-tot-venta" style="font-size:20px;font-weight:800;color:#2e7d32">0,00€</div>
+              </div>
+            </div>
+            <div style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end">
+              <button class="btn btn-ghost btn-sm" onclick="saitraExportarPresupuesto()" style="border:1px solid var(--copper);color:var(--copper)">📄 Exportar a presupuesto</button>
+              <button class="btn btn-ghost btn-sm" onclick="saitraImprimir()" style="border:1px solid var(--navy);color:var(--navy)">🖨 Vista previa</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+<!-- ═══ INTERIORISMO ═══ -->
     <div class="view" id="view-interiorismo">
       <div class="search-bar" style="gap:8px;flex-wrap:wrap;align-items:center">
         <select class="form-input" style="width:195px;flex-shrink:0" id="filter-cliente-interiorismo" onchange="cascadaModuloInt()"><option value="">👤 Cliente…</option><option value="CLI-001">Miguel Zaragozá Garzón</option><option value="CLI-002">Vicenta Folch Gil</option><option value="CLI-033">Estudi Encis SL</option><option value="CLI-034">Vicenta Baixauli Hernandez</option><option value="CLI-H002">Mª PAU BRAVO JOSE</option><option value="CLI-H001">ROSA CHANZA SOLER</option><option value="CLI-H003">DESIRE NAVARRO MARI</option><option value="CLI-H004">CARMELO RODRIGUEZ VILA</option><option value="CLI-H032">Daniel palma gallardo</option><option value="CLI-H023">Miguel Zaragozá Garzón</option><option value="CLI-H006">Vicenta Folch Gil</option><option value="CLI-H008">VICENT MARI SERRA</option><option value="CLI-H009">FERNANDO JOSE SAN GERMAN IBORRA</option><option value="CLI-H010">REME IBORRA GIL</option><option value="CLI-H011">TONI TATAY DAVID</option><option value="CLI-H019">Jose Antonio Martos Ortiz</option><option value="CLI-H021">MERCEDES HIGUERAS GOMEZ</option><option value="CLI-H024">MICHELL BENITO</option><option value="CLI-H026">Ana María Palau Sastre</option><option value="CLI-H028">Lara Blasco - Lara Blasco Iborra</option><option value="CLI-H027">Laura Doria Gomez</option><option value="CLI-H031">Belinda</option><option value="CLI-H005">PATRI</option><option value="CLI-H012">Júlia Fabregat Mestre</option><option value="CLI-H013">Jose Manuel Garcia Seller Nº 7 Pta 4</option><option value="CLI-H014">4G daniel Dominguez</option><option value="CLI-H016">Sara Muñoz Abella</option><option value="CLI-H018">Amparo Forner Pastor</option><option value="CLI-H017">Yasmina Cabezuelo Alaminos</option><option value="CLI-H020">Rafael Francés Llàcer</option><option value="CLI-H022">Miguel cocina</option><option value="CLI-H007">Juanmi</option><option value="CLI-H015">4F Fernando</option><option value="CLI-H029">Francisco Navarro Garcia</option><option value="CLI-H025">URKO Y FRANCESC</option><option value="CLI-H030">Jose Manuel Pinzón Valbuena</option></select>
@@ -2515,6 +2710,7 @@ const META={
   comparativa:{t:'Comparativa de ofertas',b:'Compara hasta 3 proveedores por trabajo'},
   tarifario:{t:'Tarifario · Catálogo propio',b:''},
   cype:{t:'CYPE 2026 · 524 partidas',b:'Base de precios importada de tu Excel'},
+  saitra:{t:'Valorador Saitra · Cocinas',b:'Constructor de valoraciones · Puntos × 0,99€ + PVP -36%'},
   interiorismo:{t:'Interiorismo & Mobiliario',b:'Propuestas · Pedidos · Márgenes'},
   compras:{t:'Compras',b:''},subcontratas:{t:'Subcontratas',b:''},
   horas:{t:'Control de horas',b:''},pedidos:{t:'Registro de pedidos',b:''},
@@ -4142,6 +4338,342 @@ async function saveTarifario(){
 
 
 
+
+// ═══════════════════════════════════════════════════════════════
+// VALORADOR SAITRA
+// ═══════════════════════════════════════════════════════════════
+
+// ── Tablas de puntos ─────────────────────────────────────────
+const SAITRA_MOD = {
+  // PBP - Base 1 puerta H.78 [ancho: [col1..col10]]
+  PBP: {
+    label: 'Base 1 puerta H.78',
+    tipo: 'puntos',
+    anchos: {
+      15:[98,103,111,119,127,137,147,157,167,181],
+      20:[102,109,117,124,132,143,154,163,175,190],
+      25:[107,114,122,130,138,148,159,170,182,198],
+      30:[112,120,129,137,145,156,167,178,192,208],
+      35:[115,123,131,140,149,160,171,183,196,213],
+      40:[116,124,133,141,150,161,172,185,198,216],
+      45:[122,129,138,146,157,167,179,192,204,223],
+      50:[126,134,144,152,161,172,185,197,211,228],
+      60:[130,138,148,156,168,178,190,202,216,235]
+    }
+  },
+  // PB2P - Base 2 puertas H.78
+  PB2P: {
+    label: 'Base 2 puertas H.78',
+    tipo: 'puntos',
+    anchos: {
+      70:[157,168,181,192,204,219,234,250,268,291],
+      80:[160,171,183,194,208,223,238,254,272,297],
+      90:[164,175,187,200,213,228,244,261,279,305],
+      100:[172,185,197,209,224,239,256,274,293,320]
+    }
+  }
+};
+
+// ── Accesorios PVP (coste = PVP × 0.64) ─────────────────────
+const SAITRA_ACC = {
+  'CUBMN-60':   { label:'Cubertero nogal 60cm',      pvp:54,    unidad:'Ud' },
+  'CUBMN-90':   { label:'Cubertero nogal 90cm',      pvp:74,    unidad:'Ud' },
+  'CUBMN-120':  { label:'Cubertero nogal 120cm',     pvp:92,    unidad:'Ud' },
+  'LAMBDAC-45': { label:'Lambda perfil LED 45cm',    pvp:17.10, unidad:'Ud' },
+  'LAMBDAC-60': { label:'Lambda perfil LED 60cm',    pvp:22.45, unidad:'Ud' },
+  'LAMBDAC-80': { label:'Lambda perfil LED 80cm',    pvp:26.35, unidad:'Ud' },
+  'LAMBDAC-90': { label:'Lambda perfil LED 90cm',    pvp:29.75, unidad:'Ud' },
+  'LAMBDAC-120':{ label:'Lambda perfil LED 120cm',   pvp:38.60, unidad:'Ud' },
+  'LAMBDAC-200':{ label:'Lambda perfil LED 200cm',   pvp:64.60, unidad:'Ud' },
+  'LAMBDA45-100':{ label:'Lambda 45° perfil LED 100cm', pvp:32, unidad:'Ud' },
+  'LAMBDA45-200':{ label:'Lambda 45° perfil LED 200cm', pvp:64, unidad:'Ud' }
+};
+
+// ── Zócalos (puntos × 0.99€) ─────────────────────────────────
+// [puntos_4m, puntos_2m]
+const SAITRA_ZOC = {
+  'ZPVCAL-8':  { label:'Zócalo PVC Aluminio Alto 8',           pts:[28,15] },
+  'ZPVCAL-10': { label:'Zócalo PVC Aluminio Alto 10',          pts:[30,16] },
+  'ZPVCAL-12': { label:'Zócalo PVC Aluminio Alto 12',          pts:[32,17] },
+  'ZPVCAL-15': { label:'Zócalo PVC Aluminio Alto 15',          pts:[38,20] },
+  'ZPVCIN-10': { label:'Zócalo PVC Inox Alto 10',              pts:[40,21] },
+  'ZPVCIN-12': { label:'Zócalo PVC Inox Alto 12',              pts:[42,22] },
+  'ZPVCIN-15': { label:'Zócalo PVC Inox Alto 15',              pts:[45,24] },
+  'ZPVCNM-10': { label:'Zócalo PVC Negro/Blanco Alto 10',      pts:[25,13] },
+  'ZPVCNM-12': { label:'Zócalo PVC Negro/Blanco Alto 12',      pts:[27,14] },
+  'ZPVCNM-15': { label:'Zócalo PVC Negro/Blanco Alto 15',      pts:[30,16] },
+  'ZAL-6':     { label:'Zócalo Aluminio Alto 6',               pts:[32,17] },
+  'ZAL-8':     { label:'Zócalo Aluminio Alto 8',               pts:[34,18] },
+  'ZAL-10':    { label:'Zócalo Aluminio Alto 10',              pts:[36,19] },
+  'ZAL-12':    { label:'Zócalo Aluminio Alto 12',              pts:[38,20] },
+  'ZAL-15':    { label:'Zócalo Aluminio Alto 15',              pts:[41,22] },
+  'ZAL-17':    { label:'Zócalo Aluminio Alto 17',              pts:[45,24] }
+};
+
+const PUNTO_VALOR = 0.99; // € por punto
+const ACC_DESCUENTO = 0.64; // PVP × 0.64 = coste
+
+let saitraLineas = []; // Array de líneas actuales
+let saitraIdCnt = 0;
+
+function initSaitra(){
+  // Populate proyecto selector
+  const sel = document.getElementById('s-proyecto');
+  if(sel && PC && PC.length){
+    sel.innerHTML = '<option value="">— Seleccionar —</option>' +
+      PC.map(p=>`<option value="${p.proyecto_id}">${escH(p.proyecto_id)}${p.nombre?' · '+escH(p.nombre):''}</option>`).join('');
+  }
+  saitraRefChange();
+  saitraAccTipoChange();
+  saitraZocChange();
+  saitraRenderTabla();
+}
+
+function saitraSetProyecto(){ /* nothing needed now */ }
+
+function saitraRefChange(){
+  const ref = document.getElementById('s-ref')?.value;
+  const selA = document.getElementById('s-ancho');
+  if(!selA || !ref || !SAITRA_MOD[ref]) return;
+  const anchos = Object.keys(SAITRA_MOD[ref].anchos).map(Number).sort((a,b)=>a-b);
+  selA.innerHTML = anchos.map(a=>`<option value="${a}">${a} cm</option>`).join('');
+  saitraPuntosPreview();
+}
+
+function saitraPuntosPreview(){
+  const ref = document.getElementById('s-ref')?.value;
+  const ancho = parseInt(document.getElementById('s-ancho')?.value)||0;
+  const col = parseInt(document.getElementById('s-col')?.value)||1;
+  const prev = document.getElementById('s-puntos-preview');
+  if(!ref || !ancho || !SAITRA_MOD[ref]){ if(prev) prev.style.display='none'; return; }
+  const pts = SAITRA_MOD[ref].anchos[ancho]?.[col-1];
+  if(!pts){ if(prev) prev.style.display='none'; return; }
+  const coste = (pts * PUNTO_VALOR).toFixed(2);
+  prev.style.display='block';
+  prev.innerHTML = `${pts} puntos × 0,99€ = <strong>${coste}€ coste</strong>`;
+}
+
+function saitraAccTipoChange(){
+  const tipo = document.getElementById('s-acc-tipo')?.value;
+  const prev = document.getElementById('s-acc-preview');
+  if(!tipo || !SAITRA_ACC[tipo]){ if(prev) prev.textContent=''; return; }
+  const acc = SAITRA_ACC[tipo];
+  const coste = (acc.pvp * ACC_DESCUENTO).toFixed(2);
+  if(prev) prev.innerHTML = `PVP ${acc.pvp.toFixed(2)}€ × 0,64 = <strong>${coste}€ coste</strong>`;
+}
+
+function saitraZocChange(){
+  const ref = document.getElementById('s-zoc-ref')?.value;
+  const long = document.getElementById('s-zoc-long')?.value;
+  const prev = document.getElementById('s-zoc-preview');
+  if(!ref || !SAITRA_ZOC[ref]){ if(prev) prev.textContent=''; return; }
+  const z = SAITRA_ZOC[ref];
+  const pts = long==='4m' ? z.pts[0] : z.pts[1];
+  const coste = (pts * PUNTO_VALOR).toFixed(2);
+  if(prev) prev.innerHTML = `${pts} puntos × 0,99€ = <strong>${coste}€ coste</strong> (${long})`;
+}
+
+function saitraAddModulo(){
+  const ref = document.getElementById('s-ref')?.value;
+  const ancho = parseInt(document.getElementById('s-ancho')?.value)||0;
+  const col = parseInt(document.getElementById('s-col')?.value)||1;
+  const cant = parseInt(document.getElementById('s-cant-mod')?.value)||1;
+  const descExtra = document.getElementById('s-desc-mod')?.value.trim()||'';
+  if(!ref || !ancho || !SAITRA_MOD[ref]){ toast('Selecciona referencia y ancho','error'); return; }
+  const pts = SAITRA_MOD[ref].anchos[ancho]?.[col-1];
+  if(!pts){ toast('Combinación no disponible en tarifa','error'); return; }
+  const mod = SAITRA_MOD[ref];
+  saitraLineas.push({
+    id: ++saitraIdCnt,
+    tipo: 'modulo',
+    ref,
+    desc: mod.label + ' ' + ancho + 'cm' + (descExtra?' · '+descExtra:''),
+    cant,
+    puntos: pts,
+    pvp: null,
+    costeUnit: pts * PUNTO_VALOR,
+    costeTotal: pts * PUNTO_VALOR * cant
+  });
+  document.getElementById('s-desc-mod').value='';
+  document.getElementById('s-cant-mod').value='1';
+  saitraRenderTabla();
+  saitraRecalc();
+  toast(`✅ ${ref} ${ancho}cm añadido (${pts} puntos)`);
+}
+
+function saitraAddAccesorio(){
+  const tipo = document.getElementById('s-acc-tipo')?.value;
+  const cant = parseInt(document.getElementById('s-cant-acc')?.value)||1;
+  if(!tipo || !SAITRA_ACC[tipo]){ toast('Selecciona un accesorio','error'); return; }
+  const acc = SAITRA_ACC[tipo];
+  const costeUnit = acc.pvp * ACC_DESCUENTO;
+  saitraLineas.push({
+    id: ++saitraIdCnt,
+    tipo: 'accesorio',
+    ref: tipo.split('-')[0],
+    desc: acc.label,
+    cant,
+    puntos: null,
+    pvp: acc.pvp,
+    costeUnit,
+    costeTotal: costeUnit * cant
+  });
+  document.getElementById('s-cant-acc').value='1';
+  saitraRenderTabla();
+  saitraRecalc();
+  toast(`✅ ${acc.label} × ${cant} añadido`);
+}
+
+function saitraAddZocalo(){
+  const ref = document.getElementById('s-zoc-ref')?.value;
+  const long = document.getElementById('s-zoc-long')?.value;
+  if(!ref || !SAITRA_ZOC[ref]){ toast('Selecciona un zócalo','error'); return; }
+  const z = SAITRA_ZOC[ref];
+  const pts = long==='4m' ? z.pts[0] : z.pts[1];
+  const costeUnit = pts * PUNTO_VALOR;
+  saitraLineas.push({
+    id: ++saitraIdCnt,
+    tipo: 'zocalo',
+    ref: ref.split('-')[0],
+    desc: z.label + ' (' + long + ')',
+    cant: 1,
+    puntos: pts,
+    pvp: null,
+    costeUnit,
+    costeTotal: costeUnit
+  });
+  saitraRenderTabla();
+  saitraRecalc();
+  toast(`✅ ${z.label} añadido`);
+}
+
+function saitraEliminarLinea(id){
+  saitraLineas = saitraLineas.filter(l=>l.id!==id);
+  saitraRenderTabla();
+  saitraRecalc();
+}
+
+function saitraRenderTabla(){
+  const tbody = document.getElementById('s-tabla-body');
+  const countEl = document.getElementById('s-items-count');
+  if(!tbody) return;
+  if(!saitraLineas.length){
+    tbody.innerHTML='<tr><td colspan="6" style="padding:30px;text-align:center;color:var(--text-soft);font-size:13px">Añade módulos desde el panel izquierdo</td></tr>';
+    if(countEl) countEl.textContent='0 partidas';
+    return;
+  }
+  if(countEl) countEl.textContent=`${saitraLineas.length} partida${saitraLineas.length!==1?'s':''}`;
+  const iconos = {modulo:'📦', accesorio:'🔧', zocalo:'⬇'};
+  tbody.innerHTML = saitraLineas.map((l,i)=>{
+    const bg = i%2===0?'white':'#fdfcfa';
+    const ptsStr = l.puntos ? `${l.puntos} pts` : `PVP ${l.pvp?.toFixed(2)}€`;
+    const costeStr = (l.costeTotal).toFixed(2)+'€';
+    return `<tr style="background:${bg};border-bottom:1px solid #f0ece5">
+      <td style="padding:7px 10px;font-weight:700;color:var(--navy);font-size:11px">${iconos[l.tipo]||''} ${l.ref}</td>
+      <td style="padding:7px 10px;font-size:12px">${escH(l.desc)}</td>
+      <td style="padding:7px 6px;text-align:center;font-size:12px">${l.cant}</td>
+      <td style="padding:7px 6px;text-align:right;font-size:11px;color:var(--text-soft)">${ptsStr}</td>
+      <td style="padding:7px 6px;text-align:right;font-weight:700;color:var(--navy);font-size:12px">${costeStr}</td>
+      <td style="padding:7px 6px;text-align:center"><button class="btn btn-ghost btn-icon btn-sm" onclick="saitraEliminarLinea(${l.id})" style="color:var(--danger)">🗑</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function saitraRecalc(){
+  const margen = parseFloat(document.getElementById('s-margen')?.value)||35;
+  document.getElementById('s-tot-margen-lbl').textContent = margen;
+  let totalPuntos = 0, totalCoste = 0;
+  saitraLineas.forEach(l=>{
+    if(l.puntos) totalPuntos += l.puntos * l.cant;
+    totalCoste += l.costeTotal;
+  });
+  const pventa = margen<100 ? totalCoste/(1-margen/100) : totalCoste;
+  document.getElementById('s-tot-puntos').textContent = totalPuntos;
+  document.getElementById('s-tot-coste').textContent = totalCoste.toFixed(2).replace('.',',')+'€';
+  document.getElementById('s-tot-venta').textContent = pventa.toFixed(2).replace('.',',')+'€';
+}
+
+function saitraLimpiar(){
+  if(saitraLineas.length && !confirm('¿Limpiar todas las partidas de la valoración actual?')) return;
+  saitraLineas = [];
+  saitraRenderTabla();
+  saitraRecalc();
+}
+
+function saitraExportarPresupuesto(){
+  if(!saitraLineas.length){ toast('No hay partidas que exportar','error'); return; }
+  const proy = document.getElementById('s-proyecto')?.value;
+  if(!proy){ toast('Selecciona un proyecto primero','error'); return; }
+  const margen = parseFloat(document.getElementById('s-margen')?.value)||35;
+  let totalCoste = saitraLineas.reduce((s,l)=>s+l.costeTotal, 0);
+  const pventa = margen<100 ? totalCoste/(1-margen/100) : totalCoste;
+  // Navega a presupuesto y lo añade como capítulo
+  document.querySelector('[data-view="presupuesto"]')?.click();
+  setTimeout(()=>{
+    const ps = document.getElementById('pres-proyecto-sel');
+    if(ps){ ps.value=proy; loadPresupuesto(); }
+    setTimeout(()=>{
+      // Añade línea resumen
+      toast('📄 Ve al presupuesto y añade las líneas manualmente con los datos calculados. Coste: '+totalCoste.toFixed(2)+'€ · Venta: '+pventa.toFixed(2)+'€');
+    },800);
+  },400);
+}
+
+function saitraImprimir(){
+  if(!saitraLineas.length){ toast('No hay partidas para imprimir','error'); return; }
+  const margen = parseFloat(document.getElementById('s-margen')?.value)||35;
+  const proy = document.getElementById('s-proyecto')?.value || '—';
+  const col = document.getElementById('s-col')?.value || '—';
+  let totalPuntos=0, totalCoste=0;
+  saitraLineas.forEach(l=>{ if(l.puntos) totalPuntos+=l.puntos*l.cant; totalCoste+=l.costeTotal; });
+  const pventa = margen<100 ? totalCoste/(1-margen/100) : totalCoste;
+  const fmtE = v => v.toFixed(2).replace('.',',')+'€';
+  const iconos = {modulo:'📦', accesorio:'🔧', zocalo:'⬇'};
+  const filas = saitraLineas.map(l=>`
+    <tr>
+      <td>${l.ref}</td>
+      <td>${l.desc}</td>
+      <td style="text-align:center">${l.cant}</td>
+      <td style="text-align:right">${l.puntos?l.puntos+' pts':'PVP '+l.pvp?.toFixed(2)+'€'}</td>
+      <td style="text-align:right;font-weight:700">${fmtE(l.costeTotal)}</td>
+    </tr>`).join('');
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Valoración Saitra</title>
+  <style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:"Segoe UI",Arial,sans-serif;font-size:12px;color:#333;background:#f5f3ef}
+  @media print{body{background:white}.toolbar{display:none}@page{size:A4;margin:12mm}}
+  .toolbar{display:flex;gap:10px;justify-content:center;padding:12px;background:#4a3728}
+  .btn{padding:8px 20px;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:700}
+  .page{background:white;max-width:794px;margin:16px auto;padding:28px 32px;box-shadow:0 2px 16px rgba(0,0,0,.1)}
+  h1{font-size:22px;color:#4a3728;margin-bottom:4px}
+  .meta{font-size:11px;color:#888;margin-bottom:20px}
+  table{width:100%;border-collapse:collapse;margin-bottom:20px}
+  thead th{background:#f7f4ef;color:#b87333;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px;border-bottom:1px solid #e8e0d4;text-align:left}
+  tbody tr{border-bottom:1px solid #f0ece5}
+  tbody tr:nth-child(even){background:#fdfcfa}
+  td{padding:7px 8px;font-size:12px}
+  .totales{background:#f7f4ef;border-top:2px solid #b87333;padding:14px 16px;border-radius:0 0 8px 8px}
+  .tot-row{display:flex;justify-content:space-between;padding:4px 0;font-size:12px}
+  .tot-final{font-size:16px;font-weight:900;color:#4a3728;border-top:1px solid #d4c8b8;margin-top:6px;padding-top:6px}
+  </style></head><body>
+  <div class="toolbar"><button class="btn" style="background:#fff;color:#4a3728" onclick="window.print()">🖨 Imprimir</button>
+  <button class="btn" style="background:rgba(255,255,255,.2);color:#fff" onclick="window.close()">✕ Cerrar</button></div>
+  <div class="page">
+    <h1>Valoración Saitra</h1>
+    <div class="meta">Proyecto: <strong>${proy}</strong> &nbsp;·&nbsp; Columna tarifa: <strong>${col}</strong> &nbsp;·&nbsp; Fecha: <strong>${new Date().toLocaleDateString('es-ES')}</strong></div>
+    <table>
+      <thead><tr><th>Ref.</th><th>Descripción</th><th style="text-align:center">Cant.</th><th style="text-align:right">Puntos/PVP</th><th style="text-align:right">Coste</th></tr></thead>
+      <tbody>${filas}</tbody>
+    </table>
+    <div class="totales">
+      <div class="tot-row"><span>Total puntos</span><span><strong>${totalPuntos}</strong></span></div>
+      <div class="tot-row"><span>Coste total</span><span><strong>${fmtE(totalCoste)}</strong></span></div>
+      <div class="tot-row tot-final"><span>Precio venta (margen ${margen}%)</span><span>${fmtE(pventa)}</span></div>
+    </div>
+  </div></body></html>`;
+  const w = window.open('','_blank','width=900,height=700');
+  w.document.write(html);
+  w.document.close();
+}
+// ─────────────────────────────────────────────────────────────────
 // ═══════════════════════════════════════════
 // IMPORTAR OPCION 3 MUNDOBAÑO
 // ═══════════════════════════════════════════
@@ -6054,6 +6586,7 @@ const loaders={
   presupuesto:()=>{initPresupuesto();if(document.getElementById('pres-proyecto-sel').value)loadPresupuesto();},
   comparativa:()=>{initComparativa();if(document.getElementById('comp-proyecto-sel').value)loadComparativa();},
   tarifario:loadTarifario,cype:loadCype,interiorismo:loadInteriorismo,
+  saitra:()=>{ initSaitra(); },
   compras:loadCompras,subcontratas:loadSubcontratas,horas:loadHoras,
   pedidos:loadPedidos,control_horario:loadControlHorario,
   proveedores:loadProveedores,
