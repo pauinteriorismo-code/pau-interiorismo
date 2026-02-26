@@ -4774,7 +4774,7 @@ async function loadFacturas(){
         :(CC.find(c=>String(c.id)===String(f.cliente_id)||c.cliente_id===f.cliente_id)?.nombre || f.cliente_id || '—');
       const yaCobrada = f.estado==='Cobrada'||f.estado==='Pagada';
       const srch=(tipo+' '+(f.num_factura||'')+' '+contra+' '+(f.proyecto_id||'')+' '+(f.concepto||'')).toLowerCase();
-      return `<tr data-tipo="${tipo}" data-contra="${contra.toLowerCase()}" data-vto="${f.fecha_vencimiento||''}" data-estado="${f.estado||''}" data-search="${srch}">
+      return `<tr data-fid="${f.id}" data-tipo="${tipo}" data-contra="${contra.toLowerCase()}" data-vto="${f.fecha_vencimiento||''}" data-estado="${f.estado||''}" data-search="${srch}">
         <td>${badge}</td>
         <td class="td-mono" style="font-weight:700">${f.num_factura||'—'}</td>
         <td>${fmtD(f.fecha_emision)}</td>
@@ -4823,8 +4823,10 @@ function filtrarFacturas(){
   const estado=document.getElementById('filt-fac-estado')?.value||'';
   const tipo=(window._facTabActivo||'todas');
   const hoy=new Date().toISOString().split('T')[0];
+  const hayFiltro = q || contra || vtoHasta || estado || tipo!=='todas';
 
   let visible=0;
+  const visibleIds=[];
   document.querySelectorAll('#facturas-tbody tr[data-tipo]').forEach(tr=>{
     const matchTipo = tipo==='todas' || (tr.dataset.tipo||'').toLowerCase()===tipo.toLowerCase();
     const matchQ = !q || (tr.dataset.search||'').toLowerCase().includes(q);
@@ -4833,9 +4835,48 @@ function filtrarFacturas(){
     const matchEstado = !estado || tr.dataset.estado===estado;
     const show = matchTipo && matchQ && matchContra && matchVto && matchEstado;
     tr.style.display = show ? '' : 'none';
-    if(show) visible++;
+    if(show){ visible++; if(tr.dataset.fid) visibleIds.push(tr.dataset.fid); }
   });
   document.getElementById('facturas-count').textContent = visible+' facturas';
+
+  // Recalcular KPIs con las facturas visibles
+  const lista = hayFiltro ? FC.filter(f=>visibleIds.includes(String(f.id))) : FC;
+  let vTotal=0,vCob=0,vPdte=0,vVenc=0;
+  let cTotal=0,cPag=0,cPdte=0,cIva=0;
+  lista.forEach(f=>{
+    const base=f.base_imponible||0;
+    const tot=base*(1+ivaPct(f.iva_pct)/100);
+    const pag=f.importe_cobrado||0;
+    const pdte=tot-pag;
+    const t=f.tipo_factura||'Venta';
+    if(t==='Compra'){
+      cTotal+=tot; cPag+=pag; cPdte+=pdte;
+      cIva+=base*ivaPct(f.iva_pct)/100;
+    } else {
+      vTotal+=tot; vCob+=pag; vPdte+=pdte;
+      if(f.estado==='Vencida') vVenc+=pdte;
+    }
+  });
+  const sv=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  sv('fk-v-total',fmt(vTotal)); sv('fk-v-cobrado',fmt(vCob));
+  sv('fk-v-pendiente',fmt(vPdte)); sv('fk-v-vencidas',fmt(vVenc));
+  sv('fk-c-total',fmt(cTotal)); sv('fk-c-pagado',fmt(cPag));
+  sv('fk-c-pendiente',fmt(cPdte)); sv('fk-c-iva',fmt(cIva));
+  const beneficio=vTotal-cTotal;
+  const margen=vTotal>0?(beneficio/vTotal)*100:0;
+  const ivaLiquidar=lista.reduce((s,f)=>{
+    const base=f.base_imponible||0, iva=base*ivaPct(f.iva_pct)/100;
+    return s+((f.tipo_factura||'Venta')==='Venta'?iva:-iva);
+  },0);
+  const bEl=document.getElementById('fk-b-beneficio');
+  if(bEl){bEl.textContent=fmt(beneficio);bEl.style.color=beneficio>=0?'var(--green)':'var(--red)';}
+  const mEl=document.getElementById('fk-b-margen');
+  if(mEl){mEl.textContent=fmtP(margen);mEl.style.color=margen>=20?'var(--green)':margen>=10?'var(--amber)':'var(--red)';}
+  sv('fk-b-iva',fmt(ivaLiquidar));
+  const pct=vTotal>0?Math.min(cTotal/vTotal*100,100):0;
+  const bar=document.getElementById('fk-b-bar');
+  if(bar){bar.style.width=pct+'%';bar.style.background=pct<60?'var(--green)':pct<85?'var(--amber)':'var(--red)';}
+  sv('fk-b-bar-lbl',hayFiltro?`📊 Filtrado: ${visible} facturas`:`Gastos: ${pct.toFixed(0)}% sobre ingresos`);
 }
 
 function limpiarFiltrosFacturas(){
