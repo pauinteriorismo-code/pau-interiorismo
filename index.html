@@ -2339,7 +2339,7 @@ const META={
   configuracion:{t:'Configuración',b:'Empresa · CI+GG+BI · Parámetros'},
 };
 document.querySelectorAll('.nav-item[data-view]').forEach(el=>el.addEventListener('click',()=>navTo(el.dataset.view)));
-async async function navTo(v){
+async function navTo(v){
   document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
   document.querySelector(`[data-view="${v}"]`)?.classList.add('active');
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
