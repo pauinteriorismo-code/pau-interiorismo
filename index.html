@@ -316,29 +316,29 @@ tbody td{padding:7px 10px;vertical-align:middle}
       </div>
       <div id="pf-doc" style="background:white;max-width:800px;margin:0 auto;padding:32px 40px;border:1px solid var(--border);border-radius:var(--radius);font-family:Arial,sans-serif;font-size:12px">
         <!-- Cabecera empresa -->
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid #1a2a3a">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid #b87333">
           <div>
-            <div style="font-size:18px;font-weight:700;color:#1a2a3a">PAU INTERIORISMO S.L.</div>
-            <div style="color:#666;margin-top:3px">C/ Tomás y Valiente Nº 6 Bajo, 46290 Alcàsser (Valencia)</div>
-            <div style="color:#666">Tel: 961 20 01 87 · <a href="https://pau-interiorismo.vercel.app/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="5f363139301f2f3e2a36312b3a2d36302d362c3230713c3032">[email&nbsp;protected]</a></div>
-            <div style="color:#666">CIF: B-56909641</div>
+            <img src="https://pauinteriorismo.es/img/logo2.png" style="height:55px;margin-bottom:6px" onerror="this.style.display='none'">
+            <div style="color:#888;margin-top:3px;font-size:10px">C/ Tomás y Valiente Nº 6 Bajo, 46290 Alcàsser (Valencia)</div>
+            <div style="color:#888;font-size:10px">Tel: 961 20 01 87 · info@pauinteriorismo.es</div>
+            <div style="color:#888;font-size:10px">CIF: B-56909641</div>
           </div>
           <div style="text-align:right">
             <div style="font-size:20px;font-weight:700;color:#b87333;letter-spacing:.05em">PRESUPUESTO</div>
-            <div id="pf-num" style="font-size:13px;color:#1a2a3a;margin-top:4px"></div>
+            <div id="pf-num" style="font-size:13px;color:#4a3728;margin-top:4px"></div>
             <div id="pf-fecha" style="color:#666;font-size:11px"></div>
           </div>
         </div>
         <!-- Datos cliente -->
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
           <div style="background:#f7f4ef;padding:12px;border-radius:4px">
-            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#8a9aaa;margin-bottom:6px">CLIENTE</div>
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#b87333;margin-bottom:6px">CLIENTE</div>
             <div id="pf-cliente-nombre" style="font-weight:700;font-size:13px"></div>
             <div id="pf-cliente-cif" style="color:#666"></div>
             <div id="pf-cliente-dir" style="color:#666"></div>
           </div>
           <div style="background:#f7f4ef;padding:12px;border-radius:4px">
-            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#8a9aaa;margin-bottom:6px">PROYECTO</div>
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#b87333;margin-bottom:6px">PROYECTO</div>
             <div id="pf-proyecto-nombre" style="font-weight:700;font-size:13px"></div>
             <div id="pf-proyecto-dir" style="color:#666"></div>
           </div>
@@ -346,12 +346,12 @@ tbody td{padding:7px 10px;vertical-align:middle}
         <!-- Tabla líneas -->
         <table style="width:100%;border-collapse:collapse;margin-bottom:20px;font-size:11px">
           <thead>
-            <tr style="background:#1a2a3a;color:white">
-              <th style="padding:8px;text-align:left">Descripción</th>
-              <th style="padding:8px;text-align:center;width:40px">Ud.</th>
-              <th style="padding:8px;text-align:right;width:60px">Cant.</th>
-              <th style="padding:8px;text-align:right;width:90px">P.Unitario</th>
-              <th style="padding:8px;text-align:right;width:90px">Subtotal</th>
+            <tr style="background:#f7f4ef">
+              <th style="padding:8px;text-align:left;color:#4a3728;border-bottom:1px solid #e8e0d4;font-size:10px;text-transform:uppercase">Descripción</th>
+              <th style="padding:8px;text-align:center;width:40px;color:#4a3728;border-bottom:1px solid #e8e0d4;font-size:10px;text-transform:uppercase">Ud.</th>
+              <th style="padding:8px;text-align:right;width:60px;color:#4a3728;border-bottom:1px solid #e8e0d4;font-size:10px;text-transform:uppercase">Cant.</th>
+              <th style="padding:8px;text-align:right;width:90px;color:#4a3728;border-bottom:1px solid #e8e0d4;font-size:10px;text-transform:uppercase">P.Unitario</th>
+              <th style="padding:8px;text-align:right;width:90px;color:#4a3728;border-bottom:1px solid #e8e0d4;font-size:10px;text-transform:uppercase">Subtotal</th>
             </tr>
           </thead>
           <tbody id="pf-lineas"></tbody>
@@ -361,7 +361,7 @@ tbody td{padding:7px 10px;vertical-align:middle}
           <div style="width:250px">
             <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #ddd;font-size:12px"><span>Base imponible</span><span id="pf-base">—</span></div>
             <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #ddd;font-size:12px"><span>IVA (10%)</span><span id="pf-iva">—</span></div>
-            <div style="display:flex;justify-content:space-between;padding:9px 0;font-size:14px;font-weight:700;color:#1a2a3a"><span>TOTAL</span><span id="pf-total">—</span></div>
+            <div style="display:flex;justify-content:space-between;padding:9px 0;font-size:14px;font-weight:700;color:#4a3728"><span>TOTAL</span><span id="pf-total">—</span></div>
           </div>
         </div>
         <!-- Condiciones -->
@@ -387,7 +387,7 @@ tbody td{padding:7px 10px;vertical-align:middle}
       </div>
       <div id="ct-doc" style="background:white;max-width:800px;margin:0 auto;padding:32px 40px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;line-height:1.7;font-family:Arial,sans-serif">
         <div style="text-align:center;margin-bottom:24px">
-          <div style="font-size:16px;font-weight:700;color:#1a2a3a;border-bottom:2px solid #b87333;padding-bottom:8px">CONTRATO DE OBRA CIVIL Y SERVICIOS DE INTERIORISMO</div>
+          <div style="font-size:16px;font-weight:700;color:#4a3728;border-bottom:2px solid #b87333;padding-bottom:8px">CONTRATO DE OBRA CIVIL Y SERVICIOS DE INTERIORISMO</div>
         </div>
         <div style="text-align:right;color:#666;margin-bottom:18px">En Valencia, a <span id="ct-fecha">[FECHA]</span></div>
         <div style="margin-bottom:16px"><strong>REUNIDOS</strong></div>
@@ -444,11 +444,11 @@ tbody td{padding:7px 10px;vertical-align:middle}
       <!-- DOCUMENTO PEDIDO EDITABLE + IMPRIMIBLE -->
       <div id="pd-doc" style="background:white;max-width:720px;margin:0 auto;padding:32px 40px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;font-family:Arial,sans-serif">
         <!-- CABECERA -->
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;padding-bottom:14px;border-bottom:2px solid #1a2a3a">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;padding-bottom:14px;border-bottom:2px solid #b87333">
           <div>
-            <div style="font-size:18px;font-weight:700;color:#1a2a3a">PAU INTERIORISMO S.L.</div>
-            <div style="color:#666;font-size:10px">C/ Tomás y Valiente Nº 6 Bajo · 46290 Alcàsser (Valencia)</div>
-            <div style="color:#666;font-size:10px"><a href="https://pau-interiorismo.vercel.app/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="650c0b030a251504100c0b1100170c0a170c16080a4b060a08">[email&nbsp;protected]</a> · Tel: 961 20 01 87 · CIF: B-56909641</div>
+            <img src="https://pauinteriorismo.es/img/logo2.png" style="height:50px;margin-bottom:6px" onerror="this.style.display='none'">
+            <div style="color:#888;font-size:10px">C/ Tomás y Valiente Nº 6 Bajo · 46290 Alcàsser (Valencia)</div>
+            <div style="color:#888;font-size:10px">info@pauinteriorismo.es · Tel: 961 20 01 87 · CIF: B-56909641</div>
           </div>
           <div style="text-align:right">
             <div style="font-size:20px;font-weight:700;color:#b87333">PEDIDO</div>
@@ -459,18 +459,18 @@ tbody td{padding:7px 10px;vertical-align:middle}
         <!-- PROVEEDOR / PROYECTO / CLIENTE -->
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px">
           <div style="background:#f7f4ef;padding:10px;border-radius:4px">
-            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#8a9aaa;margin-bottom:5px">PROVEEDOR / EMPRESA</div>
+            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#b87333;margin-bottom:5px">PROVEEDOR / EMPRESA</div>
             <input id="pd-prov-input" style="border:none;background:transparent;width:100%;font-weight:700;font-size:12px" placeholder="Nombre proveedor">
           </div>
           <div style="background:#f7f4ef;padding:10px;border-radius:4px">
-            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#8a9aaa;margin-bottom:5px">PROYECTO / REFERENCIA</div>
+            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#b87333;margin-bottom:5px">PROYECTO / REFERENCIA</div>
             <input id="pd-proyecto-input" style="border:none;background:transparent;width:100%;font-weight:700;font-size:12px" placeholder="Nombre o referencia del proyecto">
             <input id="pd-ref-doc-input" style="border:none;background:transparent;width:100%;color:#b87333;font-size:11px;font-weight:600;margin-top:3px" placeholder="Referencia del pedido (ej: Azulejo baño modelo X)">
           </div>
         </div>
         <!-- CLIENTE -->
-        <div id="pd-cliente-block" style="background:#eef6ff;padding:10px;border-radius:4px;margin-bottom:18px;border-left:3px solid #2a6aad">
-          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#2a6aad;margin-bottom:6px">CLIENTE FINAL</div>
+        <div id="pd-cliente-block" style="background:#f7f4ef;padding:10px;border-radius:4px;margin-bottom:18px;border-left:3px solid #b87333">
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#b87333;margin-bottom:6px">CLIENTE FINAL</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
             <div>
               <input id="pd-cliente-nombre-input" style="border:none;background:transparent;width:100%;font-weight:700;font-size:12px" placeholder="Nombre cliente">
@@ -485,9 +485,9 @@ tbody td{padding:7px 10px;vertical-align:middle}
         <!-- TABLA DE LÍNEAS -->
         <table style="width:100%;border-collapse:collapse;margin-bottom:16px" id="pd-lineas-table">
           <thead>
-            <tr style="background:#1a2a3a;color:white">
-              <th style="padding:7px 10px;text-align:center;width:60px">Cant.</th>
-              <th style="padding:7px 10px;text-align:left">Descripción / Concepto</th>
+            <tr style="background:#f7f4ef">
+              <th style="padding:7px 10px;text-align:center;width:60px;color:#4a3728;border-bottom:1px solid #e8e0d4;font-size:10px;text-transform:uppercase">Cant.</th>
+              <th style="padding:7px 10px;text-align:left;color:#4a3728;border-bottom:1px solid #e8e0d4;font-size:10px;text-transform:uppercase">Descripción / Concepto</th>
             </tr>
           </thead>
           <tbody id="pd-lineas-body">
@@ -507,8 +507,8 @@ HORARIO DE DESCARGA DE 10:00 - 14:00 Y DE 16:30 A 19:00 H.
 TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         </div>
         <!-- PIE -->
-        <div style="color:#666;font-size:10px;text-align:center;border-top:1px solid #eee;padding-top:10px">
-          PAU INTERIORISMO S.L. · CIF B-56909641 · <a href="https://pau-interiorismo.vercel.app/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="d1b8bfb7be91a1b0a4b8bfa5b4a3b8bea3b8a2bcbeffb2bebc">[email&nbsp;protected]</a>
+        <div style="color:#bbb;font-size:9px;text-align:center;border-top:1px solid #e8e0d4;padding-top:10px">
+          PAU INTERIORISMO S.L. · CIF B-56909641 · info@pauinteriorismo.es · Tel: 961 20 01 87
         </div>
       </div>
     </div>
@@ -3268,39 +3268,42 @@ function exportarInformeFacturas(){
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
   <title>PAU INTERIORISMO SL - ${tipoLabel}</title>
   <style>
-    body{font-family:Arial,sans-serif;font-size:12px;color:#222;margin:0;padding:0}
+    body{font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:#333;margin:0;padding:0}
     @media print{@page{size:A4 landscape;margin:15mm}}
-    .header{background:#1a2a3a;color:white;padding:18px 24px;display:flex;justify-content:space-between;align-items:flex-start}
-    .header h1{margin:0;font-size:16px;font-weight:700}
-    .header p{margin:3px 0 0;font-size:11px;opacity:.8}
-    .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:0;border-bottom:2px solid #e0e0e0}
-    .kpi{padding:12px 16px;border-right:1px solid #e0e0e0}
+    .header{background:#fff;padding:20px 24px;display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #b87333}
+    .header h1{margin:0;font-size:15px;font-weight:700;color:#4a3728}
+    .header p{margin:3px 0 0;font-size:11px;color:#888}
+    .logo-img{height:45px;margin-bottom:6px}
+    .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:0;border-bottom:1px solid #e8e0d4}
+    .kpi{padding:12px 16px;border-right:1px solid #e8e0d4}
     .kpi:last-child{border-right:none}
-    .kpi-label{font-size:10px;color:#888;text-transform:uppercase;font-weight:600;margin-bottom:4px}
-    .kpi-value{font-size:16px;font-weight:700;color:#1a2a3a}
+    .kpi-label{font-size:10px;color:#b87333;text-transform:uppercase;font-weight:700;margin-bottom:4px}
+    .kpi-value{font-size:16px;font-weight:700;color:#4a3728}
     table{width:100%;border-collapse:collapse}
-    thead tr{background:#1a2a3a;color:white}
-    thead th{padding:7px 6px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+    thead tr{background:#f7f4ef}
+    thead th{padding:8px 6px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#4a3728;border-bottom:1px solid #e8e0d4}
     thead th:nth-child(n+7){text-align:right}
-    tbody tr:hover{background:#f8f8f8}
-    tfoot tr{background:#f0f4f8;font-weight:700}
-    tfoot td{padding:7px 6px;font-size:11px}
-    .footer{text-align:center;color:#aaa;font-size:10px;margin-top:16px;padding:12px;border-top:1px solid #eee}
+    tbody tr{border-bottom:1px solid #f0ece5}
+    tbody tr:hover{background:#fdfcfa}
+    tfoot tr{background:#f7f4ef;font-weight:700;border-top:2px solid #b87333}
+    tfoot td{padding:7px 6px;font-size:11px;color:#4a3728}
+    .footer{text-align:center;color:#bbb;font-size:9px;margin-top:16px;padding:12px;border-top:1px solid #e8e0d4}
   </style></head><body>
   <div class="header">
     <div>
-      <h1>PAU INTERIORISMO S.L. — ${tipoLabel}${estadoLabel}</h1>
+      <img src="https://pauinteriorismo.es/img/logo2.png" class="logo-img" onerror="this.style.display='none'">
+      <h1>${tipoLabel}${estadoLabel}</h1>
       <p>CIF B-56909641 · C/ Tomás y Valiente Nº 6 Bajo · 46290 Alcàsser (Valencia)</p>
       <p>Informe generado: ${hoy} · ${lista.length} facturas</p>
     </div>
-    <div style="text-align:right;font-size:22px;opacity:.3">🧾</div>
+    <div style="text-align:right;font-size:22px;opacity:.2">🧾</div>
   </div>
   <div class="kpis">
     <div class="kpi"><div class="kpi-label">Base imponible</div><div class="kpi-value">${fmt(totBase)}</div></div>
     <div class="kpi"><div class="kpi-label">IVA</div><div class="kpi-value">${fmt(totIVA)}</div></div>
     <div class="kpi"><div class="kpi-label">Total</div><div class="kpi-value">${fmt(totTotal)}</div></div>
     <div class="kpi"><div class="kpi-label">Cobrado / Pagado</div><div class="kpi-value" style="color:#27ae60">${fmt(totCobrado)}</div></div>
-    <div class="kpi"><div class="kpi-label">Pendiente</div><div class="kpi-value" style="color:#e67e22">${fmt(totPdte)}</div></div>
+    <div class="kpi"><div class="kpi-label">Pendiente</div><div class="kpi-value" style="color:#c0392b">${fmt(totPdte)}</div></div>
   </div>
   <table>
     <thead><tr>
@@ -3320,11 +3323,11 @@ function exportarInformeFacturas(){
       <td></td>
       <td style="padding:7px 6px;text-align:right">${fmt(totTotal)}</td>
       <td style="padding:7px 6px;text-align:right;color:#27ae60">${fmt(totCobrado)}</td>
-      <td style="padding:7px 6px;text-align:right;color:#e67e22">${fmt(totPdte)}</td>
+      <td style="padding:7px 6px;text-align:right;color:#c0392b">${fmt(totPdte)}</td>
       <td></td>
     </tr></tfoot>
   </table>
-  <div class="footer">PAU INTERIORISMO S.L. · CIF B-56909641 · info@pauinteriorismo.com · Tel: 961 20 01 87</div>
+  <div class="footer">PAU INTERIORISMO S.L. · CIF B-56909641 · info@pauinteriorismo.es · Tel: 961 20 01 87</div>
   </body></html>`;
 
   // Abrir en ventana nueva y lanzar impresión/PDF
@@ -4367,7 +4370,7 @@ async function exportarPresupuestoPDF(){
       const tds = tr.querySelectorAll('td');
       const isCapitulo = tr.classList.contains('capitulo-row') || (tds[0]&&tds[0].colSpan>1);
       if(isCapitulo){
-        return `<tr style="background:#1a2a3a;color:white"><td colspan="7" style="padding:7px 10px;font-weight:700">${tds[0]?.textContent||''}</td></tr>`;
+        return `<tr style="background:#f7f4ef"><td colspan="7" style="padding:8px 10px;font-weight:700;color:#4a3728;border-bottom:1px solid #b87333">${tds[0]?.textContent||''}</td></tr>`;
       }
       return `<tr style="border-bottom:1px solid #eee">
         ${Array.from(tds).slice(0,-1).map(td=>`<td style="padding:5px 8px;font-size:11px">${td.textContent}</td>`).join('')}
@@ -4375,44 +4378,45 @@ async function exportarPresupuestoPDF(){
     }).join('');
 
   const printDiv = document.createElement('div');
+  const LOGO_URL='https://pauinteriorismo.es/img/logo2.png';
   printDiv.innerHTML = `
-    <div style="font-family:Arial,sans-serif;padding:20px;max-width:800px;margin:0 auto">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #1a2a3a;padding-bottom:12px;margin-bottom:16px">
+    <div style="font-family:'Segoe UI',Arial,sans-serif;padding:20px;max-width:800px;margin:0 auto">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #b87333;padding-bottom:14px;margin-bottom:16px">
         <div>
-          <div style="font-size:18px;font-weight:700;color:#1a2a3a">PAU INTERIORISMO S.L.</div>
-          <div style="font-size:10px;color:#666">C/ Tomás y Valiente Nº 6 Bajo · 46290 Alcàsser · info@pauinteriorismo.com · CIF: B-56909641</div>
+          <img src="${LOGO_URL}" style="height:55px;margin-bottom:6px" onerror="this.style.display='none'">
+          <div style="font-size:10px;color:#888">C/ Tomás y Valiente Nº 6 Bajo · 46290 Alcàsser · info@pauinteriorismo.es · CIF: B-56909641</div>
         </div>
         <div style="text-align:right">
-          <div style="font-size:18px;font-weight:700;color:#b87333">PRESUPUESTO</div>
-          <div style="font-size:11px;color:#666">${proy} · ${ver.toUpperCase()} · ${new Date().toLocaleDateString('es-ES')}</div>
+          <div style="font-size:18px;font-weight:800;color:#b87333;letter-spacing:1px">PRESUPUESTO</div>
+          <div style="font-size:11px;color:#888">${proy} · ${ver.toUpperCase()} · ${new Date().toLocaleDateString('es-ES')}</div>
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
-        <div style="background:#f7f4ef;padding:10px;border-radius:4px">
-          <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#8a9aaa;margin-bottom:4px">CLIENTE</div>
-          <div style="font-weight:700">${cliente.nombre||'—'}</div>
-          <div style="font-size:11px;color:#666">${cliente.email||''} ${cliente.telefono||''}</div>
+        <div style="background:#f7f4ef;padding:10px;border-radius:4px;border-left:3px solid #b87333">
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#b87333;margin-bottom:4px">CLIENTE</div>
+          <div style="font-weight:700;color:#4a3728">${cliente.nombre||'—'}</div>
+          <div style="font-size:11px;color:#888">${cliente.email||''} ${cliente.telefono||''}</div>
         </div>
-        <div style="background:#f7f4ef;padding:10px;border-radius:4px">
-          <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#8a9aaa;margin-bottom:4px">PROYECTO</div>
-          <div style="font-weight:700">${proyecto.nombre||proy}</div>
-          <div style="font-size:11px;color:#666">${proyecto.tipo||''}</div>
+        <div style="background:#f7f4ef;padding:10px;border-radius:4px;border-left:3px solid #b87333">
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#b87333;margin-bottom:4px">PROYECTO</div>
+          <div style="font-weight:700;color:#4a3728">${proyecto.nombre||proy}</div>
+          <div style="font-size:11px;color:#888">${proyecto.tipo||''}</div>
         </div>
       </div>
       <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
-        <thead><tr style="background:#1a2a3a;color:white;font-size:11px">
-          <th style="padding:7px;text-align:left">Cód.</th>
-          <th style="padding:7px;text-align:left">Descripción</th>
-          <th style="padding:7px;text-align:center">Ud.</th>
-          <th style="padding:7px;text-align:right">Med.</th>
-          <th style="padding:7px;text-align:right">P.Unit.</th>
-          <th style="padding:7px;text-align:right">Total</th>
+        <thead><tr style="background:#f7f4ef;font-size:11px">
+          <th style="padding:8px;text-align:left;color:#4a3728;border-bottom:1px solid #e8e0d4">Cód.</th>
+          <th style="padding:8px;text-align:left;color:#4a3728;border-bottom:1px solid #e8e0d4">Descripción</th>
+          <th style="padding:8px;text-align:center;color:#4a3728;border-bottom:1px solid #e8e0d4">Ud.</th>
+          <th style="padding:8px;text-align:right;color:#4a3728;border-bottom:1px solid #e8e0d4">Med.</th>
+          <th style="padding:8px;text-align:right;color:#4a3728;border-bottom:1px solid #e8e0d4">P.Unit.</th>
+          <th style="padding:8px;text-align:right;color:#4a3728;border-bottom:1px solid #e8e0d4">Total</th>
         </tr></thead>
         <tbody>${rowsHtml}</tbody>
       </table>
-      <div style="text-align:right;font-size:14px;font-weight:700;padding:10px;background:#f7f4ef;border-radius:4px">${totalText}</div>
-      <div style="color:#666;font-size:10px;text-align:center;border-top:1px solid #eee;padding-top:10px;margin-top:16px">
-        PAU INTERIORISMO S.L. · CIF B-56909641 · info@pauinteriorismo.com · Tel: 961 20 01 87
+      <div style="text-align:right;font-size:14px;font-weight:700;padding:10px;background:#f7f4ef;border-radius:4px;color:#4a3728;border-top:2px solid #b87333">${totalText}</div>
+      <div style="color:#bbb;font-size:9px;text-align:center;border-top:1px solid #e8e0d4;padding-top:10px;margin-top:16px">
+        PAU INTERIORISMO S.L. · CIF B-56909641 · info@pauinteriorismo.es · Tel: 961 20 01 87
       </div>
     </div>`;
   document.body.appendChild(printDiv);
@@ -5222,39 +5226,40 @@ function fmtE(n){ return Number(n).toLocaleString('es-ES',{minimumFractionDigits
 
 function previsualizarFactura(){
   const d=_buildFacturaPDF();
+  const LOGO_URL='https://pauinteriorismo.es/img/logo2.png';
   const html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Factura '+d.num+' - PAU INTERIORISMO</title>'
   +'<style>'
   +'*{box-sizing:border-box;margin:0;padding:0}'
-  +'body{font-family:Arial,sans-serif;font-size:12px;color:#222;background:#eef1f4}'
+  +'body{font-family:"Segoe UI",Arial,sans-serif;font-size:12px;color:#333;background:#f5f3ef}'
   +'@media print{body{background:white}.toolbar{display:none}@page{size:A4;margin:12mm}}'
-  +'.toolbar{display:flex;gap:10px;justify-content:center;padding:14px;background:#1a2a3a}'
+  +'.toolbar{display:flex;gap:10px;justify-content:center;padding:14px;background:#4a3728}'
   +'.btn{padding:9px 22px;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:700}'
-  +'.btn-print{background:#fff;color:#1a2a3a}'
-  +'.btn-pdf{background:#27ae60;color:#fff}'
+  +'.btn-print{background:#fff;color:#4a3728}'
+  +'.btn-pdf{background:#b87333;color:#fff}'
   +'.btn-close{background:rgba(255,255,255,.15);color:#fff}'
-  +'.page{background:white;max-width:794px;margin:16px auto;box-shadow:0 2px 16px rgba(0,0,0,.15)}'
-  +'.hdr{background:#1a2a3a;color:white;padding:24px 28px;display:flex;justify-content:space-between;align-items:flex-start}'
-  +'.logo{font-size:17px;font-weight:900}'
-  +'.logo small{font-size:10px;opacity:.65;display:block;font-weight:400;margin-top:3px}'
+  +'.page{background:white;max-width:794px;margin:16px auto;box-shadow:0 2px 16px rgba(0,0,0,.08)}'
+  +'.hdr{padding:28px 32px;display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #b87333}'
+  +'.logo-img{height:60px;margin-bottom:6px}'
+  +'.empresa{font-size:10px;color:#888;line-height:1.5}'
   +'.fnum{text-align:right}'
-  +'.fnum h2{font-size:24px;font-weight:900;margin-bottom:5px}'
-  +'.ftipo{font-size:10px;opacity:.6;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}'
-  +'.badge{display:inline-block;padding:3px 10px;border-radius:10px;font-size:10px;font-weight:700;border:1px solid '+d.estColor+';color:'+d.estColor+';background:#f8f8f8}'
-  +'.iband{display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:3px solid #1a2a3a}'
-  +'.icell{padding:14px 20px;border-right:1px solid #eee}'
+  +'.fnum h2{font-size:22px;font-weight:800;color:#4a3728;margin-bottom:4px}'
+  +'.ftipo{font-size:10px;color:#b87333;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;font-weight:700}'
+  +'.iband{display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid #e8e0d4}'
+  +'.icell{padding:14px 20px;border-right:1px solid #e8e0d4}'
   +'.icell:last-child{border-right:none}'
-  +'.ilbl{font-size:9px;text-transform:uppercase;font-weight:700;color:#999;margin-bottom:5px;letter-spacing:.06em}'
-  +'.ival{font-size:13px;font-weight:700;color:#1a2a3a}'
+  +'.ilbl{font-size:9px;text-transform:uppercase;font-weight:700;color:#b87333;margin-bottom:5px;letter-spacing:.06em}'
+  +'.ival{font-size:13px;font-weight:700;color:#4a3728}'
   +'.isub{font-size:10px;color:#888;margin-top:3px}'
-  +'.sec{padding:20px 28px 0}'
+  +'.sec{padding:20px 32px 0}'
   +'table{width:100%;border-collapse:collapse}'
-  +'thead tr{background:#1a2a3a;color:white}'
-  +'thead th{padding:8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;text-align:left}'
-  +'tbody tr:nth-child(even){background:#fafafa}'
-  +'.tot{background:#f5f7fa;border-top:2px solid #1a2a3a;padding:16px 28px}'
-  +'.tr{display:flex;justify-content:space-between;padding:4px 0;font-size:12px}'
-  +'.tf{font-size:16px;font-weight:900;color:#1a2a3a;border-top:1px solid #ccc;padding-top:8px;margin-top:5px}'
-  +'.foot{text-align:center;color:#aaa;font-size:10px;padding:14px 28px;border-top:1px solid #eee}'
+  +'thead tr{background:#f7f4ef}'
+  +'thead th{padding:9px 8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;text-align:left;color:#4a3728;border-bottom:1px solid #e8e0d4}'
+  +'tbody tr{border-bottom:1px solid #f0ece5}'
+  +'tbody tr:nth-child(even){background:#fdfcfa}'
+  +'.tot{background:#f7f4ef;border-top:2px solid #b87333;padding:16px 32px}'
+  +'.tr{display:flex;justify-content:space-between;padding:4px 0;font-size:12px;color:#555}'
+  +'.tf{font-size:16px;font-weight:900;color:#4a3728;border-top:1px solid #d4c8b8;padding-top:8px;margin-top:5px}'
+  +'.foot{text-align:center;color:#bbb;font-size:9px;padding:14px 32px;border-top:1px solid #e8e0d4}'
   +'</style></head><body>'
   +'<div class="toolbar">'
   +'<button class="btn btn-print" onclick="window.print()">🖨️ Imprimir</button>'
@@ -5264,13 +5269,13 @@ function previsualizarFactura(){
   +'<div class="page" id="fpdf">'
     +'<div class="hdr">'
       +'<div>'
-        +'<div class="logo">PAU INTERIORISMO S.L.<small>CIF B-56909641</small></div>'
-        +'<div style="font-size:10px;opacity:.65;margin-top:8px">C/ Tomás y Valiente Nº 6 Bajo · 46290 Alcàsser (Valencia)<br>Tel: 961 20 01 87 · info@pauinteriorismo.com</div>'
+        +'<img src="'+LOGO_URL+'" class="logo-img" onerror="this.style.display=\'none\'">'
+        +'<div class="empresa">C/ Tomás y Valiente Nº 6 Bajo · 46290 Alcàsser (Valencia)<br>Tel: 961 20 01 87 · info@pauinteriorismo.es · CIF: B-56909641</div>'
       +'</div>'
       +'<div class="fnum">'
         +'<div class="ftipo">'+d.tipoLabel+'</div>'
-        +'<h2>'+escH(d.num)+'</h2>'
-        // estado omitido en PDF — es información interna
+        +'<h2>Nº '+escH(d.num)+'</h2>'
+        +'<div style="font-size:11px;color:#888">'+fmtD(d.fecha)+'</div>'
       +'</div>'
     +'</div>'
     +'<div class="iband">'
@@ -5300,13 +5305,12 @@ function previsualizarFactura(){
     +'</div>'
     +'<div class="tot">'
     +'<div style="max-width:270px;margin-left:auto">'
-    +'<div class="tr"><span>Base imponible</span><span>'+fmtE(d.base)+'</span></div>'
-    +'<div class="tr"><span>IVA ('+escH(d.ivaSel)+')</span><span>'+fmtE(d.ivaImporte)+'</span></div>'
+    +'<div class="tr"><span>Base imponible</span><span style="color:#4a3728">'+fmtE(d.base)+'</span></div>'
+    +'<div class="tr"><span>IVA ('+escH(d.ivaSel)+')</span><span style="color:#4a3728">'+fmtE(d.ivaImporte)+'</span></div>'
     +'<div class="tr tf"><span>TOTAL</span><span>'+fmtE(d.total)+'</span></div>'
-    // cobrado/pendiente omitidos — son información interna
     +'</div>'
     +'</div>'
-    +'<div style="padding:12px 28px 0">'+_getPieHtml()+'</div>'
+    +'<div style="padding:12px 32px 0">'+_getPieHtml()+'</div>'
     +'<div class="foot">PAU INTERIORISMO S.L. · CIF B-56909641 · C/ Tomás y Valiente Nº 6 Bajo · 46290 Alcàsser (Valencia) · Tel: 961 20 01 87</div>'
   +'</div>'
   +'</body></html>';
@@ -5720,11 +5724,11 @@ function _getPieHtml(){
   let html='<div style="border-top:1px solid #ddd;padding-top:12px;margin-top:8px;font-size:10px;color:#555">';
   if(iban||banco){
     html+='<div style="display:flex;gap:24px;margin-bottom:6px;flex-wrap:wrap">';
-    if(iban)  html+=`<span><strong style="color:#1a2a3a">Cuenta bancaria:</strong> ${escH(iban)}</span>`;
-    if(banco) html+=`<span><strong style="color:#1a2a3a">Banco:</strong> ${escH(banco)}</span>`;
+    if(iban)  html+=`<span><strong style="color:#4a3728">Cuenta bancaria:</strong> ${escH(iban)}</span>`;
+    if(banco) html+=`<span><strong style="color:#4a3728">Banco:</strong> ${escH(banco)}</span>`;
     html+='</div>';
   }
-  if(cond)  html+=`<div style="margin-bottom:5px"><strong style="color:#1a2a3a">Condiciones de pago:</strong> ${escH(cond)}</div>`;
+  if(cond)  html+=`<div style="margin-bottom:5px"><strong style="color:#4a3728">Condiciones de pago:</strong> ${escH(cond)}</div>`;
   if(legal) html+=`<div style="margin-bottom:5px;color:#777">${escH(legal)}</div>`;
   if(extra) html+=`<div style="color:#777">${escH(extra)}</div>`;
   html+='</div>';
@@ -5944,7 +5948,7 @@ async function abrirComparativa(){
     // Merge all descriptions from v1 as base
     if(!l1.length){ tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text-soft)">Sin líneas en v1</td></tr>'; return; }
     tbody.innerHTML = l1.map(l=>{
-      if(l.es_capitulo) return `<tr style="background:#1a2a3a;color:white"><td colspan="8" style="padding:7px 10px;font-weight:700">${l.descripcion||''}</td></tr>`;
+      if(l.es_capitulo) return `<tr style="background:#f7f4ef"><td colspan="8" style="padding:8px 10px;font-weight:700;color:#4a3728;border-bottom:1px solid #b87333">${l.descripcion||''}</td></tr>`;
       const match2 = l2.find(x=>x.descripcion===l.descripcion && !x.es_capitulo);
       const match3 = l3.find(x=>x.descripcion===l.descripcion && !x.es_capitulo);
       const s1=l.subtotal||0, s2=match2?.subtotal||0, s3=match3?.subtotal||0;
@@ -5992,55 +5996,55 @@ async function enviarFacturaEmail(id){
   const pie = _getPieHtml();
 
   const htmlFactura = `
-    <div style="font-family:Arial,sans-serif;max-width:700px;margin:0 auto">
-      <div style="background:#1a2a3a;color:white;padding:20px 24px;display:flex;justify-content:space-between;align-items:center">
+    <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:700px;margin:0 auto">
+      <div style="background:#fff;padding:20px 24px;display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #b87333">
         <div>
-          <div style="font-size:18px;font-weight:900">PAU INTERIORISMO S.L.</div>
-          <div style="font-size:10px;opacity:.65;margin-top:4px">CIF B-56909641 · C/ Tomás y Valiente Nº 6 Bajo · 46290 Alcàsser (Valencia)</div>
+          <img src="https://pauinteriorismo.es/img/logo2.png" style="height:50px;margin-bottom:6px" alt="PAU INTERIORISMO">
+          <div style="font-size:10px;color:#888">CIF B-56909641 · C/ Tomás y Valiente Nº 6 Bajo · 46290 Alcàsser (Valencia)</div>
         </div>
         <div style="text-align:right">
-          <div style="font-size:10px;opacity:.6;text-transform:uppercase">Factura de venta</div>
-          <div style="font-size:22px;font-weight:900">${f.num_factura}</div>
+          <div style="font-size:10px;color:#b87333;text-transform:uppercase;letter-spacing:1.5px;font-weight:700">Factura de venta</div>
+          <div style="font-size:22px;font-weight:800;color:#4a3728">${f.num_factura}</div>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:3px solid #1a2a3a">
-        <div style="padding:14px 16px;border-right:1px solid #eee">
-          <div style="font-size:9px;text-transform:uppercase;font-weight:700;color:#888;margin-bottom:4px">Cliente</div>
-          <div style="font-size:13px;font-weight:700;color:#1a2a3a">${escH(d.contra)}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid #e8e0d4">
+        <div style="padding:14px 16px;border-right:1px solid #e8e0d4">
+          <div style="font-size:9px;text-transform:uppercase;font-weight:700;color:#b87333;margin-bottom:4px">Cliente</div>
+          <div style="font-size:13px;font-weight:700;color:#4a3728">${escH(d.contra)}</div>
           ${d.contraCIF?`<div style="font-size:10px;color:#888">CIF/NIF: ${escH(d.contraCIF)}</div>`:''}
         </div>
-        <div style="padding:14px 16px;border-right:1px solid #eee">
-          <div style="font-size:9px;text-transform:uppercase;font-weight:700;color:#888;margin-bottom:4px">Fechas</div>
-          <div style="font-size:13px;font-weight:700;color:#1a2a3a">Emisión: ${fmtD(f.fecha_emision)}</div>
+        <div style="padding:14px 16px;border-right:1px solid #e8e0d4">
+          <div style="font-size:9px;text-transform:uppercase;font-weight:700;color:#b87333;margin-bottom:4px">Fechas</div>
+          <div style="font-size:13px;font-weight:700;color:#4a3728">Emisión: ${fmtD(f.fecha_emision)}</div>
           ${f.fecha_vencimiento?`<div style="font-size:10px;color:#888">Vencimiento: ${fmtD(f.fecha_vencimiento)}</div>`:''}
         </div>
         <div style="padding:14px 16px">
-          <div style="font-size:9px;text-transform:uppercase;font-weight:700;color:#888;margin-bottom:4px">Forma de pago</div>
-          <div style="font-size:13px;font-weight:700;color:#1a2a3a">${escH(f.forma_pago||'—')}</div>
+          <div style="font-size:9px;text-transform:uppercase;font-weight:700;color:#b87333;margin-bottom:4px">Forma de pago</div>
+          <div style="font-size:13px;font-weight:700;color:#4a3728">${escH(f.forma_pago||'—')}</div>
         </div>
       </div>
       <div style="padding:16px 16px 0">
         <table style="width:100%;border-collapse:collapse">
-          <thead><tr style="background:#1a2a3a;color:white">
-            <th style="padding:8px;text-align:left;font-size:10px">Descripción</th>
-            <th style="padding:8px;text-align:center;font-size:10px">Ud.</th>
-            <th style="padding:8px;text-align:right;font-size:10px">Cant.</th>
-            <th style="padding:8px;text-align:right;font-size:10px">P. Unit.</th>
-            <th style="padding:8px;text-align:center;font-size:10px">IVA</th>
-            <th style="padding:8px;text-align:right;font-size:10px">Subtotal</th>
+          <thead><tr style="background:#f7f4ef">
+            <th style="padding:8px;text-align:left;font-size:10px;color:#4a3728;border-bottom:1px solid #e8e0d4">Descripción</th>
+            <th style="padding:8px;text-align:center;font-size:10px;color:#4a3728;border-bottom:1px solid #e8e0d4">Ud.</th>
+            <th style="padding:8px;text-align:right;font-size:10px;color:#4a3728;border-bottom:1px solid #e8e0d4">Cant.</th>
+            <th style="padding:8px;text-align:right;font-size:10px;color:#4a3728;border-bottom:1px solid #e8e0d4">P. Unit.</th>
+            <th style="padding:8px;text-align:center;font-size:10px;color:#4a3728;border-bottom:1px solid #e8e0d4">IVA</th>
+            <th style="padding:8px;text-align:right;font-size:10px;color:#4a3728;border-bottom:1px solid #e8e0d4">Subtotal</th>
           </tr></thead>
           <tbody>${d.filasLineas||`<tr><td colspan="6" style="padding:12px;text-align:center;color:#888">${escH(f.concepto||'—')}</td></tr>`}</tbody>
         </table>
       </div>
-      <div style="background:#f5f7fa;border-top:2px solid #1a2a3a;padding:14px 16px">
+      <div style="background:#f7f4ef;border-top:2px solid #b87333;padding:14px 16px">
         <div style="max-width:250px;margin-left:auto">
-          <div style="display:flex;justify-content:space-between;padding:3px 0;font-size:12px"><span>Base imponible</span><span>${fmtE(base)}</span></div>
-          <div style="display:flex;justify-content:space-between;padding:3px 0;font-size:12px"><span>IVA (${f.iva_pct||'21%'})</span><span>${fmtE(base*ivaN/100)}</span></div>
-          <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:16px;font-weight:900;color:#1a2a3a;border-top:1px solid #ccc;margin-top:4px"><span>TOTAL</span><span>${fmtE(total)}</span></div>
+          <div style="display:flex;justify-content:space-between;padding:3px 0;font-size:12px;color:#555"><span>Base imponible</span><span style="color:#4a3728">${fmtE(base)}</span></div>
+          <div style="display:flex;justify-content:space-between;padding:3px 0;font-size:12px;color:#555"><span>IVA (${f.iva_pct||'21%'})</span><span style="color:#4a3728">${fmtE(base*ivaN/100)}</span></div>
+          <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:16px;font-weight:900;color:#4a3728;border-top:1px solid #d4c8b8;margin-top:4px"><span>TOTAL</span><span>${fmtE(total)}</span></div>
         </div>
       </div>
       ${pie ? `<div style="padding:12px 16px">${pie}</div>` : ''}
-      <div style="text-align:center;color:#aaa;font-size:10px;padding:12px 16px;border-top:1px solid #eee">
+      <div style="text-align:center;color:#bbb;font-size:9px;padding:12px 16px;border-top:1px solid #e8e0d4">
         PAU INTERIORISMO S.L. · CIF B-56909641 · C/ Tomás y Valiente Nº 6 Bajo · 46290 Alcàsser (Valencia) · Tel: 961 20 01 87
       </div>
     </div>
@@ -6156,13 +6160,13 @@ async function generarInformeMensual(){
     const saldoIva = ivaRep-ivaRep*0; // IVA repercutido - IVA soportado (simplificado)
     body.innerHTML=`
       <div style="font-family:Arial,sans-serif;max-width:700px">
-        <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #1a2a3a;padding-bottom:10px;margin-bottom:16px">
-          <div><div style="font-size:16px;font-weight:700;color:#1a2a3a">PAU INTERIORISMO S.L.</div><div style="font-size:10px;color:#666">CIF B-56909641</div></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #b87333;padding-bottom:10px;margin-bottom:16px">
+          <div><img src="https://pauinteriorismo.es/img/logo2.png" style="height:45px;margin-bottom:4px" onerror="this.style.display='none'"><div style="font-size:10px;color:#888">CIF B-56909641</div></div>
           <div style="text-align:right"><div style="font-size:15px;font-weight:700;color:#b87333">INFORME MENSUAL</div><div style="font-size:12px;color:#666">${nombreMes} ${anyo}</div></div>
         </div>
         <!-- INGRESOS -->
         <div style="margin-bottom:14px">
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#1a2a3a;background:#f7f4ef;padding:6px 10px;border-radius:4px;margin-bottom:6px">📈 INGRESOS</div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#4a3728;background:#f7f4ef;padding:6px 10px;border-radius:4px;margin-bottom:6px">📈 INGRESOS</div>
           <table style="width:100%;font-size:12px">
             <tr><td style="padding:4px 10px">Facturación base imponible</td><td style="text-align:right;font-weight:700;padding:4px 10px">${fmt(ingresos)}</td></tr>
             <tr><td style="padding:4px 10px;color:#666">IVA repercutido (21%)</td><td style="text-align:right;padding:4px 10px;color:#666">${fmt(ivaRep)}</td></tr>
@@ -6172,7 +6176,7 @@ async function generarInformeMensual(){
         </div>
         <!-- GASTOS -->
         <div style="margin-bottom:14px">
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#1a2a3a;background:#f7f4ef;padding:6px 10px;border-radius:4px;margin-bottom:6px">📉 GASTOS</div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#4a3728;background:#f7f4ef;padding:6px 10px;border-radius:4px;margin-bottom:6px">📉 GASTOS</div>
           <table style="width:100%;font-size:12px">
             <tr><td style="padding:4px 10px">Compras a proveedores (base)</td><td style="text-align:right;padding:4px 10px">${fmt(compTotal)}</td></tr>
             <tr><td style="padding:4px 10px;color:#666">IVA soportado compras</td><td style="text-align:right;padding:4px 10px;color:#666">${fmt(ivaRep>0?ivaRep*0.4:ivaRep)}</td></tr>
