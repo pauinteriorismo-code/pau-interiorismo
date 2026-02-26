@@ -3275,6 +3275,9 @@ async function loadGerencia(){
       sbGet('compras'),sbGet('subcontratas'),sbGet('horas'),sbGet('facturas')
     ]);
     CC=cl;PC=pr;TC=ta;CoC=comp;ScC=subc;HC=hor;FC=fac;
+    // Diagnóstico: detectar facturas sin tipo definido
+    const sinTipo=fac.filter(f=>!f.tipo_factura);
+    if(sinTipo.length){console.warn('⚠️ Facturas sin tipo_factura (se cuentan como Venta por defecto):',sinTipo.map(f=>f.num_factura||f.id));}
     document.getElementById('cype-badge').textContent=cy.length;
 
     // KPIs superiores y resumen: SOLO facturas emitidas y recibidas (base imponible)
@@ -3326,10 +3329,10 @@ async function loadGerencia(){
         `<div class="cuenta-row"><span>${bE(k)} ${k}</span><span style="font-weight:700">${v}</span><span></span></div>`
       ).join('')+`<div class="cuenta-row total"><span>TOTAL PROYECTOS</span><span style="font-weight:700">${pr.length}</span><span></span></div>`;
 
-    // Cobros
-    const cobrado=fac.filter(f=>f.estado==='Cobrada').reduce((s,f)=>s+(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100),0);
-    const totalFactIVA=fac.reduce((s,f)=>s+(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100),0);
-    const vencidas=fac.filter(f=>f.estado==='Vencida').reduce((s,f)=>s+(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100),0);
+    // Cobros (solo facturas de venta)
+    const cobrado=facVenta.filter(f=>f.estado==='Cobrada').reduce((s,f)=>s+(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100),0);
+    const totalFactIVA=facVenta.reduce((s,f)=>s+(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100),0);
+    const vencidas=facVenta.filter(f=>f.estado==='Vencida').reduce((s,f)=>s+(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100),0);
     document.getElementById('gc-facturado').textContent=fmt(totalFactIVA);
     document.getElementById('gc-cobrado').textContent=fmt(cobrado);
     document.getElementById('gc-pendiente').textContent=fmt(totalFactIVA-cobrado);
