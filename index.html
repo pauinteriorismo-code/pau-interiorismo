@@ -21,7 +21,7 @@ button,input,select,textarea{font-family:inherit}button{cursor:pointer}
 .login-sub{font-size:10px;color:var(--text-soft);margin-bottom:28px;letter-spacing:.08em;text-transform:uppercase}
 .login-error{background:var(--red-soft);color:var(--red);font-size:12px;padding:8px 12px;border-radius:var(--radius-sm);margin-bottom:12px;display:none}
 /* APP */
-.app{display:flex;height:100vh;overflow:hidden}
+.app{display:none;height:100vh;overflow:hidden}
 /* SIDEBAR */
 .sidebar{width:var(--sidebar);background:var(--navy);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;z-index:10}
 .sidebar-logo{padding:18px 16px 14px;border-bottom:1px solid rgba(255,255,255,.08)}
@@ -2372,7 +2372,7 @@ function doLogin(){
   if(PASS_OK && USER_OK){
     document.getElementById('login-screen').style.display='none';
     const app = document.querySelector('.app');
-    if(app) app.style.display='';  // restore app visibility
+    if(app) app.style.display='flex';
     if(errEl) errEl.style.display='none';
     sessionStorage.setItem('pau-auth-v2','1');
     sessionStorage.setItem('pau-user',u);
@@ -2386,11 +2386,14 @@ function doLogin(){
 }
 function doLogout(){
   sessionStorage.clear();
-  // Ocultar la app, mostrar login
+  // Cerrar TODOS los modales abiertos
+  document.querySelectorAll('.overlay.open').forEach(el=>el.classList.remove('open'));
+  // Ocultar la app completamente
   const app = document.querySelector('.app');
   if(app) app.style.display='none';
+  // Mostrar login
   const ls = document.getElementById('login-screen');
-  if(ls){ ls.style.display='flex'; }
+  if(ls){ ls.style.display='flex'; ls.style.zIndex='9999'; }
   const pw = document.getElementById('login-pass');
   if(pw){ pw.value=''; setTimeout(()=>pw.focus(),100); }
   const err = document.getElementById('login-error');
@@ -2403,10 +2406,14 @@ function setUserDisplay(u){
 }
 // ── ARRANQUE: esperar a que el DOM esté listo ──
 function arrancar(){
-  // Siempre mostrar login — sin sesión cacheada
   sessionStorage.removeItem('pau-auth-v2');
+  // Cerrar todos los modales y ocultar app
+  document.querySelectorAll('.overlay.open').forEach(el=>el.classList.remove('open'));
+  const app = document.querySelector('.app');
+  if(app) app.style.display='none';
+  // Mostrar pantalla de login
   const loginScreen = document.getElementById('login-screen');
-  if(loginScreen) loginScreen.style.display='flex';
+  if(loginScreen){ loginScreen.style.display='flex'; loginScreen.style.zIndex='9999'; }
   const passEl = document.getElementById('login-pass');
   if(passEl){
     passEl.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
