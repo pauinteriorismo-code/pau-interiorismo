@@ -894,7 +894,8 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="search-bar" style="margin-bottom:12px">
         <div class="search-wrap" style="flex:1"><span class="search-icon">🔍</span><input class="form-input" id="search-tarifario" placeholder="Buscar en todo el tarifario…" oninput="buscarTarifario()"></div>
         <button class="btn btn-primary" onclick="abrirNuevoTarifario()">＋ Nuevo artículo</button>
-        <button class="btn btn-ghost" onclick="if(confirm('¿Importar 7 electrodomésticos Opción 3 Mundobaño (Cocina/Electrodomésticos) al tarifario?'))importarOpcion3Mundobano()" title="Importar Opción 3 Mundobaño" style="border:1px dashed var(--copper);color:var(--copper)">📥 Importar Opción 3 Mundobaño</button>
+        <button class="btn btn-ghost" onclick="if(confirm('¿Importar 7 electrodomésticos Opción 3 Mundobaño (Cocina/Electrodomésticos) al tarifario?'))importarOpcion3Mundobano()" title="Importar Opción 3 Mundobaño" style="border:1px dashed var(--copper);color:var(--copper)">📥 Opción 3 Mundobaño</button>
+        <button class="btn btn-ghost" onclick="if(confirm('¿Importar 6 productos Mundobaño (Pres.00820 + Fac.00157) al tarifario?'))importarProductosMundobano2()" title="Importar Placa+Extractor+Ósmosis+Grifo" style="border:1px dashed var(--copper);color:var(--copper)">📥 Placa/Extractor/Ósmosis/Grifo</button>
       </div>
       <!-- Layout árbol + contenido -->
       <div style="display:flex;gap:12px;align-items:flex-start">
@@ -4143,6 +4144,39 @@ async function importarOpcion3Mundobano(){
     toast('❌ No se pudo importar ningún producto. Revisa la consola.','error');
   }
 }
+// ═══════════════════════════════════════════
+// IMPORTAR PRODUCTOS MUNDOBAÑO (PRES.00820 + FAC.00157)
+// ═══════════════════════════════════════════
+async function importarProductosMundobano2(){
+  const productos = [
+    {codigo:"3EBC976LH", descripcion:"Placa de inducción con extractor integrado. 70 cm. Cristal negro", unidad:"Ud", precio_coste:1073.912, margen_pct:35, categoria:"Cocina", familia:"Electrodomésticos", marca:"Mundobaño", notas:"Pres. 2025/00820"},
+    {codigo:"HEZ9VDKR0", descripcion:"Set para instalación en recirculación con canalización en encimeras de 70 cm de fondo", unidad:"Ud", precio_coste:137.54, margen_pct:35, categoria:"Cocina", familia:"Electrodomésticos", marca:"Mundobaño", notas:"Pres. 2025/00820"},
+    {codigo:"HEZ9VDKR1", descripcion:"Set para instalación en recirculación con canalización en encimeras de 60 cm de fondo", unidad:"Ud", precio_coste:137.54, margen_pct:35, categoria:"Cocina", familia:"Electrodomésticos", marca:"Mundobaño", notas:"Pres. 2025/00820"},
+    {codigo:"MI0005", descripcion:"GS. Ósmosis Inversa Flujo Directo Midea ECO6000. Con bomba", unidad:"Ud", precio_coste:239.00, margen_pct:35, categoria:"Cocina", familia:"Electrodomésticos", marca:"Mundobaño", notas:"Fac. 2026/FC/00157"},
+    {codigo:"02131208", descripcion:"GS. Campana Filtrante GC DUAL A BK 820m³/h 75cm cristal negro", unidad:"Ud", precio_coste:248.8612, margen_pct:35, categoria:"Cocina", familia:"Electrodomésticos", marca:"Mundobaño", notas:"Fac. 2026/FC/00157"},
+    {codigo:"RO5066", descripcion:"Grifo 3 Vías París MATE", unidad:"Ud", precio_coste:62.50, margen_pct:35, categoria:"Cocina", familia:"Electrodomésticos", marca:"Mundobaño", notas:"Fac. 2026/FC/00157"}
+  ];
+  let ok=0, errores=[];
+  toast('Importando productos...','info');
+  for(const p of productos){
+    try{
+      await sbPost('tarifario', p);
+      ok++;
+    }catch(e){
+      console.error('Error insertando '+p.codigo, e);
+      errores.push(p.codigo+': '+e.message);
+    }
+  }
+  if(errores.length) alert('Errores al importar:\n'+errores.join('\n'));
+  if(ok>0){
+    toast(`✅ ${ok} de ${productos.length} productos importados correctamente`);
+    TC=[];
+    await loadTarifario();
+  } else {
+    toast('❌ No se pudo importar ningún producto. Revisa la consola.','error');
+  }
+}
+
 // ═══════════════════════════════════════════
 // CYPE
 // ═══════════════════════════════════════════
