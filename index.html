@@ -2479,6 +2479,7 @@ function filterTable(tbId,inId){const q=document.getElementById(inId)?.value.toL
 // ═══════════════════════════════════════════
 // CACHES
 // ═══════════════════════════════════════════
+let connTimeout;
 let CC=[],PC=[],TC=[],ProvC=[],IntC=[],CoC=[],ScC=[],HC=[],FC=[],PedC=[],CmpC=[],PresC=[],CyCache=[];
 let TRABAJADORES=['Paco','Raúl','Boro','Julio','Pau','Jose Asins'];
 let LISTAS={
@@ -5646,7 +5647,7 @@ const loaders={
 // ═══════════════════════════════════════════
 async function init(){
   // Timeout: si en 15s no conecta, mostrar error
-  const connTimeout = setTimeout(()=>{
+  connTimeout = setTimeout(()=>{
     const s=document.getElementById('conn-status');
     if(s && s.textContent.includes('Conectando')){
       s.style.background='var(--red-soft)';s.style.color='var(--red)';
