@@ -2284,7 +2284,7 @@ function doLogin(){
     const hex=Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
     if(hex===PASS_HASH){
       document.getElementById('login-screen').style.display='none';
-      sessionStorage.setItem('pau-auth','1');
+      sessionStorage.setItem('pau-auth-v2','1');
       sessionStorage.setItem('pau-user',u.toLowerCase());
       setUserDisplay(u);
       document.getElementById('login-error').style.display='none';
@@ -2308,7 +2308,7 @@ function arrancar(){
   const passEl = document.getElementById('login-pass');
   if(passEl) passEl.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
   // Si ya hay sesión activa, entrar directamente
-  if(sessionStorage.getItem('pau-auth')==='1'){
+  if(sessionStorage.getItem('pau-auth-v2')==='1'){
     const loginScreen = document.getElementById('login-screen');
     if(loginScreen) loginScreen.style.display='none';
     setUserDisplay(sessionStorage.getItem('pau-user')||'jose');
@@ -2444,18 +2444,13 @@ async function loadFamiliasTarifario(){
   const container = document.getElementById('familias-tarifario-container');
   if(!container) return;
   try{
-    // Get unique families from tarifario table
-    const items = await sbGet('tarifario','?select=categoria,familia&order=categoria,familia');
-    // Also get any manually saved families from configuracion
-    let savedFams = [];
-    try{
-      const cfg = await sbGet('configuracion','?clave=eq.familias_tarifario');
-      if(cfg.length) savedFams = cfg[0].valor.split('||').filter(Boolean).map(f=>{
-        const [cat,fam]=f.split('::'); return {categoria:cat,familia:fam};
-      });
-    }catch(e){}
-    
-    // Merge: DB families + saved families
+    // Use TC cache if available, otherwise fetch (familia column may not exist yet)
+    let items = TC.length ? TC : [];
+    if(!items.length){
+      try{ items = await sbGet('tarifario','?order=categoria,descripcion'); }catch(e){ items=[]; }
+    }
+
+    // Build famMap from TC
     const famMap = {};
     items.forEach(t=>{
       if(!t.familia) return;
@@ -2463,28 +2458,40 @@ async function loadFamiliasTarifario(){
       if(!famMap[cat]) famMap[cat]=new Set();
       famMap[cat].add(t.familia);
     });
-    savedFams.forEach(f=>{
-      if(!f.familia) return;
-      if(!famMap[f.categoria]) famMap[f.categoria]=new Set();
-      famMap[f.categoria].add(f.familia);
-    });
+
+    // Also load manually saved families
+    try{
+      const cfg = await sbGet('configuracion','?clave=eq.familias_tarifario');
+      if(cfg.length && cfg[0].valor){
+        cfg[0].valor.split('||').filter(Boolean).forEach(f=>{
+          const parts = f.split('::');
+          if(parts.length===2){
+            const [cat,fam] = parts;
+            if(!famMap[cat]) famMap[cat]=new Set();
+            famMap[cat].add(fam);
+          }
+        });
+      }
+    }catch(e){}
 
     if(!Object.keys(famMap).length){
-      container.innerHTML='<div style="color:var(--text-soft);font-size:12px;text-align:center;padding:16px">No hay familias definidas aún. Créalas al añadir artículos al tarifario o pulsa ＋ Añadir familia.</div>';
+      container.innerHTML='<div style="color:var(--text-soft);font-size:13px;text-align:center;padding:24px">No hay familias definidas aún.<br>Pulsa <strong>＋ Añadir familia</strong> o crea artículos en el tarifario con familia asignada.</div>';
       return;
     }
 
-    let html = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">';
+    let html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px">';
     Object.keys(famMap).sort().forEach(cat=>{
       const fams = [...famMap[cat]].sort();
-      html += `<div style="background:#f8f9fb;border-radius:8px;padding:10px">`;
-      html += `<div style="font-size:11px;font-weight:800;color:var(--navy-mid);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">${cat}</div>`;
+      html += `<div style="background:#f8f9fb;border-radius:8px;padding:12px;border:1px solid var(--border)">`;
+      html += `<div style="font-size:11px;font-weight:800;color:var(--navy-mid);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)">${cat} <span style="font-weight:400;color:var(--text-soft)">(${fams.length})</span></div>`;
       fams.forEach(fam=>{
-        html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 8px;background:white;border-radius:6px;margin-bottom:4px;border:1px solid var(--border)">`;
-        html += `<span style="font-size:12px">${fam}</span>`;
-        html += `<div style="display:flex;gap:4px">`;
-        html += `<button class="btn btn-ghost btn-icon btn-sm" title="Renombrar" onclick="renameFamilia('${cat.replace(/'/g,"\'")}','${fam.replace(/'/g,"\'")}')">✏️</button>`;
-        html += `<button class="btn btn-ghost btn-icon btn-sm" title="Eliminar" onclick="deleteFamilia('${cat.replace(/'/g,"\'")}','${fam.replace(/'/g,"\'")}')">🗑</button>`;
+        const catE = cat.replace(/'/g,"\\'");
+        const famE = fam.replace(/'/g,"\\'");
+        html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 8px;background:white;border-radius:6px;margin-bottom:4px;border:1px solid #eee">`;
+        html += `<span style="font-size:12px">📦 ${fam}</span>`;
+        html += `<div style="display:flex;gap:2px">`;
+        html += `<button onclick="renameFamilia('${catE}','${famE}')" style="background:none;border:none;cursor:pointer;padding:2px 5px;border-radius:4px;font-size:13px" title="Renombrar">✏️</button>`;
+        html += `<button onclick="deleteFamilia('${catE}','${famE}')" style="background:none;border:none;cursor:pointer;padding:2px 5px;border-radius:4px;font-size:13px" title="Eliminar">🗑</button>`;
         html += `</div></div>`;
       });
       html += `</div>`;
@@ -2492,7 +2499,7 @@ async function loadFamiliasTarifario(){
     html += '</div>';
     container.innerHTML = html;
   }catch(e){
-    container.innerHTML=`<div style="color:var(--red);font-size:12px;padding:12px">Error cargando familias: ${e.message}</div>`;
+    container.innerHTML=`<div style="color:var(--red);font-size:12px;padding:12px">Error: ${e.message}</div>`;
   }
 }
 
@@ -5453,7 +5460,7 @@ const loaders={
   presupuesto:()=>{initPresupuesto();if(document.getElementById('pres-proyecto-sel').value)loadPresupuesto();},
   comparativa:()=>{initComparativa();if(document.getElementById('comp-proyecto-sel').value)loadComparativa();},
   tarifario:loadTarifario,cype:loadCype,interiorismo:loadInteriorismo,
-  listas:loadFamiliasTarifario,
+  listas:async()=>{ if(!TC.length) TC=await sbGet("tarifario","?order=categoria,descripcion").catch(()=>[]); await loadFamiliasTarifario(); },
   compras:loadCompras,subcontratas:loadSubcontratas,horas:loadHoras,
   pedidos:loadPedidos,control_horario:loadControlHorario,
   proveedores:loadProveedores,
