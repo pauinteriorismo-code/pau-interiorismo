@@ -2261,6 +2261,44 @@ async function addListItem(listId, tipo){
   }
 }
 
+async function renameListItem(clave, listId, oldVal){
+  const newVal = prompt('Renombrar "'+oldVal+'":', oldVal);
+  if(!newVal || !newVal.trim() || newVal.trim()===oldVal) return;
+  const nv = newVal.trim();
+  // Update memory
+  if(clave==='trabajadores'){
+    const i=TRABAJADORES.indexOf(oldVal); if(i>=0) TRABAJADORES[i]=nv;
+  } else if(LISTAS[clave]){
+    const i=LISTAS[clave].indexOf(oldVal); if(i>=0) LISTAS[clave][i]=nv;
+  }
+  // Save to Supabase
+  try{
+    const arr = clave==='trabajadores' ? TRABAJADORES : (LISTAS[clave]||[]);
+    await upsertConfig(clave, arr.join(','));
+    toast('"'+oldVal+'" → "'+nv+'" ✅');
+    populateTrabajadores(); populateAllListas();
+    navTo('listas'); // refresh list view
+  }catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+async function deleteListItem(clave, listId, val){
+  if(!confirm('¿Eliminar "'+val+'"?')) return;
+  // Update memory
+  if(clave==='trabajadores'){
+    TRABAJADORES = TRABAJADORES.filter(x=>x!==val);
+  } else if(LISTAS[clave]){
+    LISTAS[clave] = LISTAS[clave].filter(x=>x!==val);
+  }
+  // Save to Supabase
+  try{
+    const arr = clave==='trabajadores' ? TRABAJADORES : (LISTAS[clave]||[]);
+    await upsertConfig(clave, arr.join(','));
+    toast('"'+val+'" eliminado ✅');
+    populateTrabajadores(); populateAllListas();
+    navTo('listas'); // refresh list view
+  }catch(e){ toast('Error: '+e.message,'error'); }
+}
+
 // ═══════════════════════════════════════════
 // CONFIG
 // ═══════════════════════════════════════════
@@ -2305,24 +2343,14 @@ function setUserDisplay(u){
 }
 // ── ARRANQUE: esperar a que el DOM esté listo ──
 function arrancar(){
+  // Siempre mostrar login — sin sesión cacheada
+  sessionStorage.removeItem('pau-auth-v2');
+  const loginScreen = document.getElementById('login-screen');
+  if(loginScreen) loginScreen.style.display='flex';
   const passEl = document.getElementById('login-pass');
-  if(passEl) passEl.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
-  // Si ya hay sesión activa, entrar directamente
-  if(sessionStorage.getItem('pau-auth-v2')==='1'){
-    const loginScreen = document.getElementById('login-screen');
-    if(loginScreen) loginScreen.style.display='none';
-    setUserDisplay(sessionStorage.getItem('pau-user')||'jose');
-    init().catch(e=>{
-      console.error('INIT ERROR:', e);
-      document.body.insertAdjacentHTML('beforeend',
-        '<div style="position:fixed;top:0;left:0;right:0;background:#c0392b;color:white;padding:12px 16px;z-index:99999;font-size:13px;font-family:monospace">'
-        +'⚠️ Error de inicio: '+e.message+'</div>');
-    });
-  } else {
-    // Mostrar pantalla de login
-    const loginScreen = document.getElementById('login-screen');
-    if(loginScreen) loginScreen.style.display='flex';
-    setTimeout(()=>{ const u=document.getElementById('login-user'); if(u)u.focus(); },100);
+  if(passEl){
+    passEl.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+    setTimeout(()=>passEl.focus(), 150);
   }
 }
 if(document.readyState==='loading'){
@@ -5460,7 +5488,6 @@ const loaders={
   presupuesto:()=>{initPresupuesto();if(document.getElementById('pres-proyecto-sel').value)loadPresupuesto();},
   comparativa:()=>{initComparativa();if(document.getElementById('comp-proyecto-sel').value)loadComparativa();},
   tarifario:loadTarifario,cype:loadCype,interiorismo:loadInteriorismo,
-  listas:async()=>{ if(!TC.length) TC=await sbGet("tarifario","?order=categoria,descripcion").catch(()=>[]); await loadFamiliasTarifario(); },
   compras:loadCompras,subcontratas:loadSubcontratas,horas:loadHoras,
   pedidos:loadPedidos,control_horario:loadControlHorario,
   proveedores:loadProveedores,
@@ -5504,16 +5531,30 @@ const loaders={
     }
     renderPedidoLineas();
   },
-  listas:()=>{
-    const r=(id,arr)=>{const el=document.getElementById(id);if(el)el.innerHTML=arr.map(t=>`<div class="lista-item" data-val="${t}">${t}</div>`).join('');};
-    r('trabajadores-list',TRABAJADORES);
-    r('estados-list',LISTAS.estados_proyecto);
-    r('tipos-proyecto-list',LISTAS.tipos_proyecto);
-    r('formas-pago-list',LISTAS.formas_pago);
-    r('tipos-cliente-list',LISTAS.tipos_cliente);
-    r('tipos-proveedor-list',LISTAS.tipos_proveedor);
-    r('estancias-list',LISTAS.estancias);
-    r('categorias-list',LISTAS.categorias_tarifario);
+  listas:async()=>{
+    // Render editable list items with rename/delete buttons
+    const r=(id,clave,arr)=>{
+      const el=document.getElementById(id);
+      if(!el) return;
+      el.innerHTML=arr.map(t=>`<div class="lista-item" data-val="${t}">
+        <span>${t}</span>
+        <div style="display:flex;gap:2px;flex-shrink:0">
+          <button onclick="renameListItem('${clave}','${id}','${t.replace(/'/g,"\\'")}')" style="background:none;border:none;cursor:pointer;padding:2px 4px;border-radius:4px;font-size:12px;opacity:.6" title="Renombrar">✏️</button>
+          <button onclick="deleteListItem('${clave}','${id}','${t.replace(/'/g,"\\'")}')" style="background:none;border:none;cursor:pointer;padding:2px 4px;border-radius:4px;font-size:12px;opacity:.6" title="Eliminar">🗑</button>
+        </div>
+      </div>`).join('');
+    };
+    r('trabajadores-list','trabajadores',TRABAJADORES);
+    r('estados-list','estados_proyecto',LISTAS.estados_proyecto||[]);
+    r('tipos-proyecto-list','tipos_proyecto',LISTAS.tipos_proyecto||[]);
+    r('formas-pago-list','formas_pago',LISTAS.formas_pago||[]);
+    r('tipos-cliente-list','tipos_cliente',LISTAS.tipos_cliente||[]);
+    r('tipos-proveedor-list','tipos_proveedor',LISTAS.tipos_proveedor||[]);
+    r('estancias-list','estancias',LISTAS.estancias||[]);
+    r('categorias-list','categorias_tarifario',LISTAS.categorias_tarifario||[]);
+    // Load familias
+    if(!TC.length) try{ TC=await sbGet('tarifario','?select=id,categoria,familia&order=categoria'); }catch(e){ TC=[]; }
+    await loadFamiliasTarifario();
   },
 };
 
