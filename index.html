@@ -601,6 +601,16 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         </div>
 
         <div class="card" style="grid-column:1/-1">
+          <div class="card-header">
+            <div class="card-title">📂 Familias del tarifario <span style="font-size:11px;font-weight:400;color:var(--text-soft)">— agrupaciones dentro de cada categoría</span></div>
+            <button class="btn btn-ghost btn-sm" onclick="addFamiliaTarifario()">＋ Añadir familia</button>
+          </div>
+          <div id="familias-tarifario-container" style="padding:12px">
+            <div style="color:var(--text-soft);font-size:12px;text-align:center;padding:20px">Cargando familias…</div>
+          </div>
+        </div>
+
+        <div class="card" style="grid-column:1/-1">
           <div class="card-header"><div class="card-title">📂 Partidas presupuesto</div><button class="btn btn-ghost btn-sm" onclick="addListItem('partidas-list','partida')">＋ Añadir</button></div>
           <div class="card-body" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px" id="partidas-list">
             <div class="lista-item">01.Demoliciones</div><div class="lista-item">02.Albañilería</div><div class="lista-item">03.Instalaciones</div><div class="lista-item">04.Revestimientos</div><div class="lista-item">05.Fontanería</div><div class="lista-item">06.Electricidad</div><div class="lista-item">07.Carpintería</div><div class="lista-item">08.Pintura</div><div class="lista-item">09.Estructura</div><div class="lista-item">10.Cubierta</div><div class="lista-item">11.Fachada</div><div class="lista-item">12.Mobiliario</div><div class="lista-item">13.Climatización</div><div class="lista-item">14.Varios</div><div class="lista-item">15.Otros</div>
@@ -2264,14 +2274,28 @@ const DIAS_CORTOS=['Lu','Ma','Mi','Ju','Vi','Sa','Do'];
 // LOGIN
 // ═══════════════════════════════════════════
 function doLogin(){
-  // Login simplificado - acepta cualquier usuario con cualquier contraseña
-  // o directamente sin contraseña
-  const u=document.getElementById('login-user').value.trim().toLowerCase()||'jose';
-  document.getElementById('login-screen').style.display='none';
-  sessionStorage.setItem('pau-auth','1');
-  sessionStorage.setItem('pau-user',u);
-  setUserDisplay(u);
-  init();
+  const u=document.getElementById('login-user').value.trim()||'jose';
+  const p=document.getElementById('login-pass').value;
+  // Contraseña maestra (SHA-256 de "pau2026")
+  const PASS_HASH='2ce5f8dfc259976ad98b39e354432d527e34d68b70c00fb9e982dfc1351a639f';
+  // Simple check - hash the input
+  const encoder=new TextEncoder();
+  crypto.subtle.digest('SHA-256',encoder.encode(p)).then(buf=>{
+    const hex=Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+    if(hex===PASS_HASH){
+      document.getElementById('login-screen').style.display='none';
+      sessionStorage.setItem('pau-auth','1');
+      sessionStorage.setItem('pau-user',u.toLowerCase());
+      setUserDisplay(u);
+      document.getElementById('login-error').style.display='none';
+      init();
+    } else {
+      const errEl=document.getElementById('login-error');
+      if(errEl){ errEl.style.display='block'; errEl.textContent='Contraseña incorrecta'; }
+      document.getElementById('login-pass').value='';
+      document.getElementById('login-pass').focus();
+    }
+  });
 }
 function doLogout(){sessionStorage.clear();location.reload();}
 function setUserDisplay(u){
@@ -2283,16 +2307,23 @@ function setUserDisplay(u){
 function arrancar(){
   const passEl = document.getElementById('login-pass');
   if(passEl) passEl.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
-  const loginScreen = document.getElementById('login-screen');
-  if(loginScreen) loginScreen.style.display='none';
-  setUserDisplay(sessionStorage.getItem('pau-user')||'jose');
-  sessionStorage.setItem('pau-auth','1');
-  init().catch(e=>{
-    console.error('INIT ERROR:', e);
-    document.body.insertAdjacentHTML('beforeend',
-      '<div style="position:fixed;top:0;left:0;right:0;background:#c0392b;color:white;padding:12px 16px;z-index:99999;font-size:13px;font-family:monospace">'
-      + '⚠️ Error de inicio: ' + e.message + '</div>');
-  });
+  // Si ya hay sesión activa, entrar directamente
+  if(sessionStorage.getItem('pau-auth')==='1'){
+    const loginScreen = document.getElementById('login-screen');
+    if(loginScreen) loginScreen.style.display='none';
+    setUserDisplay(sessionStorage.getItem('pau-user')||'jose');
+    init().catch(e=>{
+      console.error('INIT ERROR:', e);
+      document.body.insertAdjacentHTML('beforeend',
+        '<div style="position:fixed;top:0;left:0;right:0;background:#c0392b;color:white;padding:12px 16px;z-index:99999;font-size:13px;font-family:monospace">'
+        +'⚠️ Error de inicio: '+e.message+'</div>');
+    });
+  } else {
+    // Mostrar pantalla de login
+    const loginScreen = document.getElementById('login-screen');
+    if(loginScreen) loginScreen.style.display='flex';
+    setTimeout(()=>{ const u=document.getElementById('login-user'); if(u)u.focus(); },100);
+  }
 }
 if(document.readyState==='loading'){
   document.addEventListener('DOMContentLoaded', arrancar);
@@ -2405,6 +2436,160 @@ let LISTAS={
   categorias_tarifario:['Mobiliario','Sofas y tapizados','Dormitorios','Colchones','Cocina','Banos','Sanitarios','Griferias','Pavimentos','Revestimientos','Carpinteria','Puertas y ventanas','Iluminacion','Climatizacion','Calefaccion','Instalaciones','Electricidad','Fontaneria','Pintura','Varios','Otros'],
 };
 const LISTA_MAP={'trabajadores-list':'trabajadores','estados-list':'estados_proyecto','tipos-proyecto-list':'tipos_proyecto','formas-pago-list':'formas_pago','tipos-cliente-list':'tipos_cliente','tipos-proveedor-list':'tipos_proveedor','estancias-list':'estancias','categorias-list':'categorias_tarifario'};
+
+// familias gestionadas aparte via familias_tarifario (tabla supabase)
+
+// ── GESTIÓN DE FAMILIAS DEL TARIFARIO ──
+async function loadFamiliasTarifario(){
+  const container = document.getElementById('familias-tarifario-container');
+  if(!container) return;
+  try{
+    // Get unique families from tarifario table
+    const items = await sbGet('tarifario','?select=categoria,familia&order=categoria,familia');
+    // Also get any manually saved families from configuracion
+    let savedFams = [];
+    try{
+      const cfg = await sbGet('configuracion','?clave=eq.familias_tarifario');
+      if(cfg.length) savedFams = cfg[0].valor.split('||').filter(Boolean).map(f=>{
+        const [cat,fam]=f.split('::'); return {categoria:cat,familia:fam};
+      });
+    }catch(e){}
+    
+    // Merge: DB families + saved families
+    const famMap = {};
+    items.forEach(t=>{
+      if(!t.familia) return;
+      const cat = t.categoria||'Sin categoría';
+      if(!famMap[cat]) famMap[cat]=new Set();
+      famMap[cat].add(t.familia);
+    });
+    savedFams.forEach(f=>{
+      if(!f.familia) return;
+      if(!famMap[f.categoria]) famMap[f.categoria]=new Set();
+      famMap[f.categoria].add(f.familia);
+    });
+
+    if(!Object.keys(famMap).length){
+      container.innerHTML='<div style="color:var(--text-soft);font-size:12px;text-align:center;padding:16px">No hay familias definidas aún. Créalas al añadir artículos al tarifario o pulsa ＋ Añadir familia.</div>';
+      return;
+    }
+
+    let html = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">';
+    Object.keys(famMap).sort().forEach(cat=>{
+      const fams = [...famMap[cat]].sort();
+      html += `<div style="background:#f8f9fb;border-radius:8px;padding:10px">`;
+      html += `<div style="font-size:11px;font-weight:800;color:var(--navy-mid);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">${cat}</div>`;
+      fams.forEach(fam=>{
+        html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 8px;background:white;border-radius:6px;margin-bottom:4px;border:1px solid var(--border)">`;
+        html += `<span style="font-size:12px">${fam}</span>`;
+        html += `<div style="display:flex;gap:4px">`;
+        html += `<button class="btn btn-ghost btn-icon btn-sm" title="Renombrar" onclick="renameFamilia('${cat.replace(/'/g,"\'")}','${fam.replace(/'/g,"\'")}')">✏️</button>`;
+        html += `<button class="btn btn-ghost btn-icon btn-sm" title="Eliminar" onclick="deleteFamilia('${cat.replace(/'/g,"\'")}','${fam.replace(/'/g,"\'")}')">🗑</button>`;
+        html += `</div></div>`;
+      });
+      html += `</div>`;
+    });
+    html += '</div>';
+    container.innerHTML = html;
+  }catch(e){
+    container.innerHTML=`<div style="color:var(--red);font-size:12px;padding:12px">Error cargando familias: ${e.message}</div>`;
+  }
+}
+
+async function addFamiliaTarifario(){
+  const cats = LISTAS.categorias_tarifario || [];
+  if(!cats.length){ toast('Primero añade categorías en la lista de arriba','error'); return; }
+  
+  // Show a simple modal-style prompt
+  const cat = await seleccionarOpcion('Categoría', cats);
+  if(!cat) return;
+  const fam = prompt(`Nueva familia dentro de "${cat}":`);
+  if(!fam||!fam.trim()) return;
+  
+  // Save to configuracion as a combined string
+  try{
+    const cfg = await sbGet('configuracion','?clave=eq.familias_tarifario');
+    let vals = cfg.length ? cfg[0].valor.split('||').filter(Boolean) : [];
+    const key = `${cat}::${fam.trim()}`;
+    if(!vals.includes(key)) vals.push(key);
+    await upsertConfig('familias_tarifario', vals.join('||'));
+    toast(`Familia "${fam.trim()}" añadida ✅`);
+    loadFamiliasTarifario();
+  }catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+async function renameFamilia(cat, oldFam){
+  const newFam = prompt(`Renombrar "${oldFam}":`, oldFam);
+  if(!newFam||!newFam.trim()||newFam.trim()===oldFam) return;
+  try{
+    // Update all tarifario items with this family
+    const items = TC.filter(t=>(t.categoria||'')===cat && (t.familia||'')===oldFam);
+    for(const item of items){
+      await sbPatch('tarifario', item.id, {familia: newFam.trim()});
+    }
+    // Update saved families in configuracion
+    const cfg = await sbGet('configuracion','?clave=eq.familias_tarifario');
+    if(cfg.length){
+      const vals = cfg[0].valor.split('||').filter(Boolean);
+      const newVals = vals.map(v => v===`${cat}::${oldFam}` ? `${cat}::${newFam.trim()}` : v);
+      await upsertConfig('familias_tarifario', newVals.join('||'));
+    }
+    toast(`Familia renombrada a "${newFam.trim()}" ✅`);
+    loadFamiliasTarifario();
+    loadTarifario();
+  }catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+async function deleteFamilia(cat, fam){
+  const count = TC.filter(t=>(t.categoria||'')===cat && (t.familia||'')===fam).length;
+  const msg = count > 0 
+    ? `¿Eliminar familia "${fam}"? Los ${count} artículos quedarán sin familia asignada.`
+    : `¿Eliminar familia "${fam}"?`;
+  if(!confirm(msg)) return;
+  try{
+    // Clear family on all affected tarifario items
+    const items = TC.filter(t=>(t.categoria||'')===cat && (t.familia||'')===fam);
+    for(const item of items){
+      await sbPatch('tarifario', item.id, {familia: null});
+    }
+    // Remove from configuracion
+    const cfg = await sbGet('configuracion','?clave=eq.familias_tarifario');
+    if(cfg.length){
+      const vals = cfg[0].valor.split('||').filter(Boolean).filter(v=>v!==`${cat}::${fam}`);
+      await upsertConfig('familias_tarifario', vals.join('||'));
+    }
+    toast(`Familia "${fam}" eliminada ✅`);
+    loadFamiliasTarifario();
+    loadTarifario();
+  }catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+async function seleccionarOpcion(titulo, opciones){
+  return new Promise(resolve=>{
+    const ov=document.createElement('div');
+    ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px';
+    const box=document.createElement('div');
+    box.style.cssText='background:white;border-radius:12px;padding:20px;max-width:320px;width:100%';
+    box.innerHTML=`<div style="font-weight:800;font-size:15px;margin-bottom:14px">📂 ${titulo}</div>`;
+    opciones.forEach(op=>{
+      const btn=document.createElement('button');
+      btn.textContent=op;
+      btn.style.cssText='display:block;width:100%;text-align:left;padding:9px 12px;border:1px solid var(--border);border-radius:7px;background:white;cursor:pointer;font-size:13px;margin-bottom:6px';
+      btn.onmouseover=()=>btn.style.background='#f0f4ff';
+      btn.onmouseout=()=>btn.style.background='white';
+      btn.onclick=()=>{ ov.remove(); resolve(op); };
+      box.appendChild(btn);
+    });
+    const cancel=document.createElement('button');
+    cancel.textContent='Cancelar';
+    cancel.style.cssText='display:block;width:100%;padding:8px;border:1px solid #ddd;border-radius:7px;background:none;cursor:pointer;font-size:12px;color:#888;margin-top:4px';
+    cancel.onclick=()=>{ ov.remove(); resolve(null); };
+    box.appendChild(cancel);
+    ov.appendChild(box);
+    ov.addEventListener('click',e=>{ if(e.target===ov){ ov.remove(); resolve(null); }});
+    document.body.appendChild(ov);
+  });
+}
 
 // ═══════════════════════════════════════════
 // POPULATE SELECTS
@@ -5268,6 +5453,7 @@ const loaders={
   presupuesto:()=>{initPresupuesto();if(document.getElementById('pres-proyecto-sel').value)loadPresupuesto();},
   comparativa:()=>{initComparativa();if(document.getElementById('comp-proyecto-sel').value)loadComparativa();},
   tarifario:loadTarifario,cype:loadCype,interiorismo:loadInteriorismo,
+  listas:loadFamiliasTarifario,
   compras:loadCompras,subcontratas:loadSubcontratas,horas:loadHoras,
   pedidos:loadPedidos,control_horario:loadControlHorario,
   proveedores:loadProveedores,
