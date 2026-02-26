@@ -1743,29 +1743,84 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 </div></div>
 
 <!-- TARIFARIO -->
-<div class="overlay" id="m-tarifario"><div class="modal">
-  <div class="modal-head"><div class="modal-title">📋 <span id="m-tarif-title">Nuevo artículo</span></div><button class="modal-close" onclick="closeModal('m-tarifario')">×</button></div>
+<div class="overlay" id="m-tarifario"><div class="modal" style="max-width:580px">
+  <div class="modal-head"><div class="modal-title">📋 <span id="m-tarif-title">Nuevo producto</span></div><button class="modal-close" onclick="closeModal('m-tarifario')">×</button></div>
   <div class="modal-body"><input type="hidden" id="t-id">
+
+    <!-- Ruta: Categoría > Subcategoría > Producto -->
+    <div style="background:#f0f4ff;border-radius:8px;padding:10px 12px;margin-bottom:16px;font-size:12px;color:var(--navy-mid)">
+      📂 <span id="t-ruta-display" style="font-weight:600">Selecciona categoría y subcategoría</span>
+    </div>
+
     <div class="form-grid">
-      <div class="form-group"><label class="form-label">Código *</label><input class="form-input" id="t-codigo"></div>
-      <div class="form-group"><label class="form-label">Unidad</label><select class="form-input" id="t-unidad"><option>Ud</option><option>m²</option><option>m³</option><option>ml</option><option>kg</option><option>h</option><option>PA</option></select></div>
-      <div class="form-group fg-full"><label class="form-label">Descripción *</label><input class="form-input" id="t-desc"></div>
-      <div class="form-group"><label class="form-label">Precio coste (s/IVA)</label><input class="form-input" id="t-coste" type="number" step="0.01" oninput="calcPrecioVenta()"></div>
-      <div class="form-group"><label class="form-label">Margen %</label><input class="form-input" id="t-margen" type="number" step="0.1" value="30" oninput="calcPrecioVenta()"></div>
-      <div class="form-group"><label class="form-label">Precio venta</label><input class="form-input calc" id="t-pventa" readonly></div>
-      <div class="form-group"><label class="form-label">Categoría</label><select class="form-input" id="t-cat" onchange="actualizarFamiliasModal()"><option>Mobiliario</option><option>Sofas y tapizados</option><option>Dormitorios</option><option>Colchones</option><option>Cocina</option><option>Banos</option><option>Sanitarios</option><option>Griferias</option><option>Pavimentos</option><option>Revestimientos</option><option>Carpinteria</option><option>Puertas y ventanas</option><option>Iluminacion</option><option>Climatizacion</option><option>Calefaccion</option><option>Instalaciones</option><option>Electricidad</option><option>Fontaneria</option><option>Pintura</option><option>Varios</option><option>Otros</option></select></div>
-      <div class="form-group"><label class="form-label">Familia / Subfamilia</label>
-        <div style="display:flex;gap:6px">
-          <select class="form-input" id="t-familia-sel" onchange="selFamiliaModal()" style="flex:1"><option value="">— Nueva familia —</option></select>
-          <input class="form-input" id="t-familia" placeholder="Ej: Rejillas lineales" style="flex:1.5">
-        </div>
-        <div style="font-size:10px;color:var(--text-soft);margin-top:3px">Elige una existente o escribe una nueva</div>
+      <!-- Nivel 1: Categoría -->
+      <div class="form-group">
+        <label class="form-label" style="font-weight:800;color:var(--navy)">① Categoría</label>
+        <select class="form-input" id="t-cat" onchange="actualizarFamiliasModal()">
+          <option>Mobiliario</option><option>Sofas y tapizados</option><option>Dormitorios</option>
+          <option>Colchones</option><option>Cocina</option><option>Banos</option>
+          <option>Sanitarios</option><option>Griferias</option><option>Pavimentos</option>
+          <option>Revestimientos</option><option>Carpinteria</option><option>Puertas y ventanas</option>
+          <option>Iluminacion</option><option>Climatizacion</option><option>Calefaccion</option>
+          <option>Instalaciones</option><option>Electricidad</option><option>Fontaneria</option>
+          <option>Pintura</option><option>Varios</option><option>Otros</option>
+        </select>
       </div>
-      <div class="form-group"><label class="form-label">Marca</label><input class="form-input" id="t-marca"></div>
-      <div class="form-group fg-full"><label class="form-label">Notas</label><input class="form-input" id="t-notas"></div>
+
+      <!-- Nivel 2: Subcategoría -->
+      <div class="form-group">
+        <label class="form-label" style="font-weight:800;color:var(--navy)">② Subcategoría <span style="font-weight:400;font-size:10px">(ej: Muelle ensacado)</span></label>
+        <div style="display:flex;gap:6px">
+          <select class="form-input" id="t-familia-sel" onchange="selFamiliaModal()" style="flex:1.2">
+            <option value="">＋ Nueva subcategoría…</option>
+          </select>
+          <input class="form-input" id="t-familia" placeholder="Nombre subcategoría" style="flex:1.5" oninput="updateTarifRuta()">
+        </div>
+      </div>
+
+      <!-- Nivel 3: Producto / Características -->
+      <div class="form-group fg-full">
+        <label class="form-label" style="font-weight:800;color:var(--navy)">③ Características del producto <span style="font-weight:400;font-size:10px">(ej: 200×150 cm, color blanco…)</span></label>
+        <input class="form-input" id="t-desc" placeholder="Describe el producto: medidas, acabado, modelo…" oninput="updateTarifRuta()">
+      </div>
+
+      <!-- Precios -->
+      <div class="form-group">
+        <label class="form-label">Precio coste s/IVA</label>
+        <input class="form-input" id="t-coste" type="number" step="0.01" placeholder="0.00" oninput="calcPrecioVenta()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Margen %</label>
+        <input class="form-input" id="t-margen" type="number" step="0.1" value="30" oninput="calcPrecioVenta()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Precio venta s/IVA</label>
+        <input class="form-input calc" id="t-pventa" readonly style="background:#f0faf5;font-weight:800;color:var(--green)">
+      </div>
+
+      <!-- Extra -->
+      <div class="form-group">
+        <label class="form-label">Código / Referencia</label>
+        <input class="form-input" id="t-codigo" placeholder="REF-001 (opcional)">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Unidad</label>
+        <select class="form-input" id="t-unidad"><option>Ud</option><option>m²</option><option>m³</option><option>ml</option><option>kg</option><option>h</option><option>PA</option></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Marca / Proveedor</label>
+        <input class="form-input" id="t-marca" placeholder="Ej: PIKOLIN, SIMPUR…">
+      </div>
+      <div class="form-group fg-full">
+        <label class="form-label">Notas adicionales</label>
+        <input class="form-input" id="t-notas" placeholder="Info extra, colores disponibles…">
+      </div>
     </div>
   </div>
-  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('m-tarifario')">Cancelar</button><button class="btn btn-primary" onclick="saveTarifario()">💾 Guardar</button></div>
+  <div class="modal-foot">
+    <button class="btn btn-ghost" onclick="closeModal('m-tarifario')">Cancelar</button>
+    <button class="btn btn-primary" onclick="saveTarifario()">💾 Guardar producto</button>
+  </div>
 </div></div>
 
 <!-- INTERIORISMO -->
@@ -2630,7 +2685,7 @@ async function seleccionarOpcion(titulo, opciones){
 // POPULATE SELECTS
 // ═══════════════════════════════════════════
 function populateAllListas(){
-  const map={estados_proyecto:['p-estado'],tipos_proyecto:['p-tipo'],formas_pago:['c-pago','pv-pago','f-pago'],tipos_cliente:['c-tipo'],tipos_proveedor:['pv-tipo'],estancias:['i-estancia'],categorias_tarifario:['t-cat']};
+  const map={estados_proyecto:['p-estado'],tipos_proyecto:['p-tipo'],formas_pago:['c-pago','pv-pago','f-pago'],tipos_cliente:['c-tipo'],tipos_proveedor:['pv-tipo'],estancias:['i-estancia']}; // t-cat handled separately below
   Object.entries(map).forEach(([key,ids])=>{
     const vals=LISTAS[key]||[];
     ids.forEach(id=>{const el=document.getElementById(id);if(!el)return;const cur=el.value;el.innerHTML='<option value="">Seleccionar…</option>'+vals.map(v=>`<option value="${v}">${v}</option>`).join('');if(cur&&vals.includes(cur))el.value=cur;});
@@ -3682,51 +3737,52 @@ function renderTarifTree(){
   const body = document.getElementById('tarif-tree-body');
   if(!body) return;
 
-  // Agrupar categorías → familias
+  // Nivel 1: Categorías — Nivel 2: Subcategorías
   const tree = {};
   TC.forEach(t => {
     const cat = t.categoria || 'Sin categoría';
-    const fam = t.familia   || 'Sin familia';
-    if(!tree[cat]) tree[cat] = new Set();
-    tree[cat].add(fam);
+    const sub = t.familia   || 'Sin subcategoría';
+    if(!tree[cat]) tree[cat] = {subs: new Set(), count: 0};
+    tree[cat].subs.add(sub);
+    tree[cat].count++;
   });
 
-  const catIcons = {
+  const icons = {
     'Mobiliario':'🛋','Sofas y tapizados':'🛋','Dormitorios':'🛏','Colchones':'🛏',
     'Cocina':'🍳','Banos':'🚿','Sanitarios':'🚿','Griferias':'🚰',
     'Pavimentos':'🏠','Revestimientos':'🏠','Carpinteria':'🚪','Puertas y ventanas':'🚪',
     'Iluminacion':'💡','Climatizacion':'❄️','Calefaccion':'🔥','Instalaciones':'⚙️',
-    'Electricidad':'⚡','Fontaneria':'🔧','Pintura':'🎨','Varios':'📦','Otros':'📦',
-    'Sin categoría':'📋'
+    'Electricidad':'⚡','Fontaneria':'🔧','Pintura':'🎨','Varios':'📦','Otros':'📦'
   };
 
-  let html = '<div style="padding:6px 0">';
-  // "Todo" link
-  html += '<div class="tarif-tree-all tarif-tree-item" onclick="selTarifCat(\'\')" style="padding:8px 12px;cursor:pointer;display:flex;align-items:center;gap:6px;font-size:13px;color:var(--navy);font-weight:700;border-bottom:1px solid var(--border)">'
-        + '📋 Todo el tarifario</div>';
+  document.getElementById('tarif-total-badge').textContent = TC.length;
+
+  let html = `<div class="tarif-tree-item" onclick="selTarifCat('')" style="padding:8px 12px;font-size:12px;color:var(--text-soft);border-bottom:1px solid var(--border)">📋 Todo el tarifario <span style="float:right">${TC.length}</span></div>`;
 
   Object.keys(tree).sort().forEach(cat => {
-    const fams = [...tree[cat]].sort();
-    const count = TC.filter(t=>(t.categoria||'Sin categoría')===cat).length;
-    const icon = catIcons[cat] || '📦';
-    html += `<div class="tarif-cat-block" data-cat="${cat}">`;
-    html += `<div class="tarif-tree-item" onclick="toggleTarifCat('${cat}')" style="padding:8px 12px;cursor:pointer;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--navy-mid);border-bottom:1px solid var(--border);user-select:none">`
-          + `<span id="tarif-arrow-${CSS.escape(cat)}" style="font-size:10px;transition:transform .2s">▶</span>`
-          + `<span>${icon} ${cat}</span>`
-          + `<span style="margin-left:auto;background:var(--border);border-radius:8px;padding:1px 6px;font-size:10px;font-weight:600">${count}</span>`
-          + `</div>`;
-    html += `<div id="tarif-fams-${CSS.escape(cat)}" style="display:none">`;
-    fams.forEach(fam => {
-      const fcount = TC.filter(t=>(t.categoria||'Sin categoría')===cat && (t.familia||'Sin familia')===fam).length;
-      html += `<div class="tarif-tree-item tarif-fam-item" onclick="selTarifFam('${cat}','${fam.replace(/'/g,"\\'")}')"`
-            + ` style="padding:7px 12px 7px 28px;cursor:pointer;font-size:12px;color:var(--text-soft);border-bottom:1px solid #f5f5f5;display:flex;align-items:center;gap:6px">`
-            + `<span style="color:var(--copper)">›</span> ${fam}`
-            + `<span style="margin-left:auto;color:var(--text-soft);font-size:10px">${fcount}</span>`
-            + `</div>`;
+    const {subs, count} = tree[cat];
+    const ico = icons[cat] || '📦';
+    const subList = [...subs].sort();
+    html += `<div>
+      <div class="tarif-tree-item tarif-cat-item" id="tc-${cat}" onclick="toggleTarifCat('${cat.replace(/'/g,"\\'")}')">
+        <span>${ico} ${cat}</span>
+        <span style="display:flex;align-items:center;gap:4px">
+          <span style="font-size:10px;color:var(--text-soft)">${count}</span>
+          <span class="tarif-arrow" id="ta-${cat}" style="font-size:10px;transition:.2s">▶</span>
+        </span>
+      </div>
+      <div class="tarif-subs" id="ts-${cat}" style="display:none">`;
+    subList.forEach(sub => {
+      const cnt = TC.filter(t=>(t.categoria||'Sin categoría')===cat && (t.familia||'Sin subcategoría')===sub).length;
+      html += `<div class="tarif-tree-item tarif-fam-item" onclick="selTarifFam('${cat.replace(/'/g,"\\'")}','${sub.replace(/'/g,"\\'")}')"
+        style="padding:6px 10px 6px 24px;font-size:11px">
+        <span style="color:var(--text-soft)">└ ${sub}</span>
+        <span style="font-size:10px;color:var(--text-soft)">${cnt}</span>
+      </div>`;
     });
     html += `</div></div>`;
   });
-  html += '</div>';
+
   body.innerHTML = html;
 }
 
@@ -3741,11 +3797,12 @@ function toggleTarifCat(cat){
 }
 
 function selTarifCat(cat){
-  // Highlight active
-  document.querySelectorAll('.tarif-tree-item').forEach(el => el.style.background = '');
-  const items = cat ? document.querySelectorAll(`[data-cat="${cat}"] .tarif-tree-item:first-child`) : document.querySelectorAll('.tarif-tree-all');
-  items.forEach(el => el.style.background = '#eef3fb');
-
+  // Highlight active in tree
+  document.querySelectorAll('.tarif-cat-item').forEach(el => { el.classList.remove('active-cat'); el.style.background=''; });
+  if(cat){
+    const el = document.getElementById('tc-'+cat);
+    if(el){ el.classList.add('active-cat'); el.style.background='#eef3fb'; el.dataset.cat=cat; }
+  }
   const filtered = cat ? TC.filter(t=>(t.categoria||'Sin categoría')===cat) : TC;
   renderTarifPanel(filtered, cat, '');
 }
@@ -3763,60 +3820,75 @@ function renderTarifPanel(items, cat, fam){
   const crumb = document.getElementById('tarif-breadcrumb');
   if(!panel) return;
 
-  // breadcrumb
-  let bc = '📋 <span onclick="selTarifCat(\'\')" style="cursor:pointer;color:var(--navy)">Tarifario</span>';
-  if(cat) bc += ` › <span onclick="selTarifCat('${cat}')" style="cursor:pointer;color:var(--navy)">${cat}</span>`;
-  if(fam) bc += ` › <strong style="color:var(--copper)">${fam}</strong>`;
-  if(crumb) crumb.innerHTML = bc + ` &mdash; <span id="tarifario-count" style="color:var(--navy);font-weight:700">${items.length} artículo${items.length!==1?'s':''}</span>`;
+  // Breadcrumb: Tarifario > Categoría > Subcategoría
+  let bc = '📋 <span onclick="selTarifCat(\'\')" style="cursor:pointer;color:var(--navy);text-decoration:underline">Tarifario</span>';
+  if(cat) bc += ` <span style="color:var(--text-soft)">›</span> <span onclick="selTarifCat('${cat}')" style="cursor:pointer;color:var(--navy)">${cat}</span>`;
+  if(fam) bc += ` <span style="color:var(--text-soft)">›</span> <strong style="color:var(--copper)">${fam}</strong>`;
+  if(crumb) crumb.innerHTML = bc + ` &mdash; <strong style="color:var(--navy)">${items.length}</strong> producto${items.length!==1?'s':''}`;
 
   if(!items.length){
-    panel.innerHTML = '<div class="card"><div class="empty"><div class="empty-icon">📦</div><div class="empty-text">No hay artículos en esta sección</div><button class="btn btn-primary" onclick="abrirNuevoTarifario()">＋ Nuevo artículo</button></div></div>';
+    panel.innerHTML='<div style="text-align:center;padding:40px;color:var(--text-soft)">No hay productos en esta selección</div>';
     return;
   }
 
-  // Si no se filtró por familia, agrupar por familias
+  // Si no hay subcategoría seleccionada, agrupar por subcategoría
   if(!fam){
-    const famGroups = {};
+    const groups = {};
     items.forEach(t => {
-      const f = t.familia || 'Sin familia';
-      if(!famGroups[f]) famGroups[f] = [];
-      famGroups[f].push(t);
+      const sub = t.familia || 'Sin subcategoría';
+      if(!groups[sub]) groups[sub] = [];
+      groups[sub].push(t);
     });
+
     let html = '';
-    Object.keys(famGroups).sort().forEach(f => {
-      const grp = famGroups[f];
-      html += `<div class="card" style="margin-bottom:10px">`;
-      html += `<div class="card-header" style="cursor:pointer;user-select:none" onclick="toggleTarifGroup('tg-${CSS.escape(f)}')">`
-            + `<div class="card-title" style="display:flex;align-items:center;gap:8px">`
-            + `<span id="tg-arrow-${CSS.escape(f)}" style="font-size:11px;transition:transform .2s">▼</span>`
-            + `📦 ${f} <span style="font-size:11px;color:var(--text-soft);font-weight:400">${grp.length} artículo${grp.length!==1?'s':''}</span>`
-            + `</div>`
-            + `<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();selTarifFam('${cat||grp[0].categoria||''}','${f.replace(/'/g,"\\'")}')">Ver todos ›</button>`
-            + `</div>`;
-      html += `<div id="tg-${CSS.escape(f)}" class="table-wrap"><table><thead><tr><th>Código</th><th>Descripción</th><th>Ud.</th><th>Coste</th><th>Margen</th><th>P.Venta</th><th>Marca</th><th></th></tr></thead><tbody>`;
-      grp.forEach(t => { html += buildTarifRow(t); });
-      html += `</tbody></table></div></div>`;
+    Object.keys(groups).sort().forEach(sub => {
+      const gItems = groups[sub];
+      html += `<div style="margin-bottom:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;background:var(--navy);color:white;padding:9px 14px;border-radius:8px 8px 0 0;cursor:pointer" onclick="selTarifFam('${(cat||'').replace(/'/g,"\\'")}','${sub.replace(/'/g,"\\'")}')">
+          <span style="font-size:13px;font-weight:700">📂 ${sub} <span style="font-weight:400;opacity:.7;font-size:11px">${gItems.length} producto${gItems.length!==1?'s':''}</span></span>
+          <span style="font-size:11px;opacity:.7">Ver todos ›</span>
+        </div>
+        <div style="background:white;border:1px solid var(--border);border-radius:0 0 8px 8px;overflow:hidden">
+          <table class="table">
+            <thead><tr>
+              <th>Características</th><th>Ud.</th>
+              <th>Coste</th><th>Margen</th><th>P.Venta</th><th>Marca</th><th></th>
+            </tr></thead>
+            <tbody>${gItems.map(t=>buildTarifRow(t)).join('')}</tbody>
+          </table>
+        </div>
+      </div>`;
     });
     panel.innerHTML = html;
   } else {
-    // Vista plana dentro de una familia
-    panel.innerHTML = `<div class="card"><div class="table-wrap"><table><thead><tr><th>Código</th><th>Descripción</th><th>Ud.</th><th>Coste</th><th>Margen</th><th>P.Venta</th><th>Marca</th><th></th></tr></thead><tbody>`
-      + items.map(buildTarifRow).join('')
-      + `</tbody></table></div></div>`;
+    // Vista plana para una subcategoría concreta
+    panel.innerHTML = `<div style="background:white;border:1px solid var(--border);border-radius:8px;overflow:hidden">
+      <table class="table">
+        <thead><tr>
+          <th>Características</th><th>Ud.</th>
+          <th>Coste</th><th>Margen</th><th>P.Venta</th><th>Marca</th><th></th>
+        </tr></thead>
+        <tbody>${items.map(t=>buildTarifRow(t)).join('')}</tbody>
+      </table>
+    </div>`;
   }
 }
 
 function buildTarifRow(t){
-  return `<tr data-search="${(t.codigo+' '+t.descripcion+' '+(t.familia||'')+' '+(t.marca||'')).toLowerCase()}">`
-    + `<td class="td-mono" style="color:var(--navy-mid);font-weight:700;font-size:11px">${t.codigo}</td>`
-    + `<td>${t.descripcion}</td>`
-    + `<td style="text-align:center">${t.unidad||'Ud'}</td>`
-    + `<td class="td-mono">${fmt(t.precio_coste)}</td>`
-    + `<td class="td-mono" style="color:var(--green)">${fmtP(t.margen_pct)}</td>`
-    + `<td class="td-mono" style="font-weight:700">${fmt(t.precio_venta)}</td>`
-    + `<td style="color:var(--text-soft);font-size:11px">${t.marca||'—'}</td>`
-    + `<td><div class="td-actions"><button class="btn btn-ghost btn-icon btn-sm" onclick="editTarifario('${t.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('tarifario','${t.id}','${(t.descripcion||'').replace(/'/g,"\\'").replace(/"/g,'\\"')}')">🗑</button></div></td>`
-    + `</tr>`;
+  const desc = t.descripcion || '—';
+  const ref  = t.codigo ? `<div style="font-size:10px;color:var(--text-soft);margin-top:1px">${t.codigo}</div>` : '';
+  return `<tr data-search="${(desc+' '+(t.familia||'')+' '+(t.categoria||'')+' '+(t.marca||'')+(t.codigo||'')).toLowerCase()}">
+    <td><strong style="font-size:12px">${desc}</strong>${ref}</td>
+    <td style="text-align:center;color:var(--text-soft)">${t.unidad||'Ud'}</td>
+    <td class="td-mono">${fmt(t.precio_coste)}</td>
+    <td class="td-mono" style="color:var(--green)">${fmtP(t.margen_pct)}</td>
+    <td class="td-mono" style="font-weight:800;color:var(--navy)">${fmt(t.precio_venta)}</td>
+    <td style="color:var(--text-soft);font-size:11px">${t.marca||'—'}</td>
+    <td><div class="td-actions">
+      <button class="btn btn-ghost btn-icon btn-sm" onclick="editTarifario('${t.id}')">✏️</button>
+      <button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('tarifario','${t.id}','${(desc).replace(/'/g,"\\'")}')">🗑</button>
+    </div></td>
+  </tr>`;
 }
 
 function toggleTarifGroup(id){
@@ -3840,13 +3912,16 @@ function buscarTarifario(){
 function filtrarTarifario(){ buscarTarifario(); }
 
 function abrirNuevoTarifario(){
-  document.getElementById('m-tarif-title').textContent = '＋ Nuevo artículo';
+  document.getElementById('m-tarif-title').textContent = '＋ Nuevo producto';
   ['t-id','t-codigo','t-desc','t-marca','t-notas','t-familia'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
   document.getElementById('t-unidad').value = 'Ud';
-  document.getElementById('t-coste').value = '0';
+  document.getElementById('t-coste').value = '';
   document.getElementById('t-margen').value = '30';
-  document.getElementById('t-cat').value = 'Mobiliario';
   document.getElementById('t-pventa').value = '';
+  // Pre-select category from current tree selection
+  const activeCat = document.querySelector('.tarif-cat-item.active-cat')?.dataset?.cat;
+  if(activeCat) document.getElementById('t-cat').value = activeCat;
+  else document.getElementById('t-cat').value = LISTAS.categorias_tarifario?.[0] || 'Mobiliario';
   actualizarFamiliasModal();
   openModal('m-tarifario');
 }
@@ -3855,9 +3930,26 @@ function actualizarFamiliasModal(){
   const cat = document.getElementById('t-cat')?.value || '';
   const sel = document.getElementById('t-familia-sel');
   if(!sel) return;
-  const fams = [...new Set(TC.filter(t=>(t.categoria||'')===cat && t.familia).map(t=>t.familia))].sort();
-  sel.innerHTML = '<option value="">— Nueva familia —</option>' + fams.map(f=>`<option value="${f}">${f}</option>`).join('');
+  // Subcategorías existentes en esta categoría
+  const subs = [...new Set(TC.filter(t=>(t.categoria||'')===cat && t.familia).map(t=>t.familia))].sort();
+  sel.innerHTML = '<option value="">＋ Nueva subcategoría…</option>' +
+    subs.map(s=>`<option value="${s}">${s}</option>`).join('');
   document.getElementById('t-familia').value = '';
+  updateTarifRuta();
+}
+
+// selFamiliaModal defined above in actualizarFamiliasModal
+
+function updateTarifRuta(){
+  const cat  = document.getElementById('t-cat')?.value || '';
+  const sub  = document.getElementById('t-familia')?.value || document.getElementById('t-familia-sel')?.value || '';
+  const desc = document.getElementById('t-desc')?.value || '';
+  const el   = document.getElementById('t-ruta-display');
+  if(!el) return;
+  let ruta = cat || '…';
+  if(sub)  ruta += ' › ' + sub;
+  if(desc) ruta += ' › ' + desc.substring(0,40);
+  el.textContent = ruta;
 }
 
 function selFamiliaModal(){
@@ -3867,20 +3959,20 @@ function selFamiliaModal(){
 
 function editTarifario(id){
   const t=TC.find(x=>x.id===id);if(!t)return;
-  document.getElementById('m-tarif-title').textContent='✏️ Editar artículo';
+  document.getElementById('m-tarif-title').textContent='✏️ Editar producto';
   document.getElementById('t-id').value=t.id;
   document.getElementById('t-codigo').value=t.codigo||'';
   document.getElementById('t-desc').value=t.descripcion||'';
   document.getElementById('t-unidad').value=t.unidad||'Ud';
   document.getElementById('t-coste').value=t.precio_coste||0;
   document.getElementById('t-margen').value=t.margen_pct||30;
-  document.getElementById('t-cat').value=t.categoria||'Mobiliario';
+  document.getElementById('t-cat').value=t.categoria||'';
   document.getElementById('t-marca').value=t.marca||'';
   document.getElementById('t-notas').value=t.notas||'';
-  document.getElementById('t-familia').value=t.familia||'';
   actualizarFamiliasModal();
   document.getElementById('t-familia').value=t.familia||'';
   calcPrecioVenta();
+  updateTarifRuta();
   openModal('m-tarifario');
 }
 
