@@ -870,7 +870,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <div class="kpi blue"><div class="kpi-label">Base (s/CI)</div><div class="kpi-value" id="pres-k-base">—</div></div>
           <div class="kpi amber"><div class="kpi-label">CI+GG+BI</div><div class="kpi-value" id="pres-k-ci">—</div></div>
           <div class="kpi green"><div class="kpi-label">Total s/IVA</div><div class="kpi-value" id="pres-k-total">—</div></div>
-          <div class="kpi red"><div class="kpi-label">Total c/IVA 10%</div><div class="kpi-value" id="pres-k-iva">—</div></div>
+          <div class="kpi red"><div class="kpi-label">Total c/IVA</div><div class="kpi-value" id="pres-k-iva">—</div></div>
         </div>
       </div>
       <div class="card">
@@ -3814,12 +3814,28 @@ function renderPresupuesto(){
     totBase+=(l.cantidad||0)*(l.precio_base||0);totCI+=subCI-sub;totVenta+=subCI;
     return`<tr data-search="${(l.descripcion||'').toLowerCase()}"><td style="color:var(--text-soft);font-size:11px">${i+1}</td><td><strong>${l.descripcion||'—'}</strong>${l.ref_cype?`<br><span style="font-size:9px;color:var(--text-soft)">${l.ref_cype}</span>`:''}</td><td style="text-align:center">${l.unidad||'—'}</td><td class="td-mono">${l.cantidad||0}</td><td class="td-mono">${fmt(l.precio_base)}</td><td class="td-mono" style="color:var(--green)">${l.margen_pct>0?fmtP(l.margen_pct):'—'}</td><td class="td-mono" style="color:var(--amber)">${ci>0?fmtP(ci):'—'}</td><td class="td-mono" style="font-weight:700">${fmt(pv)}</td><td class="td-mono" style="font-weight:700;color:var(--navy)">${fmt(subCI)}</td><td><span class="badge b-gray">${l.iva_pct||'10%'}</span></td><td><div class="td-actions"><button class="btn btn-ghost btn-icon btn-sm" onclick="editLineaPresupuesto('${l.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('presupuesto_lineas','${l.id}','${(l.descripcion||'').replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`;
   }).join('');
-  const iva=totVenta*0.10;
-  document.getElementById('pres-k-base').textContent=fmt(totBase);document.getElementById('pres-k-ci').textContent=fmt(totCI);document.getElementById('pres-k-total').textContent=fmt(totVenta);document.getElementById('pres-k-iva').textContent=fmt(totVenta+iva);
-  document.getElementById('pres-total-lbl').textContent=`TOTAL c/IVA: ${fmt(totVenta+iva)}`;
+  // Calcular IVA por tramos según el iva_pct de cada línea
+  let ivaDesglose={};
+  PresC.forEach(l=>{
+    if(l.es_capitulo) return;
+    const pv=l.precio_venta||0, ci=l.ci_gg_bi_pct||0;
+    const sub=(l.cantidad||0)*pv, subCI=ci>0?sub*(1+ci/100):sub;
+    const tipoIva=l.iva_pct||'10%';
+    const pctIva=parseFloat(tipoIva)||10;
+    if(!ivaDesglose[tipoIva]) ivaDesglose[tipoIva]={pct:pctIva, base:0, iva:0};
+    ivaDesglose[tipoIva].base += subCI;
+    ivaDesglose[tipoIva].iva  += subCI * pctIva/100;
+  });
+  const totalIva = Object.values(ivaDesglose).reduce((s,v)=>s+v.iva, 0);
+  const totalConIva = totVenta + totalIva;
+  document.getElementById('pres-k-base').textContent=fmt(totBase);
+  document.getElementById('pres-k-ci').textContent=fmt(totCI);
+  document.getElementById('pres-k-total').textContent=fmt(totVenta);
+  document.getElementById('pres-k-iva').textContent=fmt(totalConIva);
+  document.getElementById('pres-total-lbl').textContent=`TOTAL c/IVA: ${fmt(totalConIva)}`;
   document.getElementById('pres-resumen').style.display='block';
 }
-function calcLineaPres(){const precio=parseFloat(document.getElementById('pl-precio').value)||0,margen=parseFloat(document.getElementById('pl-margen').value)||0,ci=parseFloat(document.getElementById('pl-ci').value)||0,cant=parseFloat(document.getElementById('pl-cant').value)||0;let pv=margen>0&&margen<100?precio/(1-margen/100):precio;if(ci>0)pv=pv*(1+ci/100);const sub=cant*pv;document.getElementById('pl-pventa').value=pv>0?pv.toFixed(2)+' €':'—';document.getElementById('pl-subtotal').value=sub>0?sub.toFixed(2)+' €':'—';}
+function calcLineaPres(){const precio=parseFloat(document.getElementById('pl-precio').value)||0,margen=parseFloat(document.getElementById('pl-margen').value)||0,ci=parseFloat(document.getElementById('pl-ci').value)||0,cant=parseFloat(document.getElementById('pl-cant').value)||0;let pv=margen>0?precio*(1+margen/100):precio;if(ci>0)pv=pv*(1+ci/100);const sub=cant*pv;document.getElementById('pl-pventa').value=pv>0?pv.toFixed(2)+' €':'—';document.getElementById('pl-subtotal').value=sub>0?sub.toFixed(2)+' €':'—';}
 function searchCypeLinea(){const q=document.getElementById('pl-cype-search').value.toLowerCase(),res=document.getElementById('pl-cype-results');if(q.length<2){res.style.display='none';return;}const matches=CyCache.filter(c=>c.codigo.toLowerCase().includes(q)||c.descripcion.toLowerCase().includes(q)).slice(0,8);if(!matches.length){res.style.display='none';return;}res.style.display='block';res.innerHTML=matches.map(c=>`<div onclick="selectCype('${c.id}')" style="padding:7px 11px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--border)" onmouseover="this.style.background='var(--blue-light)'" onmouseout="this.style.background=''"><strong style="color:var(--navy-mid)">${c.codigo}</strong> · ${c.descripcion} <span style="float:right;color:var(--green);font-weight:700">${fmt(c.precio)}/${c.unidad}</span></div>`).join('');}
 function selectCype(id){const c=CyCache.find(x=>x.id===id);if(!c)return;document.getElementById('pl-desc').value=c.descripcion;document.getElementById('pl-precio').value=c.precio;document.getElementById('pl-ud').value=c.unidad||'m²';document.getElementById('pl-cype-search').value=`${c.codigo} · ${c.descripcion}`;document.getElementById('pl-cype-search').dataset.cypeRef=c.codigo;document.getElementById('pl-cype-results').style.display='none';calcLineaPres();}
 function loadTarifLinea(){const id=document.getElementById('pl-tarif-sel').value;if(!id)return;const t=TC.find(x=>x.id===id);if(!t)return;document.getElementById('pl-desc').value=t.descripcion;document.getElementById('pl-precio').value=t.precio_coste||0;document.getElementById('pl-margen').value=t.margen_pct||0;document.getElementById('pl-ud').value=t.unidad||'Ud';calcLineaPres();}
@@ -3829,7 +3845,7 @@ async function saveLineaPresupuesto(){
   const desc=document.getElementById('pl-desc').value.trim();if(!desc){toast('La descripción es obligatoria','error');return;}
   const proy=document.getElementById('pres-proyecto-sel').value,ver=document.getElementById('pres-version-sel').value;
   const precio=parseFloat(document.getElementById('pl-precio').value)||0,margen=parseFloat(document.getElementById('pl-margen').value)||0,ci=parseFloat(document.getElementById('pl-ci').value)||0,cant=parseFloat(document.getElementById('pl-cant').value)||0;
-  let pv=margen>0&&margen<100?precio/(1-margen/100):precio;if(ci>0)pv=pv*(1+ci/100);
+  let pv=margen>0?precio*(1+margen/100):precio;if(ci>0)pv=pv*(1+ci/100);
   const id=document.getElementById('pl-id').value;
   const d={proyecto_id:proy,version:ver,descripcion:desc,ref_cype:document.getElementById('pl-cype-search').dataset.cypeRef||null,unidad:document.getElementById('pl-ud').value,cantidad:cant,precio_base:precio,margen_pct:margen,ci_gg_bi_pct:ci,precio_venta:parseFloat(pv.toFixed(4)),subtotal:parseFloat((cant*pv).toFixed(4)),iva_pct:document.getElementById('pl-iva').value,partida:document.getElementById('pl-partida').value,es_capitulo:false,orden:PresC.length+1};
   try{if(id){await sbPatch('presupuesto_lineas',id,d);toast('Línea actualizada ✅');}else{await sbPost('presupuesto_lineas',d);toast('Línea añadida ✅');}closeModal('m-pres-linea');loadPresupuesto();}catch(e){toast('Error: '+e.message,'error');}
@@ -4281,7 +4297,7 @@ function calcPrecioVenta(){
   const pvEl=document.getElementById('t-pventa');
   if(!pvEl)return;
   if(coste<=0){pvEl.value='';return;}
-  const pv=margen<100?coste/(1-margen/100):coste;
+  const pv=margen>0?coste*(1+margen/100):coste;
   pvEl.value=pv>0?Number(pv).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€':'';
 }
 
@@ -4326,7 +4342,7 @@ async function saveTarifario(){
   if(!codigo||!desc){toast('Código y descripción obligatorios','error');return;}
   const id=document.getElementById('t-id').value;
   const costeV=parseFloat(document.getElementById('t-coste').value)||0,margenV=parseFloat(document.getElementById('t-margen').value)||30;
-  const pvV=margenV<100?parseFloat((costeV/(1-margenV/100)).toFixed(4)):costeV;
+  const pvV=margenV>0?parseFloat((costeV*(1+margenV/100)).toFixed(4)):costeV;
   const familiaV=(document.getElementById('t-familia').value||'').trim();
   const d={codigo,descripcion:desc,unidad:document.getElementById('t-unidad').value,precio_coste:costeV,margen_pct:margenV,categoria:document.getElementById('t-cat').value,familia:familiaV||null,marca:document.getElementById('t-marca').value,notas:document.getElementById('t-notas').value};
   try{
@@ -4587,7 +4603,7 @@ function saitraRecalc(){
     if(l.puntos) totalPuntos += l.puntos * l.cant;
     totalCoste += l.costeTotal;
   });
-  const pventa = margen<100 ? totalCoste/(1-margen/100) : totalCoste;
+  const pventa = margen>0 ? totalCoste*(1+margen/100) : totalCoste;
   document.getElementById('s-tot-puntos').textContent = totalPuntos;
   document.getElementById('s-tot-coste').textContent = totalCoste.toFixed(2).replace('.',',')+'€';
   document.getElementById('s-tot-venta').textContent = pventa.toFixed(2).replace('.',',')+'€';
@@ -4606,7 +4622,7 @@ function saitraExportarPresupuesto(){
   if(!proy){ toast('Selecciona un proyecto primero','error'); return; }
   const margen = parseFloat(document.getElementById('s-margen')?.value)||35;
   let totalCoste = saitraLineas.reduce((s,l)=>s+l.costeTotal, 0);
-  const pventa = margen<100 ? totalCoste/(1-margen/100) : totalCoste;
+  const pventa = margen>0 ? totalCoste*(1+margen/100) : totalCoste;
   // Navega a presupuesto y lo añade como capítulo
   document.querySelector('[data-view="presupuesto"]')?.click();
   setTimeout(()=>{
@@ -4626,7 +4642,7 @@ function saitraImprimir(){
   const col = document.getElementById('s-col')?.value || '—';
   let totalPuntos=0, totalCoste=0;
   saitraLineas.forEach(l=>{ if(l.puntos) totalPuntos+=l.puntos*l.cant; totalCoste+=l.costeTotal; });
-  const pventa = margen<100 ? totalCoste/(1-margen/100) : totalCoste;
+  const pventa = margen>0 ? totalCoste*(1+margen/100) : totalCoste;
   const fmtE = v => v.toFixed(2).replace('.',',')+'€';
   const iconos = {modulo:'📦', accesorio:'🔧', zocalo:'⬇'};
   const filas = saitraLineas.map(l=>`
