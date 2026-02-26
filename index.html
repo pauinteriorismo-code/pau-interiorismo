@@ -2463,6 +2463,7 @@ async function navTo(v){
 const bColors={'Nuevo lead':'b-gray','Presupuesto enviado':'b-amber','Aprobado':'b-blue','En ejecución':'b-blue','Finalizado':'b-green','Facturado':'b-green','Cobrado':'b-navy','Cancelado':'b-red','Pendiente':'b-amber','Pagado':'b-green','Cobrada':'b-green','Parcial':'b-copper','Vencido':'b-red','Vencida':'b-red','Borrador':'b-gray','Enviada':'b-amber','Aprobada':'b-green','Rechazada':'b-red','En pedido':'b-blue','Entregada':'b-navy','Solicitado':'b-amber','Confirmado':'b-blue','En tránsito':'b-blue','Recibido':'b-copper','Proveedor':'b-blue','Subcontrata':'b-green','Obra nueva':'b-navy','Rehabilitación integral':'b-green','Interiorismo':'b-copper','Particular':'b-blue','Empresa':'b-green','Promotora':'b-copper'};
 function bE(v){return`<span class="badge ${bColors[v]||'b-gray'}">${v||'—'}</span>`}
 function fmt(n){if(n===null||n===undefined||n==='')return'—';return Number(n).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€'}
+function findProvName(id){if(!id)return'';return ProvC.find(p=>String(p.id)===String(id))?.nombre || ScC.find(s=>String(s.proveedor_id)===String(id))?.proveedor_id || ProvC.find(p=>p.nombre===id)?.nombre || id;}
 function fmtN(n){if(!n&&n!==0)return'—';return Number(n).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€'}
 function fmtP(n){return n!=null?Number(n).toFixed(1)+'%':'—'}
 function fmtD(d){if(!d)return'—';const p=d.split('-');return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:d}
@@ -4690,11 +4691,14 @@ async function loadFacturas(){
   const tb=document.getElementById('facturas-tbody');
   try{
     FC=await sbGet('facturas','?order=fecha_emision.desc');
-    // Poblar proveedor select en modal
+    // Poblar proveedor select en modal (proveedores + subcontratistas)
     const fProv=document.getElementById('f-proveedor');
     if(fProv){
       const cur=fProv.value;
-      fProv.innerHTML='<option value="">Seleccionar…</option>'+ProvC.map(p=>`<option value="${p.nombre}">${p.nombre}</option>`).join('');
+      const provNames=ProvC.map(p=>p.nombre).filter(Boolean);
+      const subNames=[...new Set(ScC.map(s=>s.proveedor_id).filter(Boolean))];
+      const allNames=[...new Set([...provNames,...subNames])].sort();
+      fProv.innerHTML='<option value="">Seleccionar…</option>'+allNames.map(n=>`<option value="${n}">${n}</option>`).join('');
       if(cur)fProv.value=cur;
     }
     // KPIs
@@ -4741,7 +4745,7 @@ async function loadFacturas(){
     const contrasNombres = [...new Set(FC.map(f=>{
       const esC=(f.tipo_factura||'Venta')==='Compra';
       return esC
-        ?(ProvC.find(p=>String(p.id)===String(f.proveedor_id))?.nombre || f.proveedor_id || '')
+        ?(f.proveedor_id || '')
         :(CC.find(c=>String(c.id)===String(f.cliente_id)||c.cliente_id===f.cliente_id)?.nombre || f.cliente_id || '');
     }).filter(Boolean))].sort();
     const selContra = document.getElementById('filt-fac-contra');
@@ -4770,7 +4774,7 @@ async function loadFacturas(){
         ?'<span style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:8px;background:#fdecea;color:var(--red)">📥 Compra</span>'
         :'<span style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:8px;background:#e8f5ee;color:var(--green)">📤 Venta</span>';
       const contra=esC
-        ?(ProvC.find(p=>String(p.id)===String(f.proveedor_id))?.nombre || f.proveedor_id || '—')
+        ?(f.proveedor_id || '—')
         :(CC.find(c=>String(c.id)===String(f.cliente_id)||c.cliente_id===f.cliente_id)?.nombre || f.cliente_id || '—');
       const yaCobrada = f.estado==='Cobrada'||f.estado==='Pagada';
       const srch=(tipo+' '+(f.num_factura||'')+' '+contra+' '+(f.proyecto_id||'')+' '+(f.concepto||'')).toLowerCase();
@@ -4938,7 +4942,13 @@ function abrirNuevaFactura(tipo){
   const fCliente=document.getElementById('f-cliente');
   if(fCliente) fCliente.value='';
   const fProv=document.getElementById('f-proveedor');
-  if(fProv) fProv.value='';
+  if(fProv){
+    const provNames=ProvC.map(p=>p.nombre).filter(Boolean);
+    const subNames=[...new Set(ScC.map(s=>s.proveedor_id).filter(Boolean))];
+    const allNames=[...new Set([...provNames,...subNames])].sort();
+    fProv.innerHTML='<option value="">Seleccionar…</option>'+allNames.map(n=>`<option value="${n}">${n}</option>`).join('');
+    fProv.value='';
+  }
   // Reset proyecto: vacío hasta que se elija cliente (venta) o mostrar todos (compra)
   const fProy=document.getElementById('f-proyecto');
   if(fProy){
@@ -5007,8 +5017,12 @@ function renderFacLineas(){
   if(!_facLineas.length){
     tbody.innerHTML='<tr><td colspan="7" style="padding:12px;text-align:center;color:var(--text-soft);font-size:11px">Sin líneas — pulsa ＋ Añadir línea o importa desde presupuesto</td></tr>';
     if(totEl) totEl.textContent='0,00 € / 0,00 €';
-    const bEl=document.getElementById('f-base'); if(bEl) bEl.value='';
-    const tEl=document.getElementById('f-total-display'); if(tEl) tEl.value='';
+    // Solo limpiar base si NO estamos editando una factura existente (para no borrar el importe cargado)
+    const editando=document.getElementById('f-id')?.value;
+    if(!editando){
+      const bEl=document.getElementById('f-base'); if(bEl) bEl.value='';
+      const tEl=document.getElementById('f-total-display'); if(tEl) tEl.value='';
+    }
     return;
   }
   let totalBase=0, totalConIva=0;
