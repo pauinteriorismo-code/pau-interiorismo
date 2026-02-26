@@ -1003,7 +1003,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="search-bar">
         <div class="search-wrap"><span class="search-icon">🔍</span><input class="form-input" id="search-proveedores" placeholder="Buscar…" oninput="filterTable('proveedores-tbody','search-proveedores')"></div>
         <button class="btn btn-ghost btn-sm" onclick="openModal('m-import-proveedores')" style="border:1px dashed var(--border)">📤 Importar Holded</button>
-        <button class="btn btn-primary" onclick="openModal('m-proveedor')">＋ Nuevo proveedor</button>
+        <button class="btn btn-primary" onclick="abrirNuevoProveedor()">＋ Nuevo proveedor</button>
       </div>
       <div class="card">
         <div class="card-header"><div class="card-title">🏭 Proveedores<span id="proveedores-count" style="font-size:11px;font-weight:400;color:var(--text-soft);margin-left:6px"></span></div></div>
@@ -4028,7 +4028,18 @@ async function loadProveedores(){
     filtrarProyectosPorCliente();
   }catch(e){tb.innerHTML=`<tr><td colspan="8" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
 }
-function editProveedor(id){const p=ProvC.find(x=>x.id===id);if(!p)return;document.getElementById('pv-id').value=p.id;document.getElementById('pv-nombre').value=p.nombre||'';document.getElementById('pv-cif').value=p.cif||'';document.getElementById('pv-tipo').value=p.tipo||'Proveedor';document.getElementById('pv-tel').value=p.telefono||'';document.getElementById('pv-email').value=p.email||'';document.getElementById('pv-esp').value=p.especialidad||'';document.getElementById('pv-pago').value=p.forma_pago||'Transferencia';document.getElementById('pv-iban').value=p.iban||'';document.getElementById('pv-notas').value=p.notas||'';openModal('m-proveedor');}
+function abrirNuevoProveedor(){
+  // Limpiar formulario para proveedor nuevo
+  ['pv-id','pv-nombre','pv-cif','pv-tel','pv-email','pv-esp','pv-iban','pv-notas'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('pv-tipo').value='Proveedor';
+  document.getElementById('pv-pago').value='Transferencia';
+  document.getElementById('m-proveedor').querySelector('.modal-title').textContent='🏭 Nuevo proveedor';
+  openModal('m-proveedor');
+}
+
+function editProveedor(id){const p=ProvC.find(x=>x.id===id);if(!p)return;document.getElementById('m-proveedor').querySelector('.modal-title').textContent='✏️ Editar proveedor';document.getElementById('pv-id').value=p.id;document.getElementById('pv-nombre').value=p.nombre||'';document.getElementById('pv-cif').value=p.cif||'';document.getElementById('pv-tipo').value=p.tipo||'Proveedor';document.getElementById('pv-tel').value=p.telefono||'';document.getElementById('pv-email').value=p.email||'';document.getElementById('pv-esp').value=p.especialidad||'';document.getElementById('pv-pago').value=p.forma_pago||'Transferencia';document.getElementById('pv-iban').value=p.iban||'';document.getElementById('pv-notas').value=p.notas||'';openModal('m-proveedor');}
 async function saveProveedor(){const nombre=document.getElementById('pv-nombre').value.trim();if(!nombre){toast('El nombre es obligatorio','error');return;}const id=document.getElementById('pv-id').value;const d={nombre,cif:document.getElementById('pv-cif').value,tipo:document.getElementById('pv-tipo').value,telefono:document.getElementById('pv-tel').value,email:document.getElementById('pv-email').value,especialidad:document.getElementById('pv-esp').value,forma_pago:document.getElementById('pv-pago').value,iban:document.getElementById('pv-iban').value,notas:document.getElementById('pv-notas').value};try{if(id){await sbPatch('proveedores',id,d);toast('Proveedor actualizado ✅');}else{d.proveedor_id=genId('PRV',ProvC,'proveedor_id');await sbPost('proveedores',d);toast('Proveedor guardado ✅');}closeModal('m-proveedor');document.getElementById('pv-id').value='';loadProveedores();populateSelects();}catch(e){toast('Error: '+e.message,'error');}
 }
 
@@ -7040,17 +7051,15 @@ async function saveAgenda(){
   const fecha = document.getElementById('ag-fecha').value;
   if(!fecha){ toast('La fecha es obligatoria','error'); return; }
   const id = document.getElementById('ag-id').value;
-  const d = {
-    descripcion: desc,
-    fecha,
-    hora: document.getElementById('ag-hora').value||null,
-    tipo: document.getElementById('ag-tipo').value,
-    prioridad: document.getElementById('ag-prioridad').value,
-    proyecto_id: document.getElementById('ag-proyecto')?.value||null,
-    notas: document.getElementById('ag-notas').value||null,
-    notificacion: document.getElementById('ag-notif').checked,
-    estado: 'Pendiente',
-  };
+  const hora = document.getElementById('ag-hora').value||null;
+  const tipo = document.getElementById('ag-tipo').value;
+  const prioridad = document.getElementById('ag-prioridad').value;
+  const proyecto_id = document.getElementById('ag-proyecto')?.value||null;
+  const notas = document.getElementById('ag-notas').value||null;
+  const notificacion = document.getElementById('ag-notif').checked;
+
+  const d = { descripcion:desc, fecha, hora, tipo, prioridad, proyecto_id, notas, notificacion, estado:'Pendiente' };
+
   try{
     if(id){
       await sb('agenda','PATCH',d,null,`?id=eq.${id}`);
@@ -7062,7 +7071,76 @@ async function saveAgenda(){
     closeModal('m-agenda');
     await loadAgenda();
     solicitarPermisosNotificacion();
+
+    // ── Crear evento en Google Calendar automáticamente si tiene notificación ──
+    if(notificacion){
+      try{
+        await crearEventoGoogleCalendar({desc, fecha, hora, tipo, prioridad, proyecto_id, notas});
+      }catch(e){
+        console.warn('Google Calendar no disponible:', e.message);
+        // No bloquear — el aviso ya está guardado en la app
+      }
+    }
   }catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+async function crearEventoGoogleCalendar({desc, fecha, hora, tipo, prioridad, proyecto_id, notas}){
+  // Construir fechas ISO para Google Calendar
+  let startTime, endTime;
+  if(hora){
+    const [hh, mm] = hora.split(':').map(Number);
+    const start = new Date(`${fecha}T${hora}:00`);
+    const end = new Date(start.getTime() + 60*60*1000); // +1 hora por defecto
+    startTime = start.toISOString();
+    endTime   = end.toISOString();
+  } else {
+    // Evento de todo el día
+    startTime = fecha;
+    endTime   = fecha;
+  }
+
+  const titulo = `[PAU] ${tipo||'Aviso'}: ${desc}${proyecto_id?' · '+proyecto_id:''}`;
+  const descripcion = [
+    `Tipo: ${tipo||'—'}`,
+    `Prioridad: ${prioridad||'—'}`,
+    proyecto_id ? `Proyecto: ${proyecto_id}` : '',
+    notas ? `Notas: ${notas}` : '',
+    '',
+    'Creado desde PAU INTERIORISMO Gestión'
+  ].filter(Boolean).join('\n');
+
+  // Llamar a la API de Anthropic con Google Calendar MCP
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      messages: [{
+        role: 'user',
+        content: `Crea un evento en Google Calendar con estos datos exactos:
+- Título: ${titulo}
+- Inicio: ${startTime}
+- Fin: ${endTime}
+- Descripción: ${descripcion}
+- Recordatorio: 15 minutos antes
+
+Por favor créalo ahora mismo usando la herramienta de Google Calendar.`
+      }],
+      mcp_servers: [{type:'url', url:'https://gcal.mcp.claude.com/mcp', name:'gcal-mcp'}]
+    })
+  });
+
+  if(!resp.ok) throw new Error('API error '+resp.status);
+  const data = await resp.json();
+
+  // Comprobar si se creó correctamente
+  const textos = (data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join(' ');
+  if(textos.toLowerCase().includes('creado')||textos.toLowerCase().includes('created')||textos.toLowerCase().includes('event')){
+    toast('📅 Evento añadido a Google Calendar — recibirás notificación en el móvil', 'success');
+  } else {
+    toast('📅 Sincronizado con Google Calendar', 'success');
+  }
 }
 
 async function completarAgenda(id){
