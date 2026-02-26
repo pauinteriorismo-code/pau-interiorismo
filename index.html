@@ -868,13 +868,21 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     <!-- ═══ TARIFARIO ═══ -->
     <div class="view" id="view-tarifario">
       <div class="search-bar">
-        <div class="search-wrap"><span class="search-icon">🔍</span><input class="form-input" id="search-tarifario" placeholder="Buscar…" oninput="filterTable('tarifario-tbody','search-tarifario')"></div>
-        <button class="btn btn-primary" onclick="openModal('m-tarifario')">＋ Nuevo artículo</button>
+        <div class="search-wrap"><span class="search-icon">🔍</span><input class="form-input" id="search-tarifario" placeholder="Buscar código, descripción, marca…" oninput="filtrarTarifario()"></div>
+        <select class="form-input" style="width:200px" id="filter-tarifario-cat" onchange="filtrarTarifario()">
+          <option value="">Todas las categorías</option>
+          <option>Mobiliario</option><option>Sofas y tapizados</option><option>Dormitorios</option><option>Colchones</option>
+          <option>Cocina</option><option>Banos</option><option>Sanitarios</option><option>Griferias</option>
+          <option>Pavimentos</option><option>Revestimientos</option><option>Carpinteria</option><option>Puertas y ventanas</option>
+          <option>Iluminacion</option><option>Climatizacion</option><option>Calefaccion</option><option>Instalaciones</option>
+          <option>Electricidad</option><option>Fontaneria</option><option>Pintura</option><option>Varios</option><option>Otros</option>
+        </select>
+        <button class="btn btn-primary" onclick="abrirNuevoTarifario()">＋ Nuevo artículo</button>
       </div>
       <div class="card">
         <div class="card-header"><div class="card-title">📋 Tarifario<span id="tarifario-count" style="font-size:11px;font-weight:400;color:var(--text-soft);margin-left:6px"></span></div></div>
-        <div class="table-wrap"><table><thead><tr><th>Código</th><th>Descripción</th><th>Ud.</th><th>Coste</th><th>Margen %</th><th>P.Venta</th><th>Categoría</th><th></th></tr></thead>
-        <tbody id="tarifario-tbody"><tr><td colspan="8" class="loading">Cargando…</td></tr></tbody></table></div>
+        <div class="table-wrap"><table><thead><tr><th>Código</th><th>Descripción</th><th>Ud.</th><th>Coste</th><th>Margen %</th><th>P.Venta</th><th>Categoría</th><th>Marca</th><th></th></tr></thead>
+        <tbody id="tarifario-tbody"><tr><td colspan="9" class="loading">Cargando…</td></tr></tbody></table></div>
       </div>
     </div>
 
@@ -1729,7 +1737,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="form-group"><label class="form-label">Precio coste (s/IVA)</label><input class="form-input" id="t-coste" type="number" step="0.01" oninput="calcPrecioVenta()"></div>
       <div class="form-group"><label class="form-label">Margen %</label><input class="form-input" id="t-margen" type="number" step="0.1" value="30" oninput="calcPrecioVenta()"></div>
       <div class="form-group"><label class="form-label">Precio venta</label><input class="form-input calc" id="t-pventa" readonly></div>
-      <div class="form-group"><label class="form-label">Categoría</label><select class="form-input" id="t-cat"><option>Mobiliario</option><option>Sanitarios</option><option>Griferías</option><option>Cocina</option><option>Carpintería</option><option>Pavimentos</option><option>Revestimientos</option><option>Instalaciones</option><option>Otros</option></select></div>
+      <div class="form-group"><label class="form-label">Categoría</label><select class="form-input" id="t-cat"><option>Mobiliario</option><option>Sofas y tapizados</option><option>Dormitorios</option><option>Colchones</option><option>Cocina</option><option>Banos</option><option>Sanitarios</option><option>Griferias</option><option>Pavimentos</option><option>Revestimientos</option><option>Carpinteria</option><option>Puertas y ventanas</option><option>Iluminacion</option><option>Climatizacion</option><option>Calefaccion</option><option>Instalaciones</option><option>Electricidad</option><option>Fontaneria</option><option>Pintura</option><option>Varios</option><option>Otros</option></select></div>
       <div class="form-group"><label class="form-label">Marca</label><input class="form-input" id="t-marca"></div>
       <div class="form-group fg-full"><label class="form-label">Notas</label><input class="form-input" id="t-notas"></div>
     </div>
@@ -2378,7 +2386,7 @@ let LISTAS={
   tipos_cliente:['Particular','Empresa','Promotora','Administración','Otros'],
   tipos_proveedor:['Proveedor','Subcontrata','Alquiler','Servicio','Transporte','Otros'],
   estancias:['Salón','Cocina','Dormitorio','Baño','Terraza','Despacho','Comedor','Pasillo','Entrada','Otros'],
-  categorias_tarifario:['Mobiliario','Sanitarios','Griferías','Cocina','Carpintería','Pavimentos','Revestimientos','Instalaciones','Otros'],
+  categorias_tarifario:['Mobiliario','Sofas y tapizados','Dormitorios','Colchones','Cocina','Banos','Sanitarios','Griferias','Pavimentos','Revestimientos','Carpinteria','Puertas y ventanas','Iluminacion','Climatizacion','Calefaccion','Instalaciones','Electricidad','Fontaneria','Pintura','Varios','Otros'],
 };
 const LISTA_MAP={'trabajadores-list':'trabajadores','estados-list':'estados_proyecto','tipos-proyecto-list':'tipos_proyecto','formas-pago-list':'formas_pago','tipos-cliente-list':'tipos_cliente','tipos-proveedor-list':'tipos_proveedor','estancias-list':'estancias','categorias-list':'categorias_tarifario'};
 
@@ -3432,12 +3440,39 @@ async function loadTarifario(){
     TC=await sbGet('tarifario','?order=created_at.desc');
     document.getElementById('tarifario-count').textContent=TC.length+' artículos';
     if(!TC.length){tb.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="empty-icon">📋</div><div class="empty-text">Tarifario vacío</div><button class="btn btn-primary" onclick="openModal('m-tarifario')">＋ Nuevo</button></div></td></tr>`;return;}
-    tb.innerHTML=TC.map(t=>`<tr data-search="${(t.codigo+t.descripcion+t.categoria+t.marca).toLowerCase()}"><td class="td-mono" style="color:var(--navy-mid);font-weight:700">${t.codigo}</td><td>${t.descripcion}</td><td style="text-align:center">${t.unidad||'Ud'}</td><td class="td-mono">${fmt(t.precio_coste)}</td><td class="td-mono" style="color:var(--green)">${fmtP(t.margen_pct)}</td><td class="td-mono" style="font-weight:700">${fmt(t.precio_venta)}</td><td>${t.categoria?`<span class="badge b-copper">${t.categoria}</span>`:'—'}</td><td><div class="td-actions"><button class="btn btn-ghost btn-icon btn-sm" onclick="editTarifario('${t.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('tarifario','${t.id}','${t.descripcion.replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`).join('');
+    tb.innerHTML=TC.map(t=>`<tr data-cat="${(t.categoria||'').toLowerCase()}" data-search="${(t.codigo+' '+t.descripcion+' '+(t.categoria||'')+' '+(t.marca||'')).toLowerCase()}"><td class="td-mono" style="color:var(--navy-mid);font-weight:700">${t.codigo}</td><td>${t.descripcion}</td><td style="text-align:center">${t.unidad||'Ud'}</td><td class="td-mono">${fmt(t.precio_coste)}</td><td class="td-mono" style="color:var(--green)">${fmtP(t.margen_pct)}</td><td class="td-mono" style="font-weight:700">${fmt(t.precio_venta)}</td><td>${t.categoria?`<span class="badge b-copper">${t.categoria}</span>`:'—'}</td><td style="color:var(--text-soft);font-size:11px">${t.marca||'—'}</td><td><div class="td-actions"><button class="btn btn-ghost btn-icon btn-sm" onclick="editTarifario('${t.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('tarifario','${t.id}','${t.descripcion.replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`).join('');
+  filtrarTarifario();
   }catch(e){tb.innerHTML=`<tr><td colspan="8" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
 }
+function filtrarTarifario(){
+  const q = (document.getElementById('search-tarifario')?.value||'').toLowerCase();
+  const cat = (document.getElementById('filter-tarifario-cat')?.value||'').toLowerCase();
+  const rows = document.querySelectorAll('#tarifario-tbody tr');
+  let vis = 0;
+  rows.forEach(r=>{
+    const matchQ = !q || (r.dataset.search||'').includes(q);
+    const matchC = !cat || (r.dataset.cat||'').includes(cat);
+    r.style.display = (matchQ && matchC) ? '' : 'none';
+    if(matchQ && matchC) vis++;
+  });
+  const cnt = document.getElementById('tarifario-count');
+  if(cnt) cnt.textContent = `${vis} artículo${vis!==1?'s':''}`;
+}
+
+function abrirNuevoTarifario(){
+  document.getElementById('m-tarif-title').textContent = '＋ Nuevo artículo';
+  ['t-id','t-codigo','t-desc','t-marca','t-notas'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('t-unidad').value = 'Ud';
+  document.getElementById('t-coste').value = '0';
+  document.getElementById('t-margen').value = '30';
+  document.getElementById('t-cat').value = 'Mobiliario';
+  document.getElementById('t-pventa').value = '';
+  openModal('m-tarifario');
+}
+
 function calcPrecioVenta(){const c=parseFloat(document.getElementById('t-coste').value)||0,m=parseFloat(document.getElementById('t-margen').value)||0,pv=m<100?c/(1-m/100):0;document.getElementById('t-pventa').value=pv>0?pv.toFixed(2)+' €':'—';}
 function editTarifario(id){const t=TC.find(x=>x.id===id);if(!t)return;document.getElementById('m-tarif-title').textContent='Editar artículo';document.getElementById('t-id').value=t.id;document.getElementById('t-codigo').value=t.codigo||'';document.getElementById('t-desc').value=t.descripcion||'';document.getElementById('t-unidad').value=t.unidad||'Ud';document.getElementById('t-coste').value=t.precio_coste||0;document.getElementById('t-margen').value=t.margen_pct||30;document.getElementById('t-cat').value=t.categoria||'Mobiliario';document.getElementById('t-marca').value=t.marca||'';document.getElementById('t-notas').value=t.notas||'';calcPrecioVenta();openModal('m-tarifario');}
-async function saveTarifario(){const codigo=document.getElementById('t-codigo').value.trim(),desc=document.getElementById('t-desc').value.trim();if(!codigo||!desc){toast('Código y descripción obligatorios','error');return;}const id=document.getElementById('t-id').value;const d={codigo,descripcion:desc,unidad:document.getElementById('t-unidad').value,precio_coste:parseFloat(document.getElementById('t-coste').value)||0,margen_pct:parseFloat(document.getElementById('t-margen').value)||30,categoria:document.getElementById('t-cat').value,marca:document.getElementById('t-marca').value,notas:document.getElementById('t-notas').value};try{if(id){await sbPatch('tarifario',id,d);toast('Artículo actualizado ✅');}else{await sbPost('tarifario',d);toast('Artículo añadido ✅');}closeModal('m-tarifario');document.getElementById('t-id').value='';loadTarifario();}catch(e){toast('Error: '+e.message,'error');}
+async function saveTarifario(){const codigo=document.getElementById('t-codigo').value.trim(),desc=document.getElementById('t-desc').value.trim();if(!codigo||!desc){toast('Código y descripción obligatorios','error');return;}const id=document.getElementById('t-id').value;const costeV=parseFloat(document.getElementById('t-coste').value)||0,margenV=parseFloat(document.getElementById('t-margen').value)||30;const pvV=margenV<100?parseFloat((costeV/(1-margenV/100)).toFixed(4)):costeV;const d={codigo,descripcion:desc,unidad:document.getElementById('t-unidad').value,precio_coste:costeV,margen_pct:margenV,precio_venta:pvV,categoria:document.getElementById('t-cat').value,marca:document.getElementById('t-marca').value,notas:document.getElementById('t-notas').value};try{if(id){await sbPatch('tarifario',id,d);toast('Artículo actualizado ✅');}else{await sbPost('tarifario',d);toast('Artículo añadido ✅');}closeModal('m-tarifario');document.getElementById('t-id').value='';loadTarifario();}catch(e){toast('Error: '+e.message,'error');}
 }
 
 // ═══════════════════════════════════════════
@@ -7078,55 +7113,111 @@ async function saveAgenda(){
   }catch(e){ toast('Error: '+e.message,'error'); }
 }
 
-function crearEnlaceGoogleCalendar({desc, fecha, hora, tipo, prioridad, proyecto_id, notas}){
-  let dates;
+function _fmtICS(d){ return d.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,''); }
+
+function generarICS({desc, fecha, hora, tipo, prioridad, proyecto_id, notas}){
+  // Genera fichero .ics — iOS lo abre en Calendario nativo con alarma incluida
+  const titulo = '[PAU] ' + (tipo||'Aviso') + ': ' + desc + (proyecto_id?' - '+proyecto_id:'');
+  const detalle = ['Tipo: '+(tipo||'-'), 'Prioridad: '+(prioridad||'-'),
+    proyecto_id?'Proyecto: '+proyecto_id:'', notas?'Notas: '+notas:'',
+    'PAU INTERIORISMO S.L.'].filter(Boolean).join('\n');
+  let dtStart, dtEnd, allDay = false;
   if(hora){
     const start = new Date(fecha + 'T' + hora + ':00');
     const end   = new Date(start.getTime() + 60*60*1000);
-    const fmt = d => d.toISOString().replace(/[-:]/g,'').split('.')[0];
-    dates = fmt(start) + '/' + fmt(end);
+    dtStart = 'DTSTART;TZID=Europe/Madrid:' + _fmtICS(start).replace('Z','');
+    dtEnd   = 'DTEND;TZID=Europe/Madrid:'   + _fmtICS(end).replace('Z','');
   } else {
+    allDay  = true;
     const d = fecha.replace(/-/g,'');
-    const nextDay = new Date(fecha);
-    nextDay.setDate(nextDay.getDate()+1);
-    const nd = nextDay.toISOString().split('T')[0].replace(/-/g,'');
-    dates = d + '/' + nd;
+    const nd = new Date(fecha); nd.setDate(nd.getDate()+1);
+    dtStart = 'DTSTART;VALUE=DATE:' + d;
+    dtEnd   = 'DTEND;VALUE=DATE:'   + nd.toISOString().split('T')[0].replace(/-/g,'');
   }
-  const titulo = '[PAU] ' + (tipo||'Aviso') + ': ' + desc + (proyecto_id?' · '+proyecto_id:'');
-  const detalles = encodeURIComponent([
-    'Tipo: '+(tipo||'\u2014'),
-    'Prioridad: '+(prioridad||'\u2014'),
-    proyecto_id ? 'Proyecto: '+proyecto_id : '',
-    notas ? 'Notas: '+notas : '',
-    'PAU INTERIORISMO Gestion'
-  ].filter(Boolean).join(' | '));
-  return 'https://calendar.google.com/calendar/render?action=TEMPLATE'
-    + '&text=' + encodeURIComponent(titulo)
-    + '&dates=' + dates
-    + '&details=' + detalles
-    + '&ctz=Europe%2FMadrid';
+  const uid = 'pau-' + Date.now() + '@pauinteriorismo.es';
+  const now = _fmtICS(new Date());
+  const ics = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//PAU INTERIORISMO S.L.//ES',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    'BEGIN:VEVENT',
+    uid ? 'UID:' + uid : '',
+    'DTSTAMP:' + now,
+    dtStart, dtEnd,
+    'SUMMARY:' + titulo,
+    'DESCRIPTION:' + detalle.replace(/\n/g,'\\n'),
+    'BEGIN:VALARM',
+    'ACTION:DISPLAY',
+    'DESCRIPTION:Recordatorio PAU',
+    allDay ? 'TRIGGER:-PT9H' : 'TRIGGER:-PT15M',
+    'END:VALARM',
+    'END:VEVENT',
+    'END:VCALENDAR'
+  ].filter(Boolean).join('\r\n');
+  return ics;
 }
 
-function abrirEnGoogleCalendar(evento){
-  const url = crearEnlaceGoogleCalendar(evento);
+function descargarICS(evento){
+  const ics = generarICS(evento);
+  const blob = new Blob([ics], {type:'text/calendar;charset=utf-8'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = 'evento-pau.ics';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 1000);
+}
+
+function abrirModalICS(evento){
+  // Eliminar overlay anterior si existe
+  const prev = document.getElementById('ics-overlay');
+  if(prev) prev.remove();
+
   const overlay = document.createElement('div');
-  overlay.id = 'gcal-overlay';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px';
+  overlay.id = 'ics-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px';
+
   const box = document.createElement('div');
-  box.style.cssText = 'background:white;border-radius:14px;padding:28px 24px;max-width:360px;width:100%;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.3)';
-  box.innerHTML = '<div style="font-size:42px;margin-bottom:10px">&#128197;</div>'
-    + '<div style="font-size:17px;font-weight:800;color:#1a2a3a;margin-bottom:8px">A&ntilde;adir a Google Calendar</div>'
-    + '<div style="font-size:12px;color:#555;line-height:1.6;margin-bottom:20px">'
-    + 'Pulsa el bot&oacute;n desde tu <strong>iPhone o iPad</strong> para a&ntilde;adir el aviso directamente.<br>'
-    + 'Google Calendar te avisar&aacute; aunque tengas el m&oacute;vil bloqueado. &#128276;'
+  box.style.cssText = 'background:white;border-radius:16px;padding:24px 20px;max-width:360px;width:100%;text-align:center;box-shadow:0 16px 48px rgba(0,0,0,.35)';
+
+  box.innerHTML = ''
+    + '<div style="font-size:40px;margin-bottom:6px">&#128197;</div>'
+    + '<div style="font-size:16px;font-weight:800;color:#1a2a3a;margin-bottom:4px">A&ntilde;adir al Calendario del iPhone</div>'
+    + '<div style="font-size:12px;color:#888;margin-bottom:16px">El aviso se activa solo &mdash; sin pasos extra</div>'
+
+    + '<div style="background:#e8f4ff;border-radius:10px;padding:12px 14px;text-align:left;margin-bottom:10px">'
+    + '<div style="font-weight:800;font-size:12px;color:#1a73e8;margin-bottom:6px">&#128242; C&oacute;mo funciona</div>'
+    + '<div style="font-size:11px;color:#333;line-height:1.8">'
+    + '<b>1.</b> Pulsa el bot&oacute;n verde<br>'
+    + '<b>2.</b> iOS abre el archivo en <b>Calendario</b><br>'
+    + '<b>3.</b> Pulsa <b>"A&ntilde;adir"</b> o <b>"Aceptar"</b><br>'
+    + '<b>4.</b> Listo &mdash; recibir&aacute;s la notificaci&oacute;n autom&aacute;ticamente &#9989;'
     + '</div>'
-    + '<a href="' + url + '" target="_blank" style="display:block;background:#4285f4;color:white;padding:13px 20px;border-radius:9px;text-decoration:none;font-weight:700;font-size:15px;margin-bottom:12px;box-shadow:0 2px 8px rgba(66,133,244,.4)">'
-    + '&#128242; Abrir en Google Calendar</a>';
+    + '</div>'
+
+    + '<div style="background:#fff8e1;border-radius:10px;padding:10px 14px;text-align:left;margin-bottom:16px">'
+    + '<div style="font-size:11px;color:#7a5c00;line-height:1.6">'
+    + '&#9888;&#65039; <b>Descarga desde el iPhone o iPad</b> para que iOS lo abra en Calendario.<br>'
+    + 'En PC se guarda el archivo pero no avisa en m&oacute;vil.'
+    + '</div>'
+    + '</div>';
+
+  // Botón descargar ICS
+  const btnICS = document.createElement('button');
+  btnICS.innerHTML = '&#128229; Descargar evento (.ics)';
+  btnICS.style.cssText = 'display:block;width:100%;background:#0fa860;color:white;padding:13px 20px;border-radius:9px;border:none;font-weight:800;font-size:15px;margin-bottom:10px;cursor:pointer;box-shadow:0 2px 8px rgba(15,168,96,.4)';
+  btnICS.onclick = () => { descargarICS(evento); overlay.remove(); };
+  box.appendChild(btnICS);
+
   const btnClose = document.createElement('button');
-  btnClose.textContent = 'Ahora no';
+  btnClose.textContent = 'Cancelar';
   btnClose.style.cssText = 'background:none;border:1px solid #ddd;padding:9px 20px;border-radius:7px;cursor:pointer;font-size:13px;color:#888;width:100%';
   btnClose.onclick = () => overlay.remove();
   box.appendChild(btnClose);
+
   overlay.appendChild(box);
   overlay.addEventListener('click', e => { if(e.target === overlay) overlay.remove(); });
   document.body.appendChild(overlay);
@@ -7134,8 +7225,7 @@ function abrirEnGoogleCalendar(evento){
 
 
 async function crearEventoGoogleCalendar({desc, fecha, hora, tipo, prioridad, proyecto_id, notas}){
-  // Mostrar mini-modal con enlace directo a Google Calendar
-  abrirEnGoogleCalendar({desc, fecha, hora, tipo, prioridad, proyecto_id, notas});
+  abrirModalICS({desc, fecha, hora, tipo, prioridad, proyecto_id, notas});
 }
 
 
