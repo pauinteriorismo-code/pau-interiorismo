@@ -7084,20 +7084,66 @@ async function saveAgenda(){
   }catch(e){ toast('Error: '+e.message,'error'); }
 }
 
-async function crearEventoGoogleCalendar({desc, fecha, hora, tipo, prioridad, proyecto_id, notas}){
-  // Construir fechas ISO para Google Calendar
-  let startTime, endTime;
+function crearEnlaceGoogleCalendar({desc, fecha, hora, tipo, prioridad, proyecto_id, notas}){
+  let dates;
   if(hora){
-    const [hh, mm] = hora.split(':').map(Number);
-    const start = new Date(`${fecha}T${hora}:00`);
-    const end = new Date(start.getTime() + 60*60*1000); // +1 hora por defecto
-    startTime = start.toISOString();
-    endTime   = end.toISOString();
+    const start = new Date(fecha + 'T' + hora + ':00');
+    const end   = new Date(start.getTime() + 60*60*1000);
+    const fmt = d => d.toISOString().replace(/[-:]/g,'').split('.')[0];
+    dates = fmt(start) + '/' + fmt(end);
   } else {
-    // Evento de todo el día
-    startTime = fecha;
-    endTime   = fecha;
+    const d = fecha.replace(/-/g,'');
+    const nextDay = new Date(fecha);
+    nextDay.setDate(nextDay.getDate()+1);
+    const nd = nextDay.toISOString().split('T')[0].replace(/-/g,'');
+    dates = d + '/' + nd;
   }
+  const titulo = '[PAU] ' + (tipo||'Aviso') + ': ' + desc + (proyecto_id?' · '+proyecto_id:'');
+  const detalles = encodeURIComponent([
+    'Tipo: '+(tipo||'—'),
+    'Prioridad: '+(prioridad||'—'),
+    proyecto_id ? 'Proyecto: '+proyecto_id : '',
+    notas ? 'Notas: '+notas : '',
+    'PAU INTERIORISMO Gestión'
+  ].filter(Boolean).join('
+'));
+  return 'https://calendar.google.com/calendar/render?action=TEMPLATE'
+    + '&text=' + encodeURIComponent(titulo)
+    + '&dates=' + dates
+    + '&details=' + detalles
+    + '&ctz=Europe%2FMadrid';
+}
+
+function abrirEnGoogleCalendar(evento){
+  const url = crearEnlaceGoogleCalendar(evento);
+  const overlay = document.createElement('div');
+  overlay.id = 'gcal-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px';
+  const box = document.createElement('div');
+  box.style.cssText = 'background:white;border-radius:14px;padding:28px 24px;max-width:360px;width:100%;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.3)';
+  box.innerHTML = '<div style="font-size:42px;margin-bottom:10px">&#128197;</div>'
+    + '<div style="font-size:17px;font-weight:800;color:#1a2a3a;margin-bottom:8px">A&ntilde;adir a Google Calendar</div>'
+    + '<div style="font-size:12px;color:#555;line-height:1.6;margin-bottom:20px">'
+    + 'Pulsa el bot&oacute;n desde tu <strong>iPhone o iPad</strong> para a&ntilde;adir el aviso directamente.<br>'
+    + 'Google Calendar te avisar&aacute; aunque tengas el m&oacute;vil bloqueado. &#128276;'
+    + '</div>'
+    + '<a href="' + url + '" target="_blank" style="display:block;background:#4285f4;color:white;padding:13px 20px;border-radius:9px;text-decoration:none;font-weight:700;font-size:15px;margin-bottom:12px;box-shadow:0 2px 8px rgba(66,133,244,.4)">'
+    + '&#128242; Abrir en Google Calendar</a>';
+  const btnClose = document.createElement('button');
+  btnClose.textContent = 'Ahora no';
+  btnClose.style.cssText = 'background:none;border:1px solid #ddd;padding:9px 20px;border-radius:7px;cursor:pointer;font-size:13px;color:#888;width:100%';
+  btnClose.onclick = () => overlay.remove();
+  box.appendChild(btnClose);
+  overlay.appendChild(box);
+  overlay.addEventListener('click', e => { if(e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+}
+
+
+async function crearEventoGoogleCalendar({desc, fecha, hora, tipo, prioridad, proyecto_id, notas}){
+  // Mostrar mini-modal con enlace directo a Google Calendar
+  abrirEnGoogleCalendar({desc, fecha, hora, tipo, prioridad, proyecto_id, notas});
+}
 
   const titulo = `[PAU] ${tipo||'Aviso'}: ${desc}${proyecto_id?' · '+proyecto_id:''}`;
   const descripcion = [
