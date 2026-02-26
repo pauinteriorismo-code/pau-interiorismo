@@ -3952,6 +3952,16 @@ function actualizarFamiliasModal(){
 
 // selFamiliaModal defined above in actualizarFamiliasModal
 
+function calcPrecioVenta(){
+  const coste=parseFloat(document.getElementById('t-coste')?.value)||0;
+  const margen=parseFloat(document.getElementById('t-margen')?.value)||0;
+  const pvEl=document.getElementById('t-pventa');
+  if(!pvEl)return;
+  if(coste<=0){pvEl.value='';return;}
+  const pv=margen<100?coste/(1-margen/100):coste;
+  pvEl.value=pv>0?Number(pv).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€':'';
+}
+
 function updateTarifRuta(){
   const cat  = document.getElementById('t-cat')?.value || '';
   const sub  = document.getElementById('t-familia')?.value || document.getElementById('t-familia-sel')?.value || '';
