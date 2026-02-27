@@ -3478,7 +3478,7 @@ async function loadPresupuestoFinal(){
     let totalBase=0;
     const tbody=document.getElementById('pf-lineas');
     tbody.innerHTML=lineas.map((l,i)=>{
-      if(l.es_capitulo)return`<tr><td colspan="5" style="padding:10px 8px;font-weight:700;background:#f7f4ef;color:#4a3728;font-size:12px;border-bottom:1px solid #b87333">📂 ${l.descripcion}</td></tr>`;
+      if(l.es_capitulo)return`<tr><td colspan="5" style="padding:10px 8px;font-weight:700;background:#f7f4ef;color:#4a3728;font-size:12px;border-bottom:1px solid #b87333">${l.descripcion}</td></tr>`;
       const pv=l.precio_venta||0,ci=l.ci_gg_bi_pct||0,sub=(l.cantidad||0)*pv*(ci>0?(1+ci/100):1);
       totalBase+=sub;
       const bg=i%2===0?'white':'#f9f9f9';
@@ -4892,7 +4892,7 @@ function renderPresupuesto(){
   if(!PresC.length){tbody.innerHTML=`<tr><td colspan="11"><div class="empty"><div class="empty-icon">💰</div><div class="empty-text">Presupuesto vacío</div><button class="btn btn-ghost" onclick="addCapituloPresupuesto()">＋ Capítulo</button></div></td></tr>`;document.getElementById('pres-resumen').style.display='none';return;}
   let totBase=0,totCI=0,totVenta=0;
   tbody.innerHTML=PresC.map((l,i)=>{
-    if(l.es_capitulo)return`<tr style="background:var(--navy);color:#fff"><td colspan="9" style="padding:9px 10px;font-weight:700;font-size:12px">📂 ${l.descripcion}</td><td></td><td><button class="btn btn-icon btn-sm" style="background:rgba(255,255,255,.1);border:none;color:#fff" onclick="confirmDelete('presupuesto_lineas','${l.id}','${l.descripcion.replace(/'/g,"\\'")}')">🗑</button></td></tr>`;
+    if(l.es_capitulo)return`<tr style="background:var(--navy);color:#fff"><td colspan="9" style="padding:9px 10px;font-weight:700;font-size:12px">${l.descripcion}</td><td></td><td><button class="btn btn-icon btn-sm" style="background:rgba(255,255,255,.1);border:none;color:#fff" onclick="confirmDelete('presupuesto_lineas','${l.id}','${l.descripcion.replace(/'/g,"\\'")}')">🗑</button></td></tr>`;
     const pv=l.precio_venta||0,ci=l.ci_gg_bi_pct||0,sub=(l.cantidad||0)*pv,subCI=ci>0?sub*(1+ci/100):sub;
     totBase+=(l.cantidad||0)*(l.precio_base||0);totCI+=subCI-sub;totVenta+=subCI;
     return`<tr data-search="${(l.descripcion||'').toLowerCase()}"><td style="color:var(--text-soft);font-size:11px">${i+1}</td><td><strong>${l.descripcion||'—'}</strong>${l.ref_cype?`<br><span style="font-size:9px;color:var(--text-soft)">${l.ref_cype}</span>`:''}</td><td style="text-align:center">${l.unidad||'—'}</td><td class="td-mono">${l.cantidad||0}</td><td class="td-mono">${fmt(l.precio_base)}</td><td class="td-mono" style="color:var(--green)">${l.margen_pct>0?fmtP(l.margen_pct):'—'}</td><td class="td-mono" style="color:var(--amber)">${ci>0?fmtP(ci):'—'}</td><td class="td-mono" style="font-weight:700">${fmt(pv)}</td><td class="td-mono" style="font-weight:700;color:var(--navy)">${fmt(subCI)}</td><td><span class="badge b-gray">${l.iva_pct||'10%'}</span></td><td><div class="td-actions"><button class="btn btn-ghost btn-icon btn-sm" onclick="editLineaPresupuesto('${l.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('presupuesto_lineas','${l.id}','${(l.descripcion||'').replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`;
@@ -7200,7 +7200,7 @@ async function saitraExportarPresupuesto(){
 
   if(!confirm(
     `Se añadirán al presupuesto del proyecto "${proy}" v${ver}:\n\n` +
-    `📂 Capítulo "Mobiliario Cocina · Saitra"\n` +
+    `📄 Capítulo "Mobiliario de Cocina"\n` +
     `📄 ${saitraLineas.length} líneas · Total PVP: ${totalPvp.toFixed(2)}€\n\n¿Confirmar?`
   )) return;
 
@@ -7218,7 +7218,7 @@ async function saitraExportarPresupuesto(){
     // Crear capítulo
     await sbPost('presupuesto_lineas',{
       proyecto_id: proy, version: ver,
-      descripcion: 'Mobiliario Cocina · Saitra',
+      descripcion: 'Mobiliario de Cocina',
       es_capitulo: true,
       orden: ordenBase + 1,
       cantidad: 0, precio_base: 0, precio_venta: 0, subtotal: 0
@@ -12224,7 +12224,7 @@ loaders['imex'] = function(){
 async function ixExportarPresupuesto(){
   if(!ixLineas.length){ toast('Sin partidas que exportar','error'); return; }
   // Determinar nombre capítulo según tab
-  const tabNames = { bano:'Griferías IMEX · Baño', cocina:'Griferías IMEX · Cocina', campoaras:'Muebles Baño · Campoaras', fregaderos:'Fregaderos & Grifos' };
+  const tabNames = { bano:'Griferías de Baño', cocina:'Griferías de Cocina', campoaras:'Muebles de Baño', fregaderos:'Fregaderos y Grifos' };
   const capNombre = tabNames[ixTab] || 'Griferías IMEX';
 
   // Buscar proyecto activo — primero del panel de valoración, luego otros
@@ -12241,7 +12241,7 @@ async function ixExportarPresupuesto(){
 
   if(!confirm(
     `Se añadirán al presupuesto del proyecto "${proyFinal}" ${ver}:\n\n`+
-    `📂 Capítulo "${capNombre}"\n`+
+    `📄 Capítulo "${capNombre}"\n`+
     `📄 ${ixLineas.length} líneas · Total PVP: ${totalPvp.toFixed(2)}€\n\n¿Confirmar?`
   )) return;
 
