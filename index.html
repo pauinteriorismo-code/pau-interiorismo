@@ -2125,6 +2125,11 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
                     <div class="camp-card-label">DROP</div>
                     <div class="camp-card-sub">7 acabados</div>
                   </div>
+                  <div class="camp-card" onclick="campSel('modelo','TAPAS')">
+                    <div class="camp-card-ico">🪴</div>
+                    <div class="camp-card-label">TAPAS</div>
+                    <div class="camp-card-sub">4 materiales</div>
+                  </div>
                 </div>
               </div>
 
@@ -11882,6 +11887,54 @@ const CAMP_DROP=[
   {tipo:"Columna F32.3 c/Patas",alt:"-",a:35,r1:"2269",r2:"2268",p:[263.5,285.65,319.6,336.65,386.2,341.3,307.25]}
 ];
 
+// ══════════════════════════════════════════════════════════════════
+// CAMPOARAS — TAPAS
+// ══════════════════════════════════════════════════════════════════
+const CAMP_TAPAS_ACABADOS = {
+  'Resina Acrílico Mate':  ['Resina Acrílica Mate Gr.12mm'],
+  'Madera':                ['Melamina / Laminado','Lacado Mate','Lacado Brillo','Chapa Natural','Chapa Tinte','Marmoleado'],
+  'Piedra Compacta':       ['Calacatta / Gris Polar','Marquina / Negro Portoro'],
+  'Microtec Color Mate':   ['Grafito / Verde','Hormigón / Negro'],
+};
+const CAMP_TAPAS_ANCHO_LABELS = {
+  81:'61–81 cm', 101:'82–101 cm', 121:'102–121 cm', 141:'122–141 cm', 161:'142–161 cm'
+};
+const CAMP_TAPAS_INFO = {
+  'Resina Acrílico Mate': '⚠️ Medida exacta en cm · +60€ hueco lavabo · +20€ taladro grifo',
+  'Madera':               '⚠️ Fondo 50cm (+15%) · +20€ taladro grifo',
+  'Piedra Compacta':      '⚠️ +25% F.60-120 · +15% F.140-160 · +60€ hueco · +20€ taladro',
+  'Microtec Color Mate':  '⚠️ +25% F.60-120 · +15% F.140-160 · +60€ hueco · +20€ taladro',
+};
+const CAMP_TAPAS = [
+  // RESINA ACRÍLICO MATE — precio único, F.39 y 46 (misma ref)
+  {tipo:'Resina Acrílico Mate', alt:'-', a:81,  r1:'2392', r2:null, p:[177.80]},
+  {tipo:'Resina Acrílico Mate', alt:'-', a:101, r1:'2393', r2:null, p:[217.50]},
+  {tipo:'Resina Acrílico Mate', alt:'-', a:121, r1:'2394', r2:null, p:[260.20]},
+  {tipo:'Resina Acrílico Mate', alt:'-', a:141, r1:'2395', r2:null, p:[303.85]},
+  {tipo:'Resina Acrílico Mate', alt:'-', a:161, r1:'2396', r2:null, p:[347.70]},
+  // MADERA — 6 acabados, r1=F.39, r2=F.46
+  {tipo:'Madera', alt:'-', a:60,  r1:'1735', r2:'1724', p:[56.55, 62.10, 70.35, 89.35, 94.05, 76.40]},
+  {tipo:'Madera', alt:'-', a:70,  r1:'1736', r2:'1725', p:[63.50, 69.20, 80.70,104.00,110.00, 88.55]},
+  {tipo:'Madera', alt:'-', a:80,  r1:'1737', r2:'1726', p:[63.50, 69.20, 80.70,104.00,110.00, 88.55]},
+  {tipo:'Madera', alt:'-', a:90,  r1:'1738', r2:'1727', p:[71.90, 77.45, 93.45,119.80,127.05,101.85]},
+  {tipo:'Madera', alt:'-', a:100, r1:'1739', r2:'1728', p:[71.90, 77.45, 93.45,119.80,127.05,101.85]},
+  {tipo:'Madera', alt:'-', a:120, r1:'1740', r2:'1729', p:[83.00, 87.80,109.70,137.70,146.25,117.25]},
+  {tipo:'Madera', alt:'-', a:140, r1:'1741', r2:'1730', p:[91.00, 95.85,120.75,153.35,163.15,132.30]},
+  {tipo:'Madera', alt:'-', a:160, r1:'1733', r2:'1722', p:[100.20,109.20,131.90,174.20,185.30,148.95]},
+  // PIEDRA COMPACTA — mismo precio p/todos los colores, F.39 y 46 (misma ref)
+  {tipo:'Piedra Compacta', alt:'-', a:80,  r1:'2105', r2:null, p:[269.50,269.50]},
+  {tipo:'Piedra Compacta', alt:'-', a:100, r1:'2106', r2:null, p:[335.10,335.10]},
+  {tipo:'Piedra Compacta', alt:'-', a:120, r1:'2107', r2:null, p:[396.70,396.70]},
+  {tipo:'Piedra Compacta', alt:'-', a:140, r1:'2108', r2:null, p:[545.30,545.30]},
+  {tipo:'Piedra Compacta', alt:'-', a:160, r1:'2109', r2:null, p:[618.05,618.05]},
+  // MICROTEC COLOR MATE — mismo precio p/todos los colores, F.39 y 46 (misma ref)
+  {tipo:'Microtec Color Mate', alt:'-', a:80,  r1:'2100', r2:null, p:[260.40,260.40]},
+  {tipo:'Microtec Color Mate', alt:'-', a:100, r1:'2101', r2:null, p:[323.80,323.80]},
+  {tipo:'Microtec Color Mate', alt:'-', a:120, r1:'2102', r2:null, p:[383.15,383.15]},
+  {tipo:'Microtec Color Mate', alt:'-', a:140, r1:'2103', r2:null, p:[525.55,525.55]},
+  {tipo:'Microtec Color Mate', alt:'-', a:160, r1:'2104', r2:null, p:[595.60,595.60]},
+];
+
 let ixTab    = 'bano';
 let ixLineas = [];
 let ixIdN    = 0;
@@ -12607,7 +12660,7 @@ function catAbrir(fab){
   if(fab === 'campoaras'){
     // Campoaras: usa el mismo panel IMEX pero con tab campoaras
     document.getElementById('cat-imex-title').innerHTML = '🛁 Campoaras — Muebles de Baño';
-    document.getElementById('cat-imex-desc').textContent = 'Tarifa +5% · Dto 40% · Series AQUA & DROP';
+    document.getElementById('cat-imex-desc').textContent = 'Tarifa +5% · Dto 40% · Series AQUA & DROP · Tapas';
     document.getElementById('cat-panel-imex').classList.add('open');
     ixFillSeries();
     ixSetTab('campoaras');
@@ -12692,9 +12745,13 @@ const _ixRenderOrig = window.ixRender;
 const campState = {modelo:null, tipo:null, alt:null, a:null, fondo:null};
 
 function campDatos(){
+  if(campState.modelo === 'TAPAS') return CAMP_TAPAS;
   return campState.modelo==='AQUA' ? CAMP_AQUA : CAMP_DROP;
 }
 function campAcabados(){
+  if(campState.modelo === 'TAPAS'){
+    return CAMP_TAPAS_ACABADOS[campState.tipo] || ['—'];
+  }
   return campState.modelo==='AQUA' ? CAMP_ACABADOS_AQUA : CAMP_ACABADOS_DROP;
 }
 
@@ -12707,23 +12764,29 @@ function campReset(fromStep){
 
 function campSel(field, value){
   campState[field] = value;
+  // TAPAS no tiene paso de "Alto" — se salta automáticamente
+  if(campState.modelo === 'TAPAS' && field === 'tipo'){
+    campState.alt = '-';
+  }
   campRender();
 }
 
 function campRender(){
   const s = campState;
+  const isTapas = s.modelo === 'TAPAS';
   const step = s.modelo===null ? 0
              : s.tipo===null   ? 1
-             : s.alt===null    ? 2
+             : (!isTapas && s.alt===null) ? 2
              : s.a===null      ? 3
              : 4;
 
   // Actualizar breadcrumb
+  const anchoLbl = (isTapas && CAMP_TAPAS_ANCHO_LABELS[s.a]) ? CAMP_TAPAS_ANCHO_LABELS[s.a] : (s.a ? s.a+'cm' : '—');
   const labels = {
     0: {val: s.modelo||'—'},
     1: {val: s.tipo||'—'},
-    2: {val: s.alt||'—'},
-    3: {val: s.a ? s.a+'cm' : '—'},
+    2: {val: isTapas ? '—' : (s.alt||'—')},
+    3: {val: anchoLbl},
     4: {val: s.fondo||'—'}
   };
   for(let i=0;i<5;i++){
@@ -12736,10 +12799,12 @@ function campRender(){
     if(val) val.textContent = i<step ? (Object.values(labels)[i].val||'—') : '—';
   }
 
-  // Mostrar/ocultar secciones
+  // Mostrar/ocultar secciones (para TAPAS, ocultar siempre paso 2 = alto)
   for(let i=0;i<=4;i++){
     const p = document.getElementById('camp-p'+i);
-    if(p) p.style.display = i <= step ? 'block' : 'none';
+    if(!p) continue;
+    if(i===2 && isTapas){ p.style.display='none'; continue; }
+    p.style.display = i <= step ? 'block' : 'none';
   }
 
   // Marcar la selección actual en cada paso
@@ -12752,15 +12817,18 @@ function campRender(){
   // Paso 1: Tipos disponibles para el modelo
   if(step >= 1){
     const datos = campDatos();
-    const tipos = [...new Set(datos.map(p=>p.tipo))].sort();
+    const tipos = isTapas
+      ? [...new Set(datos.map(p=>p.tipo))]
+      : [...new Set(datos.map(p=>p.tipo))].sort();
     const html = tipos.map(t =>
-      `<div class="camp-chip${s.tipo===t?' sel':''}" onclick="campSel('tipo','${t.replace(/'/g,"\'")}')">${t}</div>`
+      `<div class="camp-chip${s.tipo===t?' sel':''}" onclick="campSel('tipo','${t.replace(/'/g,"\'")}')">` +
+      t + `</div>`
     ).join('');
     document.getElementById('camp-tipos').innerHTML = html;
   }
 
-  // Paso 2: Altos disponibles para tipo seleccionado
-  if(step >= 2){
+  // Paso 2: Altos disponibles (solo AQUA/DROP)
+  if(step >= 2 && !isTapas){
     const datos = campDatos().filter(p=>p.tipo===s.tipo);
     const altos = [...new Set(datos.map(p=>p.alt))].sort();
     const altLabels = {'-':'—','H.30':'H.30 cm','H.60':'H.60 cm','H.70':'H.70 cm'};
@@ -12770,19 +12838,24 @@ function campRender(){
     document.getElementById('camp-altos').innerHTML = html;
   }
 
-  // Paso 3: Anchos disponibles para tipo+alto
+  // Paso 3: Anchos disponibles
   if(step >= 3){
     const datos = campDatos().filter(p=>p.tipo===s.tipo && p.alt===s.alt);
     const anchos = [...new Set(datos.map(p=>p.a))].sort((a,b)=>a-b);
-    const html = anchos.map(a =>
-      `<div class="camp-chip${s.a===a?' sel':''}" onclick="campSel('a',${a})">${a} cm</div>`
-    ).join('');
+    const html = anchos.map(a =>{
+      const lbl = (isTapas && s.tipo==='Resina Acrílico Mate' && CAMP_TAPAS_ANCHO_LABELS[a])
+        ? CAMP_TAPAS_ANCHO_LABELS[a] : a+' cm';
+      return `<div class="camp-chip${s.a===a?' sel':''}" onclick="campSel('a',${a})">${lbl}</div>`;
+    }).join('');
     document.getElementById('camp-anchos').innerHTML = html;
   }
 
-  // Paso 4: Fondos y acabados
+  // Paso 4: Fondos y acabados + scroll automático
   if(step >= 4){
     campRenderAcabados();
+    setTimeout(()=>{
+      document.getElementById('camp-p4')?.scrollIntoView({behavior:'smooth', block:'nearest'});
+    }, 80);
   }
 }
 
@@ -12834,6 +12907,11 @@ function campRenderAcabados(){
   // Referencia activa
   const fondoActual = fondos.find(f=>f.key===campState._fondoSel) || fondos[0];
 
+  // Info adicional para TAPAS
+  if(s.modelo==='TAPAS' && CAMP_TAPAS_INFO[s.tipo]){
+    html += `<div style="background:#fff8e1;border-left:3px solid #ff9800;padding:7px 10px;font-size:10px;color:#e65100;border-radius:0 4px 4px 0;margin-bottom:8px">${CAMP_TAPAS_INFO[s.tipo]}</div>`;
+  }
+
   html += `<div class="camp-result">
     <div style="background:var(--navy);color:#fff;padding:8px 14px;display:flex;align-items:center;gap:10px">
       <span style="font-size:11px;font-weight:700">Acabados</span>
@@ -12857,7 +12935,7 @@ function campRenderAcabados(){
     _campItems[iid] = {
       _fondoKey: fondoActual.key,
       _fondoRef: fondoActual.ref,
-      desc: s.modelo+' '+s.tipo+' '+s.alt+' '+s.a+'cm · '+ac,
+      desc: s.modelo+' '+s.tipo+(s.alt&&s.alt!=='-'?' '+s.alt:'')+(CAMP_TAPAS_ANCHO_LABELS&&CAMP_TAPAS_ANCHO_LABELS[s.a]?' '+CAMP_TAPAS_ANCHO_LABELS[s.a]:' '+s.a+'cm')+' · '+ac,
       pvp: pvp,
       coste: parseFloat(coste.toFixed(2)),
       venta: parseFloat(pvpCliente.toFixed(2)),
@@ -12910,7 +12988,7 @@ function campSelFondo(key){
     _campItems[iid] = {
       _fondoKey: fondoActual.key,
       _fondoRef: fondoActual.ref,
-      desc: s.modelo+' '+s.tipo+' '+s.alt+' '+s.a+'cm · '+ac,
+      desc: s.modelo+' '+s.tipo+(s.alt&&s.alt!=='-'?' '+s.alt:'')+(CAMP_TAPAS_ANCHO_LABELS&&CAMP_TAPAS_ANCHO_LABELS[s.a]?' '+CAMP_TAPAS_ANCHO_LABELS[s.a]:' '+s.a+'cm')+' · '+ac,
       pvp: pvp,
       coste: parseFloat((pvp * CAMP_INC * (1 - CAMP_DTO)).toFixed(2)),
       venta: parseFloat((pvp * 1.05).toFixed(2)),
