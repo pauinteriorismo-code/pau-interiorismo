@@ -279,6 +279,67 @@ tbody td{padding:7px 10px;vertical-align:middle}
 .cat-header-title{font-size:15px;font-weight:700;color:var(--navy)}
 .cat-header-desc{font-size:11px;color:var(--text-soft);margin-left:auto}
 
+
+/* ─── IMEX: CHIPS DE SERIE ─── */
+.ix-series-bar{display:flex;gap:5px;flex-wrap:nowrap;overflow-x:auto;padding:0 0 8px 0;scrollbar-width:thin}
+.ix-series-bar::-webkit-scrollbar{height:3px}
+.ix-series-bar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.ix-chip{display:inline-flex;align-items:center;white-space:nowrap;padding:3px 9px;border-radius:20px;
+  font-size:11px;font-weight:600;border:1.5px solid var(--border);background:var(--white);
+  color:var(--text-mid);cursor:pointer;transition:all .15s;flex-shrink:0}
+.ix-chip:hover{border-color:var(--navy-light);color:var(--navy)}
+.ix-chip.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.ix-chip-cnt{margin-left:4px;font-size:9px;opacity:.7}
+
+/* ─── CAMPOARAS: WIZARD ─── */
+#camp-wizard{display:none;height:calc(100vh - 56px - 36px - 70px);overflow-y:auto}
+.camp-steps{display:flex;gap:0;margin-bottom:14px;border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--border)}
+.camp-step-dot{flex:1;padding:8px 6px;font-size:10px;font-weight:700;text-align:center;background:var(--sand);
+  color:var(--text-soft);border-right:1px solid var(--border);transition:all .2s;position:relative}
+.camp-step-dot:last-child{border-right:none}
+.camp-step-dot.done{background:var(--navy);color:#fff}
+.camp-step-dot.active{background:var(--copper);color:#fff}
+.camp-step-dot .step-val{display:block;font-size:9px;font-weight:400;opacity:.8;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.camp-section{margin-bottom:16px}
+.camp-section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-soft);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.camp-section-title span.step-num{background:var(--navy);color:#fff;border-radius:50%;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0}
+
+.camp-cards{display:flex;gap:10px;flex-wrap:wrap}
+.camp-card{padding:12px 20px;border:2px solid var(--border);border-radius:var(--radius);cursor:pointer;
+  text-align:center;transition:all .18s;min-width:100px;background:var(--white)}
+.camp-card:hover{border-color:var(--copper);box-shadow:var(--shadow)}
+.camp-card.sel{border-color:var(--copper);background:var(--copper-light)}
+.camp-card.disabled{opacity:.35;cursor:default;pointer-events:none}
+.camp-card-ico{font-size:22px;margin-bottom:4px}
+.camp-card-label{font-size:12px;font-weight:700;color:var(--navy)}
+.camp-card-sub{font-size:10px;color:var(--text-soft);margin-top:2px}
+
+.camp-chips{display:flex;flex-wrap:wrap;gap:6px}
+.camp-chip{padding:5px 12px;border-radius:20px;border:1.5px solid var(--border);background:var(--white);
+  font-size:11px;font-weight:600;cursor:pointer;color:var(--text-mid);transition:all .15s}
+.camp-chip:hover{border-color:var(--navy-light);color:var(--navy)}
+.camp-chip.sel{background:var(--navy);color:#fff;border-color:var(--navy)}
+.camp-chip.disabled{opacity:.3;cursor:default;pointer-events:none}
+
+/* Acabados Campoaras - tabla resultado */
+.camp-result{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-top:4px}
+.camp-result-header{background:var(--navy);color:#fff;padding:8px 14px;font-size:11px;font-weight:700}
+.camp-result-row{display:flex;align-items:center;padding:8px 14px;border-bottom:1px solid var(--border);gap:10px}
+.camp-result-row:last-child{border-bottom:none}
+.camp-result-row:hover{background:var(--blue-light)}
+.camp-ac-name{flex:1;font-size:12px;color:var(--text)}
+.camp-ac-ref{font-family:"Courier New",monospace;font-size:10px;color:var(--text-soft);background:var(--sand);padding:2px 6px;border-radius:3px;white-space:nowrap}
+.camp-ac-pvp{font-size:11px;color:var(--text-soft);white-space:nowrap}
+.camp-ac-coste{font-size:12px;font-weight:700;color:var(--navy);white-space:nowrap}
+.camp-ac-venta{font-size:12px;font-weight:700;color:var(--green);white-space:nowrap}
+.camp-ac-btn{width:26px;height:26px;border-radius:50%;background:var(--navy-mid);color:#fff;border:none;
+  font-size:16px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.camp-ac-btn:hover{background:var(--copper);transform:scale(1.1)}
+.camp-reset-btn{background:none;border:1px solid var(--border);border-radius:var(--radius-sm);padding:4px 10px;
+  font-size:11px;cursor:pointer;color:var(--text-mid);margin-left:auto;transition:all .15s}
+.camp-reset-btn:hover{border-color:var(--red);color:var(--red)}
+
 </style>
 <script src="./PAU INTERIORISMO · Gestión_files/xlsx.full.min.js.descargar"></script>
 </head>
@@ -1998,14 +2059,13 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
               <button class="imex-tab" id="ix-tab-cocina" onclick="ixSetTab('cocina')">🍳 Cocina <span id="ix-cnt-cocina"></span></button>
               <button class="imex-tab" id="ix-tab-campoaras" onclick="ixSetTab('campoaras')">🛁 Campoaras <span id="ix-cnt-campoaras"></span></button>
             </div>
-            <div class="imex-filters">
+            <!-- Chips de serie -->
+            <div class="ix-series-bar" id="ix-series-bar" style="margin-top:6px"></div>
+            <div class="imex-filters" id="ix-filters-row">
               <div class="imex-s-wrap">
                 <input type="text" id="ix-search" placeholder="Buscar descripción o referencia..." oninput="ixRender()">
                 <span class="imex-s-ico">🔍</span>
               </div>
-              <select class="imex-sel" id="ix-serie" onchange="ixRender()">
-                <option value="">Todas las series</option>
-              </select>
             </div>
             <div class="imex-info" id="ix-info-box">PVP tarifa ×1,03 → <b>Coste PAU</b> = PVP actualizado ×0,60 (dto 40%) → <b>PVP cliente</b> = Coste × (1+margen%)</div>
           </div>
@@ -2024,6 +2084,83 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
               <tbody id="ix-tbody"></tbody>
             </table>
             <div id="ix-nor" class="ix-nor">No se encontraron productos</div>
+          </div>
+          <!-- WIZARD CAMPOARAS (se muestra cuando tab=campoaras) -->
+          <div id="camp-wizard">
+            <div style="padding:14px 16px">
+              <!-- Breadcrumb de pasos -->
+              <div class="camp-steps" id="camp-steps">
+                <div class="camp-step-dot active" id="cstep-0">
+                  <div>Modelo</div><span class="step-val" id="cstep-0-val">—</span>
+                </div>
+                <div class="camp-step-dot" id="cstep-1">
+                  <div>Tipo</div><span class="step-val" id="cstep-1-val">—</span>
+                </div>
+                <div class="camp-step-dot" id="cstep-2">
+                  <div>Alto</div><span class="step-val" id="cstep-2-val">—</span>
+                </div>
+                <div class="camp-step-dot" id="cstep-3">
+                  <div>Ancho</div><span class="step-val" id="cstep-3-val">—</span>
+                </div>
+                <div class="camp-step-dot" id="cstep-4">
+                  <div>Fondo</div><span class="step-val" id="cstep-4-val">—</span>
+                </div>
+              </div>
+
+              <!-- PASO 0: Modelo -->
+              <div id="camp-p0" class="camp-section">
+                <div class="camp-section-title"><span class="step-num">1</span> Elige el modelo / colección</div>
+                <div class="camp-cards">
+                  <div class="camp-card" onclick="campSel('modelo','AQUA')">
+                    <div class="camp-card-ico">🌊</div>
+                    <div class="camp-card-label">AQUA</div>
+                    <div class="camp-card-sub">6 acabados</div>
+                  </div>
+                  <div class="camp-card" onclick="campSel('modelo','DROP')">
+                    <div class="camp-card-ico">💧</div>
+                    <div class="camp-card-label">DROP</div>
+                    <div class="camp-card-sub">7 acabados</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- PASO 1: Tipo -->
+              <div id="camp-p1" class="camp-section" style="display:none">
+                <div class="camp-section-title">
+                  <span class="step-num">2</span> Tipo de mueble
+                  <button class="camp-reset-btn" onclick="campReset(1)">↩ cambiar modelo</button>
+                </div>
+                <div class="camp-chips" id="camp-tipos"></div>
+              </div>
+
+              <!-- PASO 2: Alto -->
+              <div id="camp-p2" class="camp-section" style="display:none">
+                <div class="camp-section-title">
+                  <span class="step-num">3</span> Alto
+                  <button class="camp-reset-btn" onclick="campReset(2)">↩ cambiar tipo</button>
+                </div>
+                <div class="camp-chips" id="camp-altos"></div>
+              </div>
+
+              <!-- PASO 3: Ancho -->
+              <div id="camp-p3" class="camp-section" style="display:none">
+                <div class="camp-section-title">
+                  <span class="step-num">4</span> Ancho (cm)
+                  <button class="camp-reset-btn" onclick="campReset(3)">↩ cambiar alto</button>
+                </div>
+                <div class="camp-chips" id="camp-anchos"></div>
+              </div>
+
+              <!-- PASO 4: Fondo + Acabados -->
+              <div id="camp-p4" class="camp-section" style="display:none">
+                <div class="camp-section-title">
+                  <span class="step-num">5</span> Fondo &amp; Acabados
+                  <button class="camp-reset-btn" onclick="campReset(4)">↩ cambiar ancho</button>
+                </div>
+                <div id="camp-acabados-wrap"></div>
+              </div>
+
+            </div>
           </div>
         </div>
 
@@ -12480,6 +12617,357 @@ function catVolver(){
 loaders['catalogos'] = function(){
   if(catActual) catAbrir(catActual);
   else catVolver();
+};
+
+
+// ═══════════════════════════════════════════════════════════════
+// IMEX: CHIPS DE SERIE
+// ═══════════════════════════════════════════════════════════════
+let ixSerieActual = '';
+
+function ixBuildSerieChips(){
+  const bar = document.getElementById('ix-series-bar');
+  if(!bar) return;
+  const datos = ixDatos();
+  if(ixTab === 'campoaras'){ bar.innerHTML=''; return; }
+  const series = [...new Set(datos.map(p=>p.serie))].sort();
+  const cnts = {};
+  datos.forEach(p=>{ cnts[p.serie]=(cnts[p.serie]||0)+1; });
+  let html = `<div class="ix-chip on" onclick="ixChipClick('')">Todas <span class="ix-chip-cnt">${datos.length}</span></div>`;
+  series.forEach(s=>{
+    html += `<div class="ix-chip" onclick="ixChipClick('${s.replace(/'/g,"\'")}')">
+      ${s} <span class="ix-chip-cnt">${cnts[s]}</span>
+    </div>`;
+  });
+  bar.innerHTML = html;
+  ixSerieActual = '';
+}
+
+function ixChipClick(serie){
+  ixSerieActual = serie;
+  // Actualizar chips activos
+  document.querySelectorAll('#ix-series-bar .ix-chip').forEach(c=>{
+    const isThis = c.textContent.trim().startsWith(serie===''?'Todas':serie);
+    c.classList.toggle('on', isThis && (serie===''? c.textContent.includes('Todas') : true));
+  });
+  // Re-activar el chip correcto
+  document.querySelectorAll('#ix-series-bar .ix-chip').forEach(c=>{
+    if(serie==='' && c.textContent.trim().startsWith('Todas')) c.classList.add('on');
+    else if(serie!=='' && c.textContent.trim().startsWith(serie)) c.classList.add('on');
+    else c.classList.remove('on');
+  });
+  ixRender();
+}
+
+// ── Override de ixRender para filtrar también por serie ──────────
+const _ixRenderOrig = window.ixRender;
+// (ver abajo, se parchea después de definición)
+
+// ═══════════════════════════════════════════════════════════════
+// CAMPOARAS: WIZARD PASO A PASO
+// ═══════════════════════════════════════════════════════════════
+const campState = {modelo:null, tipo:null, alt:null, a:null, fondo:null};
+
+function campDatos(){
+  return campState.modelo==='AQUA' ? CAMP_AQUA : CAMP_DROP;
+}
+function campAcabados(){
+  return campState.modelo==='AQUA' ? CAMP_ACABADOS_AQUA : CAMP_ACABADOS_DROP;
+}
+
+function campReset(fromStep){
+  // fromStep: cuál paso se quiere rehacer (0=modelo, 1=tipo, 2=alto, 3=ancho, 4=fondo)
+  const steps = ['modelo','tipo','alt','a','fondo'];
+  for(let i = fromStep-1; i < steps.length; i++) campState[steps[i]] = null;
+  campRender();
+}
+
+function campSel(field, value){
+  campState[field] = value;
+  campRender();
+}
+
+function campRender(){
+  const s = campState;
+  const step = s.modelo===null ? 0
+             : s.tipo===null   ? 1
+             : s.alt===null    ? 2
+             : s.a===null      ? 3
+             : 4;
+
+  // Actualizar breadcrumb
+  const labels = {
+    0: {val: s.modelo||'—'},
+    1: {val: s.tipo||'—'},
+    2: {val: s.alt||'—'},
+    3: {val: s.a ? s.a+'cm' : '—'},
+    4: {val: s.fondo||'—'}
+  };
+  for(let i=0;i<5;i++){
+    const dot = document.getElementById('cstep-'+i);
+    const val = document.getElementById('cstep-'+i+'-val');
+    if(!dot) continue;
+    dot.classList.remove('done','active');
+    if(i < step) dot.classList.add('done');
+    else if(i===step) dot.classList.add('active');
+    if(val) val.textContent = i<step ? (Object.values(labels)[i].val||'—') : '—';
+  }
+
+  // Mostrar/ocultar secciones
+  for(let i=0;i<=4;i++){
+    const p = document.getElementById('camp-p'+i);
+    if(p) p.style.display = i <= step ? 'block' : 'none';
+  }
+
+  // Marcar la selección actual en cada paso
+  if(step >= 0){
+    document.querySelectorAll('#camp-p0 .camp-card').forEach(c=>{
+      c.classList.toggle('sel', c.textContent.trim().includes(s.modelo||'__NONE__'));
+    });
+  }
+
+  // Paso 1: Tipos disponibles para el modelo
+  if(step >= 1){
+    const datos = campDatos();
+    const tipos = [...new Set(datos.map(p=>p.tipo))].sort();
+    const html = tipos.map(t =>
+      `<div class="camp-chip${s.tipo===t?' sel':''}" onclick="campSel('tipo','${t.replace(/'/g,"\'")}')">${t}</div>`
+    ).join('');
+    document.getElementById('camp-tipos').innerHTML = html;
+  }
+
+  // Paso 2: Altos disponibles para tipo seleccionado
+  if(step >= 2){
+    const datos = campDatos().filter(p=>p.tipo===s.tipo);
+    const altos = [...new Set(datos.map(p=>p.alt))].sort();
+    const altLabels = {'-':'—','H.30':'H.30 cm','H.60':'H.60 cm','H.70':'H.70 cm'};
+    const html = altos.map(a =>
+      `<div class="camp-chip${s.alt===a?' sel':''}" onclick="campSel('alt','${a}')">${altLabels[a]||a}</div>`
+    ).join('');
+    document.getElementById('camp-altos').innerHTML = html;
+  }
+
+  // Paso 3: Anchos disponibles para tipo+alto
+  if(step >= 3){
+    const datos = campDatos().filter(p=>p.tipo===s.tipo && p.alt===s.alt);
+    const anchos = [...new Set(datos.map(p=>p.a))].sort((a,b)=>a-b);
+    const html = anchos.map(a =>
+      `<div class="camp-chip${s.a===a?' sel':''}" onclick="campSel('a',${a})">${a} cm</div>`
+    ).join('');
+    document.getElementById('camp-anchos').innerHTML = html;
+  }
+
+  // Paso 4: Fondos y acabados
+  if(step >= 4){
+    campRenderAcabados();
+  }
+}
+
+function campRenderAcabados(){
+  const s = campState;
+  const producto = campDatos().find(p=>p.tipo===s.tipo && p.alt===s.alt && p.a===s.a);
+  if(!producto){
+    document.getElementById('camp-acabados-wrap').innerHTML='<p style="color:var(--text-soft);font-size:12px">No hay datos para esta combinación.</p>';
+    return;
+  }
+
+  const acabados = campAcabados();
+  const inc = 1.05;
+  const dto = 0.40;
+  const margen = parseFloat(document.getElementById('ix-mrg')?.value||30)/100;
+
+  // Limpiar items temporales previos
+  for(const k in _campItems) delete _campItems[k];
+  _campItemId = 0;
+
+  const fondos = [
+    {key:'r1', ref:String(producto.r1), label:'Fondo A · Ref.'},
+    {key:'r2', ref:String(producto.r2), label:'Fondo B · Ref.'},
+  ];
+
+  let html = '';
+  fondos.forEach(f=>{
+    html += `<div style="margin-bottom:14px">
+      <div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;
+        letter-spacing:.07em;margin-bottom:6px;display:flex;align-items:center;gap:8px">
+        ${f.label}
+        <span style="font-family:monospace;background:var(--sand);padding:2px 7px;
+          border-radius:3px;font-size:12px;color:var(--navy);font-weight:800">${f.ref}</span>
+      </div>
+      <div class="camp-result">
+        <div class="camp-result-header" style="display:grid;grid-template-columns:1fr 80px 90px 90px 32px;gap:6px;align-items:center;padding:7px 14px">
+          <span>Acabado</span><span style="text-align:right">PVP cat.</span>
+          <span style="text-align:right">Coste</span><span style="text-align:right">PVP cliente</span><span></span>
+        </div>`;
+    acabados.forEach((ac, idx)=>{
+      const pvp = producto.p[idx];
+      if(pvp===undefined) return;
+      const pvpAct = pvp * inc;
+      const coste  = pvpAct * (1 - dto);
+      const venta  = coste * (1 + margen);
+      const iid = ++_campItemId;
+      _campItems[iid] = {
+        ref: f.ref,
+        desc: s.modelo+' '+s.tipo+' '+s.alt+' '+s.a+'cm · '+ac,
+        pvp: pvp,
+        coste: parseFloat(coste.toFixed(2)),
+        venta: parseFloat(venta.toFixed(2)),
+      };
+      html += `<div class="camp-result-row" style="display:grid;grid-template-columns:1fr 80px 90px 90px 32px;gap:6px;align-items:center">
+        <span class="camp-ac-name">${ac}</span>
+        <span class="camp-ac-pvp" style="text-align:right">${pvp.toFixed(2)} €</span>
+        <span class="camp-ac-coste" style="text-align:right">${coste.toFixed(2)} €</span>
+        <span class="camp-ac-venta" style="text-align:right">${venta.toFixed(2)} €</span>
+        <button class="camp-ac-btn" onclick="campAnadir(${iid})" title="Añadir al presupuesto">+</button>
+      </div>`;
+    });
+    html += `</div></div>`;
+  });
+  document.getElementById('camp-acabados-wrap').innerHTML = html;
+}
+
+// Items temporales Campoaras (para evitar JSON inline en botones)
+const _campItems = {};
+let _campItemId = 0;
+
+function campAnadir(itemId){
+  const data = _campItems[itemId];
+  if(!data) return;
+  // Buscar si ya existe en ixLineas
+  const ex = ixLineas.find(l=>l.ref===data.ref && l.desc===data.desc);
+  if(ex){ ex.cant++; ixRenderBud(); toast('+1 · '+data.desc.substring(0,40),'success'); return; }
+  ixLineas.push({
+    id: ++ixIdN,
+    ref: String(data.ref),
+    desc: data.desc,
+    serie: 'CAMPOARAS',
+    pvp: data.pvp,
+    cst: data.coste,
+    cant: 1,
+    _camp: true,
+  });
+  ixRenderBud();
+  toast('✅ Ref. '+data.ref+' añadido','success');
+}
+
+function campInit(){
+  // Reset estado y mostrar paso 0
+  Object.assign(campState, {modelo:null,tipo:null,alt:null,a:null,fondo:null});
+  campRender();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PATCH: ixSetTab para mostrar/ocultar wizard vs tabla
+// ═══════════════════════════════════════════════════════════════
+const _ixSetTabOrig = window.ixSetTab;
+window.ixSetTab = function(tab){
+  ixTab = tab;
+  // Pestañas
+  ['bano','cocina','campoaras'].forEach(t=>{
+    const el = document.getElementById('ix-tab-'+t);
+    if(el) el.classList.toggle('active', t===tab);
+  });
+
+  const iscamp = tab==='campoaras';
+
+  // Mostrar/ocultar wizard vs tabla+filtros
+  const wizard = document.getElementById('camp-wizard');
+  const tblWrap = document.querySelector('.imex-tbl-wrap');
+  const filtersRow = document.getElementById('ix-filters-row');
+  const seriesBar = document.getElementById('ix-series-bar');
+  const stats = document.querySelector('.imex-stats');
+  const infoBox = document.getElementById('ix-info-box');
+
+  if(wizard) wizard.style.display = iscamp ? 'block' : 'none';
+  if(tblWrap) tblWrap.style.display = iscamp ? 'none' : 'block';
+  if(filtersRow) filtersRow.style.display = iscamp ? 'none' : 'flex';
+  if(seriesBar) seriesBar.style.display = iscamp ? 'none' : 'flex';
+  if(stats) stats.style.display = iscamp ? 'none' : 'flex';
+  if(infoBox) infoBox.style.display = iscamp ? 'none' : 'block';
+
+  // Actualizar info box para baño/cocina
+  if(infoBox && !iscamp){
+    infoBox.innerHTML = 'PVP tarifa ×1,03 → <b>Coste PAU</b> = PVP actualizado ×0,60 (dto 40%) → <b>PVP cliente</b> = Coste × (1+margen%)';
+  }
+
+  // Actualizar título del panel
+  const titles = {
+    bano: {t:'🚿 IMEX — Griferías Baño', d:'Tarifa +3% · Dto 40% · Margen ajustable'},
+    cocina: {t:'🍳 IMEX — Griferías Cocina', d:'Tarifa +3% · Dto 40% · Margen ajustable'},
+    campoaras: {t:'🛁 Campoaras — Muebles de Baño', d:'Colecciones AQUA & DROP · Configurador paso a paso'},
+  };
+  const m = titles[tab]||titles.bano;
+  const titleEl = document.getElementById('cat-imex-title');
+  const descEl  = document.getElementById('cat-imex-desc');
+  if(titleEl) titleEl.innerHTML = m.t;
+  if(descEl)  descEl.textContent = m.d;
+
+  if(iscamp){
+    campInit();
+  } else {
+    ixFillSeries();
+    ixBuildSerieChips();
+    ixRender();
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// PATCH: ixRender para filtrar por serie activa
+// ═══════════════════════════════════════════════════════════════
+function ixRender(){
+  if(ixTab==='campoaras') return; // wizard lo maneja
+  const datos = ixDatos();
+  const q = (document.getElementById('ix-search')?.value||'').toLowerCase();
+  
+  let filtered = datos;
+  // Filtrar por serie seleccionada
+  if(ixSerieActual) filtered = filtered.filter(p=>p.serie===ixSerieActual);
+  // Filtrar por búsqueda texto
+  if(q) filtered = filtered.filter(p=>
+    p.desc.toLowerCase().includes(q) || p.ref.toLowerCase().includes(q)
+  );
+
+  const tbody = document.getElementById('ix-tbody');
+  const nor   = document.getElementById('ix-nor');
+  const stats = document.getElementById('ix-stats-txt');
+  const added = document.getElementById('ix-stats-add');
+
+  if(!tbody) return;
+
+  if(!filtered.length){
+    tbody.innerHTML='';
+    if(nor) nor.style.display='block';
+    if(stats) stats.textContent='Sin resultados';
+    return;
+  }
+  if(nor) nor.style.display='none';
+  if(stats) stats.innerHTML=`<b>${filtered.length}</b> referencias · <span style="opacity:.7">haz clic para añadir</span>`;
+  if(added){
+    const na = Object.keys(window.ixLineas||{}).length;
+    added.textContent = na ? na+' en valoración' : '';
+  }
+
+  tbody.innerHTML = filtered.map(p=>{
+    const pvpA = p._camp ? p._pvpBase*p._inc : p.pvp * IMEX_INC;
+    const cst  = ixCoste(p.pvp||p._pvpBase, p);
+    const isAdded = (window.ixLineas||{})[p.ref];
+    return `<tr class="${isAdded?'ix-added':''}" onclick="ixAnadir('${p.ref}')">
+      <td class="ix-serie"><span>${p.serie||''}</span></td>
+      <td class="ix-ref">${p.ref}</td>
+      <td>${p.desc}</td>
+      <td class="ix-pvp">${pvpA.toFixed(2)} €</td>
+      <td class="ix-cst">${cst.toFixed(2)} €</td>
+      <td class="ix-btn-td"><button class="ix-btn${isAdded?' on':''}" onclick="event.stopPropagation();ixAnadir('${p.ref}')" title="Añadir">+</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// Resetear serie al cambiar tab
+const _origIxFillSeries = window.ixFillSeries;
+window.ixFillSeries = function(){
+  ixSerieActual = '';
+  if(_origIxFillSeries) _origIxFillSeries();
+  ixBuildSerieChips();
 };
 
 </script>
