@@ -1827,7 +1827,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
             <div style="display:grid;grid-template-columns:1fr 80px auto;gap:8px;align-items:end">
               <div>
                 <label class="form-label">Referencia</label>
-                <select class="form-input" id="s-gola-ref" style="font-size:11px">
+                <select class="form-input" id="s-gola-ref" style="font-size:11px" onchange="saitraGolaChange()">
                   <optgroup label="── GOLA H.SIMPLE ──">
                     <option value="PHSA">PHSA · Alu 400cm — 44 pts</option>
                     <option value="O5PHSA">O5PHSA · Alu 200cm — 23 pts</option>
@@ -1899,10 +1899,11 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
               </div>
               <div>
                 <label class="form-label">Uds.</label>
-                <input type="number" class="form-input" id="s-gola-qty" value="1" min="1">
+                <input type="number" class="form-input" id="s-gola-qty" value="1" min="1" oninput="saitraGolaChange()">
               </div>
               <button class="btn btn-primary" style="white-space:nowrap;height:36px" onclick="saitraAddGola()">＋ Añadir</button>
             </div>
+            <div id="s-gola-preview" style="margin-top:8px;padding:8px 10px;background:var(--sand);border-radius:6px;font-size:11px;line-height:1.8"></div>
           </div>
 
         </div>
@@ -6431,6 +6432,22 @@ const SAITRA_ZOC = {
   'ZALLCB-15': { label:'Zócalo Lac.RAL/NCS A.15',           pts:[85,43] },
 };
 
+// Accesorios Saitra con PVP tarifa (€) — aplica descuento porcentual variable
+// ⚠️ Verificar precios con tarifa Saitra actualizada
+const SAITRA_ACC = {
+  'CUBMN-60':     { label:'CUBMN 60cm · Nogal',       pvp:  58.00 },
+  'CUBMN-90':     { label:'CUBMN 90cm · Nogal',        pvp:  78.00 },
+  'CUBMN-120':    { label:'CUBMN 120cm · Nogal',       pvp:  98.00 },
+  'LAMBDAC-45':   { label:'Lambda 45cm',               pvp:  85.00 },
+  'LAMBDAC-60':   { label:'Lambda 60cm',               pvp: 105.00 },
+  'LAMBDAC-80':   { label:'Lambda 80cm',               pvp: 125.00 },
+  'LAMBDAC-90':   { label:'Lambda 90cm',               pvp: 135.00 },
+  'LAMBDAC-120':  { label:'Lambda 120cm',              pvp: 165.00 },
+  'LAMBDAC-200':  { label:'Lambda 200cm',              pvp: 245.00 },
+  'LAMBDA45-100': { label:'Lambda 45° 100cm',          pvp: 155.00 },
+  'LAMBDA45-200': { label:'Lambda 45° 200cm',          pvp: 285.00 },
+};
+
 const SAITRA_GOLA = {
   'PHSA':      { label:'Gola H.simple Aluminio 400cm',     tipo:'horizontal', pts:[44,23] },
   'O5PHSA':    { label:'Gola H.simple Aluminio 200cm',     tipo:'horizontal', pts:[23,23] },
@@ -6881,6 +6898,7 @@ function initSaitra(){
   saitraRefChange();
   saitraAccTipoChange();
   saitraZocChange();
+  saitraGolaChange();
   saitraRenderTabla();
 }
 
@@ -7042,6 +7060,26 @@ function saitraAddZocalo(){
   saitraRenderTabla();
   saitraRecalc();
   toast(`✅ ${z.label} · Coste: ${costeU.toFixed(2)}€ · PVP: ${pvpU.toFixed(2)}€`);
+}
+
+function saitraGolaChange(){
+  const ref    = document.getElementById('s-gola-ref')?.value;
+  const qty    = parseInt(document.getElementById('s-gola-qty')?.value)||1;
+  const margen = parseFloat(document.getElementById('s-margen')?.value)||0;
+  const prev   = document.getElementById('s-gola-preview');
+  if(!prev) return;
+  if(!ref || !SAITRA_GOLA[ref]){ prev.innerHTML=''; return; }
+  const g     = SAITRA_GOLA[ref];
+  const pts   = g.pts[0];
+  const coste = saitraCalcCoste(pts, PUNTO_PP);
+  const costeT= coste * qty;
+  const pvpU  = saitraCalcPvp(coste, margen);
+  const pvpT  = pvpU * qty;
+  prev.innerHTML =
+    `<span style="color:var(--text-soft)">${pts} pts × ${PUNTO_PP.toFixed(2)}€ =</span> <strong style="color:var(--navy)">${coste.toFixed(2)}€ coste/ud</strong>` +
+    (qty > 1 ? ` <span style="color:var(--text-soft)">× ${qty} =</span> <strong style="color:var(--navy)">${costeT.toFixed(2)}€ total</strong>` : '') + '<br>' +
+    `<span style="color:var(--text-soft)">+ ${margen}% margen =</span> <strong style="color:#2e7d32;font-size:13px">${pvpU.toFixed(2)}€ PVP/ud` +
+    (qty > 1 ? ` · <strong style="color:#2e7d32">${pvpT.toFixed(2)}€ PVP total</strong>` : '') + `</strong>`;
 }
 
 function saitraAddGola(){
@@ -12743,6 +12781,8 @@ const _ixRenderOrig = window.ixRender;
 // CAMPOARAS: WIZARD PASO A PASO
 // ═══════════════════════════════════════════════════════════════
 const campState = {modelo:null, tipo:null, alt:null, a:null, fondo:null};
+let _campItems  = {};  // items temporales del wizard Campoaras
+let _campItemId = 0;   // contador IDs Campoaras
 
 function campDatos(){
   if(campState.modelo === 'TAPAS') return CAMP_TAPAS;
