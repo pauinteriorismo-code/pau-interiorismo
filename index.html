@@ -350,8 +350,14 @@ th.sortable.sort-asc .sort-arrow::after{content:‘▲’}
 th.sortable.sort-desc .sort-arrow::after{content:‘▼’}
 th.sortable:not(.sort-asc):not(.sort-desc) .sort-arrow::after{content:‘⇅’}
 
+/* ═══ KANBAN STYLES ═══ */
+.kanban-card:hover { transform: translateY(-1px); }
+.kanban-col.drag-over { outline: 2px dashed var(–navy) !important; background: var(–blue-light) !important; }
+.exp-tab:hover { background: #f5f7fa; }
 </style>
+
 <script src="./PAU INTERIORISMO · Gestión_files/xlsx.full.min.js.descargar"></script>
+
 </head>
 <body>
 
@@ -967,6 +973,11 @@ PAU INTERIORISMO S.L. · CIF B-56909641 · <a href="/cdn-cgi/l/email-protection"
 
 <!-- ═══ PROYECTOS ═══ -->
 <div class="view" id="view-proyectos">
+  <!-- Vista toggle: Lista | Kanban -->
+  <div style="display:flex;gap:0;border-radius:8px;overflow:hidden;border:1px solid var(--border);flex-shrink:0">
+    <button id="btn-vista-lista" onclick="setVistaProy('lista')" style="padding:6px 14px;background:var(--navy);color:#fff;border:none;cursor:pointer;font-size:12px;font-weight:600">≡ Lista</button>
+    <button id="btn-vista-kanban" onclick="setVistaProy('kanban')" style="padding:6px 14px;background:#fff;color:var(--text-mid);border:none;cursor:pointer;font-size:12px">⬜ Kanban</button>
+  </div>
   <div class="search-bar" style="gap:8px;flex-wrap:wrap">
     <select class="form-input" style="width:240px;flex-shrink:0" id="filter-cliente-proyectos" onchange="filtrarProyectosPorCliente()"><option value="">👤 Todos los clientes</option><option value="CLI-001">Miguel Zaragozá Garzón</option><option value="CLI-002">Vicenta Folch Gil</option><option value="CLI-033">Estudi Encis SL</option><option value="CLI-034">Vicenta Baixauli Hernandez</option><option value="CLI-H002">Mª PAU BRAVO JOSE</option><option value="CLI-H001">ROSA CHANZA SOLER</option><option value="CLI-H003">DESIRE NAVARRO MARI</option><option value="CLI-H004">CARMELO RODRIGUEZ VILA</option><option value="CLI-H032">Daniel palma gallardo</option><option value="CLI-H023">Miguel Zaragozá Garzón</option><option value="CLI-H006">Vicenta Folch Gil</option><option value="CLI-H008">VICENT MARI SERRA</option><option value="CLI-H009">FERNANDO JOSE SAN GERMAN IBORRA</option><option value="CLI-H010">REME IBORRA GIL</option><option value="CLI-H011">TONI TATAY DAVID</option><option value="CLI-H019">Jose Antonio Martos Ortiz</option><option value="CLI-H021">MERCEDES HIGUERAS GOMEZ</option><option value="CLI-H024">MICHELL BENITO</option><option value="CLI-H026">Ana María Palau Sastre</option><option value="CLI-H028">Lara Blasco - Lara Blasco Iborra</option><option value="CLI-H027">Laura Doria Gomez</option><option value="CLI-H031">Belinda</option><option value="CLI-H005">PATRI</option><option value="CLI-H012">Júlia Fabregat Mestre</option><option value="CLI-H013">Jose Manuel Garcia Seller Nº 7 Pta 4</option><option value="CLI-H014">4G daniel Dominguez</option><option value="CLI-H016">Sara Muñoz Abella</option><option value="CLI-H018">Amparo Forner Pastor</option><option value="CLI-H017">Yasmina Cabezuelo Alaminos</option><option value="CLI-H020">Rafael Francés Llàcer</option><option value="CLI-H022">Miguel cocina</option><option value="CLI-H007">Juanmi</option><option value="CLI-H015">4F Fernando</option><option value="CLI-H029">Francisco Navarro Garcia</option><option value="CLI-H025">URKO Y FRANCESC</option><option value="CLI-H030">Jose Manuel Pinzón Valbuena</option></select>
     <div class="search-wrap" style="flex:1;min-width:180px"><span class="search-icon">🔍</span><input class="form-input" id="search-proyectos" placeholder="Buscar proyecto…" oninput="filterTable(&#39;proyectos-tbody&#39;,&#39;search-proyectos&#39;)"></div>
@@ -977,6 +988,10 @@ PAU INTERIORISMO S.L. · CIF B-56909641 · <a href="/cdn-cgi/l/email-protection"
     <div class="table-wrap"><table><thead><tr><th>ID</th><th>Nombre</th><th>Cliente</th><th>Tipo</th><th>Estado</th><th>Responsable</th><th>Inicio</th><th></th></tr></thead>
     <tbody id="proyectos-tbody"><tr><td colspan="8" class="loading">Cargando…</td></tr></tbody></table></div>
   </div>
+<!-- ═══ KANBAN DE PROYECTOS ═══ -->
+<div id="kanban-proy" style="display:none;padding:0 4px;overflow-x:auto;padding-bottom:16px">
+  <div id="kanban-board" style="display:flex;gap:12px;min-width:max-content;align-items:flex-start;padding:4px 0"></div>
+</div>
 </div>
 
 <!-- ═══ PRESUPUESTO ═══ -->
@@ -3236,7 +3251,7 @@ PAU INTERIORISMO S.L. · CIF B-56909641 · <a href="/cdn-cgi/l/email-protection"
           <div id="co-pdf-label" style="color:var(--text-soft);font-size:12px">
             📄 Arrastra el PDF aquí o <u style="color:var(--navy);cursor:pointer">haz clic para seleccionar</u>
           </div>
-          <div id="co-pdf-preview" style="display:none;margin-top:8px;display:flex;align-items:center;gap:8px;justify-content:center"></div>
+          <div id="co-pdf-preview" style="display:none;margin-top:8px;align-items:center;gap:8px;justify-content:center"></div>
         </div>
         <input type="file" id="co-pdf-input" accept=".pdf,application/pdf" style="display:none" onchange="coHandleFile(this.files[0])">
         <input type="hidden" id="co-pdf-b64">
@@ -3254,6 +3269,100 @@ PAU INTERIORISMO S.L. · CIF B-56909641 · <a href="/cdn-cgi/l/email-protection"
     </div>
   </div>
 </div></div>
+
+<!-- ═══ EXPEDIENTE DE PROYECTO (Vista unificada) ═══ -->
+
+<div class="overlay" id="m-expediente">
+  <div class="modal" style="width:min(900px,97vw);max-height:94vh;display:flex;flex-direction:column">
+    <div class="modal-head" style="flex-shrink:0">
+      <div>
+        <div class="modal-title" id="exp-title">📁 Expediente de proyecto</div>
+        <div id="exp-subtitle" style="font-size:11px;color:var(--text-soft);margin-top:2px"></div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-left:auto">
+        <div id="exp-estado-badge"></div>
+        <button class="modal-close" onclick="closeModal('m-expediente')">×</button>
+      </div>
+    </div>
+
+```
+<!-- KPIs rápidos del proyecto -->
+<div id="exp-kpis" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:10px 18px;background:#f8fafd;border-bottom:1px solid var(--border);flex-shrink:0">
+  <div style="background:#fff;border-radius:8px;padding:10px 14px;border:1px solid var(--border)">
+    <div style="font-size:10px;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px">Presupuesto</div>
+    <div id="exp-k-pres" style="font-size:18px;font-weight:800;color:var(--navy)">—</div>
+  </div>
+  <div style="background:#fff;border-radius:8px;padding:10px 14px;border:1px solid var(--border)">
+    <div style="font-size:10px;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px">Compras / Costes</div>
+    <div id="exp-k-costes" style="font-size:18px;font-weight:800;color:var(--amber)">—</div>
+  </div>
+  <div style="background:#fff;border-radius:8px;padding:10px 14px;border:1px solid var(--border)">
+    <div style="font-size:10px;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px">Facturado</div>
+    <div id="exp-k-fact" style="font-size:18px;font-weight:800;color:var(--green)">—</div>
+  </div>
+  <div style="background:#fff;border-radius:8px;padding:10px 14px;border:1px solid var(--border)">
+    <div style="font-size:10px;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px">Margen real</div>
+    <div id="exp-k-margen" style="font-size:18px;font-weight:800">—</div>
+  </div>
+</div>
+
+<!-- Tabs -->
+<div style="display:flex;border-bottom:1px solid var(--border);flex-shrink:0;background:#fff">
+  <button class="exp-tab active" onclick="expTab('resumen')" data-tab="resumen" style="padding:10px 16px;border:none;background:none;cursor:pointer;font-size:12px;font-weight:600;color:var(--navy);border-bottom:2px solid var(--navy)">📊 Resumen</button>
+  <button class="exp-tab" onclick="expTab('rentabilidad')" data-tab="rentabilidad" style="padding:10px 16px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-mid);border-bottom:2px solid transparent">📈 Rentabilidad</button>
+  <button class="exp-tab" onclick="expTab('gantt')" data-tab="gantt" style="padding:10px 16px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-mid);border-bottom:2px solid transparent">📅 Planificación</button>
+  <button class="exp-tab" onclick="expTab('compras')" data-tab="compras" style="padding:10px 16px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-mid);border-bottom:2px solid transparent">🛒 Compras</button>
+  <button class="exp-tab" onclick="expTab('facturas')" data-tab="facturas" style="padding:10px 16px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-mid);border-bottom:2px solid transparent">🧾 Facturas</button>
+  <button class="exp-tab" onclick="expTab('subcontratas')" data-tab="subcontratas" style="padding:10px 16px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-mid);border-bottom:2px solid transparent">👷 Subcontratas</button>
+  <button class="exp-tab" onclick="expTab('horas')" data-tab="horas" style="padding:10px 16px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-mid);border-bottom:2px solid transparent">⏱ Horas</button>
+  <button class="exp-tab" onclick="expTab('notas')" data-tab="notas" style="padding:10px 16px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-mid);border-bottom:2px solid transparent">📝 Notas</button>
+</div>
+
+<!-- Tab content -->
+<div id="exp-body" style="flex:1;overflow-y:auto;padding:16px 18px"></div>
+
+<div class="modal-foot" style="flex-shrink:0">
+  <button class="btn btn-ghost btn-sm" onclick="expEditarProyecto()" style="margin-right:auto">✏️ Editar proyecto</button>
+  <button class="btn btn-ghost" onclick="closeModal('m-expediente')">Cerrar</button>
+</div>
+```
+
+  </div>
+</div>
+
+<!-- ═══ MODAL CAMBIAR ESTADO PROYECTO ═══ -->
+
+<div class="overlay" id="m-estado-proy">
+  <div class="modal" style="width:340px">
+    <div class="modal-head">
+      <div class="modal-title">🔄 Cambiar estado</div>
+      <button class="modal-close" onclick="closeModal('m-estado-proy')">×</button>
+    </div>
+    <div class="modal-body" style="padding:10px">
+      <div id="estado-proy-nombre" style="font-size:12px;color:var(--text-soft);margin-bottom:12px;padding:0 4px"></div>
+      <div id="estado-proy-btns" style="display:flex;flex-direction:column;gap:6px"></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('m-estado-proy')">Cancelar</button></div>
+  </div>
+</div>
+
+<!-- ═══ FICHA DE OBRA (vista móvil simplificada) ═══ -->
+
+<div class="overlay" id="m-ficha-obra">
+  <div class="modal" style="width:min(480px,97vw);max-height:94vh;display:flex;flex-direction:column">
+    <div class="modal-head" style="flex-shrink:0">
+      <div>
+        <div class="modal-title">🏗️ Ficha de obra</div>
+        <div id="ficha-subtitle" style="font-size:11px;color:var(--text-soft)"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal('m-ficha-obra')">×</button>
+    </div>
+    <div id="ficha-body" style="flex:1;overflow-y:auto;padding:14px 16px"></div>
+    <div class="modal-foot" style="flex-shrink:0">
+      <button class="btn btn-ghost" onclick="closeModal('m-ficha-obra')">Cerrar</button>
+    </div>
+  </div>
+</div>
 
 <!-- SUBCONTRATA -->
 
@@ -4969,7 +5078,7 @@ try{
 PC=await sbGet(‘proyectos’,’?order=created_at.desc’);
 document.getElementById(‘proyectos-count’).textContent=PC.length+’ proyectos’;
 if(!PC.length){tb.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="empty-icon">📁</div><div class="empty-text">Sin proyectos</div><button class="btn btn-primary" onclick="openModal('m-proyecto')">＋ Nuevo</button></div></td></tr>`;return;}
-tb.innerHTML=PC.map(p=>`<tr data-search="${(p.proyecto_id+p.nombre+p.cliente_id+p.tipo+p.estado).toLowerCase()}"><td class="td-mono" style="color:var(--text-soft)">${p.proyecto_id||'—'}</td><td><strong>${p.nombre}</strong></td><td>${p.cliente_id||'—'}</td><td>${bE(p.tipo)}</td><td>${bE(p.estado)}</td><td>${p.responsable||'—'}</td><td>${fmtD(p.fecha_inicio)}</td><td><div class="td-actions"><button class="btn btn-ghost btn-icon btn-sm" onclick="editProyecto('${p.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('proyectos','${p.id}','${p.nombre.replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`).join(’’);
+tb.innerHTML=PC.map(p=>`<tr data-search="${(p.proyecto_id+p.nombre+p.cliente_id+p.tipo+p.estado).toLowerCase()}"><td class="td-mono" style="color:var(--text-soft)">${p.proyecto_id||'—'}</td><td><strong style="cursor:pointer;color:var(--navy)" onclick="abrirExpediente('${p.proyecto_id}')" title="Ver expediente completo">${p.nombre}</strong></td><td>${p.cliente_id||'—'}</td><td>${bE(p.tipo)}</td><td>${bE(p.estado)}</td><td>${p.responsable||'—'}</td><td>${fmtD(p.fecha_inicio)}</td><td><div class="td-actions"><button class="btn btn-ghost btn-sm" style="font-size:11px;color:var(--navy);font-weight:600" onclick="abrirExpediente('${p.proyecto_id}')">📁 Exp.</button><button class="btn btn-ghost btn-icon btn-sm" onclick="editProyecto('${p.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('proyectos','${p.id}','${p.nombre.replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`).join(’’);
 populateSelects();
 poblarFiltrosCliente();
 filtrarProyectosPorCliente();
@@ -13764,9 +13873,705 @@ plt.splice(idx,1); localStorage.setItem(‘pau-plantillas’,JSON.stringify(plt)
 toast(‘Plantilla eliminada’); abrirModalPlantillas();
 }
 
-// Hook alertas al cargar gerencia
-const _origLoadGerencia=loadGerencia;
-loadGerencia=async function(){await _origLoadGerencia();setTimeout(renderAlertasGerencia,300);};
+// Hook alertas al cargar gerencia — patch loaders directly so it works on every navTo
+const _gerenciaOrigFn = loaders[‘gerencia’];
+loaders[‘gerencia’] = async function(){
+if(_gerenciaOrigFn) await _gerenciaOrigFn();
+setTimeout(renderAlertasGerencia, 300);
+};
+// Also patch the direct init() call
+const _origLoadGerencia = loadGerencia;
+loadGerencia = async function(){
+await _origLoadGerencia();
+setTimeout(renderAlertasGerencia, 300);
+};
+
+// ══════════════════════════════════════════════════════════════════════
+// FASE 2 — KANBAN DE PROYECTOS
+// ══════════════════════════════════════════════════════════════════════
+const KANBAN_COLS = [
+{ estado:‘Nuevo lead’,         color:’#64b5f6’, bg:’#e3f2fd’, ico:‘💡’ },
+{ estado:‘Presupuesto enviado’,color:’#ffb74d’, bg:’#fff3e0’, ico:‘📤’ },
+{ estado:‘Aprobado’,           color:’#81c784’, bg:’#e8f5e9’, ico:‘✅’ },
+{ estado:‘En ejecución’,       color:’#4db6ac’, bg:’#e0f2f1’, ico:‘🔨’ },
+{ estado:‘Finalizado’,         color:’#9575cd’, bg:’#ede7f6’, ico:‘🏁’ },
+{ estado:‘Facturado’,          color:’#f06292’, bg:’#fce4ec’, ico:‘🧾’ },
+{ estado:‘Cobrado’,            color:’#a5d6a7’, bg:’#f1f8e9’, ico:‘💰’ },
+{ estado:‘Cancelado’,          color:’#b0bec5’, bg:’#eceff1’, ico:‘❌’ },
+];
+
+let _vistaProyActual = ‘lista’;
+
+function setVistaProy(v){
+_vistaProyActual = v;
+const lista = document.querySelector(’#view-proyectos .card’);
+const kanban = document.getElementById(‘kanban-proy’);
+const btnLista = document.getElementById(‘btn-vista-lista’);
+const btnKanban = document.getElementById(‘btn-vista-kanban’);
+if(v===‘kanban’){
+if(lista) lista.style.display=‘none’;
+if(kanban) kanban.style.display=‘block’;
+if(btnLista){ btnLista.style.background=’#fff’; btnLista.style.color=‘var(–text-mid)’; btnLista.style.fontWeight=‘400’; }
+if(btnKanban){ btnKanban.style.background=‘var(–navy)’; btnKanban.style.color=’#fff’; btnKanban.style.fontWeight=‘600’; }
+renderKanban();
+} else {
+if(lista) lista.style.display=’’;
+if(kanban) kanban.style.display=‘none’;
+if(btnLista){ btnLista.style.background=‘var(–navy)’; btnLista.style.color=’#fff’; btnLista.style.fontWeight=‘600’; }
+if(btnKanban){ btnKanban.style.background=’#fff’; btnKanban.style.color=‘var(–text-mid)’; btnKanban.style.fontWeight=‘400’; }
+}
+}
+
+function renderKanban(){
+const board = document.getElementById(‘kanban-board’);
+if(!board || !PC) return;
+
+// Calcular importes facturados por proyecto para mostrar en tarjeta
+const facByProy = {};
+(FC||[]).forEach(f => {
+if(!f.proyecto_id) return;
+if(!facByProy[f.proyecto_id]) facByProy[f.proyecto_id] = 0;
+if((f.tipo_factura||‘Venta’)===‘Venta’) facByProy[f.proyecto_id] += (f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100);
+});
+
+board.innerHTML = KANBAN_COLS.map(col => {
+const proyCol = PC.filter(p => (p.estado||‘Nuevo lead’)===col.estado);
+const totalCol = proyCol.reduce((s,p) => s+(facByProy[p.proyecto_id]||0), 0);
+return `<div class="kanban-col" data-estado="${col.estado}" ondragover="kbDragOver(event,this)" ondrop="kbDrop(event,this)" ondragleave="kbDragLeave(this)" style="width:200px;flex-shrink:0;background:#f8fafd;border-radius:10px;border:1px solid var(--border);overflow:hidden"> <div style="padding:10px 12px;background:${col.bg};border-bottom:2px solid ${col.color};display:flex;align-items:center;gap:6px"> <span>${col.ico}</span> <div style="flex:1"> <div style="font-size:11px;font-weight:700;color:#333">${col.estado}</div> <div style="font-size:10px;color:#888">${proyCol.length} proyecto${proyCol.length!==1?'s':''} ${totalCol>0?'· '+fmt(totalCol):''}</div> </div> </div> <div class="kanban-cards" style="padding:8px;display:flex;flex-direction:column;gap:6px;min-height:60px"> ${proyCol.map(p =>`
+<div class="kanban-card" draggable="true"
+ondragstart="kbDragStart(event,'${p.id}')"
+onclick="abrirExpediente('${p.proyecto_id}')"
+style="background:#fff;border-radius:8px;padding:9px 11px;box-shadow:0 1px 3px rgba(0,0,0,.08);cursor:pointer;transition:box-shadow .15s;border:1px solid #eee"
+onmouseover="this.style.boxShadow='0 3px 10px rgba(0,0,0,.12)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.08)'">
+<div style="font-size:9px;color:var(--text-soft);font-weight:600;text-transform:uppercase;letter-spacing:.4px">${p.proyecto_id}</div>
+<div style="font-size:12px;font-weight:700;color:var(--navy);margin:2px 0;line-height:1.3">${p.nombre}</div>
+<div style="font-size:10px;color:var(--text-soft)">${p.cliente_id||’’}</div>
+${facByProy[p.proyecto_id]?`<div style="font-size:11px;color:var(--green);font-weight:600;margin-top:4px">${fmt(facByProy[p.proyecto_id])}</div>`:’’}
+${p.fecha_inicio?`<div style="font-size:9px;color:var(--text-soft);margin-top:3px">📅 ${fmtD(p.fecha_inicio)}</div>`:’’}
+</div>` ).join('')} </div> </div>`;
+}).join(’’);
+}
+
+// Drag & Drop Kanban
+let _kbDragId = null;
+function kbDragStart(e, id){ _kbDragId=id; e.dataTransfer.effectAllowed=‘move’; }
+function kbDragOver(e, col){ e.preventDefault(); col.style.outline=‘2px dashed var(–navy)’; }
+function kbDragLeave(col){ col.style.outline=’’; }
+async function kbDrop(e, colEl){
+e.preventDefault(); colEl.style.outline=’’;
+if(!_kbDragId) return;
+const nuevoEstado = colEl.dataset.estado;
+const p = PC.find(x=>x.id===_kbDragId);
+if(!p || p.estado===nuevoEstado){ _kbDragId=null; return; }
+try{
+await sbPatch(‘proyectos’, _kbDragId, {estado: nuevoEstado});
+p.estado = nuevoEstado;
+toast(`${p.nombre} → ${nuevoEstado} ✅`);
+renderKanban();
+renderAlertasGerencia();
+}catch(ex){ toast(’Error: ’+ex.message,‘error’); }
+_kbDragId=null;
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// FASE 2 — EXPEDIENTE UNIFICADO DE PROYECTO
+// ══════════════════════════════════════════════════════════════════════
+let _expProyId = null;
+
+async function abrirExpediente(proyId){
+_expProyId = proyId;
+const p = PC.find(x=>x.proyecto_id===proyId);
+if(!p){ toast(‘Proyecto no encontrado’,‘error’); return; }
+
+// Header
+document.getElementById(‘exp-title’).textContent = `📁 ${p.proyecto_id} · ${p.nombre}`;
+document.getElementById(‘exp-subtitle’).textContent = `${p.cliente_id||''} · ${p.tipo||''} · ${p.responsable||''} · ${p.direccion_obra||''}`;
+document.getElementById(‘exp-estado-badge’).innerHTML = `<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:10px;background:var(--navy);color:#fff">${p.estado||''}</span>`;
+
+// KPIs — calcular desde datos ya cargados + refrescar si hace falta
+await calcExpKPIs(proyId);
+
+// Abrir en tab resumen
+expTab(‘resumen’);
+openModal(‘m-expediente’);
+}
+
+async function calcExpKPIs(proyId){
+// Presupuesto (suma lineas)
+let presTot = 0;
+try{
+const lineas = await sbGet(‘presupuesto_lineas’, `?proyecto_id=eq.${proyId}&es_capitulo=eq.false`);
+lineas.forEach(l=>{ const pv=l.precio_venta||0,ci=l.ci_gg_bi_pct||0,sub=(l.cantidad||0)*pv; presTot+=ci>0?sub*(1+ci/100):sub; });
+}catch(e){}
+
+// Facturas de venta del proyecto
+const factProy = (FC||[]).filter(f=>f.proyecto_id===proyId&&(f.tipo_factura||‘Venta’)===‘Venta’);
+const factTotal = factProy.reduce((s,f)=>s+(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100), 0);
+
+// Compras del proyecto
+const compProy = (CoC||[]).filter(c=>c.proyecto_id===proyId);
+const compTotal = compProy.reduce((s,c)=>s+(c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100), 0);
+
+const margen = factTotal>0 ? ((factTotal-compTotal)/factTotal)*100 : 0;
+
+const setEl = (id,val,style) => { const el=document.getElementById(id); if(el){el.textContent=val; if(style) Object.assign(el.style,style);} };
+setEl(‘exp-k-pres’, presTot>0 ? fmt(presTot) : ‘—’);
+setEl(‘exp-k-costes’, fmt(compTotal));
+setEl(‘exp-k-fact’, fmt(factTotal));
+setEl(‘exp-k-margen’, margen>0 ? fmtP(margen) : ‘—’, {color: margen>=20?‘var(–green)’:margen>0?‘var(–amber)’:‘var(–red)’});
+}
+
+function expTab(tab){
+document.querySelectorAll(’.exp-tab’).forEach(btn=>{
+const isActive = btn.dataset.tab===tab;
+btn.style.color = isActive ? ‘var(–navy)’ : ‘var(–text-mid)’;
+btn.style.fontWeight = isActive ? ‘600’ : ‘400’;
+btn.style.borderBottom = isActive ? ‘2px solid var(–navy)’ : ‘2px solid transparent’;
+});
+const body = document.getElementById(‘exp-body’);
+if(!body) return;
+switch(tab){
+case ‘resumen’:      renderExpResumen(body); break;
+case ‘rentabilidad’: renderExpRentabilidad(body); break;
+case ‘gantt’:        renderExpGantt(body); break;
+case ‘compras’:      renderExpCompras(body); break;
+case ‘facturas’:     renderExpFacturas(body); break;
+case ‘subcontratas’: renderExpSubcontratas(body); break;
+case ‘horas’:        renderExpHoras(body); break;
+case ‘notas’:        renderExpNotas(body); break;
+}
+}
+
+function renderExpResumen(body){
+const pid = _expProyId;
+const p = PC.find(x=>x.proyecto_id===pid);
+if(!p){ body.innerHTML=’<p>No encontrado</p>’; return; }
+
+const compProy = (CoC||[]).filter(c=>c.proyecto_id===pid);
+const factProy = (FC||[]).filter(f=>f.proyecto_id===pid&&(f.tipo_factura||‘Venta’)===‘Venta’);
+const scProy   = (ScC||[]).filter(s=>s.proyecto_id===pid);
+const horProy  = (HC||[]).filter(h=>h.proyecto_id===pid);
+
+const compPend = compProy.filter(c=>c.estado_pago===‘Pendiente’).reduce((s,c)=>s+(c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100),0);
+const factPend = factProy.filter(f=>f.estado!==‘Cobrada’).reduce((s,f)=>s+(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100),0);
+const totalHoras = horProy.reduce((s,h)=>s+(h.horas||0),0);
+const costeHoras = horProy.reduce((s,h)=>s+(h.total||0),0);
+
+// Progress: compras vs presupuesto
+const compTotal = compProy.reduce((s,c)=>s+(c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100),0);
+const factTotal = factProy.reduce((s,f)=>s+(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100),0);
+
+body.innerHTML = `
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+    <!-- Info general -->
+    <div>
+      <div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Información del proyecto</div>
+      ${[
+        ['Estado', `<span style="font-weight:700">${p.estado||'—'}</span>`],
+        ['Tipo', p.tipo||'—'],
+        ['Cliente', p.cliente_id||'—'],
+        ['Responsable', p.responsable||'—'],
+        ['Dirección obra', p.direccion_obra||'—'],
+        ['Fecha inicio', fmtD(p.fecha_inicio)],
+      ].map(([k,v])=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:12px"><span style="color:var(--text-soft)">${k}</span><span>${v}</span></div>`).join('')}
+      <div style="margin-top:12px">
+        <button class="btn btn-ghost btn-sm" onclick="expCambiarEstado()">🔄 Cambiar estado</button>
+      </div>
+    </div>
+    <!-- Resumen financiero -->
+    <div>
+      <div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Financiero</div>
+      ${[
+        ['Compras / costes acumulados', fmt(compTotal), compTotal>0?'var(--amber)':''],
+        ['Compras pendientes pago', fmt(compPend), compPend>0?'var(--red)':''],
+        ['Facturas emitidas', fmt(factTotal), 'var(--green)'],
+        ['Pendiente cobrar', fmt(factPend), factPend>0?'var(--amber)':''],
+        ['Horas registradas', totalHoras.toFixed(1)+'h', ''],
+        ['Coste mano de obra', fmt(costeHoras), ''],
+      ].map(([k,v,c])=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:12px"><span style="color:var(--text-soft)">${k}</span><span style="font-weight:600${c?';color:'+c:''}">${v}</span></div>`).join('')}
+    </div>
+  </div>
+  <!-- Últimas compras -->
+  ${compProy.length?`
+  <div style="margin-top:16px">
+    <div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Últimas compras del proyecto</div>
+    ${compProy.slice(0,5).map(c=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #f5f5f5;font-size:12px">
+      <span>${fmtD(c.fecha)} · <strong>${c.proveedor_id||'—'}</strong></span>
+      <span style="color:var(--amber);font-weight:600">${fmt((c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100))} ${bE(c.estado_pago)}</span>
+    </div>`).join('')}
+    ${compProy.length>5?`<div style="font-size:11px;color:var(--text-soft);padding:4px 0">+${compProy.length-5} más — ver pestaña Compras</div>`:''}
+  </div>`:''}`;
+}
+
+function renderExpCompras(body){
+const pid = _expProyId;
+const items = (CoC||[]).filter(c=>c.proyecto_id===pid).sort((a,b)=>b.fecha>a.fecha?1:-1);
+if(!items.length){ body.innerHTML=’<div style="text-align:center;padding:32px;color:var(--text-soft)">Sin compras registradas en este proyecto</div>’; return; }
+const total = items.reduce((s,c)=>s+(c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100),0);
+body.innerHTML = ` <div style="margin-bottom:10px;font-size:12px;color:var(--text-soft)">Total: <strong style="color:var(--amber)">${fmt(total)}</strong> · ${items.length} registro${items.length!==1?'s':''}</div> <table style="width:100%;font-size:12px;border-collapse:collapse"> <thead><tr style="background:var(--navy);color:#fff">${['Fecha','Proveedor','Concepto','Base','IVA','Total','Estado'].map(h=>`<th style="padding:7px 10px;text-align:left;font-weight:600">${h}</th>`).join('')}<th></th></tr></thead> <tbody>${items.map((c,i)=>{const tot=(c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100);return`<tr style="background:${i%2?'#fafafa':'#fff'}">
+<td style="padding:6px 10px">${fmtD(c.fecha)}</td><td style="padding:6px 10px">${c.proveedor_id||’—’}</td>
+<td style="padding:6px 10px">${c.concepto||’—’}${c.adjunto_pdf?’ 📎’:’’}</td>
+<td style="padding:6px 10px;font-family:monospace">${fmt(c.base_imponible)}</td>
+<td style="padding:6px 10px">${c.iva_pct}</td>
+<td style="padding:6px 10px;font-weight:700;font-family:monospace;color:var(--amber)">${fmt(tot)}</td>
+<td style="padding:6px 10px">${bE(c.estado_pago)}</td>
+<td style="padding:6px 10px">${c.adjunto_pdf?`<button class="btn btn-ghost btn-sm" style="font-size:10px" onclick="coVerPDFById('${c.id}')">📄 PDF</button>`:’’}</td>
+</tr>`}).join('')}</tbody> </table>`;
+}
+
+function renderExpFacturas(body){
+const pid = _expProyId;
+const items = (FC||[]).filter(f=>f.proyecto_id===pid).sort((a,b)=>b.fecha_emision>a.fecha_emision?1:-1);
+if(!items.length){ body.innerHTML=’<div style="text-align:center;padding:32px;color:var(--text-soft)">Sin facturas en este proyecto</div>’; return; }
+body.innerHTML = `<table style="width:100%;font-size:12px;border-collapse:collapse"> <thead><tr style="background:var(--navy);color:#fff">${['Nº Factura','Fecha','Tipo','Concepto','Base','Total','Estado'].map(h=>`<th style="padding:7px 10px;text-align:left">${h}</th>`).join('')}</tr></thead> <tbody>${items.map((f,i)=>{const tot=(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100);return`<tr style="background:${i%2?'#fafafa':'#fff'}">
+<td style="padding:6px 10px;font-weight:600">${f.num_factura||’—’}</td>
+<td style="padding:6px 10px">${fmtD(f.fecha_emision)}</td>
+<td style="padding:6px 10px">${bE(f.tipo_factura||‘Venta’)}</td>
+<td style="padding:6px 10px">${f.concepto||’—’}</td>
+<td style="padding:6px 10px;font-family:monospace">${fmt(f.base_imponible)}</td>
+<td style="padding:6px 10px;font-weight:700;font-family:monospace">${fmt(tot)}</td>
+<td style="padding:6px 10px">${bE(f.estado)}</td>
+</tr>`}).join(’’)}</tbody>
+
+  </table>`;
+}
+
+function renderExpSubcontratas(body){
+const pid = _expProyId;
+const items = (ScC||[]).filter(s=>s.proyecto_id===pid);
+if(!items.length){ body.innerHTML=’<div style="text-align:center;padding:32px;color:var(--text-soft)">Sin subcontratas en este proyecto</div>’; return; }
+const total = items.reduce((s,c)=>s+(c.importe||0)*(1+ivaPct(c.iva_pct)/100),0);
+body.innerHTML = ` <div style="margin-bottom:10px;font-size:12px;color:var(--text-soft)">Total: <strong>${fmt(total)}</strong></div> <table style="width:100%;font-size:12px;border-collapse:collapse"> <thead><tr style="background:var(--navy);color:#fff">${['Fecha','Empresa','Trabajo','Importe','Estado'].map(h=>`<th style="padding:7px 10px;text-align:left">${h}</th>`).join('')}</tr></thead> <tbody>${items.map((s,i)=>`<tr style="background:${i%2?'#fafafa':'#fff'}">
+<td style="padding:6px 10px">${fmtD(s.fecha)}</td>
+<td style="padding:6px 10px">${s.proveedor_id||’—’}</td>
+<td style="padding:6px 10px">${s.trabajo||’—’}</td>
+<td style="padding:6px 10px;font-weight:700;font-family:monospace">${fmt((s.importe||0)*(1+ivaPct(s.iva_pct)/100))}</td>
+<td style="padding:6px 10px">${bE(s.estado_pago)}</td>
+</tr>`).join('')}</tbody> </table>`;
+}
+
+function renderExpHoras(body){
+const pid = _expProyId;
+const items = (HC||[]).filter(h=>h.proyecto_id===pid).sort((a,b)=>b.fecha>a.fecha?1:-1);
+if(!items.length){ body.innerHTML=’<div style="text-align:center;padding:32px;color:var(--text-soft)">Sin horas registradas en este proyecto</div>’; return; }
+const totH = items.reduce((s,h)=>s+(h.horas||0),0);
+const totE = items.reduce((s,h)=>s+(h.total||0),0);
+body.innerHTML = ` <div style="margin-bottom:10px;font-size:12px;color:var(--text-soft)">Total: <strong>${totH.toFixed(1)}h</strong> · Coste: <strong>${fmt(totE)}</strong></div> <table style="width:100%;font-size:12px;border-collapse:collapse"> <thead><tr style="background:var(--navy);color:#fff">${['Fecha','Trabajador','Descripción','Horas','€/h','Total'].map(h=>`<th style="padding:7px 10px;text-align:left">${h}</th>`).join('')}</tr></thead> <tbody>${items.map((h,i)=>`<tr style="background:${i%2?'#fafafa':'#fff'}">
+<td style="padding:6px 10px">${fmtD(h.fecha)}</td>
+<td style="padding:6px 10px">${h.trabajador||’—’}</td>
+<td style="padding:6px 10px">${h.descripcion||’—’}</td>
+<td style="padding:6px 10px;font-family:monospace">${h.horas||0}h</td>
+<td style="padding:6px 10px;font-family:monospace">${h.coste_hora||0}€</td>
+<td style="padding:6px 10px;font-weight:700;font-family:monospace">${fmt(h.total)}</td>
+</tr>`).join('')}</tbody> </table>`;
+}
+
+function renderExpNotas(body){
+const pid = _expProyId;
+const p = PC.find(x=>x.proyecto_id===pid);
+body.innerHTML = ` <div style="font-size:12px;margin-bottom:8px;color:var(--text-soft)">Notas del proyecto:</div> <textarea id="exp-notas-txt" style="width:100%;min-height:180px;padding:12px;border:1px solid var(--border);border-radius:8px;font-size:13px;resize:vertical">${p?.notas||''}</textarea> <div style="margin-top:10px;display:flex;gap:8px"> <button class="btn btn-primary btn-sm" onclick="expGuardarNotas()">💾 Guardar notas</button> </div>`;
+}
+
+async function expGuardarNotas(){
+const pid = _expProyId;
+const p = PC.find(x=>x.proyecto_id===pid);
+if(!p) return;
+const notas = document.getElementById(‘exp-notas-txt’)?.value||’’;
+try{
+await sbPatch(‘proyectos’, p.id, {notas});
+p.notas = notas;
+toast(‘Notas guardadas ✅’);
+}catch(e){ toast(’Error: ’+e.message,‘error’); }
+}
+
+async function expCambiarEstado(){
+const pid = _expProyId;
+const p = PC.find(x=>x.proyecto_id===pid);
+if(!p) return;
+const estados = [‘Nuevo lead’,‘Presupuesto enviado’,‘Aprobado’,‘En ejecución’,‘Finalizado’,‘Facturado’,‘Cobrado’,‘Cancelado’];
+const colores  = [’#e3f0ff’,’#fff8e1’,’#d5e8d4’,’#e8f4ff’,’#e8ffe8’,’#d5e8d4’,’#1e6b3d’,’#fdecea’];
+const icosMap  = {‘Nuevo lead’:‘💡’,‘Presupuesto enviado’:‘📤’,‘Aprobado’:‘✅’,‘En ejecución’:‘🔨’,‘Finalizado’:‘🏁’,‘Facturado’:‘🧾’,‘Cobrado’:‘💰’,‘Cancelado’:‘❌’};
+document.getElementById(‘estado-proy-nombre’).textContent = `Proyecto: ${p.proyecto_id} · ${p.nombre}`;
+document.getElementById(‘estado-proy-btns’).innerHTML = estados.map((e,i)=>` <button onclick="expSetEstado('${e}')" style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;border:2px solid ${e===p.estado?'var(--navy)':'var(--border)'};background:${colores[i]};cursor:pointer;font-size:13px;font-weight:${e===p.estado?'700':'400'};transition:all .1s" onmouseover="this.style.borderColor='var(--navy)'" onmouseout="this.style.borderColor='${e===p.estado?'var(--navy)':'var(--border)'}'">${icosMap[e]||'•'} ${e}${e===p.estado?' <span style=\'font-size:10px;color:var(--navy)\'>← actual</span>':''}</button>`).join(’’);
+openModal(‘m-estado-proy’);
+}
+
+async function expSetEstado(nuevo){
+const pid = _expProyId;
+const p = PC.find(x=>x.proyecto_id===pid);
+if(!p || p.estado===nuevo){ closeModal(‘m-estado-proy’); return; }
+try{
+await sbPatch(‘proyectos’, p.id, {estado: nuevo});
+p.estado = nuevo;
+document.getElementById(‘exp-estado-badge’).innerHTML = `<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:10px;background:var(--navy);color:#fff">${nuevo}</span>`;
+toast(`Estado → ${nuevo} ✅`);
+closeModal(‘m-estado-proy’);
+if(_vistaProyActual===‘kanban’) renderKanban();
+renderAlertasGerencia();
+}catch(e){ toast(’Error: ’+e.message,‘error’); }
+}
+
+function expEditarProyecto(){
+const pid = _expProyId;
+const p = PC.find(x=>x.proyecto_id===pid);
+if(!p) return;
+closeModal(‘m-expediente’);
+editProyecto(p.id);
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// FASE 2 — GANTT BÁSICO DE FASES POR PROYECTO
+// ══════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════
+// EXPEDIENTE — PESTAÑA RENTABILIDAD (presupuesto vs real)
+// ══════════════════════════════════════════════════════════════════════
+async function renderExpRentabilidad(body){
+const pid = _expProyId;
+body.innerHTML = ‘<div style="text-align:center;padding:20px;color:var(--text-soft)">Calculando…</div>’;
+
+// Cargar líneas de presupuesto
+let lineas = [];
+try{ lineas = await sbGet(‘presupuesto_lineas’, `?proyecto_id=eq.${pid}&order=orden.asc`); }catch(e){}
+
+const compProy = (CoC||[]).filter(c=>c.proyecto_id===pid);
+const factProy = (FC||[]).filter(f=>f.proyecto_id===pid&&(f.tipo_factura||‘Venta’)===‘Venta’);
+const scProy   = (ScC||[]).filter(s=>s.proyecto_id===pid);
+const horProy  = (HC||[]).filter(h=>h.proyecto_id===pid);
+
+// Totales presupuesto
+const caps = lineas.filter(l=>l.es_capitulo);
+const lins = lineas.filter(l=>!l.es_capitulo);
+let presTotalVenta = 0;
+lins.forEach(l=>{ const pv=l.precio_venta||0,ci=l.ci_gg_bi_pct||0,sub=(l.cantidad||0)*pv; presTotalVenta+=ci>0?sub*(1+ci/100):sub; });
+
+// Totales reales
+const costesReales = compProy.reduce((s,c)=>s+(c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100),0)
++ scProy.reduce((s,c)=>s+(c.importe||0)*(1+ivaPct(c.iva_pct)/100),0)
++ horProy.reduce((s,h)=>s+(h.total||0),0);
+const ventasReales = factProy.reduce((s,f)=>s+(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100),0);
+
+const benefPres = presTotalVenta - presTotalVenta*(1-0.19); // presupuesto margen teórico (estimación si no hay desglose)
+const benefReal = ventasReales - costesReales;
+const margenReal = ventasReales>0?(benefReal/ventasReales)*100:0;
+const margenPres = presTotalVenta>0?19:0; // placeholder si no se puede calcular desglosado
+
+// Desglose por capítulo
+const capRows = caps.map(cap=>{
+const capLines = lins.filter(l=>l.partida===cap.descripcion||false);
+const presCapTotal = capLines.reduce((s,l)=>{ const pv=l.precio_venta||0,ci=l.ci_gg_bi_pct||0,sub=(l.cantidad||0)*pv; return s+(ci>0?sub*(1+ci/100):sub); },0);
+return { nombre: cap.descripcion, pres: presCapTotal };
+});
+
+// Build visual
+const pct = (val,max) => max>0?Math.min(100,val/max*100):0;
+const barColor = (val,ref) => val<= ref*1.05?‘var(–green)’:val<=ref*1.2?‘var(–amber)’:‘var(–red)’;
+
+body.innerHTML = `
+
+  <!-- Barras comparativas principales -->
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px">
+    ${[
+      ['Presupuesto', presTotalVenta, 'var(--navy)', ''],
+      ['Ventas reales', ventasReales, 'var(--green)', ''],
+      ['Costes reales', costesReales, barColor(costesReales, presTotalVenta*0.75), ''],
+      ['Beneficio real', benefReal, benefReal>=0?'var(--green)':'var(--red)', benefReal>=0?'':'⚠️'],
+    ].map(([label,val,color,warn])=>`
+      <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px">
+        <div style="font-size:10px;color:var(--text-soft);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">${warn} ${label}</div>
+        <div style="font-size:20px;font-weight:800;color:${color}">${val!==0?fmt(val):'—'}</div>
+      </div>`).join('')}
+  </div>
+
+  <!-- Margen visual -->
+
+  <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:18px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <span style="font-size:13px;font-weight:700;color:var(--navy)">Margen real del proyecto</span>
+      <span style="font-size:20px;font-weight:800;color:${margenReal>=20?'var(--green)':margenReal>=10?'var(--amber)':'var(--red)'}">${fmtP(margenReal)}</span>
+    </div>
+    <div style="height:12px;background:#f0f0f0;border-radius:6px;overflow:hidden">
+      <div style="height:100%;width:${Math.max(0,Math.min(100,margenReal)).toFixed(1)}%;background:${margenReal>=20?'var(--green)':margenReal>=10?'var(--amber)':'var(--red)'};border-radius:6px;transition:width .5s"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:10px;color:var(--text-soft)">
+      <span>0%</span><span style="color:var(--amber)">10% mínimo</span><span style="color:var(--green)">20% objetivo</span><span>100%</span>
+    </div>
+  </div>
+
+  <!-- Tabla comparativa presupuesto vs real -->
+
+  <div style="background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden">
+    <div style="padding:12px 16px;border-bottom:1px solid var(--border);font-size:12px;font-weight:700;color:var(--navy)">📋 Comparativa presupuesto vs real</div>
+    <table style="width:100%;font-size:12px;border-collapse:collapse">
+      <thead><tr style="background:#f8fafd">
+        <th style="padding:8px 12px;text-align:left;color:var(--text-soft);font-weight:600">Concepto</th>
+        <th style="padding:8px 12px;text-align:right;color:var(--text-soft);font-weight:600">Presupuesto</th>
+        <th style="padding:8px 12px;text-align:right;color:var(--text-soft);font-weight:600">Real</th>
+        <th style="padding:8px 12px;text-align:right;color:var(--text-soft);font-weight:600">Desviación</th>
+      </tr></thead>
+      <tbody>
+        <tr style="border-top:1px solid #f0f0f0">
+          <td style="padding:8px 12px;font-weight:600">💰 Ingresos (ventas/facturas)</td>
+          <td style="padding:8px 12px;text-align:right;font-family:monospace;color:var(--navy)">${fmt(presTotalVenta)}</td>
+          <td style="padding:8px 12px;text-align:right;font-family:monospace;color:var(--green);font-weight:700">${fmt(ventasReales)}</td>
+          <td style="padding:8px 12px;text-align:right;font-family:monospace;color:${ventasReales>=presTotalVenta?'var(--green)':'var(--amber)'}">${fmt(ventasReales-presTotalVenta)}</td>
+        </tr>
+        <tr style="border-top:1px solid #f0f0f0">
+          <td style="padding:8px 12px;font-weight:600">🛒 Costes totales (compras+subcontratas+MO)</td>
+          <td style="padding:8px 12px;text-align:right;font-family:monospace;color:var(--navy)">—</td>
+          <td style="padding:8px 12px;text-align:right;font-family:monospace;color:var(--amber);font-weight:700">${fmt(costesReales)}</td>
+          <td style="padding:8px 12px;text-align:right">—</td>
+        </tr>
+        <tr style="border-top:1px solid #f0f0f0;background:#f8fafd">
+          <td style="padding:8px 12px;font-weight:700">📊 Resultado / Beneficio</td>
+          <td style="padding:8px 12px;text-align:right;font-family:monospace;font-weight:700;color:var(--navy)">—</td>
+          <td style="padding:8px 12px;text-align:right;font-family:monospace;font-weight:800;color:${benefReal>=0?'var(--green)':'var(--red)'}">${fmt(benefReal)}</td>
+          <td style="padding:8px 12px;text-align:right;font-size:14px;font-weight:800;color:${margenReal>=20?'var(--green)':margenReal>=10?'var(--amber)':'var(--red)'}">M: ${fmtP(margenReal)}</td>
+        </tr>
+        <tr style="border-top:2px solid var(--border)">
+          <td colspan="4" style="padding:6px 12px 2px;font-size:10px;color:var(--text-soft)">
+            Desglose costes: Compras ${fmt(compProy.reduce((s,c)=>s+(c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100),0))} 
+            · Subcontratas ${fmt(scProy.reduce((s,c)=>s+(c.importe||0)*(1+ivaPct(c.iva_pct)/100),0))} 
+            · Mano de obra ${fmt(horProy.reduce((s,h)=>s+(h.total||0),0))}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  ${lineas.length===0?`<div style="margin-top:12px;padding:10px 14px;background:var(--amber-soft);border-radius:8px;font-size:11px;color:var(--amber)">⚠️ No hay presupuesto creado para este proyecto. Para ver la comparativa completa, crea el presupuesto desde la sección <strong>Presupuesto</strong>.</div>`:''}
+  `;
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// EXPEDIENTE — PESTAÑA GANTT / PLANIFICACIÓN
+// ══════════════════════════════════════════════════════════════════════
+async function renderExpGantt(body){
+const pid = _expProyId;
+const p = PC.find(x=>x.proyecto_id===pid);
+body.innerHTML = ‘<div style="text-align:center;padding:20px;color:var(--text-soft)">Cargando planificación…</div>’;
+
+let lineas = [];
+try{ lineas = await sbGet(‘presupuesto_lineas’, `?proyecto_id=eq.${pid}&order=orden.asc`); }catch(e){}
+
+const caps = lineas.filter(l=>l.es_capitulo);
+const fechaIni = p?.fecha_inicio ? new Date(p.fecha_inicio+‘T00:00:00’) : new Date();
+const hoy = new Date(); hoy.setHours(0,0,0,0);
+
+// Calcular rango del proyecto basado en compras por fechas
+const compProy = (CoC||[]).filter(c=>c.proyecto_id===pid&&c.fecha);
+const fechasFact = […compProy.map(c=>new Date(c.fecha+‘T00:00:00’))];
+const minDate = fechasFact.length ? new Date(Math.min(…fechasFact)) : fechaIni;
+const maxDate = fechasFact.length ? new Date(Math.max(…fechasFact)) : new Date(fechaIni.getTime()+90*864e5);
+const spanMs = Math.max(maxDate-minDate, 30*864e5);
+
+// Si hay capítulos en presupuesto, usarlos como filas de Gantt
+// Si no, usar fases genéricas estimadas
+let fases = [];
+if(caps.length > 0){
+fases = caps.map((cap,i) => {
+// Estimación lineal: distribuir fases a lo largo del proyecto
+const offset = i / caps.length;
+const dur = 1 / caps.length;
+const start = new Date(fechaIni.getTime() + offset*spanMs);
+const end   = new Date(fechaIni.getTime() + (offset+dur)*spanMs);
+// Compras reales en ese capítulo (buscar por concepto similar)
+const capComp = compProy.filter(c=>(c.concepto||’’).toLowerCase().includes((cap.descripcion||’’).toLowerCase().substring(0,8)));
+return { nombre: cap.descripcion, start, end, costes: capComp.reduce((s,c)=>s+(c.base_imponible||0),0) };
+});
+} else {
+// Fases genéricas para proyectos sin presupuesto detallado
+const fasesDef = [
+{nombre:‘Demolición y estructura’, offset:0, dur:0.15},
+{nombre:‘Instalaciones (fontanería, elec.)’, offset:0.1, dur:0.25},
+{nombre:‘Albañilería y revestimientos’, offset:0.25, dur:0.30},
+{nombre:‘Carpintería y acabados’, offset:0.50, dur:0.25},
+{nombre:‘Pintura’, offset:0.70, dur:0.15},
+{nombre:‘Mobiliario y equipamiento’, offset:0.80, dur:0.20},
+];
+fases = fasesDef.map(f=>({
+nombre: f.nombre,
+start: new Date(fechaIni.getTime()+f.offset*spanMs),
+end: new Date(fechaIni.getTime()+(f.offset+f.dur)*spanMs),
+costes: 0, estimada: true
+}));
+}
+
+// Timeline range
+const ganttStart = new Date(Math.min(fechaIni, minDate));
+const ganttEnd   = new Date(Math.max(maxDate.getTime()+30*864e5, new Date(fechaIni.getTime()+120*864e5)));
+const ganttSpan  = ganttEnd - ganttStart;
+
+// Month headers
+const months = [];
+let cur = new Date(ganttStart.getFullYear(), ganttStart.getMonth(), 1);
+while(cur < ganttEnd){
+months.push(new Date(cur));
+cur = new Date(cur.getFullYear(), cur.getMonth()+1, 1);
+}
+
+const toX = d => ((d - ganttStart) / ganttSpan * 100).toFixed(2)+’%’;
+const toW = (s,e) => (Math.max(0,(e-s)/ganttSpan*100)).toFixed(2)+’%’;
+
+// Compras como puntos en el timeline
+const compDots = compProy.map(c=>({fecha:new Date(c.fecha+‘T00:00:00’), label:c.proveedor_id||c.concepto||’’, importe:c.base_imponible||0}));
+
+const MESES = [‘Ene’,‘Feb’,‘Mar’,‘Abr’,‘May’,‘Jun’,‘Jul’,‘Ago’,‘Sep’,‘Oct’,‘Nov’,‘Dic’];
+const hoyX = toX(hoy);
+
+body.innerHTML = `
+
+  <div style="margin-bottom:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <div style="font-size:12px;color:var(--text-soft)">
+      ${caps.length>0?`📋 ${caps.length} capítulos del presupuesto`:`<span style="color:var(--amber)">⚠️ Sin presupuesto — mostrando fases estimadas</span>`}
+      · ${compProy.length} compras registradas
+      · Inicio: ${fmtD(p?.fecha_inicio||fechaIni.toISOString().split('T')[0])}
+    </div>
+    ${caps.length===0?`<button class="btn btn-ghost btn-sm" onclick="closeModal('m-expediente');navTo('presupuesto')" style="font-size:11px">+ Crear presupuesto detallado</button>`:''}
+  </div>
+
+  <!-- Gantt chart -->
+
+  <div style="background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden">
+    <!-- Header de meses -->
+    <div style="position:relative;height:28px;background:var(--navy);border-bottom:1px solid rgba(255,255,255,.15)">
+      ${months.map(m=>`<div style="position:absolute;left:${toX(m)};top:0;height:100%;border-left:1px solid rgba(255,255,255,.2);display:flex;align-items:center;padding-left:6px">
+        <span style="font-size:9px;font-weight:600;color:rgba(255,255,255,.9);white-space:nowrap">${MESES[m.getMonth()]} ${m.getFullYear()}</span>
+      </div>`).join('')}
+    </div>
+    <!-- Filas de fases -->
+    <div style="position:relative">
+      ${fases.map((f,i)=>`
+      <div style="display:flex;align-items:center;height:38px;border-bottom:1px solid #f5f5f5;background:${i%2?'#fff':'#fafcff'}">
+        <div style="width:180px;flex-shrink:0;padding:0 12px;font-size:11px;font-weight:600;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-right:1px solid #eee">${f.nombre}</div>
+        <div style="flex:1;position:relative;height:100%">
+          <!-- Bar de fase -->
+          <div style="position:absolute;left:${toX(f.start)};width:${toW(f.start,f.end)};top:50%;transform:translateY(-50%);height:18px;background:${f.estimada?'repeating-linear-gradient(45deg,var(--blue-soft),var(--blue-soft) 4px,var(--blue-light) 4px,var(--blue-light) 8px)':'var(--navy)'};border-radius:4px;opacity:.8;min-width:4px"></div>
+          <!-- Puntos de compras -->
+          ${compDots.filter(c=>c.fecha>=f.start&&c.fecha<=f.end).map(c=>`
+            <div title="${c.label} — ${fmt(c.importe)}" style="position:absolute;left:${toX(c.fecha)};top:50%;transform:translate(-50%,-50%);width:8px;height:8px;background:var(--amber);border-radius:50%;border:2px solid #fff;cursor:help;z-index:2"></div>`).join('')}
+        </div>
+      </div>`).join('')}
+      <!-- Línea HOY -->
+      ${hoy>=ganttStart&&hoy<=ganttEnd?`<div style="position:absolute;left:${hoyX};top:0;bottom:0;width:2px;background:var(--red);opacity:.7;pointer-events:none;z-index:3">
+        <div style="position:absolute;top:4px;left:4px;font-size:9px;font-weight:700;color:var(--red);white-space:nowrap;background:rgba(255,255,255,.9);padding:1px 4px;border-radius:3px">HOY</div>
+      </div>`:''}
+    </div>
+    <!-- Leyenda -->
+    <div style="padding:8px 12px;border-top:1px solid #f0f0f0;display:flex;gap:16px;font-size:10px;color:var(--text-soft)">
+      <span>◼ Fase planificada</span>
+      <span style="color:var(--amber)">● Compra registrada</span>
+      ${caps.length===0?'<span style="color:var(--blue-soft)">▦ Estimación automática</span>':''}
+      <span style="color:var(--red)">— Hoy</span>
+    </div>
+  </div>
+
+  <!-- Añadir fechas manualmente si no hay presupuesto -->
+
+${caps.length===0?`
+
+  <div style="margin-top:12px;padding:12px 14px;background:var(--blue-light);border-radius:8px;font-size:11px;color:var(--navy)">
+    💡 <strong>Tip:</strong> Crea el presupuesto con capítulos (Demolición, Instalaciones, Albañilería…) 
+    y el Gantt se generará automáticamente distribuyendo los capítulos a lo largo del proyecto.
+  </div>`:''}
+  `;
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// FICHA DE OBRA — vista rápida para uso en campo (móvil)
+// ══════════════════════════════════════════════════════════════════════
+function abrirFichaObra(proyId){
+const p = PC.find(x=>x.proyecto_id===proyId);
+if(!p){ toast(‘Proyecto no encontrado’,‘error’); return; }
+
+document.getElementById(‘ficha-subtitle’).textContent = `${p.proyecto_id} · ${p.estado||''}`;
+
+const compProy = (CoC||[]).filter(c=>c.proyecto_id===proyId);
+const factProy = (FC||[]).filter(f=>f.proyecto_id===proyId&&(f.tipo_factura||‘Venta’)===‘Venta’);
+const horProy  = (HC||[]).filter(h=>h.proyecto_id===proyId);
+
+const compTot = compProy.reduce((s,c)=>s+(c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100),0);
+const factTot = factProy.reduce((s,f)=>s+(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100),0);
+const hTot = horProy.reduce((s,h)=>s+(h.horas||0),0);
+
+const compPend = compProy.filter(c=>c.estado_pago===‘Pendiente’);
+const factPend = factProy.filter(f=>f.estado!==‘Cobrada’);
+
+document.getElementById(‘ficha-body’).innerHTML = ` <!-- Info obra --> <div style="background:var(--navy);color:#fff;border-radius:10px;padding:14px 16px;margin-bottom:14px"> <div style="font-size:16px;font-weight:800;margin-bottom:4px">${p.nombre}</div> <div style="font-size:12px;opacity:.75">${p.cliente_id||''}</div> ${p.direccion_obra?`<div style="font-size:11px;opacity:.6;margin-top:4px">📍 ${p.direccion_obra}</div>`:’’}
+<div style="margin-top:10px;display:inline-block;background:rgba(255,255,255,.15);padding:3px 12px;border-radius:10px;font-size:12px;font-weight:700">${p.estado||’—’}</div>
+</div>
+
+```
+<!-- KPIs rápidos -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+  ${[
+    ['🛒 Compras', fmt(compTot), 'var(--amber)'],
+    ['🧾 Facturado', fmt(factTot), 'var(--green)'],
+    ['⏱ Horas', hTot.toFixed(1)+'h', 'var(--navy)'],
+    ['👷 Subcontratas', `${(ScC||[]).filter(s=>s.proyecto_id===proyId).length} reg.`, 'var(--text-mid)'],
+  ].map(([k,v,c])=>`<div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:10px 12px"><div style="font-size:10px;color:var(--text-soft)">${k}</div><div style="font-size:16px;font-weight:800;color:${c}">${v}</div></div>`).join('')}
+</div>
+
+<!-- Pendientes -->
+${compPend.length||factPend.length?`
+<div style="background:#fff;border:1px solid var(--border);border-radius:10px;margin-bottom:14px">
+  <div style="padding:10px 14px;font-size:12px;font-weight:700;border-bottom:1px solid var(--border);color:var(--navy)">⚠️ Pendientes</div>
+  ${compPend.slice(0,3).map(c=>`<div style="display:flex;justify-content:space-between;padding:9px 14px;border-bottom:1px solid #f5f5f5;font-size:12px">
+    <span>🛒 ${c.proveedor_id||c.concepto||'—'}</span>
+    <span style="color:var(--red);font-weight:700">${fmt((c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100))}</span>
+  </div>`).join('')}
+  ${factPend.slice(0,2).map(f=>`<div style="display:flex;justify-content:space-between;padding:9px 14px;border-bottom:1px solid #f5f5f5;font-size:12px">
+    <span>🧾 Fra. ${f.num_factura||'—'}</span>
+    <span style="color:var(--amber);font-weight:700">${fmt((f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100))}</span>
+  </div>`).join('')}
+</div>`:``}
+
+<!-- Notas -->
+${p.notas?`<div style="background:var(--amber-soft);border:1px solid var(--amber);border-radius:8px;padding:12px 14px;font-size:12px;color:var(--amber);margin-bottom:14px">
+  <div style="font-weight:700;margin-bottom:4px">📝 Notas</div>${p.notas}</div>`:''}
+
+<!-- Acciones rápidas -->
+<div style="display:flex;flex-direction:column;gap:8px">
+  <button class="btn btn-primary" onclick="closeModal('m-ficha-obra');abrirExpediente('${proyId}')" style="justify-content:center;padding:12px">📁 Ver expediente completo</button>
+  <button class="btn btn-ghost" onclick="closeModal('m-ficha-obra');editProyecto('${p.id}')" style="justify-content:center;padding:10px">✏️ Editar proyecto</button>
+</div>
+```
+
+`;
+openModal(‘m-ficha-obra’);
+}
+
+// Botón “Ficha de obra” en Kanban cards y tabla
+function renderExpResumenConFicha(body){
+// Helper: override para añadir botón ficha en el footer del resumen
+renderExpResumen(body);
+// Añadir botón ficha al final
+const extra = document.createElement(‘div’);
+extra.style.marginTop = ‘16px’;
+extra.innerHTML = `<button class="btn btn-ghost btn-sm" onclick="closeModal('m-expediente');abrirFichaObra('${_expProyId}')" style="font-size:11px">📱 Ver ficha de obra (móvil)</button>`;
+body.appendChild(extra);
+}
+// Patch expTab para usar versión con ficha
+const _origExpTab = expTab;
+expTab = function(tab){
+_origExpTab(tab);
+if(tab===‘resumen’){
+const body = document.getElementById(‘exp-body’);
+if(body){
+const extra = document.createElement(‘div’);
+extra.style.cssText = ‘margin-top:14px;padding-top:12px;border-top:1px solid var(–border)’;
+extra.innerHTML = `<button class="btn btn-ghost btn-sm" onclick="closeModal('m-expediente');setTimeout(()=>abrirFichaObra('${_expProyId}'),100)" style="font-size:11px;color:var(--navy)">📱 Ficha de obra (vista móvil)</button>`;
+body.appendChild(extra);
+}
+}
+};
+
+// Patch loadProyectos to also refresh kanban if visible
+const _origLoadProyectos = loadProyectos;
+loadProyectos = async function(){
+await _origLoadProyectos();
+if(_vistaProyActual===‘kanban’) renderKanban();
+};
 
 </script>
 
