@@ -255,6 +255,30 @@ tbody td{padding:7px 10px;vertical-align:middle}
 .horario-day.festivo{background:#f3e5f5;border-color:#8e24aa}
 .horario-day.teletrabajo{background:#e8f5e9;border-color:#43a047}
 .horario-day-tipo{font-size:9px;font-weight:600;text-align:center;line-height:1.1;max-width:100%}
+
+/* ─── CATÁLOGOS ─── */
+.cat-grid{display:flex;flex-wrap:wrap;gap:14px;padding:4px 0 20px 0}
+.cat-card{background:var(--white);border:2px solid var(--border);border-radius:var(--radius);
+  padding:20px 22px;cursor:pointer;transition:all .18s;min-width:170px;flex:0 0 auto;
+  display:flex;flex-direction:column;align-items:center;text-align:center;position:relative}
+.cat-card:hover{border-color:var(--copper);box-shadow:var(--shadow);transform:translateY(-2px)}
+.cat-card.active{border-color:var(--copper);background:var(--copper-light)}
+.cat-card-new{border-style:dashed;opacity:.7}
+.cat-card-new:hover{opacity:1;border-color:var(--navy-mid)}
+.cat-card-icon{font-size:32px;margin-bottom:8px;line-height:1}
+.cat-card-name{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:4px}
+.cat-card-desc{font-size:11px;color:var(--text-soft);line-height:1.4}
+.cat-panel{display:none}
+.cat-panel.open{display:block}
+.cat-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;
+  padding-bottom:12px;border-bottom:2px solid var(--border)}
+.cat-back{background:none;border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:5px 12px;font-size:12px;cursor:pointer;color:var(--text-mid);font-weight:600;
+  transition:all .15s}
+.cat-back:hover{background:var(--sand);color:var(--navy);border-color:var(--navy-mid)}
+.cat-header-title{font-size:15px;font-weight:700;color:var(--navy)}
+.cat-header-desc{font-size:11px;color:var(--text-soft);margin-left:auto}
+
 </style>
 <script src="./PAU INTERIORISMO · Gestión_files/xlsx.full.min.js.descargar"></script>
 </head>
@@ -293,9 +317,7 @@ tbody td{padding:7px 10px;vertical-align:middle}
     <div class="nav-item" data-view="comparativa"><span class="ni">⚖️</span><span>Comparativa ofertas</span></div>
     <div class="nav-item" data-view="tarifario"><span class="ni">📋</span><span>Tarifario</span></div>
     <div class="nav-item" data-view="cype"><span class="ni">📐</span><span>CYPE 2026</span><span class="nav-badge" id="cype-badge">524</span></div>
-    <div class="nav-item" data-view="saitra"><span class="ni">🍳</span><span>Valorador Saitra</span></div>
-    <div class="nav-item" data-view="imex"><span class="ni">🚿</span><span>Griferías IMEX</span></div>
-    <div class="nav-item" data-view="interiorismo"><span class="ni">🛋</span><span>Interiorismo</span></div>
+    <div class="nav-item" data-view="catalogos"><span class="ni">📚</span><span>Catálogos</span></div>
   </div>
   <div class="nav-section">
     <div class="nav-label">Ejecución</div>
@@ -1106,8 +1128,45 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     </div>
 
     
-    <!-- ═══ VALORADOR SAITRA ═══ -->
-    <div class="view" id="view-saitra">
+
+    <!-- ═══ CATÁLOGOS ═══ -->
+    <div class="view" id="view-catalogos">
+
+      <!-- GRID DE FABRICANTES -->
+      <div id="cat-selector">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
+          color:var(--text-soft);margin-bottom:12px">Selecciona el catálogo de precios</div>
+        <div class="cat-grid">
+          <div class="cat-card" data-cat="saitra" onclick="catAbrir('saitra')">
+            <div class="cat-card-icon">🍳</div>
+            <div class="cat-card-name">Saitra</div>
+            <div class="cat-card-desc">Cocinas · Valorador por puntos × 0,99€</div>
+          </div>
+          <div class="cat-card" data-cat="imex" onclick="catAbrir('imex')">
+            <div class="cat-card-icon">🚿</div>
+            <div class="cat-card-name">IMEX</div>
+            <div class="cat-card-desc">Griferías baño &amp; cocina · Dto 40%</div>
+          </div>
+          <div class="cat-card" data-cat="campoaras" onclick="catAbrir('campoaras')">
+            <div class="cat-card-icon">🛁</div>
+            <div class="cat-card-name">Campoaras</div>
+            <div class="cat-card-desc">Muebles de baño · Series AQUA &amp; DROP</div>
+          </div>
+          <div class="cat-card cat-card-new" onclick="toast('Próximamente: añadir fabricante','info')">
+            <div class="cat-card-icon">＋</div>
+            <div class="cat-card-name" style="color:var(--text-soft)">Nuevo</div>
+            <div class="cat-card-desc">Añadir fabricante</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PANEL: SAITRA -->
+      <div class="cat-panel" id="cat-panel-saitra">
+        <div class="cat-header">
+          <button class="cat-back" onclick="catVolver()">← Catálogos</button>
+          <span class="cat-header-title">🍳 Saitra — Cocinas</span>
+          <span class="cat-header-desc">Puntos × 0,99€ · Margen ajustable</span>
+        </div>
 
       <!-- TOOLBAR SUPERIOR -->
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
@@ -1846,7 +1905,15 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     <!-- ═══ INTERIORISMO ═══ -->
 
     <!-- ═══ GRIFERÍAS IMEX ═══ -->
-    <div class="view" id="view-imex">
+      </div>
+
+      <!-- PANEL: IMEX -->
+      <div class="cat-panel" id="cat-panel-imex">
+        <div class="cat-header">
+          <button class="cat-back" onclick="catVolver()">← Catálogos</button>
+          <span class="cat-header-title" id="cat-imex-title">🚿 IMEX — Griferías</span>
+          <span class="cat-header-desc" id="cat-imex-desc">Tarifa +3% · Dto 40% · Margen ajustable</span>
+        </div>
       <!-- Estilos propios del presupuestador IMEX -->
       <style>
         .imex-layout{display:grid;grid-template-columns:1fr 360px;height:calc(100vh - 56px - 36px);gap:0;margin:-18px -20px}
@@ -2001,18 +2068,8 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       </div>
     </div>
 
-    <div class="view" id="view-interiorismo">
-      <div class="search-bar" style="gap:8px;flex-wrap:wrap;align-items:center">
-        <select class="form-input" style="width:195px;flex-shrink:0" id="filter-cliente-interiorismo" onchange="cascadaModuloInt()"><option value="">👤 Cliente…</option><option value="CLI-001">Miguel Zaragozá Garzón</option><option value="CLI-002">Vicenta Folch Gil</option><option value="CLI-033">Estudi Encis SL</option><option value="CLI-034">Vicenta Baixauli Hernandez</option><option value="CLI-H002">Mª PAU BRAVO JOSE</option><option value="CLI-H001">ROSA CHANZA SOLER</option><option value="CLI-H003">DESIRE NAVARRO MARI</option><option value="CLI-H004">CARMELO RODRIGUEZ VILA</option><option value="CLI-H032">Daniel palma gallardo</option><option value="CLI-H023">Miguel Zaragozá Garzón</option><option value="CLI-H006">Vicenta Folch Gil</option><option value="CLI-H008">VICENT MARI SERRA</option><option value="CLI-H009">FERNANDO JOSE SAN GERMAN IBORRA</option><option value="CLI-H010">REME IBORRA GIL</option><option value="CLI-H011">TONI TATAY DAVID</option><option value="CLI-H019">Jose Antonio Martos Ortiz</option><option value="CLI-H021">MERCEDES HIGUERAS GOMEZ</option><option value="CLI-H024">MICHELL BENITO</option><option value="CLI-H026">Ana María Palau Sastre</option><option value="CLI-H028">Lara Blasco - Lara Blasco Iborra</option><option value="CLI-H027">Laura Doria Gomez</option><option value="CLI-H031">Belinda</option><option value="CLI-H005">PATRI</option><option value="CLI-H012">Júlia Fabregat Mestre</option><option value="CLI-H013">Jose Manuel Garcia Seller Nº 7 Pta 4</option><option value="CLI-H014">4G daniel Dominguez</option><option value="CLI-H016">Sara Muñoz Abella</option><option value="CLI-H018">Amparo Forner Pastor</option><option value="CLI-H017">Yasmina Cabezuelo Alaminos</option><option value="CLI-H020">Rafael Francés Llàcer</option><option value="CLI-H022">Miguel cocina</option><option value="CLI-H007">Juanmi</option><option value="CLI-H015">4F Fernando</option><option value="CLI-H029">Francisco Navarro Garcia</option><option value="CLI-H025">URKO Y FRANCESC</option><option value="CLI-H030">Jose Manuel Pinzón Valbuena</option></select>
-        <select class="form-input" style="width:215px;flex-shrink:0" id="filter-proyecto-interiorismo" onchange="filtrarInteriorismo()"><option value="">📁 Proyecto…</option><option value="PRY-001">PRY-001 · Mobiliario de cocina</option><option value="PRY-002">PRY-002 · Rehabilitación lateral fachada</option><option value="PRY-003">PRY-003 · Pavimento/revestimiento vivienda.</option><option value="PRY-004">PRY-004 · Rehabilitación estudio</option><option value="PRY-005">PRY-005 · Trabajos en terraza</option></select>
-        <div class="search-wrap" style="flex:1;min-width:160px"><span class="search-icon">🔍</span><input class="form-input" id="search-interiorismo" placeholder="Buscar…" oninput="filterTable(&#39;interiorismo-tbody&#39;,&#39;search-interiorismo&#39;)"></div>
-        <button class="btn btn-copper" onclick="openModal(&#39;m-interiorismo&#39;)">＋ Añadir artículo</button>
       </div>
-      <div class="card">
-        <div class="card-header"><div class="card-title">🛋 Interiorismo &amp; Mobiliario<span id="interiorismo-count" style="font-size:11px;font-weight:400;color:var(--text-soft);margin-left:6px"></span></div></div>
-        <div class="table-wrap"><table><thead><tr><th>Proyecto</th><th>Estancia</th><th>Ref.</th><th>Descripción</th><th>Cant.</th><th>PVP Neto</th><th>Margen</th><th>Est. Prop.</th><th>Est. Pedido</th><th></th></tr></thead>
-        <tbody id="interiorismo-tbody"><tr><td colspan="10" class="loading">Cargando…</td></tr></tbody></table></div>
-      </div>
+
     </div>
 
     <!-- ═══ COMPRAS ═══ -->
@@ -3570,9 +3627,9 @@ const META={
   comparativa:{t:'Comparativa de ofertas',b:'Compara hasta 3 proveedores por trabajo'},
   tarifario:{t:'Tarifario · Catálogo propio',b:''},
   cype:{t:'CYPE 2026 · 524 partidas',b:'Base de precios importada de tu Excel'},
+  catalogos:{t:'Catálogos de Precios',b:'Saitra · IMEX · Campoaras — selecciona fabricante para presupuestar'},
   saitra:{t:'Valorador Saitra · Cocinas',b:'Puntos × 0,99€ = coste | Margen editable | Muebles de Línea integrados'},
   imex:{t:'Griferías IMEX 2024 · Presupuestador',b:'Catálogo completo · +3% tarifa · Dto 40% · Margen ajustable'},
-  interiorismo:{t:'Interiorismo & Mobiliario',b:'Propuestas · Pedidos · Márgenes'},
   compras:{t:'Compras',b:''},subcontratas:{t:'Subcontratas',b:''},
   horas:{t:'Control de horas',b:''},pedidos:{t:'Registro de pedidos',b:''},
   control_horario:{t:'Control horario anual',b:'Ficha por trabajador'},
@@ -12373,6 +12430,57 @@ document.addEventListener('DOMContentLoaded', ()=>{
     document.querySelectorAll('#view-presupuesto thead th:nth-child(7)').forEach(el=>el.style.display='none');
   }, 300);
 });
+
+
+// ═══════════════════════════════════════════════════════════════
+// MÓDULO CATÁLOGOS — Navegación entre fabricantes
+// ═══════════════════════════════════════════════════════════════
+let catActual = null;
+
+function catAbrir(fab){
+  catActual = fab;
+  document.getElementById('cat-selector').style.display = 'none';
+  document.querySelectorAll('.cat-panel').forEach(p => p.classList.remove('open'));
+  document.querySelectorAll('.cat-card[data-cat]').forEach(c => c.classList.remove('active'));
+  const card = document.querySelector('.cat-card[data-cat="'+fab+'"]');
+  if(card) card.classList.add('active');
+
+  if(fab === 'campoaras'){
+    // Campoaras: usa el mismo panel IMEX pero con tab campoaras
+    document.getElementById('cat-imex-title').innerHTML = '🛁 Campoaras — Muebles de Baño';
+    document.getElementById('cat-imex-desc').textContent = 'Tarifa +5% · Dto 40% · Series AQUA & DROP';
+    document.getElementById('cat-panel-imex').classList.add('open');
+    ixFillSeries();
+    ixSetTab('campoaras');
+  } else if(fab === 'imex'){
+    document.getElementById('cat-imex-title').innerHTML = '🚿 IMEX — Griferías';
+    document.getElementById('cat-imex-desc').textContent = 'Tarifa +3% · Dto 40% · Margen ajustable';
+    document.getElementById('cat-panel-imex').classList.add('open');
+    ixFillSeries();
+    ixSetTab('bano');
+  } else if(fab === 'saitra'){
+    document.getElementById('cat-panel-saitra').classList.add('open');
+    if(typeof saitraLineaTipoChange === 'function') saitraLineaTipoChange();
+  }
+  // Actualizar título topbar
+  const nombres = {saitra:'Saitra · Cocinas', imex:'IMEX · Griferías', campoaras:'Campoaras · Baño'};
+  document.getElementById('tb-title').textContent = 'Catálogos · ' + (nombres[fab]||fab);
+  document.getElementById('tb-bc').textContent = 'Catálogos de precios → Exportar al presupuesto';
+}
+
+function catVolver(){
+  catActual = null;
+  document.querySelectorAll('.cat-panel').forEach(p => p.classList.remove('open'));
+  document.querySelectorAll('.cat-card[data-cat]').forEach(c => c.classList.remove('active'));
+  document.getElementById('cat-selector').style.display = 'block';
+  document.getElementById('tb-title').textContent = 'Catálogos de Precios';
+  document.getElementById('tb-bc').textContent = 'Saitra · IMEX · Campoaras — selecciona fabricante para presupuestar';
+}
+
+loaders['catalogos'] = function(){
+  if(catActual) catAbrir(catActual);
+  else catVolver();
+};
 
 </script>
 
