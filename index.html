@@ -1127,14 +1127,12 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           </select>
           <span style="font-size:11px;color:var(--text-soft)">(se fija automático con acabado)</span>
         </div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <label style="font-size:12px;font-weight:600;color:var(--text-soft)">Dto. comercial:</label>
-          <input type="number" class="form-input" id="s-dto" value="5" min="0" max="60" style="width:60px" oninput="saitraPuntosPreview();saitraZocChange()">
-          <span style="font-size:12px;color:var(--text-soft)">%</span>
+        <div style="display:flex;align-items:center;gap:8px;background:#f0f9f0;padding:5px 10px;border-radius:6px;border:1px solid #c8e6c9">
+          <span style="font-size:11px;color:#2e7d32">💰 Coste = Pts × 0,99€ · PVP = Coste × (1+margen%)</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
           <label style="font-size:12px;font-weight:600;color:var(--text-soft)">Mi margen:</label>
-          <input type="number" class="form-input" id="s-margen" value="30" min="0" max="80" style="width:60px" oninput="saitraRecalc()">
+          <input type="number" class="form-input" id="s-margen" value="70" min="0" max="200" style="width:65px" oninput="saitraRecalc()">
           <span style="font-size:12px;color:var(--text-soft)">%</span>
         </div>
         <button class="btn btn-ghost btn-sm" onclick="saitraLimpiar()" style="margin-left:auto;color:var(--danger)">🗑 Limpiar todo</button>
@@ -1249,13 +1247,9 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <div>
             <label class="form-label">🪵 Casco interior</label>
             <select class="form-input" id="s-casco">
-              <option value="">— Sin especificar —</option>
-              <option value="Blanco estándar">Blanco estándar</option>
-              <option value="Igual a frente">Igual a frente</option>
-              <option value="HPL Roble">HPL Roble</option>
-              <option value="HPL Nogal">HPL Nogal</option>
-              <option value="HPL Grafito">HPL Grafito</option>
-              <option value="Otro (ver notas)">Otro (ver notas)</option>
+              <option value="Cotton" selected>Cotton (defecto)</option>
+              <option value="Blanco">Blanco</option>
+              <option value="Antracita">Antracita</option>
             </select>
           </div>
 
@@ -1280,6 +1274,47 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 
         <!-- ─── PANEL IZQUIERDO ─── -->
         <div style="display:flex;flex-direction:column;gap:10px">
+
+          <!-- MUEBLES DE LÍNEA (Colgantes/Columnas/Bases Gola/Sobrecolumnas/Sobreencimeras) -->
+          <div class="card" style="padding:14px;border-left:4px solid #1565c0">
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#1565c0;margin-bottom:10px;letter-spacing:.05em">📐 Mueble de Línea (pts × 0,99€)</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+              <div>
+                <label class="form-label">Tipo</label>
+                <select class="form-input" id="sl-tipo" onchange="saitraLineaTipoChange()"></select>
+              </div>
+              <div>
+                <label class="form-label">Acabado</label>
+                <select class="form-input" id="sl-acabado" onchange="saitraLineaPreview()">
+                  <option value="PET" selected>PET (Narai PET)</option>
+                  <option value="Laminado">Laminado</option>
+                  <option value="Estratificado">Estratificado</option>
+                  <option value="Laca">Laca</option>
+                  <option value="Madera">Madera</option>
+                </select>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 70px;gap:8px;margin-bottom:8px">
+              <div>
+                <label class="form-label">Alto</label>
+                <select class="form-input" id="sl-alto" onchange="saitraLineaAltoChange()"></select>
+              </div>
+              <div>
+                <label class="form-label">Ancho</label>
+                <select class="form-input" id="sl-ancho" onchange="saitraLineaPreview()"></select>
+              </div>
+              <div>
+                <label class="form-label">Cant.</label>
+                <input type="number" class="form-input" id="sl-cant" value="1" min="1" max="99">
+              </div>
+            </div>
+            <div style="margin-bottom:8px">
+              <label class="form-label">Notas</label>
+              <input type="text" class="form-input" id="sl-notas" placeholder="Ej: con tirador, push…">
+            </div>
+            <div id="sl-preview" style="display:none;background:#f8f6f2;border-radius:6px;padding:8px 10px;font-size:11px;margin-bottom:8px"></div>
+            <button class="btn btn-primary btn-sm" style="width:100%;background:#1565c0;border:none" onclick="saitraLineaAdd()">＋ Añadir mueble de línea</button>
+          </div>
 
           <!-- MÓDULOS POR PUNTOS -->
           <div class="card" style="padding:14px">
@@ -1610,7 +1645,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
               </div>
               <div>
                 <label class="form-label">Dto. accesorio %</label>
-                <input type="number" class="form-input" id="s-dto-acc" value="34" min="0" max="60" oninput="saitraAccTipoChange()">
+                <input type="number" class="form-input" id="s-dto-acc" value="36" min="0" max="60" oninput="saitraAccTipoChange()">
               </div>
             </div>
             <div style="margin-top:8px">
@@ -3533,7 +3568,7 @@ const META={
   comparativa:{t:'Comparativa de ofertas',b:'Compara hasta 3 proveedores por trabajo'},
   tarifario:{t:'Tarifario · Catálogo propio',b:''},
   cype:{t:'CYPE 2026 · 524 partidas',b:'Base de precios importada de tu Excel'},
-  saitra:{t:'Valorador Saitra · Cocinas',b:'Constructor de valoraciones · Puntos × 0,99€ + PVP -36%'},
+  saitra:{t:'Valorador Saitra · Cocinas',b:'Puntos × 0,99€ = coste | Margen editable | Muebles de Línea integrados'},
   imex:{t:'Griferías IMEX 2024 · Presupuestador',b:'Catálogo completo · +3% tarifa · Dto 40% · Margen ajustable'},
   interiorismo:{t:'Interiorismo & Mobiliario',b:'Propuestas · Pedidos · Márgenes'},
   compras:{t:'Compras',b:''},subcontratas:{t:'Subcontratas',b:''},
@@ -5180,9 +5215,12 @@ async function saveTarifario(){
 
 
 // ═══════════════════════════════════════════════════════════════
-// VALORADOR SAITRA
-// Flujo: Puntos × 0,99 × (1 - dto%) = COSTE → × (1 + margen%) = PVP cliente
-// El cliente solo ve PVP. El coste es interno.
+// VALORADOR SAITRA v57
+// Flujo: Puntos × 0,99€ = COSTE → × (1 + margen%) = PVP cliente
+// PVP artículos (accesorios): PVP tarifa × (1 - dto%) = COSTE → × (1 + margen%) = PVP cliente
+// Margen por defecto: 70% · Dto. accesorios: 36%
+// Casco por defecto: Cotton
+// Acabado línea por defecto: PET (Narai PET = Tarifa 4)
 // ═══════════════════════════════════════════════════════════════
 
 const SAITRA_MOD = {
@@ -6261,11 +6299,339 @@ const SAITRA_GOLA = {
 
 
 const PUNTO_PP = 0.99; // precio punto estándar Saitra
+
+// ═══════════════════════════════════════════════════════════════
+// SAITRA — MUEBLES DE LÍNEA (Valoración Especiales)
+// Precios en PUNTOS · 5 acabados: Lam/Estrat/PET/Laca/Madera
+// Punto × 0,99€ = coste
+// ═══════════════════════════════════════════════════════════════
+const SAITRA_LINEA = {
+  'Bases y Bases Gola': {
+    label: 'Bases y Bases Gola',
+    icon: '🗄',
+    alturas: {'70/78/84': {
+      15:  {Laminado:14,  Estratificado:32, PET:30, Laca:52,  Madera:60},
+      20:  {Laminado:16,  Estratificado:34, PET:32, Laca:56,  Madera:62},
+      25:  {Laminado:18,  Estratificado:36, PET:34, Laca:58,  Madera:64},
+      30:  {Laminado:20,  Estratificado:38, PET:36, Laca:60,  Madera:66},
+      35:  {Laminado:22,  Estratificado:40, PET:38, Laca:62,  Madera:68},
+      40:  {Laminado:24,  Estratificado:42, PET:40, Laca:64,  Madera:70},
+      45:  {Laminado:26,  Estratificado:44, PET:42, Laca:66,  Madera:72},
+      50:  {Laminado:28,  Estratificado:46, PET:44, Laca:68,  Madera:74},
+      60:  {Laminado:30,  Estratificado:50, PET:48, Laca:72,  Madera:78},
+      70:  {Laminado:32,  Estratificado:54, PET:52, Laca:76,  Madera:82},
+      80:  {Laminado:34,  Estratificado:58, PET:56, Laca:80,  Madera:86},
+      90:  {Laminado:36,  Estratificado:62, PET:60, Laca:84,  Madera:90},
+      100: {Laminado:38,  Estratificado:66, PET:64, Laca:88,  Madera:94},
+      120: {Laminado:50,  Estratificado:80, PET:78, Laca:102, Madera:108}
+    }}
+  },
+  'Colgantes': {
+    label: 'Colgantes',
+    icon: '🪟',
+    alturas: {
+      '26/28/39/42': {
+        30:  {Laminado:12, Estratificado:30, PET:28, Laca:52, Madera:58},
+        40:  {Laminado:14, Estratificado:32, PET:30, Laca:54, Madera:60},
+        50:  {Laminado:16, Estratificado:34, PET:32, Laca:56, Madera:62},
+        60:  {Laminado:18, Estratificado:36, PET:34, Laca:58, Madera:64},
+        70:  {Laminado:20, Estratificado:38, PET:36, Laca:60, Madera:66},
+        80:  {Laminado:22, Estratificado:40, PET:38, Laca:62, Madera:68},
+        90:  {Laminado:24, Estratificado:42, PET:40, Laca:64, Madera:70},
+        100: {Laminado:26, Estratificado:44, PET:42, Laca:66, Madera:72},
+        110: {Laminado:28, Estratificado:46, PET:44, Laca:68, Madera:74},
+        120: {Laminado:30, Estratificado:48, PET:46, Laca:70, Madera:76}
+      },
+      '52/56': {
+        30:  {Laminado:14, Estratificado:32, PET:30, Laca:54, Madera:60},
+        40:  {Laminado:16, Estratificado:34, PET:32, Laca:56, Madera:62},
+        50:  {Laminado:18, Estratificado:36, PET:34, Laca:58, Madera:64},
+        60:  {Laminado:20, Estratificado:38, PET:36, Laca:60, Madera:66},
+        70:  {Laminado:22, Estratificado:40, PET:38, Laca:62, Madera:68},
+        80:  {Laminado:24, Estratificado:42, PET:40, Laca:64, Madera:70},
+        90:  {Laminado:26, Estratificado:44, PET:42, Laca:66, Madera:72},
+        100: {Laminado:28, Estratificado:46, PET:44, Laca:68, Madera:74},
+        110: {Laminado:30, Estratificado:48, PET:46, Laca:70, Madera:76},
+        120: {Laminado:32, Estratificado:50, PET:48, Laca:72, Madera:78}
+      },
+      '70/78': {
+        30:  {Laminado:18, Estratificado:36, PET:34, Laca:58, Madera:64},
+        40:  {Laminado:20, Estratificado:38, PET:36, Laca:60, Madera:66},
+        50:  {Laminado:22, Estratificado:40, PET:38, Laca:62, Madera:68},
+        60:  {Laminado:24, Estratificado:42, PET:40, Laca:64, Madera:70},
+        70:  {Laminado:26, Estratificado:44, PET:42, Laca:66, Madera:72},
+        80:  {Laminado:28, Estratificado:46, PET:44, Laca:68, Madera:74},
+        90:  {Laminado:30, Estratificado:48, PET:46, Laca:70, Madera:76},
+        100: {Laminado:32, Estratificado:50, PET:48, Laca:72, Madera:78},
+        110: {Laminado:34, Estratificado:52, PET:50, Laca:74, Madera:80},
+        120: {Laminado:36, Estratificado:54, PET:52, Laca:76, Madera:82}
+      },
+      '84/91/98': {
+        30:  {Laminado:18, Estratificado:36, PET:34, Laca:58, Madera:64},
+        40:  {Laminado:20, Estratificado:38, PET:36, Laca:60, Madera:66},
+        50:  {Laminado:22, Estratificado:40, PET:38, Laca:62, Madera:68},
+        60:  {Laminado:24, Estratificado:42, PET:40, Laca:64, Madera:70},
+        70:  {Laminado:26, Estratificado:44, PET:42, Laca:66, Madera:72},
+        80:  {Laminado:28, Estratificado:46, PET:44, Laca:68, Madera:74},
+        90:  {Laminado:30, Estratificado:48, PET:46, Laca:70, Madera:76},
+        100: {Laminado:32, Estratificado:50, PET:48, Laca:72, Madera:78},
+        110: {Laminado:34, Estratificado:52, PET:50, Laca:74, Madera:80},
+        120: {Laminado:36, Estratificado:54, PET:52, Laca:76, Madera:82}
+      }
+    }
+  },
+  'Columnas': {
+    label: 'Columnas',
+    icon: '🏛',
+    alturas: {
+      '143': {
+        25:  {Laminado:27, Estratificado:48, PET:46, Laca:73,  Madera:81},
+        30:  {Laminado:29, Estratificado:50, PET:48, Laca:75,  Madera:83},
+        35:  {Laminado:31, Estratificado:52, PET:50, Laca:77,  Madera:85},
+        40:  {Laminado:33, Estratificado:54, PET:52, Laca:79,  Madera:87},
+        45:  {Laminado:35, Estratificado:56, PET:54, Laca:81,  Madera:89},
+        50:  {Laminado:37, Estratificado:58, PET:56, Laca:83,  Madera:91},
+        60:  {Laminado:41, Estratificado:62, PET:60, Laca:87,  Madera:95},
+        70:  {Laminado:45, Estratificado:66, PET:64, Laca:91,  Madera:99},
+        80:  {Laminado:49, Estratificado:70, PET:68, Laca:95,  Madera:103},
+        90:  {Laminado:53, Estratificado:74, PET:72, Laca:99,  Madera:107},
+        120: {Laminado:61, Estratificado:82, PET:80, Laca:107, Madera:115}
+      },
+      '195': {
+        25:  {Laminado:39, Estratificado:60, PET:58, Laca:91,  Madera:99},
+        30:  {Laminado:41, Estratificado:62, PET:60, Laca:93,  Madera:101},
+        35:  {Laminado:43, Estratificado:64, PET:62, Laca:95,  Madera:103},
+        40:  {Laminado:45, Estratificado:66, PET:64, Laca:97,  Madera:105},
+        45:  {Laminado:47, Estratificado:68, PET:66, Laca:99,  Madera:107},
+        50:  {Laminado:49, Estratificado:70, PET:68, Laca:101, Madera:109},
+        60:  {Laminado:53, Estratificado:74, PET:72, Laca:105, Madera:113},
+        70:  {Laminado:57, Estratificado:78, PET:76, Laca:109, Madera:117},
+        80:  {Laminado:61, Estratificado:82, PET:80, Laca:113, Madera:121},
+        90:  {Laminado:65, Estratificado:86, PET:84, Laca:117, Madera:125},
+        120: {Laminado:73, Estratificado:94, PET:92, Laca:125, Madera:133}
+      },
+      '206/208': {
+        25:  {Laminado:41, Estratificado:62, PET:60, Laca:94,  Madera:102},
+        30:  {Laminado:43, Estratificado:64, PET:62, Laca:96,  Madera:104},
+        35:  {Laminado:45, Estratificado:66, PET:64, Laca:98,  Madera:106},
+        40:  {Laminado:47, Estratificado:68, PET:66, Laca:100, Madera:108},
+        45:  {Laminado:49, Estratificado:70, PET:68, Laca:102, Madera:110},
+        50:  {Laminado:51, Estratificado:72, PET:70, Laca:104, Madera:112},
+        60:  {Laminado:55, Estratificado:76, PET:74, Laca:108, Madera:116},
+        70:  {Laminado:59, Estratificado:80, PET:78, Laca:112, Madera:120},
+        80:  {Laminado:63, Estratificado:84, PET:82, Laca:116, Madera:124},
+        90:  {Laminado:67, Estratificado:88, PET:86, Laca:120, Madera:128},
+        120: {Laminado:75, Estratificado:96, PET:94, Laca:128, Madera:136}
+      },
+      '220/221': {
+        25:  {Laminado:43, Estratificado:64, PET:62, Laca:97,  Madera:105},
+        30:  {Laminado:45, Estratificado:66, PET:64, Laca:99,  Madera:107},
+        35:  {Laminado:47, Estratificado:68, PET:66, Laca:101, Madera:109},
+        40:  {Laminado:49, Estratificado:70, PET:68, Laca:103, Madera:111},
+        45:  {Laminado:51, Estratificado:72, PET:70, Laca:105, Madera:113},
+        50:  {Laminado:53, Estratificado:74, PET:72, Laca:107, Madera:115},
+        60:  {Laminado:57, Estratificado:78, PET:76, Laca:111, Madera:119},
+        70:  {Laminado:61, Estratificado:82, PET:80, Laca:115, Madera:123},
+        80:  {Laminado:65, Estratificado:86, PET:84, Laca:119, Madera:127},
+        90:  {Laminado:69, Estratificado:90, PET:88, Laca:123, Madera:131},
+        120: {Laminado:77, Estratificado:98, PET:96, Laca:131, Madera:139}
+      },
+      '234': {
+        25:  {Laminado:45, Estratificado:67, PET:65, Laca:101, Madera:109},
+        30:  {Laminado:47, Estratificado:69, PET:67, Laca:103, Madera:111},
+        35:  {Laminado:49, Estratificado:71, PET:69, Laca:105, Madera:113},
+        40:  {Laminado:51, Estratificado:73, PET:71, Laca:107, Madera:115},
+        45:  {Laminado:53, Estratificado:75, PET:73, Laca:109, Madera:117},
+        50:  {Laminado:55, Estratificado:77, PET:75, Laca:111, Madera:119},
+        60:  {Laminado:59, Estratificado:81, PET:79, Laca:115, Madera:123},
+        70:  {Laminado:63, Estratificado:85, PET:83, Laca:119, Madera:127},
+        80:  {Laminado:67, Estratificado:89, PET:87, Laca:123, Madera:131},
+        90:  {Laminado:71, Estratificado:93, PET:91, Laca:127, Madera:135},
+        120: {Laminado:79, Estratificado:101, PET:99, Laca:135, Madera:143}
+      }
+    }
+  },
+  'Sobrecolumnas': {
+    label: 'Sobrecolumnas',
+    icon: '🗂',
+    alturas: {
+      '39/42': {
+        30:  {Laminado:15, Estratificado:33, PET:31, Laca:55, Madera:61},
+        40:  {Laminado:17, Estratificado:35, PET:33, Laca:57, Madera:63},
+        50:  {Laminado:19, Estratificado:37, PET:35, Laca:59, Madera:65},
+        60:  {Laminado:21, Estratificado:39, PET:37, Laca:61, Madera:67},
+        70:  {Laminado:23, Estratificado:41, PET:39, Laca:63, Madera:69},
+        80:  {Laminado:25, Estratificado:43, PET:41, Laca:65, Madera:71},
+        90:  {Laminado:27, Estratificado:45, PET:43, Laca:67, Madera:73},
+        100: {Laminado:29, Estratificado:47, PET:45, Laca:69, Madera:75},
+        110: {Laminado:31, Estratificado:49, PET:47, Laca:71, Madera:77},
+        120: {Laminado:33, Estratificado:51, PET:49, Laca:73, Madera:79}
+      },
+      '52/56': {
+        30:  {Laminado:17, Estratificado:35, PET:33, Laca:57, Madera:63},
+        40:  {Laminado:19, Estratificado:37, PET:35, Laca:59, Madera:65},
+        50:  {Laminado:21, Estratificado:39, PET:37, Laca:61, Madera:67},
+        60:  {Laminado:23, Estratificado:41, PET:39, Laca:63, Madera:69},
+        70:  {Laminado:25, Estratificado:43, PET:41, Laca:65, Madera:71},
+        80:  {Laminado:27, Estratificado:45, PET:43, Laca:67, Madera:73},
+        90:  {Laminado:29, Estratificado:47, PET:45, Laca:69, Madera:75},
+        100: {Laminado:31, Estratificado:49, PET:47, Laca:71, Madera:77},
+        110: {Laminado:33, Estratificado:51, PET:49, Laca:73, Madera:79},
+        120: {Laminado:35, Estratificado:53, PET:51, Laca:75, Madera:81}
+      },
+      '65/70': {
+        30:  {Laminado:20, Estratificado:38, PET:36, Laca:60, Madera:66},
+        40:  {Laminado:22, Estratificado:40, PET:38, Laca:62, Madera:68},
+        50:  {Laminado:24, Estratificado:42, PET:40, Laca:64, Madera:70},
+        60:  {Laminado:26, Estratificado:44, PET:42, Laca:66, Madera:72},
+        70:  {Laminado:28, Estratificado:46, PET:44, Laca:68, Madera:74},
+        80:  {Laminado:30, Estratificado:48, PET:46, Laca:70, Madera:76},
+        90:  {Laminado:32, Estratificado:50, PET:48, Laca:72, Madera:78},
+        100: {Laminado:34, Estratificado:52, PET:50, Laca:74, Madera:80},
+        110: {Laminado:36, Estratificado:54, PET:52, Laca:76, Madera:82},
+        120: {Laminado:38, Estratificado:56, PET:54, Laca:78, Madera:84}
+      },
+      '78/74': {
+        30:  {Laminado:24, Estratificado:42, PET:40, Laca:64, Madera:70},
+        40:  {Laminado:26, Estratificado:44, PET:42, Laca:66, Madera:72},
+        50:  {Laminado:28, Estratificado:46, PET:44, Laca:68, Madera:74},
+        60:  {Laminado:30, Estratificado:48, PET:46, Laca:70, Madera:76},
+        70:  {Laminado:32, Estratificado:50, PET:48, Laca:72, Madera:78},
+        80:  {Laminado:34, Estratificado:52, PET:50, Laca:74, Madera:80},
+        90:  {Laminado:36, Estratificado:54, PET:52, Laca:76, Madera:82},
+        100: {Laminado:38, Estratificado:56, PET:54, Laca:78, Madera:84},
+        110: {Laminado:40, Estratificado:58, PET:56, Laca:80, Madera:86},
+        120: {Laminado:42, Estratificado:60, PET:58, Laca:82, Madera:88}
+      }
+    }
+  },
+  'Sobreencimeras': {
+    label: 'Sobreencimeras',
+    icon: '🟦',
+    alturas: {
+      '114/119': {
+        60:  {Laminado:40, Estratificado:60, PET:58, Laca:85,  Madera:97},
+        90:  {Laminado:52, Estratificado:72, PET:70, Laca:97,  Madera:109},
+        120: {Laminado:64, Estratificado:84, PET:82, Laca:109, Madera:121}
+      },
+      '127/133': {
+        60:  {Laminado:43, Estratificado:63, PET:61, Laca:88,  Madera:100},
+        90:  {Laminado:55, Estratificado:77, PET:75, Laca:100, Madera:112},
+        120: {Laminado:67, Estratificado:89, PET:87, Laca:112, Madera:124}
+      },
+      '140/147': {
+        60:  {Laminado:45, Estratificado:65, PET:63, Laca:90,  Madera:102},
+        90:  {Laminado:57, Estratificado:79, PET:77, Laca:102, Madera:114},
+        120: {Laminado:69, Estratificado:91, PET:89, Laca:114, Madera:126}
+      }
+    }
+  }
+};
+
+// Acabados de línea → columna de datos
+const LINEA_ACABADOS = ['Laminado','Estratificado','PET','Laca','Madera'];
+// Acabado por defecto (Narai PET = PET)
+const LINEA_ACABADO_DEF = 'PET';
+
+let saitraLineaSelTipo  = 'Colgantes';
+let saitraLineaSelAlto  = '';
+let saitraLineaSelAcab  = LINEA_ACABADO_DEF;
+
+function initSaitraLinea(){
+  const selTipo = document.getElementById('sl-tipo');
+  if(selTipo){
+    selTipo.innerHTML = Object.entries(SAITRA_LINEA)
+      .map(([k,v])=>`<option value="${k}">${v.icon} ${v.label}</option>`).join('');
+    selTipo.value = saitraLineaSelTipo;
+  }
+  const selAcab = document.getElementById('sl-acabado');
+  if(selAcab){
+    selAcab.innerHTML = LINEA_ACABADOS.map(a=>
+      `<option value="${a}" ${a===LINEA_ACABADO_DEF?'selected':''}>${a}</option>`).join('');
+  }
+  saitraLineaTipoChange();
+}
+
+function saitraLineaTipoChange(){
+  const tipo = document.getElementById('sl-tipo')?.value;
+  if(!tipo || !SAITRA_LINEA[tipo]) return;
+  const alturas = Object.keys(SAITRA_LINEA[tipo].alturas);
+  const selAlto = document.getElementById('sl-alto');
+  if(selAlto){
+    selAlto.innerHTML = alturas.map(a=>`<option value="${a}">H. ${a} cm</option>`).join('');
+    selAlto.value = alturas[0];
+  }
+  saitraLineaAltoChange();
+}
+
+function saitraLineaAltoChange(){
+  const tipo  = document.getElementById('sl-tipo')?.value;
+  const alto  = document.getElementById('sl-alto')?.value;
+  if(!tipo||!alto||!SAITRA_LINEA[tipo]?.alturas[alto]) return;
+  const anchos = Object.keys(SAITRA_LINEA[tipo].alturas[alto]).map(Number).sort((a,b)=>a-b);
+  const selAncho = document.getElementById('sl-ancho');
+  if(selAncho){
+    selAncho.innerHTML = anchos.map(a=>`<option value="${a}">${a} cm</option>`).join('');
+  }
+  saitraLineaPreview();
+}
+
+function saitraLineaPreview(){
+  const tipo   = document.getElementById('sl-tipo')?.value;
+  const alto   = document.getElementById('sl-alto')?.value;
+  const ancho  = parseInt(document.getElementById('sl-ancho')?.value)||0;
+  const acabado= document.getElementById('sl-acabado')?.value || LINEA_ACABADO_DEF;
+  const margen = parseFloat(document.getElementById('s-margen')?.value)||70;
+  const prev   = document.getElementById('sl-preview');
+  if(!tipo||!alto||!ancho||!SAITRA_LINEA[tipo]?.alturas[alto]?.[ancho]){
+    if(prev) prev.style.display='none'; return;
+  }
+  const pts    = SAITRA_LINEA[tipo].alturas[alto][ancho][acabado];
+  if(!pts){ if(prev) prev.style.display='none'; return; }
+  const coste  = saitraCalcCoste(pts, PUNTO_PP);
+  const pvp    = saitraCalcPvp(coste, margen);
+  if(prev){
+    prev.style.display='block';
+    prev.innerHTML =
+      `<span style="color:var(--text-soft)">${pts} pts × 0,99€ =</span> <strong style="color:var(--navy)">${coste.toFixed(2)}€ coste</strong><br>` +
+      `<span style="color:var(--text-soft)">+ ${margen}% margen =</span> <strong style="color:#2e7d32;font-size:13px">${pvp.toFixed(2)}€ PVP cliente</strong>`;
+  }
+}
+
+function saitraLineaAdd(){
+  const tipo   = document.getElementById('sl-tipo')?.value;
+  const alto   = document.getElementById('sl-alto')?.value;
+  const ancho  = parseInt(document.getElementById('sl-ancho')?.value)||0;
+  const acabado= document.getElementById('sl-acabado')?.value || LINEA_ACABADO_DEF;
+  const margen = parseFloat(document.getElementById('s-margen')?.value)||70;
+  const cant   = parseInt(document.getElementById('sl-cant')?.value)||1;
+  const notas  = document.getElementById('sl-notas')?.value?.trim()||'';
+  if(!tipo||!alto||!ancho){ toast('Completa tipo, alto y ancho','error'); return; }
+  const pts = SAITRA_LINEA[tipo].alturas[alto]?.[ancho]?.[acabado];
+  if(!pts){ toast('Combinación no disponible','error'); return; }
+  const costeU = saitraCalcCoste(pts, PUNTO_PP);
+  const pvpU   = saitraCalcPvp(costeU, margen);
+  const desc   = `${SAITRA_LINEA[tipo].label} H.${alto}cm A.${ancho}cm · ${acabado}`;
+  saitraLineas.push({
+    id:++saitraIdCnt, tipo:'modulo', ref: tipo.substring(0,4).toUpperCase(),
+    desc: desc, notas,
+    cant, puntos:pts,
+    costeUnit:costeU, costeTotal:costeU*cant,
+    pvpUnit:pvpU, pvpTotal:pvpU*cant
+  });
+  if(document.getElementById('sl-notas')) document.getElementById('sl-notas').value='';
+  if(document.getElementById('sl-cant')) document.getElementById('sl-cant').value='1';
+  saitraRenderTabla();
+  saitraRecalc();
+  toast(`✅ ${desc} ×${cant} · PVP: ${(pvpU*cant).toFixed(2)}€`);
+}
+
 let saitraLineas = [];
 let saitraIdCnt  = 0;
 
 // Helpers de cálculo centralizados
-function saitraCalcCoste(puntos, pp, dto){ return puntos * pp * (1 - dto/100); }
+function saitraCalcCoste(puntos, pp){ return puntos * pp; }
+function saitraCalcPvpAccesorio(pvpTarifa, dto){ return pvpTarifa * (1 - dto/100); }
 function saitraCalcPvp(coste, margen){ return coste * (1 + margen/100); }
 const ACABADOS_TARIFA = { 'Narai PET': 4, 'Morguet': 4, 'Morguet 45': 4 };
 
@@ -6295,6 +6661,7 @@ function saitraFrenteChange(){
 }
 
 function initSaitra(){
+  initSaitraLinea();
   const sel = document.getElementById('s-proyecto');
   if(sel && PC && PC.length){
     sel.innerHTML = '<option value="">— Seleccionar —</option>' +
@@ -6329,7 +6696,6 @@ function saitraPuntosPreview(){
   const ref   = document.getElementById('s-ref')?.value;
   const ancho = document.getElementById('s-ancho')?.value || '';
   const col   = parseInt(document.getElementById('s-col')?.value)||1;
-  const dto   = parseFloat(document.getElementById('s-dto')?.value)||0;
   const margen= parseFloat(document.getElementById('s-margen')?.value)||0;
   const prev  = document.getElementById('s-puntos-preview');
   if(!ref||!ancho||!SAITRA_MOD[ref]){if(prev)prev.style.display='none';return;}
@@ -6337,11 +6703,11 @@ function saitraPuntosPreview(){
   const anchoKey = /^\d+x\d+$/.test(ancho) ? ancho : parseInt(ancho);
   const pts = SAITRA_MOD[ref].anchos[anchoKey]?.[col-1];
   if(!pts){if(prev)prev.style.display='none';return;}
-  const coste = saitraCalcCoste(pts, PUNTO_PP, dto);
+  const coste = saitraCalcCoste(pts, PUNTO_PP);
   const pvp   = saitraCalcPvp(coste, margen);
   prev.style.display='block';
   prev.innerHTML =
-    `<span style="color:var(--text-soft)">${pts} pts × 0,99 × (1-${dto}%) =</span> <strong style="color:var(--navy)">${coste.toFixed(2)}€ coste</strong><br>` +
+    `<span style="color:var(--text-soft)">${pts} pts × 0,99€ =</span> <strong style="color:var(--navy)">${coste.toFixed(2)}€ coste</strong><br>` +
     `<span style="color:var(--text-soft)">+ ${margen}% margen =</span> <strong style="color:#2e7d32;font-size:13px">${pvp.toFixed(2)}€ PVP cliente</strong>`;
 }
 
@@ -6352,7 +6718,7 @@ function saitraAccTipoChange(){
   const prev  = document.getElementById('s-acc-preview');
   if(!tipo||!SAITRA_ACC[tipo]){if(prev)prev.textContent='';return;}
   const acc   = SAITRA_ACC[tipo];
-  const coste = acc.pvp * (1 - dto/100);
+  const coste = saitraCalcPvpAccesorio(acc.pvp, dto);
   const pvp   = saitraCalcPvp(coste, margen);
   if(prev) prev.innerHTML =
     `<span style="color:var(--text-soft)">PVP tarifa ${acc.pvp.toFixed(2)}€ × (1-${dto}%) =</span> <strong style="color:var(--navy)">${coste.toFixed(2)}€ coste</strong><br>` +
@@ -6362,16 +6728,15 @@ function saitraAccTipoChange(){
 function saitraZocChange(){
   const ref   = document.getElementById('s-zoc-ref')?.value;
   const long  = document.getElementById('s-zoc-long')?.value;
-  const dto   = parseFloat(document.getElementById('s-dto')?.value)||0;
   const margen= parseFloat(document.getElementById('s-margen')?.value)||0;
   const prev  = document.getElementById('s-zoc-preview');
   if(!ref||!SAITRA_ZOC[ref]){if(prev)prev.textContent='';return;}
   const z     = SAITRA_ZOC[ref];
   const pts   = long==='4m' ? z.pts[0] : z.pts[1];
-  const coste = saitraCalcCoste(pts, PUNTO_PP, dto);
+  const coste = saitraCalcCoste(pts, PUNTO_PP);
   const pvp   = saitraCalcPvp(coste, margen);
   if(prev) prev.innerHTML =
-    `<span style="color:var(--text-soft)">${pts} pts × 0,99 × (1-${dto}%) =</span> <strong style="color:var(--navy)">${coste.toFixed(2)}€ coste</strong><br>` +
+    `<span style="color:var(--text-soft)">${pts} pts × 0,99€ =</span> <strong style="color:var(--navy)">${coste.toFixed(2)}€ coste</strong><br>` +
     `<span style="color:var(--text-soft)">+ ${margen}% margen =</span> <strong style="color:#2e7d32;font-size:13px">${pvp.toFixed(2)}€ PVP cliente</strong>`;
 }
 
@@ -6379,8 +6744,7 @@ function saitraAddModulo(){
   const ref    = document.getElementById('s-ref')?.value;
   const ancho  = document.getElementById('s-ancho')?.value || '';
   const col    = parseInt(document.getElementById('s-col')?.value)||1;
-  const dto    = parseFloat(document.getElementById('s-dto')?.value)||0;
-  const margen = parseFloat(document.getElementById('s-margen')?.value)||0;
+  const margen = parseFloat(document.getElementById('s-margen')?.value)||70;
   const cant   = parseInt(document.getElementById('s-cant-mod')?.value)||1;
   const extra  = document.getElementById('s-desc-mod')?.value.trim()||'';
   if(!ref||!ancho||!SAITRA_MOD[ref]){toast('Selecciona referencia y ancho','error');return;}
@@ -6389,7 +6753,7 @@ function saitraAddModulo(){
   const pts    = SAITRA_MOD[ref].anchos[anchoKey]?.[col-1];
   if(!pts){toast('Combinación no disponible en tarifa','error');return;}
   const mod    = SAITRA_MOD[ref];
-  const costeU = saitraCalcCoste(pts, PUNTO_PP, dto);
+  const costeU = saitraCalcCoste(pts, PUNTO_PP);
   const pvpU   = saitraCalcPvp(costeU, margen);
   const anchoLabel = String(ancho).replace('x','×');
 
@@ -6426,8 +6790,8 @@ function saitraAddModulo(){
 
 function saitraAddAccesorio(){
   const tipo   = document.getElementById('s-acc-tipo')?.value;
-  const dto    = parseFloat(document.getElementById('s-dto-acc')?.value)||34;
-  const margen = parseFloat(document.getElementById('s-margen')?.value)||0;
+  const dto    = parseFloat(document.getElementById('s-dto-acc')?.value)||36;
+  const margen = parseFloat(document.getElementById('s-margen')?.value)||70;
   const cant   = parseInt(document.getElementById('s-cant-acc')?.value)||1;
   if(!tipo||!SAITRA_ACC[tipo]){toast('Selecciona un accesorio','error');return;}
   const acc    = SAITRA_ACC[tipo];
@@ -6450,17 +6814,16 @@ function saitraAddAccesorio(){
 function saitraAddZocalo(){
   const ref    = document.getElementById('s-zoc-ref')?.value;
   const long   = document.getElementById('s-zoc-long')?.value;
-  const dto    = parseFloat(document.getElementById('s-dto')?.value)||0;
-  const margen = parseFloat(document.getElementById('s-margen')?.value)||0;
+  const margen = parseFloat(document.getElementById('s-margen')?.value)||70;
   if(!ref||!SAITRA_ZOC[ref]){toast('Selecciona un zócalo','error');return;}
   const z      = SAITRA_ZOC[ref];
   const pts    = long==='4m' ? z.pts[0] : z.pts[1];
-  const costeU = saitraCalcCoste(pts, PUNTO_PP, dto);
+  const costeU = saitraCalcCoste(pts, PUNTO_PP);
   const pvpU   = saitraCalcPvp(costeU, margen);
   saitraLineas.push({
     id:++saitraIdCnt, tipo:'zocalo', ref:ref.split('-')[0],
     desc:z.label+' ('+long+')', notas: document.getElementById('s-notas-zoc')?.value.trim()||'',
-    cant:1, puntos:pts, dto,
+    cant:1, puntos:pts,
     costeUnit:costeU, costeTotal:costeU,
     pvpUnit:pvpU, pvpTotal:pvpU
   });
@@ -6473,17 +6836,16 @@ function saitraAddZocalo(){
 function saitraAddGola(){
   const ref    = document.getElementById('s-gola-ref')?.value;
   const qty    = parseInt(document.getElementById('s-gola-qty')?.value)||1;
-  const dto    = parseFloat(document.getElementById('s-dto')?.value)||0;
-  const margen = parseFloat(document.getElementById('s-margen')?.value)||0;
+  const margen = parseFloat(document.getElementById('s-margen')?.value)||70;
   if(!ref||!SAITRA_GOLA[ref]){toast('Selecciona un perfil gola','error');return;}
   const g      = SAITRA_GOLA[ref];
   const pts    = g.pts[0];
-  const costeU = saitraCalcCoste(pts, PUNTO_PP, dto);
+  const costeU = saitraCalcCoste(pts, PUNTO_PP);
   const pvpU   = saitraCalcPvp(costeU, margen);
   saitraLineas.push({
     id:++saitraIdCnt, tipo:'gola', ref,
     desc:g.label, notas:'',
-    cant:qty, puntos:pts, dto,
+    cant:qty, puntos:pts,
     costeUnit:costeU, costeTotal:costeU*qty,
     pvpUnit:pvpU, pvpTotal:pvpU*qty
   });
@@ -6535,6 +6897,7 @@ function saitraRecalc(){
   document.getElementById('s-tot-venta').textContent  = fmtE(totalPvp);
   // Refrescar previews con nuevo margen
   saitraPuntosPreview();
+  saitraLineaPreview();
   saitraAccTipoChange();
   saitraZocChange();
 }
