@@ -1826,7 +1826,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
                 <div id="s-tot-margen-eur" style="font-size:18px;font-weight:800;color:var(--amber)">0,00€</div>
               </div>
               <div style="text-align:center;padding:12px;background:#e8f5e9;border-radius:8px;border:2px solid #4caf50">
-                <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#388e3c;margin-bottom:4px">PVP CLIENTE (<span id="s-tot-margen-lbl">30</span>%)</div>
+                <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#388e3c;margin-bottom:4px">PVP CLIENTE (<span id="s-tot-margen-lbl">70</span>%)</div>
                 <div id="s-tot-venta" style="font-size:22px;font-weight:800;color:#2e7d32">0,00€</div>
               </div>
             </div>
@@ -4163,7 +4163,7 @@ async function populateSelects(){
   if(!PC.length)PC=await sbGet('proyectos').catch(()=>[]);
   if(!ProvC.length)ProvC=await sbGet('proveedores','?order=nombre.asc').catch(()=>[]);
   ['p-cliente','f-cliente'].forEach(id=>{const el=document.getElementById(id);if(!el)return;const cur=el.value;el.innerHTML='<option value="">Seleccionar…</option>'+CC.map(c=>`<option value="${c.cliente_id}">${c.nombre}</option>`).join('');if(cur)el.value=cur;});
-  ['co-proyecto','sc-proyecto','h-proyecto','f-proyecto','i-proyecto','ped-proyecto','pres-proyecto-sel','comp-proyecto-sel','rent-proyecto-sel','cmp-proyecto'].forEach(id=>{const el=document.getElementById(id);if(!el)return;const cur=el.value;el.innerHTML='<option value="">Seleccionar…</option>'+PC.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');if(cur)el.value=cur;});
+  ['co-proyecto','sc-proyecto','h-proyecto','f-proyecto','i-proyecto','ped-proyecto','pres-proyecto-sel','comp-proyecto-sel','rent-proyecto-sel','cmp-proyecto','s-proyecto'].forEach(id=>{const el=document.getElementById(id);if(!el)return;const cur=el.value;el.innerHTML='<option value="">Seleccionar…</option>'+PC.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');if(cur)el.value=cur;});
   ['co-prov','sc-prov','ped-prov'].forEach(id=>{const el=document.getElementById(id);if(!el)return;const cur=el.value;el.innerHTML='<option value="">Seleccionar proveedor…</option>'+ProvC.map(p=>`<option value="${p.nombre}">${p.nombre}${p.tipo?' · '+p.tipo:''}</option>`).join('');if(cur)el.value=cur;});
 }
 async function populateIntCatalog(){
@@ -6663,9 +6663,17 @@ function saitraFrenteChange(){
 function initSaitra(){
   initSaitraLinea();
   const sel = document.getElementById('s-proyecto');
-  if(sel && PC && PC.length){
-    sel.innerHTML = '<option value="">— Seleccionar —</option>' +
-      PC.map(p=>`<option value="${p.proyecto_id}">${escH(p.proyecto_id)}${p.nombre?' · '+escH(p.nombre):''}</option>`).join('');
+  if(sel){
+    if(!PC || !PC.length){
+      sbGet('proyectos').then(data=>{
+        PC = data || [];
+        sel.innerHTML = '<option value="">— Seleccionar —</option>' +
+          PC.map(p=>`<option value="${p.proyecto_id}">${escH(p.proyecto_id)}${p.nombre?' · '+escH(p.nombre):''}</option>`).join('');
+      }).catch(()=>{});
+    } else {
+      sel.innerHTML = '<option value="">— Seleccionar —</option>' +
+        PC.map(p=>`<option value="${p.proyecto_id}">${escH(p.proyecto_id)}${p.nombre?' · '+escH(p.nombre):''}</option>`).join('');
+    }
   }
   saitraRefChange();
   saitraAccTipoChange();
@@ -6775,7 +6783,7 @@ function saitraAddModulo(){
     id:++saitraIdCnt, tipo:'modulo', ref,
     desc: mod.label+' '+anchoLabel+'cm'+acabadosTag+(extra?' · '+extra:''),
     notas: document.getElementById('s-notas-mod')?.value.trim()||'',
-    cant, puntos:pts, dto,
+    cant, puntos:pts,
     costeUnit:costeU, costeTotal:costeU*cant,
     pvpUnit:pvpU, pvpTotal:pvpU*cant
   });
@@ -6886,10 +6894,18 @@ function saitraRenderTabla(){
 }
 
 function saitraRecalc(){
-  const margen = parseFloat(document.getElementById('s-margen')?.value)||0;
+  const margen = parseFloat(document.getElementById('s-margen')?.value)||70;
   document.getElementById('s-tot-margen-lbl').textContent = margen;
   let totalCoste=0, totalPvp=0;
-  saitraLineas.forEach(l=>{ totalCoste+=l.costeTotal; totalPvp+=l.pvpTotal; });
+  // Recalcular pvp de cada línea con el margen actual
+  saitraLineas.forEach(l=>{
+    l.pvpUnit   = saitraCalcPvp(l.costeUnit, margen);
+    l.pvpTotal  = l.pvpUnit * l.cant;
+    totalCoste += l.costeTotal;
+    totalPvp   += l.pvpTotal;
+  });
+  // Re-render la tabla para reflejar nuevos precios
+  saitraRenderTabla();
   const margenEur = totalPvp - totalCoste;
   const fmtE = v => v.toFixed(2).replace('.',',')+'€';
   document.getElementById('s-tot-coste').textContent  = fmtE(totalCoste);
@@ -6914,8 +6930,9 @@ async function saitraExportarPresupuesto(){
   const proy = document.getElementById('s-proyecto')?.value;
   if(!proy){ toast('Selecciona un proyecto primero','error'); return; }
 
-  const ver = prompt('¿A qué versión del presupuesto exportar?', '1');
-  if(!ver) return;
+  const verRaw = prompt('¿A qué versión del presupuesto exportar? (1, 2 o 3)', '1');
+  if(!verRaw) return;
+  const ver = verRaw.startsWith('v') ? verRaw : 'v'+verRaw;
 
   const margen   = parseFloat(document.getElementById('s-margen')?.value)||0;
   const totalPvp = saitraLineas.reduce((s,l)=>s+l.pvpTotal, 0);
