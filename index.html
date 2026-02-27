@@ -982,18 +982,34 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 
         <!-- CATÁLOGOS -->
         <div id="pp-body-cat" class="pres-panel-body" style="display:none">
-          <div class="cat-sub-tabs" id="pp-cat-subtabs">
-            <button class="cat-sub-tab active" id="pp-csub-imex-bano"   onclick="ppCatSetSub('imex-bano')">IMEX Baño</button>
-            <button class="cat-sub-tab"        id="pp-csub-imex-cocina" onclick="ppCatSetSub('imex-cocina')">IMEX Cocina</button>
+          <!-- Nivel 1: Fabricante -->
+          <div id="pp-cat-fab-wrap">
+            <div style="padding:8px 10px 4px;font-size:10px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.05em">Fabricante</div>
+            <div id="pp-cat-fab-list" style="display:flex;flex-direction:column;gap:2px;padding:0 8px 8px"></div>
           </div>
-          <div class="pp-search-wrap">
-            <input type="text" id="pp-cat-q" placeholder="Buscar en catálogo…" oninput="ppSearchCat()">
-            <select class="pp-filter" id="pp-cat-serie" onchange="ppSearchCat()">
-              <option value="">Todas las series</option>
-            </select>
+          <!-- Nivel 2: Modelo (dentro del fabricante) -->
+          <div id="pp-cat-mod-wrap" style="display:none">
+            <div style="display:flex;align-items:center;gap:6px;padding:6px 10px;border-bottom:1px solid var(--border)">
+              <button onclick="ppCatBack()" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--text-soft);padding:0;line-height:1">←</button>
+              <span id="pp-cat-fab-label" style="font-size:11px;font-weight:700;color:var(--navy)"></span>
+            </div>
+            <div id="pp-cat-mod-list" style="display:flex;flex-direction:column;gap:2px;padding:6px 8px 6px"></div>
           </div>
-          <div class="pp-results" id="pp-cat-res">
-            <div class="pp-empty"><div class="ico">🚿</div>Escribe para buscar en el catálogo</div>
+          <!-- Nivel 3: Búsqueda dentro del modelo -->
+          <div id="pp-cat-search-wrap" style="display:none;flex-direction:column;flex:1;overflow:hidden">
+            <div style="display:flex;align-items:center;gap:6px;padding:6px 10px;border-bottom:1px solid var(--border);flex-shrink:0">
+              <button onclick="ppCatBackToMod()" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--text-soft);padding:0;line-height:1">←</button>
+              <span id="pp-cat-mod-label" style="font-size:11px;font-weight:700;color:var(--navy)"></span>
+            </div>
+            <div class="pp-search-wrap" style="flex-shrink:0">
+              <input type="text" id="pp-cat-q" placeholder="Buscar tipo de mueble…" oninput="ppSearchCat()">
+              <select class="pp-filter" id="pp-cat-serie" onchange="ppSearchCat()">
+                <option value="">Todos los tipos</option>
+              </select>
+            </div>
+            <div class="pp-results" id="pp-cat-res" style="flex:1;overflow-y:auto">
+              <div class="pp-empty"><div class="ico">🚿</div>Escribe o filtra por tipo</div>
+            </div>
           </div>
         </div>
 
@@ -11013,6 +11029,261 @@ const IMEX_BANO   = [{"serie": "ACCESORIOS", "ref": "KITR01", "desc": "SET DUCHA
 ;
 const IMEX_INC = 1.03;
 const IMEX_DTO = 0.40;
+
+// ── DATOS CAMPOARAS ──────────────────────────────────────────
+const CAMP_INC = 1.05;   // PVP tarifa × 1.05 = precio venta
+const CAMP_DTO = 0.40;   // descuento 40% sobre precio venta
+const CAMP_ACABADOS_AQUA=['Melamina','Lacado Mate','Lacado Brillo Sup./Lam.','Chapa Natural','Chapa Tinte','Marmoleado'];
+const CAMP_ACABADOS_DROP=['Melamina','Laminado','Lacado Mate','Lacado Brillo Sup./Tex.','Chapa Natural','Chapa Tinte','Marmoleado'];
+const CAMP_AQUA=[
+  {tipo:"Portalavabo 1 Caj\u00f3n",alt:"H.30",a:60,r1:"1705",r2:"1700",p:[202.1,216.3,239.3,249.5,278.95,251.7]},
+  {tipo:"Portalavabo 1 Caj\u00f3n",alt:"H.30",a:70,r1:"1706",r2:"1701",p:[214.6,229.65,256.1,266.6,300.55,269.45]},
+  {tipo:"Portalavabo 1 Caj\u00f3n",alt:"H.30",a:80,r1:"1707",r2:"1702",p:[228.2,244.65,272.8,284.55,323.05,287.35]},
+  {tipo:"Portalavabo 1 Caj\u00f3n",alt:"H.30",a:90,r1:"1708",r2:"1703",p:[241.8,259.7,289.5,302.5,345.55,305.3]},
+  {tipo:"Portalavabo 1 Caj\u00f3n",alt:"H.30",a:100,r1:"1709",r2:"1704",p:[255.4,274.7,306.2,320.45,368.1,323.2]},
+  {tipo:"Portalavabo 1 Caj\u00f3n",alt:"H.30",a:110,r1:"1713",r2:"1710",p:[268.95,289.75,322.9,338.35,390.6,341.1]},
+  {tipo:"Portalavabo 1 Caj\u00f3n",alt:"H.30",a:120,r1:"1714",r2:"1711",p:[282.55,304.8,339.6,356.3,413.1,359.05]},
+  {tipo:"Portalavabo 1 Caj\u00f3n",alt:"H.60",a:60,r1:"1749",r2:"1744",p:[225.05,241.0,267.1,278.55,312.5,281.3]},
+  {tipo:"Portalavabo 1 Caj\u00f3n",alt:"H.60",a:70,r1:"1750",r2:"1745",p:[238.65,256.1,283.8,296.55,334.95,299.2]},
+  {tipo:"Portalavabo 1 Caj\u00f3n",alt:"H.60",a:80,r1:"1751",r2:"1746",p:[252.2,271.15,300.5,314.5,357.5,317.15]},
+  {tipo:"Portalavabo 1 Caj\u00f3n",alt:"H.60",a:90,r1:"1752",r2:"1747",p:[265.8,286.2,317.2,332.45,380.0,335.05]},
+  {tipo:"Portalavabo 1 Caj\u00f3n",alt:"H.60",a:100,r1:"1753",r2:"1748",p:[279.35,301.2,333.9,350.4,402.5,352.95]},
+  {tipo:"Portalavabo 1 Caj\u00f3n",alt:"H.60",a:110,r1:"1757",r2:"1754",p:[292.95,316.25,350.6,368.35,425.0,370.9]},
+  {tipo:"Portalavabo 1 Caj\u00f3n",alt:"H.60",a:120,r1:"1758",r2:"1755",p:[306.5,331.3,367.3,386.3,447.55,388.8]},
+  {tipo:"Bajo 1 Caj\u00f3n s/Salvasisf\u00f3n",alt:"H.30",a:30,r1:"1761",r2:"1759",p:[127.8,137.05,153.25,160.1,181.45,163.9]},
+  {tipo:"Bajo 1 Caj\u00f3n s/Salvasisf\u00f3n",alt:"H.30",a:40,r1:"1762",r2:"1760",p:[141.4,151.75,169.4,176.85,200.6,181.25]},
+  {tipo:"Bajo 1 Caj\u00f3n s/Salvasisf\u00f3n",alt:"H.30",a:50,r1:"1765",r2:"1763",p:[154.95,166.5,186.1,194.4,220.9,198.6]},
+  {tipo:"Bajo 1 Caj\u00f3n s/Salvasisf\u00f3n",alt:"H.30",a:60,r1:"1766",r2:"1764",p:[168.55,181.2,202.8,211.95,241.15,216.0]},
+  {tipo:"Bajo 1 Caj\u00f3n s/Salvasisf\u00f3n",alt:"H.60",a:30,r1:"1769",r2:"1767",p:[140.85,151.05,168.35,175.75,198.95,179.7]},
+  {tipo:"Bajo 1 Caj\u00f3n s/Salvasisf\u00f3n",alt:"H.60",a:40,r1:"1770",r2:"1768",p:[154.4,165.75,185.0,193.35,219.25,197.55]},
+  {tipo:"Bajo 1 Caj\u00f3n s/Salvasisf\u00f3n",alt:"H.60",a:50,r1:"1773",r2:"1771",p:[167.95,180.5,201.75,210.9,239.5,215.4]},
+  {tipo:"Bajo 1 Caj\u00f3n s/Salvasisf\u00f3n",alt:"H.60",a:60,r1:"1774",r2:"1772",p:[181.5,195.2,218.45,228.45,259.8,233.25]},
+  {tipo:"Portalavabo 1C + 1C Interno",alt:"H.60",a:60,r1:"1777",r2:"1775",p:[241.8,259.7,289.5,302.5,345.55,305.3]},
+  {tipo:"Portalavabo 1C + 1C Interno",alt:"H.60",a:70,r1:"1778",r2:"1776",p:[255.4,274.7,306.2,320.45,368.1,323.2]},
+  {tipo:"Portalavabo 1C + 1C Interno",alt:"H.60",a:80,r1:"1780",r2:"1779",p:[268.95,289.75,322.9,338.35,390.6,341.1]},
+  {tipo:"Portalavabo 1C + 1C Interno",alt:"H.60",a:90,r1:"1782",r2:"1781",p:[282.55,304.8,339.6,356.3,413.1,359.05]},
+  {tipo:"Portalavabo 1C + 1C Interno",alt:"H.60",a:100,r1:"1784",r2:"1783",p:[296.1,319.85,356.3,374.2,435.65,377.0]},
+  {tipo:"Portalavabo 2 Cajones",alt:"H.60",a:60,r1:"1787",r2:"1785",p:[268.95,289.75,322.9,338.35,390.6,341.1]},
+  {tipo:"Portalavabo 2 Cajones",alt:"H.60",a:70,r1:"1788",r2:"1786",p:[282.55,304.8,339.6,356.3,413.1,359.05]},
+  {tipo:"Portalavabo 2 Cajones",alt:"H.60",a:80,r1:"1790",r2:"1789",p:[296.1,319.85,356.3,374.2,435.65,377.0]},
+  {tipo:"Portalavabo 2 Cajones",alt:"H.60",a:90,r1:"1792",r2:"1791",p:[309.65,334.85,373.0,392.15,458.15,394.9]},
+  {tipo:"Portalavabo 2 Cajones",alt:"H.60",a:100,r1:"1794",r2:"1793",p:[323.25,349.9,389.7,410.05,480.65,412.8]},
+  {tipo:"Portalavabo 2 Cajones",alt:"H.60",a:110,r1:"1797",r2:"1795",p:[336.8,364.95,406.4,428.0,503.15,430.7]},
+  {tipo:"Portalavabo 2 Cajones",alt:"H.60",a:120,r1:"1798",r2:"1796",p:[350.4,380.0,423.1,445.95,525.7,448.6]},
+  {tipo:"Portalavabo 2 Cajones",alt:"H.70",a:60,r1:"1801",r2:"1799",p:[282.55,304.8,339.6,356.3,413.1,359.05]},
+  {tipo:"Portalavabo 2 Cajones",alt:"H.70",a:70,r1:"1802",r2:"1800",p:[296.1,319.85,356.3,374.2,435.65,377.0]},
+  {tipo:"Portalavabo 2 Cajones",alt:"H.70",a:80,r1:"1804",r2:"1803",p:[309.65,334.85,373.0,392.15,458.15,394.9]},
+  {tipo:"Portalavabo 2 Cajones",alt:"H.70",a:90,r1:"1806",r2:"1805",p:[323.25,349.9,389.7,410.05,480.65,412.8]},
+  {tipo:"Portalavabo 2 Cajones",alt:"H.70",a:100,r1:"1808",r2:"1807",p:[336.8,364.95,406.4,428.0,503.15,430.7]},
+  {tipo:"Portalavabo 2 Cajones",alt:"H.70",a:110,r1:"1811",r2:"1809",p:[350.4,380.0,423.1,445.95,525.7,448.6]},
+  {tipo:"Portalavabo 2 Cajones",alt:"H.70",a:120,r1:"1812",r2:"1810",p:[363.95,395.0,439.8,463.85,548.2,466.5]},
+  {tipo:"Portalavabo 1C + Hueco Inferior",alt:"H.60",a:60,r1:"1815",r2:"1813",p:[241.8,259.7,289.5,302.5,345.55,305.3]},
+  {tipo:"Portalavabo 1C + Hueco Inferior",alt:"H.60",a:70,r1:"1816",r2:"1814",p:[255.4,274.7,306.2,320.45,368.1,323.2]},
+  {tipo:"Portalavabo 1C + Hueco Inferior",alt:"H.60",a:80,r1:"1818",r2:"1817",p:[268.95,289.75,322.9,338.35,390.6,341.1]},
+  {tipo:"Portalavabo 1C + Hueco Inferior",alt:"H.60",a:90,r1:"1820",r2:"1819",p:[282.55,304.8,339.6,356.3,413.1,359.05]},
+  {tipo:"Portalavabo 1C + Hueco Inferior",alt:"H.60",a:100,r1:"1822",r2:"1821",p:[296.1,319.85,356.3,374.2,435.65,377.0]},
+  {tipo:"Portalavabo 1C + Hueco Inferior",alt:"H.60",a:110,r1:"1825",r2:"1823",p:[309.65,334.85,373.0,392.15,458.15,394.9]},
+  {tipo:"Portalavabo 1C + Hueco Inferior",alt:"H.60",a:120,r1:"1826",r2:"1824",p:[323.25,349.9,389.7,410.05,480.65,412.8]},
+  {tipo:"Bajo 2 Cajones s/Salvasisf\u00f3n",alt:"H.60",a:30,r1:"1829",r2:"1827",p:[154.95,166.5,186.1,194.4,220.9,198.6]},
+  {tipo:"Bajo 2 Cajones s/Salvasisf\u00f3n",alt:"H.60",a:40,r1:"1830",r2:"1828",p:[168.55,181.2,202.8,211.95,241.15,216.0]},
+  {tipo:"Bajo 2 Cajones s/Salvasisf\u00f3n",alt:"H.60",a:50,r1:"1832",r2:"1831",p:[182.1,195.85,219.45,229.5,261.4,233.95]},
+  {tipo:"Bajo 2 Cajones s/Salvasisf\u00f3n",alt:"H.60",a:60,r1:"1833",r2:null,p:[195.65,210.55,236.15,247.05,281.65,251.85]},
+  {tipo:"Bajo 2 Cajones s/Salvasisf\u00f3n",alt:"H.70",a:30,r1:"1836",r2:"1834",p:[168.55,181.2,202.8,211.95,241.15,216.0]},
+  {tipo:"Bajo 2 Cajones s/Salvasisf\u00f3n",alt:"H.70",a:40,r1:"1837",r2:"1835",p:[182.1,195.85,219.45,229.5,261.4,233.95]},
+  {tipo:"Bajo 2 Cajones s/Salvasisf\u00f3n",alt:"H.70",a:50,r1:"1839",r2:"1838",p:[195.65,210.55,236.15,247.05,281.65,251.85]},
+  {tipo:"Bajo 2 Cajones s/Salvasisf\u00f3n",alt:"H.70",a:60,r1:"1840",r2:null,p:[209.25,225.6,252.85,264.95,302.15,269.75]},
+  {tipo:"Bajo 1C + Hueco Inferior s/Salvasisf\u00f3n",alt:"H.60",a:30,r1:"1843",r2:"1841",p:[140.85,151.05,168.35,175.75,198.95,179.7]},
+  {tipo:"Bajo 1C + Hueco Inferior s/Salvasisf\u00f3n",alt:"H.60",a:40,r1:"1844",r2:"1842",p:[154.4,165.75,185.0,193.35,219.25,197.55]},
+  {tipo:"Bajo 1C + Hueco Inferior s/Salvasisf\u00f3n",alt:"H.60",a:50,r1:"1846",r2:"1845",p:[167.95,180.5,201.75,210.9,239.5,215.4]},
+  {tipo:"Bajo 1C + Hueco Inferior s/Salvasisf\u00f3n",alt:"H.60",a:60,r1:"1847",r2:null,p:[181.5,195.2,218.45,228.45,259.8,233.25]},
+  {tipo:"Portalavabo 3C/Caj\u00f3n Peque\u00f1o Alto",alt:"H.60",a:100,r1:"1850",r2:"1848",p:[336.8,364.95,406.4,428.0,503.15,430.7]},
+  {tipo:"Portalavabo 3C/Caj\u00f3n Peque\u00f1o Alto",alt:"H.60",a:110,r1:"1852",r2:"1851",p:[350.4,380.0,423.1,445.95,525.7,448.6]},
+  {tipo:"Portalavabo 3C/Caj\u00f3n Peque\u00f1o Alto",alt:"H.60",a:120,r1:"1854",r2:"1853",p:[363.95,395.0,439.8,463.85,548.2,466.5]},
+  {tipo:"Bajo 1 Puerta D/I",alt:"H.60",a:25,r1:"1857",r2:"1855",p:[120.05,128.7,143.85,150.25,170.55,154.0]},
+  {tipo:"Bajo 1 Puerta D/I",alt:"H.60",a:30,r1:"1858",r2:"1856",p:[127.8,137.05,153.25,160.1,181.45,163.9]},
+  {tipo:"Bajo 1 Puerta D/I",alt:"H.60",a:35,r1:"1860",r2:"1859",p:[134.5,144.35,161.7,168.85,191.8,172.8]},
+  {tipo:"Bajo 1 Puerta D/I",alt:"H.60",a:40,r1:"1862",r2:"1861",p:[141.4,151.75,169.4,176.85,200.6,181.25]},
+  {tipo:"Bajo 1 Puerta D/I",alt:"H.70",a:25,r1:"1865",r2:"1863",p:[127.8,137.05,153.25,160.1,181.45,163.9]},
+  {tipo:"Bajo 1 Puerta D/I",alt:"H.70",a:30,r1:"1866",r2:"1864",p:[134.5,144.35,161.7,168.85,191.8,172.8]},
+  {tipo:"Bajo 1 Puerta D/I",alt:"H.70",a:35,r1:"1868",r2:"1867",p:[141.4,151.75,169.4,176.85,200.6,181.25]},
+  {tipo:"Bajo 1 Puerta D/I",alt:"H.70",a:40,r1:"1870",r2:"1869",p:[148.1,158.8,177.15,185.0,210.15,189.65]},
+  {tipo:"Portalavabo 2 Puertas",alt:"H.60",a:60,r1:"1873",r2:"1871",p:[225.05,241.0,267.1,278.55,312.5,281.3]},
+  {tipo:"Portalavabo 2 Puertas",alt:"H.60",a:70,r1:"1874",r2:"1872",p:[238.65,256.1,283.8,296.55,334.95,299.2]},
+  {tipo:"Portalavabo 2 Puertas",alt:"H.60",a:80,r1:"1876",r2:"1875",p:[252.2,271.15,300.5,314.5,357.5,317.15]},
+  {tipo:"Portalavabo 2 Puertas",alt:"H.70",a:60,r1:"1879",r2:"1877",p:[238.65,256.1,283.8,296.55,334.95,299.2]},
+  {tipo:"Portalavabo 2 Puertas",alt:"H.70",a:70,r1:"1880",r2:"1878",p:[252.2,271.15,300.5,314.5,357.5,317.15]},
+  {tipo:"Portalavabo 2 Puertas",alt:"H.70",a:80,r1:"1882",r2:"1881",p:[265.8,286.2,317.2,332.45,380.0,335.05]},
+  {tipo:"Bajo 2 Puertas",alt:"H.60",a:50,r1:"1885",r2:"1883",p:[148.1,158.8,177.15,185.0,210.15,189.65]},
+  {tipo:"Bajo 2 Puertas",alt:"H.60",a:60,r1:"1886",r2:"1884",p:[154.95,166.5,186.1,194.4,220.9,198.6]},
+  {tipo:"Bajo 2 Puertas",alt:"H.60",a:70,r1:"1888",r2:"1887",p:[161.65,174.15,195.1,203.9,231.6,207.5]},
+  {tipo:"Bajo 2 Puertas",alt:"H.60",a:80,r1:"1890",r2:"1889",p:[168.55,181.2,202.8,211.95,241.15,216.0]},
+  {tipo:"Bajo 2 Puertas",alt:"H.70",a:50,r1:"1893",r2:"1891",p:[154.95,166.5,186.1,194.4,220.9,198.6]},
+  {tipo:"Bajo 2 Puertas",alt:"H.70",a:60,r1:"1894",r2:"1892",p:[161.65,174.15,195.1,203.9,231.6,207.5]},
+  {tipo:"Bajo 2 Puertas",alt:"H.70",a:70,r1:"1896",r2:"1895",p:[168.55,181.2,202.8,211.95,241.15,216.0]},
+  {tipo:"Bajo 2 Puertas",alt:"H.70",a:80,r1:"1898",r2:"1897",p:[175.3,188.85,211.5,221.0,251.9,224.5]},
+  {tipo:"Bajo 1 Balda",alt:"H.60",a:30,r1:"1901",r2:"1899",p:[114.3,122.65,137.0,143.2,162.5,146.65]},
+  {tipo:"Bajo 1 Balda",alt:"H.60",a:40,r1:"1902",r2:"1900",p:[120.05,128.7,143.85,150.25,170.55,154.0]},
+  {tipo:"Bajo 1 Balda",alt:"H.60",a:50,r1:"1904",r2:"1903",p:[127.8,137.05,153.25,160.1,181.45,163.9]},
+  {tipo:"Bajo 1 Balda",alt:"H.60",a:60,r1:"1905",r2:null,p:[134.5,144.35,161.7,168.85,191.8,172.8]},
+  {tipo:"Bajo 1 Balda",alt:"H.70",a:30,r1:"1908",r2:"1906",p:[120.05,128.7,143.85,150.25,170.55,154.0]},
+  {tipo:"Bajo 1 Balda",alt:"H.70",a:40,r1:"1909",r2:"1907",p:[127.8,137.05,153.25,160.1,181.45,163.9]},
+  {tipo:"Bajo 1 Balda",alt:"H.70",a:50,r1:"1911",r2:"1910",p:[134.5,144.35,161.7,168.85,191.8,172.8]},
+  {tipo:"Bajo 1 Balda",alt:"H.70",a:60,r1:"1912",r2:null,p:[141.4,151.75,169.4,176.85,200.6,181.25]},
+  {tipo:"Portalavabo 3 Cajones",alt:"H.70",a:60,r1:"1915",r2:"1913",p:[296.1,319.85,356.3,374.2,435.65,377.0]},
+  {tipo:"Portalavabo 3 Cajones",alt:"H.70",a:70,r1:"1916",r2:"1914",p:[309.65,334.85,373.0,392.15,458.15,394.9]},
+  {tipo:"Portalavabo 3 Cajones",alt:"H.70",a:80,r1:"1918",r2:"1917",p:[323.25,349.9,389.7,410.05,480.65,412.8]},
+  {tipo:"Portalavabo 3 Cajones",alt:"H.70",a:90,r1:"1920",r2:"1919",p:[336.8,364.95,406.4,428.0,503.15,430.7]},
+  {tipo:"Portalavabo 3 Cajones",alt:"H.70",a:100,r1:"1922",r2:"1921",p:[350.4,380.0,423.1,445.95,525.7,448.6]},
+  {tipo:"Portalavabo 3 Cajones",alt:"H.70",a:110,r1:"1925",r2:"1923",p:[363.95,395.0,439.8,463.85,548.2,466.5]},
+  {tipo:"Portalavabo 3 Cajones",alt:"H.70",a:120,r1:"1926",r2:"1924",p:[377.5,410.05,456.5,481.8,570.75,484.4]},
+  {tipo:"Bajo 3 Cajones s/Salvasisf\u00f3n",alt:"H.70",a:30,r1:"1929",r2:"1927",p:[182.1,195.85,219.45,229.5,261.4,233.95]},
+  {tipo:"Bajo 3 Cajones s/Salvasisf\u00f3n",alt:"H.70",a:40,r1:"1930",r2:"1928",p:[195.65,210.55,236.15,247.05,281.65,251.85]},
+  {tipo:"Bajo 3 Cajones s/Salvasisf\u00f3n",alt:"H.70",a:50,r1:"1932",r2:"1931",p:[209.25,225.6,252.85,264.95,302.15,269.75]},
+  {tipo:"Bajo 3 Cajones s/Salvasisf\u00f3n",alt:"H.70",a:60,r1:"1933",r2:null,p:[222.8,240.6,269.55,282.85,322.65,287.6]},
+  {tipo:"Bajo 2 Baldas",alt:"H.70",a:30,r1:"1936",r2:"1934",p:[120.05,128.7,143.85,150.25,170.55,154.0]},
+  {tipo:"Bajo 2 Baldas",alt:"H.70",a:40,r1:"1937",r2:"1935",p:[127.8,137.05,153.25,160.1,181.45,163.9]},
+  {tipo:"Bajo 2 Baldas",alt:"H.70",a:50,r1:"1939",r2:"1938",p:[134.5,144.35,161.7,168.85,191.8,172.8]},
+  {tipo:"Bajo 2 Baldas",alt:"H.70",a:60,r1:"1940",r2:null,p:[141.4,151.75,169.4,176.85,200.6,181.25]},
+  {tipo:"Bajo Toallero c/Acc. Telesc.",alt:"H.70",a:15,r1:"1943",r2:"1941",p:[195.65,210.55,236.15,247.05,281.65,251.85]},
+  {tipo:"Bajo Toallero c/Acc. Telesc.",alt:"H.70",a:20,r1:"1944",r2:"1942",p:[209.25,225.6,252.85,264.95,302.15,269.75]},
+  {tipo:"Bajo Toallero c/Acc. Telesc.",alt:"H.70",a:25,r1:"1946",r2:"1945",p:[222.8,240.6,269.55,282.85,322.65,287.6]},
+  {tipo:"Dado 1 Puerta F26.9",alt:"-",a:35,r1:"1948",r2:null,p:[134.5,144.35,161.7,168.85,191.8,172.8]},
+  {tipo:"Colgar 1 Puerta F26.9",alt:"-",a:25,r1:"1950",r2:"1949",p:[95.5,102.6,114.55,119.75,136.05,122.85]},
+  {tipo:"Colgar 1 Puerta F26.9",alt:"-",a:30,r1:"1952",r2:"1951",p:[100.25,107.6,120.2,125.55,142.6,128.75]},
+  {tipo:"Colgar 1 Puerta F26.9",alt:"-",a:35,r1:"1954",r2:"1953",p:[105.0,112.65,125.85,131.4,149.2,134.65]},
+  {tipo:"Colgar 1 Puerta F26.9",alt:"-",a:40,r1:"1956",r2:"1955",p:[110.7,118.7,132.75,138.75,157.55,142.1]},
+  {tipo:"Colgar 2 Puertas F26.9",alt:"-",a:50,r1:"1959",r2:"1957",p:[120.05,128.7,143.85,150.25,170.55,154.0]},
+  {tipo:"Colgar 2 Puertas F26.9",alt:"-",a:60,r1:"1960",r2:"1958",p:[127.8,137.05,153.25,160.1,181.45,163.9]},
+  {tipo:"Colgar 2 Puertas F26.9",alt:"-",a:70,r1:"1962",r2:"1961",p:[134.5,144.35,161.7,168.85,191.8,172.8]},
+  {tipo:"Colgar 2 Puertas F26.9",alt:"-",a:80,r1:"1964",r2:"1963",p:[141.4,151.75,169.4,176.85,200.6,181.25]},
+  {tipo:"Suspendido 1/2 Puertas F26.9",alt:"-",a:35,r1:"1967",r2:"1965",p:[114.3,122.65,137.0,143.2,162.5,146.65]},
+  {tipo:"Columna F32.3 c/Patas",alt:"-",a:35,r1:"1969",r2:"1968",p:[255.4,274.7,306.2,320.45,368.1,323.2]}
+];
+const CAMP_DROP=[
+  {tipo:"Portalavabo 1 Caj\u00f3n",alt:"H.30",a:60,r1:"2005",r2:"2000",p:[209.25,225.6,252.85,264.95,302.15,269.75,241.85]},
+  {tipo:"Portalavabo 1 Caj\u00f3n",alt:"H.30",a:70,r1:"2006",r2:"2001",p:[222.8,240.6,269.55,282.85,322.65,287.6,258.2]},
+  {tipo:"Portalavabo 1 Caj\u00f3n",alt:"H.30",a:80,r1:"2007",r2:"2002",p:[236.35,255.6,286.25,300.8,343.15,305.5,274.55]},
+  {tipo:"Portalavabo 1 Caj\u00f3n",alt:"H.30",a:90,r1:"2008",r2:"2003",p:[249.9,270.6,302.9,318.7,363.65,323.4,290.9]},
+  {tipo:"Portalavabo 1 Caj\u00f3n",alt:"H.30",a:100,r1:"2009",r2:"2004",p:[263.5,285.65,319.6,336.65,386.2,341.3,307.25]},
+  {tipo:"Portalavabo 1 Caj\u00f3n",alt:"H.30",a:110,r1:"2013",r2:"2010",p:[277.05,300.65,336.3,354.55,408.7,359.2,323.6]},
+  {tipo:"Portalavabo 1 Caj\u00f3n",alt:"H.30",a:120,r1:"2014",r2:"2011",p:[290.6,315.7,353.0,372.5,431.2,377.1,339.95]},
+  {tipo:"Portalavabo 1 Caj\u00f3n",alt:"H.60",a:60,r1:"2049",r2:"2044",p:[232.2,249.6,278.85,291.35,330.65,295.1,264.75]},
+  {tipo:"Portalavabo 1 Caj\u00f3n",alt:"H.60",a:70,r1:"2050",r2:"2045",p:[245.75,264.65,295.55,309.3,353.1,313.0,281.05]},
+  {tipo:"Portalavabo 1 Caj\u00f3n",alt:"H.60",a:80,r1:"2051",r2:"2046",p:[259.35,279.65,312.25,327.2,375.6,331.0,297.4]},
+  {tipo:"Portalavabo 1 Caj\u00f3n",alt:"H.60",a:90,r1:"2052",r2:"2047",p:[272.9,294.7,328.95,345.15,398.15,348.9,313.75]},
+  {tipo:"Portalavabo 1 Caj\u00f3n",alt:"H.60",a:100,r1:"2053",r2:"2048",p:[286.5,309.7,345.65,363.05,420.65,366.8,330.1]},
+  {tipo:"Portalavabo 1 Caj\u00f3n",alt:"H.60",a:110,r1:"2057",r2:"2054",p:[300.05,324.75,362.35,381.0,443.15,384.75,346.45]},
+  {tipo:"Portalavabo 1 Caj\u00f3n",alt:"H.60",a:120,r1:"2058",r2:"2055",p:[313.6,339.75,379.05,398.9,465.65,402.65,362.8]},
+  {tipo:"Bajo 1 Caj\u00f3n s/Salvasisf\u00f3n",alt:"H.30",a:30,r1:"2061",r2:"2059",p:[135.55,145.85,163.25,170.5,193.6,173.65,155.75]},
+  {tipo:"Bajo 1 Caj\u00f3n s/Salvasisf\u00f3n",alt:"H.30",a:40,r1:"2062",r2:"2060",p:[149.1,160.5,179.95,188.0,213.9,191.6,171.85]},
+  {tipo:"Bajo 1 Caj\u00f3n s/Salvasisf\u00f3n",alt:"H.30",a:50,r1:"2065",r2:"2063",p:[162.65,175.2,196.6,205.55,234.15,209.5,188.15]},
+  {tipo:"Bajo 1 Caj\u00f3n s/Salvasisf\u00f3n",alt:"H.30",a:60,r1:"2066",r2:"2064",p:[176.2,189.9,213.3,223.05,254.45,227.45,204.5]},
+  {tipo:"Bajo 1 Caj\u00f3n s/Salvasisf\u00f3n",alt:"H.60",a:30,r1:"2069",r2:"2067",p:[148.6,159.85,178.55,186.6,211.8,190.1,170.45]},
+  {tipo:"Bajo 1 Caj\u00f3n s/Salvasisf\u00f3n",alt:"H.60",a:40,r1:"2070",r2:"2068",p:[162.15,174.5,195.25,204.15,232.05,208.0,186.75]},
+  {tipo:"Bajo 1 Caj\u00f3n s/Salvasisf\u00f3n",alt:"H.60",a:50,r1:"2073",r2:"2071",p:[175.7,189.2,211.95,221.65,252.35,225.95,203.1]},
+  {tipo:"Bajo 1 Caj\u00f3n s/Salvasisf\u00f3n",alt:"H.60",a:60,r1:"2074",r2:"2072",p:[189.25,203.9,228.65,239.15,272.6,243.85,219.4]},
+  {tipo:"Portalavabo 1C + 1C Interno",alt:"H.60",a:60,r1:"2077",r2:"2075",p:[249.9,270.6,302.9,318.7,363.65,323.4,290.9]},
+  {tipo:"Portalavabo 1C + 1C Interno",alt:"H.60",a:70,r1:"2078",r2:"2076",p:[263.5,285.65,319.6,336.65,386.2,341.3,307.25]},
+  {tipo:"Portalavabo 1C + 1C Interno",alt:"H.60",a:80,r1:"2080",r2:"2079",p:[277.05,300.65,336.3,354.55,408.7,359.2,323.6]},
+  {tipo:"Portalavabo 1C + 1C Interno",alt:"H.60",a:90,r1:"2082",r2:"2081",p:[290.6,315.7,353.0,372.5,431.2,377.1,339.95]},
+  {tipo:"Portalavabo 1C + 1C Interno",alt:"H.60",a:100,r1:"2084",r2:"2083",p:[304.2,330.7,369.75,390.4,453.75,395.0,356.3]},
+  {tipo:"Portalavabo 2 Cajones",alt:"H.60",a:60,r1:"2087",r2:"2085",p:[277.05,300.65,336.3,354.55,408.7,359.2,323.6]},
+  {tipo:"Portalavabo 2 Cajones",alt:"H.60",a:70,r1:"2088",r2:"2086",p:[290.6,315.7,353.0,372.5,431.2,377.1,339.95]},
+  {tipo:"Portalavabo 2 Cajones",alt:"H.60",a:80,r1:"2090",r2:"2089",p:[304.2,330.7,369.75,390.4,453.75,395.0,356.3]},
+  {tipo:"Portalavabo 2 Cajones",alt:"H.60",a:90,r1:"2092",r2:"2091",p:[317.75,345.7,386.45,408.35,476.3,412.95,372.65]},
+  {tipo:"Portalavabo 2 Cajones",alt:"H.60",a:100,r1:"2094",r2:"2093",p:[331.35,360.75,403.15,426.25,498.8,430.85,389.0]},
+  {tipo:"Portalavabo 2 Cajones",alt:"H.60",a:110,r1:"2097",r2:"2095",p:[344.9,375.75,419.85,444.15,521.3,448.8,405.35]},
+  {tipo:"Portalavabo 2 Cajones",alt:"H.60",a:120,r1:"2098",r2:"2096",p:[358.45,390.8,436.55,462.05,543.8,466.7,421.7]},
+  {tipo:"Portalavabo 2 Cajones",alt:"H.70",a:60,r1:"2101",r2:"2099",p:[290.6,315.7,353.0,372.5,431.2,377.1,339.95]},
+  {tipo:"Portalavabo 2 Cajones",alt:"H.70",a:70,r1:"2102",r2:"2100",p:[304.2,330.7,369.75,390.4,453.75,395.0,356.3]},
+  {tipo:"Portalavabo 2 Cajones",alt:"H.70",a:80,r1:"2104",r2:"2103",p:[317.75,345.7,386.45,408.35,476.3,412.95,372.65]},
+  {tipo:"Portalavabo 2 Cajones",alt:"H.70",a:90,r1:"2106",r2:"2105",p:[331.35,360.75,403.15,426.25,498.8,430.85,389.0]},
+  {tipo:"Portalavabo 2 Cajones",alt:"H.70",a:100,r1:"2108",r2:"2107",p:[344.9,375.75,419.85,444.15,521.3,448.8,405.35]},
+  {tipo:"Portalavabo 2 Cajones",alt:"H.70",a:110,r1:"2111",r2:"2109",p:[358.45,390.8,436.55,462.05,543.8,466.7,421.7]},
+  {tipo:"Portalavabo 2 Cajones",alt:"H.70",a:120,r1:"2112",r2:"2110",p:[372.0,405.8,453.25,480.0,566.35,484.6,438.05]},
+  {tipo:"Portalavabo 1C + Hueco Inferior",alt:"H.60",a:60,r1:"2115",r2:"2113",p:[249.9,270.6,302.9,318.7,363.65,323.4,290.9]},
+  {tipo:"Portalavabo 1C + Hueco Inferior",alt:"H.60",a:70,r1:"2116",r2:"2114",p:[263.5,285.65,319.6,336.65,386.2,341.3,307.25]},
+  {tipo:"Portalavabo 1C + Hueco Inferior",alt:"H.60",a:80,r1:"2118",r2:"2117",p:[277.05,300.65,336.3,354.55,408.7,359.2,323.6]},
+  {tipo:"Portalavabo 1C + Hueco Inferior",alt:"H.60",a:90,r1:"2120",r2:"2119",p:[290.6,315.7,353.0,372.5,431.2,377.1,339.95]},
+  {tipo:"Portalavabo 1C + Hueco Inferior",alt:"H.60",a:100,r1:"2122",r2:"2121",p:[304.2,330.7,369.75,390.4,453.75,395.0,356.3]},
+  {tipo:"Portalavabo 1C + Hueco Inferior",alt:"H.60",a:110,r1:"2125",r2:"2123",p:[317.75,345.7,386.45,408.35,476.3,412.95,372.65]},
+  {tipo:"Portalavabo 1C + Hueco Inferior",alt:"H.60",a:120,r1:"2126",r2:"2124",p:[331.35,360.75,403.15,426.25,498.8,430.85,389.0]},
+  {tipo:"Bajo 2 Cajones s/Salvasisf\u00f3n",alt:"H.60",a:30,r1:"2129",r2:"2127",p:[162.65,175.2,196.6,205.55,234.15,209.5,188.15]},
+  {tipo:"Bajo 2 Cajones s/Salvasisf\u00f3n",alt:"H.60",a:40,r1:"2130",r2:"2128",p:[176.2,189.9,213.3,223.05,254.45,227.45,204.5]},
+  {tipo:"Bajo 2 Cajones s/Salvasisf\u00f3n",alt:"H.60",a:50,r1:"2132",r2:"2131",p:[189.75,204.6,230.0,240.55,274.7,245.35,220.8]},
+  {tipo:"Bajo 2 Cajones s/Salvasisf\u00f3n",alt:"H.60",a:60,r1:"2133",r2:null,p:[203.35,219.3,246.7,258.05,295.0,263.3,237.15]},
+  {tipo:"Bajo 2 Cajones s/Salvasisf\u00f3n",alt:"H.70",a:30,r1:"2136",r2:"2134",p:[176.2,189.9,213.3,223.05,254.45,227.45,204.5]},
+  {tipo:"Bajo 2 Cajones s/Salvasisf\u00f3n",alt:"H.70",a:40,r1:"2137",r2:"2135",p:[189.75,204.6,230.0,240.55,274.7,245.35,220.8]},
+  {tipo:"Bajo 2 Cajones s/Salvasisf\u00f3n",alt:"H.70",a:50,r1:"2139",r2:"2138",p:[203.35,219.3,246.7,258.05,295.0,263.3,237.15]},
+  {tipo:"Bajo 2 Cajones s/Salvasisf\u00f3n",alt:"H.70",a:60,r1:"2140",r2:null,p:[216.9,234.0,263.4,275.95,315.3,281.2,253.5]},
+  {tipo:"Bajo 1C + Hueco Inferior s/Salvasisf\u00f3n",alt:"H.60",a:30,r1:"2143",r2:"2141",p:[148.6,159.85,178.55,186.6,211.8,190.1,170.45]},
+  {tipo:"Bajo 1C + Hueco Inferior s/Salvasisf\u00f3n",alt:"H.60",a:40,r1:"2144",r2:"2142",p:[162.15,174.5,195.25,204.15,232.05,208.0,186.75]},
+  {tipo:"Bajo 1C + Hueco Inferior s/Salvasisf\u00f3n",alt:"H.60",a:50,r1:"2146",r2:"2145",p:[175.7,189.2,211.95,221.65,252.35,225.95,203.1]},
+  {tipo:"Bajo 1C + Hueco Inferior s/Salvasisf\u00f3n",alt:"H.60",a:60,r1:"2147",r2:null,p:[189.25,203.9,228.65,239.15,272.6,243.85,219.4]},
+  {tipo:"Portalavabo 3C/Caj\u00f3n Peque\u00f1o Alto",alt:"H.60",a:100,r1:"2150",r2:"2148",p:[344.9,375.75,419.85,444.15,521.3,448.8,405.35]},
+  {tipo:"Portalavabo 3C/Caj\u00f3n Peque\u00f1o Alto",alt:"H.60",a:110,r1:"2152",r2:"2151",p:[358.45,390.8,436.55,462.05,543.8,466.7,421.7]},
+  {tipo:"Portalavabo 3C/Caj\u00f3n Peque\u00f1o Alto",alt:"H.60",a:120,r1:"2154",r2:"2153",p:[372.0,405.8,453.25,480.0,566.35,484.6,438.05]},
+  {tipo:"Bajo 1 Puerta D/I",alt:"H.60",a:25,r1:"2157",r2:"2155",p:[127.8,137.05,153.25,160.1,181.45,163.9,147.55]},
+  {tipo:"Bajo 1 Puerta D/I",alt:"H.60",a:30,r1:"2158",r2:"2156",p:[135.55,145.85,163.25,170.5,193.6,173.65,155.75]},
+  {tipo:"Bajo 1 Puerta D/I",alt:"H.60",a:35,r1:"2160",r2:"2159",p:[142.25,152.9,171.0,178.75,203.0,182.6,163.9]},
+  {tipo:"Bajo 1 Puerta D/I",alt:"H.60",a:40,r1:"2162",r2:"2161",p:[149.1,160.5,179.95,188.0,213.9,191.6,171.85]},
+  {tipo:"Bajo 1 Puerta D/I",alt:"H.70",a:25,r1:"2165",r2:"2163",p:[135.55,145.85,163.25,170.5,193.6,173.65,155.75]},
+  {tipo:"Bajo 1 Puerta D/I",alt:"H.70",a:30,r1:"2166",r2:"2164",p:[142.25,152.9,171.0,178.75,203.0,182.6,163.9]},
+  {tipo:"Bajo 1 Puerta D/I",alt:"H.70",a:35,r1:"2168",r2:"2167",p:[149.1,160.5,179.95,188.0,213.9,191.6,171.85]},
+  {tipo:"Bajo 1 Puerta D/I",alt:"H.70",a:40,r1:"2170",r2:"2169",p:[155.8,167.7,187.65,196.0,222.65,200.05,179.6]},
+  {tipo:"Portalavabo 2 Puertas",alt:"H.60",a:60,r1:"2173",r2:"2171",p:[232.2,249.6,278.85,291.35,330.65,295.1,264.75]},
+  {tipo:"Portalavabo 2 Puertas",alt:"H.60",a:70,r1:"2174",r2:"2172",p:[245.75,264.65,295.55,309.3,353.1,313.0,281.05]},
+  {tipo:"Portalavabo 2 Puertas",alt:"H.60",a:80,r1:"2176",r2:"2175",p:[259.35,279.65,312.25,327.2,375.6,331.0,297.4]},
+  {tipo:"Portalavabo 2 Puertas",alt:"H.70",a:60,r1:"2179",r2:"2177",p:[245.75,264.65,295.55,309.3,353.1,313.0,281.05]},
+  {tipo:"Portalavabo 2 Puertas",alt:"H.70",a:70,r1:"2180",r2:"2178",p:[259.35,279.65,312.25,327.2,375.6,331.0,297.4]},
+  {tipo:"Portalavabo 2 Puertas",alt:"H.70",a:80,r1:"2182",r2:"2181",p:[272.9,294.7,328.95,345.15,398.15,348.9,313.75]},
+  {tipo:"Bajo 2 Puertas",alt:"H.60",a:50,r1:"2185",r2:"2183",p:[155.8,167.7,187.65,196.0,222.65,200.05,179.6]},
+  {tipo:"Bajo 2 Puertas",alt:"H.60",a:60,r1:"2186",r2:"2184",p:[162.65,175.2,196.6,205.55,234.15,209.5,188.15]},
+  {tipo:"Bajo 2 Puertas",alt:"H.60",a:70,r1:"2188",r2:"2187",p:[169.35,182.35,203.6,212.7,241.65,216.5,194.5]},
+  {tipo:"Bajo 2 Puertas",alt:"H.60",a:80,r1:"2190",r2:"2189",p:[176.2,189.9,213.3,223.05,254.45,227.45,204.5]},
+  {tipo:"Bajo 2 Puertas",alt:"H.70",a:50,r1:"2193",r2:"2191",p:[162.65,175.2,196.6,205.55,234.15,209.5,188.15]},
+  {tipo:"Bajo 2 Puertas",alt:"H.70",a:60,r1:"2194",r2:"2192",p:[169.35,182.35,203.6,212.7,241.65,216.5,194.5]},
+  {tipo:"Bajo 2 Puertas",alt:"H.70",a:70,r1:"2196",r2:"2195",p:[176.2,189.9,213.3,223.05,254.45,227.45,204.5]},
+  {tipo:"Bajo 2 Puertas",alt:"H.70",a:80,r1:"2198",r2:"2197",p:[183.05,197.1,220.65,230.5,263.2,236.95,212.5]},
+  {tipo:"Bajo 1 Balda",alt:"H.60",a:30,r1:"2201",r2:"2199",p:[122.05,131.2,146.75,153.35,174.15,156.6,140.6]},
+  {tipo:"Bajo 1 Balda",alt:"H.60",a:40,r1:"2202",r2:"2200",p:[127.8,137.05,153.25,160.1,181.45,163.9,147.55]},
+  {tipo:"Bajo 1 Balda",alt:"H.60",a:50,r1:"2204",r2:"2203",p:[135.55,145.85,163.25,170.5,193.6,173.65,155.75]},
+  {tipo:"Bajo 1 Balda",alt:"H.60",a:60,r1:"2205",r2:null,p:[142.25,152.9,171.0,178.75,203.0,182.6,163.9]},
+  {tipo:"Bajo 1 Balda",alt:"H.70",a:30,r1:"2208",r2:"2206",p:[127.8,137.05,153.25,160.1,181.45,163.9,147.55]},
+  {tipo:"Bajo 1 Balda",alt:"H.70",a:40,r1:"2209",r2:"2207",p:[135.55,145.85,163.25,170.5,193.6,173.65,155.75]},
+  {tipo:"Bajo 1 Balda",alt:"H.70",a:50,r1:"2211",r2:"2210",p:[142.25,152.9,171.0,178.75,203.0,182.6,163.9]},
+  {tipo:"Bajo 1 Balda",alt:"H.70",a:60,r1:"2212",r2:null,p:[149.1,160.5,179.95,188.0,213.9,191.6,171.85]},
+  {tipo:"Portalavabo 3 Cajones",alt:"H.70",a:60,r1:"2215",r2:"2213",p:[304.2,330.7,369.75,390.4,453.75,395.0,356.3]},
+  {tipo:"Portalavabo 3 Cajones",alt:"H.70",a:70,r1:"2216",r2:"2214",p:[317.75,345.7,386.45,408.35,476.3,412.95,372.65]},
+  {tipo:"Portalavabo 3 Cajones",alt:"H.70",a:80,r1:"2218",r2:"2217",p:[331.35,360.75,403.15,426.25,498.8,430.85,389.0]},
+  {tipo:"Portalavabo 3 Cajones",alt:"H.70",a:90,r1:"2220",r2:"2219",p:[344.9,375.75,419.85,444.15,521.3,448.8,405.35]},
+  {tipo:"Portalavabo 3 Cajones",alt:"H.70",a:100,r1:"2222",r2:"2221",p:[358.45,390.8,436.55,462.05,543.8,466.7,421.7]},
+  {tipo:"Portalavabo 3 Cajones",alt:"H.70",a:110,r1:"2225",r2:"2223",p:[372.0,405.8,453.25,480.0,566.35,484.6,438.05]},
+  {tipo:"Portalavabo 3 Cajones",alt:"H.70",a:120,r1:"2226",r2:"2224",p:[385.55,420.85,469.95,497.9,588.85,502.5,454.4]},
+  {tipo:"Bajo 3 Cajones s/Salvasisf\u00f3n",alt:"H.70",a:30,r1:"2229",r2:"2227",p:[189.75,204.6,230.0,240.55,274.7,245.35,220.8]},
+  {tipo:"Bajo 3 Cajones s/Salvasisf\u00f3n",alt:"H.70",a:40,r1:"2230",r2:"2228",p:[203.35,219.3,246.7,258.05,295.0,263.3,237.15]},
+  {tipo:"Bajo 3 Cajones s/Salvasisf\u00f3n",alt:"H.70",a:50,r1:"2232",r2:"2231",p:[216.9,234.0,263.4,275.95,315.3,281.2,253.5]},
+  {tipo:"Bajo 3 Cajones s/Salvasisf\u00f3n",alt:"H.70",a:60,r1:"2233",r2:null,p:[230.5,249.0,280.1,293.9,335.6,299.15,269.85]},
+  {tipo:"Bajo 2 Baldas",alt:"H.70",a:30,r1:"2236",r2:"2234",p:[127.8,137.05,153.25,160.1,181.45,163.9,147.55]},
+  {tipo:"Bajo 2 Baldas",alt:"H.70",a:40,r1:"2237",r2:"2235",p:[135.55,145.85,163.25,170.5,193.6,173.65,155.75]},
+  {tipo:"Bajo 2 Baldas",alt:"H.70",a:50,r1:"2239",r2:"2238",p:[142.25,152.9,171.0,178.75,203.0,182.6,163.9]},
+  {tipo:"Bajo 2 Baldas",alt:"H.70",a:60,r1:"2240",r2:null,p:[149.1,160.5,179.95,188.0,213.9,191.6,171.85]},
+  {tipo:"Bajo Toallero c/Acc. Telesc.",alt:"H.70",a:15,r1:"2243",r2:"2241",p:[203.35,219.3,246.7,258.05,295.0,263.3,237.15]},
+  {tipo:"Bajo Toallero c/Acc. Telesc.",alt:"H.70",a:20,r1:"2244",r2:"2242",p:[216.9,234.0,263.4,275.95,315.3,281.2,253.5]},
+  {tipo:"Bajo Toallero c/Acc. Telesc.",alt:"H.70",a:25,r1:"2246",r2:"2245",p:[230.5,249.0,280.1,293.9,335.6,299.15,269.85]},
+  {tipo:"Dado 1 Puerta F26.9",alt:"-",a:35,r1:"2248",r2:null,p:[142.25,152.9,171.0,178.75,203.0,182.6,163.9]},
+  {tipo:"Colgar 1 Puerta F26.9",alt:"-",a:25,r1:"2250",r2:"2249",p:[103.25,111.0,124.15,129.75,147.4,132.65,119.35]},
+  {tipo:"Colgar 1 Puerta F26.9",alt:"-",a:30,r1:"2252",r2:"2251",p:[108.0,116.1,129.75,135.55,154.0,138.55,124.55]},
+  {tipo:"Colgar 1 Puerta F26.9",alt:"-",a:35,r1:"2254",r2:"2253",p:[112.75,121.15,135.4,141.4,160.6,144.45,129.85]},
+  {tipo:"Colgar 1 Puerta F26.9",alt:"-",a:40,r1:"2256",r2:"2255",p:[118.5,127.4,142.3,148.75,169.0,152.0,136.7]},
+  {tipo:"Colgar 2 Puertas F26.9",alt:"-",a:50,r1:"2259",r2:"2257",p:[127.8,137.05,153.25,160.1,181.45,163.9,147.55]},
+  {tipo:"Colgar 2 Puertas F26.9",alt:"-",a:60,r1:"2260",r2:"2258",p:[135.55,145.85,163.25,170.5,193.6,173.65,155.75]},
+  {tipo:"Colgar 2 Puertas F26.9",alt:"-",a:70,r1:"2262",r2:"2261",p:[142.25,152.9,171.0,178.75,203.0,182.6,163.9]},
+  {tipo:"Colgar 2 Puertas F26.9",alt:"-",a:80,r1:"2264",r2:"2263",p:[149.1,160.5,179.95,188.0,213.9,191.6,171.85]},
+  {tipo:"Suspendido 1/2 Puertas F26.9",alt:"-",a:35,r1:"2267",r2:"2265",p:[122.05,131.2,146.75,153.35,174.15,156.6,140.6]},
+  {tipo:"Columna F32.3 c/Patas",alt:"-",a:35,r1:"2269",r2:"2268",p:[263.5,285.65,319.6,336.65,386.2,341.3,307.25]}
+];
+
 let ixTab    = 'bano';
 let ixLineas = [];
 let ixIdN    = 0;
@@ -11177,7 +11448,7 @@ loaders['imex'] = function(){
 // PANEL LATERAL FUENTES — PRESUPUESTO
 // ═══════════════════════════════════════════════════════════════
 let ppTabActual  = 'cype';
-let ppCatSub     = 'imex-bano';
+// ppCatSub eliminado - ahora se usa ppCatFab + ppCatMod
 let ciActivo     = false;  // CI+GG+BI toggle
 
 // ── CI+GG+BI TOGGLE ──────────────────────────────────────────
@@ -11326,70 +11597,196 @@ function ppUseTarif(id){
 }
 
 // ── CATÁLOGOS ─────────────────────────────────────────────────
+// Estado: {fab: null|'imex'|'camp', mod: null|'imex-bano'|'imex-cocina'|'camp-aqua'|'camp-drop'}
+let ppCatFab = null;
+let ppCatMod = null;
+
+const CAT_FABRICANTES = [
+  { id:'imex',  label:'IMEX',      icon:'🚿', desc:'Grifería y accesorios de baño/cocina' },
+  { id:'camp',  label:'Campoaras', icon:'🛁', desc:'Muebles de baño AQUA y DROP' }
+];
+const CAT_MODELOS = {
+  imex: [
+    { id:'imex-bano',   label:'Baño',   icon:'🚿' },
+    { id:'imex-cocina', label:'Cocina',  icon:'🍳' }
+  ],
+  camp: [
+    { id:'camp-aqua', label:'AQUA', icon:'💧' },
+    { id:'camp-drop', label:'DROP', icon:'🌊' }
+  ]
+};
+
 function ppInitCat(){
-  ppCatSetSub(ppCatSub);
+  ppCatShowFab();
 }
 
-function ppCatSetSub(sub){
-  ppCatSub = sub;
-  document.querySelectorAll('.cat-sub-tab').forEach(el=>{
-    el.classList.toggle('active', el.id === 'pp-csub-'+sub);
-  });
-  // Rellenar serie filter
-  const datos = ppCatDatos();
+function ppCatShowFab(){
+  ppCatFab = null; ppCatMod = null;
+  document.getElementById('pp-cat-fab-wrap').style.display='block';
+  document.getElementById('pp-cat-mod-wrap').style.display='none';
+  document.getElementById('pp-cat-search-wrap').style.display='none';
+  const list = document.getElementById('pp-cat-fab-list');
+  list.innerHTML = CAT_FABRICANTES.map(f=>
+    '<button onclick="ppCatSelFab(\'' + f.id + '\')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);cursor:pointer;text-align:left;transition:background .15s;width:100%" onmouseover="this.style.background=\'var(--bg-alt)\'" onmouseout="this.style.background=\'var(--bg)\'">'
+    +'<span style="font-size:22px">'+f.icon+'</span>'
+    +'<div><div style="font-size:12px;font-weight:700;color:var(--navy)">'+f.label+'</div>'
+    +'<div style="font-size:10px;color:var(--text-soft)">'+f.desc+'</div></div>'
+    +'</button>'
+  ).join('');
+}
+
+function ppCatSelFab(fab){
+  ppCatFab = fab;
+  document.getElementById('pp-cat-fab-wrap').style.display='none';
+  document.getElementById('pp-cat-mod-wrap').style.display='block';
+  document.getElementById('pp-cat-search-wrap').style.display='none';
+  document.getElementById('pp-cat-fab-label').textContent = CAT_FABRICANTES.find(f=>f.id===fab)?.label || fab;
+  const modList = document.getElementById('pp-cat-mod-list');
+  modList.innerHTML = (CAT_MODELOS[fab]||[]).map(m=>
+    '<button onclick="ppCatSelMod(\'' + m.id + '\')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);cursor:pointer;text-align:left;transition:background .15s;width:100%" onmouseover="this.style.background=\'var(--bg-alt)\'" onmouseout="this.style.background=\'var(--bg)\'">'
+    +'<span style="font-size:20px">'+m.icon+'</span>'
+    +'<div style="font-size:12px;font-weight:700;color:var(--navy)">'+m.label+'</div>'
+    +'</button>'
+  ).join('');
+}
+
+function ppCatBack(){ ppCatShowFab(); }
+
+function ppCatBackToMod(){
+  ppCatMod = null;
+  document.getElementById('pp-cat-mod-wrap').style.display='block';
+  document.getElementById('pp-cat-search-wrap').style.display='none';
+}
+
+function ppCatSelMod(mod){
+  ppCatMod = mod;
+  document.getElementById('pp-cat-mod-wrap').style.display='none';
+  const sw = document.getElementById('pp-cat-search-wrap');
+  sw.style.display='flex';
+  document.getElementById('pp-cat-mod-label').textContent =
+    (CAT_MODELOS[ppCatFab]||[]).find(m=>m.id===mod)?.label || mod;
   const sel = document.getElementById('pp-cat-serie');
-  if(sel){
+  sel.innerHTML = '<option value="">Todos los tipos</option>';
+  if(mod.startsWith('imex')){
+    const datos = mod==='imex-bano' ? IMEX_BANO : IMEX_COCINA;
     const series = [...new Set(datos.map(p=>p.serie))].filter(Boolean).sort();
-    sel.innerHTML = '<option value="">Todas las series</option>'
-      + series.map(s=>'<option value="'+escH(s)+'">'+escH(s)+'</option>').join('');
+    sel.innerHTML += series.map(s=>'<option value="'+escH(s)+'">'+escH(s)+'</option>').join('');
+  } else {
+    const data = mod==='camp-aqua' ? CAMP_AQUA : CAMP_DROP;
+    const tipos = [...new Set(data.map(p=>p.tipo))].filter(Boolean).sort();
+    sel.innerHTML += tipos.map(t=>'<option value="'+escH(t)+'">'+escH(t)+'</option>').join('');
   }
-  document.getElementById('pp-cat-q') && (document.getElementById('pp-cat-q').value='');
+  document.getElementById('pp-cat-q').value='';
   ppSearchCat();
 }
 
-function ppCatDatos(){
-  if(ppCatSub==='imex-bano')   return IMEX_BANO;
-  if(ppCatSub==='imex-cocina') return IMEX_COCINA;
-  return [];
-}
-
 function ppSearchCat(){
-  const q     = (document.getElementById('pp-cat-q')?.value||'').toLowerCase().trim();
-  const serie = document.getElementById('pp-cat-serie')?.value||'';
-  const res   = document.getElementById('pp-cat-res');
-  if(!res) return;
-  let list = ppCatDatos();
-  if(serie) list = list.filter(p=>p.serie===serie);
-  if(q)     list = list.filter(p=>(p.desc||'').toLowerCase().includes(q)||(p.ref||'').toLowerCase().includes(q)||(p.serie||'').toLowerCase().includes(q));
-  else if(!serie){ res.innerHTML='<div class="pp-empty"><div class="ico">🚿</div>Escribe o filtra por serie</div>'; return; }
-  list = list.slice(0,40);
-  if(!list.length){ res.innerHTML='<div class="pp-empty">Sin resultados</div>'; return; }
-  const INC=1.03, DTO=0.40;
-  res.innerHTML = list.map(p=>{
-    const pvpA = p.pvp * INC;
-    const coste = p.pvp * INC * (1-DTO);
-    const provLabel = ppCatSub.startsWith('imex') ? 'IMEX' : 'CAT';
-    return '<div class="pp-item" onclick="ppUseCat(\''+escH(p.ref).replace(/'/g,"&#39;")+'\')">'+
-      '<div class="pp-item-top">'+
-        '<span class="pp-badge pp-b-imex">'+provLabel+'</span>'+
-        '<span class="pp-item-desc">'+escH(p.desc)+'</span>'+
-      '</div>'+
-      '<div style="display:flex;justify-content:space-between;align-items:center;gap:6px">'+
-        '<span class="pp-item-ref">'+escH(p.ref)+' · '+escH(p.serie)+'</span>'+
-        '<span class="pp-item-price">'+coste.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€</span>'+
-      '</div>'+
-    '</div>';
-  }).join('');
+  const q    = (document.getElementById('pp-cat-q')?.value||'').toLowerCase().trim();
+  const tipo = document.getElementById('pp-cat-serie')?.value||'';
+  const res  = document.getElementById('pp-cat-res');
+  if(!res || !ppCatMod) return;
+
+  if(ppCatMod.startsWith('imex')){
+    let list = ppCatMod==='imex-bano' ? IMEX_BANO : IMEX_COCINA;
+    if(tipo) list = list.filter(p=>p.serie===tipo);
+    if(q)    list = list.filter(p=>(p.desc||'').toLowerCase().includes(q)||(p.ref||'').toLowerCase().includes(q)||(p.serie||'').toLowerCase().includes(q));
+    else if(!tipo){ res.innerHTML='<div class="pp-empty"><div class="ico">🚿</div>Escribe o filtra por serie</div>'; return; }
+    list = list.slice(0,40);
+    if(!list.length){ res.innerHTML='<div class="pp-empty">Sin resultados</div>'; return; }
+    res.innerHTML = list.map(p=>{
+      const coste = p.pvp * IMEX_INC * (1-IMEX_DTO);
+      return '<div class="pp-item" onclick="ppUseCatImex(\'' + escH(p.ref).replace(/\'/g,"&#39;") + '\')">'
+        +'<div class="pp-item-top"><span class="pp-badge pp-b-imex">IMEX</span><span class="pp-item-desc">'+escH(p.desc)+'</span></div>'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;gap:6px">'
+          +'<span class="pp-item-ref">'+escH(p.ref)+' · '+escH(p.serie)+'</span>'
+          +'<span class="pp-item-price">'+coste.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€</span>'
+        +'</div></div>';
+    }).join('');
+  } else {
+    const data     = ppCatMod==='camp-aqua' ? CAMP_AQUA : CAMP_DROP;
+    const acabados = ppCatMod==='camp-aqua' ? CAMP_ACABADOS_AQUA : CAMP_ACABADOS_DROP;
+    let list = data;
+    if(tipo) list = list.filter(p=>p.tipo===tipo);
+    if(q)    list = list.filter(p=>p.tipo.toLowerCase().includes(q)||p.alt.toLowerCase().includes(q)||String(p.a).includes(q)||p.r1.includes(q)||(p.r2&&p.r2.includes(q)));
+    else if(!tipo){ res.innerHTML='<div class="pp-empty"><div class="ico">🛁</div>Escribe o filtra por tipo de mueble</div>'; return; }
+    list = list.slice(0,30);
+    if(!list.length){ res.innerHTML='<div class="pp-empty">Sin resultados</div>'; return; }
+    const modelLabel = ppCatMod==='camp-aqua'?'AQUA':'DROP';
+    res.innerHTML = list.map((p,i)=>{
+      const key = 'camp_'+i+'_'+p.r1;
+      const minCoste = Math.min(...p.p) * CAMP_INC * (1-CAMP_DTO);
+      const acabOpts = acabados.map((a,ai)=>'<option value="'+ai+'">'+escH(a)+'</option>').join('');
+      const dataP = JSON.stringify(p.p).replace(/"/g,'&quot;');
+      const dataR = JSON.stringify([p.r1,p.r2]).replace(/"/g,'&quot;');
+      return '<div class="pp-item" style="cursor:default">'
+        +'<div class="pp-item-top"><span class="pp-badge" style="background:#e8f4fd;color:#0d6ca3">'+modelLabel+'</span>'
+          +'<span class="pp-item-desc">'+escH(p.tipo)+' '+escH(p.alt)+'</span></div>'
+        +'<div style="font-size:10px;color:var(--text-soft);margin:2px 0 6px">Ancho '+p.a+'cm · Ref. F37.8: '+p.r1+(p.r2?' | F44.8: '+p.r2:'')+'</div>'
+        +'<div style="background:var(--bg-alt);border-radius:6px;padding:8px;display:flex;flex-direction:column;gap:6px">'
+          +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">'
+            +'<div style="font-size:10px;color:var(--text-soft)">Fondo</div>'
+            +'<select id="fondo_'+key+'" style="font-size:11px;padding:3px 5px;border:1px solid var(--border);border-radius:4px;background:var(--bg)" onchange="ppCampUpdatePrice(this,\''+key+'\','+dataP+','+dataR+')">'
+              +'<option value="0">F37.8 cm</option>'+(p.r2?'<option value="1">F44.8 cm</option>':'')
+            +'</select>'
+            +'<div style="font-size:10px;color:var(--text-soft)">Acabado</div>'
+            +'<select id="acab_'+key+'" style="font-size:11px;padding:3px 5px;border:1px solid var(--border);border-radius:4px;background:var(--bg)" onchange="ppCampUpdatePrice(this,\''+key+'\','+dataP+','+dataR+')">'
+              +acabOpts
+            +'</select>'
+          +'</div>'
+          +'<div style="display:flex;justify-content:space-between;align-items:center">'
+            +'<span id="price_'+key+'" style="font-size:13px;font-weight:700;color:var(--navy)">'+minCoste.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€</span>'
+            +'<button onclick="ppUseCamp(\'' + key + '\','+JSON.stringify(p).replace(/"/g,"'")+')" style="background:var(--navy);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;font-weight:600">+ Añadir</button>'
+          +'</div>'
+        +'</div></div>';
+    }).join('');
+  }
 }
 
-function ppUseCat(ref){
-  const datos = ppCatDatos();
+function ppCampUpdatePrice(el, key, precios, refs){
+  const fondoEl = document.getElementById('fondo_'+key);
+  const acabEl  = document.getElementById('acab_'+key);
+  if(!fondoEl||!acabEl) return;
+  const acabIdx = parseInt(acabEl.value)||0;
+  const pvp = precios[acabIdx] || precios[0];
+  const coste = pvp * CAMP_INC * (1-CAMP_DTO);
+  const priceEl = document.getElementById('price_'+key);
+  if(priceEl) priceEl.textContent = coste.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€';
+}
+
+function ppUseCamp(key, prod){
+  const proy = document.getElementById('pres-proyecto-sel')?.value;
+  if(!proy){ toast('Selecciona un proyecto primero','error'); return; }
+  const fondoEl = document.getElementById('fondo_'+key);
+  const acabEl  = document.getElementById('acab_'+key);
+  const fondoIdx = parseInt(fondoEl?.value)||0;
+  const acabIdx  = parseInt(acabEl?.value)||0;
+  const acabados = ppCatMod==='camp-aqua' ? CAMP_ACABADOS_AQUA : CAMP_ACABADOS_DROP;
+  const ref = fondoIdx===1 && prod.r2 ? prod.r2 : prod.r1;
+  const pvp = prod.p[acabIdx] || prod.p[0];
+  const coste = pvp * CAMP_INC * (1-CAMP_DTO);
+  const modelLabel = ppCatMod==='camp-aqua'?'AQUA':'DROP';
+  const desc = 'Campoaras '+modelLabel+' '+prod.tipo+' '+prod.alt+' '+prod.a+'cm '+acabados[acabIdx];
+  addLineaPresupuesto();
+  setTimeout(()=>{
+    document.getElementById('pl-desc').value   = desc;
+    document.getElementById('pl-precio').value = coste.toFixed(4);
+    document.getElementById('pl-margen').value = '0';
+    document.getElementById('pl-ud').value     = 'Ud';
+    if(!ciActivo){ document.getElementById('pl-ci').value='0'; }
+    document.getElementById('pl-cype-search').value = ref+' · '+desc;
+    document.getElementById('pl-cype-search').dataset.cypeRef = ref;
+    calcLineaPres();
+    toast('Mueble Campoaras añadido','ok');
+  }, 50);
+}
+
+function ppUseCatImex(ref){
+  const datos = ppCatMod==='imex-bano' ? IMEX_BANO : IMEX_COCINA;
   const p = datos.find(x=>x.ref===ref);
   if(!p) return;
   const proy = document.getElementById('pres-proyecto-sel')?.value;
   if(!proy){ toast('Selecciona un proyecto primero','error'); return; }
-  const INC=1.03, DTO=0.40;
-  const coste = p.pvp * INC * (1-DTO);
+  const coste = p.pvp * IMEX_INC * (1-IMEX_DTO);
   addLineaPresupuesto();
   setTimeout(()=>{
     document.getElementById('pl-desc').value   = p.desc||'';
@@ -11397,7 +11794,6 @@ function ppUseCat(ref){
     document.getElementById('pl-margen').value = '0';
     document.getElementById('pl-ud').value     = 'Ud';
     if(!ciActivo){ document.getElementById('pl-ci').value='0'; }
-    // Guardar la ref del catálogo en el campo de CYPE (reutilizando el campo ref_cype para referencia)
     document.getElementById('pl-cype-search').value = p.ref+' · '+p.desc;
     document.getElementById('pl-cype-search').dataset.cypeRef = p.ref;
     calcLineaPres();
