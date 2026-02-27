@@ -1929,6 +1929,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
             <div class="imex-tabs">
               <button class="imex-tab active" id="ix-tab-bano" onclick="ixSetTab('bano')">🚿 Baño <span id="ix-cnt-bano"></span></button>
               <button class="imex-tab" id="ix-tab-cocina" onclick="ixSetTab('cocina')">🍳 Cocina <span id="ix-cnt-cocina"></span></button>
+              <button class="imex-tab" id="ix-tab-campoaras" onclick="ixSetTab('campoaras')">🛁 Campoaras <span id="ix-cnt-campoaras"></span></button>
             </div>
             <div class="imex-filters">
               <div class="imex-s-wrap">
@@ -1939,7 +1940,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
                 <option value="">Todas las series</option>
               </select>
             </div>
-            <div class="imex-info">PVP tarifa ×1,03 → <b>Coste PAU</b> = PVP actualizado ×0,60 (dto 40%) → <b>PVP cliente</b> = Coste × (1+margen%)</div>
+            <div class="imex-info" id="ix-info-box">PVP tarifa ×1,03 → <b>Coste PAU</b> = PVP actualizado ×0,60 (dto 40%) → <b>PVP cliente</b> = Coste × (1+margen%)</div>
           </div>
           <div class="imex-stats">
             <span id="ix-stats-txt">—</span>
@@ -1992,7 +1993,8 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
                 <div class="ix-tot-val" id="ix-t-mrg">—</div>
               </div>
             </div>
-            <button class="ix-btn-exp" onclick="ixExportar()">📋 Copiar resumen al portapapeles</button>
+            <button class="ix-btn-exp" onclick="ixExportarPresupuesto()" style="background:var(--copper)">📤 Exportar al presupuesto</button>
+            <button class="ix-btn-exp" onclick="ixExportar()" style="background:#555;margin-top:4px">📋 Copiar al portapapeles</button>
             <button class="ix-btn-clr" onclick="ixLimpiar()">🗑 Vaciar valoración</button>
           </div>
         </div>
@@ -11669,32 +11671,86 @@ let ixLineas = [];
 let ixIdN    = 0;
 
 function ixMrg(){ return parseFloat(document.getElementById('ix-mrg')?.value)||0; }
-function ixCoste(pvp){ return pvp * IMEX_INC * (1 - IMEX_DTO); }
+function ixCoste(pvp, p){ 
+  if(p && p._camp) return p._pvpBase * p._inc * (1 - p._dto);
+  return pvp * IMEX_INC * (1 - IMEX_DTO); 
+}
 function ixPvpCli(c){ return c * (1 + ixMrg()/100); }
 function ixFmt(n){ return n.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€'; }
 function ixH(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function ixDatos(){ return ixTab==='bano' ? IMEX_BANO : IMEX_COCINA; }
+function ixDatos(){
+  if(ixTab==='bano') return IMEX_BANO;
+  if(ixTab==='cocina') return IMEX_COCINA;
+  if(ixTab==='campoaras') return ixCampoarasFlat();
+  return IMEX_BANO;
+}
+
+// Aplanar datos Campoaras (AQUA + DROP) al formato IMEX {ref, serie, desc, pvp, cst}
+function ixCampoarasFlat(){
+  const list=[];
+  const processModel=(data,model,acabados,inc,dto)=>{
+    data.forEach(prod=>{
+      acabados.forEach((ac,i)=>{
+        const pvp=prod.p[i];
+        if(!pvp) return;
+        const ref=prod.r1+'/'+(i+1); // ref única por acabado
+        list.push({
+          ref: prod.r1+'-'+String(i+1).padStart(2,'0'),
+          serie: model+' · '+ac,
+          desc: model+' '+prod.tipo+' '+prod.alt+' '+prod.a+'cm · '+ac,
+          pvp: pvp,
+          cst: pvp*inc*(1-dto),
+          _camp: true, _pvpBase: pvp, _inc: inc, _dto: dto
+        });
+      });
+    });
+  };
+  processModel(CAMP_AQUA,'AQUA',CAMP_ACABADOS_AQUA,CAMP_INC,CAMP_DTO);
+  processModel(CAMP_DROP,'DROP',CAMP_ACABADOS_DROP,CAMP_INC,CAMP_DTO);
+  return list;
+}
 
 function ixSetTab(t){
   ixTab = t;
   document.getElementById('ix-tab-bano')?.classList.toggle('active', t==='bano');
   document.getElementById('ix-tab-cocina')?.classList.toggle('active', t==='cocina');
+  document.getElementById('ix-tab-campoaras')?.classList.toggle('active', t==='campoaras');
+  // Mostrar/ocultar filtro serie (Campoaras usa serie para mostrar modelo+acabado)
+  const serieWrap = document.getElementById('ix-serie')?.parentElement;
   const s = document.getElementById('ix-search');
   if(s) s.value = '';
   ixFillSeries();
   ixRender();
+  // Actualizar info-box
+  const infoBox = document.getElementById('ix-info-box');
+  if(infoBox){
+    if(t==='campoaras')
+      infoBox.innerHTML='PVP tarifa ×1,05 → <b>Coste PAU</b> = PVP actualizado ×0,60 (dto 40%) → <b>PVP cliente</b> = Coste × (1+margen%)';
+    else
+      infoBox.innerHTML='PVP tarifa ×1,03 → <b>Coste PAU</b> = PVP actualizado ×0,60 (dto 40%) → <b>PVP cliente</b> = Coste × (1+margen%)';
+  }
 }
 
 function ixFillSeries(){
   const sel = document.getElementById('ix-serie');
   if(!sel) return;
-  const series = [...new Set(ixDatos().map(p=>p.serie))].filter(Boolean).sort();
-  sel.innerHTML = '<option value="">Todas las series</option>'
-    + series.map(s=>'<option value="'+ixH(s)+'">'+ixH(s)+'</option>').join('');
+  let series=[];
+  if(ixTab==='campoaras'){
+    // Para Campoaras, filtrar por modelo (AQUA / DROP)
+    series=['AQUA · Melamina','AQUA · Lacado Mate','AQUA · Lacado Brillo Sup./Lam.','AQUA · Chapa Natural','AQUA · Chapa Tinte','AQUA · Marmoleado',
+            'DROP · Melamina','DROP · Laminado','DROP · Lacado Mate','DROP · Lacado Brillo Sup./Tex.','DROP · Chapa Natural','DROP · Chapa Tinte','DROP · Marmoleado'];
+    sel.innerHTML='<option value="">Todos los acabados</option>'+series.map(s=>'<option value="'+ixH(s)+'">'+ixH(s)+'</option>').join('');
+  } else {
+    series = [...new Set(ixDatos().map(p=>p.serie))].filter(Boolean).sort();
+    sel.innerHTML = '<option value="">Todas las series</option>'
+      + series.map(s=>'<option value="'+ixH(s)+'">'+ixH(s)+'</option>').join('');
+  }
   const cb = document.getElementById('ix-cnt-bano');
   const cc = document.getElementById('ix-cnt-cocina');
+  const ccamp = document.getElementById('ix-cnt-campoaras');
   if(cb) cb.textContent='('+IMEX_BANO.length+')';
   if(cc) cc.textContent='('+IMEX_COCINA.length+')';
+  if(ccamp){ const flat=ixCampoarasFlat(); ccamp.textContent='('+flat.length+')'; }
 }
 
 function ixRender(){
@@ -11719,8 +11775,8 @@ function ixRender(){
   if(noR) noR.style.display='none';
   tbody.innerHTML='';
   list.forEach(p=>{
-    const pvpA = p.pvp * IMEX_INC;
-    const cst  = ixCoste(p.pvp);
+    const pvpA = p._camp ? p._pvpBase * p._inc : p.pvp * IMEX_INC;
+    const cst  = ixCoste(p.pvp, p);
     const on   = addedSet.has(p.ref);
     const tr   = document.createElement('tr');
     tr.className = on ? 'ix-added' : '';
@@ -11743,7 +11799,7 @@ function ixAnadir(ref){
   const ex = ixLineas.find(l=>l.ref===ref);
   if(ex){ ex.cant++; ixRenderBud(); toast('+1 · '+p.desc.substring(0,40),'success'); return; }
   ixLineas.push({ id:++ixIdN, ref:p.ref, desc:p.desc, serie:p.serie,
-    pvp:p.pvp, cst:ixCoste(p.pvp), cant:1 });
+    pvp:p.pvp, cst:ixCoste(p.pvp, p), cant:1 });
   ixRenderBud();
   ixRender();
   toast('✅ '+p.ref+' añadido','success');
@@ -11822,6 +11878,80 @@ loaders['imex'] = function(){
   ixFillSeries();
   ixRender();
 };
+
+async function ixExportarPresupuesto(){
+  if(!ixLineas.length){ toast('Sin partidas que exportar','error'); return; }
+  // Determinar nombre capítulo según tab
+  const tabNames = { bano:'Griferías IMEX · Baño', cocina:'Griferías IMEX · Cocina', campoaras:'Muebles Baño · Campoaras' };
+  const capNombre = tabNames[ixTab] || 'Griferías IMEX';
+
+  // Buscar proyecto activo
+  const proy = document.getElementById('s-proyecto')?.value ||
+               document.getElementById('pres-proyecto-sel')?.value || '';
+  let proyFinal = proy;
+  if(!proyFinal){
+    proyFinal = prompt('Introduce el ID del proyecto (ej: PRY-001):','');
+    if(!proyFinal) return;
+  }
+  const verRaw = prompt('¿A qué versión del presupuesto exportar? (1, 2 o 3)','1');
+  if(!verRaw) return;
+  const ver = verRaw.startsWith('v') ? verRaw : 'v'+verRaw;
+  const margen = ixMrg();
+  const totalPvp = ixLineas.reduce((s,l)=>s+ixPvpCli(l.cst)*l.cant, 0);
+
+  if(!confirm(
+    `Se añadirán al presupuesto del proyecto "${proyFinal}" ${ver}:\n\n`+
+    `📂 Capítulo "${capNombre}"\n`+
+    `📄 ${ixLineas.length} líneas · Total PVP: ${totalPvp.toFixed(2)}€\n\n¿Confirmar?`
+  )) return;
+
+  try{
+    toast('Exportando...','info');
+    let ordenBase=0;
+    try{
+      const existing = await sbGet('presupuesto_lineas',
+        `?proyecto_id=eq.${proyFinal}&version=eq.${ver}&order=orden.desc&limit=1`);
+      if(existing && existing.length) ordenBase = existing[0].orden||0;
+    }catch(e){ ordenBase=0; }
+
+    await sbPost('presupuesto_lineas',{
+      proyecto_id:proyFinal, version:ver,
+      descripcion:capNombre, es_capitulo:true,
+      orden:ordenBase+1, cantidad:0, precio_base:0, precio_venta:0, subtotal:0
+    });
+
+    for(let i=0;i<ixLineas.length;i++){
+      const l=ixLineas[i];
+      const pvpU=ixPvpCli(l.cst);
+      await sbPost('presupuesto_lineas',{
+        proyecto_id:proyFinal, version:ver,
+        descripcion:'['+l.ref+'] '+l.desc,
+        unidad:'Ud', cantidad:l.cant,
+        precio_base:parseFloat(l.cst.toFixed(4)),
+        margen_pct:parseFloat(margen.toFixed(2)),
+        ci_gg_bi_pct:0,
+        precio_venta:parseFloat(pvpU.toFixed(4)),
+        subtotal:parseFloat((pvpU*l.cant).toFixed(4)),
+        iva_pct:'21%', es_capitulo:false,
+        orden:ordenBase+2+i
+      });
+    }
+
+    toast(`✅ ${ixLineas.length} líneas exportadas al presupuesto`);
+    setTimeout(()=>{
+      document.querySelector('[data-view="presupuesto"]')?.click();
+      setTimeout(()=>{
+        const ps=document.getElementById('pres-proyecto-sel');
+        const vs=document.getElementById('pres-version-sel');
+        if(ps) ps.value=proyFinal;
+        if(vs) vs.value=ver;
+        if(ps) loadPresupuesto();
+      },400);
+    },800);
+  }catch(e){
+    toast('Error al exportar: '+e.message,'error');
+  }
+}
 
 
 // ═══════════════════════════════════════════════════════════════
