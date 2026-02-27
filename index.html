@@ -357,7 +357,7 @@ th.sortable:not(.sort-asc):not(.sort-desc) .sort-arrow::after{content:‘⇅’}
 .exp-tab:hover { background: #f5f7fa; }
 </style>
 
-<script src="./PAU INTERIORISMO · Gestión_files/xlsx.full.min.js.descargar"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 </head>
 <body>
@@ -3666,7 +3666,7 @@ PAU INTERIORISMO S.L. · CIF B-56909641 · <a href="/cdn-cgi/l/email-protection"
 
 <div class="toast error" id="toast">Error al cargar datos: </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="./PAU INTERIORISMO · Gestión_files/email-decode.min.js.descargar"></script><script src="./PAU INTERIORISMO · Gestión_files/html2pdf.bundle.min.js.descargar"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <script>
 // ═══ ANTI-CACHÉ: Ejecutar LO PRIMERO antes de todo ═══
@@ -4063,7 +4063,7 @@ async function navTo(v){
   const m=META[v]||{};
   document.getElementById('tb-title').textContent=m.t||v;
   document.getElementById('tb-bc').textContent=m.b||'';
-  if(loaders[v]) await loaders[v]();
+  if(loaders[v]) try{ await loaders[v](); }catch(e){ console.error('navTo loader error ['+v+']:',e); toast('Error cargando sección: '+e.message,'error'); }
 }
 
 // ═══════════════════════════════════════════
@@ -5061,6 +5061,7 @@ renderGrentTable('activos');
 
 clearTimeout(connTimeout); const s=document.getElementById('conn-status');s.style.background='var(--green-soft)';s.style.color='var(--green)';s.textContent='🟢 Conectado';
 populateSelects();populateIntCatalog();populateTrabajadores();poblarFiltrosProyecto();poblarFiltrosCliente();poblarClientesComparativa();
+setTimeout(renderAlertasGerencia, 100);
 ```
 
 }catch(e){
