@@ -2,14 +2,15 @@
 
 <!-- saved from url=(0036)https://pau-interiorismo.vercel.app/ -->
 
-<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<html lang="es"><head><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#1a2a3a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="PAU Gestión">
-<link rel="manifest" href="https://pau-interiorismo.vercel.app/manifest.json">
+<!-- manifest PWA desactivado para evitar caché -->
+<!-- PAU INTERIORISMO v71 · Build: 2026-02-27 21:05 -->
 <title>PAU INTERIORISMO · Gestión</title>
 <style>
 :root{--navy:#1a2a3a;--navy-mid:#27405b;--navy-light:#3d5a78;--blue-soft:#b8cce4;--blue-light:#e8f4ff;--cream:#f7f4ef;--sand:#ede8df;--copper:#b87333;--copper-light:#f4e8da;--green:#1e6b3d;--green-soft:#d5e8d4;--amber:#7d6608;--amber-soft:#fff2cc;--red:#7b241c;--red-soft:#fce8e6;--white:#fff;--text:#1a2a3a;--text-mid:#4a5f72;--text-soft:#8a9aaa;--border:#dce6f0;--radius:8px;--radius-sm:4px;--shadow:0 1px 3px rgba(26,42,58,.08),0 4px 16px rgba(26,42,58,.06);--shadow-lg:0 8px 32px rgba(26,42,58,.14);--sidebar:220px;--header:56px}
@@ -3668,6 +3669,24 @@ PAU INTERIORISMO S.L. · CIF B-56909641 · <a href="/cdn-cgi/l/email-protection"
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="./PAU INTERIORISMO · Gestión_files/email-decode.min.js.descargar"></script><script src="./PAU INTERIORISMO · Gestión_files/html2pdf.bundle.min.js.descargar"></script>
 
 <script>
+// ═══ ANTI-CACHÉ: Ejecutar LO PRIMERO antes de todo ═══
+(function(){
+  // Limpiar Service Workers
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.getRegistrations().then(function(regs){
+      regs.forEach(function(r){ r.unregister(); });
+    });
+  }
+  // Limpiar todas las cachés
+  if('caches' in window){
+    caches.keys().then(function(keys){
+      keys.forEach(function(k){ caches.delete(k); });
+    });
+  }
+})();
+</script>
+
+<script>
 
 // ═══════════════════════════════════════════
 // PRESUPUESTO FINAL (documento imprimible)
@@ -4846,6 +4865,10 @@ function exportarInformeFacturas(){
   }).join('');
 
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <!-- PAU INTERIORISMO v70 -->
   <title>PAU INTERIORISMO SL - ${tipoLabel}</title>
   <style>
     body{font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:#333;margin:0;padding:0}
@@ -11591,12 +11614,8 @@ setTimeout(mostrarBotonNotif, 2000); // mostrar botón si no hay permisos
 iniciarCheckerAgenda();
 });
 
-// ═══ PWA SERVICE WORKER ═══
-if(‘serviceWorker’ in navigator){
-window.addEventListener(‘load’, ()=>{
-navigator.serviceWorker.register(’/sw.js’).catch(()=>{});
-});
-}
+// ═══ PWA: limpiar service workers y cachés obsoletos ═══
+// Anti-caché movido al inicio del documento
 
 // ═══════════════════════════════════════════
 // GRIFERÍAS IMEX · PRESUPUESTADOR
@@ -14552,15 +14571,17 @@ extra.innerHTML = `<button class="btn btn-ghost btn-sm" onclick="closeModal('m-e
 body.appendChild(extra);
 }
 // Patch expTab para usar versión con ficha
+// expTab: añadir botón ficha obra en pestaña resumen
 const _origExpTab = expTab;
 expTab = function(tab){
 _origExpTab(tab);
 if(tab===‘resumen’){
 const body = document.getElementById(‘exp-body’);
-if(body){
+if(body && _expProyId){
 const extra = document.createElement(‘div’);
 extra.style.cssText = ‘margin-top:14px;padding-top:12px;border-top:1px solid var(–border)’;
-extra.innerHTML = `<button class="btn btn-ghost btn-sm" onclick="closeModal('m-expediente');setTimeout(()=>abrirFichaObra('${_expProyId}'),100)" style="font-size:11px;color:var(--navy)">📱 Ficha de obra (vista móvil)</button>`;
+const pid = _expProyId; // capturar valor actual
+extra.innerHTML = `<button class="btn btn-ghost btn-sm" onclick="closeModal('m-expediente');setTimeout(function(){abrirFichaObra('${pid}');},100)" style="font-size:11px;color:var(--navy)">📱 Ficha de obra (vista móvil)</button>`;
 body.appendChild(extra);
 }
 }
