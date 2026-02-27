@@ -6156,24 +6156,34 @@ function saitraAddZocalo(){
     cant:1, puntos:pts, dto,
     costeUnit:costeU, costeTotal:costeU,
     pvpUnit:pvpU, pvpTotal:pvpU
-  }
-
-  function saitraAddGola(){
-    const ref = document.getElementById('s-gola-ref').value;
-    const qty = parseInt(document.getElementById('s-gola-qty').value)||1;
-    if(!ref||!SAITRA_GOLA[ref]){toast('Selecciona un perfil gola','error');return;}
-    const g = SAITRA_GOLA[ref];
-    const pts = g.pts[0];
-    const coste = Math.round(pts * 0.99 * qty * 100)/100;
-    saitraPresupuesto.push({tipo:'saitra-gola', ref, label:g.label, qty, pts, coste});
-    renderSaitraTable();
-    toast('Gola añadida ✓','success');
-  }
-);
+  });
   document.getElementById('s-notas-zoc').value='';
   saitraRenderTabla();
   saitraRecalc();
   toast(`✅ ${z.label} · Coste: ${costeU.toFixed(2)}€ · PVP: ${pvpU.toFixed(2)}€`);
+}
+
+function saitraAddGola(){
+  const ref    = document.getElementById('s-gola-ref')?.value;
+  const qty    = parseInt(document.getElementById('s-gola-qty')?.value)||1;
+  const dto    = parseFloat(document.getElementById('s-dto')?.value)||0;
+  const margen = parseFloat(document.getElementById('s-margen')?.value)||0;
+  if(!ref||!SAITRA_GOLA[ref]){toast('Selecciona un perfil gola','error');return;}
+  const g      = SAITRA_GOLA[ref];
+  const pts    = g.pts[0];
+  const costeU = saitraCalcCoste(pts, PUNTO_PP, dto);
+  const pvpU   = saitraCalcPvp(costeU, margen);
+  saitraLineas.push({
+    id:++saitraIdCnt, tipo:'gola', ref,
+    desc:g.label, notas:'',
+    cant:qty, puntos:pts, dto,
+    costeUnit:costeU, costeTotal:costeU*qty,
+    pvpUnit:pvpU, pvpTotal:pvpU*qty
+  });
+  document.getElementById('s-gola-qty').value='1';
+  saitraRenderTabla();
+  saitraRecalc();
+  toast(`✅ ${g.label} ×${qty} · Coste: ${(costeU*qty).toFixed(2)}€ · PVP: ${(pvpU*qty).toFixed(2)}€`);
 }
 
 function saitraEliminarLinea(id){
@@ -6192,7 +6202,7 @@ function saitraRenderTabla(){
     return;
   }
   if(countEl) countEl.textContent=`${saitraLineas.length} partida${saitraLineas.length!==1?'s':''}`;
-  const iconos = {modulo:'📦', accesorio:'🔧', zocalo:'⬇'};
+  const iconos = {modulo:'📦', accesorio:'🔧', zocalo:'⬇', gola:'↔'};
   tbody.innerHTML = saitraLineas.map((l,i)=>{
     const bg = i%2===0?'white':'#fdfcfa';
     return `<tr style="background:${bg};border-bottom:1px solid #f0ece5">
