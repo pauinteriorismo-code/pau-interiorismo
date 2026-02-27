@@ -2156,7 +2156,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
               <div id="camp-p3" class="camp-section" style="display:none">
                 <div class="camp-section-title">
                   <span class="step-num">4</span> Ancho (cm)
-                  <button class="camp-reset-btn" onclick="campReset(3)">↩ cambiar alto</button>
+                  <button class="camp-reset-btn" id="camp-reset-ancho-btn" onclick="campResetAncho()">↩ cambiar alto</button>
                 </div>
                 <div class="camp-chips" id="camp-anchos"></div>
               </div>
@@ -12799,7 +12799,18 @@ function campReset(fromStep){
   // fromStep: cuál paso se quiere rehacer (0=modelo, 1=tipo, 2=alto, 3=ancho, 4=fondo)
   const steps = ['modelo','tipo','alt','a','fondo'];
   for(let i = fromStep-1; i < steps.length; i++) campState[steps[i]] = null;
+  // TAPAS no tiene paso de "Alto": alt siempre debe ser '-' mientras haya tipo seleccionado
+  if(campState.modelo === 'TAPAS' && campState.tipo) campState.alt = '-';
   campRender();
+}
+
+function campResetAncho(){
+  // Para TAPAS, "cambiar alto" equivale a "cambiar tipo" ya que el paso de alto está oculto
+  if(campState.modelo === 'TAPAS'){
+    campReset(2); // vuelve a seleccionar tipo
+  } else {
+    campReset(3); // vuelve a seleccionar alto
+  }
 }
 
 function campSel(field, value){
@@ -12845,6 +12856,12 @@ function campRender(){
     if(!p) continue;
     if(i===2 && isTapas){ p.style.display='none'; continue; }
     p.style.display = i <= step ? 'block' : 'none';
+  }
+
+  // Para TAPAS, ajustar la etiqueta del botón de retroceso en el paso Ancho
+  const resetAnchoBtn = document.getElementById('camp-reset-ancho-btn');
+  if(resetAnchoBtn){
+    resetAnchoBtn.textContent = isTapas ? '↩ cambiar tipo' : '↩ cambiar alto';
   }
 
   // Marcar la selección actual en cada paso
