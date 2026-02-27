@@ -2061,6 +2061,11 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
             </div>
             <!-- Chips de serie -->
             <div class="ix-series-bar" id="ix-series-bar" style="margin-top:6px"></div>
+            <!-- Chips de acabado (aparece tras seleccionar serie) -->
+            <div id="ix-acabado-wrap" style="display:none;margin-top:4px">
+              <div style="font-size:10px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px">✨ Acabado</div>
+              <div class="ix-series-bar" id="ix-acabado-bar"></div>
+            </div>
             <div class="imex-filters" id="ix-filters-row">
               <div class="imex-s-wrap">
                 <input type="text" id="ix-search" placeholder="Buscar descripción o referencia..." oninput="ixRender()">
@@ -12633,9 +12638,10 @@ function ixBuildSerieChips(){
   const series = [...new Set(datos.map(p=>p.serie))].sort();
   const cnts = {};
   datos.forEach(p=>{ cnts[p.serie]=(cnts[p.serie]||0)+1; });
-  let html = `<div class="ix-chip on" onclick="ixChipClick('')">Todas <span class="ix-chip-cnt">${datos.length}</span></div>`;
+  let html = `<div class="ix-chip on" data-serie="" onclick="ixChipClick('')">Todas <span class="ix-chip-cnt">${datos.length}</span></div>`;
   series.forEach(s=>{
-    html += `<div class="ix-chip" onclick="ixChipClick('${s.replace(/'/g,"\'")}')">
+    const sEsc = s.replace(/'/g,"\'").replace(/"/g,'&quot;');
+    html += `<div class="ix-chip" data-serie="${sEsc}" onclick="ixChipClick('${s.replace(/'/g,"\'")}')">
       ${s} <span class="ix-chip-cnt">${cnts[s]}</span>
     </div>`;
   });
@@ -12772,73 +12778,138 @@ function campRenderAcabados(){
   }
 
   const acabados = campAcabados();
-  const inc = 1.05;
-  const dto = 0.40;
   const margen = parseFloat(document.getElementById('ix-mrg')?.value||30)/100;
 
-  // Limpiar items temporales previos
+  // Calcular coste como pvp_cat × INC × (1-DTO)
+  // PVP cliente = pvp_cat × 1.05 (fórmula directa sin margen)
+  
+  // Fondo A siempre existe; Fondo B solo si r2 no es null
+  const fondos = [{key:'r1', ref:String(producto.r1), label:'F.37,8'}];
+  if(producto.r2 !== null && producto.r2 !== undefined) {
+    fondos.push({key:'r2', ref:String(producto.r2), label:'F.44,8'});
+  }
+  const hasDualFondo = fondos.length > 1;
+
+  // Estado de fondo seleccionado
+  if(!campState._fondoSel || !fondos.find(f=>f.key===campState._fondoSel)){
+    campState._fondoSel = 'r1';
+  }
+
+  // Limpiar items temporales
   for(const k in _campItems) delete _campItems[k];
   _campItemId = 0;
 
-  const fondos = [
-    {key:'r1', ref:String(producto.r1), label:'Fondo A · Ref.'},
-    {key:'r2', ref:String(producto.r2), label:'Fondo B · Ref.'},
-  ];
-
   let html = '';
-  fondos.forEach(f=>{
-    html += `<div style="margin-bottom:14px">
-      <div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;
-        letter-spacing:.07em;margin-bottom:6px;display:flex;align-items:center;gap:8px">
-        ${f.label}
-        <span style="font-family:monospace;background:var(--sand);padding:2px 7px;
-          border-radius:3px;font-size:12px;color:var(--navy);font-weight:800">${f.ref}</span>
-      </div>
-      <div class="camp-result">
-        <div class="camp-result-header" style="display:grid;grid-template-columns:1fr 80px 90px 90px 32px;gap:6px;align-items:center;padding:7px 14px">
-          <span>Acabado</span><span style="text-align:right">PVP cat.</span>
-          <span style="text-align:right">Coste</span><span style="text-align:right">PVP cliente</span><span></span>
-        </div>`;
-    acabados.forEach((ac, idx)=>{
-      const pvp = producto.p[idx];
-      if(pvp===undefined) return;
-      const pvpAct = pvp * inc;
-      const coste  = pvpAct * (1 - dto);
-      const venta  = coste * (1 + margen);
-      const iid = ++_campItemId;
-      _campItems[iid] = {
-        ref: f.ref,
-        desc: s.modelo+' '+s.tipo+' '+s.alt+' '+s.a+'cm · '+ac,
-        pvp: pvp,
-        coste: parseFloat(coste.toFixed(2)),
-        venta: parseFloat(venta.toFixed(2)),
-      };
-      html += `<div class="camp-result-row" style="display:grid;grid-template-columns:1fr 80px 90px 90px 32px;gap:6px;align-items:center">
-        <span class="camp-ac-name">${ac}</span>
-        <span class="camp-ac-pvp" style="text-align:right">${pvp.toFixed(2)} €</span>
-        <span class="camp-ac-coste" style="text-align:right">${coste.toFixed(2)} €</span>
-        <span class="camp-ac-venta" style="text-align:right">${venta.toFixed(2)} €</span>
-        <button class="camp-ac-btn" onclick="campAnadir(${iid})" title="Añadir al presupuesto">+</button>
-      </div>`;
-    });
-    html += `</div></div>`;
+
+  // Selector de fondo (solo si hay dos fondos)
+  if(hasDualFondo){
+    html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+      <span style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.07em">Fondo:</span>
+      ${fondos.map(f=>`
+        <button onclick="campSelFondo('${f.key}')" id="camp-fondo-btn-${f.key}"
+          style="padding:5px 14px;border-radius:20px;border:1.5px solid var(--border);background:${campState._fondoSel===f.key?'var(--navy)':'var(--white)'};
+          color:${campState._fondoSel===f.key?'#fff':'var(--text-mid)'};font-size:11px;font-weight:700;cursor:pointer;transition:all .15s">
+          ${f.label}
+        </button>`).join('')}
+    </div>`;
+  }
+
+  // Referencia activa
+  const fondoActual = fondos.find(f=>f.key===campState._fondoSel) || fondos[0];
+
+  html += `<div class="camp-result">
+    <div style="background:var(--navy);color:#fff;padding:8px 14px;display:flex;align-items:center;gap:10px">
+      <span style="font-size:11px;font-weight:700">Acabados</span>
+      <span style="margin-left:auto;font-size:10px;opacity:.7">Referencia:</span>
+      <span id="camp-ref-badge" style="font-family:monospace;background:rgba(255,255,255,.15);padding:2px 8px;border-radius:3px;font-size:12px;font-weight:800">${fondoActual.ref}</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 80px 90px 90px 32px;gap:0;background:rgba(0,0,0,.03);padding:6px 14px;border-bottom:1px solid var(--border)">
+      <span style="font-size:10px;font-weight:700;color:var(--text-soft);text-transform:uppercase">Acabado</span>
+      <span style="font-size:10px;font-weight:700;color:var(--text-soft);text-align:right">PVP cat.</span>
+      <span style="font-size:10px;font-weight:700;color:var(--text-soft);text-align:right">Coste PAU</span>
+      <span style="font-size:10px;font-weight:700;color:var(--text-soft);text-align:right">PVP cliente</span>
+      <span></span>
+    </div>`;
+
+  acabados.forEach((ac, idx)=>{
+    const pvp = producto.p[idx];
+    if(pvp===undefined) return;
+    const pvpCliente = pvp * 1.05;
+    const coste = pvp * CAMP_INC * (1 - CAMP_DTO);
+    const iid = ++_campItemId;
+    _campItems[iid] = {
+      _fondoKey: fondoActual.key,
+      _fondoRef: fondoActual.ref,
+      desc: s.modelo+' '+s.tipo+' '+s.alt+' '+s.a+'cm · '+ac,
+      pvp: pvp,
+      coste: parseFloat(coste.toFixed(2)),
+      venta: parseFloat(pvpCliente.toFixed(2)),
+    };
+    html += `<div class="camp-result-row" style="display:grid;grid-template-columns:1fr 80px 90px 90px 32px;gap:6px;align-items:center" id="camp-row-${iid}">
+      <span class="camp-ac-name">${ac}</span>
+      <span class="camp-ac-pvp" style="text-align:right">${pvp.toFixed(2)} €</span>
+      <span class="camp-ac-coste" style="text-align:right">${coste.toFixed(2)} €</span>
+      <span class="camp-ac-venta" style="text-align:right;color:var(--copper)">${pvpCliente.toFixed(2)} €</span>
+      <button class="camp-ac-btn" onclick="campAnadir(${iid})" title="Añadir">+</button>
+    </div>`;
   });
+  html += `</div>`;
   document.getElementById('camp-acabados-wrap').innerHTML = html;
 }
 
-// Items temporales Campoaras (para evitar JSON inline en botones)
-const _campItems = {};
-let _campItemId = 0;
+function campSelFondo(key){
+  campState._fondoSel = key;
+  // Reconstruir items con nueva referencia
+  const s = campState;
+  const producto = campDatos().find(p=>p.tipo===s.tipo && p.alt===s.alt && p.a===s.a);
+  if(!producto) return;
+  const fondos = [{key:'r1', ref:String(producto.r1), label:'F.37,8'}];
+  if(producto.r2 !== null && producto.r2 !== undefined) fondos.push({key:'r2', ref:String(producto.r2), label:'F.44,8'});
+  const fondoActual = fondos.find(f=>f.key===key) || fondos[0];
+  
+  // Actualizar badge de ref
+  const badge = document.getElementById('camp-ref-badge');
+  if(badge) badge.textContent = fondoActual.ref;
+  
+  // Actualizar botones de fondo
+  fondos.forEach(f=>{
+    const btn = document.getElementById('camp-fondo-btn-'+f.key);
+    if(!btn) return;
+    btn.style.background = f.key===key ? 'var(--navy)' : 'var(--white)';
+    btn.style.color = f.key===key ? '#fff' : 'var(--text-mid)';
+    btn.style.borderColor = f.key===key ? 'var(--navy)' : 'var(--border)';
+  });
+  
+  // Actualizar _campItems con nueva ref
+  const acabados = campAcabados();
+  for(const k in _campItems) delete _campItems[k];
+  _campItemId = 0;
+  const producto2 = campDatos().find(p=>p.tipo===s.tipo && p.alt===s.alt && p.a===s.a);
+  if(!producto2) return;
+  campAcabados().forEach((ac, idx)=>{
+    const pvp = producto2.p[idx];
+    if(pvp===undefined) return;
+    const iid = ++_campItemId;
+    _campItems[iid] = {
+      _fondoKey: fondoActual.key,
+      _fondoRef: fondoActual.ref,
+      desc: s.modelo+' '+s.tipo+' '+s.alt+' '+s.a+'cm · '+ac,
+      pvp: pvp,
+      coste: parseFloat((pvp * CAMP_INC * (1 - CAMP_DTO)).toFixed(2)),
+      venta: parseFloat((pvp * 1.05).toFixed(2)),
+    };
+  });
+}
 
 function campAnadir(itemId){
   const data = _campItems[itemId];
   if(!data) return;
-  // Buscar si ya existe en ixLineas
-  const ex = ixLineas.find(l=>l.ref===data.ref && l.desc===data.desc);
+  const ref = data._fondoRef || String(itemId);
+  const ex = ixLineas.find(l=>l.ref===ref && l.desc===data.desc);
   if(ex){ ex.cant++; ixRenderBud(); toast('+1 · '+data.desc.substring(0,40),'success'); return; }
   ixLineas.push({
     id: ++ixIdN,
-    ref: String(data.ref),
+    ref: ref,
     desc: data.desc,
     serie: 'CAMPOARAS',
     pvp: data.pvp,
@@ -12847,8 +12918,9 @@ function campAnadir(itemId){
     _camp: true,
   });
   ixRenderBud();
-  toast('✅ Ref. '+data.ref+' añadido','success');
+  toast('✅ Ref. '+ref+' añadido','success');
 }
+
 
 function campInit(){
   // Reset estado y mostrar paso 0
@@ -12905,6 +12977,9 @@ window.ixSetTab = function(tab){
   if(iscamp){
     campInit();
   } else {
+    ixAcabadoActual = null;
+    const awrap = document.getElementById('ix-acabado-wrap');
+    if(awrap) awrap.style.display='none';
     ixFillSeries();
     ixBuildSerieChips();
     ixRender();
@@ -12922,6 +12997,10 @@ function ixRender(){
   let filtered = datos;
   // Filtrar por serie seleccionada
   if(ixSerieActual) filtered = filtered.filter(p=>p.serie===ixSerieActual);
+  // Filtrar por acabado seleccionado (solo si hay serie activa)
+  if(ixSerieActual && ixAcabadoActual !== null) {
+    filtered = filtered.filter(p=>ixGetAcabado(p.ref)===ixAcabadoActual);
+  }
   // Filtrar por búsqueda texto
   if(q) filtered = filtered.filter(p=>
     p.desc.toLowerCase().includes(q) || p.ref.toLowerCase().includes(q)
@@ -12969,6 +13048,108 @@ window.ixFillSeries = function(){
   if(_origIxFillSeries) _origIxFillSeries();
   ixBuildSerieChips();
 };
+
+
+// ═══════════════════════════════════════════════════════════════
+// IMEX: PASO INTERMEDIO DE ACABADO
+// ═══════════════════════════════════════════════════════════════
+const IMEX_SUFIJOS = {
+  '': 'Cromado',
+  'NG': 'Negro Mate',
+  'BGM': 'Black Gun Metal',
+  'OC': 'Oro Cepillado',
+  'ORC': 'Oro Rosa Cepillado',
+  'NQ': 'Níquel Cepillado',
+  'GC': 'Gris Mate-Champagne',
+  'BL': 'Blanco Mate',
+  'NOR': 'Negro Oro Rosa Brillo',
+  'NGOLD': 'Negro-Oro Brillo',
+  'OR': 'Oro Rosa',
+  'AC': 'Acero Inox (316)',
+  'CHG': 'Champagne',
+  'GRM': 'Gris Mate',
+  'P': 'Con Premarco',
+};
+
+function ixGetAcabado(ref) {
+  const parts = ref.split('/');
+  return parts.length > 1 ? parts[parts.length-1] : '';
+}
+
+function ixAcabadoLabel(suf) {
+  return IMEX_SUFIJOS[suf] || suf || 'Cromado';
+}
+
+let ixAcabadoActual = null; // null = aún no se ha elegido acabado
+
+function ixChipClick(serie){
+  ixSerieActual = serie;
+  ixAcabadoActual = null; // reset acabado al cambiar serie
+  
+  // Actualizar chips de serie
+  document.querySelectorAll('#ix-series-bar .ix-chip').forEach(c=>{
+    if(serie==='' && c.dataset.serie==='') c.classList.add('on');
+    else if(serie!=='' && c.dataset.serie===serie) c.classList.add('on');
+    else c.classList.remove('on');
+  });
+
+  if(!serie) {
+    // Si "Todas" → mostrar tabla directamente
+    ixBuildAcabadoBar(null);
+    ixRender();
+  } else {
+    // Serie seleccionada → mostrar chips de acabado
+    ixBuildAcabadoBar(serie);
+    ixRender();
+  }
+}
+
+function ixBuildAcabadoBar(serie) {
+  const bar = document.getElementById('ix-acabado-bar');
+  const wrap = document.getElementById('ix-acabado-wrap');
+  if(!bar) return;
+  
+  if(!serie) {
+    if(wrap) wrap.style.display='none';
+    ixAcabadoActual = null;
+    return;
+  }
+  
+  const datos = ixDatos().filter(p=>p.serie===serie);
+  const sufsCount = {};
+  datos.forEach(p=>{ const s=ixGetAcabado(p.ref); sufsCount[s]=(sufsCount[s]||0)+1; });
+  
+  const sufs = Object.keys(sufsCount).sort((a,b)=>{
+    // Cromado primero, luego alfabético
+    if(a==='' && b!=='') return -1;
+    if(a!=='' && b==='') return 1;
+    return ixAcabadoLabel(a).localeCompare(ixAcabadoLabel(b));
+  });
+  
+  let html = '';
+  sufs.forEach(s=>{
+    const lbl = ixAcabadoLabel(s);
+    const cnt = sufsCount[s];
+    const isActive = ixAcabadoActual === s;
+    html += `<div class="ix-chip${isActive?' on':''}" data-suf="${s}" onclick="ixAcabadoClick('${s.replace(/'/g,"\\'")}')">${lbl} <span class="ix-chip-cnt">${cnt}</span></div>`;
+  });
+  
+  bar.innerHTML = html;
+  if(wrap) wrap.style.display='block';
+  
+  // Auto-seleccionar cromado si existe
+  if(ixAcabadoActual === null && '' in sufsCount) {
+    ixAcabadoClick('');
+  }
+}
+
+function ixAcabadoClick(suf) {
+  ixAcabadoActual = suf;
+  document.querySelectorAll('#ix-acabado-bar .ix-chip').forEach(c=>{
+    c.classList.toggle('on', c.dataset.suf === suf);
+  });
+  ixRender();
+}
 
 </script>
 
