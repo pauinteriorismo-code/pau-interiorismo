@@ -959,7 +959,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     <div class="view" id="view-saitra">
 
       <!-- TOOLBAR SUPERIOR -->
-      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
         <div style="display:flex;align-items:center;gap:8px">
           <label style="font-size:12px;font-weight:600;color:var(--text-soft)">Proyecto:</label>
           <select class="form-input" id="s-proyecto" style="width:200px">
@@ -987,6 +987,77 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <span style="font-size:12px;color:var(--text-soft)">%</span>
         </div>
         <button class="btn btn-ghost btn-sm" onclick="saitraLimpiar()" style="margin-left:auto;color:var(--danger)">🗑 Limpiar todo</button>
+      </div>
+
+      <!-- ⚙️ CONFIGURACIÓN GLOBAL DE LA COCINA -->
+      <div class="card" style="margin-bottom:14px;border-left:4px solid var(--copper)">
+        <div style="padding:10px 14px 6px;font-size:11px;font-weight:700;text-transform:uppercase;color:var(--copper);letter-spacing:.06em">⚙️ Configuración de la cocina <span style="font-weight:400;font-size:10px;color:var(--text-soft);text-transform:none">(aplica a todos los módulos)</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;padding:10px 14px 14px">
+
+          <!-- 1. ACABADO FRENTE -->
+          <div>
+            <label class="form-label">🎨 Acabado frente <span style="font-weight:400;color:var(--text-soft)">(fija tarifa)</span></label>
+            <select class="form-input" id="s-frente" onchange="saitraFrenteChange()">
+              <option value="">— Manual —</option>
+              <optgroup label="── Laminados ──">
+                <option value="Laminado|3">Laminado (T.3)</option>
+              </optgroup>
+              <optgroup label="── Estratificados y PET ──">
+                <option value="Narai PET|4">Narai PET (T.4)</option>
+                <option value="Morguet|4">Morguet (T.4)</option>
+                <option value="Morguet 45|4">Morguet 45 (T.4)</option>
+              </optgroup>
+              <optgroup label="── Maderas ──">
+                <option value="Madera natural|5">Madera natural (T.5)</option>
+              </optgroup>
+              <optgroup label="── Lacas ──">
+                <option value="Laca blanco|4">Laca blanco (T.4)</option>
+                <option value="Laca color RAL|5">Laca color RAL (T.5)</option>
+              </optgroup>
+            </select>
+          </div>
+
+          <!-- 2. VITRINAS -->
+          <div>
+            <label class="form-label">🪟 Vitrinas</label>
+            <select class="form-input" id="s-vitrina">
+              <option value="">— Sin vitrinas —</option>
+              <option value="Cristal transparente">Cristal transparente</option>
+              <option value="Cristal satinado">Cristal satinado</option>
+              <option value="Cristal fumé">Cristal fumé</option>
+              <option value="Sin cristal (estantería)">Sin cristal (estantería)</option>
+            </select>
+          </div>
+
+          <!-- 3. CASCO INTERIOR -->
+          <div>
+            <label class="form-label">🪵 Casco interior</label>
+            <select class="form-input" id="s-casco">
+              <option value="">— Sin especificar —</option>
+              <option value="Blanco estándar">Blanco estándar</option>
+              <option value="Igual a frente">Igual a frente</option>
+              <option value="HPL Roble">HPL Roble</option>
+              <option value="HPL Nogal">HPL Nogal</option>
+              <option value="HPL Grafito">HPL Grafito</option>
+              <option value="Otro (ver notas)">Otro (ver notas)</option>
+            </select>
+          </div>
+
+          <!-- 4. CAJÓN -->
+          <div>
+            <label class="form-label">🗄 Cajón seleccionado</label>
+            <select class="form-input" id="s-cajones">
+              <option value="">— Sin cajones —</option>
+              <option value="Blanco estándar">Blanco estándar</option>
+              <option value="Antracita">Antracita</option>
+              <option value="Gris claro">Gris claro</option>
+              <option value="Igual a frente">Igual a frente</option>
+              <option value="Inox">Inox</option>
+              <option value="Otro (ver notas)">Otro (ver notas)</option>
+            </select>
+          </div>
+
+        </div>
       </div>
 
       <div style="display:grid;grid-template-columns:340px 1fr;gap:14px;align-items:start">
@@ -1151,6 +1222,11 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
                     <option value="PCFPI221">PCFPI221 · Columna frigorífico puertas integradas H.221/F.60</option>
                     <option value="PCLSP221">PCLSP221 · Columna lavadora-secadora 1P H.221/F.67</option>
                   </optgroup>
+                  <optgroup label="── INCREMENTOS ──">
+                    <option value="INC-RECORTE">Recorte de pilar</option>
+                    <option value="INC-ALTURA">Incremento altura columna</option>
+                    <option value="INC-OTROS">Otros incrementos</option>
+                  </optgroup>
                 </select>
               </div>
               <div>
@@ -1158,58 +1234,8 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
                 <select class="form-input" id="s-ancho" onchange="saitraPuntosPreview()"></select>
               </div>
             </div>
-            <!-- ACABADOS DEL MÓDULO -->
-            <div style="margin-top:10px;padding:10px;background:var(--sand);border-radius:8px;border-left:3px solid var(--copper)">
-              <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--copper);margin-bottom:8px;letter-spacing:.06em">🎨 Acabados de este módulo</div>
-              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
-
-                <!-- 1. FRENTE -->
-                <div>
-                  <label class="form-label" style="color:var(--navy)">Frente <span style="font-weight:400;color:var(--text-soft)">(fija tarifa)</span></label>
-                  <select class="form-input" id="s-frente" onchange="saitraFrenteChange()">
-                    <option value="">— Manual —</option>
-                    <optgroup label="PET">
-                      <option value="Narai PET|4">Narai PET</option>
-                    </optgroup>
-                    <optgroup label="Estratificado">
-                      <option value="Morguet|4">Morguet</option>
-                      <option value="Morguet 45|4">Morguet 45</option>
-                    </optgroup>
-                  </select>
-                </div>
-
-                <!-- 2. CASCO INTERIOR -->
-                <div>
-                  <label class="form-label" style="color:var(--navy)">Casco interior</label>
-                  <select class="form-input" id="s-casco">
-                    <option value="">— Sin especificar —</option>
-                    <option value="Blanco estándar">Blanco estándar</option>
-                    <option value="Igual a frente">Igual a frente</option>
-                    <option value="HPL Roble">HPL Roble</option>
-                    <option value="HPL Nogal">HPL Nogal</option>
-                    <option value="HPL Grafito">HPL Grafito</option>
-                    <option value="Otro (ver notas)">Otro (ver notas)</option>
-                  </select>
-                </div>
-
-                <!-- 3. CAJONES -->
-                <div>
-                  <label class="form-label" style="color:var(--navy)">Cajones</label>
-                  <select class="form-input" id="s-cajones">
-                    <option value="">— Sin cajones —</option>
-                    <option value="Blanco estándar">Blanco estándar</option>
-                    <option value="Antracita">Antracita</option>
-                    <option value="Gris claro">Gris claro</option>
-                    <option value="Igual a frente">Igual a frente</option>
-                    <option value="Inox">Inox</option>
-                    <option value="Otro (ver notas)">Otro (ver notas)</option>
-                  </select>
-                </div>
-
-              </div>
-            </div>
-
-            <div style="margin-top:8px;display:flex;gap:8px">
+                        <!-- Los acabados se configuran en el panel global arriba -->
+                        <div style="margin-top:8px;display:flex;gap:8px">
               <div style="flex:1">
                 <label class="form-label">Descripción adicional</label>
                 <input type="text" class="form-input" id="s-desc-mod" placeholder="ej. apertura, observación...">
@@ -5588,17 +5614,18 @@ function saitraAddModulo(){
   const pvpU   = saitraCalcPvp(costeU, margen);
   const anchoLabel = String(ancho).replace('x','×');
 
-  // Leer acabados
-  const frenteVal = document.getElementById('s-frente')?.value || '';
+  // Leer acabados del panel global
+  const frenteVal    = document.getElementById('s-frente')?.value || '';
   const frenteNombre = frenteVal ? frenteVal.split('|')[0] : '';
-  const casco   = document.getElementById('s-casco')?.value || '';
-  const cajones = document.getElementById('s-cajones')?.value || '';
+  const casco        = document.getElementById('s-casco')?.value || '';
+  const cajones      = document.getElementById('s-cajones')?.value || '';
+  const vitrina      = document.getElementById('s-vitrina')?.value || '';
 
-  // Construir etiqueta de acabados
   const acabadosParts = [];
   if(frenteNombre) acabadosParts.push(`Frente: ${frenteNombre}`);
   if(casco)        acabadosParts.push(`Casco: ${casco}`);
-  if(cajones)      acabadosParts.push(`Cajones: ${cajones}`);
+  if(cajones)      acabadosParts.push(`Cajón: ${cajones}`);
+  if(vitrina)      acabadosParts.push(`Vitrina: ${vitrina}`);
   const acabadosTag = acabadosParts.length ? ` [${acabadosParts.join(' · ')}]` : '';
 
   saitraLineas.push({
@@ -10627,7 +10654,18 @@ if('serviceWorker' in navigator){
     <div id="prov-import-preview" style="display:none">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
         <div id="prov-import-resumen" style="font-size:13px;font-weight:600;color:var(--navy)"></div>
-        <div style="font-size:11px;color:var(--text-soft)">
+</div>
+      </div>
+      <div class="table-wrap"><table><thead><tr><th>Proveedor</th><th>CIF</th><th>Tipo</th><th>Especialidad</th><th></th></tr></thead><tbody id="prov-import-tbody"></tbody></table></div>
+    </div>
+  </div>
+  <div class="modal-foot">
+    <button class="btn btn-ghost" onclick="closeModal('m-import-proveedores')">Cancelar</button>
+    <button class="btn btn-primary" id="btn-import-proveedores" style="display:none" onclick="ejecutarImportProveedores()">🏭 Importar proveedores</button>
+  </div>
+</div>
+</div>
+
 <!-- ═══ MODAL CONTROL HORARIO DÍA ═══ -->
 <div class="overlay" id="m-horario-dia">
 <div class="modal" style="width:420px;max-width:96vw">
