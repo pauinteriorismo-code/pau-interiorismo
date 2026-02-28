@@ -1283,6 +1283,11 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
             <div class="cat-card-name">Campoaras</div>
             <div class="cat-card-desc">Muebles de baño · Series AQUA &amp; DROP</div>
           </div>
+          <div class="cat-card" data-cat="lavabos" onclick="catAbrir('lavabos')">
+            <div class="cat-card-icon">🪠</div>
+            <div class="cat-card-name">Lavabos</div>
+            <div class="cat-card-desc">Catálogo de lavabos · Editable</div>
+          </div>
           <div class="cat-card cat-card-new" onclick="toast('Próximamente: añadir fabricante','info')">
             <div class="cat-card-icon">＋</div>
             <div class="cat-card-name" style="color:var(--text-soft)">Nuevo</div>
@@ -2129,6 +2134,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
               <button class="imex-tab" id="ix-tab-cocina" onclick="ixSetTab('cocina')">🍳 Cocina <span id="ix-cnt-cocina"></span></button>
               <button class="imex-tab" id="ix-tab-campoaras" onclick="ixSetTab('campoaras')">🛁 Campoaras <span id="ix-cnt-campoaras"></span></button>
               <button class="imex-tab" id="ix-tab-fregaderos" onclick="ixSetTab('fregaderos')">🚿 Plados/D'Aqua <span id="ix-cnt-fregaderos"></span></button>
+              <button class="imex-tab" id="ix-tab-lavabos" onclick="ixSetTab('lavabos')">🪠 Lavabos <span id="ix-cnt-lavabos"></span></button>
             </div>
             <!-- Chips de serie -->
             <div class="ix-series-bar" id="ix-series-bar" style="margin-top:6px"></div>
@@ -12269,6 +12275,29 @@ let ixLineas = [];
 let ixIdN    = 0;
 
 function ixMrg(){ return parseFloat(document.getElementById('ix-mrg')?.value)||0; }
+// ══════════════════════════════════════════════════
+// CATÁLOGO LAVABOS (editar en "Editar referencias y precios" > pestaña Lavabos)
+// ══════════════════════════════════════════════════
+let IMEX_LAVABOS = [
+  // Formato: { ref, desc, serie, pvp }
+  // pvp = precio tarifa fabricante (antes de descuento)
+  // Ejemplo estructura - completar con datos reales de proveedor
+  { ref:'LAV-001', desc:'Lavabo sobre encimera redondo Ø40 cm blanco', serie:'Sobre Encimera', pvp:120.00 },
+  { ref:'LAV-002', desc:'Lavabo sobre encimera redondo Ø50 cm blanco', serie:'Sobre Encimera', pvp:145.00 },
+  { ref:'LAV-003', desc:'Lavabo sobre encimera rectangular 50×35 cm blanco', serie:'Sobre Encimera', pvp:155.00 },
+  { ref:'LAV-004', desc:'Lavabo sobre encimera rectangular 60×35 cm blanco', serie:'Sobre Encimera', pvp:170.00 },
+  { ref:'LAV-005', desc:'Lavabo sobre encimera rectangular 80×35 cm blanco', serie:'Sobre Encimera', pvp:195.00 },
+  { ref:'LAV-010', desc:'Lavabo semiencastrado 56×37 cm blanco', serie:'Semiencastrado', pvp:160.00 },
+  { ref:'LAV-011', desc:'Lavabo semiencastrado 60×37 cm blanco', serie:'Semiencastrado', pvp:175.00 },
+  { ref:'LAV-012', desc:'Lavabo semiencastrado 80×37 cm blanco', serie:'Semiencastrado', pvp:210.00 },
+  { ref:'LAV-020', desc:'Lavabo encastrado 45×35 cm blanco', serie:'Encastrado', pvp:95.00 },
+  { ref:'LAV-021', desc:'Lavabo encastrado 56×35 cm blanco', serie:'Encastrado', pvp:110.00 },
+  { ref:'LAV-022', desc:'Lavabo encastrado 60×35 cm blanco', serie:'Encastrado', pvp:125.00 },
+  { ref:'LAV-030', desc:'Lavabo mural / suspendido 50×42 cm blanco', serie:'Suspendido', pvp:130.00 },
+  { ref:'LAV-031', desc:'Lavabo mural / suspendido 60×42 cm blanco', serie:'Suspendido', pvp:145.00 },
+];
+// ──────────────────────────────────────────────────
+
 function ixCoste(pvp, p){ 
   if(p && p._camp) return p._pvpBase * p._inc * (1 - p._dto);
   return pvp * IMEX_INC * (1 - IMEX_DTO); 
@@ -12280,6 +12309,7 @@ function ixDatos(){
   if(ixTab==='bano') return IMEX_BANO;
   if(ixTab==='cocina') return IMEX_COCINA;
   if(ixTab==='fregaderos') return IMEX_FREGADEROS;
+  if(ixTab==='lavabos') return IMEX_LAVABOS;
   if(ixTab==='campoaras') return ixCampoarasFlat();
   return IMEX_BANO;
 }
@@ -12315,6 +12345,7 @@ function ixSetTab(t){
   document.getElementById('ix-tab-cocina')?.classList.toggle('active', t==='cocina');
   document.getElementById('ix-tab-campoaras')?.classList.toggle('active', t==='campoaras');
   document.getElementById('ix-tab-fregaderos')?.classList.toggle('active', t==='fregaderos');
+  document.getElementById('ix-tab-lavabos')?.classList.toggle('active', t==='lavabos');
   // Mostrar/ocultar filtro serie (Campoaras usa serie para mostrar modelo+acabado)
   const serieWrap = document.getElementById('ix-serie')?.parentElement;
   const s = document.getElementById('ix-search');
@@ -12326,6 +12357,8 @@ function ixSetTab(t){
   if(infoBox){
     if(t==='campoaras')
       infoBox.innerHTML='PVP tarifa ×1,05 → <b>Coste PAU</b> = PVP actualizado ×0,60 (dto 40%) → <b>PVP cliente</b> = Coste × (1+margen%)';
+    else if(t==='lavabos')
+      infoBox.innerHTML='<b>Coste PAU</b> = PVP tarifa × dto aplicable → <b>PVP cliente</b> = Coste × (1+margen%)';
     else
       infoBox.innerHTML='PVP tarifa ×1,03 → <b>Coste PAU</b> = PVP actualizado ×0,60 (dto 40%) → <b>PVP cliente</b> = Coste × (1+margen%)';
   }
@@ -12357,6 +12390,12 @@ function ixFillSeries(){
   const cfreg = document.getElementById('ix-cnt-fregaderos');
   if(cfreg) cfreg.textContent='('+IMEX_FREGADEROS.length+')';
   if(ccamp){ const flat=ixCampoarasFlat(); ccamp.textContent='('+flat.length+')'; }
+  const clav = document.getElementById('ix-cnt-lavabos');
+  if(clav) clav.textContent='('+IMEX_LAVABOS.length+')';
+  if(ixTab==='lavabos'){
+    series = [...new Set(IMEX_LAVABOS.map(p=>p.serie))].filter(Boolean).sort();
+    if(sel) sel.innerHTML='<option value="">Todas las series</option>'+series.map(s=>'<option value="'+ixH(s)+'">'+ixH(s)+'</option>').join('');
+  }
 }
 
 function ixRender(){
@@ -12422,12 +12461,20 @@ function ixRenderBud(){
   if(foot) foot.style.display='block';
   scroll.innerHTML = ixLineas.map(l=>{
     const pc = ixPvpCli(l.cst);
+    const notaHtml = '<div style="margin:2px 0 0;display:flex;align-items:center;gap:4px">'+
+      '<span style="font-size:10px;color:#b87333;flex-shrink:0">📝</span>'+
+      '<input class="ix-nota-inp" type="text" data-id="'+l.id+'" value="'+ixH(l.nota||'')+'" '+
+        'placeholder="Nota/especificación para presupuesto..." '+
+        'style="flex:1;border:none;border-bottom:1px dashed #d4a040;background:transparent;font-size:10px;'+
+        'color:#7a5c20;padding:1px 0;outline:none;font-style:'+(l.nota?'normal':'italic')+'">'+
+      '</div>';
     return '<div class="ix-bl">'+
       '<div class="ix-bl-a">'+
         '<span class="ix-bl-ref">'+ixH(l.ref)+'</span>'+
-        '<span class="ix-bl-desc">'+ixH(l.desc)+'</span>'+
+        '<span class="ix-bl-desc" style="flex:1;min-width:0">'+ixH(l.desc)+'</span>'+
         '<button class="ix-bl-del" data-id="'+l.id+'" title="Eliminar">✕</button>'+
       '</div>'+
+      notaHtml+
       '<div class="ix-bl-b">'+
         '<div class="ix-cant-w">'+
           '<button class="ix-cbtn" data-id="'+l.id+'" data-d="-1">−</button>'+
@@ -12443,6 +12490,10 @@ function ixRenderBud(){
   scroll.querySelectorAll('.ix-bl-del').forEach(b=>b.addEventListener('click',function(e){e.stopPropagation();ixElim(+this.dataset.id);}));
   scroll.querySelectorAll('.ix-cbtn').forEach(b=>b.addEventListener('click',function(e){e.stopPropagation();ixCambiar(+this.dataset.id,+this.dataset.d);}));
   scroll.querySelectorAll('input.ix-cant').forEach(inp=>inp.addEventListener('change',function(){ixSetCant(+this.dataset.id,+this.value);}));
+  scroll.querySelectorAll('input.ix-nota-inp').forEach(inp=>inp.addEventListener('input',function(){
+    const l=ixLineas.find(x=>x.id===+this.dataset.id);
+    if(l){ l.nota=this.value.trim(); this.style.fontStyle=this.value?'normal':'italic'; }
+  }));
   ixTotales();
 }
 
@@ -12471,7 +12522,8 @@ function ixExportar(){
   ixLineas.forEach(l=>{
     const pc=ixPvpCli(l.cst), cTot=l.cst*l.cant, pTot=pc*l.cant;
     tc+=cTot; tp+=pTot;
-    txt+=l.ref.padEnd(16)+' '+l.desc.substring(0,42).padEnd(43)+' x'+String(l.cant).padStart(2)+'  Coste:'+ixFmt(cTot).padStart(10)+'  PVP:'+ixFmt(pTot).padStart(10)+'\n';
+    const notaTxt = l.nota ? '  ['+l.nota+']' : '';
+    txt+=l.ref.padEnd(16)+' '+l.desc.substring(0,42).padEnd(43)+' x'+String(l.cant).padStart(2)+'  Coste:'+ixFmt(cTot).padStart(10)+'  PVP:'+ixFmt(pTot).padStart(10)+notaTxt+'\n';
   });
   txt+='-'.repeat(58)+'\nTOTAL COSTE: '+ixFmt(tc)+'   PVP CLIENTE: '+ixFmt(tp)+'   MARGEN: '+ixFmt(tp-tc)+'\n';
   navigator.clipboard.writeText(txt)
@@ -12488,7 +12540,7 @@ loaders['imex'] = function(){
 async function ixExportarPresupuesto(){
   if(!ixLineas.length){ toast('Sin partidas que exportar','error'); return; }
   // Determinar nombre capítulo según tab
-  const tabNames = { bano:'Griferías de Baño', cocina:'Griferías de Cocina', campoaras:'Muebles de Baño', fregaderos:'Fregaderos y Grifería' };
+  const tabNames = { bano:'Griferías de Baño', cocina:'Griferías de Cocina', campoaras:'Muebles de Baño', fregaderos:'Fregaderos y Grifería', lavabos:'Lavabos' };
   const capNombre = tabNames[ixTab] || 'Griferías IMEX';
 
   // Buscar proyecto activo — primero del panel de valoración, luego otros
@@ -12529,7 +12581,7 @@ async function ixExportarPresupuesto(){
       const pvpU=ixPvpCli(l.cst);
       await sbPost('presupuesto_lineas',{
         proyecto_id:proyFinal, version:ver,
-        descripcion:'['+l.ref+'] '+l.desc,
+        descripcion:'['+l.ref+'] '+l.desc+(l.nota?' — '+l.nota:''),
         unidad:'Ud', cantidad:l.cant,
         precio_base:parseFloat(l.cst.toFixed(4)),
         margen_pct:parseFloat(margen.toFixed(2)),
@@ -13005,6 +13057,11 @@ function catAbrir(fab){
     document.getElementById('cat-panel-imex').classList.add('open');
     ixFillSeries();
     ixSetTab('campoaras');
+  } else if(fab === 'lavabos'){
+    // Lavabos: usa el panel IMEX con tab lavabos
+    document.getElementById('cat-panel-imex').classList.add('open');
+    ixFillSeries();
+    ixSetTab('lavabos');
   } else if(fab === 'imex'){
     document.getElementById('cat-imex-title').innerHTML = '🚿 IMEX — Griferías';
     document.getElementById('cat-imex-desc').textContent = 'Tarifa +3% · Dto 40% · Margen ajustable';
@@ -13360,8 +13417,9 @@ function campSelFondo(key){
 function campAnadir(itemId){
   const data = _campItems[itemId];
   if(!data) return;
+  const nota = (document.getElementById('camp-nota-input')?.value||'').trim();
   const ref = data._fondoRef || String(itemId);
-  const ex = ixLineas.find(l=>l.ref===ref && l.desc===data.desc);
+  const ex = ixLineas.find(l=>l.ref===ref && l.desc===data.desc && (l.nota||'')===(nota||''));
   if(ex){ ex.cant++; ixRenderBud(); toast('+1 · '+data.desc.substring(0,40),'success'); return; }
   ixLineas.push({
     id: ++ixIdN,
@@ -13371,6 +13429,7 @@ function campAnadir(itemId){
     pvp: data.pvp,
     cst: data.coste,
     cant: 1,
+    nota: nota,
     _camp: true,
   });
   ixRenderBud();
@@ -13389,7 +13448,8 @@ function openCampEdit(){
     aqua:  JSON.parse(JSON.stringify(CAMP_AQUA)),
     drop:  JSON.parse(JSON.stringify(CAMP_DROP)),
     tapas: JSON.parse(JSON.stringify(CAMP_TAPAS)),
-    tapasAc: JSON.parse(JSON.stringify(CAMP_TAPAS_ACABADOS))
+    tapasAc: JSON.parse(JSON.stringify(CAMP_TAPAS_ACABADOS)),
+    lavabos: JSON.parse(JSON.stringify(IMEX_LAVABOS))
   };
   campEditTab('aqua');
   openModal('m-camp-edit');
@@ -13397,7 +13457,7 @@ function openCampEdit(){
 
 function campEditTab(t){
   _campEditTab = t;
-  ['aqua','drop','tapas','tapas-ac'].forEach(id=>{
+  ['aqua','drop','tapas','tapas-ac','lavabos'].forEach(id=>{
     const el = document.getElementById('cedit-tab-'+id);
     if(el) el.classList.toggle('active', id===t);
   });
@@ -13410,6 +13470,10 @@ function campEditRender(){
   const t = _campEditTab;
   if(t === 'tapas-ac'){
     campEditRenderTapasAc(body);
+    return;
+  }
+  if(t === 'lavabos'){
+    campEditRenderLavabos(body);
     return;
   }
   const data = t==='aqua' ? _campEditDraft.aqua : t==='drop' ? _campEditDraft.drop : _campEditDraft.tapas;
@@ -13488,16 +13552,66 @@ function campEditSetAcabado(tipo, idx, val){
   if(_campEditDraft.tapasAc[tipo]) _campEditDraft.tapasAc[tipo][idx] = val.trim();
 }
 
+
+// ══════════════════════════════════════════════════
+// EDITOR DE LAVABOS
+// ══════════════════════════════════════════════════
+function campEditRenderLavabos(body){
+  const data = _campEditDraft.lavabos;
+  let h = '<div style="font-size:10px;color:var(--text-soft);margin-bottom:10px">Edita referencia, descripción, serie y PVP de tarifa. Pulsa <b>Aplicar cambios</b> para guardar.</div>';
+  h += '<table style="width:100%;border-collapse:collapse;font-size:11px">';
+  h += '<thead><tr style="background:var(--navy);color:#fff">';
+  h += '<th style="padding:6px 8px;text-align:left;width:90px">Referencia</th>';
+  h += '<th style="padding:6px 8px;text-align:left">Descripción</th>';
+  h += '<th style="padding:6px 8px;text-align:left;width:120px">Serie</th>';
+  h += '<th style="padding:6px 8px;text-align:right;width:80px">PVP tarifa</th>';
+  h += '<th style="padding:6px 8px;width:30px"></th>';
+  h += '</tr></thead><tbody id="lav-edit-body">';
+  data.forEach((lav, idx)=>{
+    h += `<tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:4px 6px"><input class="form-input" style="padding:3px 5px;font-size:11px" value="${ixH(lav.ref)}" onchange="lavEditSet(${idx},'ref',this.value)"></td>
+      <td style="padding:4px 6px"><input class="form-input" style="padding:3px 5px;font-size:11px" value="${ixH(lav.desc)}" onchange="lavEditSet(${idx},'desc',this.value)"></td>
+      <td style="padding:4px 6px"><input class="form-input" style="padding:3px 5px;font-size:11px" value="${ixH(lav.serie)}" onchange="lavEditSet(${idx},'serie',this.value)"></td>
+      <td style="padding:4px 6px"><input class="form-input" style="padding:3px 5px;font-size:11px;text-align:right" type="number" step="0.01" value="${lav.pvp.toFixed(2)}" onchange="lavEditSet(${idx},'pvp',parseFloat(this.value)||0)"></td>
+      <td style="padding:4px 6px;text-align:center"><button onclick="lavEditDel(${idx})" style="background:var(--red);color:#fff;border:none;border-radius:3px;padding:2px 6px;cursor:pointer;font-size:11px">✕</button></td>
+    </tr>`;
+  });
+  h += '</tbody></table>';
+  h += '<div style="margin-top:10px">';
+  h += '<button onclick="lavEditAddRow()" class="btn btn-ghost btn-sm">➕ Añadir lavabo</button>';
+  h += '</div>';
+  body.innerHTML = h;
+}
+
+function lavEditSet(idx, field, val){
+  if(_campEditDraft.lavabos[idx]) _campEditDraft.lavabos[idx][field] = val;
+}
+
+function lavEditDel(idx){
+  if(!confirm('¿Eliminar este lavabo del catálogo?')) return;
+  _campEditDraft.lavabos.splice(idx, 1);
+  campEditRender();
+}
+
+function lavEditAddRow(){
+  _campEditDraft.lavabos.push({ ref:'LAV-NEW', desc:'Nuevo lavabo', serie:'Sin serie', pvp:0 });
+  campEditRender();
+  // Scroll al final de la tabla
+  const body = document.getElementById('camp-edit-body');
+  if(body) setTimeout(()=>body.scrollTop=body.scrollHeight, 50);
+}
+// ──────────────────────────────────────────────────
 function campEditGuardar(){
   if(!_campEditDraft){ closeModal('m-camp-edit'); return; }
   CAMP_AQUA  = _campEditDraft.aqua;
   CAMP_DROP  = _campEditDraft.drop;
   CAMP_TAPAS = _campEditDraft.tapas;
   CAMP_TAPAS_ACABADOS = _campEditDraft.tapasAc;
+  if(_campEditDraft.lavabos) IMEX_LAVABOS = _campEditDraft.lavabos;
   _campEditDraft = null;
   closeModal('m-camp-edit');
   campRender();
-  toast('✅ Catálogo Campoaras actualizado', 'success');
+  toast('✅ Catálogo actualizado', 'success');
 }
 
 function campEditExportJSON(){
@@ -13585,6 +13699,11 @@ function ixPopulateProyectoSel(){
 function campInit(){
   // Reset estado y mostrar paso 0
   Object.assign(campState, {modelo:null,tipo:null,alt:null,a:null,fondo:null});
+  // Asegurar que wizard visible y tabla oculta
+  const campWiz = document.getElementById('camp-wizard');
+  const ixTable = document.getElementById('ix-table-wrap');
+  if(campWiz) campWiz.style.display='';
+  if(ixTable) ixTable.style.display='none';
   campRender();
 }
 
@@ -13600,7 +13719,7 @@ window.ixSetTab = function(tab){
     if(el) el.classList.toggle('active', t===tab);
   });
 
-  const iscamp = tab==='campoaras';
+  const iscamp = tab==='campoaras'; // lavabos usa ruta normal (tabla), no wizard
   const isfreg = tab==='fregaderos';
 
   // Mostrar/ocultar wizard vs tabla+filtros
@@ -13640,9 +13759,12 @@ window.ixSetTab = function(tab){
   // Populate project selector when panel opens
   ixPopulateProyectoSel();
 
-  // Actualizar info box para baño/cocina
-  if(infoBox && !iscamp){
-    infoBox.innerHTML = 'PVP tarifa ×1,03 → <b>Coste PAU</b> = PVP actualizado ×0,60 (dto 40%) → <b>PVP cliente</b> = Coste × (1+margen%)';
+  // Actualizar info box según tab
+  if(infoBox){
+    if(tab==='lavabos')
+      infoBox.innerHTML = '<b>Coste PAU</b> = PVP tarifa × descuento proveedor → <b>PVP cliente</b> = Coste × (1+margen%)';
+    else if(!iscamp)
+      infoBox.innerHTML = 'PVP tarifa ×1,03 → <b>Coste PAU</b> = PVP actualizado ×0,60 (dto 40%) → <b>PVP cliente</b> = Coste × (1+margen%)';
   }
 
   // Actualizar título del panel
@@ -13651,6 +13773,7 @@ window.ixSetTab = function(tab){
     cocina: {t:'🍳 IMEX — Griferías Cocina', d:'Tarifa +3% · Dto 40% · Margen ajustable'},
     campoaras: {t:'🛁 Campoaras — Muebles de Baño', d:'Colecciones AQUA & DROP · Configurador paso a paso'},
     fregaderos: {t:"🚿 Plados · D'Aqua", d:'483 referencias · Fregaderos ONE/LX/COSMO + Grifería Pure Life · Dto 40%'},
+    lavabos: {t:'🪠 Lavabos', d:'Catálogo lavabos · Precios editables · Margen ajustable'},
   };
   const m = titles[tab]||titles.bano;
   const titleEl = document.getElementById('cat-imex-title');
@@ -13664,6 +13787,11 @@ window.ixSetTab = function(tab){
     ixAcabadoActual = null;
     const awrap = document.getElementById('ix-acabado-wrap');
     if(awrap) awrap.style.display='none';
+    // Mostrar tabla, ocultar wizard para tabs no-campoaras
+    const campWiz = document.getElementById('camp-wizard');
+    const ixTable = document.getElementById('ix-table-wrap');
+    if(campWiz) campWiz.style.display='none';
+    if(ixTable) ixTable.style.display='';
     ixFillSeries();
     ixBuildSerieChips();
     ixRender();
@@ -13675,6 +13803,11 @@ window.ixSetTab = function(tab){
 // ═══════════════════════════════════════════════════════════════
 function ixRender(){
   if(ixTab==='campoaras') return; // wizard lo maneja
+  // Lavabos: mostrar tabla normal, ocultar wizard campoaras
+  const campWiz = document.getElementById('camp-wizard');
+  const ixTable = document.getElementById('ix-table-wrap');
+  if(campWiz){ campWiz.style.display = ixTab==='campoaras' ? '' : 'none'; }
+  if(ixTable){ ixTable.style.display = ixTab==='campoaras' ? 'none' : ''; }
   const datos = ixDatos();
   const q = (document.getElementById('ix-search')?.value||'').toLowerCase();
   
@@ -15620,6 +15753,7 @@ loadProyectos = async function(){
       <button id="cedit-tab-aqua" class="imex-tab active" style="flex:1;border-radius:0" onclick="campEditTab('aqua')">💧 AQUA</button>
       <button id="cedit-tab-drop" class="imex-tab" style="flex:1;border-radius:0" onclick="campEditTab('drop')">🌊 DROP</button>
       <button id="cedit-tab-tapas" class="imex-tab" style="flex:1;border-radius:0" onclick="campEditTab('tapas')">🪴 TAPAS</button>
+      <button id="cedit-tab-lavabos" class="imex-tab" style="flex:1;border-radius:0" onclick="campEditTab('lavabos')">🪠 Lavabos</button>
       <button id="cedit-tab-tapas-ac" class="imex-tab" style="flex:1;border-radius:0" onclick="campEditTab('tapas-ac')">🎨 Acabados TAPAS</button>
     </div>
     <div style="overflow-y:auto;flex:1;padding:12px" id="camp-edit-body"></div>
