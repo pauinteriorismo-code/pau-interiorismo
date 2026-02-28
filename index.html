@@ -1,7 +1,5 @@
 <!DOCTYPE html>
 
-<!-- saved from url=(0036)https://pau-interiorismo.vercel.app/ -->
-
 <html lang="es"><head><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="PAU Gestión">
 <!-- manifest PWA desactivado para evitar caché -->
-<!-- PAU INTERIORISMO v71 · Build: 2026-02-27 21:05 -->
+<!-- PAU INTERIORISMO v73 · Build: 2026-02-28 01:00
 <title>PAU INTERIORISMO · Gestión</title>
 <style>
 :root{--navy:#1a2a3a;--navy-mid:#27405b;--navy-light:#3d5a78;--blue-soft:#b8cce4;--blue-light:#e8f4ff;--cream:#f7f4ef;--sand:#ede8df;--copper:#b87333;--copper-light:#f4e8da;--green:#1e6b3d;--green-soft:#d5e8d4;--amber:#7d6608;--amber-soft:#fff2cc;--red:#7b241c;--red-soft:#fce8e6;--white:#fff;--text:#1a2a3a;--text-mid:#4a5f72;--text-soft:#8a9aaa;--border:#dce6f0;--radius:8px;--radius-sm:4px;--shadow:0 1px 3px rgba(26,42,58,.08),0 4px 16px rgba(26,42,58,.06);--shadow-lg:0 8px 32px rgba(26,42,58,.14);--sidebar:220px;--header:56px}
@@ -25,6 +23,16 @@ button,input,select,textarea{font-family:inherit}button{cursor:pointer}
 .login-error{background:var(--red-soft);color:var(--red);font-size:12px;padding:8px 12px;border-radius:var(--radius-sm);margin-bottom:12px;display:none}
 /* APP */
 .app{display:none;height:100vh;overflow:hidden}
+/* MOBILE SIDEBAR */
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9}
+.hamburger{display:none;background:none;border:none;cursor:pointer;padding:6px;font-size:20px;color:var(--navy)}
+@media(max-width:768px){
+  .hamburger{display:flex;align-items:center}
+  .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:100;transform:translateX(-100%);transition:transform .25s ease}
+  .sidebar.open{transform:translateX(0)}
+  .sidebar-overlay.visible{display:block}
+  .main{margin-left:0!important}
+}
 /* SIDEBAR */
 .sidebar{width:var(--sidebar);background:var(--navy);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;z-index:10}
 .sidebar-logo{padding:18px 16px 14px;border-bottom:1px solid rgba(255,255,255,.08)}
@@ -32,7 +40,7 @@ button,input,select,textarea{font-family:inherit}button{cursor:pointer}
 .brand-sub{font-size:10px;color:rgba(255,255,255,.35);letter-spacing:.08em;text-transform:uppercase;margin-top:2px}
 .nav-section{padding:12px 0 4px}
 .nav-label{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.3);padding:0 16px 5px}
-.nav-item{display:flex;align-items:center;gap:8px;padding:7px 16px;cursor:pointer;font-size:12px;color:rgba(255,255,255,.6);border-left:2px solid transparent;transition:all .15s;white-space:nowrap}
+.nav-item{display:flex;align-items:center;gap:8px;padding:7px 16px;cursor:pointer;font-size:12px;color:rgba(255,255,255,.6);border-left:2px solid transparent;transition:all .15s;white-space:nowrap;touch-action:manipulation;-webkit-tap-highlight-color:rgba(255,255,255,.1)}
 .nav-item:hover{background:rgba(255,255,255,.06);color:#fff}
 .nav-item.active{background:rgba(255,255,255,.1);color:#fff;border-left-color:var(--copper)}
 .nav-item .ni{font-size:13px;width:16px;text-align:center}
@@ -175,7 +183,27 @@ tbody td{padding:7px 10px;vertical-align:middle}
 .prog-bar{height:100%;border-radius:4px;transition:width .5s}
 .lista-item{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:var(--sand);border-radius:var(--radius-sm);font-size:12px;margin-bottom:5px}
 .lista-item:hover{background:var(--blue-light)}
-@media(max-width:768px){.sidebar{width:52px}.brand,.brand-sub,.nav-label,.nav-item span:not(.ni),.nav-badge,.user-name,.user-role{display:none}.nav-item{justify-content:center;padding:9px}.kpi-grid,.kpi-grid-3{grid-template-columns:1fr 1fr}.form-grid{grid-template-columns:1fr}.fg-full{grid-column:1}.content{padding:12px}}
+.hamburger-btn{display:none;background:none;border:none;cursor:pointer;padding:6px;color:#fff;font-size:22px;line-height:1;align-items:center;justify-content:center;touch-action:manipulation}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:98}
+.sidebar-overlay.visible{display:block}
+.loading-bar{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--navy),var(--copper));z-index:9999;width:0;pointer-events:none;transition:opacity .3s}
+.loading-bar.active{animation:lbar 1.2s ease-in-out infinite}
+@keyframes lbar{0%{width:0;opacity:1}70%{width:90%;opacity:1}100%{width:100%;opacity:0}}
+.fab{display:none;position:fixed;bottom:20px;right:20px;width:52px;height:52px;background:var(--navy);border-radius:50%;box-shadow:0 4px 16px rgba(26,42,58,.35);align-items:center;justify-content:center;font-size:24px;cursor:pointer;z-index:200;border:none;color:#fff;touch-action:manipulation}
+@media(max-width:768px){
+  .hamburger-btn{display:flex}
+  .fab{display:flex}
+  .sidebar{position:fixed;top:0;left:0;height:100vh;z-index:100;transform:translateX(-100%);transition:transform .22s ease;width:var(--sidebar)!important}
+  .sidebar.mobile-open{transform:translateX(0)}
+  .main{margin-left:0!important}
+  .kpi-grid,.kpi-grid-3{grid-template-columns:1fr 1fr}
+  .form-grid{grid-template-columns:1fr}
+  .fg-full{grid-column:1}
+  .content{padding:10px}
+  .topbar{padding:0 8px}
+  #tb-bc{display:none}
+}
+@media(max-width:480px){.kpi-grid{grid-template-columns:1fr}.kpi-grid-3{grid-template-columns:1fr 1fr}}
 
 /* ══════════════════════════════
 PRINT STYLES
@@ -382,57 +410,62 @@ th.sortable:not(.sort-asc):not(.sort-desc) .sort-arrow::after{content:‘⇅’}
 <!-- APP -->
 
 <div class="app" style="display: flex;">
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleMobileSidebar()"></div>
 <nav class="sidebar">
-  <div class="sidebar-logo"><div class="brand">PAU INTERIORISMO</div><div class="brand-sub">Sistema de gestión · <span style="color:#b87333">v71</span></div></div>
+  <div class="sidebar-logo"><div class="brand">PAU INTERIORISMO</div><div class="brand-sub">Sistema de gestión · <span style="color:#b87333">v73</span></div></div>
   <div class="nav-section">
     <div class="nav-label">Principal</div>
-    <div class="nav-item active" data-view="gerencia"><span class="ni">🏠</span><span>Gerencia</span></div>
-    <div class="nav-item" data-view="agenda"><span class="ni">🔔</span><span>Agenda</span><span class="nav-badge" id="agenda-badge" style="">1</span></div>
-    <div class="nav-item" data-view="clientes"><span class="ni">🤝</span><span>Clientes</span></div>
-    <div class="nav-item" data-view="proyectos"><span class="ni">📁</span><span>Proyectos</span></div>
+    <div class="nav-item active" data-view="gerencia" onclick="navTo('gerencia')"><span class="ni">🏠</span><span>Gerencia</span></div>
+    <div class="nav-item" data-view="agenda" onclick="navTo('agenda')"><span class="ni">🔔</span><span>Agenda</span><span class="nav-badge" id="agenda-badge" style="">1</span></div>
+    <div class="nav-item" data-view="clientes" onclick="navTo('clientes')"><span class="ni">🤝</span><span>Clientes</span></div>
+    <div class="nav-item" data-view="proyectos" onclick="navTo('proyectos')"><span class="ni">📁</span><span>Proyectos</span></div>
   </div>
   <div class="nav-section">
     <div class="nav-label">Presupuestación</div>
-    <div class="nav-item" data-view="presupuesto"><span class="ni">💰</span><span>Presupuesto</span></div>
-    <div class="nav-item" data-view="comparativa"><span class="ni">⚖️</span><span>Comparativa ofertas</span></div>
-    <div class="nav-item" data-view="tarifario"><span class="ni">📋</span><span>Tarifario</span></div>
-    <div class="nav-item" data-view="cype"><span class="ni">📐</span><span>CYPE 2026</span><span class="nav-badge" id="cype-badge">524</span></div>
-    <div class="nav-item" data-view="catalogos"><span class="ni">📚</span><span>Catálogos</span></div>
+    <div class="nav-item" data-view="presupuesto" onclick="navTo('presupuesto')"><span class="ni">💰</span><span>Presupuesto</span></div>
+    <div class="nav-item" data-view="comparativa" onclick="navTo('comparativa')"><span class="ni">⚖️</span><span>Comparativa ofertas</span></div>
+    <div class="nav-item" data-view="tarifario" onclick="navTo('tarifario')"><span class="ni">📋</span><span>Tarifario</span></div>
+    <div class="nav-item" data-view="cype" onclick="navTo('cype')"><span class="ni">📐</span><span>CYPE 2026</span><span class="nav-badge" id="cype-badge">524</span></div>
+    <div class="nav-item" data-view="catalogos" onclick="navTo('catalogos')"><span class="ni">📚</span><span>Catálogos</span></div>
   </div>
   <div class="nav-section">
     <div class="nav-label">Ejecución</div>
-    <div class="nav-item" data-view="compras"><span class="ni">🛒</span><span>Compras</span></div>
-    <div class="nav-item" data-view="subcontratas"><span class="ni">👷</span><span>Subcontratas</span></div>
-    <div class="nav-item" data-view="horas"><span class="ni">⏱</span><span>Horas</span></div>
-    <div class="nav-item" data-view="pedidos"><span class="ni">📦</span><span>Pedidos</span></div>
-    <div class="nav-item" data-view="control_horario"><span class="ni">📅</span><span>Control horario</span></div>
-    <div class="nav-item" data-view="proveedores"><span class="ni">🏭</span><span>Proveedores</span></div>
+    <div class="nav-item" data-view="compras" onclick="navTo('compras')"><span class="ni">🛒</span><span>Compras</span></div>
+    <div class="nav-item" data-view="subcontratas" onclick="navTo('subcontratas')"><span class="ni">👷</span><span>Subcontratas</span></div>
+    <div class="nav-item" data-view="horas" onclick="navTo('horas')"><span class="ni">⏱</span><span>Horas</span></div>
+    <div class="nav-item" data-view="pedidos" onclick="navTo('pedidos')"><span class="ni">📦</span><span>Pedidos</span></div>
+    <div class="nav-item" data-view="control_horario" onclick="navTo('control_horario')"><span class="ni">📅</span><span>Control horario</span></div>
+    <div class="nav-item" data-view="proveedores" onclick="navTo('proveedores')"><span class="ni">🏭</span><span>Proveedores</span></div>
   </div>
   <div class="nav-section">
     <div class="nav-label">Cierre</div>
-    <div class="nav-item" data-view="rentabilidad"><span class="ni">📈</span><span>Rentabilidad</span></div>
-    <div class="nav-item" data-view="facturas"><span class="ni">🧾</span><span>Facturas</span></div>
-    <div class="nav-item" data-view="conciliacion"><span class="ni">🏦</span><span>Conciliación bancaria</span></div>
-    <div class="nav-item" data-view="contabilidad"><span class="ni">📊</span><span>Contabilidad</span></div>
-    <div class="nav-item" data-view="informe_mensual"><span class="ni">📅</span><span>Informe mensual</span></div>
-    <div class="nav-item" data-view="rrhh"><span class="ni">👤</span><span>RR.HH. · Nóminas</span></div>
+    <div class="nav-item" data-view="rentabilidad" onclick="navTo('rentabilidad')"><span class="ni">📈</span><span>Rentabilidad</span></div>
+    <div class="nav-item" data-view="facturas" onclick="navTo('facturas')"><span class="ni">🧾</span><span>Facturas</span></div>
+    <div class="nav-item" data-view="conciliacion" onclick="navTo('conciliacion')"><span class="ni">🏦</span><span>Conciliación bancaria</span></div>
+    <div class="nav-item" data-view="contabilidad" onclick="navTo('contabilidad')"><span class="ni">📊</span><span>Contabilidad</span></div>
+    <div class="nav-item" data-view="informe_mensual" onclick="navTo('informe_mensual')"><span class="ni">📅</span><span>Informe mensual</span></div>
+    <div class="nav-item" data-view="rrhh" onclick="navTo('rrhh')"><span class="ni">👤</span><span>RR.HH. · Nóminas</span></div>
   </div>
   <div class="nav-section">
     <div class="nav-label">Sistema</div>
-    <div class="nav-item" data-view="pres_final"><span class="ni">📄</span><span>Presupuesto final</span></div>
-    <div class="nav-item" data-view="contrato"><span class="ni">📝</span><span>Contrato</span></div>
-    <div class="nav-item" data-view="pedido_doc"><span class="ni">📋</span><span>Doc. Pedido</span></div>
-    <div class="nav-item" data-view="listas"><span class="ni">🗂</span><span>Listas</span></div>
-    <div class="nav-item" data-view="configuracion"><span class="ni">⚙️</span><span>Configuración</span></div>
+    <div class="nav-item" data-view="pres_final" onclick="navTo('pres_final')"><span class="ni">📄</span><span>Presupuesto final</span></div>
+    <div class="nav-item" data-view="contrato" onclick="navTo('contrato')"><span class="ni">📝</span><span>Contrato</span></div>
+    <div class="nav-item" data-view="pedido_doc" onclick="navTo('pedido_doc')"><span class="ni">📋</span><span>Doc. Pedido</span></div>
+    <div class="nav-item" data-view="listas" onclick="navTo('listas')"><span class="ni">🗂</span><span>Listas</span></div>
+    <div class="nav-item" data-view="configuracion" onclick="navTo('configuracion')"><span class="ni">⚙️</span><span>Configuración</span></div>
   </div>
   <div class="sidebar-bottom">
     <div class="user-card"><div class="user-av" id="user-av">JO</div><div><div class="user-name" id="user-name">Jose</div><div class="user-role">Administrador</div></div></div>
   </div>
 </nav>
 
+<!-- FAB para móvil -->
+
+<button class="fab" onclick="openModal('m-quick')" title="Nuevo registro">＋</button>
+
 <div class="main">
   <div class="topbar">
-    <div><div class="topbar-title" id="tb-title">Gerencia · Panel ejecutivo</div><div class="topbar-bc" id="tb-bc">Datos en tiempo real</div></div>
+    <div style="display:flex;align-items:center;gap:8px"><button class="hamburger-btn" onclick="toggleMobileSidebar()" aria-label="Menú" style="touch-action:manipulation">☰</button><div><div class="topbar-title" id="tb-title">Gerencia · Panel ejecutivo</div><div class="topbar-bc" id="tb-bc">Datos en tiempo real</div></div></div>
     <div class="topbar-right">
       <!-- Búsqueda global Ctrl+K -->
       <button onclick="abrirBusquedaGlobal()" style="display:flex;align-items:center;gap:7px;padding:6px 14px;background:#f5f7fa;border:1px solid var(--border);border-radius:8px;cursor:pointer;color:var(--text-mid);font-size:12px;transition:all .15s" onmouseover="this.style.background='var(--blue-light)'" onmouseout="this.style.background='#f5f7fa'">
@@ -771,25 +804,80 @@ PAU INTERIORISMO S.L. · CIF B-56909641 · <a href="/cdn-cgi/l/email-protection"
 
 <!-- ═══ GERENCIA ═══ -->
 <div class="view active" id="view-gerencia">
-  <div class="kpi-grid">
-    <div class="kpi blue"><div class="kpi-label">Total Ventas (Base Imp.)</div><div class="kpi-value" id="g-ventas">34.573,36€</div><div class="kpi-sub">Facturas emitidas</div></div>
-    <div class="kpi red"><div class="kpi-label">Total Costes (Base Imp.)</div><div class="kpi-value" id="g-costes">44.513,81€</div><div class="kpi-sub">Facturas recibidas</div></div>
-    <div class="kpi green"><div class="kpi-label">Beneficio Neto</div><div class="kpi-value" id="g-benef" style="color: var(--red);">-9940,45€</div><div class="kpi-sub">Ventas − Costes (base imp.)</div></div>
-    <div class="kpi amber"><div class="kpi-label">Margen Neto %</div><div class="kpi-value" id="g-margen">-28.8%</div><div class="kpi-sub">Sobre base imponible</div></div>
+  <!-- Barra de filtro de período -->
+  <div id="g-periodo-bar" style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:10px 14px;background:#fff;border:1px solid var(--border);border-radius:var(--radius);flex-wrap:wrap">
+    <span style="font-size:12px;color:var(--text-soft);font-weight:600">📅 Período:</span>
+    <select id="g-filtro-tipo" style="width:130px;font-size:12px;border:1px solid var(--border);border-radius:6px;padding:4px 8px;background:#fff" onchange="gerenciaFiltroChange()">
+      <option value="anio">Año completo</option>
+      <option value="trimestre">Trimestre</option>
+      <option value="mes">Mes</option>
+      <option value="todo">Todo (histórico)</option>
+    </select>
+    <select id="g-filtro-anio" style="width:85px;font-size:12px;border:1px solid var(--border);border-radius:6px;padding:4px 8px;background:#fff" onchange="loadGerencia()">
+      <option value="2026">2026</option><option value="2025">2025</option><option value="2024">2024</option><option value="2023">2023</option>
+    </select>
+    <select id="g-filtro-trim" style="width:120px;font-size:12px;border:1px solid var(--border);border-radius:6px;padding:4px 8px;background:#fff;display:none" onchange="loadGerencia()">
+      <option value="1">T1 (Ene–Mar)</option><option value="2">T2 (Abr–Jun)</option><option value="3">T3 (Jul–Sep)</option><option value="4">T4 (Oct–Dic)</option>
+    </select>
+    <select id="g-filtro-mes" style="width:130px;font-size:12px;border:1px solid var(--border);border-radius:6px;padding:4px 8px;background:#fff;display:none" onchange="loadGerencia()">
+      <option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option><option value="4">Abril</option><option value="5">Mayo</option><option value="6">Junio</option><option value="7">Julio</option><option value="8">Agosto</option><option value="9">Septiembre</option><option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
+    </select>
+    <span id="g-filtro-label" style="font-size:11px;color:var(--copper);font-weight:600;margin-left:4px"></span>
+    <button style="margin-left:auto;font-size:11px;padding:4px 12px;background:var(--navy);color:#fff;border:none;border-radius:6px;cursor:pointer;touch-action:manipulation" onclick="loadGerencia()">🔄 Actualizar</button>
   </div>
+  <div class="kpi-grid">
+    <div class="kpi blue" onclick="navTo('facturas')" style="cursor:pointer" title="Ver facturas"><div class="kpi-label">Total Ventas (Base Imp.)</div><div class="kpi-value" id="g-ventas">—</div><div class="kpi-sub" style="font-size:10px">Facturas emitidas →</div></div>
+    <div class="kpi red" onclick="navTo('compras')" style="cursor:pointer" title="Ver compras"><div class="kpi-label">Total Costes (Base Imp.)</div><div class="kpi-value" id="g-costes">—</div><div class="kpi-sub" style="font-size:10px">Facturas recibidas →</div></div>
+    <div class="kpi green" onclick="navTo('rentabilidad')" style="cursor:pointer" title="Ver rentabilidad"><div class="kpi-label">Beneficio Neto</div><div class="kpi-value" id="g-benef">—</div><div class="kpi-sub" style="font-size:10px">Análisis rentabilidad →</div></div>
+    <div class="kpi amber" onclick="navTo('proyectos')" style="cursor:pointer" title="Ver proyectos"><div class="kpi-label">Margen Neto %</div><div class="kpi-value" id="g-margen">—</div><div class="kpi-sub" style="font-size:10px">Sobre base imponible →</div></div>
+  </div>
+  <!-- KPIs operacionales -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px" id="g-ops-kpis">
+    <div class="kpi" style="background:#fff;border:1px solid var(--border);cursor:pointer" onclick="navTo('proyectos')" title="Ver proyectos en ejecución">
+      <div class="kpi-label">🔨 En ejecución</div>
+      <div class="kpi-value" id="g-en-ejecucion" style="font-size:24px">—</div>
+      <div class="kpi-sub">Obras activas</div>
+    </div>
+    <div class="kpi" style="background:#fff;border:1px solid var(--border);cursor:pointer" onclick="navTo('facturas')" title="Ver facturas vencidas">
+      <div class="kpi-label">⚠️ Fra. vencidas</div>
+      <div class="kpi-value" id="g-fra-vencidas" style="font-size:24px;color:var(--red)">—</div>
+      <div class="kpi-sub">Sin cobrar</div>
+    </div>
+    <div class="kpi" style="background:#fff;border:1px solid var(--border);cursor:pointer" onclick="navTo('proyectos')" title="Presupuestos enviados pendientes de respuesta">
+      <div class="kpi-label">📤 Pres. enviados</div>
+      <div class="kpi-value" id="g-pres-enviados" style="font-size:24px;color:var(--amber)">—</div>
+      <div class="kpi-sub">Pendiente respuesta</div>
+    </div>
+    <div class="kpi" style="background:#fff;border:1px solid var(--border);cursor:pointer" onclick="navTo('compras')" title="Compras pendientes de pago">
+      <div class="kpi-label">🛒 Compras pdte.</div>
+      <div class="kpi-value" id="g-compras-pdte" style="font-size:24px;color:var(--amber)">—</div>
+      <div class="kpi-sub">Sin pagar</div>
+    </div>
+  </div>
+  <!-- Últimos movimientos -->
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-header" style="padding:10px 16px">
+      <div class="card-title" style="font-size:13px">⚡ Últimos movimientos</div>
+      <button onclick="renderUltimosMovimientos()" style="font-size:10px;padding:3px 8px;background:none;border:1px solid var(--border);border-radius:4px;cursor:pointer;color:var(--text-soft)">🔄</button>
+    </div>
+    <div id="g-ultimos-list" style="max-height:150px;overflow-y:auto;padding:4px 12px">
+      <div style="text-align:center;padding:12px;color:var(--text-soft);font-size:12px">Cargando…</div>
+    </div>
+  </div>
+
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
     <!-- Resumen económico -->
     <div class="card">
       <div class="card-header"><div class="card-title">📊 Resumen económico</div></div>
       <div class="card-body" style="padding:0">
         <div class="cuenta-row header"><span>Concepto</span><span>Importe €</span><span>%</span></div>
-        <div class="cuenta-row"><span>Total Ventas (Base Imp.)</span><span id="ge-ventas">34.573,36€</span><span>100%</span></div>
+        <div class="cuenta-row"><span>Total Ventas (Base Imp.)</span><span id="ge-ventas">—</span><span>100%</span></div>
         <div class="cuenta-row"><span>IVA Repercutido</span><span id="ge-iva-rep">7002,46€</span><span></span></div>
-        <div class="cuenta-row"><span style="color:var(--text-soft)">— Compras (fact. recibidas)</span><span id="ge-compras">44.513,81€</span><span id="ge-compras-pct">128.8%</span></div>
+        <div class="cuenta-row"><span style="color:var(--text-soft)">— Compras (fact. recibidas)</span><span id="ge-compras">—</span><span id="ge-compras-pct">—</span></div>
         <div class="cuenta-row" style="display:none"><span></span><span id="ge-subcs">—</span><span id="ge-subcs-pct"></span></div>
         <div class="cuenta-row" style="display:none"><span></span><span id="ge-mo">—</span><span id="ge-mo-pct"></span></div>
-        <div class="cuenta-row total"><span>TOTAL COSTES (Base Imp.)</span><span id="ge-costes-tot">44.513,81€</span><span id="ge-costes-pct">128.8%</span></div>
-        <div class="cuenta-row result neg" id="ge-result-row"><span>BENEFICIO NETO</span><span id="ge-beneficio">-9940,45€</span><span id="ge-benef-pct">-28.8%</span></div>
+        <div class="cuenta-row total"><span>TOTAL COSTES (Base Imp.)</span><span id="ge-costes-tot">—</span><span id="ge-costes-pct">—</span></div>
+        <div class="cuenta-row result neg" id="ge-result-row"><span>BENEFICIO NETO</span><span id="ge-beneficio">—</span><span id="ge-benef-pct">—</span></div>
       </div>
     </div>
     <!-- Proyectos por estado -->
@@ -986,7 +1074,7 @@ PAU INTERIORISMO S.L. · CIF B-56909641 · <a href="/cdn-cgi/l/email-protection"
   </div>
   <div class="card">
     <div class="card-header"><div class="card-title">📁 Proyectos<span id="proyectos-count" style="font-size:11px;font-weight:400;color:var(--text-soft);margin-left:6px"></span></div></div>
-    <div class="table-wrap"><table><thead><tr><th>ID</th><th>Nombre</th><th>Cliente</th><th>Tipo</th><th>Estado</th><th>Responsable</th><th>Inicio</th><th></th></tr></thead>
+    <div class="table-wrap"><table><thead><tr><th>ID</th><th>Nombre</th><th>Cliente</th><th>Tipo</th><th>Estado</th><th>Responsable</th><th>Inicio</th><th style="text-align:right">💰 Pres.</th><th style="text-align:right">📊 Margen</th><th></th></tr></thead>
     <tbody id="proyectos-tbody"><tr><td colspan="8" class="loading">Cargando…</td></tr></tbody></table></div>
   </div>
 <!-- ═══ KANBAN DE PROYECTOS ═══ -->
@@ -4055,7 +4143,21 @@ const META={
   configuracion:{t:'Configuración',b:'Empresa · CI+GG+BI · Parámetros'},
 };
 document.querySelectorAll('.nav-item[data-view]').forEach(el=>el.addEventListener('click',()=>navTo(el.dataset.view)));
+function toggleMobileSidebar(){
+  document.querySelector('.sidebar')?.classList.toggle('mobile-open');
+  document.getElementById('sidebar-overlay')?.classList.toggle('visible');
+}
+function closeMobileSidebar(){
+  document.querySelector('.sidebar')?.classList.remove('mobile-open');
+  document.getElementById('sidebar-overlay')?.classList.remove('visible');
+}
+
+let _loadingCount=0;
+function showBar(){const b=document.getElementById('loading-bar');if(b){b.style.width='80%';b.classList.add('active');}}
+function hideBar(){const b=document.getElementById('loading-bar');if(b&&_loadingCount<=0){b.classList.remove('active');b.style.width='0';}}
+
 async function navTo(v){
+  closeMobileSidebar();
   document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
   document.querySelector(`[data-view="${v}"]`)?.classList.add('active');
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
@@ -4063,7 +4165,16 @@ async function navTo(v){
   const m=META[v]||{};
   document.getElementById('tb-title').textContent=m.t||v;
   document.getElementById('tb-bc').textContent=m.b||'';
-  if(loaders[v]) try{ await loaders[v](); }catch(e){ console.error('navTo loader error ['+v+']:',e); toast('Error cargando sección: '+e.message,'error'); }
+  if(loaders[v]) try{
+    _loadingCount++; showBar();
+    await loaders[v]();
+  }catch(e){
+    console.error('navTo loader error ['+v+']:',e); 
+    toast('Error cargando sección: '+e.message,'error');
+  }finally{
+    _loadingCount--;
+    if(_loadingCount<=0){_loadingCount=0;setTimeout(hideBar,300);}
+  }
 }
 
 // ═══════════════════════════════════════════
@@ -4079,7 +4190,7 @@ function fmtD(d){if(!d)return'—';const p=d.split('-');return p.length===3?`${p
 function genId(pre,list,key){const ns=list.map(x=>parseInt((x[key||pre.toLowerCase()+'_id']||'').replace(/\D/g,''))||0);return`${pre}-${(Math.max(0,...ns)+1).toString().padStart(3,'0')}`}
 function ivaPct(s){return s==='Exento'?0:parseFloat(s)||21}
 let toastT;
-function toast(msg,type='success'){const el=document.getElementById('toast');el.textContent=msg;el.className=`toast show ${type}`;clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),3200);}
+function toast(msg,type='success',dur=3200){const el=document.getElementById('toast');el.innerHTML=msg;el.className=`toast show ${type}`;clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),dur);}
 function openModal(id){
   if(id==='m-comparativa'){
     poblarProveedoresComparativa();
@@ -4956,8 +5067,23 @@ document.getElementById(‘cype-badge’).textContent=cy.length;
 
 ```
 // KPIs superiores y resumen: SOLO facturas emitidas y recibidas (base imponible)
-const facVenta  = fac.filter(f=>(f.tipo_factura||'Venta')==='Venta');
-const facCompra = fac.filter(f=>(f.tipo_factura||'Venta')==='Compra');
+// Aplicar filtro de período desde los selectores existentes en la UI
+const _gTipo = document.getElementById('g-filtro-tipo')?.value||'anio';
+const _gAnio = document.getElementById('g-filtro-anio')?.value||String(new Date().getFullYear());
+const _gTrim = document.getElementById('g-filtro-trim')?.value||'1';
+const _gMesFil = document.getElementById('g-filtro-mes')?.value||'1';
+const _periodoFiltro = f=>{
+  if(!f.fecha_emision) return _gTipo==='todo';
+  const dStr=f.fecha_emision.substring(0,10);
+  const fAnio=dStr.substring(0,4), fMes=parseInt(dStr.substring(5,7));
+  if(_gTipo==='todo') return true;
+  if(fAnio!==_gAnio) return false;
+  if(_gTipo==='trimestre'){const t=parseInt(_gTrim);return fMes>=(t-1)*3+1&&fMes<=t*3;}
+  if(_gTipo==='mes') return fMes===parseInt(_gMesFil);
+  return true;
+};
+const facVenta  = fac.filter(f=>(f.tipo_factura||'Venta')==='Venta').filter(_periodoFiltro);
+const facCompra = fac.filter(f=>(f.tipo_factura||'Venta')==='Compra').filter(_periodoFiltro);
 const kpiVentas = facVenta.reduce((s,f)=>s+(f.base_imponible||0),0);
 const kpiCostes = facCompra.reduce((s,f)=>s+(f.base_imponible||0),0);
 const kpiBenef  = kpiVentas - kpiCostes;
@@ -4971,6 +5097,16 @@ document.getElementById('g-costes').textContent=fmt(kpiCostes);
 document.getElementById('g-benef').textContent=fmt(kpiBenef);
 document.getElementById('g-benef').style.color=kpiBenef>=0?'var(--green)':'var(--red)';
 document.getElementById('g-margen').textContent=fmtP(kpiMargen);
+// KPIs operacionales (usan todos los proyectos/facturas, sin filtro de periodo)
+const enEjecucion=pr.filter(p=>p.estado==='En ejecución').length;
+const presEnviados=pr.filter(p=>p.estado==='Presupuesto enviado').length;
+const fraVencidas=fac.filter(f=>(f.tipo_factura||'Venta')==='Venta'&&f.estado==='Vencida').length;
+const comprasPdte=comp.filter(c=>c.estado_pago==='Pendiente').length;
+const sv2=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+sv2('g-en-ejecucion',enEjecucion);
+sv2('g-fra-vencidas',fraVencidas||'0');
+sv2('g-pres-enviados',presEnviados||'0');
+sv2('g-compras-pdte',comprasPdte||'0');
 
 // Resumen económico — solo facturas, base imponible
 const pv=kpiVentas>0;
@@ -5102,7 +5238,7 @@ try{
 PC=await sbGet(‘proyectos’,’?order=created_at.desc’);
 document.getElementById(‘proyectos-count’).textContent=PC.length+’ proyectos’;
 if(!PC.length){tb.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="empty-icon">📁</div><div class="empty-text">Sin proyectos</div><button class="btn btn-primary" onclick="openModal('m-proyecto')">＋ Nuevo</button></div></td></tr>`;return;}
-tb.innerHTML=PC.map(p=>`<tr data-search="${(p.proyecto_id+p.nombre+p.cliente_id+p.tipo+p.estado).toLowerCase()}"><td class="td-mono" style="color:var(--text-soft)">${p.proyecto_id||'—'}</td><td><strong style="cursor:pointer;color:var(--navy)" onclick="abrirExpediente('${p.proyecto_id}')" title="Ver expediente completo">${p.nombre}</strong></td><td>${p.cliente_id||'—'}</td><td>${bE(p.tipo)}</td><td>${bE(p.estado)}</td><td>${p.responsable||'—'}</td><td>${fmtD(p.fecha_inicio)}</td><td><div class="td-actions"><button class="btn btn-ghost btn-sm" style="font-size:11px;color:var(--navy);font-weight:600" onclick="abrirExpediente('${p.proyecto_id}')">📁 Exp.</button><button class="btn btn-ghost btn-icon btn-sm" onclick="editProyecto('${p.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('proyectos','${p.id}','${p.nombre.replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`).join(’’);
+tb.innerHTML=PC.map(p=>`<tr data-search="${(p.proyecto_id+p.nombre+p.cliente_id+p.tipo+p.estado).toLowerCase()}"><td class="td-mono" style="color:var(--text-soft)">${p.proyecto_id||'—'}</td><td><strong style="cursor:pointer;color:var(--navy)" onclick="abrirExpediente('${p.proyecto_id}')" title="Ver expediente completo">${p.nombre}</strong></td><td>${p.cliente_id||'—'}</td><td>${bE(p.tipo)}</td><td>${bE(p.estado)}</td><td>${p.responsable||'—'}</td><td>${fmtD(p.fecha_inicio)}</td><td class=\"td-mono\" style=\"text-align:right\">${(()=>{const fv=(FC||[]).filter(f=>f.proyecto_id===p.proyecto_id&&(f.tipo_factura||'Venta')==='Venta');const t=fv.reduce((s,f)=>s+(f.base_imponible||0),0);return t>0?'<span style=\"font-size:11px\">'+fmt(t)+'</span>':'<span style=\"color:var(--text-soft)\">—</span>'})()}</td><td class=\"td-mono\" style=\"text-align:right\">${(()=>{const fv=(FC||[]).filter(f=>f.proyecto_id===p.proyecto_id&&(f.tipo_factura||'Venta')==='Venta');const v=fv.reduce((s,f)=>s+(f.base_imponible||0),0);const co=(CoC||[]).filter(c=>c.proyecto_id===p.proyecto_id).reduce((s,c)=>s+(c.base_imponible||0),0);const sc=(ScC||[]).filter(s=>s.proyecto_id===p.proyecto_id).reduce((s,c)=>s+(c.importe||0),0);const m=v>0?((v-co-sc)/v)*100:null;if(m===null) return'<span style=\"color:var(--text-soft)\">—</span>';const c=m>=20?'var(--green)':m>=10?'var(--amber)':'var(--red)';return'<span style=\"font-weight:700;color:'+c+'\">'+fmtP(m)+'</span>'})()}</td><td><div class="td-actions"><button class="btn btn-ghost btn-sm" style="font-size:11px;color:var(--navy);font-weight:600" onclick="abrirExpediente('${p.proyecto_id}')">📁 Exp.</button><button class="btn btn-ghost btn-icon btn-sm" onclick="editProyecto('${p.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('proyectos','${p.id}','${p.nombre.replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`).join(’’);
 populateSelects();
 poblarFiltrosCliente();
 filtrarProyectosPorCliente();
@@ -5124,12 +5260,27 @@ if(!PC.length)PC=await sbGet(‘proyectos’).catch(()=>[]);
 if(!TC.length)TC=await sbGet(‘tarifario’).catch(()=>[]);
 if(!CyCache.length)CyCache=await sbGet(‘precios_cype’,’?order=codigo.asc’).catch(()=>[]);
 populateSelects();populateIntCatalog();
+// Restaurar último proyecto seleccionado
+const lastProy=sessionStorage.getItem(‘pres_last_proyecto’);
+const lastVer=sessionStorage.getItem(‘pres_last_version’);
+const pSel=document.getElementById(‘pres-proyecto-sel’);
+const vSel=document.getElementById(‘pres-version-sel’);
+if(lastProy&&pSel){
+// Verify project still exists
+if(PC.some(p=>p.proyecto_id===lastProy)){
+pSel.value=lastProy;
+if(lastVer&&vSel) vSel.value=lastVer;
+loadPresupuesto();
+}
+}
 }
 async function loadPresupuesto(){
 const proy=document.getElementById(‘pres-proyecto-sel’).value;
 const ver=document.getElementById(‘pres-version-sel’).value;
 const tbody=document.getElementById(‘pres-tbody’);
 document.getElementById(‘btn-comparativa’).style.display=proy?’’:‘none’;
+// Guardar último proyecto en sessionStorage
+if(proy){sessionStorage.setItem(‘pres_last_proyecto’,proy);sessionStorage.setItem(‘pres_last_version’,ver||‘v1’);}
 if(!proy){tbody.innerHTML=`<tr><td colspan="11" style="text-align:center;padding:40px;color:var(--text-soft)"> <div style="font-size:32px;margin-bottom:10px">📁</div> <div style="font-size:14px;font-weight:600;margin-bottom:6px">Selecciona un cliente y proyecto</div> <div style="font-size:12px">El presupuesto aparecerá aquí una vez seleccionado el proyecto</div> </td></tr>`;document.getElementById(‘pres-resumen’).style.display=‘none’;return;}
 try{
 PresC=await sbGet(‘presupuesto_lineas’,`?proyecto_id=eq.${proy}&version=eq.${ver}&order=orden.asc`);
@@ -7679,7 +7830,7 @@ try{
 CoC=await sbGet(‘compras’,’?order=fecha.desc’);
 document.getElementById(‘compras-count’).textContent=CoC.length+’ registros’;
 if(!CoC.length){tb.innerHTML=`<tr><td colspan="9"><div class="empty"><div class="empty-icon">🛒</div><div class="empty-text">Sin compras</div><button class="btn btn-primary" onclick="openModal('m-compra')">＋ Nueva</button></div></td></tr>`;return;}
-tb.innerHTML=CoC.map(c=>{const tot=c.base_imponible*(1+ivaPct(c.iva_pct)/100);const hasPDF=!!(c.adjunto_pdf);return`<tr data-search="${(c.proyecto_id+c.proveedor_id+c.concepto).toLowerCase()}"><td>${fmtD(c.fecha)}</td><td class="td-mono" style="color:var(--text-soft)">${c.proyecto_id||'—'}</td><td>${c.proveedor_id||'—'}</td><td>${c.concepto||'—'}${hasPDF?' 📎':''}</td><td class="td-mono">${fmt(c.base_imponible)}</td><td class="td-mono">${c.iva_pct}</td><td class="td-mono" style="font-weight:700">${fmt(tot)}</td><td>${bE(c.estado_pago)}</td><td style="display:flex;gap:4px">${hasPDF?`<button class="btn btn-ghost btn-icon btn-sm" onclick="coVerPDFById('${c.id}')" style="font-size:11px;color:var(--navy)" title="Ver PDF">📄</button>`:''}<button class="btn btn-ghost btn-icon btn-sm" onclick="editCompra('${c.id}')" style="font-size:11px">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('compras','${c.id}','${(c.concepto||'compra').replace(/'/g,"\\'")}')">🗑</button></td></tr>`;}).join(’’);
+tb.innerHTML=CoC.map(c=>{const tot=c.base_imponible*(1+ivaPct(c.iva_pct)/100);const hasPDF=!!(c.adjunto_pdf);return`<tr data-search="${(c.proyecto_id+c.proveedor_id+c.concepto).toLowerCase()}"><td>${fmtD(c.fecha)}</td><td class="td-mono">${c.proyecto_id?`<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:1px 5px;color:var(--navy);font-weight:700" title="Ver expediente" onclick="navTo('proyectos').then(()=>setTimeout(()=>abrirExpediente('${c.proyecto_id}'),400))">${c.proyecto_id}</button>`:'<span style="color:var(--text-soft)">—</span>'}</td><td>${c.proveedor_id||'—'}</td><td>${c.concepto||'—'}${hasPDF?' 📎':''}</td><td class="td-mono">${fmt(c.base_imponible)}</td><td class="td-mono">${c.iva_pct}</td><td class="td-mono" style="font-weight:700">${fmt(tot)}</td><td>${bE(c.estado_pago)}</td><td style="display:flex;gap:4px">${hasPDF?`<button class="btn btn-ghost btn-icon btn-sm" onclick="coVerPDFById('${c.id}')" style="font-size:11px;color:var(--navy)" title="Ver PDF">📄</button>`:''}<button class="btn btn-ghost btn-icon btn-sm" onclick="editCompra('${c.id}')" style="font-size:11px">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('compras','${c.id}','${(c.concepto||'compra').replace(/'/g,"\\'")}')">🗑</button></td></tr>`;}).join(’’);
 }catch(e){tb.innerHTML=`<tr><td colspan="9" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
 // Re-apply project filter after load
 filtrarModuloPorProyecto(‘compras’);
@@ -7710,7 +7861,7 @@ try{
 ScC=await sbGet(‘subcontratas’,’?order=fecha.desc’);
 document.getElementById(‘subcontratas-count’).textContent=ScC.length+’ registros’;
 if(!ScC.length){tb.innerHTML=`<tr><td colspan="9"><div class="empty"><div class="empty-icon">👷</div><div class="empty-text">Sin subcontratas</div><button class="btn btn-primary" onclick="openModal('m-subcontrata')">＋ Nueva</button></div></td></tr>`;return;}
-tb.innerHTML=ScC.map(s=>{const tot=s.importe*(1+ivaPct(s.iva_pct)/100);return`<tr data-search="${(s.proyecto_id+s.proveedor_id+s.trabajo).toLowerCase()}"><td>${fmtD(s.fecha)}</td><td class="td-mono" style="color:var(--text-soft)">${s.proyecto_id||'—'}</td><td>${s.proveedor_id||'—'}</td><td>${s.trabajo||'—'}</td><td class="td-mono">${fmt(s.importe)}</td><td class="td-mono">${s.iva_pct}</td><td class="td-mono" style="font-weight:700">${fmt(tot)}</td><td>${bE(s.estado_pago)}</td><td style="display:flex;gap:4px"><button class="btn btn-ghost btn-icon btn-sm" onclick="editSubcontrata('${s.id}')" style="font-size:11px">Editar</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('subcontratas','${s.id}','${(s.trabajo||'subcontrata').replace(/'/g,"\\'")}')">🗑</button></td></tr>`;}).join(’’);
+tb.innerHTML=ScC.map(s=>{const tot=s.importe*(1+ivaPct(s.iva_pct)/100);return`<tr data-search="${(s.proyecto_id+s.proveedor_id+s.trabajo).toLowerCase()}"><td>${fmtD(s.fecha)}</td><td class="td-mono">${s.proyecto_id?`<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:1px 5px;color:var(--navy);font-weight:700" title="Ver expediente" onclick="navTo('proyectos').then(()=>setTimeout(()=>abrirExpediente('${s.proyecto_id}'),400))">${s.proyecto_id}</button>`:'<span style="color:var(--text-soft)">—</span>'}</td><td>${s.proveedor_id||'—'}</td><td>${s.trabajo||'—'}</td><td class="td-mono">${fmt(s.importe)}</td><td class="td-mono">${s.iva_pct}</td><td class="td-mono" style="font-weight:700">${fmt(tot)}</td><td>${bE(s.estado_pago)}</td><td style="display:flex;gap:4px"><button class="btn btn-ghost btn-icon btn-sm" onclick="editSubcontrata('${s.id}')" style="font-size:11px">Editar</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('subcontratas','${s.id}','${(s.trabajo||'subcontrata').replace(/'/g,"\\'")}')">🗑</button></td></tr>`;}).join(’’);
 }catch(e){tb.innerHTML=`<tr><td colspan="9" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
 // Re-apply project filter after load
 filtrarModuloPorProyecto(‘subcontratas’);
@@ -7736,7 +7887,7 @@ try{
 HC=await sbGet(‘horas’,’?order=fecha.desc’);
 document.getElementById(‘horas-count’).textContent=HC.length+’ registros’;
 if(!HC.length){tb.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="empty-icon">⏱</div><div class="empty-text">Sin horas registradas</div><button class="btn btn-primary" onclick="openModal('m-hora')">＋ Registrar</button></div></td></tr>`;return;}
-tb.innerHTML=HC.map(h=>`<tr data-search="${(h.proyecto_id+h.trabajador+h.descripcion).toLowerCase()}"><td>${fmtD(h.fecha)}</td><td class="td-mono" style="color:var(--text-soft)">${h.proyecto_id||'—'}</td><td><strong>${h.trabajador||'—'}</strong></td><td class="td-mono">${h.horas}h</td><td class="td-mono">${fmt(h.coste_hora)}</td><td class="td-mono" style="font-weight:700">${fmt(h.total)}</td><td style="color:var(--text-soft)">${h.descripcion||'—'}</td><td><button class="btn btn-ghost btn-sm" style="margin-right:4px;font-size:11px" onclick="editHora('${h.id}')">Editar</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('horas','${h.id}','horas ${h.trabajador}')">🗑</button></td></tr>`).join(’’);
+tb.innerHTML=HC.map(h=>`<tr data-search="${(h.proyecto_id+h.trabajador+h.descripcion).toLowerCase()}"><td>${fmtD(h.fecha)}</td><td class="td-mono">${h.proyecto_id?`<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:1px 5px;color:var(--navy);font-weight:700" title="Ver expediente" onclick="navTo('proyectos').then(()=>setTimeout(()=>abrirExpediente('${h.proyecto_id}'),400))">${h.proyecto_id}</button>`:'<span style="color:var(--text-soft)">—</span>'}</td><td><strong>${h.trabajador||'—'}</strong></td><td class="td-mono">${h.horas}h</td><td class="td-mono">${fmt(h.coste_hora)}</td><td class="td-mono" style="font-weight:700">${fmt(h.total)}</td><td style="color:var(--text-soft)">${h.descripcion||'—'}</td><td><button class="btn btn-ghost btn-sm" style="margin-right:4px;font-size:11px" onclick="editHora('${h.id}')">Editar</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('horas','${h.id}','horas ${h.trabajador}')">🗑</button></td></tr>`).join(’’);
 }catch(e){tb.innerHTML=`<tr><td colspan="8" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
 // Re-apply project filter after load
 filtrarModuloPorProyecto(‘horas’);
@@ -8609,7 +8760,7 @@ const contra=esC
 :(CC.find(c=>String(c.id)===String(f.cliente_id)||c.cliente_id===f.cliente_id)?.nombre || f.cliente_id || ‘—’);
 const yaCobrada = f.estado===‘Cobrada’||f.estado===‘Pagada’;
 const srch=(tipo+’ ‘+(f.num_factura||’’)+’ ‘+contra+’ ‘+(f.proyecto_id||’’)+’ ‘+(f.concepto||’’)).toLowerCase();
-return `<tr data-fid="${f.id}" data-tipo="${tipo}" data-contra="${contra.toLowerCase()}" data-vto="${f.fecha_vencimiento||''}" data-estado="${f.estado||''}" data-search="${srch}"> <td>${badge}</td> <td class="td-mono" style="font-weight:700">${f.num_factura||'—'}</td> <td>${fmtD(f.fecha_emision)}</td> <td>${fmtD(f.fecha_vencimiento)}</td> <td>${contra}</td> <td class="td-mono" style="color:var(--text-soft)">${f.proyecto_id||'—'}</td> <td class="td-mono">${fmt(base)}</td> <td class="td-mono">${f.iva_pct||'—'}</td> <td class="td-mono" style="font-weight:700">${fmt(tot)}</td> <td class="td-mono" style="color:var(--green)">${fmt(pag)}</td> <td class="td-mono" style="color:${pdte>0?'var(--amber)':'var(--green)'}">${fmt(pdte)}</td> <td>${bE(f.estado)}</td> <td style="display:flex;gap:3px;align-items:center"> <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px" onclick="editFactura('${f.id}')">✏️</button> ${!esC ? `<button class="btn btn-sm ${yaCobrada?'btn-green':'btn-ghost'}" style="font-size:10px;padding:2px 6px" title="${yaCobrada?'Ya cobrada':'Marcar como cobrada'}" onclick="marcarFacturaCobrada('${f.id}')">✅</button>
+return `<tr data-fid="${f.id}" data-tipo="${tipo}" data-contra="${contra.toLowerCase()}" data-vto="${f.fecha_vencimiento||''}" data-estado="${f.estado||''}" data-search="${srch}"> <td>${badge}</td> <td class="td-mono" style="font-weight:700">${f.num_factura||'—'}</td> <td>${fmtD(f.fecha_emision)}</td> <td>${fmtD(f.fecha_vencimiento)}</td> <td>${contra}</td> <td class="td-mono">${f.proyecto_id?`<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:1px 5px;color:var(--navy);font-weight:700" title="Ver expediente del proyecto" onclick="navTo('proyectos').then(()=>setTimeout(()=>abrirExpediente('${f.proyecto_id}'),400))">${f.proyecto_id}</button>`:'<span style="color:var(--text-soft)">—</span>'}</td> <td class="td-mono">${fmt(base)}</td> <td class="td-mono">${f.iva_pct||'—'}</td> <td class="td-mono" style="font-weight:700">${fmt(tot)}</td> <td class="td-mono" style="color:var(--green)">${fmt(pag)}</td> <td class="td-mono" style="color:${pdte>0?'var(--amber)':'var(--green)'}">${fmt(pdte)}</td> <td>${bE(f.estado)}</td> <td style="display:flex;gap:3px;align-items:center"> <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px" onclick="editFactura('${f.id}')">✏️</button> ${!esC ? `<button class="btn btn-sm ${yaCobrada?'btn-green':'btn-ghost'}" style="font-size:10px;padding:2px 6px" title="${yaCobrada?'Ya cobrada':'Marcar como cobrada'}" onclick="marcarFacturaCobrada('${f.id}')">✅</button>
 <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px" onclick="marcarFacturaParcial('${f.id}')">💶</button>`:`<button class="btn btn-sm ${yaCobrada?'btn-green':'btn-ghost'}" style="font-size:10px;padding:2px 6px" title="${yaCobrada?'Ya pagada':'Marcar como pagada'}" onclick="marcarFacturaPagada('${f.id}')">💳</button>`} ${!esC ?`<button class="btn btn-ghost btn-sm" style="font-size:11px;padding:2px 5px;${f.email_enviado?'color:var(--green)':''}" title="${f.email_enviado?'📬 Enviada el '+fmtD(f.fecha_envio):'📧 Enviar por email'}" onclick="enviarFacturaEmail('${f.id}')">${f.email_enviado?‘📬’:‘📧’}</button>` : ''} <button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('facturas','${f.id}','${(f.num_factura||'factura').replace(/'/g,"\\'")}')" >🗑</button> </td> </tr>`;
 }).join(’’);
 // Re-apply filtros activos
@@ -13652,6 +13803,9 @@ setTimeout(() => restaurarEstadoPagina(v), 80);
 // MEJORAS UX — Cierre de modales con Escape
 // ══════════════════════════════════════════════════════════════════════
 document.addEventListener(‘keydown’, e => {
+const tag=e.target.tagName.toLowerCase();
+const inInput=tag===‘input’||tag===‘textarea’||tag===‘select’||e.target.isContentEditable;
+
 if (e.key === ‘Escape’) {
 const abierto = document.querySelector(’.overlay.open’);
 if (abierto) {
@@ -13661,6 +13815,48 @@ e.stopPropagation();
 // También cerrar confirm
 const confirm = document.getElementById(‘confirm-overlay’);
 if (confirm?.classList.contains(‘open’)) closeConfirm();
+// Cerrar búsqueda global
+const gs=document.getElementById(‘global-search-overlay’);
+if(gs?.classList.contains(‘open’)){gs.classList.remove(‘open’);e.stopPropagation();}
+// Cerrar sidebar móvil
+closeSidebar();
+}
+
+// Ctrl+K → búsqueda global
+if((e.ctrlKey||e.metaKey)&&e.key===‘k’){e.preventDefault();abrirBusquedaGlobal();return;}
+
+// Atajos solo cuando NO se está escribiendo en un campo
+if(!inInput&&!document.querySelector(’.overlay.open’)){
+// N → nuevo item (contextual según la vista activa)
+if(e.key===‘n’||e.key===‘N’){
+e.preventDefault();
+const vista=document.querySelector(’.nav-item.active’)?.dataset?.view||’’;
+const actions={
+clientes:()=>openModal(‘m-cliente’),
+proyectos:()=>openModal(‘m-proyecto’),
+compras:()=>openModal(‘m-compra’),
+facturas:()=>abrirNuevaFactura(‘Venta’),
+subcontratas:()=>openModal(‘m-subcontrata’),
+horas:()=>openModal(‘m-hora’),
+pedidos:()=>openModal(‘m-pedido’),
+proveedores:()=>openModal(‘m-proveedor’),
+agenda:()=>openModal(‘m-agenda’),
+};
+if(actions[vista]) actions[vista]();
+else openModal(‘m-quick’);
+return;
+}
+// G → ir a Gerencia
+if(e.key===‘g’&&!e.ctrlKey) {e.preventDefault();navTo(‘gerencia’);return;}
+// P → ir a Proyectos
+if(e.key===‘p’&&!e.ctrlKey) {e.preventDefault();navTo(‘proyectos’);return;}
+// F → ir a Facturas
+if(e.key===‘f’&&!e.ctrlKey) {e.preventDefault();navTo(‘facturas’);return;}
+// ? → mostrar ayuda de shortcuts
+if(e.key===’?’){
+toast(‘⌨️ Atajos: N=Nuevo · G=Gerencia · P=Proyectos · F=Facturas · Ctrl+K=Buscar · Esc=Cerrar’,‘info’,5000);
+return;
+}
 }
 });
 
@@ -13827,6 +14023,87 @@ el.innerHTML=alerts.slice(0,8).map(a=>`<div onclick="navTo('${a.go}')" style="di
 // ══════════════════════════════════════════════════════════════════════
 // DUPLICAR LÍNEAS Y CAPÍTULOS EN PRESUPUESTO
 // ══════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════
+// GERENCIA — FILTRO DE PERÍODO
+// ══════════════════════════════════════════════════════════
+function gerenciaFiltroChange(){
+const tipo = document.getElementById(‘g-filtro-tipo’)?.value||‘anio’;
+const trim = document.getElementById(‘g-filtro-trim’);
+const mes  = document.getElementById(‘g-filtro-mes’);
+const anio = document.getElementById(‘g-filtro-anio’);
+if(trim) trim.style.display = tipo===‘trimestre’?’’:‘none’;
+if(mes)  mes.style.display  = tipo===‘mes’?’’:‘none’;
+if(anio) anio.style.display = tipo===‘todo’?‘none’:’’;
+loadGerencia();
+}
+function gerenciaGetRango(){
+const tipo = document.getElementById(‘g-filtro-tipo’)?.value||‘anio’;
+const anio = parseInt(document.getElementById(‘g-filtro-anio’)?.value||new Date().getFullYear());
+const trim = parseInt(document.getElementById(‘g-filtro-trim’)?.value||‘1’);
+const mes  = parseInt(document.getElementById(‘g-filtro-mes’)?.value||‘1’);
+if(tipo===‘todo’) return {desde:null,hasta:null,label:‘Todo el histórico’};
+if(tipo===‘anio’) return {desde:`${anio}-01-01`,hasta:`${anio}-12-31`,label:`Año ${anio}`};
+if(tipo===‘trimestre’){
+const m0=(trim-1)*3+1; const m1=trim*3;
+const p=n=>String(n).padStart(2,‘0’);
+const dim=(y,m)=>new Date(y,m,0).getDate();
+return {desde:`${anio}-${p(m0)}-01`,hasta:`${anio}-${p(m1)}-${dim(anio,m1)}`,label:`T${trim} ${anio}`};
+}
+if(tipo===‘mes’){
+const p=n=>String(n).padStart(2,‘0’);
+const dias=new Date(anio,mes,0).getDate();
+const MESES_N=[’’,‘Enero’,‘Febrero’,‘Marzo’,‘Abril’,‘Mayo’,‘Junio’,‘Julio’,‘Agosto’,‘Septiembre’,‘Octubre’,‘Noviembre’,‘Diciembre’];
+return {desde:`${anio}-${p(mes)}-01`,hasta:`${anio}-${p(mes)}-${dias}`,label:`${MESES_N[mes]} ${anio}`};
+}
+return {desde:null,hasta:null,label:’’};
+}
+function gerenciaFiltrarFac(fac){
+const {desde,hasta}=gerenciaGetRango();
+if(!desde) return fac;
+return fac.filter(f=>{const fd=(f.fecha_emision||f.fecha||’’).slice(0,10);return fd>=desde&&fd<=hasta;});
+}
+function gerenciaInitFiltros(){
+const anioSel=document.getElementById(‘g-filtro-anio’);
+if(!anioSel||anioSel.dataset.init) return;
+anioSel.dataset.init=‘1’;
+const anioActual=new Date().getFullYear();
+const opts=[…anioSel.options].map(o=>parseInt(o.value));
+if(!opts.includes(anioActual)){
+const opt=document.createElement(‘option’);opt.value=anioActual;opt.textContent=anioActual;
+anioSel.insertBefore(opt,anioSel.firstChild);
+}
+anioSel.value=anioActual;
+const mesSel=document.getElementById(‘g-filtro-mes’);
+if(mesSel) mesSel.value=new Date().getMonth()+1;
+const trimSel=document.getElementById(‘g-filtro-trim’);
+if(trimSel) trimSel.value=Math.ceil((new Date().getMonth()+1)/3);
+}
+
+// ══════════════════════════════════════════════════════════
+// GERENCIA — ÚLTIMOS MOVIMIENTOS
+// ══════════════════════════════════════════════════════════
+function renderUltimosMovimientos(){
+const el=document.getElementById(‘g-ultimos-list’); if(!el) return;
+const fmtRel=d=>{
+const diff=Math.floor((new Date()-new Date(d+‘T00:00:00’))/864e5);
+if(diff===0) return ‘Hoy’; if(diff===1) return ‘Ayer’;
+if(diff<7) return `${diff}d`; return d;
+};
+const movs=[];
+(FC||[]).filter(f=>f.fecha_emision).forEach(f=>{
+const esVenta=(f.tipo_factura||‘Venta’)===‘Venta’;
+const quien=esVenta?(CC.find(c=>String(c.id)===String(f.cliente_id))?.nombre||’—’):(f.proveedor_id||’—’);
+movs.push({fecha:f.fecha_emision,ico:esVenta?‘🧾’:‘📦’,txt:`Fra. ${f.num_factura||'—'} ${esVenta?'→':'←'} ${quien}`,imp:f.base_imponible||0,color:esVenta?‘var(–green)’:‘var(–red)’,go:‘facturas’});
+});
+(CoC||[]).filter(c=>c.fecha).forEach(c=>{
+movs.push({fecha:c.fecha,ico:‘🛒’,txt:`Compra — ${c.proveedor_id||c.concepto||'—'}`,imp:c.base_imponible||0,color:‘var(–amber)’,go:‘compras’});
+});
+movs.sort((a,b)=>b.fecha.localeCompare(a.fecha));
+const top=movs.slice(0,10);
+if(!top.length){el.innerHTML=’<div style="text-align:center;padding:12px;color:var(--text-soft);font-size:12px">Sin movimientos registrados</div>’;return;}
+el.innerHTML=top.map(m=>`<div onclick="navTo('${m.go}')" style="display:flex;align-items:center;gap:8px;padding:5px 2px;border-bottom:1px solid #f5f5f5;cursor:pointer" onmouseover="this.style.background='var(--blue-light)'" onmouseout="this.style.background=''"><span>${m.ico}</span><span style="font-size:11px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.txt}</span><span style="font-size:11px;color:${m.color};font-weight:600;white-space:nowrap">${fmt(m.imp)}</span><span style="font-size:10px;color:var(--text-soft);min-width:30px;text-align:right">${fmtRel(m.fecha)}</span></div>`).join(’’);
+}
+
 async function duplicarLineaPresupuesto(id){
 const orig=PresC.find(x=>x.id===id); if(!orig){toast(‘No encontrado’,‘error’);return;}
 const d={…orig}; delete d.id; d.orden=PresC.length+1;
@@ -13840,7 +14117,7 @@ renderPresupuesto=function(){
 _origRenderPres();
 const tbody=document.getElementById(‘pres-tbody’); if(!tbody||!PresC.length) return;
 tbody.innerHTML=PresC.map((l,i)=>{
-if(l.es_capitulo) return `<tr style="background:var(--navy);color:#fff"><td colspan="9" style="padding:9px 10px;font-weight:700;font-size:12px">${l.descripcion}</td><td></td><td><div style="display:flex;gap:3px"><button class="btn btn-icon btn-sm" style="background:rgba(255,255,255,.12);border:none;color:#fff;font-size:12px" title="Duplicar" onclick="duplicarLineaPresupuesto('${l.id}')">⧉</button><button class="btn btn-icon btn-sm" style="background:rgba(255,255,255,.1);border:none;color:#fff" onclick="confirmDelete('presupuesto_lineas','${l.id}','${l.descripcion.replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`;
+if(l.es_capitulo) return `<tr style="background:var(--navy);color:#fff"><td colspan="9" style="padding:9px 10px;font-weight:700;font-size:12px">${l.descripcion}</td><td></td><td><div style="display:flex;gap:3px"><button class="btn btn-icon btn-sm" style="background:rgba(255,255,255,.15);border:none;color:#fff;font-size:10px;padding:3px 7px;white-space:nowrap" title="Duplicar capítulo completo con todas sus líneas" onclick="duplicarCapituloCompleto('${l.id}')">📋 Dup. capítulo</button><button class="btn btn-icon btn-sm" style="background:rgba(255,255,255,.1);border:none;color:#fff" onclick="confirmDelete('presupuesto_lineas','${l.id}','${l.descripcion.replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`;
 const pv=l.precio_venta||0,ci=l.ci_gg_bi_pct||0,sub=(l.cantidad||0)*pv,subCI=ci>0?sub*(1+ci/100):sub;
 return `<tr data-search="${(l.descripcion||'').toLowerCase()}"><td style="color:var(--text-soft);font-size:11px">${i+1}</td><td><strong>${l.descripcion||'—'}</strong>${l.ref_cype?`<br><span style="font-size:9px;color:var(--text-soft)">${l.ref_cype}</span>`:''}</td><td style="text-align:center">${l.unidad||'—'}</td><td class="td-mono">${l.cantidad||0}</td><td class="td-mono">${fmt(l.precio_base)}</td><td class="td-mono" style="color:var(--green)">${l.margen_pct>0?fmtP(l.margen_pct):'—'}</td><td class="td-mono" style="color:var(--amber)">${ci>0?fmtP(ci):'—'}</td><td class="td-mono" style="font-weight:700">${fmt(pv)}</td><td class="td-mono" style="font-weight:700;color:var(--navy)">${fmt(subCI)}</td><td><span class="badge b-gray">${l.iva_pct||'10%'}</span></td><td><div class="td-actions"><button class="btn btn-ghost btn-icon btn-sm" title="Duplicar" onclick="duplicarLineaPresupuesto('${l.id}')">⧉</button><button class="btn btn-ghost btn-icon btn-sm" onclick="editLineaPresupuesto('${l.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('presupuesto_lineas','${l.id}','${(l.descripcion||'').replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`;
 }).join(’’);
@@ -14595,597 +14872,6 @@ await _origLoadProyectos();
 if(_vistaProyActual===‘kanban’) renderKanban();
 };
 
+function closeSidebar(){toggleMobileSidebar();}
+
 </script>
-
-<!-- ═══ MODAL IMPORTAR HOLDED ═══ -->
-
-<div class="overlay" id="m-importar-holded">
-<div class="modal" style="width:780px;max-width:96vw">
-  <div class="modal-head">
-    <div class="modal-title">📤 Importar facturas de compra desde Holded</div>
-    <button class="modal-close" onclick="closeModal(&#39;m-importar-holded&#39;)">×</button>
-  </div>
-  <div class="modal-body">
-
-```
-<!-- INSTRUCCIONES -->
-<div class="info-box" style="margin-bottom:14px">
-  <strong>¿Cómo exportar desde Holded?</strong><br>
-  1. Ve a <strong>Gastos → Facturas de compra</strong><br>
-  2. Filtra por el periodo que quieras importar<br>
-  3. Pulsa el <strong>icono ⬇ Exportar</strong> (arriba derecha) → <strong>Excel o CSV</strong><br>
-  4. Sube el archivo aquí abajo
-</div>
-
-<!-- UPLOAD -->
-<div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:14px;flex-wrap:wrap">
-  <div style="flex:1;min-width:220px">
-    <label class="form-label">Archivo exportado de Holded (.xlsx o .csv)</label>
-    <input type="file" id="holded-file" accept=".xlsx,.xls,.csv" class="form-input" onchange="procesarArchivoHolded()" style="padding:6px">
-  </div>
-  <div style="flex:1;min-width:200px">
-    <label class="form-label">Asignar a proyecto <span style="font-size:10px;color:var(--text-soft)">(opcional — puedes cambiar por factura)</span></label>
-    <select class="form-input" id="holded-proyecto-default">
-      <option value="">— Sin proyecto por defecto —</option>
-    </select>
-  </div>
-</div>
-
-<!-- PREVIEW TABLE -->
-<div id="holded-preview" style="display:none">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-    <div id="holded-resumen" style="font-size:13px;font-weight:600;color:var(--navy)"></div>
-    <div style="font-size:11px;color:var(--text-soft)">Desmarca las que no quieras importar</div>
-  </div>
-  <div class="table-wrap" style="max-height:320px;overflow-y:auto"><table>
-    <thead><tr>
-      <th><input type="checkbox" id="holded-chk-all" onchange="toggleAllHolded(this.checked)" checked="" style="width:15px;height:15px"></th>
-      <th>Nº Factura</th><th>Fecha</th><th>Proveedor</th>
-      <th>Concepto</th><th>Base imp.</th><th>IVA</th><th>Total</th>
-      <th>Vencimiento</th><th>Estado</th><th>Proyecto</th>
-    </tr></thead>
-    <tbody id="holded-tbody"></tbody>
-  </table></div>
-
-  <!-- ALERTAS -->
-  <div id="holded-alertas" style="margin-top:10px"></div>
-</div>
-```
-
-  </div>
-  <div class="modal-foot">
-    <button class="btn btn-ghost" onclick="closeModal(&#39;m-importar-holded&#39;)">Cancelar</button>
-    <button class="btn btn-primary" id="btn-importar-holded" style="display:none" onclick="ejecutarImportHolded()">📥 Importar facturas seleccionadas</button>
-  </div>
-</div>
-</div>
-
-<!-- ═══ MODAL TRABAJADOR ═══ -->
-
-<div class="overlay" id="m-trabajador">
-<div class="modal" style="width:620px">
-  <div class="modal-head">
-    <div class="modal-title" id="m-trab-title">👤 Nuevo trabajador</div>
-    <button class="modal-close" onclick="closeModal(&#39;m-trabajador&#39;)">×</button>
-  </div>
-  <div class="modal-body">
-    <input type="hidden" id="trab-id">
-    <div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)">DATOS PERSONALES</div>
-    <div class="form-grid">
-      <div class="form-group">
-        <label class="form-label">Nombre completo *</label>
-        <input class="form-input" id="trab-nombre" placeholder="Nombre Apellidos">
-      </div>
-      <div class="form-group">
-        <label class="form-label">DNI / NIE</label>
-        <input class="form-input" id="trab-dni" placeholder="12345678A">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Teléfono</label>
-        <input class="form-input" id="trab-tel" placeholder="600 000 000">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Email</label>
-        <input class="form-input" id="trab-email" type="email" placeholder="trabajador@email.com">
-      </div>
-      <div class="form-group fg-full">
-        <label class="form-label">Dirección</label>
-        <input class="form-input" id="trab-dir" placeholder="Calle, número, ciudad…">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Nº Seg. Social</label>
-        <input class="form-input" id="trab-nss" placeholder="000000000000">
-      </div>
-      <div class="form-group">
-        <label class="form-label">IBAN</label>
-        <input class="form-input" id="trab-iban" placeholder="ES00 0000 0000 0000 0000 0000">
-      </div>
-    </div>
-
-```
-<div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;margin:14px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)">DATOS LABORALES</div>
-<div class="form-grid">
-  <div class="form-group">
-    <label class="form-label">Categoría profesional</label>
-    <select class="form-input" id="trab-categoria">
-      <option>Oficial 1ª</option><option>Oficial 2ª</option><option>Oficial 3ª</option>
-      <option>Peón especialista</option><option>Peón ordinario</option>
-      <option>Administrativo</option><option>Técnico</option><option>Jefe de obra</option><option>Otro</option>
-    </select>
-  </div>
-  <div class="form-group">
-    <label class="form-label">Tipo contrato</label>
-    <select class="form-input" id="trab-contrato">
-      <option>Indefinido</option><option>Temporal</option><option>Obra y servicio</option>
-      <option>Prácticas</option><option>Parcial</option>
-    </select>
-  </div>
-  <div class="form-group">
-    <label class="form-label">Fecha de alta</label>
-    <input class="form-input" type="date" id="trab-alta">
-  </div>
-  <div class="form-group">
-    <label class="form-label">Estado</label>
-    <select class="form-input" id="trab-estado">
-      <option>Activo</option><option>Baja temporal</option><option>Baja definitiva</option>
-    </select>
-  </div>
-</div>
-
-<div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;margin:14px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)">NÓMINA MENSUAL</div>
-<div class="form-grid">
-  <div class="form-group">
-    <label class="form-label">Salario bruto / mes €</label>
-    <input class="form-input" type="number" id="trab-bruto" step="0.01" placeholder="2000.00" oninput="calcNomina()">
-  </div>
-  <div class="form-group">
-    <label class="form-label">IRPF % (retención)</label>
-    <input class="form-input" type="number" id="trab-irpf" step="0.1" placeholder="15" value="15" oninput="calcNomina()">
-  </div>
-  <div class="form-group">
-    <label class="form-label">SS trabajador % </label>
-    <input class="form-input" type="number" id="trab-ss-trab" step="0.1" placeholder="6.35" value="6.35" oninput="calcNomina()">
-  </div>
-  <div class="form-group">
-    <label class="form-label">SS empresa %</label>
-    <input class="form-input" type="number" id="trab-ss-emp" step="0.1" placeholder="30" value="30" oninput="calcNomina()">
-  </div>
-</div>
-
-<!-- Resumen cálculo nómina -->
-<div style="background:var(--blue-light);border-radius:8px;padding:12px;margin-top:8px">
-  <div style="font-size:11px;font-weight:700;color:var(--navy);margin-bottom:8px">📋 Resumen nómina calculado</div>
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px">
-    <div style="text-align:center">
-      <div style="font-size:10px;color:var(--text-soft)">Bruto/mes</div>
-      <div style="font-weight:700;font-size:14px" id="trab-calc-bruto">—</div>
-    </div>
-    <div style="text-align:center">
-      <div style="font-size:10px;color:var(--text-soft)">Neto/mes</div>
-      <div style="font-weight:700;font-size:14px;color:var(--green)" id="trab-calc-neto">—</div>
-    </div>
-    <div style="text-align:center">
-      <div style="font-size:10px;color:var(--text-soft)">SS empresa/mes</div>
-      <div style="font-weight:700;font-size:14px;color:var(--amber)" id="trab-calc-ss-emp">—</div>
-    </div>
-    <div style="text-align:center">
-      <div style="font-size:10px;color:var(--text-soft)">Coste empresa/mes</div>
-      <div style="font-weight:700;font-size:16px;color:var(--red)" id="trab-calc-total">—</div>
-    </div>
-  </div>
-</div>
-
-<div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;margin:14px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)">🎁 PAGA EXTRA</div>
-<div class="form-grid">
-  <div class="form-group">
-    <label class="form-label">Importe paga extra €</label>
-    <input class="form-input" type="number" id="trab-paga-extra" step="0.01" placeholder="0.00" oninput="calcNomina()">
-  </div>
-  <div class="form-group">
-    <label class="form-label">Nº pagas extras / año</label>
-    <select class="form-input" id="trab-num-pagas" onchange="calcNomina()">
-      <option value="0">Sin paga extra</option>
-      <option value="1">1 paga extra</option>
-      <option value="2" selected="">2 pagas extras (verano + navidad)</option>
-      <option value="3">3 pagas extras</option>
-      <option value="4">4 pagas extras</option>
-    </select>
-  </div>
-  <div class="form-group">
-    <label class="form-label">IRPF paga extra %</label>
-    <input class="form-input" type="number" id="trab-paga-irpf" step="0.1" placeholder="15" value="15" oninput="calcNomina()">
-  </div>
-  <div class="form-group" style="display:flex;align-items:flex-end">
-    <div style="background:var(--green-soft);border-radius:6px;padding:8px 12px;width:100%">
-      <div style="font-size:10px;color:var(--text-soft)">Neto paga extra</div>
-      <div style="font-weight:700;font-size:14px;color:var(--green)" id="trab-calc-paga-neto">—</div>
-    </div>
-  </div>
-</div>
-
-<div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;margin:14px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)">⭐ COMPENSACIÓN POR ACTITUD / BONUS</div>
-
-<!-- Selector modo -->
-<div style="display:flex;gap:8px;margin-bottom:10px">
-  <button type="button" id="btn-modo-recurrente" class="btn btn-primary btn-sm" onclick="setModoBonus(&#39;recurrente&#39;)" style="font-size:11px">🔁 Recurrente</button>
-  <button type="button" id="btn-modo-puntual" class="btn btn-ghost btn-sm" onclick="setModoBonus(&#39;puntual&#39;)" style="font-size:11px">📅 Pagos puntuales</button>
-</div>
-
-<!-- MODO RECURRENTE -->
-<div id="bonus-modo-recurrente">
-  <div class="form-grid">
-    <div class="form-group">
-      <label class="form-label">Importe compensación €</label>
-      <input class="form-input" type="number" id="trab-bonus" step="0.01" placeholder="0.00" oninput="calcNomina()">
-    </div>
-    <div class="form-group">
-      <label class="form-label">Periodicidad</label>
-      <select class="form-input" id="trab-bonus-periodo" onchange="calcNomina()">
-        <option value="mensual">Mensual (×12/año)</option>
-        <option value="trimestral">Trimestral (×4/año)</option>
-        <option value="anual">Anual (×1/año)</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label class="form-label">IVA compensación</label>
-      <select class="form-input" id="trab-bonus-iva" onchange="calcNomina()">
-        <option value="0">Exento de IVA</option>
-        <option value="21">21% IVA</option>
-        <option value="10">10% IVA</option>
-      </select>
-    </div>
-    <div class="form-group" style="display:flex;align-items:flex-end">
-      <div style="background:var(--amber-soft);border-radius:6px;padding:8px 12px;width:100%">
-        <div style="font-size:10px;color:var(--text-soft)">Total compensación c/IVA / año</div>
-        <div style="font-weight:700;font-size:14px;color:var(--copper)" id="trab-calc-bonus">—</div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- MODO PAGOS PUNTUALES -->
-<div id="bonus-modo-puntual" style="display:none">
-  <div style="background:var(--bg-alt);border-radius:8px;padding:10px;margin-bottom:8px">
-    <div style="display:grid;grid-template-columns:2fr 1.2fr 1fr 1fr auto;gap:6px;align-items:end;margin-bottom:6px">
-      <div>
-        <label class="form-label" style="font-size:10px">Concepto</label>
-        <input class="form-input" id="bp-concepto" placeholder="Ej: Bonus verano, Navidad…" style="font-size:12px">
-      </div>
-      <div>
-        <label class="form-label" style="font-size:10px">Fecha pago</label>
-        <input class="form-input" type="date" id="bp-fecha" style="font-size:12px">
-      </div>
-      <div>
-        <label class="form-label" style="font-size:10px">Importe €</label>
-        <input class="form-input" type="number" id="bp-importe" step="0.01" placeholder="0.00" style="font-size:12px">
-      </div>
-      <div>
-        <label class="form-label" style="font-size:10px">IVA</label>
-        <select class="form-input" id="bp-iva" style="font-size:12px">
-          <option value="0">Exento</option>
-          <option value="21">21%</option>
-          <option value="10">10%</option>
-        </select>
-      </div>
-      <button type="button" class="btn btn-primary btn-sm" onclick="addBonusPago()" style="padding:6px 12px;font-size:12px">＋</button>
-    </div>
-    <!-- Lista de pagos puntuales -->
-    <div id="bp-lista" style="font-size:12px"></div>
-  </div>
-  <div style="background:var(--amber-soft);border-radius:6px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center">
-    <span style="font-size:11px;color:var(--text-soft)">Total compensaciones puntuales c/IVA:</span>
-    <span style="font-weight:700;font-size:15px;color:var(--copper)" id="trab-calc-bonus-puntual">—</span>
-  </div>
-</div>
-
-<!-- Resumen total anual -->
-<div style="background:#f0faf4;border:1px solid #c3e6cb;border-radius:8px;padding:12px;margin-top:10px">
-  <div style="font-size:11px;font-weight:700;color:var(--green);margin-bottom:8px">💶 COSTE TOTAL EMPRESA / AÑO</div>
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px">
-    <div style="text-align:center">
-      <div style="font-size:10px;color:var(--text-soft)">Nóminas (12 meses)</div>
-      <div style="font-weight:700;font-size:13px" id="trab-calc-anual-nom">—</div>
-    </div>
-    <div style="text-align:center">
-      <div style="font-size:10px;color:var(--text-soft)">Pagas extras</div>
-      <div style="font-weight:700;font-size:13px" id="trab-calc-anual-pagas">—</div>
-    </div>
-    <div style="text-align:center">
-      <div style="font-size:10px;color:var(--text-soft)">Bonus / Compensaciones</div>
-      <div style="font-weight:700;font-size:13px;color:var(--copper)" id="trab-calc-anual-bonus">—</div>
-    </div>
-    <div style="text-align:center">
-      <div style="font-size:10px;color:var(--text-soft)">COSTE ANUAL TOTAL</div>
-      <div style="font-weight:700;font-size:16px;color:var(--red)" id="trab-calc-anual-total">—</div>
-    </div>
-  </div>
-</div>
-
-<div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;margin:14px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)">NOTAS</div>
-<textarea class="form-input" id="trab-notas" rows="2" placeholder="Observaciones, condiciones especiales…"></textarea>
-```
-
-  </div>
-  <div class="modal-foot">
-    <button class="btn btn-ghost" onclick="closeModal(&#39;m-trabajador&#39;)">Cancelar</button>
-    <button class="btn btn-primary" onclick="saveTrabajador()">💾 Guardar</button>
-  </div>
-</div>
-</div>
-
-<!-- ═══ MODAL AGENDA ═══ -->
-
-<div class="overlay" id="m-agenda">
-<div class="modal" style="width:540px">
-  <div class="modal-head">
-    <div class="modal-title">🔔 Nuevo aviso / Cita</div>
-    <button class="modal-close" onclick="closeModal(&#39;m-agenda&#39;)">×</button>
-  </div>
-  <div class="modal-body">
-    <input type="hidden" id="ag-id">
-    <div class="form-grid">
-      <div class="form-group fg-full">
-        <label class="form-label">Descripción *</label>
-        <input class="form-input" id="ag-desc" placeholder="Ej: Reunión con cliente · Visita obra · Llamada…">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Fecha *</label>
-        <input class="form-input" type="date" id="ag-fecha">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Hora aviso</label>
-        <input class="form-input" type="time" id="ag-hora" placeholder="HH:MM">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Tipo</label>
-        <select class="form-input" id="ag-tipo">
-          <option>Reunión</option>
-          <option>Visita obra</option>
-          <option>Llamada</option>
-          <option>Entrega</option>
-          <option>Pago</option>
-          <option>Recordatorio</option>
-          <option>Otro</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Prioridad</label>
-        <select class="form-input" id="ag-prioridad">
-          <option value="normal">Normal</option>
-          <option value="alta">Alta 🔴</option>
-          <option value="baja">Baja</option>
-        </select>
-      </div>
-      <div class="form-group fg-full">
-        <label class="form-label">Proyecto (opcional)</label>
-        <select class="form-input" id="ag-proyecto">
-          <option value="">— Sin proyecto —</option>
-        </select>
-      </div>
-      <div class="form-group fg-full">
-        <label class="form-label">Notas</label>
-        <textarea class="form-input" id="ag-notas" rows="2" placeholder="Detalles adicionales…"></textarea>
-      </div>
-      <div class="form-group fg-full">
-        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text-mid)">
-          <input type="checkbox" id="ag-notif" checked="" style="width:16px;height:16px">
-          🔔 Activar notificación cuando llegue la hora
-        </label>
-        <div style="font-size:11px;color:var(--text-soft);margin-top:4px">
-          El navegador/móvil emitirá un aviso sonoro en la hora indicada. Debes mantener la app abierta o en segundo plano.
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="modal-foot">
-    <button class="btn btn-ghost" onclick="closeModal(&#39;m-agenda&#39;)">Cancelar</button>
-    <button class="btn btn-primary" onclick="saveAgenda()">💾 Guardar aviso</button>
-  </div>
-</div>
-</div>
-
-<!-- ═══ MODAL IMPORTAR CLIENTES HOLDED ═══ -->
-
-<div class="overlay" id="m-import-clientes">
-<div class="modal" style="width:820px;max-width:96vw">
-  <div class="modal-head">
-    <div class="modal-title">👤 Importar clientes desde Holded</div>
-    <button class="modal-close" onclick="closeModal(&#39;m-import-clientes&#39;)">×</button>
-  </div>
-  <div class="modal-body">
-    <div class="info-box" style="margin-bottom:14px">
-      <strong>¿Cómo exportar desde Holded?</strong><br>
-      Ve a <strong>Contactos → Clientes</strong> · Pulsa <strong>⬇ Exportar → Excel o CSV</strong>
-    </div>
-    <div style="margin-bottom:14px">
-      <label class="form-label">Archivo exportado de Holded (.xlsx o .csv)</label>
-      <input type="file" id="cli-holded-file" accept=".xlsx,.xls,.csv" class="form-input" onchange="procesarImportClientes()" style="padding:6px">
-    </div>
-    <div id="cli-import-preview" style="display:none">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div id="cli-import-resumen" style="font-size:13px;font-weight:600;color:var(--navy)"></div>
-        <div style="font-size:11px;color:var(--text-soft)">Desmarca los que no quieras importar</div>
-      </div>
-      <div class="table-wrap" style="max-height:340px;overflow-y:auto"><table>
-        <thead><tr>
-          <th><input type="checkbox" id="cli-chk-all" onchange="toggleAll(&#39;cli-chk&#39;,this.checked)" checked="" style="width:15px;height:15px"></th>
-          <th>Nombre</th><th>CIF/NIF</th><th>Teléfono</th><th>Email</th><th>Dirección</th><th>Forma pago</th><th>Estado</th>
-        </tr></thead>
-        <tbody id="cli-import-tbody"></tbody>
-      </table></div>
-    </div>
-  </div>
-  <div class="modal-foot">
-    <button class="btn btn-ghost" onclick="closeModal(&#39;m-import-clientes&#39;)">Cancelar</button>
-    <button class="btn btn-primary" id="btn-import-clientes" style="display:none" onclick="ejecutarImportClientes()">👤 Importar clientes seleccionados</button>
-  </div>
-</div>
-</div>
-
-<!-- ═══ MODAL IMPORTAR PROVEEDORES HOLDED ═══ -->
-
-<div class="overlay" id="m-import-proveedores">
-<div class="modal" style="width:820px;max-width:96vw">
-  <div class="modal-head">
-    <div class="modal-title">🏭 Importar proveedores desde Holded</div>
-    <button class="modal-close" onclick="closeModal(&#39;m-import-proveedores&#39;)">×</button>
-  </div>
-  <div class="modal-body">
-    <div class="info-box" style="margin-bottom:14px">
-      <strong>¿Cómo exportar desde Holded?</strong><br>
-      Ve a <strong>Contactos → Proveedores</strong> · Pulsa <strong>⬇ Exportar → Excel o CSV</strong>
-    </div>
-    <div style="margin-bottom:14px">
-      <label class="form-label">Archivo exportado de Holded (.xlsx o .csv)</label>
-      <input type="file" id="prov-holded-file" accept=".xlsx,.xls,.csv" class="form-input" onchange="procesarImportProveedores()" style="padding:6px">
-    </div>
-    <div id="prov-import-preview" style="display:none">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div id="prov-import-resumen" style="font-size:13px;font-weight:600;color:var(--navy)"></div>
-</div>
-      </div>
-      <div class="table-wrap"><table><thead><tr><th>Proveedor</th><th>CIF</th><th>Tipo</th><th>Especialidad</th><th></th></tr></thead><tbody id="prov-import-tbody"></tbody></table></div>
-    </div>
-  </div>
-  <div class="modal-foot">
-    <button class="btn btn-ghost" onclick="closeModal('m-import-proveedores')">Cancelar</button>
-    <button class="btn btn-primary" id="btn-import-proveedores" style="display:none" onclick="ejecutarImportProveedores()">🏭 Importar proveedores</button>
-  </div>
-</div>
-</div>
-
-<!-- ═══ MODAL CONTROL HORARIO DÍA ═══ -->
-
-<div class="overlay" id="m-horario-dia">
-<div class="modal" style="width:420px;max-width:96vw">
-  <div class="modal-head">
-    <div class="modal-title">📅 Registrar día — <span id="ch-modal-fecha" style="color:var(--copper)"></span></div>
-    <button class="modal-close" onclick="closeModal('m-horario-dia')">×</button>
-  </div>
-  <div class="modal-body" style="display:flex;flex-direction:column;gap:14px">
-    <input type="hidden" id="ch-modal-fecha-hidden">
-    <input type="hidden" id="ch-modal-trab">
-    <input type="hidden" id="ch-modal-year">
-    <input type="hidden" id="ch-modal-id">
-
-```
-<!-- Tipo / Causa -->
-<div>
-  <label class="form-label">Tipo / Causa</label>
-  <select class="form-input" id="ch-modal-tipo" onchange="chModalTipoChange()" style="font-size:14px">
-    <optgroup label="✅ Trabajo">
-      <option value="Trabajo">Trabajo presencial</option>
-      <option value="Teletrabajo">💻 Teletrabajo</option>
-      <option value="Formación">📚 Formación</option>
-    </optgroup>
-    <optgroup label="🏖 Ausencias planificadas">
-      <option value="Vacaciones">🏖 Vacaciones</option>
-      <option value="Asuntos personales">🙋 Asuntos personales</option>
-      <option value="Permiso">📋 Permiso retribuido</option>
-      <option value="Festivo nacional">🎉 Festivo nacional</option>
-      <option value="Festivo local">🎊 Festivo local</option>
-    </optgroup>
-    <optgroup label="🤒 Bajas / Imprevistos">
-      <option value="Enfermedad">🤒 Enfermedad</option>
-      <option value="Baja médica">🏥 Baja médica (IT)</option>
-      <option value="Fallecimiento familiar">🖤 Fallecimiento familiar</option>
-      <option value="Otros">❓ Otros</option>
-    </optgroup>
-  </select>
-</div>
-
-<!-- Horas -->
-<div id="ch-modal-horas-wrap">
-  <label class="form-label">Horas trabajadas</label>
-  <div style="display:flex;align-items:center;gap:8px">
-    <input type="number" class="form-input" id="ch-modal-horas" value="8" min="0" max="24" step="0.5" style="width:80px;text-align:center;font-size:16px;font-weight:700">
-    <span style="font-size:13px;color:var(--text-soft)">horas</span>
-  </div>
-</div>
-
-<!-- Notas -->
-<div>
-  <label class="form-label">Notas / observaciones <span style="font-weight:400;color:var(--text-soft)">(opcional)</span></label>
-  <input type="text" class="form-input" id="ch-modal-notas" placeholder="ej. revisión médica, permiso por boda...">
-</div>
-
-<!-- Leyenda colores -->
-<div style="background:var(--sand);border-radius:6px;padding:8px 10px;font-size:11px;color:var(--text-soft)">
-  <div style="display:flex;flex-wrap:wrap;gap:6px">
-    <span style="background:#e3f2fd;border:1px solid #1e88e5;border-radius:3px;padding:1px 5px">🏖 Vacaciones</span>
-    <span style="background:#fff8e1;border:1px solid #f9a825;border-radius:3px;padding:1px 5px">📋 Permiso/AP</span>
-    <span style="background:#fce4ec;border:1px solid #e91e63;border-radius:3px;padding:1px 5px">🤒 Baja/Enf.</span>
-    <span style="background:#fde8e8;border:1px solid #e53935;border-radius:3px;padding:1px 5px">🖤 Fallecimiento</span>
-    <span style="background:#f3e5f5;border:1px solid #8e24aa;border-radius:3px;padding:1px 5px">🎉 Festivo</span>
-    <span style="background:#e8f5e9;border:1px solid #43a047;border-radius:3px;padding:1px 5px">💻 Teletrabajo</span>
-  </div>
-</div>
-```
-
-  </div>
-  <div class="modal-foot" style="justify-content:space-between">
-    <button class="btn btn-ghost btn-sm" id="ch-modal-btn-borrar" onclick="borrarHorarioDia()" style="color:var(--danger);display:none">🗑 Borrar registro</button>
-    <div style="display:flex;gap:8px">
-      <button class="btn btn-ghost" onclick="closeModal('m-horario-dia')">Cancelar</button>
-      <button class="btn btn-primary" onclick="guardarHorarioDia()">💾 Guardar</button>
-    </div>
-  </div>
-</div>
-</div>
-
-<!-- ═══ MODAL: EDITAR CATÁLOGO CAMPOARAS ═══ -->
-
-<div class="modal-overlay" id="m-camp-edit" style="display:none" onclick="if(event.target===this)closeModal('m-camp-edit')">
-  <div class="modal" style="max-width:820px;width:95%;max-height:90vh;display:flex;flex-direction:column">
-    <div class="modal-head" style="display:flex;align-items:center;justify-content:space-between">
-      <span>✏️ Editar catálogo Campoaras</span>
-      <button class="btn btn-ghost btn-sm" onclick="closeModal('m-camp-edit')">✕</button>
-    </div>
-    <div style="display:flex;gap:0;border-bottom:1px solid var(--border);flex-shrink:0">
-      <button id="cedit-tab-aqua" class="imex-tab active" style="flex:1;border-radius:0" onclick="campEditTab('aqua')">💧 AQUA</button>
-      <button id="cedit-tab-drop" class="imex-tab" style="flex:1;border-radius:0" onclick="campEditTab('drop')">🌊 DROP</button>
-      <button id="cedit-tab-tapas" class="imex-tab" style="flex:1;border-radius:0" onclick="campEditTab('tapas')">🪴 TAPAS</button>
-      <button id="cedit-tab-tapas-ac" class="imex-tab" style="flex:1;border-radius:0" onclick="campEditTab('tapas-ac')">🎨 Acabados TAPAS</button>
-    </div>
-    <div style="overflow-y:auto;flex:1;padding:12px" id="camp-edit-body"></div>
-    <div class="modal-foot" style="justify-content:space-between">
-      <button class="btn btn-ghost btn-sm" onclick="campEditExportJSON()" style="color:var(--copper)">📋 Copiar JSON</button>
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-ghost" onclick="closeModal('m-camp-edit')">Cerrar</button>
-        <button class="btn btn-primary" onclick="campEditGuardar()">💾 Aplicar cambios</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══ MODAL: IMPORTAR FREGADEROS ═══ -->
-
-<div class="modal-overlay" id="m-freg-import" style="display:none" onclick="if(event.target===this)closeModal('m-freg-import')">
-  <div class="modal" style="max-width:660px;width:95%;max-height:88vh;display:flex;flex-direction:column">
-    <div class="modal-head" style="display:flex;align-items:center;justify-content:space-between">
-      <span>🏠 Importar catálogo Fregaderos &amp; Grifos</span>
-      <button class="btn btn-ghost btn-sm" onclick="closeModal('m-freg-import')">✕</button>
-    </div>
-    <div style="padding:14px;flex:1;overflow-y:auto">
-      <div style="background:#e8f5e9;border-left:3px solid #4caf50;padding:10px 12px;font-size:11px;border-radius:0 4px 4px 0;margin-bottom:12px">
-        <b>Formato esperado:</b> una línea por producto. Cada línea: <code>SERIE | REF | Descripción | PVP</code><br>
-        O pega directamente un JSON array: <code>[{"serie":"...","ref":"...","desc":"...","pvp":0}]</code><br>
-        También puedes copiar/pegar filas de Excel (separadas por tabulador).
-      </div>
-      <textarea id="freg-import-txt" style="width:100%;height:260px;font-family:monospace;font-size:11px;border:1px solid var(--border);border-radius:6px;padding:8px;resize:vertical" placeholder="Pega aquí los datos del catálogo..."></textarea>
-      <div style="margin-top:8px;display:flex;align-items:center;gap:10px">
-        <span style="font-size:11px;color:var(--text-soft)">Productos actuales: <b id="freg-current-count">0</b></span>
-        <label style="display:flex;align-items:center;gap:5px;font-size:11px">
-          <input type="checkbox" id="freg-append-mode"> Añadir a los existentes (sin borrar)
-        </label>
-      </div>
-    </div>
-    <div class="modal-foot" style="justify-content:space-between">
-      <button class="btn btn-ghost btn-sm" onclick="fregExportJSON()" style="color:var(--copper)">📋 Exportar JSON actual</button>
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-ghost" onclick="closeModal('m-freg-import')">Cancelar</button>
-        <button class="btn btn-primary" onclick="fregImportar()">📥 Importar</button>
-      </div>
-    </div>
-  </div>
-</div>
