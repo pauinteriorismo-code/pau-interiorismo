@@ -2160,8 +2160,8 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
             <table class="imex-tbl">
               <thead><tr>
                 <th>Serie</th><th>Referencia</th><th>Descripción</th>
-                <th style="text-align:right">PVP+3%</th>
-                <th style="text-align:right">Coste</th>
+                <th style="text-align:right" id="ix-th-pvp">PVP</th>
+                <th style="text-align:right" id="ix-th-cst">Coste PAU</th>
                 <th></th>
               </tr></thead>
               <tbody id="ix-tbody"></tbody>
@@ -12783,11 +12783,11 @@ function ixCoste(pvp, p){
 }
 function ixPvpCli(c){ return c * (1 + ixMrg()/100); }
 function ixLinePvp(l){
-  const mrg = ixMrg();
-  if(l._camp) return (l._pvpVenta||l.cst) * (1 + mrg/100); // Campoaras: pvpVenta base
-  if(l._lavabo) return l.pvp * (1 + mrg/100);              // Lavabos: pvp catálogo
-  if(l._tab==='fregaderos') return l.pvp * (1 + mrg/100);  // Plados/D'Aqua: pvp directo
-  return ixPvpCli(l.cst); // IMEX baño/cocina: cst × (1+margen)
+  // Catálogos con PVP fijo: el beneficio ES el descuento recibido, no hay margen extra
+  if(l._camp)   return l._pvpVenta || l.cst; // Campoaras: pvp×1,05 = precio venta tarifa
+  if(l._lavabo) return l.pvp;               // Lavabos: PVP catálogo directo
+  if(l._tab==='fregaderos') return l.pvp;   // Plados/D'Aqua: PVP catálogo sin +3%
+  return ixPvpCli(l.cst); // IMEX baño/cocina ÚNICAMENTE: cst × (1+margen%)
 }
 function ixFmt(n){ return n.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€'; }
 function ixH(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -12983,12 +12983,13 @@ function ixRenderBud(){
 function ixTotales(){
   let tc=0,tp=0;
   ixLineas.forEach(l=>{ tc+=l.cst*l.cant; tp+=ixLinePvp(l)*l.cant; });
-  const m = ixMrg();
   const el = (id)=>document.getElementById(id);
+  const margenEuro = tp - tc;
+  const margenPct  = tp > 0 ? (margenEuro/tp*100).toFixed(1) : 0;
   if(el('ix-t-coste')) el('ix-t-coste').textContent = ixFmt(tc);
   if(el('ix-t-pvp'))   el('ix-t-pvp').textContent   = ixFmt(tp);
-  if(el('ix-t-mrg'))   el('ix-t-mrg').textContent   = ixFmt(tp-tc)+' ('+m+'%)';
-  if(el('ix-mrg-note'))el('ix-mrg-note').textContent = '+'+m+'% aplicado';
+  if(el('ix-t-mrg'))   el('ix-t-mrg').textContent   = ixFmt(margenEuro)+' ('+margenPct+'%)';
+  if(el('ix-mrg-note'))el('ix-mrg-note').textContent = 'Margen s/PVP: '+margenPct+'%';
 }
 
 function ixRecalc(){ ixRenderBud(); }
@@ -14647,6 +14648,13 @@ window.ixSetTab = function(tab){
     const awrap = document.getElementById('ix-acabado-wrap');
     if(awrap) awrap.style.display='none';
     ixFillSeries();
+    (function(){
+      const th=document.getElementById('ix-th-pvp');
+      if(!th) return;
+      if(tab==='bano'||tab==='cocina') th.textContent='PVP+3%';
+      else if(tab==='campoaras')       th.textContent='PVP tarifa';
+      else                             th.textContent='PVP catálogo';
+    })();
     ixBuildSerieChips();
     ixRender();
   }
@@ -14694,7 +14702,8 @@ function ixRender(){
   }
 
   tbody.innerHTML = filtered.map(p=>{
-    const pvpA = p._camp ? p._pvpBase*p._inc : p.pvp * IMEX_INC;
+    const _imex2 = ixTab==='bano' || ixTab==='cocina';
+    const pvpA = p._camp ? p._pvpBase*p._inc : _imex2 ? p.pvp * IMEX_INC : p.pvp;
     const cst  = ixCoste(p.pvp||p._pvpBase, p);
     const isAdded = (window.ixLineas||{})[p.ref];
     return `<tr class="${isAdded?'ix-added':''}" onclick="ixAnadir('${p.ref}')">
