@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-title" content="PAU Gestión">
 <!-- manifest PWA desactivado para evitar caché -->
 <!-- PAU INTERIORISMO v73 · Build: 2026-02-28 10:00 -->
-<title>PAU INTERIORISMO - Gestión v20260228-1800</title>
+<title>PAU INTERIORISMO - Gestión v20260228-1810</title>
 <style>
 :root{--navy:#1a2a3a;--navy-mid:#27405b;--navy-light:#3d5a78;--blue-soft:#b8cce4;--blue-light:#e8f4ff;--cream:#f7f4ef;--sand:#ede8df;--copper:#b87333;--copper-light:#f4e8da;--green:#1e6b3d;--green-soft:#d5e8d4;--amber:#7d6608;--amber-soft:#fff2cc;--red:#7b241c;--red-soft:#fce8e6;--white:#fff;--text:#1a2a3a;--text-mid:#4a5f72;--text-soft:#8a9aaa;--border:#dce6f0;--radius:8px;--radius-sm:4px;--shadow:0 1px 3px rgba(26,42,58,.08),0 4px 16px rgba(26,42,58,.06);--shadow-lg:0 8px 32px rgba(26,42,58,.14);--sidebar:220px;--header:56px}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -4212,23 +4212,33 @@ if(document.readyState==='loading'){
 // SUPABASE
 // ═══════════════════════════════════════════
 async function sb(table,method='GET',body=null,id=null,extra=''){
-  // Pasar apikey como query param en lugar de header Authorization
-  // Esto evita CORS preflight en iOS Safari (simple request, sin headers custom)
   const sep = (extra||'').includes('?') ? '&' : '?';
   const keyParam = `${sep}apikey=${SB_KEY}`;
   const url=`${SB_URL}/rest/v1/${table}${id?`?id=eq.${id}`:''}${extra}${keyParam}`;
   const isWrite = method==='POST'||method==='PATCH'||method==='PUT'||method==='DELETE';
-  const headers = { 'Accept': 'application/json' };
-  if(isWrite){ headers['Content-Type']='application/json'; headers['Authorization']=`Bearer ${SB_KEY}`; }
-  if(method==='POST') headers['Prefer']='return=representation';
-  // Timeout con Promise.race (más fiable que AbortController en iOS)
-  const fetchPromise = fetch(url,{method,headers,body:body?JSON.stringify(body):null})
-    .then(async r=>{
-      if(!r.ok){ const txt=await r.text().catch(()=>''); throw new Error(txt||`HTTP ${r.status}`); }
-      const t=await r.text(); return t?JSON.parse(t):[];
-    });
-  const timeoutPromise = new Promise((_,rej)=>setTimeout(()=>rej(new Error('Sin conexión con servidor (timeout)')),20000));
-  return Promise.race([fetchPromise, timeoutPromise]);
+  return new Promise(function(resolve, reject){
+    const xhr = new XMLHttpRequest();
+    xhr.open(method, url, true);
+    xhr.setRequestHeader('Accept','application/json');
+    if(isWrite){
+      xhr.setRequestHeader('Content-Type','application/json');
+      xhr.setRequestHeader('Authorization','Bearer '+SB_KEY);
+    }
+    if(method==='POST') xhr.setRequestHeader('Prefer','return=representation');
+    xhr.timeout = 15000;
+    xhr.ontimeout = function(){ reject(new Error('Sin conexión (timeout 15s)')); };
+    xhr.onerror = function(){ reject(new Error('Error de red: sin respuesta del servidor')); };
+    xhr.onload = function(){
+      if(xhr.status>=200 && xhr.status<300){
+        try{ resolve(xhr.responseText ? JSON.parse(xhr.responseText) : []); }
+        catch(e){ reject(new Error('Respuesta inválida del servidor')); }
+      } else {
+        reject(new Error('HTTP '+xhr.status+': '+(xhr.responseText||'').substring(0,120)));
+      }
+    };
+    try{ xhr.send(isWrite && body ? JSON.stringify(body) : null); }
+    catch(e){ reject(e); }
+  });
 }
 const sbGet=(t,e='')=>sb(t,'GET',null,null,e);
 const sbPost=(t,d)=>sb(t,'POST',d);
@@ -15433,19 +15443,40 @@ const msg = document.getElementById(‘ios-diag-msg’);
 if(!bar||!msg) return;
 bar.style.display=‘flex’;
 bar.style.background=’#1e3a5f’;
-msg.textContent=‘🔄 Probando conexión con Supabase…’;
-try{
-const t0=Date.now();
-const res = await sbGet(‘clientes’,’?limit=1’);
-const ms = Date.now()-t0;
+msg.innerHTML=‘🔄 Probando conexión… <button onclick="window.open(\'' + SB_URL + '/rest/v1/clientes?limit=1&apikey='+SB_KEY+'\',\'_blank\')" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;padding:3px 10px;border-radius:5px;cursor:pointer;font-size:11px;margin-left:8px">🔗 Test directo</button>’;
+
+// Test con XHR (más fiable que fetch en iOS Safari antiguo)
+xhrTest(SB_URL+’/rest/v1/clientes?limit=1&apikey=’+SB_KEY,
+function(data){
 bar.style.background=’#1b5e20’;
-msg.textContent=`✅ Conexión OK · ${ms}ms · ${res.length} clientes recibidos`;
-// Si hay datos, recargar gerencia completo
-setTimeout(()=>{ bar.style.display=‘none’; loadGerencia(); }, 2000);
-}catch(e){
-bar.style.background=’#b71c1c’;
-msg.innerHTML=`❌ Error: ${e.message} &nbsp;|&nbsp; <small>Asegúrate de tener conexión a internet</small>`;
+try{
+const arr=JSON.parse(data);
+msg.textContent=‘✅ Conexión OK · ‘+arr.length+’ clientes · Recargando datos…’;
+setTimeout(()=>{ bar.style.display=‘none’; loadGerencia(); },1500);
+}catch(e2){
+msg.textContent=‘✅ Servidor respondió · Recargando…’;
+setTimeout(()=>{ bar.style.display=‘none’; loadGerencia(); },1500);
 }
+},
+function(err){
+bar.style.background=’#b71c1c’;
+msg.innerHTML=‘❌ ‘+err+’ — Pulsa <b>Test directo</b> para ver el error exacto en Safari’;
+}
+);
+}
+
+function xhrTest(url, onOK, onErr){
+const xhr = new XMLHttpRequest();
+xhr.open(‘GET’, url, true);
+xhr.setRequestHeader(‘Accept’,‘application/json’);
+xhr.timeout = 15000;
+xhr.ontimeout = function(){ onErr(‘Timeout: sin respuesta en 15s’); };
+xhr.onerror = function(){ onErr(‘Error de red (XHR): posible bloqueo CORS o red sin internet’); };
+xhr.onload = function(){
+if(xhr.status>=200 && xhr.status<300){ onOK(xhr.responseText); }
+else{ onErr(’HTTP ‘+xhr.status+’: ’+xhr.responseText.substring(0,100)); }
+};
+try{ xhr.send(); }catch(e){ onErr(’Excepción XHR: ’+e.message); }
 }
 
 // ══════════════════════════════════════════════════════════════════════
