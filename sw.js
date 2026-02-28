@@ -1,22 +1,29 @@
-const CACHE = 'pau-gestion-v29';
-const ASSETS = ['/', '/index.html'];
+// PAU INTERIORISMO - Service Worker LIMPIO
+// Este SW no cachea nada y se autodestruye para no interferir con la app
 
-self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
-  self.skipWaiting();
+self.addEventListener(‘install’, function(e) {
+// Activar inmediatamente sin esperar
+self.skipWaiting();
 });
 
-self.addEventListener('activate', e => {
-  e.waitUntil(caches.keys().then(keys =>
-    Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-  ));
-  self.clients.claim();
+self.addEventListener(‘activate’, function(e) {
+e.waitUntil(
+Promise.all([
+// Limpiar TODAS las cachés
+caches.keys().then(function(keys) {
+return Promise.all(keys.map(function(k) {
+return caches.delete(k);
+}));
+}),
+// Tomar control de todas las páginas
+self.clients.claim()
+])
+);
 });
 
-self.addEventListener('fetch', e => {
-  // Network first for API calls, cache first for assets
-  if(e.request.url.includes('supabase')) return;
-  e.respondWith(
-    fetch(e.request).catch(() => caches.match(e.request))
-  );
+// NO interceptar fetch - dejar pasar todo directamente
+// Esto es CRÍTICO para que Supabase funcione en iOS Safari
+self.addEventListener(‘fetch’, function(e) {
+// Pass through - no caché, no interceptación
+return;
 });
