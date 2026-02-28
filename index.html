@@ -5322,6 +5322,7 @@ const vSel=document.getElementById(‘pres-version-sel’);
 if(lv&&vSel) vSel.value=lv;
 loadPresupuesto();
 }
+presRenderEstado();
 }
 async function loadPresupuesto(){
 const proy=document.getElementById(‘pres-proyecto-sel’).value;
@@ -5672,12 +5673,7 @@ setTimeout(()=>navTo(‘facturas’), 1000);
 }catch(e){ toast(’Error: ’+e.message,‘error’); }
 }
 
-// ── Hook: actualizar badge al cargar presupuesto ──────────────────────
-const _origLoadPres = loadPresupuesto;
-loadPresupuesto = async function(){
-await _origLoadPres.apply(this, arguments);
-presRenderEstado();
-};
+// presRenderEstado() integrado en initPresupuesto()
 
 function calcLineaPres(){const precio=parseFloat(document.getElementById(‘pl-precio’).value)||0,margen=parseFloat(document.getElementById(‘pl-margen’).value)||0,ci=parseFloat(document.getElementById(‘pl-ci’).value)||0,cant=parseFloat(document.getElementById(‘pl-cant’).value)||0;let pv=margen>0?precio*(1+margen/100):precio;if(ci>0)pv=pv*(1+ci/100);const sub=cant*pv;document.getElementById(‘pl-pventa’).value=pv>0?pv.toFixed(2)+’ €’:’—’;document.getElementById(‘pl-subtotal’).value=sub>0?sub.toFixed(2)+’ €’:’—’;}
 function searchCypeLinea(){const q=document.getElementById(‘pl-cype-search’).value.toLowerCase(),res=document.getElementById(‘pl-cype-results’);if(q.length<2){res.style.display=‘none’;return;}const matches=CyCache.filter(c=>c.codigo.toLowerCase().includes(q)||c.descripcion.toLowerCase().includes(q)).slice(0,8);if(!matches.length){res.style.display=‘none’;return;}res.style.display=‘block’;res.innerHTML=matches.map(c=>`<div onclick="selectCype('${c.id}')" style="padding:7px 11px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--border)" onmouseover="this.style.background='var(--blue-light)'" onmouseout="this.style.background=''"><strong style="color:var(--navy-mid)">${c.codigo}</strong> · ${c.descripcion} <span style="float:right;color:var(--green);font-weight:700">${fmt(c.precio)}/${c.unidad}</span></div>`).join(’’);}
