@@ -1,29 +1,25 @@
-// PAU INTERIORISMO - Service Worker LIMPIO
-// Este SW no cachea nada y se autodestruye para no interferir con la app
-
-self.addEventListener(‘install’, function(e) {
-// Activar inmediatamente sin esperar
-self.skipWaiting();
-});
-
-self.addEventListener(‘activate’, function(e) {
-e.waitUntil(
-Promise.all([
-// Limpiar TODAS las cachés
-caches.keys().then(function(keys) {
-return Promise.all(keys.map(function(k) {
-return caches.delete(k);
-}));
-}),
-// Tomar control de todas las páginas
-self.clients.claim()
-])
-);
-});
-
-// NO interceptar fetch - dejar pasar todo directamente
-// Esto es CRÍTICO para que Supabase funcione en iOS Safari
-self.addEventListener(‘fetch’, function(e) {
-// Pass through - no caché, no interceptación
-return;
-});
+{
+“headers”: [
+{
+“source”: “/(.*)”,
+“headers”: [
+{
+“key”: “Content-Security-Policy”,
+“value”: “default-src ‘self’ ‘unsafe-inline’ ‘unsafe-eval’ https://*.supabase.co https://*.supabase.in https://cdnjs.cloudflare.com data: blob:; connect-src ‘self’ https://*.supabase.co https://*.supabase.in; img-src ‘self’ data: blob: https:; font-src ‘self’ data: https:;”
+},
+{
+“key”: “Access-Control-Allow-Origin”,
+“value”: “*”
+},
+{
+“key”: “Access-Control-Allow-Methods”,
+“value”: “GET, POST, PATCH, DELETE, OPTIONS”
+},
+{
+“key”: “Access-Control-Allow-Headers”,
+“value”: “Content-Type, Authorization, apikey, Prefer”
+}
+]
+}
+]
+}
