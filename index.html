@@ -2170,9 +2170,6 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           </div>
           <!-- WIZARD LAVABOS KRION (se muestra cuando tab=lavabos) -->
           <div id="lav-wizard" style="display:none;padding:14px 16px;overflow-y:auto;flex:1">
-            <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
-              <button class="btn btn-ghost btn-sm" onclick="openCampEdit('lavabos')" style="font-size:11px;color:var(--text-soft)">✏️ Editar referencias y precios</button>
-            </div>
           </div>
 
           <!-- WIZARD CAMPOARAS (se muestra cuando tab=campoaras) -->
@@ -2270,7 +2267,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
               <span class="ix-mrg-lbl">Margen s/ coste</span>
               <input type="number" class="ix-mrg" id="ix-mrg" value="0" min="0" max="300" oninput="ixRecalc()">
               <span class="ix-mrg-pct">%</span>
-              <span class="ix-mrg-note" id="ix-mrg-note">+30% aplicado</span>
+              <span class="ix-mrg-note" id="ix-mrg-note">+0% aplicado</span>
             </div>
             <div style="margin-top:8px;display:flex;align-items:center;gap:6px">
               <span style="font-size:10px;font-weight:700;color:var(--text-soft);flex-shrink:0">Exportar a:</span>
@@ -13959,7 +13956,7 @@ function campEditSetAcabado(tipo, idx, val){
 // ══════════════════════════════════════════════════════════════
 // WIZARD LAVABOS KRION®
 // ══════════════════════════════════════════════════════════════
-let lavState = { modelo: null, tipo: null, medida: null };
+let lavState = { modelo: null, tipo: null, medida: null, itemIdx: null };
 
 function lavInit(){
   lavState = { modelo: null, tipo: null, medida: null, itemIdx: null };
@@ -13974,7 +13971,10 @@ function lavRender(){
   const { modelo, tipo, medida, itemIdx } = lavState;
   const data = modelo ? LAV_MODELOS[modelo] : null;
 
-  let h = '';
+  // ── Botón editar siempre visible ────────────────────────────────
+  let h = `<div style="display:flex;justify-content:flex-end;margin-bottom:8px">
+    <button class="btn btn-ghost btn-sm" onclick="openCampEdit('lavabos')" style="font-size:11px;color:var(--text-soft)">✏️ Editar referencias y precios</button>
+  </div>`;
 
   // ── Paso 0: Selección de modelo (siempre primero) ────────────────
   if(!modelo){
