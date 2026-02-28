@@ -3857,6 +3857,18 @@ PAU INTERIORISMO S.L. · CIF B-56909641 · <a href="/cdn-cgi/l/email-protection"
 
 <script>
 
+// ══════════════════════════════════════════════════════════════════════
+// SAFE STORAGE — Compatible con iOS Safari Private Mode
+// localStorage lanza SecurityError en modo privado → fallback a memoria
+// ══════════════════════════════════════════════════════════════════════
+const _memStore = {};
+const safeLS = {
+  getItem(k){ try{ return safeLS.getItem(k); }catch(e){ return _memStore[k]??null; } },
+  setItem(k,v){ try{ safeLS.setItem(k,v); }catch(e){ _memStore[k]=v; } },
+  removeItem(k){ try{ safeLS.removeItem(k); }catch(e){ delete _memStore[k]; } }
+};
+
+
 // ═══════════════════════════════════════════
 // PRESUPUESTO FINAL (documento imprimible)
 // ═══════════════════════════════════════════
@@ -4093,8 +4105,8 @@ function doLogin(){
     if(errEl) errEl.style.display='none';
     sessionStorage.setItem('pau-auth-v2','1');
     sessionStorage.setItem('pau-user',u);
-    localStorage.setItem('pau-auth-v2','1');
-    localStorage.setItem('pau-auth-user',u);
+    safeLS.setItem('pau-auth-v2','1');
+    safeLS.setItem('pau-auth-user',u);
     setUserDisplay(u);
     init().catch(e=>{ console.error('INIT ERROR:',e); });
   } else {
@@ -4105,8 +4117,8 @@ function doLogin(){
 }
 function doLogout(){
   sessionStorage.clear();
-  localStorage.removeItem('pau-auth-v2');
-  localStorage.removeItem('pau-auth-user');
+  safeLS.removeItem('pau-auth-v2');
+  safeLS.removeItem('pau-auth-user');
   // Cerrar TODOS los modales abiertos
   document.querySelectorAll('.overlay.open').forEach(el=>el.classList.remove('open'));
   // Ocultar la app completamente
@@ -4146,8 +4158,8 @@ function closeImportMenuOutside(e){
 }
 function arrancar(){
   // Comprobar si ya hay sesión guardada (localStorage para persistir al refrescar)
-  const savedUser = localStorage.getItem('pau-auth-user');
-  const savedAuth = localStorage.getItem('pau-auth-v2');
+  const savedUser = safeLS.getItem('pau-auth-user');
+  const savedAuth = safeLS.getItem('pau-auth-v2');
   if(savedAuth === '1' && savedUser){
     // Sesión válida - restaurar sin pedir contraseña
     sessionStorage.setItem('pau-auth-v2','1');
@@ -5377,13 +5389,13 @@ function presGetEstado(){
 const proy = document.getElementById(‘pres-proyecto-sel’)?.value;
 const ver  = document.getElementById(‘pres-version-sel’)?.value || ‘v1’;
 if(!proy) return ‘Borrador’;
-return localStorage.getItem(`pres_estado_${proy}_${ver}`) || ‘Borrador’;
+return safeLS.getItem(`pres_estado_${proy}_${ver}`) || ‘Borrador’;
 }
 function presSetEstado(estado){
 const proy = document.getElementById(‘pres-proyecto-sel’)?.value;
 const ver  = document.getElementById(‘pres-version-sel’)?.value || ‘v1’;
 if(!proy) return;
-localStorage.setItem(`pres_estado_${proy}_${ver}`, estado);
+safeLS.setItem(`pres_estado_${proy}_${ver}`, estado);
 presRenderEstado();
 }
 function presRenderEstado(){
@@ -15460,13 +15472,13 @@ if(!proy||!PresC.length){toast(‘No hay presupuesto activo’,‘error’);retu
 const nombre=prompt(‘Nombre de la plantilla (p.ej. “Unifamiliar estándar”):’);
 if(!nombre) return;
 const lineas=PresC.map(l=>({descripcion:l.descripcion,unidad:l.unidad,cantidad:l.cantidad,precio_base:l.precio_base,margen_pct:l.margen_pct,ci_gg_bi_pct:l.ci_gg_bi_pct,precio_venta:l.precio_venta,iva_pct:l.iva_pct,ref_cype:l.ref_cype,partida:l.partida,es_capitulo:l.es_capitulo}));
-const plt=JSON.parse(localStorage.getItem(‘pau-plantillas’)||’[]’);
+const plt=JSON.parse(safeLS.getItem(‘pau-plantillas’)||’[]’);
 plt.push({id:‘plt-’+Date.now(),nombre,fecha:new Date().toISOString().split(‘T’)[0],proyecto:proy,lineas});
-localStorage.setItem(‘pau-plantillas’,JSON.stringify(plt));
+safeLS.setItem(‘pau-plantillas’,JSON.stringify(plt));
 toast(`Plantilla "${nombre}" guardada ✅`);
 }
 function abrirModalPlantillas(){
-const plt=JSON.parse(localStorage.getItem(‘pau-plantillas’)||’[]’);
+const plt=JSON.parse(safeLS.getItem(‘pau-plantillas’)||’[]’);
 let ov=document.getElementById(‘m-plantillas’);
 if(!ov){
 ov=document.createElement(‘div’); ov.id=‘m-plantillas’; ov.className=‘overlay’;
@@ -15480,7 +15492,7 @@ list.innerHTML=plt.length?plt.map((p,i)=>`<div style="display:flex;align-items:c
 openModal(‘m-plantillas’);
 }
 async function aplicarPlantilla(idx){
-const plt=JSON.parse(localStorage.getItem(‘pau-plantillas’)||’[]’); const p=plt[idx];
+const plt=JSON.parse(safeLS.getItem(‘pau-plantillas’)||’[]’); const p=plt[idx];
 if(!p){toast(‘No encontrada’,‘error’);return;}
 const proy=document.getElementById(‘pres-proyecto-sel’)?.value, ver=document.getElementById(‘pres-version-sel’)?.value||‘1’;
 if(!proy){toast(‘Selecciona un proyecto primero’,‘error’);closeModal(‘m-plantillas’);return;}
@@ -15492,9 +15504,9 @@ closeModal(‘m-plantillas’); loadPresupuesto();
 }catch(e){toast(‘Error: ‘+e.message,‘error’);}
 }
 function borrarPlantilla(idx){
-const plt=JSON.parse(localStorage.getItem(‘pau-plantillas’)||’[]’);
+const plt=JSON.parse(safeLS.getItem(‘pau-plantillas’)||’[]’);
 if(!confirm(`¿Eliminar "${plt[idx]?.nombre}"?`)) return;
-plt.splice(idx,1); localStorage.setItem(‘pau-plantillas’,JSON.stringify(plt));
+plt.splice(idx,1); safeLS.setItem(‘pau-plantillas’,JSON.stringify(plt));
 toast(‘Plantilla eliminada’); abrirModalPlantillas();
 }
 
