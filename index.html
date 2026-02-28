@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-title" content="PAU Gestión">
 <!-- manifest PWA desactivado para evitar caché -->
 <!-- PAU INTERIORISMO v73 · Build: 2026-02-28 10:00 -->
-<title>PAU INTERIORISMO - Gestión v20260228-1733</title>
+<title>PAU INTERIORISMO - Gestión v20260228-1743</title>
 <style>
 :root{--navy:#1a2a3a;--navy-mid:#27405b;--navy-light:#3d5a78;--blue-soft:#b8cce4;--blue-light:#e8f4ff;--cream:#f7f4ef;--sand:#ede8df;--copper:#b87333;--copper-light:#f4e8da;--green:#1e6b3d;--green-soft:#d5e8d4;--amber:#7d6608;--amber-soft:#fff2cc;--red:#7b241c;--red-soft:#fce8e6;--white:#fff;--text:#1a2a3a;--text-mid:#4a5f72;--text-soft:#8a9aaa;--border:#dce6f0;--radius:8px;--radius-sm:4px;--shadow:0 1px 3px rgba(26,42,58,.08),0 4px 16px rgba(26,42,58,.06);--shadow-lg:0 8px 32px rgba(26,42,58,.14);--sidebar:220px;--header:56px}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -3847,16 +3847,26 @@ PAU INTERIORISMO S.L. · CIF B-56909641 · <a href="/cdn-cgi/l/email-protection"
 <script>
 // ═══ ANTI-CACHÉ: Ejecutar LO PRIMERO antes de todo ═══
 (function(){
-  // Limpiar Service Workers
+  // Desregistrar TODOS los Service Workers (crítico para iOS Safari)
   if('serviceWorker' in navigator){
     navigator.serviceWorker.getRegistrations().then(function(regs){
-      regs.forEach(function(r){ r.unregister(); });
+      regs.forEach(function(r){ 
+        console.log('[PAU] Eliminando SW:', r.scope);
+        r.unregister(); 
+      });
     });
+    // También limpiar el controlador actual
+    if(navigator.serviceWorker.controller){
+      navigator.serviceWorker.controller.postMessage({type:'SKIP_WAITING'});
+    }
   }
-  // Limpiar todas las cachés
+  // Limpiar TODAS las cachés del navegador
   if('caches' in window){
     caches.keys().then(function(keys){
-      keys.forEach(function(k){ caches.delete(k); });
+      keys.forEach(function(k){ 
+        console.log('[PAU] Eliminando caché:', k);
+        caches.delete(k); 
+      });
     });
   }
 })();
