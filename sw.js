@@ -1,25 +1,38 @@
-{
-“headers”: [
-{
-“source”: “/(.*)”,
-“headers”: [
-{
-“key”: “Content-Security-Policy”,
-“value”: “default-src ‘self’ ‘unsafe-inline’ ‘unsafe-eval’ https://*.supabase.co https://*.supabase.in https://cdnjs.cloudflare.com data: blob:; connect-src ‘self’ https://*.supabase.co https://*.supabase.in; img-src ‘self’ data: blob: https:; font-src ‘self’ data: https:;”
-},
-{
-“key”: “Access-Control-Allow-Origin”,
-“value”: “*”
-},
-{
-“key”: “Access-Control-Allow-Methods”,
-“value”: “GET, POST, PATCH, DELETE, OPTIONS”
-},
-{
-“key”: “Access-Control-Allow-Headers”,
-“value”: “Content-Type, Authorization, apikey, Prefer”
-}
-]
-}
-]
-}
+// PAU INTERIORISMO — Service Worker ELIMINADOR
+// Este archivo se desinstala a sí mismo permanentemente
+// para liberar todas las peticiones de red que estaban bloqueadas
+
+self.addEventListener(‘install’, function(e) {
+console.log(’[SW] Instalando versión limpia…’);
+self.skipWaiting(); // Activar inmediatamente
+});
+
+self.addEventListener(‘activate’, function(e) {
+console.log(’[SW] Activando — eliminando service worker permanentemente…’);
+e.waitUntil(
+caches.keys().then(function(keys) {
+return Promise.all(keys.map(function(k) {
+console.log(’[SW] Eliminando caché:’, k);
+return caches.delete(k);
+}));
+}).then(function() {
+return self.clients.matchAll({ includeUncontrolled: true });
+}).then(function(clients) {
+// Desregistrar este service worker
+return self.registration.unregister();
+}).then(function() {
+// Recargar todas las páginas para que carguen sin SW
+return self.clients.matchAll({ includeUncontrolled: true });
+}).then(function(clients) {
+clients.forEach(function(client) {
+console.log(’[SW] Recargando cliente:’, client.url);
+client.navigate(client.url);
+});
+})
+);
+});
+
+// NO interceptar fetch — dejar pasar todo
+self.addEventListener(‘fetch’, function(e) {
+return; // Sin respondWith = el navegador hace la petición normal
+});
