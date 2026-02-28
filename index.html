@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-title" content="PAU Gestión">
 <!-- manifest PWA desactivado para evitar caché -->
 <!-- PAU INTERIORISMO v73 · Build: 2026-02-28 10:00 -->
-<title>PAU INTERIORISMO - Gestión v20260228-1725</title>
+<title>PAU INTERIORISMO - Gestión v20260228-1733</title>
 <style>
 :root{--navy:#1a2a3a;--navy-mid:#27405b;--navy-light:#3d5a78;--blue-soft:#b8cce4;--blue-light:#e8f4ff;--cream:#f7f4ef;--sand:#ede8df;--copper:#b87333;--copper-light:#f4e8da;--green:#1e6b3d;--green-soft:#d5e8d4;--amber:#7d6608;--amber-soft:#fff2cc;--red:#7b241c;--red-soft:#fce8e6;--white:#fff;--text:#1a2a3a;--text-mid:#4a5f72;--text-soft:#8a9aaa;--border:#dce6f0;--radius:8px;--radius-sm:4px;--shadow:0 1px 3px rgba(26,42,58,.08),0 4px 16px rgba(26,42,58,.06);--shadow-lg:0 8px 32px rgba(26,42,58,.14);--sidebar:220px;--header:56px}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -770,6 +770,13 @@ PAU INTERIORISMO S.L. · CIF B-56909641 · <a href="/cdn-cgi/l/email-protection"
 
 <!-- ═══ GERENCIA ═══ -->
 <div class="view active" id="view-gerencia">
+  <!-- BARRA DIAGNÓSTICO iOS -->
+  <div id="ios-diag-bar" style="background:#1e3a5f;color:#fff;padding:10px 16px;font-size:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:-18px -20px 14px">
+    <span id="ios-diag-msg" style="flex:1">🔄 Probando conexión…</span>
+    <button onclick="iosDiagTest()" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);color:#fff;padding:5px 14px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:700">🔄 Reintentar</button>
+    <button onclick="this.parentElement.style.display='none'" style="background:transparent;border:none;color:rgba(255,255,255,.5);padding:4px 8px;cursor:pointer;font-size:16px;line-height:1">×</button>
+  </div>
+
   <div class="kpi-grid">
     <div class="kpi blue"><div class="kpi-label">Total Ventas (Base Imp.)</div><div class="kpi-value" id="g-ventas">—</div><div class="kpi-sub">Facturas emitidas</div></div>
     <div class="kpi red"><div class="kpi-label">Total Costes (Base Imp.)</div><div class="kpi-value" id="g-costes">—</div><div class="kpi-sub">Facturas recibidas</div></div>
@@ -4262,7 +4269,12 @@ async function navTo(v){
   const m=META[v]||{};
   document.getElementById('tb-title').textContent=m.t||v;
   document.getElementById('tb-bc').textContent=m.b||'';
-  if(loaders[v]) try{ await loaders[v](); }catch(e){ console.error('navTo loader error ['+v+']:',e); toast('Error cargando sección: '+e.message,'error'); }
+  // Feedback visual inmediato (crítico en iOS Safari)
+  toast('Cargando…', 'info', 1200);
+  if(loaders[v]) try{ await loaders[v](); }catch(e){
+    console.error('navTo loader error ['+v+']:',e);
+    toast('❌ Error: '+e.message,'error');
+  }
 }
 
 // ═══════════════════════════════════════════
@@ -5289,6 +5301,14 @@ if(s){ s.style.background=‘var(–red-soft)’;s.style.color=‘var(–red)’
 // Mostrar error con botón de reintento
 const alertEl=document.getElementById(‘g-alertas-list’);
 if(alertEl) alertEl.innerHTML=`<div style="padding:16px;text-align:center"> <div style="font-size:28px;margin-bottom:8px">📡</div> <div style="font-weight:700;margin-bottom:6px;color:var(--red)">Sin conexión con el servidor</div> <div style="font-size:12px;color:var(--text-soft);margin-bottom:12px">${e.message}</div> <button class="btn btn-primary" onclick="loadGerencia()">🔄 Reintentar</button> </div>`;
+// Mostrar barra diagnóstico con error
+const diagBar=document.getElementById(‘ios-diag-bar’);
+const diagMsg=document.getElementById(‘ios-diag-msg’);
+if(diagBar&&diagMsg){
+diagBar.style.display=‘flex’;
+diagBar.style.background=’#b71c1c’;
+diagMsg.textContent=‘❌ ‘+e.message+’ — Pulsa Reintentar’;
+}
 }
 }
 
@@ -10128,6 +10148,8 @@ poblarFiltrosCliente();
 poblarClientesDocumentos();
 
 await loadPieFactura();
+// Test diagnóstico iOS (se oculta automáticamente si OK)
+try{ await iosDiagTest(); }catch(e){}
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -15396,6 +15418,30 @@ res.innerHTML=hits.map((h,i)=>`<div onclick="cerrarBusquedaGlobal();navTo('${h.g
 document.addEventListener('keydown', e=>{
   if(e.key==='Escape'){ const gs=document.getElementById('global-search-overlay'); if(gs&&gs.style.display!=='none'){cerrarBusquedaGlobal();e.stopPropagation();} }
 });
+
+// ══════════════════════════════════════════════════════════════════════
+// DIAGNÓSTICO iOS — Test de conexión visible
+// ══════════════════════════════════════════════════════════════════════
+async function iosDiagTest(){
+const bar = document.getElementById(‘ios-diag-bar’);
+const msg = document.getElementById(‘ios-diag-msg’);
+if(!bar||!msg) return;
+bar.style.display=‘flex’;
+bar.style.background=’#1e3a5f’;
+msg.textContent=‘🔄 Probando conexión con Supabase…’;
+try{
+const t0=Date.now();
+const res = await sbGet(‘clientes’,’?limit=1’);
+const ms = Date.now()-t0;
+bar.style.background=’#1b5e20’;
+msg.textContent=`✅ Conexión OK · ${ms}ms · ${res.length} clientes recibidos`;
+// Si hay datos, recargar gerencia completo
+setTimeout(()=>{ bar.style.display=‘none’; loadGerencia(); }, 2000);
+}catch(e){
+bar.style.background=’#b71c1c’;
+msg.innerHTML=`❌ Error: ${e.message} &nbsp;|&nbsp; <small>Asegúrate de tener conexión a internet</small>`;
+}
+}
 
 // ══════════════════════════════════════════════════════════════════════
 // PANEL ALERTAS INTELIGENTES EN GERENCIA
