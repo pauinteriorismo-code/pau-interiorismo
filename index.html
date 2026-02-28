@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-title" content="PAU Gestión">
 <!-- manifest PWA desactivado para evitar caché -->
 <!-- PAU INTERIORISMO v73 · Build: 2026-02-28 10:00 -->
-<title>PAU INTERIORISMO - Gestión v20260228-1743</title>
+<title>PAU INTERIORISMO - Gestión v20260228-1800</title>
 <style>
 :root{--navy:#1a2a3a;--navy-mid:#27405b;--navy-light:#3d5a78;--blue-soft:#b8cce4;--blue-light:#e8f4ff;--cream:#f7f4ef;--sand:#ede8df;--copper:#b87333;--copper-light:#f4e8da;--green:#1e6b3d;--green-soft:#d5e8d4;--amber:#7d6608;--amber-soft:#fff2cc;--red:#7b241c;--red-soft:#fce8e6;--white:#fff;--text:#1a2a3a;--text-mid:#4a5f72;--text-soft:#8a9aaa;--border:#dce6f0;--radius:8px;--radius-sm:4px;--shadow:0 1px 3px rgba(26,42,58,.08),0 4px 16px rgba(26,42,58,.06);--shadow-lg:0 8px 32px rgba(26,42,58,.14);--sidebar:220px;--header:56px}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -4212,28 +4212,23 @@ if(document.readyState==='loading'){
 // SUPABASE
 // ═══════════════════════════════════════════
 async function sb(table,method='GET',body=null,id=null,extra=''){
-  const url=`${SB_URL}/rest/v1/${table}${id?`?id=eq.${id}`:''}${extra}`;
-  const ctrl = new AbortController();
-  const timer = setTimeout(()=>ctrl.abort(), 15000);
-  // iOS Safari: NO enviar Content-Type en GET (causa CORS preflight que falla)
-  const isWrite = method==='POST'||method==='PATCH'||method==='PUT';
-  const headers = {
-    'apikey': SB_KEY,
-    'Authorization': `Bearer ${SB_KEY}`,
-    'Accept': 'application/json',
-  };
-  if(isWrite) headers['Content-Type'] = 'application/json';
-  if(method==='POST') headers['Prefer'] = 'return=representation';
-  try{
-    const r=await fetch(url,{method,signal:ctrl.signal,headers,body:body?JSON.stringify(body):null});
-    clearTimeout(timer);
-    if(!r.ok){ const txt=await r.text().catch(()=>''); throw new Error(txt||`HTTP ${r.status}`); }
-    const t=await r.text();return t?JSON.parse(t):[];
-  }catch(e){
-    clearTimeout(timer);
-    if(e.name==='AbortError') throw new Error('Sin conexión (timeout 15s)');
-    throw e;
-  }
+  // Pasar apikey como query param en lugar de header Authorization
+  // Esto evita CORS preflight en iOS Safari (simple request, sin headers custom)
+  const sep = (extra||'').includes('?') ? '&' : '?';
+  const keyParam = `${sep}apikey=${SB_KEY}`;
+  const url=`${SB_URL}/rest/v1/${table}${id?`?id=eq.${id}`:''}${extra}${keyParam}`;
+  const isWrite = method==='POST'||method==='PATCH'||method==='PUT'||method==='DELETE';
+  const headers = { 'Accept': 'application/json' };
+  if(isWrite){ headers['Content-Type']='application/json'; headers['Authorization']=`Bearer ${SB_KEY}`; }
+  if(method==='POST') headers['Prefer']='return=representation';
+  // Timeout con Promise.race (más fiable que AbortController en iOS)
+  const fetchPromise = fetch(url,{method,headers,body:body?JSON.stringify(body):null})
+    .then(async r=>{
+      if(!r.ok){ const txt=await r.text().catch(()=>''); throw new Error(txt||`HTTP ${r.status}`); }
+      const t=await r.text(); return t?JSON.parse(t):[];
+    });
+  const timeoutPromise = new Promise((_,rej)=>setTimeout(()=>rej(new Error('Sin conexión con servidor (timeout)')),20000));
+  return Promise.race([fetchPromise, timeoutPromise]);
 }
 const sbGet=(t,e='')=>sb(t,'GET',null,null,e);
 const sbPost=(t,d)=>sb(t,'POST',d);
