@@ -12442,6 +12442,11 @@ const LAV_MODELOS = {
     type:'fixed', fab:'Art&bath', color:'#7a5a2d',
     desc:'Sobre encimera porcelana Art&bath · Blanco Brillo · Sin rebosadero',
     ref:'LAV.EUROPA', pvp:130
+  },
+  AMUR: {
+    type:'fixed', fab:'Art&bath', color:'#4a6b8b',
+    desc:'Sobre encimera porcelana Art&bath · 400×310mm · Blanco Brillo · Sin rebosadero',
+    ref:'LAV.AMUR', pvp:108
   }
 }
 
@@ -13803,11 +13808,10 @@ function lavRender(){
       h += '<div style="display:grid;gap:6px">';
       data.items.forEach((it,i)=>{
         const coste = it.pvp*(1-LAV_DTO);
-        const pvpCli = coste*(1+ixMrg()/100);
         h += `<div onclick="lavSel('itemIdx',${i})" style="display:grid;grid-template-columns:1fr 80px 80px 36px;align-items:center;gap:8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;cursor:pointer;background:var(--white);transition:all .15s" onmouseover="this.style.borderColor='${data.color}';this.style.background='#f8f9ff'" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--white)'">`;
         h += `<div><div style="font-size:12px;font-weight:700">${it.label}</div><div style="font-family:monospace;font-size:10px;color:var(--text-soft)">${it.ref}</div></div>`;
         h += `<div style="text-align:right"><div style="font-size:9px;color:var(--text-soft)">Tarifa</div><div style="font-size:12px;font-weight:700">${it.pvp}€</div></div>`;
-        h += `<div style="text-align:right"><div style="font-size:9px;color:var(--text-soft)">Cliente</div><div style="font-size:12px;font-weight:700;color:var(--copper)">${pvpCli.toFixed(0)}€</div></div>`;
+        h += `<div style="text-align:right"><div style="font-size:9px;color:var(--text-soft)">PVP cliente</div><div style="font-size:12px;font-weight:700;color:var(--copper)">${it.pvp.toFixed(0)}€</div></div>`;
         h += `<div style="width:30px;height:30px;background:${data.color};border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:700">+</div>`;
         h += '</div>';
       });
@@ -13822,11 +13826,10 @@ function lavRender(){
       h += '<div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Selecciona la medida / anchura</div>';
       h += '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">';
       data.items.forEach((it,i)=>{
-        const pvpCli = (it.pvp*(1-LAV_DTO))*(1+ixMrg()/100);
         h += `<div onclick="lavSel('itemIdx',${i})" style="border:2px solid var(--border);border-radius:var(--radius);padding:12px 16px;cursor:pointer;text-align:center;background:var(--white);min-width:90px;transition:all .15s" onmouseover="this.style.borderColor='${data.color}';this.style.background='#f8f9ff'" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--white)'">`;
         h += `<div style="font-size:16px;font-weight:800;color:${data.color}">${it.label}</div>`;
-        h += `<div style="font-size:10px;color:var(--text-soft);margin-top:3px">${it.pvp}€ tarifa</div>`;
-        h += `<div style="font-size:10px;color:var(--copper);font-weight:700">${pvpCli.toFixed(0)}€ cliente</div>`;
+        h += `<div style="font-size:10px;color:var(--text-soft);margin-top:3px">Coste PAU: ${(it.pvp*(1-LAV_DTO)).toFixed(0)}€</div>`;
+        h += `<div style="font-size:10px;color:var(--copper);font-weight:700">${it.pvp}€ PVP</div>`;
         h += '</div>';
       });
       h += '</div>';
@@ -13844,12 +13847,11 @@ function lavRender(){
         const isNegro = it.label.toLowerCase().includes('negro');
         const bg = isNegro?'#222':isMate?'#e8e8e8':'#fff';
         const fg = isNegro?'#fff':isMate?'#333':'#000';
-        const pvpCli = (it.pvp*(1-LAV_DTO))*(1+ixMrg()/100);
         h += `<div onclick="lavSel('itemIdx',${i})" style="border:2px solid var(--border);border-radius:var(--radius);padding:14px;cursor:pointer;text-align:center;background:var(--white);min-width:110px;transition:all .15s" onmouseover="this.style.borderColor='${data.color}';this.style.transform='translateY(-1px)'" onmouseout="this.style.borderColor='var(--border)';this.style.transform=''">`;
         h += `<div style="width:44px;height:44px;border-radius:50%;background:${bg};border:2px solid ${isNegro?'#555':isMate?'#bbb':'#ddd'};margin:0 auto 8px;box-shadow:inset 0 2px 4px rgba(0,0,0,.1)"></div>`;
         h += `<div style="font-size:11px;font-weight:700;color:var(--text)">${it.label}</div>`;
-        h += `<div style="font-size:10px;color:var(--text-soft);margin-top:3px">${it.pvp}€ tarifa</div>`;
-        h += `<div style="font-size:10px;color:var(--copper);font-weight:700">${pvpCli.toFixed(0)}€ cliente</div>`;
+        h += `<div style="font-size:10px;color:var(--text-soft);margin-top:3px">Coste PAU: ${(it.pvp*(1-LAV_DTO)).toFixed(0)}€</div>`;
+        h += `<div style="font-size:10px;color:var(--copper);font-weight:700">${it.pvp}€ PVP</div>`;
         h += '</div>';
       });
       h += '</div>';
@@ -13898,7 +13900,7 @@ function lavRenderMedidas(modelo, data, tipo){
   const refs = tipo==='1S' ? data.seno : data.faldon;
   medidas.forEach((m,i)=>{
     const p = refs[i];
-    const pvpCli = p ? ((p.pvp*(1-LAV_DTO))*(1+ixMrg()/100)).toFixed(0) : '?';
+    const pvpCli = p ? p.pvp.toFixed(0) : '?'; // PVP = precio cliente
     const parts = m.split('x');
     h += `<div onclick="lavSel('medida','${m}')" style="border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;cursor:pointer;background:var(--white);transition:all .15s;text-align:center" onmouseover="this.style.borderColor='${data.color}';this.style.background='#f8f9ff'" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--white)'">`;
     h += `<div style="font-size:13px;font-weight:700;color:${data.color}">${parts[0]}<span style="font-size:10px;color:var(--text-soft)">×${parts[1]}cm</span></div>`;
@@ -13930,7 +13932,6 @@ function lavRenderFixed(modelo, data){
 
 function lavResultCard({ref,pvp,label,modelo,data,nota,accList}){
   const coste = pvp*(1-LAV_DTO);
-  const pvpCli = coste*(1+ixMrg()/100);
   const col = data.color||'var(--navy)';
   let h = `<div style="background:${col};color:#fff;border-radius:var(--radius);padding:14px 16px;margin-bottom:10px">`;
   h += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">`;
@@ -13938,10 +13939,9 @@ function lavResultCard({ref,pvp,label,modelo,data,nota,accList}){
   h += `<div><div style="font-size:14px;font-weight:700">${label}</div><div style="font-size:10px;opacity:.6">${data.fab} · ${data.desc.substring(0,60)}${data.desc.length>60?'…':''}</div></div>`;
   h += '</div>';
   h += `<div style="font-family:monospace;font-size:15px;font-weight:800;background:rgba(255,255,255,.15);padding:4px 12px;border-radius:4px;display:inline-block;margin-bottom:10px">${ref}</div>`;
-  h += `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">`;
-  h += `<div><div style="font-size:9px;opacity:.5;text-transform:uppercase">PVP tarifa</div><div style="font-size:16px;font-weight:700">${pvp.toFixed(2)}€</div></div>`;
+  h += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">`;
+  h += `<div><div style="font-size:9px;opacity:.5;text-transform:uppercase">PVP cliente</div><div style="font-size:18px;font-weight:800;color:#86efac">${pvp.toFixed(2)}€</div></div>`;
   h += `<div><div style="font-size:9px;opacity:.5;text-transform:uppercase">Coste PAU (−${Math.round(LAV_DTO*100)}%)</div><div style="font-size:16px;font-weight:700;color:#7dd3fc">${coste.toFixed(2)}€</div></div>`;
-  h += `<div><div style="font-size:9px;opacity:.5;text-transform:uppercase">PVP cliente (+${ixMrg()}%)</div><div style="font-size:16px;font-weight:700;color:#86efac">${pvpCli.toFixed(2)}€</div></div>`;
   h += '</div></div>';
   if(nota){
     h += `<div style="display:flex;align-items:center;gap:8px;background:#fffbf0;border:1px dashed #d4a040;border-radius:6px;padding:7px 10px;margin-bottom:10px">`;
@@ -13954,7 +13954,7 @@ function lavResultCard({ref,pvp,label,modelo,data,nota,accList}){
     h += '<div style="background:var(--sand);border-radius:var(--radius-sm);overflow:hidden">';
     accList.forEach((a,ai)=>{
       const aC = a.pvp ? (a.pvp*(1-LAV_DTO)).toFixed(2) : null;
-      const aP = aC ? ((parseFloat(aC))*(1+ixMrg()/100)).toFixed(2) : null;
+      const aP = a.pvp ? a.pvp.toFixed(2) : null; // PVP = precio cliente
       h += `<div style="display:grid;grid-template-columns:1fr ${a.ref?'70px 70px 30px':'auto'};gap:6px;align-items:center;padding:7px 10px;border-bottom:1px solid var(--border)">`;
       h += `<span style="font-size:11px">${a.desc}${a.desc2?` <span style="opacity:.5;font-size:10px">${a.desc2}</span>`:''}</span>`;
       if(a.ref){
