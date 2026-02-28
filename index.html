@@ -12670,6 +12670,85 @@ const LAV_MODELOS = {
     type:'fixed', fab:'Art&bath', color:'#7a3a3a',
     desc:'Sobre encimera porcelana Art&bath · Gran formato · Sin rebosadero',
     ref:'LAV.INDIANA', pvp:1123
+  },
+  // ── ART&BATH PORCELANA: SOBRE MUEBLE ─────────────────────────
+  ETNA: {
+    type:'acabados', fab:'Art&bath', color:'#2d5a8e',
+    desc:'Sobre mueble porcelana Art&bath · Blanco Brillo · Con rebosadero',
+    items:[
+      {label:'61×46 BB',  ref:'LAV.ETNA61X46',  pvp:86},
+      {label:'71×46 BB',  ref:'LAV.ETNA71X46',  pvp:99},
+      {label:'81×46 BB',  ref:'LAV.ETNA81X46',  pvp:99},
+      {label:'91×46 BB',  ref:'LAV.ETNA91X46',  pvp:122},
+      {label:'101×46 BB', ref:'LAV.ETNA101X46', pvp:132},
+      {label:'121×46 BB', ref:'LAV.ETNA121X46', pvp:200},
+      {label:'51×39 BB',  ref:'LAV.ETNA51X39',  pvp:85},
+      {label:'61×39 BB',  ref:'LAV.ETNA61X39',  pvp:89},
+      {label:'71×39 BB',  ref:'LAV.ETNA71X39',  pvp:99},
+      {label:'81×39 BB',  ref:'LAV.ETNA81X39',  pvp:110},
+      {label:'91×39 BB',  ref:'LAV.ETNA91X39',  pvp:140}
+    ]
+  },
+  ETNA_MATE: {
+    type:'acabados', fab:'Art&bath', color:'#3a5a7e',
+    desc:'Sobre mueble porcelana Art&bath · Blanco Mate / Negro Mate · Con rebosadero',
+    items:[
+      {label:'61×39 BM',  ref:'LAV.ETNA61X39BM',  pvp:143},
+      {label:'71×39 BM',  ref:'LAV.ETNA71X39BM',  pvp:174},
+      {label:'81×39 BM',  ref:'LAV.ETNA81X39BM',  pvp:174},
+      {label:'61×46 BM',  ref:'LAV.ETNA61X46BM',  pvp:133},
+      {label:'71×46 BM',  ref:'LAV.ETNA71X46BM',  pvp:173},
+      {label:'81×46 BM',  ref:'LAV.ETNA81X46BM',  pvp:173},
+      {label:'91×46 BM',  ref:'LAV.ETNA91X46BM',  pvp:207},
+      {label:'101×46 BM', ref:'LAV.ETNA101X46BM', pvp:217},
+      {label:'121×46 BM', ref:'LAV.ETNA121X46BM', pvp:311},
+      {label:'61×39 NM',  ref:'LAV.ETNA61X39NM',  pvp:143},
+      {label:'71×39 NM',  ref:'LAV.ETNA71X39NM',  pvp:174},
+      {label:'81×39 NM',  ref:'LAV.ETNA81X39NM',  pvp:174},
+      {label:'61×46 NM',  ref:'LAV.ETNA61X46NM',  pvp:133},
+      {label:'71×46 NM',  ref:'LAV.ETNA71X46NM',  pvp:173},
+      {label:'81×46 NM',  ref:'LAV.ETNA81X46NM',  pvp:173},
+      {label:'91×46 NM',  ref:'LAV.ETNA91X46NM',  pvp:207},
+      {label:'101×46 NM', ref:'LAV.ETNA101X46NM', pvp:217},
+      {label:'121×46 NM', ref:'LAV.ETNA121X46NM', pvp:311}
+    ]
+  },
+  ARIES: {
+    type:'acabados', fab:'Art&bath', color:'#6b4a9b',
+    desc:'Sobre mueble porcelana Art&bath · Blanco Brillo · Con rebosadero · Suspendible',
+    items:[
+      {label:'61×47', ref:'LAV.ARIES61',  pvp:230},
+      {label:'81×47', ref:'LAV.ARIES81',  pvp:260},
+      {label:'101×47', ref:'LAV.ARIES101', pvp:350}
+    ]
+  },
+  QUADRA: {
+    type:'acabados', fab:'Art&bath', color:'#4a7a5a',
+    desc:'Sobre mueble porcelana Art&bath · Blanco Brillo · Con rebosadero',
+    items:[
+      {label:'61×36', ref:'LAV.QUADRA61', pvp:78},
+      {label:'71×36', ref:'LAV.QUADRA71', pvp:99},
+      {label:'81×36', ref:'LAV.QUADRA81', pvp:92}
+    ]
+  },
+  THIN: {
+    type:'acabados', fab:'Art&bath', color:'#5a7a9a',
+    desc:'Sobre mueble porcelana Art&bath · Blanco Brillo · Con rebosadero',
+    items:[
+      {label:'51×46',  ref:'LAV.THIN51X46',  pvp:81},
+      {label:'61×46',  ref:'LAV.THIN61X46',  pvp:84},
+      {label:'71×46',  ref:'LAV.THIN71X46',  pvp:91},
+      {label:'81×46',  ref:'LAV.THIN81X46',  pvp:91},
+      {label:'91×46',  ref:'LAV.THIN91X46',  pvp:115},
+      {label:'101×46', ref:'LAV.THIN101X46', pvp:132},
+      {label:'121×46', ref:'LAV.THIN121X46', pvp:177},
+      {label:'51×39',  ref:'LAV.THIN51X39',  pvp:76},
+      {label:'61×39',  ref:'LAV.THIN61X39',  pvp:91},
+      {label:'71×39',  ref:'LAV.THIN71X39',  pvp:99},
+      {label:'81×39',  ref:'LAV.THIN81X39',  pvp:105},
+      {label:'91×39',  ref:'LAV.THIN91X39',  pvp:135},
+      {label:'101×39', ref:'LAV.THIN101X39', pvp:147}
+    ]
   }
 }
 
@@ -16502,7 +16581,7 @@ loadProyectos = async function(){
 </div>
 
 <!-- ═══ MODAL: EDITAR CATÁLOGO CAMPOARAS ═══ -->
-<div class="modal-overlay" id="m-camp-edit" style="display:none" onclick="if(event.target===this)closeModal('m-camp-edit')">
+<div class="overlay" id="m-camp-edit" style="display:none" onclick="if(event.target===this)closeModal('m-camp-edit')">
   <div class="modal" style="max-width:820px;width:95%;max-height:90vh;display:flex;flex-direction:column">
     <div class="modal-head" style="display:flex;align-items:center;justify-content:space-between">
       <span>✏️ Editar catálogo Campoaras</span>
@@ -16527,7 +16606,7 @@ loadProyectos = async function(){
 </div>
 
 <!-- ═══ MODAL: IMPORTAR FREGADEROS ═══ -->
-<div class="modal-overlay" id="m-freg-import" style="display:none" onclick="if(event.target===this)closeModal('m-freg-import')">
+<div class="overlay" id="m-freg-import" style="display:none" onclick="if(event.target===this)closeModal('m-freg-import')">
   <div class="modal" style="max-width:660px;width:95%;max-height:88vh;display:flex;flex-direction:column">
     <div class="modal-head" style="display:flex;align-items:center;justify-content:space-between">
       <span>🏠 Importar catálogo Fregaderos &amp; Grifos</span>
