@@ -7722,7 +7722,7 @@ async function loadCompras(){
   // Re-apply project filter after load
   filtrarModuloPorProyecto('compras');
 }
-async async function saveCompra(){
+async function saveCompra(){
   const id=document.getElementById('co-id')?.value;
   const pdfB64=document.getElementById('co-pdf-b64')?.value||null;
   const pdfNombre=document.getElementById('co-pdf-nombre')?.value||null;
