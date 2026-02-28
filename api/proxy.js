@@ -1,24 +1,15 @@
-// Vercel Serverless Function — Proxy para Supabase
-// Resuelve definitivamente los problemas de CORS/iOS Safari
-// El navegador llama a /api/proxy (mismo dominio, sin CORS)
-// Este servidor hace la llamada a Supabase (sin restricciones)
-
 const SB_URL = ‘https://qxyflndntpmcdbyvwjnj.supabase.co’;
 const SB_KEY = ‘eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4eWZsbmRudHBtY2RieXZ3am5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MjgzOTMsImV4cCI6MjA4NzUwNDM5M30.WQ193I6oS9ANMvuWG8XXa_J6oFleoTSlLQKeFVR_d50’;
 
-module.exports = async function handler(req, res) {
-// CORS headers — permite llamadas desde cualquier origen
+export default async function handler(req, res) {
 res.setHeader(‘Access-Control-Allow-Origin’, ‘*’);
 res.setHeader(‘Access-Control-Allow-Methods’, ‘GET, POST, PATCH, PUT, DELETE, OPTIONS’);
 res.setHeader(‘Access-Control-Allow-Headers’, ‘Content-Type, Authorization’);
-
-if (req.method === ‘OPTIONS’) {
-return res.status(200).end();
-}
+if (req.method === ‘OPTIONS’) return res.status(200).end();
 
 try {
 const { table, method = ‘GET’, extra = ‘’, id } = req.query;
-if (!table) return res.status(400).json({ error: ‘table param required’ });
+if (!table) return res.status(400).json({ error: ‘table required’ });
 
 ```
 let path = `/rest/v1/${table}`;
@@ -33,23 +24,19 @@ const headers = {
 };
 if (method === 'POST') headers['Prefer'] = 'return=representation';
 
+const bodyData = req.body && req.body.body ? req.body.body : null;
 const sbRes = await fetch(`${SB_URL}${path}`, {
   method,
   headers,
-  body: (method !== 'GET' && method !== 'DELETE' && req.body) 
-    ? JSON.stringify(req.body) 
+  body: (method !== 'GET' && method !== 'DELETE' && bodyData)
+    ? JSON.stringify(bodyData)
     : undefined,
 });
 
 const text = await sbRes.text();
-const data = text ? JSON.parse(text) : [];
-
-if (!sbRes.ok) {
-  return res.status(sbRes.status).json({ error: text });
-}
-
+if (!sbRes.ok) return res.status(sbRes.status).json({ error: text });
 res.setHeader('Content-Type', 'application/json');
-return res.status(200).send(text);
+return res.status(200).send(text || '[]');
 ```
 
 } catch (e) {
