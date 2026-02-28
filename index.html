@@ -2170,6 +2170,9 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           </div>
           <!-- WIZARD LAVABOS KRION (se muestra cuando tab=lavabos) -->
           <div id="lav-wizard" style="display:none;padding:14px 16px;overflow-y:auto;flex:1">
+            <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
+              <button class="btn btn-ghost btn-sm" onclick="openCampEdit('lavabos')" style="font-size:11px;color:var(--text-soft)">✏️ Editar referencias y precios</button>
+            </div>
           </div>
 
           <!-- WIZARD CAMPOARAS (se muestra cuando tab=campoaras) -->
@@ -2265,7 +2268,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
             <div style="font-size:12px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.07em">📄 Valoración</div>
             <div class="ix-mrg-row">
               <span class="ix-mrg-lbl">Margen s/ coste</span>
-              <input type="number" class="ix-mrg" id="ix-mrg" value="30" min="0" max="300" oninput="ixRecalc()">
+              <input type="number" class="ix-mrg" id="ix-mrg" value="0" min="0" max="300" oninput="ixRecalc()">
               <span class="ix-mrg-pct">%</span>
               <span class="ix-mrg-note" id="ix-mrg-note">+30% aplicado</span>
             </div>
@@ -12447,6 +12450,229 @@ const LAV_MODELOS = {
     type:'fixed', fab:'Art&bath', color:'#4a6b8b',
     desc:'Sobre encimera porcelana Art&bath · 400×310mm · Blanco Brillo · Sin rebosadero',
     ref:'LAV.AMUR', pvp:108
+  },
+  // ── ART&BATH PORCELANA: acabados múltiples (NUEVOS) ─────────────────────
+  BOL: {
+    type:'acabados', fab:'Art&bath', color:'#3a6b8b',
+    desc:'Sobre encimera porcelana Art&bath · Bowl redondo · Sin rebosadero',
+    items:[
+      {label:'Blanco Brillo',    ref:'LAV.BOL',    pvp:103},
+      {label:'Blanco Mate',      ref:'LAV.BOLBM',  pvp:164},
+      {label:'Negro Mate',       ref:'LAV.BOL.NEG',pvp:170},
+      {label:'Blanco Brillo Mini (32cm)', ref:'LAV.BOL32', pvp:84},
+    ]
+  },
+  ADWA: {
+    type:'acabados', fab:'Art&bath', color:'#6b3a2d',
+    desc:'Sobre encimera porcelana Art&bath · Textura natural · Sin rebosadero',
+    items:[
+      {label:'Fine',   ref:'LAV.ADWAF', pvp:295},
+      {label:'Nature', ref:'LAV.ADWAN', pvp:295},
+    ]
+  },
+  ABU: {
+    type:'acabados', fab:'Art&bath', color:'#4a5c3a',
+    desc:'Sobre encimera porcelana Art&bath · Orgánico · Sin rebosadero',
+    items:[
+      {label:'Gris',  ref:'LAV.ABU.GRIS', pvp:295},
+      {label:'Beige', ref:'LAV.ABU.BEI',  pvp:295},
+    ]
+  },
+  DANA: {
+    type:'acabados', fab:'Art&bath', color:'#5c3a6b',
+    desc:'Sobre encimera porcelana Art&bath · Sin rebosadero',
+    items:[
+      {label:'Beige', ref:'LAV.DANA.BEI', pvp:295},
+      {label:'Negro', ref:'LAV.DANA.NEG', pvp:295},
+    ]
+  },
+  TERRANOVA: {
+    type:'acabados', fab:'Art&bath', color:'#3a5c4a',
+    desc:'Sobre encimera piedra sinterizada Art&bath · Oval · Sin rebosadero',
+    items:[
+      {label:'Beige', ref:'LAV.TERRANOVA',  pvp:295},
+      {label:'Gris',  ref:'LAV.TERRANOVAD', pvp:295},
+    ]
+  },
+  DAKOTA: {
+    type:'acabados', fab:'Art&bath', color:'#6b5c3a',
+    desc:'Sobre encimera piedra sinterizada Art&bath · Rectangular · Sin rebosadero',
+    items:[
+      {label:'Beige', ref:'LAV.DAKOTA',  pvp:360},
+      {label:'Gris',  ref:'LAV.DAKOTAG', pvp:360},
+    ]
+  },
+  TERRAZO: {
+    type:'acabados', fab:'Art&bath', color:'#3a4a5c',
+    desc:'Sobre encimera terrazo Art&bath · Sin rebosadero',
+    items:[
+      {label:'Beige', ref:'LAV.TERRAB', pvp:252},
+      {label:'Gris',  ref:'LAV.TERRAG', pvp:252},
+    ]
+  },
+  FOGO: {
+    type:'acabados', fab:'Art&bath', color:'#8b3a2d',
+    desc:'Sobre encimera porcelana Art&bath · 345mm · Sin rebosadero',
+    items:[
+      {label:'Blanco Brillo', ref:'LAV.FOGOBR',  pvp:133},
+      {label:'Blanco Mate',   ref:'LAV.FOGO',    pvp:197},
+      {label:'Negro Mate',    ref:'LAV.FOGON',   pvp:197},
+    ]
+  },
+  HORUS: {
+    type:'acabados', fab:'Art&bath', color:'#2d5c8b',
+    desc:'Sobre encimera porcelana Art&bath · Rectangular · Sin rebosadero',
+    items:[
+      {label:'Blanco Brillo', ref:'LAV.HORUS',  pvp:95},
+      {label:'Blanco Mate',   ref:'LAV.HORUSB', pvp:185},
+      {label:'Negro Mate',    ref:'LAV.HORUSN', pvp:185},
+    ]
+  },
+  // ── ART&BATH PORCELANA: precio único (NUEVOS) ──────────────────────────
+  TEBAS: {
+    type:'fixed', fab:'Art&bath', color:'#6b8b3a',
+    desc:'Sobre encimera porcelana Art&bath · Blanco Brillo · Sin rebosadero',
+    ref:'LAV.TEBAS', pvp:88
+  },
+  ROUNDMINI: {
+    type:'fixed', fab:'Art&bath', color:'#3a8b6b',
+    desc:'Sobre encimera porcelana Art&bath · Round Mini · Blanco Brillo',
+    ref:'LAV.ROUND.M', pvp:90
+  },
+  LIBRA: {
+    type:'fixed', fab:'Art&bath', color:'#5c6b3a',
+    desc:'Sobre encimera porcelana Art&bath · Blanco Brillo · Sin rebosadero',
+    ref:'LAV.LIBRA', pvp:91
+  },
+  OBI: {
+    type:'fixed', fab:'Art&bath', color:'#3a6b5c',
+    desc:'Sobre encimera porcelana Art&bath · Blanco Brillo · Compacto',
+    ref:'LAV.OBI', pvp:94
+  },
+  LEO: {
+    type:'fixed', fab:'Art&bath', color:'#8b6b3a',
+    desc:'Sobre encimera porcelana Art&bath · Blanco Brillo · Sin rebosadero',
+    ref:'LAV.LEO', pvp:113
+  },
+  AGNES: {
+    type:'fixed', fab:'Art&bath', color:'#3a5c8b',
+    desc:'Sobre encimera porcelana Art&bath · Blanco Brillo · Sin rebosadero',
+    ref:'LAV.AGNES', pvp:125
+  },
+  IRIS: {
+    type:'fixed', fab:'Art&bath', color:'#6b3a5c',
+    desc:'Sobre encimera porcelana Art&bath · Cuadrado · Blanco Brillo',
+    ref:'LAV.IRIS', pvp:131
+  },
+  EUME: {
+    type:'fixed', fab:'Art&bath', color:'#3a6b6b',
+    desc:'Sobre encimera porcelana Art&bath · Blanco Brillo · Sin rebosadero',
+    ref:'LAV.EUME', pvp:133
+  },
+  BEIRA: {
+    type:'fixed', fab:'Art&bath', color:'#5c8b3a',
+    desc:'Sobre encimera porcelana Art&bath · Ovalado · Blanco Brillo',
+    ref:'LAV.BEIRA', pvp:138
+  },
+  BELICE: {
+    type:'fixed', fab:'Art&bath', color:'#8b3a5c',
+    desc:'Sobre encimera porcelana Art&bath · Blanco Brillo · Rectangular',
+    ref:'LAV.BELICE', pvp:162
+  },
+  REMO: {
+    type:'fixed', fab:'Art&bath', color:'#5c3a8b',
+    desc:'Sobre encimera porcelana Art&bath · Blanco Brillo · Sin rebosadero',
+    ref:'LAV.REMO', pvp:175
+  },
+  PRAGA: {
+    type:'fixed', fab:'Art&bath', color:'#3a8b5c',
+    desc:'Sobre encimera porcelana Art&bath · Blanco Brillo · Sin rebosadero',
+    ref:'LAV.PRAGA', pvp:184
+  },
+  CUBE: {
+    type:'fixed', fab:'Art&bath', color:'#8b5c3a',
+    desc:'Sobre encimera porcelana Art&bath · Cubo · Sin rebosadero',
+    ref:'LAV.CUBE', pvp:305
+  },
+  BRACO: {
+    type:'fixed', fab:'Art&bath', color:'#3a5c6b',
+    desc:'Sobre encimera piedra sinterizada Art&bath · Sin rebosadero',
+    ref:'LAV.BRACO', pvp:325
+  },
+  GALBA: {
+    type:'fixed', fab:'Art&bath', color:'#6b5c8b',
+    desc:'Sobre encimera piedra sinterizada Art&bath · Sin rebosadero',
+    ref:'LAV.GALBA', pvp:295
+  },
+  PETRA: {
+    type:'fixed', fab:'Art&bath', color:'#8b6b5c',
+    desc:'Sobre encimera piedra sinterizada Art&bath · Natural · Sin rebosadero',
+    ref:'LAV.PETRA', pvp:390
+  },
+  LION: {
+    type:'fixed', fab:'Art&bath', color:'#4a7a3a',
+    desc:'Sobre encimera porcelana Art&bath · Blanco Brillo · Sin rebosadero',
+    ref:'LAV.LIONN', pvp:255
+  },
+  ZARA: {
+    type:'fixed', fab:'Art&bath', color:'#7a3a4a',
+    desc:'Sobre encimera porcelana Art&bath · Blanco Brillo · Orgánico',
+    ref:'LAV.ZARA', pvp:255
+  },
+  KARIBA: {
+    type:'fixed', fab:'Art&bath', color:'#3a4a7a',
+    desc:'Sobre encimera cerámica Art&bath · Bicolor · Sin rebosadero',
+    ref:'LAV.KARIBA', pvp:257
+  },
+  SFERA: {
+    type:'fixed', fab:'Art&bath', color:'#7a5c3a',
+    desc:'Sobre encimera cerámica Art&bath · Esférico · Sin rebosadero',
+    ref:'LAV.SFERA', pvp:257
+  },
+  BOLBICOLOR: {
+    type:'fixed', fab:'Art&bath', color:'#5c7a3a',
+    desc:'Sobre encimera cerámica Art&bath · Bicolor exterior/interior · Sin rebosadero',
+    ref:'LAV.BOLS/RB', pvp:349
+  },
+  GORDON: {
+    type:'fixed', fab:'Art&bath', color:'#3a7a5c',
+    desc:'Lavabo suspendido porcelana Art&bath · Blanco Brillo · Con soporte',
+    ref:'LAV. GORDON', pvp:358
+  },
+  RIZZO: {
+    type:'fixed', fab:'Art&bath', color:'#7a3a6b',
+    desc:'Sobre encimera porcelana Art&bath · Diseño · Blanco Brillo',
+    ref:'LAV.RIZZO', pvp:495
+  },
+  PIETRO: {
+    type:'fixed', fab:'Art&bath', color:'#6b7a3a',
+    desc:'Sobre encimera porcelana Art&bath · Diseño · Blanco Brillo',
+    ref:'LAV.PIET', pvp:495
+  },
+  NOA: {
+    type:'fixed', fab:'Art&bath', color:'#3a6b7a',
+    desc:'Sobre encimera porcelana Art&bath · Gran formato · Sin rebosadero',
+    ref:'LAV.NOA', pvp:592
+  },
+  TOTEM: {
+    type:'fixed', fab:'Art&bath', color:'#7a6b3a',
+    desc:'Sobre encimera cerámica Art&bath · Totem · Blanco Brillo',
+    ref:'LAV.TOTEM', pvp:765
+  },
+  DETROIT: {
+    type:'fixed', fab:'Art&bath', color:'#3a7a6b',
+    desc:'Sobre encimera cerámica Art&bath · Blanco Brillo · Diseño urbano',
+    ref:'LAV.DETROIT', pvp:765
+  },
+  TRAVISSOLID: {
+    type:'fixed', fab:'Art&bath', color:'#6b3a7a',
+    desc:'Sobre encimera Solid Surface Art&bath · Blanco Brillo',
+    ref:'LAV.TRAVIS', pvp:898
+  },
+  INDIANA: {
+    type:'fixed', fab:'Art&bath', color:'#7a3a3a',
+    desc:'Sobre encimera porcelana Art&bath · Gran formato · Sin rebosadero',
+    ref:'LAV.INDIANA', pvp:1123
   }
 }
 
@@ -12478,6 +12704,7 @@ function ixCoste(pvp, p){
   return pvp * IMEX_INC * (1 - IMEX_DTO); 
 }
 function ixPvpCli(c){ return c * (1 + ixMrg()/100); }
+function ixLinePvp(l){ return l._lavabo ? (l.pvp||l.cst) : ixPvpCli(l.cst); }
 function ixFmt(n){ return n.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€'; }
 function ixH(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function ixDatos(){
@@ -12533,7 +12760,7 @@ function ixSetTab(t){
     if(t==='campoaras')
       infoBox.innerHTML='PVP tarifa ×1,05 → <b>Coste PAU</b> = PVP actualizado ×0,60 (dto 40%) → <b>PVP cliente</b> = Coste × (1+margen%)';
     else if(t==='lavabos')
-      infoBox.innerHTML='<b>Coste PAU</b> = PVP tarifa × dto aplicable → <b>PVP cliente</b> = Coste × (1+margen%)';
+      infoBox.innerHTML='<b>Coste PAU</b> = PVP tarifa × dto aplicable → <b>PVP</b> = precio final al cliente' × (1+margen%)';
     else
       infoBox.innerHTML='PVP tarifa ×1,03 → <b>Coste PAU</b> = PVP actualizado ×0,60 (dto 40%) → <b>PVP cliente</b> = Coste × (1+margen%)';
   }
@@ -12631,7 +12858,7 @@ function ixRenderBud(){
   }
   if(foot) foot.style.display='block';
   scroll.innerHTML = ixLineas.map(l=>{
-    const pc = ixPvpCli(l.cst);
+    const pc = ixLinePvp(l);
     const notaHtml = '<div style="margin:2px 0 0;display:flex;align-items:center;gap:4px">'+
       '<span style="font-size:10px;color:#b87333;flex-shrink:0">📝</span>'+
       '<input class="ix-nota-inp" type="text" data-id="'+l.id+'" value="'+ixH(l.nota||'')+'" '+
@@ -12670,7 +12897,7 @@ function ixRenderBud(){
 
 function ixTotales(){
   let tc=0,tp=0;
-  ixLineas.forEach(l=>{ tc+=l.cst*l.cant; tp+=ixPvpCli(l.cst)*l.cant; });
+  ixLineas.forEach(l=>{ tc+=l.cst*l.cant; tp+=ixLinePvp(l)*l.cant; });
   const m = ixMrg();
   const el = (id)=>document.getElementById(id);
   if(el('ix-t-coste')) el('ix-t-coste').textContent = ixFmt(tc);
@@ -13614,7 +13841,7 @@ function campAnadir(itemId){
 let _campEditTab = 'aqua';
 let _campEditDraft = null; // copia temporal para editar
 
-function openCampEdit(){
+function openCampEdit(tab){
   _campEditDraft = {
     aqua:  JSON.parse(JSON.stringify(CAMP_AQUA)),
     drop:  JSON.parse(JSON.stringify(CAMP_DROP)),
@@ -13623,7 +13850,7 @@ function openCampEdit(){
     lavabos: JSON.parse(JSON.stringify(LAV_MODELOS))
   };
   _lavEditModel = null;
-  campEditTab('aqua');
+  campEditTab(tab||'aqua');
   openModal('m-camp-edit');
 }
 
@@ -13633,6 +13860,10 @@ function campEditTab(t){
     const el = document.getElementById('cedit-tab-'+id);
     if(el) el.classList.toggle('active', id===t);
   });
+  // Actualizar título del modal
+  const titleMap = {aqua:'AQUA',drop:'DROP',tapas:'TAPAS',['tapas-ac']:'TAPAS Acabados',lavabos:'Lavabos'};
+  const titleEl = document.querySelector('#m-camp-edit .modal-head span');
+  if(titleEl) titleEl.textContent = '✏️ Editar catálogo '+( titleMap[t]||t);
   campEditRender();
 }
 
@@ -13811,7 +14042,7 @@ function lavRender(){
         h += `<div onclick="lavSel('itemIdx',${i})" style="display:grid;grid-template-columns:1fr 80px 80px 36px;align-items:center;gap:8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;cursor:pointer;background:var(--white);transition:all .15s" onmouseover="this.style.borderColor='${data.color}';this.style.background='#f8f9ff'" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--white)'">`;
         h += `<div><div style="font-size:12px;font-weight:700">${it.label}</div><div style="font-family:monospace;font-size:10px;color:var(--text-soft)">${it.ref}</div></div>`;
         h += `<div style="text-align:right"><div style="font-size:9px;color:var(--text-soft)">Tarifa</div><div style="font-size:12px;font-weight:700">${it.pvp}€</div></div>`;
-        h += `<div style="text-align:right"><div style="font-size:9px;color:var(--text-soft)">PVP cliente</div><div style="font-size:12px;font-weight:700;color:var(--copper)">${it.pvp.toFixed(0)}€</div></div>`;
+        h += `<div style="text-align:right"><div style="font-size:9px;color:var(--text-soft)">PVP</div><div style="font-size:12px;font-weight:700;color:var(--copper)">${it.pvp.toFixed(0)}€</div></div>`;
         h += `<div style="width:30px;height:30px;background:${data.color};border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:700">+</div>`;
         h += '</div>';
       });
@@ -13940,7 +14171,7 @@ function lavResultCard({ref,pvp,label,modelo,data,nota,accList}){
   h += '</div>';
   h += `<div style="font-family:monospace;font-size:15px;font-weight:800;background:rgba(255,255,255,.15);padding:4px 12px;border-radius:4px;display:inline-block;margin-bottom:10px">${ref}</div>`;
   h += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">`;
-  h += `<div><div style="font-size:9px;opacity:.5;text-transform:uppercase">PVP cliente</div><div style="font-size:18px;font-weight:800;color:#86efac">${pvp.toFixed(2)}€</div></div>`;
+  h += `<div><div style="font-size:9px;opacity:.5;text-transform:uppercase">PVP</div><div style="font-size:18px;font-weight:800;color:#86efac">${pvp.toFixed(2)}€</div></div>`;
   h += `<div><div style="font-size:9px;opacity:.5;text-transform:uppercase">Coste PAU (−${Math.round(LAV_DTO*100)}%)</div><div style="font-size:16px;font-weight:700;color:#7dd3fc">${coste.toFixed(2)}€</div></div>`;
   h += '</div></div>';
   if(nota){
