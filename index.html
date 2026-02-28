@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-title" content="PAU Gestión">
 <!-- manifest PWA desactivado para evitar caché -->
 <!-- PAU INTERIORISMO v73 · Build: 2026-02-28 10:00 -->
-<title>PAU INTERIORISMO - Gestión v20260228-1940</title>
+<title>PAU INTERIORISMO - Gestión v20260228-2010</title>
 <style>
 :root{--navy:#1a2a3a;--navy-mid:#27405b;--navy-light:#3d5a78;--blue-soft:#b8cce4;--blue-light:#e8f4ff;--cream:#f7f4ef;--sand:#ede8df;--copper:#b87333;--copper-light:#f4e8da;--green:#1e6b3d;--green-soft:#d5e8d4;--amber:#7d6608;--amber-soft:#fff2cc;--red:#7b241c;--red-soft:#fce8e6;--white:#fff;--text:#1a2a3a;--text-mid:#4a5f72;--text-soft:#8a9aaa;--border:#dce6f0;--radius:8px;--radius-sm:4px;--shadow:0 1px 3px rgba(26,42,58,.08),0 4px 16px rgba(26,42,58,.06);--shadow-lg:0 8px 32px rgba(26,42,58,.14);--sidebar:220px;--header:56px}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -15474,7 +15474,15 @@ const msg = document.getElementById(‘ios-diag-msg’);
 if(!bar||!msg) return;
 bar.style.display=‘flex’;
 bar.style.background=’#1e3a5f’;
-msg.innerHTML=‘🔄 Probando conexión… <button onclick="window.open(\'' + SB_URL + '/rest/v1/clientes?limit=1&apikey='+SB_KEY+'\',\'_blank\')" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;padding:3px 10px;border-radius:5px;cursor:pointer;font-size:11px;margin-left:8px">🔗 Test directo</button>’;
+
+// Countdown timer para ver si el timeout funciona
+let countdown = 20;
+const timer = setInterval(()=>{ countdown–; msg.innerHTML = `🔄 Probando /api/proxy… ${countdown}s | <a href="https://qxyflndntpmcdbyvwjnj.supabase.co/rest/v1/clientes?limit=1&apikey=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4eWZsbmRudHBtY2RieXZ3am5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MjgzOTMsImV4cCI6MjA4NzUwNDM5M30.WQ193I6oS9ANMvuWG8XXa_J6oFleoTSlLQKeFVR_d50" target="_blank" style="color:#ff9">Test directo</a>`; if(countdown<=0){ clearInterval(timer); msg.innerHTML=‘⏱ Timeout — ni siquiera responde el proxy local’; bar.style.background=’#b71c1c’; }}, 1000);
+
+msg.innerHTML = `🔄 Probando /api/proxy… ${countdown}s | <a href="https://qxyflndntpmcdbyvwjnj.supabase.co/rest/v1/clientes?limit=1&apikey=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4eWZsbmRudHBtY2RieXZ3am5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MjgzOTMsImV4cCI6MjA4NzUwNDM5M30.WQ193I6oS9ANMvuWG8XXa_J6oFleoTSlLQKeFVR_d50" target="_blank" style="color:#ff9">Test directo</a>`;
+
+xhrTestProxy(’/api/proxy?table=clientes&method=GET&extra=limit%3D1’,
+function(data){ clearInterval(timer);('’ + SB_URL + ‘/rest/v1/clientes?limit=1&apikey=’+SB_KEY+’','_blank')” style=“background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;padding:3px 10px;border-radius:5px;cursor:pointer;font-size:11px;margin-left:8px”>🔗 Test directo</button>’;
 
 // Test con XHR (más fiable que fetch en iOS Safari antiguo)
 xhrTestProxy(’/api/proxy?table=clientes&method=GET&extra=limit%3D1’,
@@ -15490,8 +15498,9 @@ setTimeout(()=>{ bar.style.display=‘none’; loadGerencia(); },1500);
 }
 },
 function(err){
+clearInterval(timer);
 bar.style.background=’#b71c1c’;
-msg.innerHTML=‘❌ ‘+err+’ — Pulsa <b>Test directo</b> para ver el error exacto en Safari’;
+msg.innerHTML=’❌ PROXY ERROR: ’+err;
 }
 );
 }
