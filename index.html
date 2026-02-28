@@ -293,6 +293,7 @@ tbody td{padding:7px 10px;vertical-align:middle}
 
 /* ─── CAMPOARAS: WIZARD ─── */
 #camp-wizard{display:none;flex:1;min-height:0;overflow-y:auto}
+.lav-card:hover{border-color:var(--navy)!important;transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.08)}
 .camp-steps{display:flex;gap:0;margin-bottom:14px;border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--border)}
 .camp-step-dot{flex:1;padding:8px 6px;font-size:10px;font-weight:700;text-align:center;background:var(--sand);
   color:var(--text-soft);border-right:1px solid var(--border);transition:all .2s;position:relative}
@@ -12290,32 +12291,157 @@ let LAV_DTO = 0.40; // Descuento PAU sobre PVP tarifa (40%)
 
 // Datos por modelo: { medida, tipo (1S=1 seno, 1SF=1 seno+faldón), ref, pvp }
 const LAV_MODELOS = {
+  // ── KRION® ENCIMERA LINEAR (Modelo → 1S / 1SF → Medida) ────────────────
   AUSTIN: {
-    desc: 'Lavabo sobre encimera / encastrado · KRION® Blanco · Fondo 46cm (121: 56cm)',
-    icon: '🪠', color: '#1e3a5f',
+    type:'linear', fab:'KRION®', color:'#1e3a5f',
+    desc:'Encimera KRION® · Fondo 46cm (121→56cm) · Blanco',
     medidas_seno:   ['81x46','91x46','101x46','111x46','121x56','131x46','141x46','151x46','161x46','171x46','181x46','191x46','201x46'],
     medidas_faldon: ['81x46','91x46','101x46','111x46','121x56','131x46','141x46','151x46','161x46','171x46','181x46','191x46','201x46'],
-    seno:   [{ref:'30.620.277',pvp:620},{ref:'30.640.277',pvp:640},{ref:'30.665.277',pvp:665},{ref:'30.695.277',pvp:695},{ref:'30.755.277',pvp:755},{ref:'30.790.277',pvp:790},{ref:'30.830.277',pvp:830},{ref:'30.895.277',pvp:895},{ref:'30.935.277',pvp:935},{ref:'30.970.277',pvp:970},{ref:'30.1000.277',pvp:1000},{ref:'30.1080.277',pvp:1080},{ref:'30.1130.277',pvp:1130}],
-    faldon: [{ref:'30.880.277',pvp:880},{ref:'30.907.277',pvp:907},{ref:'30.970.277',pvp:970},{ref:'30.1077.277',pvp:1077},{ref:'30.1134.277',pvp:1134},{ref:'30.1169.277',pvp:1169},{ref:'30.1205.277',pvp:1205},{ref:'30.1230.277',pvp:1230},{ref:'30.1295.277',pvp:1295},{ref:'30.1354.277',pvp:1354},{ref:'30.1460.277',pvp:1460},{ref:'30.1550.277',pvp:1550},{ref:'30.1650.277',pvp:1650}],
-    acc: [{desc:'Incremento Seno 80',ref:'30.70.277',pvp:70},{desc:'Incremento Seno 100',ref:'30.110.277',pvp:110},{desc:'Rebosadero',ref:'30.27.277',pvp:27},{desc:'Estructura soporte (1ud)',ref:'30.26.277',pvp:26},{desc:'Toallero frontal/lateral 32-42cm',ref:'30.45.277',pvp:45},{desc:'Seno adicional',ref:'30.275.277',pvp:275},{desc:'Ampliación fondo hasta 53cm',pvp_pct:15,desc2:'(+15% s/precio base)'}]
+    seno:  [{ref:'30.620.277',pvp:620},{ref:'30.640.277',pvp:640},{ref:'30.665.277',pvp:665},{ref:'30.695.277',pvp:695},{ref:'30.755.277',pvp:755},{ref:'30.790.277',pvp:790},{ref:'30.830.277',pvp:830},{ref:'30.895.277',pvp:895},{ref:'30.935.277',pvp:935},{ref:'30.970.277',pvp:970},{ref:'30.1000.277',pvp:1000},{ref:'30.1080.277',pvp:1080},{ref:'30.1130.277',pvp:1130}],
+    faldon:[{ref:'30.880.277',pvp:880},{ref:'30.907.277',pvp:907},{ref:'30.970.277',pvp:970},{ref:'30.1077.277',pvp:1077},{ref:'30.1134.277',pvp:1134},{ref:'30.1169.277',pvp:1169},{ref:'30.1205.277',pvp:1205},{ref:'30.1230.277',pvp:1230},{ref:'30.1295.277',pvp:1295},{ref:'30.1354.277',pvp:1354},{ref:'30.1460.277',pvp:1460},{ref:'30.1550.277',pvp:1550},{ref:'30.1650.277',pvp:1650}],
+    acc:[{desc:'Incremento Seno 80',ref:'30.70.277',pvp:70},{desc:'Incremento Seno 100',ref:'30.110.277',pvp:110},{desc:'Rebosadero',ref:'30.27.277',pvp:27},{desc:'Estructura soporte',ref:'30.26.277',pvp:26},{desc:'Toallero 32-42cm',ref:'30.45.277',pvp:45},{desc:'Seno adicional',ref:'30.275.277',pvp:275}]
   },
   BLAKA: {
-    desc: 'Lavabo sobre encimera / encastrado · KRION® Blanco · Fondo 46cm · Formato compacto',
-    icon: '🪠', color: '#2d5016',
+    type:'linear', fab:'KRION®', color:'#2d5016',
+    desc:'Encimera KRION® compacta · Fondo 46cm · Blanco',
     medidas_seno:   ['71x46','81x46','91x46','101x46','111x46','121x46','131x46'],
     medidas_faldon: ['71x46','81x46','91x46','101x46','111x46','121x46','131x46'],
-    seno:   [{ref:'30.373.277',pvp:373},{ref:'30.397.277',pvp:397},{ref:'30.420.277',pvp:420},{ref:'30.443.277',pvp:443},{ref:'30.467.277',pvp:467},{ref:'30.491.277',pvp:491},{ref:'30.568.277',pvp:568}],
-    faldon: [{ref:'30.601.277',pvp:601},{ref:'30.647.277',pvp:647},{ref:'30.696.277',pvp:696},{ref:'30.742.277',pvp:742},{ref:'30.790.277',pvp:790},{ref:'30.837.277',pvp:837},{ref:'30.945.277',pvp:945}],
-    acc: [{desc:'Rebosadero',ref:'30.27.277',pvp:27},{desc:'Seno adicional',ref:'30.170.277',pvp:170},{desc:'Estructura soporte (1ud)',ref:'30.26.277',pvp:26},{desc:'Toallero frontal/lateral 32-42cm',ref:'30.45.277',pvp:45},{desc:'Ampliación fondo hasta 53cm',pvp_pct:15,desc2:'(+15% s/precio base)'}]
+    seno:  [{ref:'30.373.277',pvp:373},{ref:'30.397.277',pvp:397},{ref:'30.420.277',pvp:420},{ref:'30.443.277',pvp:443},{ref:'30.467.277',pvp:467},{ref:'30.491.277',pvp:491},{ref:'30.568.277',pvp:568}],
+    faldon:[{ref:'30.601.277',pvp:601},{ref:'30.647.277',pvp:647},{ref:'30.696.277',pvp:696},{ref:'30.742.277',pvp:742},{ref:'30.790.277',pvp:790},{ref:'30.837.277',pvp:837},{ref:'30.945.277',pvp:945}],
+    acc:[{desc:'Rebosadero',ref:'30.27.277',pvp:27},{desc:'Seno adicional',ref:'30.170.277',pvp:170},{desc:'Estructura soporte',ref:'30.26.277',pvp:26},{desc:'Toallero 32-42cm',ref:'30.45.277',pvp:45}]
   },
   APOLO: {
-    desc: 'Lavabo sobre encimera / encastrado · KRION® Blanco · Seno 500×300×80mm · Fondo 46cm',
-    icon: '🪠', color: '#5c1e3a',
+    type:'linear', fab:'KRION®', color:'#5c1e3a',
+    desc:'Encimera KRION® · Seno 500×300×80mm · Fondo 46cm · Blanco',
     medidas_seno:   ['71x46','81x46','91x46','101x46','111x46','121x46','131x46','141x46','151x46','161x46','171x46','181x46','191x46'],
     medidas_faldon: ['71x46','81x46','91x46','101x46','111x46','121x46','131x46','141x46','151x46','161x46','171x46','181x46','191x46'],
-    seno:   [{ref:'30.353.277',pvp:353},{ref:'30.373.277',pvp:373},{ref:'30.397.277',pvp:397},{ref:'30.420.277',pvp:420},{ref:'30.443.277',pvp:443},{ref:'30.467.277',pvp:467},{ref:'30.491.277',pvp:491},{ref:'30.568.277',pvp:568},{ref:'30.592.277',pvp:592},{ref:'30.615.277',pvp:615},{ref:'30.639.277',pvp:639},{ref:'30.664.277',pvp:664},{ref:'30.821.277',pvp:821}],
-    faldon: [{ref:'30.562.277',pvp:562},{ref:'30.601.277',pvp:601},{ref:'30.647.277',pvp:647},{ref:'30.696.277',pvp:696},{ref:'30.742.277',pvp:742},{ref:'30.790.277',pvp:790},{ref:'30.837.277',pvp:837},{ref:'30.945.277',pvp:945},{ref:'30.994.277',pvp:994},{ref:'30.1040.277',pvp:1040},{ref:'30.1088.277',pvp:1088},{ref:'30.1136.277',pvp:1136},{ref:'30.1334.277',pvp:1334}],
-    acc: [{desc:'Seno adicional',ref:'30.170.277',pvp:170},{desc:'Rebosadero',ref:'30.27.277',pvp:27},{desc:'Estructura soporte (1ud)',ref:'30.26.277',pvp:26},{desc:'Toallero frontal/lateral 32-42cm',ref:'30.45.277',pvp:45},{desc:'Ampliación fondo hasta 53cm',pvp_pct:15,desc2:'(+15% s/precio base)'}]
+    seno:  [{ref:'30.353.277',pvp:353},{ref:'30.373.277',pvp:373},{ref:'30.397.277',pvp:397},{ref:'30.420.277',pvp:420},{ref:'30.443.277',pvp:443},{ref:'30.467.277',pvp:467},{ref:'30.491.277',pvp:491},{ref:'30.568.277',pvp:568},{ref:'30.592.277',pvp:592},{ref:'30.615.277',pvp:615},{ref:'30.639.277',pvp:639},{ref:'30.664.277',pvp:664},{ref:'30.821.277',pvp:821}],
+    faldon:[{ref:'30.562.277',pvp:562},{ref:'30.601.277',pvp:601},{ref:'30.647.277',pvp:647},{ref:'30.696.277',pvp:696},{ref:'30.742.277',pvp:742},{ref:'30.790.277',pvp:790},{ref:'30.837.277',pvp:837},{ref:'30.945.277',pvp:945},{ref:'30.994.277',pvp:994},{ref:'30.1040.277',pvp:1040},{ref:'30.1088.277',pvp:1088},{ref:'30.1136.277',pvp:1136},{ref:'30.1334.277',pvp:1334}],
+    acc:[{desc:'Seno adicional',ref:'30.170.277',pvp:170},{desc:'Rebosadero',ref:'30.27.277',pvp:27},{desc:'Estructura soporte',ref:'30.26.277',pvp:26},{desc:'Toallero 32-42cm',ref:'30.45.277',pvp:45}]
+  },
+  // ── KRION® HERA (tablero fijo, variantes) ───────────────────────────────
+  HERA: {
+    type:'configs', fab:'KRION®', color:'#0f4c75',
+    desc:'Tablero lavabo KRION® · 121×46cm · Integración en mueble · Blanco',
+    items:[
+      {label:'1 Seno 121×46',              ref:'EGCH121x46',   pvp:230},
+      {label:'1 Seno 121×46 + Rebosadero', ref:'EGCHRM121x46', pvp:499},
+      {label:'2 Senos 121×46',             ref:'EGCH121x46-2', pvp:245},
+      {label:'2 Senos 141×46 + Rebosadero',ref:'EGCHRM141D',   pvp:599},
+    ]
+  },
+  // ── KRION® JAZZ / SOUL / ROCK / VULCANO (precio único) ──────────────────
+  JAZZ: {
+    type:'fixed', fab:'KRION®', color:'#1a4a6b',
+    desc:'Mueble lavabo suspendido KRION® · 1 seno · Blanco',
+    ref:'MSSIJ', pvp:565
+  },
+  SOUL: {
+    type:'fixed', fab:'KRION®', color:'#3d1a4a',
+    desc:'Mueble lavabo suspendido KRION® · Doble seno 150cm · Blanco',
+    ref:'MSSIS', pvp:1125
+  },
+  ROCK: {
+    type:'fixed', fab:'KRION®', color:'#2c3e50',
+    desc:'Lavabo sobre encimera KRION® orgánico · Sin rebosadero · Blanco',
+    ref:'LAV.SOL.ROCK', pvp:969
+  },
+  VULCANO: {
+    type:'fixed', fab:'KRION®', color:'#4a1942',
+    desc:'Tablero encimera KRION® · 121×46cm · Blanco',
+    ref:'ESSIV121X46', pvp:995
+  },
+  // ── KRION® HARLEM (mueble, varias anchuras) ─────────────────────────────
+  HARLEM: {
+    type:'sizes', fab:'KRION®', color:'#1e5f4a',
+    desc:'Mueble lavabo suspendido KRION® · Sin rebosadero · Blanco',
+    items:[
+      {label:'50 cm',  ref:'LAV.HARLEM50',  pvp:436},
+      {label:'60 cm',  ref:'LAV.HARLEM60',  pvp:455},
+      {label:'80 cm',  ref:'LAV.HARLEM80',  pvp:490},
+      {label:'100 cm', ref:'LAV.HARLEM100', pvp:530},
+    ]
+  },
+  // ── KRION® TIBET (tablero encimera varias medidas) ──────────────────────
+  TIBET: {
+    type:'sizes', fab:'KRION®', color:'#5f3a1e',
+    desc:'Tablero encimera KRION® · Fondo 46cm · Sin faldón · Blanco',
+    items:[
+      {label:'71×46',  ref:'ESSITT71X46',  pvp:245},
+      {label:'81×46',  ref:'ESSITT81X46',  pvp:266},
+      {label:'101×46', ref:'ESSITT101X46', pvp:345},
+      {label:'121×46', ref:'ESSITT121X46', pvp:381},
+    ]
+  },
+  // ── ART&BATH PORCELANA con acabados ─────────────────────────────────────
+  FLAVIA: {
+    type:'acabados', fab:'Art&bath', color:'#7b2d8b',
+    desc:'Sobre encimera porcelana Art&bath · Ø360mm · Sin rebosadero',
+    items:[
+      {label:'Blanco Brillo', ref:'LAV.FLAVIA',   pvp:120},
+      {label:'Blanco Mate',   ref:'LAV.FLAVIABM', pvp:175},
+    ]
+  },
+  LUCIO: {
+    type:'acabados', fab:'Art&bath', color:'#8b2d5a',
+    desc:'Sobre encimera porcelana Art&bath · 500×320mm · Sin rebosadero',
+    items:[
+      {label:'Blanco Brillo', ref:'LAV.LUCIOBB',  pvp:125},
+      {label:'Blanco Mate',   ref:'LAV.LUCIOBM',  pvp:190},
+    ]
+  },
+  MAXIMO: {
+    type:'acabados', fab:'Art&bath', color:'#2d5a8b',
+    desc:'Sobre encimera porcelana Art&bath · Sin rebosadero · Circular',
+    items:[
+      {label:'Blanco Brillo', ref:'LAV.MAXIMO',   pvp:130},
+      {label:'Blanco Mate',   ref:'LAV.MAXIMOBM', pvp:190},
+      {label:'Negro Mate',    ref:'LAV.MAXIMONM', pvp:190},
+    ]
+  },
+  VITO: {
+    type:'acabados', fab:'Art&bath', color:'#5a2d8b',
+    desc:'Sobre encimera porcelana Art&bath · 400×290mm · Sin rebosadero',
+    items:[
+      {label:'Blanco Brillo', ref:'LAV.VITOBB',  pvp:296},
+      {label:'Blanco Mate',   ref:'LAV.VITOBM',  pvp:378},
+      {label:'Negro Mate',    ref:'LAV.VITONM',  pvp:439},
+    ]
+  },
+  FURNAS: {
+    type:'acabados', fab:'Art&bath', color:'#8b5a2d',
+    desc:'Sobre encimera porcelana Art&bath · 500×380mm · Agujero grifo incl.',
+    items:[
+      {label:'Blanco Brillo', ref:'LAV.FURNASBB', pvp:107},
+      {label:'Blanco Mate',   ref:'LAV.FURNASBM', pvp:163},
+      {label:'Negro Mate',    ref:'LAV.FURNASN',  pvp:163},
+    ]
+  },
+  // ── ART&BATH precio único ────────────────────────────────────────────────
+  ICON: {
+    type:'fixed', fab:'Art&bath', color:'#2d6b8b',
+    desc:'Sobre encimera porcelana Art&bath · Blanco Brillo · Diseño circular',
+    ref:'LAV.ICON', pvp:765
+  },
+  EOS: {
+    type:'fixed', fab:'Art&bath', color:'#6b2d2d',
+    desc:'Sobre encimera porcelana Art&bath · Blanco Brillo · Diseño rectangular',
+    ref:'LAV.EOS', pvp:820
+  },
+  DALLAS: {
+    type:'fixed', fab:'Art&bath', color:'#2d7a5a',
+    desc:'Sobre encimera porcelana Art&bath · Blanco Brillo · Con rebosadero',
+    ref:'LAV.DALLAS', pvp:108
+  },
+  TORMES: {
+    type:'fixed', fab:'Art&bath', color:'#5a7a2d',
+    desc:'Sobre encimera porcelana Art&bath · Blanco Brillo · Con grifo y rebosadero',
+    ref:'LAV.TORMES', pvp:131
+  },
+  EUROPA: {
+    type:'fixed', fab:'Art&bath', color:'#7a5a2d',
+    desc:'Sobre encimera porcelana Art&bath · Blanco Brillo · Sin rebosadero',
+    ref:'LAV.EUROPA', pvp:130
   }
 }
 
@@ -12329,16 +12455,14 @@ const LAV_TIPOS = {
 let IMEX_LAVABOS = (function(){
   const list = [];
   Object.entries(LAV_MODELOS).forEach(([modelo, data])=>{
-    data.medidas_seno.forEach((med, i)=>{
-      const d = data.seno[i];
-      if(!d) return;
-      list.push({ ref: d.ref, desc: modelo+' '+med+' — 1 Seno', serie: modelo, pvp: d.pvp, _modelo: modelo, _medida: med, _tipo: '1S' });
-    });
-    data.medidas_faldon.forEach((med, i)=>{
-      const d = data.faldon[i];
-      if(!d) return;
-      list.push({ ref: d.ref, desc: modelo+' '+med+' — 1 Seno + Faldón', serie: modelo, pvp: d.pvp, _modelo: modelo, _medida: med, _tipo: '1SF' });
-    });
+    if(data.type==='linear'){
+      (data.medidas_seno||[]).forEach((med,i)=>{ const d=data.seno[i]; if(d) list.push({ref:d.ref,desc:modelo+' '+med+' — 1 Seno',serie:modelo,pvp:d.pvp,fab:data.fab}); });
+      (data.medidas_faldon||[]).forEach((med,i)=>{ const d=data.faldon[i]; if(d) list.push({ref:d.ref,desc:modelo+' '+med+' — 1 Seno+Faldón',serie:modelo,pvp:d.pvp,fab:data.fab}); });
+    } else if(data.type==='fixed'){
+      list.push({ref:data.ref,desc:modelo,serie:modelo,pvp:data.pvp,fab:data.fab});
+    } else if(data.items){
+      (data.items||[]).forEach(it=>list.push({ref:it.ref,desc:modelo+' '+it.label,serie:modelo,pvp:it.pvp,fab:data.fab}));
+    }
   });
   return list;
 })();
@@ -13602,237 +13726,365 @@ function campEditSetAcabado(tipo, idx, val){
 let lavState = { modelo: null, tipo: null, medida: null };
 
 function lavInit(){
-  lavState = { modelo: null, tipo: null, medida: null };
+  lavState = { modelo: null, tipo: null, medida: null, itemIdx: null };
   lavRender();
 }
 
 function lavRender(){
-  // Target: either camp-wizard div or a dedicated lav area
   const container = document.getElementById('lav-wizard');
   if(!container) return;
 
   const modeloNames = Object.keys(LAV_MODELOS);
-  const { modelo, tipo, medida } = lavState;
-  const step = modelo===null ? 0 : tipo===null ? 1 : medida===null ? 2 : 3;
+  const { modelo, tipo, medida, itemIdx } = lavState;
+  const data = modelo ? LAV_MODELOS[modelo] : null;
 
   let h = '';
 
-  // ── Breadcrumb ──
-  h += '<div style="display:flex;gap:0;margin-bottom:12px;background:var(--sand);border-radius:var(--radius-sm);overflow:hidden">';
-  const steps = [{id:0,label:'Modelo',val:modelo},{id:1,label:'Tipo',val:tipo ? LAV_TIPOS[tipo] : null},{id:2,label:'Medida',val:medida}];
-  steps.forEach((s,i)=>{
-    const isDone = i < step;
-    const isActive = i === step;
-    const bg = isActive ? 'var(--navy)' : isDone ? 'var(--navy-mid)' : 'var(--sand)';
-    const col = (isDone||isActive) ? '#fff' : 'var(--text-soft)';
-    h += `<div style="flex:1;padding:7px 10px;background:${bg};color:${col};font-size:11px;font-weight:700;text-align:center;cursor:${isDone?'pointer':'default'};transition:all .15s" onclick="if(${isDone})lavReset(${i})">`;
-    h += `<div>${s.label}</div><div style="font-size:10px;font-weight:400;opacity:.75;margin-top:1px">${isDone&&s.val?s.val:(isActive?'Selecciona':'—')}</div>`;
-    h += '</div>';
-    if(i<steps.length-1) h+='<div style="width:1px;background:rgba(255,255,255,.2)"></div>';
-  });
+  // ── Paso 0: Selección de modelo (siempre primero) ────────────────
+  if(!modelo){
+    // Agrupar por fabricante
+    const fabs = {};
+    modeloNames.forEach(m=>{ const f=LAV_MODELOS[m].fab||'Otro'; (fabs[f]||(fabs[f]=[])).push(m); });
+    
+    Object.entries(fabs).forEach(([fab, modelos])=>{
+      h += `<div style="font-size:10px;font-weight:800;color:var(--text-soft);text-transform:uppercase;letter-spacing:.1em;margin-bottom:7px;padding-bottom:4px;border-bottom:1px solid var(--border)">${fab}</div>`;
+      h += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-bottom:14px">';
+      modelos.forEach(m=>{
+        const d = LAV_MODELOS[m];
+        const col = d.color||'var(--navy)';
+        const mPvp = lavMinPvp(m);
+        const typeLabel = {linear:'Encimera medida',configs:'Tablero fijo',fixed:'Precio único',sizes:'Varias anchuras',acabados:'Varios acabados'}[d.type]||d.type;
+        h += `<div onclick="lavSel('modelo','${m}')" class="lav-card" style="border:2px solid var(--border);border-radius:var(--radius);padding:12px;cursor:pointer;background:var(--white);transition:all .15s" onmouseover="this.style.borderColor='${col}';this.style.transform='translateY(-1px)'" onmouseout="this.style.borderColor='var(--border)';this.style.transform=''">`;
+        h += `<div style="width:38px;height:38px;border-radius:50%;background:${col};display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:7px">🪠</div>`;
+        h += `<div style="font-size:13px;font-weight:800;color:${col}">${m}</div>`;
+        h += `<div style="font-size:9px;color:var(--text-soft);margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:.05em">${typeLabel}</div>`;
+        h += `<div style="font-size:10px;color:var(--text-soft);margin-top:3px">${mPvp>0?'desde '+mPvp+'€':''}</div>`;
+        h += '</div>';
+      });
+      h += '</div>';
+    });
+    container.innerHTML = h;
+    return;
+  }
+
+  // ── Breadcrumb ────────────────────────────────────────────────────
+  h += `<div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;flex-wrap:wrap">`;
+  h += `<button onclick="lavReset(0)" style="background:var(--sand);border:1px solid var(--border);border-radius:4px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer;color:var(--navy)">🪠 Lavabos</button>`;
+  h += `<span style="color:var(--border)">›</span>`;
+  h += `<span style="font-size:11px;font-weight:700;color:${data.color||'var(--navy)'};background:var(--sand);padding:3px 10px;border-radius:4px;border:1px solid ${data.color||'var(--border)'}">${modelo}</span>`;
+  if(tipo) { h += `<span style="color:var(--border)">›</span><button onclick="lavReset(1)" style="background:var(--sand);border:1px solid var(--border);border-radius:4px;padding:3px 10px;font-size:11px;cursor:pointer">${LAV_TIPOS[tipo]||tipo}</button>`; }
+  if(medida) { h += `<span style="color:var(--border)">›</span><span style="font-size:11px;background:var(--navy);color:#fff;padding:3px 10px;border-radius:4px">${medida}</span>`; }
+  if(itemIdx!==null && itemIdx!==undefined && !medida) { 
+    const it = (data.items||[])[itemIdx];
+    if(it) h += `<span style="color:var(--border)">›</span><span style="font-size:11px;background:var(--navy);color:#fff;padding:3px 10px;border-radius:4px">${it.label}</span>`;
+  }
   h += '</div>';
 
-  // ── PASO 0: Modelo ──
-  if(step === 0){
-    h += '<div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Selecciona el modelo</div>';
-    h += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px">';
-    modeloNames.forEach(m=>{
-      const data = LAV_MODELOS[m];
-      const nSizes = data.medidas_seno.length;
-      const minPvp = Math.min(...data.seno.map(s=>s.pvp));
-      const maxPvp = Math.max(...data.seno.map(s=>s.pvp));
-      const mColor = data.color || 'var(--navy)';
-      h += `<div onclick="lavSel('modelo','${m}')" style="border:2px solid var(--border);border-radius:var(--radius);padding:14px;cursor:pointer;transition:all .15s;background:var(--white);text-align:center" onmouseover="this.style.borderColor='${mColor}';this.style.background='#f8f9ff'" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--white)'">`;
-      h += `<div style="width:44px;height:44px;border-radius:50%;background:${mColor};display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:22px">🪠</div>`;
-      h += `<div style="font-size:14px;font-weight:800;color:${mColor};letter-spacing:.03em">${m}</div>`;
-      h += `<div style="font-size:10px;color:var(--text-soft);margin-top:4px">${nSizes} medidas · desde ${minPvp}€</div>`;
-      h += `<div style="font-size:10px;color:var(--text-soft);margin-top:3px;line-height:1.3">${data.desc.substring(0,60)}${data.desc.length>60?'…':''}</div>`;
-      h += '</div>';
-    });
-    h += '</div>';
-  }
+  // ── Renderizado según type ────────────────────────────────────────
+  const t = data.type;
 
-  // ── PASO 1: Tipo ──
-  if(step === 1){
-    h += '<div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Tipo de instalación</div>';
-    h += '<div style="display:flex;gap:10px;margin-bottom:10px">';
-    const tipos_disp = [
-      {key:'1S', label:'1 Seno', icon:'🚿', desc:'Sin faldón frontal · Perfil limpio'},
-      {key:'1SF', label:'1 Seno + Faldón', icon:'🛁', desc:'Con faldón frontal · Cubre el mueble'},
-    ];
-    tipos_disp.forEach(t=>{
-      h += `<div onclick="lavSel('tipo','${t.key}')" style="flex:1;border:1.5px solid var(--border);border-radius:var(--radius);padding:14px;cursor:pointer;transition:all .15s;background:var(--white);text-align:center" onmouseover="this.style.borderColor='var(--navy)';this.style.background='var(--blue-light)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--white)'">`;
-      h += `<div style="font-size:28px;margin-bottom:8px">${t.icon}</div>`;
-      h += `<div style="font-size:13px;font-weight:700;color:var(--navy)">${t.label}</div>`;
-      h += `<div style="font-size:10px;color:var(--text-soft);margin-top:4px">${t.desc}</div>`;
-      h += '</div>';
-    });
-    h += '</div>';
-  }
+  // DESC header
+  h += `<div style="font-size:10px;color:var(--text-soft);margin-bottom:10px;background:var(--sand);padding:6px 10px;border-radius:4px;border-left:3px solid ${data.color||'var(--navy)'}">${data.desc} · <b>${data.fab}</b></div>`;
 
-  // ── PASO 2: Medida ──
-  if(step === 2){
-    const data = LAV_MODELOS[modelo];
-    const medidas = tipo==='1S' ? data.medidas_seno : data.medidas_faldon;
-    h += '<div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Medida (Ancho × Fondo)</div>';
-    h += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">';
-    medidas.forEach(m=>{
-      const parts = m.split('x');
-      h += `<div onclick="lavSel('medida','${m}')" style="border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:7px 12px;cursor:pointer;font-size:12px;font-weight:600;color:var(--navy);background:var(--white);transition:all .15s" onmouseover="this.style.borderColor='var(--navy)';this.style.background='var(--blue-light)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--white)'">${parts[0]}<span style="font-size:10px;color:var(--text-soft)">×${parts[1]}cm</span></div>`;
-    });
-    h += '</div>';
-  }
-
-  // ── PASO 3: Resultado ──
-  if(step === 3){
-    const data = LAV_MODELOS[modelo];
-    const medidas = tipo==='1S' ? data.medidas_seno : data.medidas_faldon;
-    const refs    = tipo==='1S' ? data.seno : data.faldon;
-    const idx2    = medidas.indexOf(medida);
-    const item    = idx2 >= 0 ? refs[idx2] : null;
-    if(!item){ h+='<p style="color:var(--red)">Combinación no disponible</p>'; }
-    else {
-      const coste = item.pvp * (1-LAV_DTO);
-      const pvpCli = coste * (1+ixMrg()/100);
-      h += `<div style="background:var(--navy);color:#fff;border-radius:var(--radius);padding:14px 16px;margin-bottom:10px">`;
-      h += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">`;
-      h += `<span style="font-size:18px">🪠</span>`;
-      h += `<div><div style="font-size:14px;font-weight:700">${modelo} ${medida}</div><div style="font-size:11px;opacity:.6">${LAV_TIPOS[tipo]} · Material KRION® Blanco (277)</div></div>`;
-      h += `</div>`;
-      h += `<div style="font-family:monospace;font-size:16px;font-weight:800;background:rgba(255,255,255,.15);padding:5px 12px;border-radius:4px;display:inline-block;margin-bottom:10px">${item.ref}</div>`;
-      h += `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:4px">`;
-      h += `<div><div style="font-size:9px;opacity:.5;text-transform:uppercase">PVP tarifa</div><div style="font-size:16px;font-weight:700">${item.pvp.toFixed(2)} €</div></div>`;
-      h += `<div><div style="font-size:9px;opacity:.5;text-transform:uppercase">Coste PAU (dto ${Math.round(LAV_DTO*100)}%)</div><div style="font-size:16px;font-weight:700;color:#7dd3fc">${coste.toFixed(2)} €</div></div>`;
-      h += `<div><div style="font-size:9px;opacity:.5;text-transform:uppercase">PVP cliente (+${ixMrg()}%)</div><div style="font-size:16px;font-weight:700;color:#86efac">${pvpCli.toFixed(2)} €</div></div>`;
-      h += '</div></div>';
-
-      // Campo nota
-      h += `<div style="margin-bottom:10px;display:flex;align-items:center;gap:8px;background:#fffbf0;border:1px dashed #d4a040;border-radius:6px;padding:7px 10px">`;
-      h += `<span style="font-size:13px">📝</span>`;
-      h += `<div style="flex:1"><div style="font-size:10px;font-weight:700;color:#7a5c20;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Nota / Especificación (opcional)</div>`;
-      h += `<input type="text" id="lav-nota-input" placeholder="Ej: medida real 78cm, instalación sobre encimera…" style="width:100%;border:none;border-bottom:1.5px solid #d4a040;background:transparent;font-size:11px;color:var(--text);padding:2px 0;outline:none"></div>`;
-      h += '</div>';
-
-      // Accesorios
-      if(data.acc && data.acc.length){
-        h += '<div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Accesorios opcionales</div>';
-        h += '<div style="background:var(--sand);border-radius:var(--radius-sm);overflow:hidden">';
-        data.acc.forEach((a,ai)=>{
-          const aCoste = a.pvp ? a.pvp*(1-LAV_DTO) : null;
-          const aPvpCli = aCoste ? aCoste*(1+ixMrg()/100) : null;
-          h += `<div style="display:grid;grid-template-columns:1fr ${a.ref?'80px 80px 32px':'auto'};gap:6px;align-items:center;padding:7px 10px;border-bottom:1px solid var(--border)">`;
-          h += `<span style="font-size:11px;color:var(--text)">${a.desc}${a.desc2?' <span style="opacity:.5;font-size:10px">'+a.desc2+'</span>':''}</span>`;
-          if(a.ref){
-            h += `<span style="font-size:11px;color:var(--text-soft);text-align:right">${aCoste?aCoste.toFixed(2)+'€':'—'}</span>`;
-            h += `<span style="font-size:11px;color:var(--copper);text-align:right">${aPvpCli?aPvpCli.toFixed(2)+'€':'—'}</span>`;
-            h += `<button class="camp-ac-btn" onclick="lavAnadirAcc(${ai},'${modelo}')" title="Añadir">+</button>`;
-          } else {
-            h += `<span style="font-size:10px;color:var(--text-soft)">consultar</span>`;
-          }
-          h += '</div>';
-        });
-        h += '</div>';
-      }
-
-      // Botón añadir
-      h += `<div style="margin-top:12px;display:flex;gap:8px">`;
-      h += `<button onclick="lavAnadir('${modelo}','${medida}','${tipo}',${item.pvp},'${item.ref}')" class="btn btn-copper" style="flex:1;justify-content:center;font-size:12px">+ Añadir a valoración</button>`;
-      h += `<button onclick="lavReset(0)" class="btn btn-ghost btn-sm">↩ Nuevo</button>`;
-      h += '</div>';
+  // ── LINEAR: 3 pasos (tipo → medida → resultado) ───────────────────
+  if(t==='linear'){
+    if(!tipo){
+      h += lavRenderTipos(modelo, data);
+    } else if(!medida){
+      h += lavRenderMedidas(modelo, data, tipo);
+    } else {
+      h += lavRenderResultado(modelo, data, tipo, medida);
     }
+  }
+  // ── CONFIGS: lista de configuraciones fijas ────────────────────────
+  else if(t==='configs'){
+    if(itemIdx===null || itemIdx===undefined){
+      h += '<div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Selecciona la configuración</div>';
+      h += '<div style="display:grid;gap:6px">';
+      data.items.forEach((it,i)=>{
+        const coste = it.pvp*(1-LAV_DTO);
+        const pvpCli = coste*(1+ixMrg()/100);
+        h += `<div onclick="lavSel('itemIdx',${i})" style="display:grid;grid-template-columns:1fr 80px 80px 36px;align-items:center;gap:8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;cursor:pointer;background:var(--white);transition:all .15s" onmouseover="this.style.borderColor='${data.color}';this.style.background='#f8f9ff'" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--white)'">`;
+        h += `<div><div style="font-size:12px;font-weight:700">${it.label}</div><div style="font-family:monospace;font-size:10px;color:var(--text-soft)">${it.ref}</div></div>`;
+        h += `<div style="text-align:right"><div style="font-size:9px;color:var(--text-soft)">Tarifa</div><div style="font-size:12px;font-weight:700">${it.pvp}€</div></div>`;
+        h += `<div style="text-align:right"><div style="font-size:9px;color:var(--text-soft)">Cliente</div><div style="font-size:12px;font-weight:700;color:var(--copper)">${pvpCli.toFixed(0)}€</div></div>`;
+        h += `<div style="width:30px;height:30px;background:${data.color};border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:700">+</div>`;
+        h += '</div>';
+      });
+      h += '</div>';
+    } else {
+      h += lavRenderItemResult(modelo, data, itemIdx);
+    }
+  }
+  // ── SIZES: varias anchuras ────────────────────────────────────────
+  else if(t==='sizes'){
+    if(itemIdx===null || itemIdx===undefined){
+      h += '<div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Selecciona la medida / anchura</div>';
+      h += '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">';
+      data.items.forEach((it,i)=>{
+        const pvpCli = (it.pvp*(1-LAV_DTO))*(1+ixMrg()/100);
+        h += `<div onclick="lavSel('itemIdx',${i})" style="border:2px solid var(--border);border-radius:var(--radius);padding:12px 16px;cursor:pointer;text-align:center;background:var(--white);min-width:90px;transition:all .15s" onmouseover="this.style.borderColor='${data.color}';this.style.background='#f8f9ff'" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--white)'">`;
+        h += `<div style="font-size:16px;font-weight:800;color:${data.color}">${it.label}</div>`;
+        h += `<div style="font-size:10px;color:var(--text-soft);margin-top:3px">${it.pvp}€ tarifa</div>`;
+        h += `<div style="font-size:10px;color:var(--copper);font-weight:700">${pvpCli.toFixed(0)}€ cliente</div>`;
+        h += '</div>';
+      });
+      h += '</div>';
+    } else {
+      h += lavRenderItemResult(modelo, data, itemIdx);
+    }
+  }
+  // ── ACABADOS: seleccionar acabado ─────────────────────────────────
+  else if(t==='acabados'){
+    if(itemIdx===null || itemIdx===undefined){
+      h += '<div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Selecciona el acabado</div>';
+      h += '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">';
+      data.items.forEach((it,i)=>{
+        const isMate = it.label.toLowerCase().includes('mate');
+        const isNegro = it.label.toLowerCase().includes('negro');
+        const bg = isNegro?'#222':isMate?'#e8e8e8':'#fff';
+        const fg = isNegro?'#fff':isMate?'#333':'#000';
+        const pvpCli = (it.pvp*(1-LAV_DTO))*(1+ixMrg()/100);
+        h += `<div onclick="lavSel('itemIdx',${i})" style="border:2px solid var(--border);border-radius:var(--radius);padding:14px;cursor:pointer;text-align:center;background:var(--white);min-width:110px;transition:all .15s" onmouseover="this.style.borderColor='${data.color}';this.style.transform='translateY(-1px)'" onmouseout="this.style.borderColor='var(--border)';this.style.transform=''">`;
+        h += `<div style="width:44px;height:44px;border-radius:50%;background:${bg};border:2px solid ${isNegro?'#555':isMate?'#bbb':'#ddd'};margin:0 auto 8px;box-shadow:inset 0 2px 4px rgba(0,0,0,.1)"></div>`;
+        h += `<div style="font-size:11px;font-weight:700;color:var(--text)">${it.label}</div>`;
+        h += `<div style="font-size:10px;color:var(--text-soft);margin-top:3px">${it.pvp}€ tarifa</div>`;
+        h += `<div style="font-size:10px;color:var(--copper);font-weight:700">${pvpCli.toFixed(0)}€ cliente</div>`;
+        h += '</div>';
+      });
+      h += '</div>';
+    } else {
+      h += lavRenderItemResult(modelo, data, itemIdx);
+    }
+  }
+  // ── FIXED: resultado directo ──────────────────────────────────────
+  else if(t==='fixed'){
+    h += lavRenderFixed(modelo, data);
   }
 
   container.innerHTML = h;
 }
 
+function lavMinPvp(m){
+  const d = LAV_MODELOS[m];
+  if(!d) return 0;
+  if(d.type==='linear') return Math.min(...(d.seno||[]).map(s=>s.pvp));
+  if(d.type==='fixed') return d.pvp||0;
+  if(d.items) return Math.min(...d.items.map(it=>it.pvp));
+  return 0;
+}
+
+function lavRenderTipos(modelo, data){
+  let h = '<div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Tipo de instalación</div>';
+  h += '<div style="display:flex;gap:10px;margin-bottom:10px">';
+  const tipos=[{key:'1S',icon:'🚿',label:'1 Seno',sub:'Sin faldón frontal'},{key:'1SF',icon:'🛁',label:'1 Seno + Faldón',sub:'Con faldón frontal'}];
+  tipos.forEach(t=>{
+    const minP = Math.min(...(t.key==='1S'?data.seno:data.faldon).map(s=>s.pvp));
+    h += `<div onclick="lavSel('tipo','${t.key}')" style="flex:1;border:1.5px solid var(--border);border-radius:var(--radius);padding:14px;cursor:pointer;text-align:center;background:var(--white);transition:all .15s" onmouseover="this.style.borderColor='${data.color}';this.style.background='#f8f9ff'" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--white)'">`;
+    h += `<div style="font-size:28px;margin-bottom:6px">${t.icon}</div>`;
+    h += `<div style="font-size:13px;font-weight:700;color:var(--navy)">${t.label}</div>`;
+    h += `<div style="font-size:10px;color:var(--text-soft);margin-top:3px">${t.sub}</div>`;
+    h += `<div style="font-size:11px;color:var(--copper);font-weight:700;margin-top:5px">desde ${minP}€</div>`;
+    h += '</div>';
+  });
+  h += '</div>';
+  return h;
+}
+
+function lavRenderMedidas(modelo, data, tipo){
+  const medidas = tipo==='1S' ? data.medidas_seno : data.medidas_faldon;
+  let h = '<div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Medida (Ancho × Fondo)</div>';
+  h += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">';
+  const refs = tipo==='1S' ? data.seno : data.faldon;
+  medidas.forEach((m,i)=>{
+    const p = refs[i];
+    const pvpCli = p ? ((p.pvp*(1-LAV_DTO))*(1+ixMrg()/100)).toFixed(0) : '?';
+    const parts = m.split('x');
+    h += `<div onclick="lavSel('medida','${m}')" style="border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;cursor:pointer;background:var(--white);transition:all .15s;text-align:center" onmouseover="this.style.borderColor='${data.color}';this.style.background='#f8f9ff'" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--white)'">`;
+    h += `<div style="font-size:13px;font-weight:700;color:${data.color}">${parts[0]}<span style="font-size:10px;color:var(--text-soft)">×${parts[1]}cm</span></div>`;
+    h += `<div style="font-size:10px;color:var(--copper);font-weight:700;margin-top:2px">${pvpCli}€</div>`;
+    h += '</div>';
+  });
+  h += '</div>';
+  return h;
+}
+
+function lavRenderResultado(modelo, data, tipo, medida){
+  const medidas = tipo==='1S' ? data.medidas_seno : data.medidas_faldon;
+  const refs    = tipo==='1S' ? data.seno : data.faldon;
+  const idx2    = medidas.indexOf(medida);
+  const item    = idx2>=0 ? refs[idx2] : null;
+  if(!item) return '<p style="color:var(--red)">Combinación no disponible</p>';
+  return lavResultCard({ref:item.ref,pvp:item.pvp,label:`${modelo} ${medida} — ${LAV_TIPOS[tipo]||tipo}`,modelo,data,nota:true,accList:data.acc});
+}
+
+function lavRenderItemResult(modelo, data, idx2){
+  const it = (data.items||[])[idx2];
+  if(!it) return '<p>Item no encontrado</p>';
+  return lavResultCard({ref:it.ref,pvp:it.pvp,label:`${modelo} ${it.label}`,modelo,data,nota:true,accList:null});
+}
+
+function lavRenderFixed(modelo, data){
+  return lavResultCard({ref:data.ref,pvp:data.pvp,label:modelo,modelo,data,nota:true,accList:null});
+}
+
+function lavResultCard({ref,pvp,label,modelo,data,nota,accList}){
+  const coste = pvp*(1-LAV_DTO);
+  const pvpCli = coste*(1+ixMrg()/100);
+  const col = data.color||'var(--navy)';
+  let h = `<div style="background:${col};color:#fff;border-radius:var(--radius);padding:14px 16px;margin-bottom:10px">`;
+  h += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">`;
+  h += `<span style="font-size:20px">🪠</span>`;
+  h += `<div><div style="font-size:14px;font-weight:700">${label}</div><div style="font-size:10px;opacity:.6">${data.fab} · ${data.desc.substring(0,60)}${data.desc.length>60?'…':''}</div></div>`;
+  h += '</div>';
+  h += `<div style="font-family:monospace;font-size:15px;font-weight:800;background:rgba(255,255,255,.15);padding:4px 12px;border-radius:4px;display:inline-block;margin-bottom:10px">${ref}</div>`;
+  h += `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">`;
+  h += `<div><div style="font-size:9px;opacity:.5;text-transform:uppercase">PVP tarifa</div><div style="font-size:16px;font-weight:700">${pvp.toFixed(2)}€</div></div>`;
+  h += `<div><div style="font-size:9px;opacity:.5;text-transform:uppercase">Coste PAU (−${Math.round(LAV_DTO*100)}%)</div><div style="font-size:16px;font-weight:700;color:#7dd3fc">${coste.toFixed(2)}€</div></div>`;
+  h += `<div><div style="font-size:9px;opacity:.5;text-transform:uppercase">PVP cliente (+${ixMrg()}%)</div><div style="font-size:16px;font-weight:700;color:#86efac">${pvpCli.toFixed(2)}€</div></div>`;
+  h += '</div></div>';
+  if(nota){
+    h += `<div style="display:flex;align-items:center;gap:8px;background:#fffbf0;border:1px dashed #d4a040;border-radius:6px;padding:7px 10px;margin-bottom:10px">`;
+    h += `<span>📝</span><div style="flex:1"><div style="font-size:9px;font-weight:700;color:#7a5c20;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Nota / Especificación</div>`;
+    h += `<input type="text" id="lav-nota-input" placeholder="Ej: instalación sobre encimera de mármol…" style="width:100%;border:none;border-bottom:1.5px solid #d4a040;background:transparent;font-size:11px;padding:2px 0;outline:none"></div>`;
+    h += '</div>';
+  }
+  if(accList && accList.length){
+    h += '<div style="font-size:10px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Accesorios opcionales</div>';
+    h += '<div style="background:var(--sand);border-radius:var(--radius-sm);overflow:hidden">';
+    accList.forEach((a,ai)=>{
+      const aC = a.pvp ? (a.pvp*(1-LAV_DTO)).toFixed(2) : null;
+      const aP = aC ? ((parseFloat(aC))*(1+ixMrg()/100)).toFixed(2) : null;
+      h += `<div style="display:grid;grid-template-columns:1fr ${a.ref?'70px 70px 30px':'auto'};gap:6px;align-items:center;padding:7px 10px;border-bottom:1px solid var(--border)">`;
+      h += `<span style="font-size:11px">${a.desc}${a.desc2?` <span style="opacity:.5;font-size:10px">${a.desc2}</span>`:''}</span>`;
+      if(a.ref){
+        h += `<span style="font-size:11px;color:var(--text-soft);text-align:right">${aC}€</span>`;
+        h += `<span style="font-size:11px;color:var(--copper);text-align:right">${aP}€</span>`;
+        h += `<button class="camp-ac-btn" onclick="lavAnadirAccItem(${ai},'${modelo}')" title="Añadir">+</button>`;
+      } else { h += `<span style="font-size:10px;color:var(--text-soft)">consultar</span>`; }
+      h += '</div>';
+    });
+    h += '</div>';
+  }
+  h += `<div style="margin-top:10px;display:flex;gap:8px">`;
+  h += `<button onclick="lavAnadirResult('${modelo}','${ref}',${pvp})" class="btn btn-copper" style="flex:1;justify-content:center;font-size:12px">+ Añadir a valoración</button>`;
+  h += `<button onclick="lavReset(0)" class="btn btn-ghost btn-sm">↩ Nueva búsqueda</button>`;
+  h += '</div>';
+  return h;
+}
+
+function lavAnadirResult(modelo, ref, pvp){
+  const nota = (document.getElementById('lav-nota-input')?.value||'').trim();
+  const coste = pvp*(1-LAV_DTO);
+  const container = document.getElementById('lav-wizard');
+  const labelEl = container ? container.querySelector('[style*="font-size:14px;font-weight:700"]') : null;
+  const desc = labelEl ? labelEl.textContent : (modelo+' '+ref);
+  const data = LAV_MODELOS[modelo]||{};
+  const ex = ixLineas.find(l=>l.ref===ref && l.nota===(nota||''));
+  if(ex){ ex.cant++; ixRenderBud(); toast('+1 · '+ref,'success'); return; }
+  ixLineas.push({id:++ixIdN,ref,desc:'Art&bath/KRION® '+desc,serie:(data.fab||'Lavabo')+'·'+modelo,pvp,cst:parseFloat(coste.toFixed(2)),cant:1,nota,_lavabo:true});
+  ixRenderBud();
+  toast('✅ '+modelo+' añadido','success');
+}
+
+function lavAnadirAccItem(accIdx, modelo){
+  const data = LAV_MODELOS[modelo];
+  const acc = (data.acc||data.items||[])[accIdx];
+  if(!acc||!acc.ref){ toast('Accesorio sin referencia directa — consultar','info'); return; }
+  const coste = acc.pvp*(1-LAV_DTO);
+  const desc = (data.fab||'KRION®')+' Acc. '+acc.desc+' ('+modelo+')';
+  ixLineas.push({id:++ixIdN,ref:acc.ref,desc,serie:(data.fab||'Lavabo')+'·'+modelo,pvp:acc.pvp,cst:parseFloat(coste.toFixed(2)),cant:1,_lavabo:true});
+  ixRenderBud();
+  toast('✅ Accesorio añadido','success');
+}
 function lavSel(field, value){
   lavState[field] = value;
-  if(field==='modelo') lavState.tipo = null;
-  if(field==='modelo'||field==='tipo') lavState.medida = null;
+  if(field==='modelo'){ lavState.tipo=null; lavState.medida=null; lavState.itemIdx=null; }
+  if(field==='tipo')  { lavState.medida=null; lavState.itemIdx=null; }
   lavRender();
 }
 
 function lavReset(toStep){
-  if(toStep<=0) lavState = { modelo:null, tipo:null, medida:null };
-  else if(toStep<=1) { lavState.tipo=null; lavState.medida=null; }
-  else { lavState.medida=null; }
+  if(toStep<=0) lavState = {modelo:null,tipo:null,medida:null,itemIdx:null};
+  else if(toStep<=1){ lavState.tipo=null; lavState.medida=null; lavState.itemIdx=null; }
+  else { lavState.medida=null; lavState.itemIdx=null; }
   lavRender();
 }
 
-function lavAnadir(modelo, medida, tipo, pvp, ref){
-  const nota = (document.getElementById('lav-nota-input')?.value||'').trim();
-  const coste = pvp * (1 - LAV_DTO);
-  const desc = 'KRION® '+modelo+' '+medida+' — '+LAV_TIPOS[tipo];
-  const ex = ixLineas.find(l=>l.ref===ref && l.desc===desc && (l.nota||'')===(nota||''));
-  if(ex){ ex.cant++; ixRenderBud(); toast('+1 · '+modelo+' '+medida,'success'); return; }
-  ixLineas.push({ id:++ixIdN, ref, desc, serie:'KRION·'+modelo, pvp, cst: parseFloat(coste.toFixed(2)), cant:1, nota, _lavabo:true });
-  ixRenderBud();
-  toast('✅ '+modelo+' '+medida+' añadido','success');
-}
-
-function lavAnadirAcc(accIdx, modelo){
-  const data = LAV_MODELOS[modelo];
-  const acc = data.acc[accIdx];
-  if(!acc || !acc.ref) { toast('Accesorio sin referencia directa — consultar', 'info'); return; }
-  const coste = acc.pvp * (1-LAV_DTO);
-  const desc = 'KRION® Acc. '+acc.desc+' ('+modelo+')';
-  ixLineas.push({ id:++ixIdN, ref:acc.ref, desc, serie:'KRION·'+modelo, pvp:acc.pvp, cst:parseFloat(coste.toFixed(2)), cant:1, _lavabo:true });
-  ixRenderBud();
-  toast('✅ Accesorio añadido','success');
-}
+// lavAnadir/lavAnadirAcc → reemplazados por lavAnadirResult/lavAnadirAccItem
 // ──────────────────────────────────────────────────────────────────
 // ══════════════════════════════════════════════════
 // EDITOR DE LAVABOS
 // ══════════════════════════════════════════════════
 function campEditRenderLavabos(body){
-  const draft = _campEditDraft.lavabos; // { AUSTIN: {...}, BALCA: {...}, APOLO: {...} }
-  let activeModel = _lavEditModel || Object.keys(draft)[0];
-  _lavEditModel = activeModel;
+  const draft = _campEditDraft.lavabos;
+  const modelNames = Object.keys(draft);
+  let active = _lavEditModel || modelNames[0];
+  _lavEditModel = active;
+  const data = draft[active];
 
-  let h = '<div style="font-size:10px;color:var(--text-soft);margin-bottom:8px">Edita los precios PVP de tarifa por modelo. Pulsa <b>Aplicar cambios</b> para guardar.</div>';
+  let h = '<div style="font-size:10px;color:var(--text-soft);background:var(--sand);padding:6px 10px;border-radius:4px;margin-bottom:10px">Edita precios PVP de tarifa y referencias por modelo. Pulsa <b>Aplicar cambios</b> para guardar.</div>';
 
-  // Tabs de modelo
-  h += '<div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:10px">';
-  Object.keys(draft).forEach(m=>{
-    const active = m===activeModel;
-    h += `<button onclick="lavEditSelModel('${m}')" style="flex:1;padding:6px;font-size:12px;font-weight:600;border:none;cursor:pointer;background:${active?'var(--navy)':'var(--sand)'};color:${active?'#fff':'var(--text-mid)'};border-radius:0">${m}</button>`;
+  // Pestañas de modelo
+  h += '<div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:12px;overflow-x:auto">';
+  modelNames.forEach(m=>{
+    const d = draft[m];
+    const isActive = m===active;
+    const col = d.color||'var(--navy)';
+    const fabBadge = d.fab==='Art&bath' ? '<span style="font-size:8px;background:#7b2d8b;color:#fff;padding:1px 5px;border-radius:10px;margin-left:4px">A&B</span>' : '';
+    h += `<button onclick="lavEditSelModel('${m}')" style="padding:6px 10px;font-size:11px;font-weight:700;border:none;border-bottom:${isActive?'2px solid '+col:'2px solid transparent'};cursor:pointer;background:${isActive?'var(--white)':'var(--sand)'};color:${isActive?col:'var(--text-soft)'};white-space:nowrap">${m}${fabBadge}</button>`;
   });
   h += '</div>';
 
-  const data = draft[activeModel];
-  if(!data){ body.innerHTML=h+'<p>No hay datos</p>'; return; }
+  if(!data){ body.innerHTML=h+'<p>Sin datos</p>'; return; }
 
-  // Tabla 1 SENO
-  h += '<div style="font-size:11px;font-weight:700;color:var(--navy);margin-bottom:6px">1 Seno (sin faldón)</div>';
-  h += '<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:12px">';
-  h += '<thead><tr style="background:var(--navy);color:#fff"><th style="padding:5px 8px;width:80px">Medida</th><th style="padding:5px 8px">Referencia</th><th style="padding:5px 8px;width:90px;text-align:right">PVP tarifa</th></tr></thead><tbody>';
-  data.medidas_seno.forEach((med,i)=>{
-    const d = data.seno[i]||{};
-    h += `<tr style="border-bottom:1px solid var(--border)">
-      <td style="padding:4px 8px;font-weight:600;color:var(--navy)">${med}</td>
-      <td style="padding:4px 8px;font-family:monospace"><input class="form-input" style="padding:2px 5px;font-size:11px;font-family:monospace" value="${ixH(d.ref||'')}" onchange="lavEditSetPvp('${activeModel}','seno',${i},'ref',this.value)"></td>
-      <td style="padding:4px 8px"><input class="form-input" style="padding:2px 5px;font-size:11px;text-align:right" type="number" step="1" value="${d.pvp||0}" onchange="lavEditSetPvp('${activeModel}','seno',${i},'pvp',parseFloat(this.value)||0)"></td>
-    </tr>`;
-  });
-  h += '</tbody></table>';
+  h += `<div style="font-size:10px;background:var(--sand);padding:5px 10px;border-radius:4px;margin-bottom:8px;border-left:3px solid ${data.color||'var(--navy)'}"><b>${data.fab||''}</b> · ${data.desc||''} · Tipo: <b>${data.type}</b></div>`;
 
-  // Tabla 1 SENO+FALDON
-  h += '<div style="font-size:11px;font-weight:700;color:var(--navy);margin-bottom:6px">1 Seno + Faldón</div>';
-  h += '<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:12px">';
-  h += '<thead><tr style="background:var(--navy);color:#fff"><th style="padding:5px 8px;width:80px">Medida</th><th style="padding:5px 8px">Referencia</th><th style="padding:5px 8px;width:90px;text-align:right">PVP tarifa</th></tr></thead><tbody>';
-  data.medidas_faldon.forEach((med,i)=>{
-    const d = data.faldon[i]||{};
-    h += `<tr style="border-bottom:1px solid var(--border)">
-      <td style="padding:4px 8px;font-weight:600;color:var(--navy)">${med}</td>
-      <td style="padding:4px 8px;font-family:monospace"><input class="form-input" style="padding:2px 5px;font-size:11px;font-family:monospace" value="${ixH(d.ref||'')}" onchange="lavEditSetPvp('${activeModel}','faldon',${i},'ref',this.value)"></td>
-      <td style="padding:4px 8px"><input class="form-input" style="padding:2px 5px;font-size:11px;text-align:right" type="number" step="1" value="${d.pvp||0}" onchange="lavEditSetPvp('${activeModel}','faldon',${i},'pvp',parseFloat(this.value)||0)"></td>
-    </tr>`;
-  });
-  h += '</tbody></table>';
+  const t = data.type;
+
+  if(t==='linear'){
+    // Mostrar tabla 1S y 1SF con inputs
+    ['seno','faldon'].forEach(kind=>{
+      const label = kind==='seno' ? '1 Seno' : '1 Seno + Faldón';
+      const meds   = kind==='seno' ? data.medidas_seno : data.medidas_faldon;
+      const refs   = kind==='seno' ? data.seno : data.faldon;
+      h += `<div style="font-size:11px;font-weight:700;color:${data.color||'var(--navy)'};margin-bottom:5px">${label}</div>`;
+      h += '<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:12px">';
+      h += '<thead><tr style="background:var(--navy);color:#fff"><th style="padding:5px 8px;text-align:left;width:70px">Medida</th><th style="padding:5px 8px;text-align:left">Referencia</th><th style="padding:5px 8px;text-align:right;width:85px">PVP tarifa €</th></tr></thead><tbody>';
+      meds.forEach((med,i)=>{
+        const d2 = refs[i]||{};
+        h += `<tr style="border-bottom:1px solid var(--border)"><td style="padding:4px 8px;font-weight:600;color:var(--navy)">${med}</td>`;
+        h += `<td style="padding:4px 6px"><input class="form-input" style="padding:2px 6px;font-size:11px;font-family:monospace;width:100%" value="${ixH(d2.ref||'')}" onchange="lavEditSetPvp('${active}','${kind}',${i},'ref',this.value)"></td>`;
+        h += `<td style="padding:4px 6px"><input class="form-input" style="padding:2px 6px;font-size:11px;text-align:right;width:100%" type="number" step="1" value="${d2.pvp||0}" onchange="lavEditSetPvp('${active}','${kind}',${i},'pvp',parseFloat(this.value)||0)"></td>`;
+        h += '</tr>';
+      });
+      h += '</tbody></table>';
+    });
+  } else if(t==='fixed'){
+    h += '<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:12px">';
+    h += '<thead><tr style="background:var(--navy);color:#fff"><th style="padding:5px 8px;text-align:left">Referencia</th><th style="padding:5px 8px;text-align:right;width:100px">PVP tarifa €</th></tr></thead><tbody>';
+    h += `<tr style="border-bottom:1px solid var(--border)">`;
+    h += `<td style="padding:4px 6px"><input class="form-input" style="padding:2px 6px;font-size:11px;font-family:monospace;width:100%" value="${ixH(data.ref||'')}" onchange="lavEditSetFixed('${active}','ref',this.value)"></td>`;
+    h += `<td style="padding:4px 6px"><input class="form-input" style="padding:2px 6px;font-size:11px;text-align:right;width:100%" type="number" step="1" value="${data.pvp||0}" onchange="lavEditSetFixed('${active}','pvp',parseFloat(this.value)||0)"></td>`;
+    h += '</tr></tbody></table>';
+  } else {
+    // configs, sizes, acabados → items[]
+    const itemLabel = {configs:'Configuración',sizes:'Medida',acabados:'Acabado'}[t]||'Item';
+    h += `<div style="font-size:11px;font-weight:700;color:${data.color||'var(--navy)'};margin-bottom:5px">Items (${itemLabel})</div>`;
+    h += '<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:12px">';
+    h += `<thead><tr style="background:var(--navy);color:#fff"><th style="padding:5px 8px;text-align:left">${itemLabel}</th><th style="padding:5px 8px;text-align:left">Referencia</th><th style="padding:5px 8px;text-align:right;width:85px">PVP tarifa €</th></tr></thead><tbody>`;
+    (data.items||[]).forEach((it,i)=>{
+      h += `<tr style="border-bottom:1px solid var(--border)"><td style="padding:4px 8px;font-size:11px;font-weight:600">${it.label||'—'}</td>`;
+      h += `<td style="padding:4px 6px"><input class="form-input" style="padding:2px 6px;font-size:11px;font-family:monospace;width:100%" value="${ixH(it.ref||'')}" onchange="lavEditSetItem('${active}',${i},'ref',this.value)"></td>`;
+      h += `<td style="padding:4px 6px"><input class="form-input" style="padding:2px 6px;font-size:11px;text-align:right;width:100%" type="number" step="1" value="${it.pvp||0}" onchange="lavEditSetItem('${active}',${i},'pvp',parseFloat(this.value)||0)"></td>`;
+      h += '</tr>';
+    });
+    h += '</tbody></table>';
+  }
 
   // Dto global
-  h += `<div style="display:flex;align-items:center;gap:10px;background:var(--sand);border-radius:var(--radius-sm);padding:8px 12px">`;
-  h += `<span style="font-size:11px;font-weight:700;color:var(--navy)">Descuento PAU aplicado:</span>`;
+  h += `<div style="display:flex;align-items:center;gap:10px;background:var(--sand);border-radius:var(--radius-sm);padding:8px 12px;margin-top:4px">`;
+  h += `<span style="font-size:11px;font-weight:700;color:var(--navy)">Descuento PAU global:</span>`;
   h += `<input type="number" step="1" min="0" max="100" value="${Math.round(LAV_DTO*100)}" onchange="LAV_DTO=parseFloat(this.value)/100" style="width:60px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px">`;
   h += `<span style="font-size:11px;color:var(--text-soft)">% sobre PVP tarifa</span>`;
   h += '</div>';
@@ -13842,11 +14094,20 @@ function campEditRenderLavabos(body){
 
 let _lavEditModel = null;
 function lavEditSelModel(m){ _lavEditModel = m; campEditRender(); }
-function lavEditSetPvp(modelo, tipo, idx, field, val){
-  if(_campEditDraft.lavabos[modelo] && _campEditDraft.lavabos[modelo][tipo][idx]){
-    _campEditDraft.lavabos[modelo][tipo][idx][field] = val;
+function lavEditSetPvp(modelo, tipo, idx2, field, val){
+  if(_campEditDraft.lavabos[modelo] && _campEditDraft.lavabos[modelo][tipo] && _campEditDraft.lavabos[modelo][tipo][idx2]){
+    _campEditDraft.lavabos[modelo][tipo][idx2][field] = val;
   }
 }
+function lavEditSetFixed(modelo, field, val){
+  if(_campEditDraft.lavabos[modelo]) _campEditDraft.lavabos[modelo][field] = val;
+}
+function lavEditSetItem(modelo, idx2, field, val){
+  if(_campEditDraft.lavabos[modelo] && _campEditDraft.lavabos[modelo].items && _campEditDraft.lavabos[modelo].items[idx2]){
+    _campEditDraft.lavabos[modelo].items[idx2][field] = val;
+  }
+}
+
 
 
 
@@ -13861,18 +14122,22 @@ function campEditGuardar(){
   CAMP_TAPAS = _campEditDraft.tapas;
   CAMP_TAPAS_ACABADOS = _campEditDraft.tapasAc;
   if(_campEditDraft.lavabos){
-    // Actualizar LAV_MODELOS con los nuevos precios/refs
     Object.assign(LAV_MODELOS, _campEditDraft.lavabos);
-    // Regenerar IMEX_LAVABOS flat list
     IMEX_LAVABOS = (function(){
       const list=[];
       Object.entries(LAV_MODELOS).forEach(([modelo,data])=>{
-        data.medidas_seno.forEach((med,i)=>{ const d=data.seno[i]; if(d) list.push({ref:d.ref,desc:modelo+' '+med+' — 1 Seno',serie:modelo,pvp:d.pvp,_modelo:modelo,_medida:med,_tipo:'1S'}); });
-        data.medidas_faldon.forEach((med,i)=>{ const d=data.faldon[i]; if(d) list.push({ref:d.ref,desc:modelo+' '+med+' — 1 Seno + Faldón',serie:modelo,pvp:d.pvp,_modelo:modelo,_medida:med,_tipo:'1SF'}); });
+        if(data.type==='linear'){
+          (data.medidas_seno||[]).forEach((med,i)=>{ const d=data.seno[i]; if(d) list.push({ref:d.ref,desc:modelo+' '+med+' — 1 Seno',serie:modelo,pvp:d.pvp,fab:data.fab}); });
+          (data.medidas_faldon||[]).forEach((med,i)=>{ const d=data.faldon[i]; if(d) list.push({ref:d.ref,desc:modelo+' '+med+' — 1 Seno+Faldón',serie:modelo,pvp:d.pvp,fab:data.fab}); });
+        } else if(data.type==='fixed'){
+          list.push({ref:data.ref,desc:modelo,serie:modelo,pvp:data.pvp,fab:data.fab});
+        } else if(data.items){
+          (data.items||[]).forEach(it=>list.push({ref:it.ref,desc:modelo+' '+it.label,serie:modelo,pvp:it.pvp,fab:data.fab}));
+        }
       });
       return list;
     })();
-    lavInit(); // re-init wizard with new data
+    lavReset(0);
   }
   _campEditDraft = null;
   closeModal('m-camp-edit');
