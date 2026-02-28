@@ -12,25 +12,23 @@ const { table, method = ‘GET’, extra = ‘’, id } = req.query;
 if (!table) return res.status(400).json({ error: ‘table required’ });
 
 ```
-let path = `/rest/v1/${table}`;
-if (id) path += `?id=eq.${id}`;
+let path = '/rest/v1/' + table;
+if (id) path += '?id=eq.' + id;
 if (extra) path += (path.includes('?') ? '&' : '?') + extra.replace(/^\?/, '');
 
 const headers = {
   'apikey': SB_KEY,
-  'Authorization': `Bearer ${SB_KEY}`,
+  'Authorization': 'Bearer ' + SB_KEY,
   'Content-Type': 'application/json',
   'Accept': 'application/json',
 };
 if (method === 'POST') headers['Prefer'] = 'return=representation';
 
-const bodyData = req.body && req.body.body ? req.body.body : null;
-const sbRes = await fetch(`${SB_URL}${path}`, {
-  method,
-  headers,
-  body: (method !== 'GET' && method !== 'DELETE' && bodyData)
-    ? JSON.stringify(bodyData)
-    : undefined,
+const bodyData = (req.body && req.body.body) ? req.body.body : null;
+const sbRes = await fetch(SB_URL + path, {
+  method: method,
+  headers: headers,
+  body: (method !== 'GET' && method !== 'DELETE' && bodyData) ? JSON.stringify(bodyData) : undefined,
 });
 
 const text = await sbRes.text();
