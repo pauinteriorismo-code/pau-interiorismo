@@ -13747,8 +13747,17 @@ let ppCatFab = null;
 let ppCatMod = null;
 
 const CAT_FABRICANTES = [
-  { id:'imex',  label:'IMEX',      icon:'🚿', desc:'Grifería y accesorios de baño/cocina' },
-  { id:'camp',  label:'Campoaras', icon:'🛁', desc:'Muebles de baño AQUA y DROP' }
+  { id:'imex',       label:'IMEX',                icon:'🚿', desc:'Griferías baño & cocina · Dto 40%' },
+  { id:'campoaras',  label:'Campoaras',            icon:'🛁', desc:'Muebles de baño · AQUA & DROP' },
+  { id:'roca',       label:'Roca',                 icon:'🔵', desc:'Sanitarios serie ONA · Dto 40%' },
+  { id:'mamparas',   label:'Mámparas',             icon:'🚪', desc:'Deyban · Venecia · Riaza · Dto 40%' },
+  { id:'genexia',    label:'Genexia',              icon:'🪞', desc:'Espejos LED · Dto 40%' },
+  { id:'saitra',     label:'Saitra',               icon:'🍳', desc:'Cocinas · Valorador por puntos' },
+  { id:'fregaderos', label:"Plados · D'Aqua",      icon:'🚿', desc:'Fregaderos & Grifería · Dto 40%' },
+  { id:'lavabos',    label:'Lavabos',              icon:'🪠', desc:'Catálogo de lavabos · Editable' },
+  { id:'visek',      label:'Platos Visek',         icon:'🔲', desc:'Minimal Collection · 5 modelos' },
+  { id:'marmoles',   label:'Mármoles Santamaría',  icon:'🪨', desc:'Bancadas · Dekton · Silestone' },
+  { id:'electrodom', label:'Electrodomésticos',    icon:'🔌', desc:'Balay & Cata · Hornos · Placas' },
 ];
 const CAT_MODELOS = {
   imex: [
@@ -13771,28 +13780,47 @@ function ppCatShowFab(){
   document.getElementById('pp-cat-mod-wrap').style.display='none';
   document.getElementById('pp-cat-search-wrap').style.display='none';
   const list = document.getElementById('pp-cat-fab-list');
-  list.innerHTML = CAT_FABRICANTES.map(f=>
-    '<button onclick="ppCatSelFab(\'' + f.id + '\')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);cursor:pointer;text-align:left;transition:background .15s;width:100%" onmouseover="this.style.background=\'var(--bg-alt)\'" onmouseout="this.style.background=\'var(--bg)\'">'
-    +'<span style="font-size:22px">'+f.icon+'</span>'
-    +'<div><div style="font-size:12px;font-weight:700;color:var(--navy)">'+f.label+'</div>'
-    +'<div style="font-size:10px;color:var(--text-soft)">'+f.desc+'</div></div>'
-    +'</button>'
-  ).join('');
+  list.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:6px';
+  const INLINE = ['imex','campoaras'];
+  list.innerHTML = CAT_FABRICANTES.map(function(f){
+    var isInline = INLINE.indexOf(f.id) >= 0;
+    var clickFn  = isInline ? "ppCatSelFabInline('"+f.id+"')" : "ppCatAbrirExterno('"+f.id+"')";
+    var badge    = isInline
+      ? '<div style="font-size:9px;background:#1a3a5c;color:#fff;border-radius:3px;padding:1px 5px;margin-top:3px">Búsqueda</div>'
+      : '<div style="font-size:9px;background:#b87333;color:#fff;border-radius:3px;padding:1px 5px;margin-top:3px">Catálogo →</div>';
+    return '<button onclick="'+clickFn+'" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 4px;border:1px solid var(--border);border-radius:8px;background:var(--bg);cursor:pointer;text-align:center;transition:all .15s;width:100%" onmouseover="this.style.borderColor='var(--copper)';this.style.background='var(--bg-alt)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--bg)'">'
+      +'<span style="font-size:22px">'+f.icon+'</span>'
+      +'<div style="font-size:10px;font-weight:700;color:var(--navy);line-height:1.2">'+f.label+'</div>'
+      +badge
+      +'</button>';
+  }).join('');
 }
 
-function ppCatSelFab(fab){
+function ppCatSelFabInline(fab){
   ppCatFab = fab;
+  var fabKey = fab === 'campoaras' ? 'camp' : fab;
   document.getElementById('pp-cat-fab-wrap').style.display='none';
   document.getElementById('pp-cat-mod-wrap').style.display='block';
   document.getElementById('pp-cat-search-wrap').style.display='none';
-  document.getElementById('pp-cat-fab-label').textContent = CAT_FABRICANTES.find(f=>f.id===fab)?.label || fab;
+  document.getElementById('pp-cat-fab-label').textContent = CAT_FABRICANTES.find(function(f){return f.id===fab;})?.label || fab;
   const modList = document.getElementById('pp-cat-mod-list');
-  modList.innerHTML = (CAT_MODELOS[fab]||[]).map(m=>
-    '<button onclick="ppCatSelMod(\'' + m.id + '\')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);cursor:pointer;text-align:left;transition:background .15s;width:100%" onmouseover="this.style.background=\'var(--bg-alt)\'" onmouseout="this.style.background=\'var(--bg)\'">'
-    +'<span style="font-size:20px">'+m.icon+'</span>'
-    +'<div style="font-size:12px;font-weight:700;color:var(--navy)">'+m.label+'</div>'
-    +'</button>'
-  ).join('');
+  modList.innerHTML = (CAT_MODELOS[fabKey]||[]).map(function(m){
+    return '<button onclick="ppCatSelMod(\''+m.id+'\')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);cursor:pointer;text-align:left;transition:background .15s;width:100%" onmouseover="this.style.background=\'var(--bg-alt)\'" onmouseout="this.style.background=\'var(--bg)\'">'
+      +'<span style="font-size:20px">'+m.icon+'</span>'
+      +'<div style="font-size:12px;font-weight:700;color:var(--navy)">'+m.label+'</div>'
+      +'</button>';
+  }).join('');
+}
+
+function ppCatAbrirExterno(fab){
+  syncPresContext();
+  navTo('catalogos');
+  setTimeout(function(){ catAbrir(fab); }, 200);
+}
+
+function ppCatSelFab(fab){
+  if(fab==='imex'||fab==='campoaras'||fab==='camp') ppCatSelFabInline(fab==='camp'?'campoaras':fab);
+  else ppCatAbrirExterno(fab);
 }
 
 function ppCatBack(){ ppCatShowFab(); }
