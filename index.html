@@ -13776,24 +13776,35 @@ function ppInitCat(){
 
 function ppCatShowFab(){
   ppCatFab = null; ppCatMod = null;
-  document.getElementById('pp-cat-fab-wrap').style.display='block';
-  document.getElementById('pp-cat-mod-wrap').style.display='none';
-  document.getElementById('pp-cat-search-wrap').style.display='none';
+  var fabWrap = document.getElementById('pp-cat-fab-wrap');
+  var modWrap = document.getElementById('pp-cat-mod-wrap');
+  var srchWrap = document.getElementById('pp-cat-search-wrap');
+  if(fabWrap) fabWrap.style.display='block';
+  if(modWrap) modWrap.style.display='none';
+  if(srchWrap) srchWrap.style.display='none';
   const list = document.getElementById('pp-cat-fab-list');
+  if(!list) return;
   list.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:6px';
   const INLINE = ['imex','campoaras'];
   list.innerHTML = CAT_FABRICANTES.map(function(f){
     var isInline = INLINE.indexOf(f.id) >= 0;
-    var clickFn  = isInline ? "ppCatSelFabInline('"+f.id+"')" : "ppCatAbrirExterno('"+f.id+"')";
-    var badge    = isInline
-      ? '<div style="font-size:9px;background:#1a3a5c;color:#fff;border-radius:3px;padding:1px 5px;margin-top:3px">Búsqueda</div>'
-      : '<div style="font-size:9px;background:#b87333;color:#fff;border-radius:3px;padding:1px 5px;margin-top:3px">Catálogo →</div>';
-    return '<button onclick="'+clickFn+'" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 4px;border:1px solid var(--border);border-radius:8px;background:var(--bg);cursor:pointer;text-align:center;transition:all .15s;width:100%" onmouseover="this.style.borderColor='var(--copper)';this.style.background='var(--bg-alt)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--bg)'">'
+    var clickFn  = isInline ? "ppCatSelFabInline(&#39;"+f.id+"&#39;)" : "ppCatAbrirExterno(&#39;"+f.id+"&#39;)";
+    var badgeCol = isInline ? '#1a3a5c' : '#b87333';
+    var badgeTxt = isInline ? 'B&#xFA;squeda' : 'Cat&#xE1;logo &rarr;';
+    return '<button onclick="'+clickFn+'" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 4px;border:1px solid #e0d8ce;border-radius:8px;background:#fff;cursor:pointer;text-align:center;width:100%;transition:all .15s">'
       +'<span style="font-size:22px">'+f.icon+'</span>'
-      +'<div style="font-size:10px;font-weight:700;color:var(--navy);line-height:1.2">'+f.label+'</div>'
-      +badge
+      +'<div style="font-size:10px;font-weight:700;color:#1a3a5c;line-height:1.2">'+f.label+'</div>'
+      +'<div style="font-size:9px;background:'+badgeCol+';color:#fff;border-radius:3px;padding:1px 5px;margin-top:3px">'+badgeTxt+'</div>'
       +'</button>';
   }).join('');
+  // Hover via JS event delegation (avoids inline quote issues)
+  list.onclick = null;
+  list.querySelectorAll && setTimeout(function(){
+    list.querySelectorAll('button').forEach(function(btn){
+      btn.addEventListener('mouseenter',function(){ this.style.borderColor='#b87333'; this.style.background='#faf7f3'; });
+      btn.addEventListener('mouseleave',function(){ this.style.borderColor='#e0d8ce'; this.style.background='#fff'; });
+    });
+  }, 0);
 }
 
 function ppCatSelFabInline(fab){
@@ -13802,12 +13813,13 @@ function ppCatSelFabInline(fab){
   document.getElementById('pp-cat-fab-wrap').style.display='none';
   document.getElementById('pp-cat-mod-wrap').style.display='block';
   document.getElementById('pp-cat-search-wrap').style.display='none';
-  document.getElementById('pp-cat-fab-label').textContent = CAT_FABRICANTES.find(function(f){return f.id===fab;})?.label || fab;
-  const modList = document.getElementById('pp-cat-mod-list');
+  var found = CAT_FABRICANTES.filter(function(f){ return f.id===fab; })[0];
+  document.getElementById('pp-cat-fab-label').textContent = found ? found.label : fab;
+  var modList = document.getElementById('pp-cat-mod-list');
   modList.innerHTML = (CAT_MODELOS[fabKey]||[]).map(function(m){
-    return '<button onclick="ppCatSelMod(\''+m.id+'\')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);cursor:pointer;text-align:left;transition:background .15s;width:100%" onmouseover="this.style.background=\'var(--bg-alt)\'" onmouseout="this.style.background=\'var(--bg)\'">'
+    return '<button onclick="ppCatSelMod(&#39;'+m.id+'&#39;)" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #e0d8ce;border-radius:8px;background:#fff;cursor:pointer;text-align:left;width:100%">'
       +'<span style="font-size:20px">'+m.icon+'</span>'
-      +'<div style="font-size:12px;font-weight:700;color:var(--navy)">'+m.label+'</div>'
+      +'<div style="font-size:12px;font-weight:700;color:#1a3a5c">'+m.label+'</div>'
       +'</button>';
   }).join('');
 }
