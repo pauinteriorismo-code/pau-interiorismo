@@ -3996,16 +3996,16 @@ function pfVistaPrevia(){
   </head><body><div class="doc">${doc.innerHTML}</div>
   <script>setTimeout(()=>window.print(),500)<\/script>
 <!-- MODAL VISTA PREVIA PRESUPUESTO -->
-<div id="m-vista-previa" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(10,20,30,.7);flex-direction:column;">
-  <div style="display:flex;align-items:center;justify-content:space-between;background:#4a3728;padding:10px 18px;flex-shrink:0">
+<div id="m-vista-previa" style="display:none;position:fixed;inset:0;z-index:9000;flex-direction:column;">
+  <div id="vp-toolbar" style="display:flex;align-items:center;justify-content:space-between;background:#4a3728;padding:10px 18px;flex-shrink:0;z-index:9001;position:relative">
     <span style="color:#fff;font-weight:700;font-size:14px">👁 Vista previa del presupuesto</span>
     <div style="display:flex;gap:8px">
       <button onclick="vpImprimir()" style="background:#b87333;color:#fff;border:none;border-radius:5px;padding:7px 16px;font-size:12px;font-weight:700;cursor:pointer">🖨️ Imprimir</button>
-      <button onclick="vpGuardarPDF()" style="background:#27405b;color:#fff;border:none;border-radius:5px;padding:7px 16px;font-size:12px;font-weight:700;cursor:pointer">📥 Guardar PDF</button>
-      <button onclick="document.getElementById('m-vista-previa').style.display='none'" style="background:rgba(255,255,255,.2);color:#fff;border:none;border-radius:5px;padding:7px 14px;font-size:12px;cursor:pointer">✕ Cerrar</button>
+      <button onclick="vpGuardarPDF()" id="vp-btn-pdf" style="background:#27405b;color:#fff;border:none;border-radius:5px;padding:7px 16px;font-size:12px;font-weight:700;cursor:pointer">📥 Guardar PDF</button>
+      <button onclick="document.getElementById('m-vista-previa').style.display='none';document.body.style.overflow=''" style="background:rgba(255,255,255,.2);color:#fff;border:none;border-radius:5px;padding:7px 14px;font-size:12px;cursor:pointer">✕ Cerrar</button>
     </div>
   </div>
-  <iframe id="vp-iframe" style="flex:1;border:none;background:#f5f3ef;" srcdoc=""></iframe>
+  <div id="vp-content" style="flex:1;overflow-y:auto;background:#f5f3ef;"></div>
 </div>
 </body></html>`);
   w.document.close();
@@ -8311,7 +8311,7 @@ function clearPedidoLineas(){
 // EXPORTAR PDF
 // ═══════════════════════════════════════════
 async function exportarPDF(elementId, nombreArchivo){
-  const el = document.getElementById(elementId);
+  const el = (typeof elementId === 'string') ? document.getElementById(elementId) : elementId;
   if(!el){ toast('Elemento no encontrado','error'); return; }
   toast('Generando PDF…');
   const opt = {
@@ -8565,30 +8565,51 @@ function previsualizarPresupuesto(){
     +'</div>'
     +'<div class=\"foot\">PAU INTERIORISMO S.L. · CIF B-56909641 · C/ Tomás y Valiente Nº 6 Bajo · 46290 Alcàsser (Valencia) · Tel: 961 20 01 87</div>'
   +'</div></body></html>';
-  // Mostrar en modal in-page — sin popups, funciona siempre
+  // Mostrar presupuesto en modal de pantalla completa
   window._vpHtml = html;
   window._vpFilename = filename;
   var modal = document.getElementById('m-vista-previa');
-  var iframe = document.getElementById('vp-iframe');
-  if(!modal||!iframe){ toast('Error: modal VP no encontrado','error'); return; }
-  iframe.srcdoc = html;
+  var vpcont = document.getElementById('vp-content');
+  if(!modal||!vpcont){ toast('Error interno: modal VP no encontrado','error'); return; }
+  // Extraer solo el <body> del HTML generado e inyectarlo en el div
+  var bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+  var styleMatch = html.match(/<style[^>]*>([\s\S]*?)<\/style>/gi);
+  var styles = styleMatch ? styleMatch.join('\n') : '';
+  vpcont.innerHTML = styles + (bodyMatch ? bodyMatch[1] : html);
+  // Ocultar botones de imprimir/PDF que están dentro del contenido (son para ventana aparte)
+  vpcont.querySelectorAll('.toolbar').forEach(function(el){ el.style.display='none'; });
+  document.body.style.overflow = 'hidden';
   modal.style.display = 'flex';
 }
 function vpImprimir(){
-  var iframe = document.getElementById('vp-iframe');
-  if(iframe && iframe.contentWindow){ iframe.contentWindow.focus(); iframe.contentWindow.print(); }
+  var vpcont = document.getElementById('vp-content');
+  if(!vpcont) return;
+  var w = window.open('','_blank','width=870,height=950');
+  if(!w){ toast('Activa ventanas emergentes para imprimir','error'); return; }
+  w.document.write(window._vpHtml||'');
+  w.document.close();
+  setTimeout(function(){ w.focus(); w.print(); }, 800);
 }
 function vpGuardarPDF(){
-  var html2 = window._vpHtml||'';
+  var vpcont = document.getElementById('vp-content');
+  if(!vpcont){ toast('Sin contenido','error'); return; }
+  var btn = document.getElementById('vp-btn-pdf');
+  if(btn){ btn.textContent='⏳ Generando...'; btn.disabled=true; }
+  var el = vpcont.querySelector('#fpdf') || vpcont.firstElementChild;
+  if(!el){ toast('Elemento no encontrado','error'); if(btn){btn.textContent='📥 Guardar PDF';btn.disabled=false;} return; }
   var fn = (window._vpFilename||'presupuesto.pdf').replace(/['"]/g,'');
-  var sc1='<scr'+'ipt src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"><'+'/scr'+'ipt>';
-  var sc2='<scr'+'ipt>window.onload=function(){html2pdf().set({margin:8,filename:"'+fn+'",image:{type:"jpeg",quality:0.98},html2canvas:{scale:2,useCORS:true,logging:false},jsPDF:{unit:"mm",format:"a4",orientation:"portrait"}}).from(document.getElementById("fpdf")||document.body).save();}<'+'/scr'+'ipt>';
-  var bc=html2.lastIndexOf('<'+'/body>');
-  var hp=bc>0?html2.substring(0,bc)+sc1+sc2+'<'+'/body><'+'/html>':html2+sc1+sc2;
-  var blob=new Blob([hp],{type:'text/html;charset=utf-8'});
-  var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.target='_blank';
-  document.body.appendChild(a); a.click();
-  setTimeout(function(){document.body.removeChild(a);},1500);
+  html2pdf().set({
+    margin:8, filename:fn,
+    image:{type:'jpeg',quality:0.98},
+    html2canvas:{scale:2,useCORS:true,logging:false},
+    jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
+  }).from(el).save().then(function(){
+    if(btn){ btn.textContent='📥 Guardar PDF'; btn.disabled=false; }
+    toast('PDF descargado ✅');
+  }).catch(function(e){
+    toast('Error PDF: '+e.message,'error');
+    if(btn){ btn.textContent='📥 Guardar PDF'; btn.disabled=false; }
+  });
 }
 // ═══ EDITAR HORAS ═══
 function editHora(id){
@@ -16405,11 +16426,13 @@ renderPresupuesto=function(){
   _origRenderPres();
   const tbody=document.getElementById('pres-tbody'); if(!tbody||!PresC.length) return;
   tbody.innerHTML=PresC.map((l,i)=>{
-    if(l.es_capitulo) return `<tr style="background:#f7f4ef"><td colspan="10" style="padding:9px 10px;font-weight:700;font-size:12px;color:#4a3728;border-bottom:2px solid #b87333">${l.descripcion}</td><td></td><td><div style="display:flex;gap:3px"><button class="btn btn-icon btn-sm" style="background:#e8e0d4;border:none;color:#4a3728;font-size:10px;padding:3px 7px;white-space:nowrap" title="Duplicar capítulo completo" onclick="duplicarCapituloCompleto('${l.id}')">📋 Dup.</button><button class="btn btn-icon btn-sm" style="background:#e8e0d4;border:none;color:#4a3728" onclick="confirmDelete('presupuesto_lineas','${l.id}','${l.descripcion.replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`;
+    if(l.es_capitulo) return `<tr style="background:#f7f4ef"><td colspan="${ciActivo?10:9}" style="padding:9px 10px;font-weight:700;font-size:12px;color:#4a3728;border-bottom:2px solid #b87333">${l.descripcion}</td><td></td><td><div style="display:flex;gap:3px"><button class="btn btn-icon btn-sm" style="background:#e8e0d4;border:none;color:#4a3728;font-size:10px;padding:3px 7px;white-space:nowrap" title="Duplicar capítulo completo" onclick="duplicarCapituloCompleto('${l.id}')">📋 Dup.</button><button class="btn btn-icon btn-sm" style="background:#e8e0d4;border:none;color:#4a3728" onclick="confirmDelete('presupuesto_lineas','${l.id}','${l.descripcion.replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`;
     const pv=l.precio_venta||0,ci=l.ci_gg_bi_pct||0,sub=(l.cantidad||0)*pv,subCI=ci>0?sub*(1+ci/100):sub;
     const ivaPctNum=parseFloat(l.iva_pct)||10,ivaImporte=subCI*ivaPctNum/100;
     return `<tr data-search="${(l.descripcion||'').toLowerCase()}"><td style="color:var(--text-soft);font-size:11px">${i+1}</td><td><strong>${l.descripcion||'—'}</strong>${l.ref_cype?`<br><span style="font-size:9px;color:var(--text-soft)">${l.ref_cype}</span>`:''}</td><td style="text-align:center">${l.unidad||'—'}</td><td class="td-mono">${l.cantidad||0}</td><td class="td-mono">${fmt(l.precio_base)}</td><td class="td-mono" style="color:var(--green)">${l.margen_pct>0?fmtP(l.margen_pct):'—'}</td><td class="td-mono" style="color:var(--amber)">${ci>0?fmtP(ci):'—'}</td><td class="td-mono" style="font-weight:700">${fmt(pv)}</td><td class="td-mono" style="font-weight:700;color:var(--navy)">${fmt(subCI)}</td><td style="text-align:center;vertical-align:middle"><span class="badge b-gray">${l.iva_pct||'10%'}</span></td><td class="td-mono" style="font-weight:700;color:var(--copper)">${fmt(subCI+ivaImporte)}</td><td><div class="td-actions"><button class="btn btn-ghost btn-icon btn-sm" title="Duplicar" onclick="duplicarLineaPresupuesto('${l.id}')">⧉</button><button class="btn btn-ghost btn-icon btn-sm" onclick="editLineaPresupuesto('${l.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('presupuesto_lineas','${l.id}','${(l.descripcion||'').replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`;
   }).join('');
+  // Reaplica CI+GG+BI hide a los TDs nuevos
+  tbody.querySelectorAll('td:nth-child(7)').forEach(td=>{ td.style.display = ciActivo ? '' : 'none'; });
 };
 
 // ══════════════════════════════════════════════════════════════════════
