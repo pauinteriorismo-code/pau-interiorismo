@@ -4007,6 +4007,20 @@ function pfVistaPrevia(){
   </div>
   <div id="vp-content" style="flex:1;overflow-y:auto;background:#f5f3ef;"></div>
 </div>
+
+<!-- MODAL VISOR PDF ADJUNTO -->
+<div id="m-pdf-viewer" style="display:none;position:fixed;inset:0;z-index:9500;flex-direction:column;background:rgba(10,20,30,.85);">
+  <div style="display:flex;align-items:center;justify-content:space-between;background:#1a2a3a;padding:10px 18px;flex-shrink:0">
+    <span id="pdf-viewer-title" style="color:#fff;font-weight:700;font-size:13px">📄 PDF adjunto</span>
+    <div style="display:flex;gap:8px">
+      <button onclick="pdfViewerDescargar()" style="background:#b87333;color:#fff;border:none;border-radius:5px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer">⬇️ Descargar</button>
+      <button onclick="pdfViewerCerrar()" style="background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:5px;padding:6px 12px;font-size:12px;cursor:pointer">✕ Cerrar</button>
+    </div>
+  </div>
+  <div style="flex:1;overflow:hidden;background:#525659;">
+    <embed id="pdf-viewer-embed" src="" type="application/pdf" style="width:100%;height:100%;border:none;">
+  </div>
+</div>
 </body></html>`);
   w.document.close();
 }
@@ -16206,17 +16220,14 @@ function coQuitarPDF(){
 function coResetPDF(){ coQuitarPDF(); }
 function coVerPDF(){
   const b64=window._coPDFActual||document.getElementById('co-pdf-b64')?.value;
+  const nombre=document.getElementById('co-pdf-nombre')?.value||'factura_compra.pdf';
   if(!b64){ toast('No hay PDF adjunto','error'); return; }
-  const bin=atob(b64),bytes=new Uint8Array(bin.length);
-  for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
-  window.open(URL.createObjectURL(new Blob([bytes],{type:'application/pdf'})),'_blank');
+  abrirVisorPDF(b64, nombre);
 }
 function coVerPDFById(id){
   const c=CoC.find(x=>String(x.id)===String(id));
   if(!c||!c.adjunto_pdf){ toast('Sin PDF adjunto','error'); return; }
-  const bin=atob(c.adjunto_pdf),bytes=new Uint8Array(bin.length);
-  for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
-  window.open(URL.createObjectURL(new Blob([bytes],{type:'application/pdf'})),'_blank');
+  abrirVisorPDF(c.adjunto_pdf, c.adjunto_nombre||'factura_compra.pdf');
 }
 
 // ── PDF adjunto para FACTURAS ──
@@ -16267,17 +16278,14 @@ function fQuitarPDF(){
 function fResetPDF(){ fQuitarPDF(); }
 function fVerPDF(){
   const b64=window._fPDFActual||document.getElementById('f-pdf-b64')?.value;
+  const nombre=document.getElementById('f-pdf-nombre')?.value||'factura.pdf';
   if(!b64){ toast('No hay PDF adjunto','error'); return; }
-  const bin=atob(b64),bytes=new Uint8Array(bin.length);
-  for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
-  window.open(URL.createObjectURL(new Blob([bytes],{type:'application/pdf'})),'_blank');
+  abrirVisorPDF(b64, nombre);
 }
 function fVerPDFById(id){
   const f=FC.find(x=>String(x.id)===String(id));
   if(!f||!f.adjunto_pdf){ toast('Sin PDF adjunto','error'); return; }
-  const bin=atob(f.adjunto_pdf),bytes=new Uint8Array(bin.length);
-  for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
-  window.open(URL.createObjectURL(new Blob([bytes],{type:'application/pdf'})),'_blank');
+  abrirVisorPDF(f.adjunto_pdf, f.adjunto_nombre||'factura.pdf');
 }
 
 // ══════════════════════════════════════════════════════════════════════
@@ -17516,6 +17524,54 @@ async function presGuardarOrden(){
   }catch(e){
     toast('Error guardando orden: '+e.message,'error');
   }
+}
+
+
+// ══════════════════════════════════════════════════════════════════════
+// VISOR PDF INTERNO — sin popups, funciona siempre
+// ══════════════════════════════════════════════════════════════════════
+window._pdfViewerB64   = null;
+window._pdfViewerNombre = null;
+window._pdfViewerBlobUrl = null;
+
+function abrirVisorPDF(b64, nombre){
+  if(!b64){ toast('Sin PDF adjunto','error'); return; }
+  // Revocar blob anterior si existe
+  if(window._pdfViewerBlobUrl) URL.revokeObjectURL(window._pdfViewerBlobUrl);
+
+  const bin=atob(b64), bytes=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
+  const blob = new Blob([bytes],{type:'application/pdf'});
+  const url  = URL.createObjectURL(blob);
+
+  window._pdfViewerB64    = b64;
+  window._pdfViewerNombre = nombre || 'documento.pdf';
+  window._pdfViewerBlobUrl = url;
+
+  const modal = document.getElementById('m-pdf-viewer');
+  const embed = document.getElementById('pdf-viewer-embed');
+  const title = document.getElementById('pdf-viewer-title');
+  if(!modal||!embed){ toast('Error: visor PDF no encontrado','error'); return; }
+
+  if(title) title.textContent = '📄 ' + window._pdfViewerNombre;
+  embed.src = url;
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+function pdfViewerCerrar(){
+  const modal = document.getElementById('m-pdf-viewer');
+  if(modal) modal.style.display = 'none';
+  document.body.style.overflow = '';
+  // No revocar aquí — mantener URL válida para descarga posterior
+}
+function pdfViewerDescargar(){
+  if(!window._pdfViewerBlobUrl){ toast('Sin PDF','error'); return; }
+  const a = document.createElement('a');
+  a.href     = window._pdfViewerBlobUrl;
+  a.download = window._pdfViewerNombre || 'documento.pdf';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
 
 </script>
