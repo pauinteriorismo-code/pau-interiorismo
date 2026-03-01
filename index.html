@@ -90,6 +90,7 @@ tbody td{padding:7px 10px;vertical-align:middle}
 .b-red{background:var(--red-soft);color:var(--red)}.b-blue{background:var(--blue-light);color:var(--navy-mid)}
 .b-navy{background:var(--navy);color:#fff}.b-copper{background:var(--copper-light);color:var(--copper)}
 .b-gray{background:var(--sand);color:var(--text-mid)}
+#pres-tbody tr[draggable]{cursor:default}#pres-tbody tr[draggable] td:first-child{cursor:grab}#pres-tbody tr.drag-over{outline:2px dashed var(--copper);outline-offset:-2px;background:var(--copper-light)!important}
 /* VIEWS */
 .view{display:none}.view.active{display:block}
 /* FORM */
@@ -1070,7 +1071,6 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <button class="btn btn-ghost btn-sm no-print" onclick="abrirModalPlantillas()" title="Cargar plantilla de capítulos" style="font-size:11px">📋 Plantillas</button>
           <button class="btn btn-ghost btn-sm no-print" onclick="guardarPlantilla()" title="Guardar presupuesto actual como plantilla" style="font-size:11px">💾 Guardar plantilla</button>
         </div>
-        <button class="btn btn-primary no-print" onclick="previsualizarPresupuesto()">👁 Vista previa</button>
         <button class="btn btn-ghost no-print" onclick="exportarPresupuestoPDF()">⬇️ PDF</button>
         <button class="btn btn-ghost no-print" onclick="window.print()">🖨️ Imprimir</button>
         <div id="pres-total-lbl" style="margin-left:auto;font-size:13px;font-weight:700;color:var(--navy)"></div>
@@ -1088,7 +1088,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         </div>
       </div>
       <div class="card">
-        <div class="table-wrap"><table><thead><tr style="background:#f7f4ef"><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">#</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Descripción</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Ud.</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Cant.</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Precio Base</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Margen %</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">CI+GG+BI</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">P.Venta</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Subtotal s/IVA</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4;text-align:center;width:50px">IVA%</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Total c/IVA</th><th></th></tr></thead>
+        <div class="table-wrap"><table><thead><tr style="background:#f7f4ef"><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4;width:22px;cursor:grab" title="Arrastra para reordenar">☰</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">#</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Descripción</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Ud.</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Cant.</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Precio Base</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Margen %</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">CI+GG+BI</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">P.Venta</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Subtotal s/IVA</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4;text-align:center;width:50px">IVA%</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Total c/IVA</th><th></th></tr></thead>
         <tbody id="pres-tbody"><tr><td colspan="11"><div class="empty"><div class="empty-icon">💰</div><div class="empty-text">Selecciona un proyecto</div></div></td></tr></tbody></table></div>
       </div>
     </div>
@@ -16426,10 +16426,10 @@ renderPresupuesto=function(){
   _origRenderPres();
   const tbody=document.getElementById('pres-tbody'); if(!tbody||!PresC.length) return;
   tbody.innerHTML=PresC.map((l,i)=>{
-    if(l.es_capitulo) return `<tr style="background:#f7f4ef"><td colspan="${ciActivo?10:9}" style="padding:9px 10px;font-weight:700;font-size:12px;color:#4a3728;border-bottom:2px solid #b87333">${l.descripcion}</td><td></td><td><div style="display:flex;gap:3px"><button class="btn btn-icon btn-sm" style="background:#e8e0d4;border:none;color:#4a3728;font-size:10px;padding:3px 7px;white-space:nowrap" title="Duplicar capítulo completo" onclick="duplicarCapituloCompleto('${l.id}')">📋 Dup.</button><button class="btn btn-icon btn-sm" style="background:#e8e0d4;border:none;color:#4a3728" onclick="confirmDelete('presupuesto_lineas','${l.id}','${l.descripcion.replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`;
+    if(l.es_capitulo) return `<tr draggable="true" data-id="${l.id}" data-orden="${l.orden}" style="background:#f7f4ef"><td style="padding:4px 3px;cursor:grab;color:#bbb;text-align:center;font-size:14px;user-select:none" title="Arrastrar">⠿</td><td colspan="${ciActivo?10:9}" style="padding:9px 10px;font-weight:700;font-size:12px;color:#4a3728;border-bottom:2px solid #b87333">${l.descripcion}</td><td></td><td><div style="display:flex;gap:3px"><button class="btn btn-icon btn-sm" style="background:#e8e0d4;border:none;color:#4a3728;font-size:10px;padding:3px 7px;white-space:nowrap" title="Duplicar capítulo completo" onclick="duplicarCapituloCompleto('${l.id}')">📋 Dup.</button><button class="btn btn-icon btn-sm" style="background:#e8e0d4;border:none;color:#4a3728" onclick="confirmDelete('presupuesto_lineas','${l.id}','${l.descripcion.replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`;
     const pv=l.precio_venta||0,ci=l.ci_gg_bi_pct||0,sub=(l.cantidad||0)*pv,subCI=ci>0?sub*(1+ci/100):sub;
     const ivaPctNum=parseFloat(l.iva_pct)||10,ivaImporte=subCI*ivaPctNum/100;
-    return `<tr data-search="${(l.descripcion||'').toLowerCase()}"><td style="color:var(--text-soft);font-size:11px">${i+1}</td><td><strong>${l.descripcion||'—'}</strong>${l.ref_cype?`<br><span style="font-size:9px;color:var(--text-soft)">${l.ref_cype}</span>`:''}</td><td style="text-align:center">${l.unidad||'—'}</td><td class="td-mono">${l.cantidad||0}</td><td class="td-mono">${fmt(l.precio_base)}</td><td class="td-mono" style="color:var(--green)">${l.margen_pct>0?fmtP(l.margen_pct):'—'}</td><td class="td-mono" style="color:var(--amber)">${ci>0?fmtP(ci):'—'}</td><td class="td-mono" style="font-weight:700">${fmt(pv)}</td><td class="td-mono" style="font-weight:700;color:var(--navy)">${fmt(subCI)}</td><td style="text-align:center;vertical-align:middle"><span class="badge b-gray">${l.iva_pct||'10%'}</span></td><td class="td-mono" style="font-weight:700;color:var(--copper)">${fmt(subCI+ivaImporte)}</td><td><div class="td-actions"><button class="btn btn-ghost btn-icon btn-sm" title="Duplicar" onclick="duplicarLineaPresupuesto('${l.id}')">⧉</button><button class="btn btn-ghost btn-icon btn-sm" onclick="editLineaPresupuesto('${l.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('presupuesto_lineas','${l.id}','${(l.descripcion||'').replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`;
+    return `<tr draggable="true" data-id="${l.id}" data-orden="${l.orden}" data-search="${(l.descripcion||'').toLowerCase()}"><td style="padding:4px 3px;cursor:grab;color:#bbb;text-align:center;font-size:14px;user-select:none" title="Arrastrar para reordenar">⠿</td><td style="color:var(--text-soft);font-size:11px">${i+1}</td><td><strong>${l.descripcion||'—'}</strong>${l.ref_cype?`<br><span style="font-size:9px;color:var(--text-soft)">${l.ref_cype}</span>`:''}</td><td style="text-align:center">${l.unidad||'—'}</td><td class="td-mono">${l.cantidad||0}</td><td class="td-mono">${fmt(l.precio_base)}</td><td class="td-mono" style="color:var(--green)">${l.margen_pct>0?fmtP(l.margen_pct):'—'}</td><td class="td-mono" style="color:var(--amber)">${ci>0?fmtP(ci):'—'}</td><td class="td-mono" style="font-weight:700">${fmt(pv)}</td><td class="td-mono" style="font-weight:700;color:var(--navy)">${fmt(subCI)}</td><td style="text-align:center;vertical-align:middle"><span class="badge b-gray">${l.iva_pct||'10%'}</span></td><td class="td-mono" style="font-weight:700;color:var(--copper)">${fmt(subCI+ivaImporte)}</td><td><div class="td-actions"><button class="btn btn-ghost btn-icon btn-sm" title="Duplicar" onclick="duplicarLineaPresupuesto('${l.id}')">⧉</button><button class="btn btn-ghost btn-icon btn-sm" onclick="editLineaPresupuesto('${l.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('presupuesto_lineas','${l.id}','${(l.descripcion||'').replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`;
   }).join('');
   // Reaplica CI+GG+BI hide a los TDs nuevos
   tbody.querySelectorAll('td:nth-child(7)').forEach(td=>{ td.style.display = ciActivo ? '' : 'none'; });
@@ -17424,6 +17424,98 @@ async function edCargarProyectos(){
     const data=await sbGet('proyectos','select=id,nombre&order=nombre');
     if(data&&data.length){data.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.nombre;sel.appendChild(o)})}
   }catch(e){}
+}
+
+
+// ══════════════════════════════════════════════════════════════════════
+// DRAG & DROP — REORDENAR FILAS PRESUPUESTO
+// ══════════════════════════════════════════════════════════════════════
+(function(){
+  let dragSrc = null;
+
+  function onDragStart(e){
+    dragSrc = this;
+    this.style.opacity = '0.4';
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', this.dataset.id);
+  }
+  function onDragOver(e){
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    document.querySelectorAll('#pres-tbody tr.drag-over').forEach(r=>r.classList.remove('drag-over'));
+    this.classList.add('drag-over');
+    return false;
+  }
+  function onDragLeave(){
+    this.classList.remove('drag-over');
+  }
+  function onDrop(e){
+    e.stopPropagation();
+    e.preventDefault();
+    document.querySelectorAll('#pres-tbody tr.drag-over').forEach(r=>r.classList.remove('drag-over'));
+    if(dragSrc && dragSrc !== this){
+      const tbody = document.getElementById('pres-tbody');
+      const rows  = Array.from(tbody.querySelectorAll('tr[data-id]'));
+      const fromIdx = rows.indexOf(dragSrc);
+      const toIdx   = rows.indexOf(this);
+      if(fromIdx === -1 || toIdx === -1) return false;
+      // Reorder in DOM
+      if(fromIdx < toIdx){
+        this.parentNode.insertBefore(dragSrc, this.nextSibling);
+      } else {
+        this.parentNode.insertBefore(dragSrc, this);
+      }
+      // Persist new order to Supabase
+      presGuardarOrden();
+    }
+    return false;
+  }
+  function onDragEnd(){
+    this.style.opacity = '';
+    document.querySelectorAll('#pres-tbody tr.drag-over').forEach(r=>r.classList.remove('drag-over'));
+  }
+
+  // Attach listeners whenever tbody is re-rendered
+  const _obs = new MutationObserver(function(){
+    document.querySelectorAll('#pres-tbody tr[data-id]').forEach(function(row){
+      if(row._dndBound) return;
+      row._dndBound = true;
+      row.addEventListener('dragstart', onDragStart);
+      row.addEventListener('dragover',  onDragOver);
+      row.addEventListener('dragleave', onDragLeave);
+      row.addEventListener('drop',      onDrop);
+      row.addEventListener('dragend',   onDragEnd);
+    });
+  });
+  document.addEventListener('DOMContentLoaded', function(){
+    const tbody = document.getElementById('pres-tbody');
+    if(tbody) _obs.observe(tbody, {childList:true, subtree:false});
+  });
+})();
+
+async function presGuardarOrden(){
+  const rows = Array.from(document.querySelectorAll('#pres-tbody tr[data-id]'));
+  if(!rows.length) return;
+  try{
+    // Update PresC array to match new DOM order
+    const newOrder = rows.map(r=>r.dataset.id);
+    PresC.sort((a,b)=> newOrder.indexOf(a.id) - newOrder.indexOf(b.id));
+    // Renumber orden field starting from 1
+    const patches = PresC.map((l,i)=>
+      sb('presupuesto_lineas','PATCH',{orden:i+1},null,`?id=eq.${l.id}`)
+    );
+    await Promise.all(patches);
+    // Update row number cells (td:nth-child(2) — after handle)
+    rows.forEach((row,i)=>{
+      if(!row.querySelector('td[colspan]')){  // skip capitulo rows
+        const numTd = row.querySelectorAll('td')[1]; // 2nd td = # number
+        if(numTd) numTd.textContent = i+1;
+      }
+    });
+    toast('Orden guardado ✅');
+  }catch(e){
+    toast('Error guardando orden: '+e.message,'error');
+  }
 }
 
 </script>
