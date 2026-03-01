@@ -2350,7 +2350,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="cat-header">
         <button class="cat-back" onclick="catVolver()">← Catálogos</button>
         <span class="cat-header-title">🔌 Electrodomésticos — Balay &amp; Cata</span>
-        <span class="cat-header-desc">P. Referencia Balay (IVA incl.) · Dto 30% + Margen 40%</span>
+        <span class="cat-header-desc">P. Referencia Balay (IVA incl.) · Dto 30% + Margen 35%</span>
       </div>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
         <div style="display:flex;align-items:center;gap:8px">
@@ -2359,7 +2359,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
           <label style="font-size:12px;font-weight:600;color:var(--text-soft)">Margen %:</label>
-          <input type="number" class="form-input" id="ed-margen" value="40" min="0" max="80" step="1" style="width:60px;text-align:center" onchange="edRenderCatalogo()">
+          <input type="number" class="form-input" id="ed-margen" value="35" min="0" max="80" step="1" style="width:60px;text-align:center" onchange="edRenderCatalogo()">
         </div>
         <div style="display:flex;align-items:center;gap:8px">
           <label style="font-size:12px;font-weight:600;color:var(--text-soft)">Categoría:</label>
@@ -12902,6 +12902,18 @@ const LAV_MODELOS = {
       {label:'121×46 NM', ref:'LAV.ETNA121X46NM', pvp:311}
     ]
   },
+  ETNA_GF: {
+    type:'acabados', fab:'Art&bath', color:'#5a3d2b',
+    desc:'Sobre mueble porcelana Art&bath · Gran formato · Con rebosadero · Agujero grifo',
+    items:[
+      {label:'141×46 BB Centrado',    ref:'EPORET141',   pvp:410},
+      {label:'141×46 BB Doble seno',  ref:'EPORET141-2', pvp:420},
+      {label:'141×46 BM Doble seno',  ref:'EPORET141B',  pvp:590},
+      {label:'141×46 NM Doble seno',  ref:'EPORET141N',  pvp:590},
+      {label:'151×46 BB Centrado',    ref:'EPORET151',   pvp:435},
+      {label:'151×46 BB Doble seno',  ref:'EPORET151-2', pvp:495}
+    ]
+  },
   ARIES: {
     type:'acabados', fab:'Art&bath', color:'#6b4a9b',
     desc:'Sobre mueble porcelana Art&bath · Blanco Brillo · Con rebosadero · Suspendible',
@@ -16641,7 +16653,7 @@ function edImgUrl(p){
 }
 
 function edPvp(coste){
-  const m = parseFloat(document.getElementById('ed-margen')?.value) || 40;
+  const m = parseFloat(document.getElementById('ed-margen')?.value) || 35;
   return coste * (1 + m/100);
 }
 
