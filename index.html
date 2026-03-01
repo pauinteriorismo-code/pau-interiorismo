@@ -450,7 +450,9 @@ th.sortable:not(.sort-asc):not(.sort-desc) .sort-arrow::after{content:'⇅'}
         <select class="form-input" style="width:195px;flex-shrink:0" id="filter-cliente-pres_final" onchange="cascadaModulo(&#39;pres_final&#39;,&#39;pf-proyecto-sel&#39;,loadPresupuestoFinal)"><option value="">👤 Cliente…</option><option value="CLI-001">Miguel Zaragozá Garzón</option><option value="CLI-002">Vicenta Folch Gil</option><option value="CLI-033">Estudi Encis SL</option><option value="CLI-034">Vicenta Baixauli Hernandez</option><option value="CLI-H002">Mª PAU BRAVO JOSE</option><option value="CLI-H001">ROSA CHANZA SOLER</option><option value="CLI-H003">DESIRE NAVARRO MARI</option><option value="CLI-H004">CARMELO RODRIGUEZ VILA</option><option value="CLI-H032">Daniel palma gallardo</option><option value="CLI-H023">Miguel Zaragozá Garzón</option><option value="CLI-H006">Vicenta Folch Gil</option><option value="CLI-H008">VICENT MARI SERRA</option><option value="CLI-H009">FERNANDO JOSE SAN GERMAN IBORRA</option><option value="CLI-H010">REME IBORRA GIL</option><option value="CLI-H011">TONI TATAY DAVID</option><option value="CLI-H019">Jose Antonio Martos Ortiz</option><option value="CLI-H021">MERCEDES HIGUERAS GOMEZ</option><option value="CLI-H024">MICHELL BENITO</option><option value="CLI-H026">Ana María Palau Sastre</option><option value="CLI-H028">Lara Blasco - Lara Blasco Iborra</option><option value="CLI-H027">Laura Doria Gomez</option><option value="CLI-H031">Belinda</option><option value="CLI-H005">PATRI</option><option value="CLI-H012">Júlia Fabregat Mestre</option><option value="CLI-H013">Jose Manuel Garcia Seller Nº 7 Pta 4</option><option value="CLI-H014">4G daniel Dominguez</option><option value="CLI-H016">Sara Muñoz Abella</option><option value="CLI-H018">Amparo Forner Pastor</option><option value="CLI-H017">Yasmina Cabezuelo Alaminos</option><option value="CLI-H020">Rafael Francés Llàcer</option><option value="CLI-H022">Miguel cocina</option><option value="CLI-H007">Juanmi</option><option value="CLI-H015">4F Fernando</option><option value="CLI-H029">Francisco Navarro Garcia</option><option value="CLI-H025">URKO Y FRANCESC</option><option value="CLI-H030">Jose Manuel Pinzón Valbuena</option></select>
         <select class="form-input" style="width:220px" id="pf-proyecto-sel" onchange="loadPresupuestoFinal()"><option value="">📁 Proyecto…</option></select>
         <select class="form-input" style="width:75px" id="pf-version-sel" onchange="loadPresupuestoFinal()"><option value="v1">v1</option><option value="v2">v2</option><option value="v3">v3</option></select>
-        <button class="btn btn-primary" onclick="window.print()">🖨️ Imprimir / PDF</button>
+        <button class="btn btn-primary no-print" onclick="pfVistaPrevia()">👁 Vista previa</button>
+        <button class="btn btn-ghost no-print" onclick="pfExportarPDF()">⬇️ PDF</button>
+        <button class="btn btn-ghost no-print" onclick="window.print()">🖨️ Imprimir</button>
       </div>
       <div id="pf-doc" style="background:white;max-width:800px;margin:0 auto;padding:32px 40px;border:1px solid var(--border);border-radius:var(--radius);font-family:Arial,sans-serif;font-size:12px">
         <!-- Cabecera empresa -->
@@ -3727,6 +3729,25 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       </div>
     </div>
 
+    <!-- PDF ADJUNTO (visible inmediatamente) -->
+    <div id="f-grp-pdf" style="margin:12px 0;padding:12px;background:var(--blue-light);border-radius:8px;border:1px solid var(--border)">
+      <label class="form-label" style="margin-bottom:8px;font-weight:700;color:var(--navy)">📎 PDF adjunto de factura</label>
+      <div id="f-pdf-zone" style="border:2px dashed var(--border);border-radius:8px;padding:14px;text-align:center;cursor:pointer;transition:all .15s;background:var(--white)" 
+           onclick="document.getElementById('f-pdf-input').click()"
+           ondragover="event.preventDefault();this.style.borderColor='var(--navy)';this.style.background='#f0f4ff'"
+           ondragleave="this.style.borderColor='var(--border)';this.style.background='var(--white)'"
+           ondrop="fHandleDrop(event)">
+        <div id="f-pdf-label" style="color:var(--text-soft);font-size:12px">
+          📄 Arrastra el PDF aquí o <u style="color:var(--navy);cursor:pointer">haz clic para seleccionar</u>
+          <div style="font-size:10px;margin-top:4px;color:var(--text-soft);opacity:.7">Máx. 5 MB · Solo archivos PDF</div>
+        </div>
+        <div id="f-pdf-preview" style="display:none;margin-top:8px;align-items:center;gap:8px;justify-content:center"></div>
+      </div>
+      <input type="file" id="f-pdf-input" accept=".pdf,application/pdf" style="display:none" onchange="fHandleFile(this.files[0])">
+      <input type="hidden" id="f-pdf-b64">
+      <input type="hidden" id="f-pdf-nombre">
+    </div>
+
     <!-- LÍNEAS DE FACTURA (solo ventas) -->
     <div id="f-grp-lineas">
       <div style="display:flex;justify-content:space-between;align-items:center;margin:12px 0 6px">
@@ -3825,23 +3846,6 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <select class="form-input" id="f-estado">
           <option>Pendiente</option><option>Cobrada</option><option>Parcial</option><option>Vencida</option><option>Anulada</option>
         </select>
-      </div>
-      <!-- PDF ADJUNTO (facturas) -->
-      <div class="form-group fg-full" id="f-grp-pdf">
-        <label class="form-label">📎 PDF adjunto</label>
-        <div id="f-pdf-zone" style="border:2px dashed var(--border);border-radius:8px;padding:14px;text-align:center;cursor:pointer;transition:all .15s;background:var(--bg-card)" 
-             onclick="document.getElementById('f-pdf-input').click()"
-             ondragover="event.preventDefault();this.style.borderColor='var(--navy)'"
-             ondragleave="this.style.borderColor='var(--border)'"
-             ondrop="fHandleDrop(event)">
-          <div id="f-pdf-label" style="color:var(--text-soft);font-size:12px">
-            📄 Arrastra el PDF aquí o <u style="color:var(--navy);cursor:pointer">haz clic para seleccionar</u>
-          </div>
-          <div id="f-pdf-preview" style="display:none;margin-top:8px;align-items:center;gap:8px;justify-content:center"></div>
-        </div>
-        <input type="file" id="f-pdf-input" accept=".pdf,application/pdf" style="display:none" onchange="fHandleFile(this.files[0])">
-        <input type="hidden" id="f-pdf-b64">
-        <input type="hidden" id="f-pdf-nombre">
       </div>
     </div>
   </div>
@@ -3968,8 +3972,39 @@ async function loadPresupuestoFinal(){
   }catch(e){toast('Error: '+e.message,'error');}
 }
 
-// ═══════════════════════════════════════════
-// CONTRATO
+function pfVistaPrevia(){
+  const doc = document.getElementById('pf-doc');
+  if(!doc || !doc.querySelector('#pf-lineas')?.children.length){ toast('Carga un presupuesto primero','error'); return; }
+  const w = window.open('','_blank','width=900,height=700');
+  w.document.write(`<!DOCTYPE html><html><head><title>Presupuesto Final</title>
+    <style>*{margin:0;padding:0;box-sizing:border-box}body{background:#f5f5f5;padding:20px;font-family:Arial,sans-serif}
+    .doc{background:white;max-width:800px;margin:0 auto;padding:32px 40px;box-shadow:0 2px 12px rgba(0,0,0,.1);font-size:12px}
+    table{width:100%;border-collapse:collapse}@media print{body{background:white;padding:0}.doc{box-shadow:none;padding:20px}}</style>
+  </head><body><div class="doc">${doc.innerHTML}</div>
+  <script>setTimeout(()=>window.print(),500)<\/script></body></html>`);
+  w.document.close();
+}
+
+async function pfExportarPDF(){
+  const doc = document.getElementById('pf-doc');
+  if(!doc || !doc.querySelector('#pf-lineas')?.children.length){ toast('Carga un presupuesto primero','error'); return; }
+  const proy = document.getElementById('pf-proyecto-sel')?.value || 'PRES';
+  const ver = document.getElementById('pf-version-sel')?.value || 'v1';
+  const filename = `Presupuesto_${proy}_${ver}_${new Date().toISOString().split('T')[0]}.pdf`;
+  toast('Generando PDF…');
+  try {
+    const opt = {
+      margin: [8, 8, 8, 8],
+      filename: filename,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+    };
+    await html2pdf().set(opt).from(doc).save();
+    toast('PDF descargado ✅');
+  } catch(e) { toast('Error: '+e.message,'error'); }
+}
 // ═══════════════════════════════════════════
 async function initContrato(){
   if(!PC.length)PC=await sbGet('proyectos').catch(()=>[]);
@@ -5404,7 +5439,7 @@ function renderPresupuesto(){
   if(!PresC.length){tbody.innerHTML=`<tr><td colspan="11"><div class="empty"><div class="empty-icon">💰</div><div class="empty-text">Presupuesto vacío</div><button class="btn btn-ghost" onclick="addCapituloPresupuesto()">＋ Capítulo</button></div></td></tr>`;document.getElementById('pres-resumen').style.display='none';return;}
   let totBase=0,totCI=0,totVenta=0;
   tbody.innerHTML=PresC.map((l,i)=>{
-    if(l.es_capitulo)return`<tr style="background:var(--navy);color:#fff"><td colspan="9" style="padding:9px 10px;font-weight:700;font-size:12px">${l.descripcion}</td><td></td><td><button class="btn btn-icon btn-sm" style="background:rgba(255,255,255,.1);border:none;color:#fff" onclick="confirmDelete('presupuesto_lineas','${l.id}','${l.descripcion.replace(/'/g,"\\'")}')">🗑</button></td></tr>`;
+    if(l.es_capitulo)return`<tr style="background:#f7f4ef"><td colspan="9" style="padding:9px 10px;font-weight:700;font-size:12px;color:#4a3728;border-bottom:2px solid #b87333">${l.descripcion}</td><td></td><td><button class="btn btn-icon btn-sm" style="background:#e8e0d4;border:none;color:#4a3728" onclick="confirmDelete('presupuesto_lineas','${l.id}','${l.descripcion.replace(/'/g,"\\'")}')">🗑</button></td></tr>`;
     const pv=l.precio_venta||0,ci=l.ci_gg_bi_pct||0,sub=(l.cantidad||0)*pv,subCI=ci>0?sub*(1+ci/100):sub;
     totBase+=(l.cantidad||0)*(l.precio_base||0);totCI+=subCI-sub;totVenta+=subCI;
     return`<tr data-search="${(l.descripcion||'').toLowerCase()}"><td style="color:var(--text-soft);font-size:11px">${i+1}</td><td><strong>${l.descripcion||'—'}</strong>${l.ref_cype?`<br><span style="font-size:9px;color:var(--text-soft)">${l.ref_cype}</span>`:''}</td><td style="text-align:center">${l.unidad||'—'}</td><td class="td-mono">${l.cantidad||0}</td><td class="td-mono">${fmt(l.precio_base)}</td><td class="td-mono" style="color:var(--green)">${l.margen_pct>0?fmtP(l.margen_pct):'—'}</td><td class="td-mono" style="color:var(--amber)">${ci>0?fmtP(ci):'—'}</td><td class="td-mono" style="font-weight:700">${fmt(pv)}</td><td class="td-mono" style="font-weight:700;color:var(--navy)">${fmt(subCI)}</td><td><span class="badge b-gray">${l.iva_pct||'10%'}</span></td><td><div class="td-actions"><button class="btn btn-ghost btn-icon btn-sm" onclick="editLineaPresupuesto('${l.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('presupuesto_lineas','${l.id}','${(l.descripcion||'').replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`;
@@ -16054,7 +16089,8 @@ function fHandleFile(file){
 }
 function fHandleDrop(e){
   e.preventDefault();
-  document.getElementById('f-pdf-zone').style.borderColor='var(--border)';
+  const zone=document.getElementById('f-pdf-zone');
+  if(zone){zone.style.borderColor='var(--border)';zone.style.background='var(--white)';}
   const file=e.dataTransfer.files[0]; if(file) fHandleFile(file);
 }
 function fQuitarPDF(){
@@ -16231,7 +16267,7 @@ renderPresupuesto=function(){
   _origRenderPres();
   const tbody=document.getElementById('pres-tbody'); if(!tbody||!PresC.length) return;
   tbody.innerHTML=PresC.map((l,i)=>{
-    if(l.es_capitulo) return `<tr style="background:var(--navy);color:#fff"><td colspan="9" style="padding:9px 10px;font-weight:700;font-size:12px">${l.descripcion}</td><td></td><td><div style="display:flex;gap:3px"><button class="btn btn-icon btn-sm" style="background:rgba(255,255,255,.15);border:none;color:#fff;font-size:10px;padding:3px 7px;white-space:nowrap" title="Duplicar capítulo completo" onclick="duplicarCapituloCompleto('${l.id}')">📋 Dup.</button><button class="btn btn-icon btn-sm" style="background:rgba(255,255,255,.1);border:none;color:#fff" onclick="confirmDelete('presupuesto_lineas','${l.id}','${l.descripcion.replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`;
+    if(l.es_capitulo) return `<tr style="background:#f7f4ef"><td colspan="9" style="padding:9px 10px;font-weight:700;font-size:12px;color:#4a3728;border-bottom:2px solid #b87333">${l.descripcion}</td><td></td><td><div style="display:flex;gap:3px"><button class="btn btn-icon btn-sm" style="background:#e8e0d4;border:none;color:#4a3728;font-size:10px;padding:3px 7px;white-space:nowrap" title="Duplicar capítulo completo" onclick="duplicarCapituloCompleto('${l.id}')">📋 Dup.</button><button class="btn btn-icon btn-sm" style="background:#e8e0d4;border:none;color:#4a3728" onclick="confirmDelete('presupuesto_lineas','${l.id}','${l.descripcion.replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`;
     const pv=l.precio_venta||0,ci=l.ci_gg_bi_pct||0,sub=(l.cantidad||0)*pv,subCI=ci>0?sub*(1+ci/100):sub;
     return `<tr data-search="${(l.descripcion||'').toLowerCase()}"><td style="color:var(--text-soft);font-size:11px">${i+1}</td><td><strong>${l.descripcion||'—'}</strong>${l.ref_cype?`<br><span style="font-size:9px;color:var(--text-soft)">${l.ref_cype}</span>`:''}</td><td style="text-align:center">${l.unidad||'—'}</td><td class="td-mono">${l.cantidad||0}</td><td class="td-mono">${fmt(l.precio_base)}</td><td class="td-mono" style="color:var(--green)">${l.margen_pct>0?fmtP(l.margen_pct):'—'}</td><td class="td-mono" style="color:var(--amber)">${ci>0?fmtP(ci):'—'}</td><td class="td-mono" style="font-weight:700">${fmt(pv)}</td><td class="td-mono" style="font-weight:700;color:var(--navy)">${fmt(subCI)}</td><td><span class="badge b-gray">${l.iva_pct||'10%'}</span></td><td><div class="td-actions"><button class="btn btn-ghost btn-icon btn-sm" title="Duplicar" onclick="duplicarLineaPresupuesto('${l.id}')">⧉</button><button class="btn btn-ghost btn-icon btn-sm" onclick="editLineaPresupuesto('${l.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('presupuesto_lineas','${l.id}','${(l.descripcion||'').replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`;
   }).join('');
