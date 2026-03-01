@@ -2296,7 +2296,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <div class="imex-bud-top">
             <div style="font-size:12px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.07em">📄 Valoración</div>
             <div class="ix-mrg-row">
-              <span class="ix-mrg-lbl">Margen s/ coste</span>
+              <span class="ix-mrg-lbl">Margen extra s/ PVP</span>
               <input type="number" class="ix-mrg" id="ix-mrg" value="0" min="0" max="300" oninput="ixRecalc()">
               <span class="ix-mrg-pct">%</span>
               <span class="ix-mrg-note" id="ix-mrg-note">+0% aplicado</span>
@@ -2436,7 +2436,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <div class="imex-bud-top">
             <div style="font-size:12px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.07em">📄 Valoración</div>
             <div class="ix-mrg-row">
-              <span class="ix-mrg-lbl">Margen s/ coste</span>
+              <span class="ix-mrg-lbl">Margen extra s/ PVP</span>
               <input type="number" class="ix-mrg" id="vk-bud-mrg" value="0" min="0" max="300" oninput="ixRecalc()">
               <span class="ix-mrg-pct">%</span>
               <span class="ix-mrg-note" id="vk-bud-mrg-note">+0% aplicado</span>
@@ -13194,7 +13194,10 @@ function ixLinePvp(l){
   if(l._camp)   return l._pvpVenta || l.cst; // Campoaras: pvp×1,05 = precio venta tarifa
   if(l._lavabo) return l.pvp;               // Lavabos: PVP catálogo directo
   if(['fregaderos','genexia','mamparas','roca','visek'].includes(l._tab)) return l.pvp; // PVP catálogo directo
-  return ixPvpCli(l.cst); // IMEX baño/cocina ÚNICAMENTE: cst × (1+margen%)
+  // IMEX baño/cocina: PVP catálogo (+3%) + margen extra opcional
+  const pvpCat = l.pvp * IMEX_INC;
+  const mrg = ixMrg();
+  return mrg > 0 ? pvpCat * (1 + mrg/100) : pvpCat;
 }
 function ixFmt(n){ return n.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€'; }
 function ixH(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -13416,7 +13419,7 @@ function ixExportar(){
   let txt='VALORACIÓN GRIFERÍAS IMEX\nMargen: +'+m+'%\n'+'-'.repeat(58)+'\n';
   let tc=0,tp=0;
   ixLineas.forEach(l=>{
-    const pc=ixPvpCli(l.cst), cTot=l.cst*l.cant, pTot=pc*l.cant;
+    const pc=ixLinePvp(l), cTot=l.cst*l.cant, pTot=pc*l.cant;
     tc+=cTot; tp+=pTot;
     const notaTxt = l.nota ? '  ['+l.nota+']' : '';
     txt+=l.ref.padEnd(16)+' '+l.desc.substring(0,42).padEnd(43)+' x'+String(l.cant).padStart(2)+'  Coste:'+ixFmt(cTot).padStart(10)+'  PVP:'+ixFmt(pTot).padStart(10)+notaTxt+'\n';
@@ -13453,7 +13456,7 @@ async function ixExportarPresupuesto(){
   }
   const ver = verPanel;
   const margen = ixMrg();
-  const totalPvp = ixLineas.reduce((s,l)=>s+ixPvpCli(l.cst)*l.cant, 0);
+  const totalPvp = ixLineas.reduce((s,l)=>s+ixLinePvp(l)*l.cant, 0);
 
   if(!confirm(
     `Se añadirán al presupuesto del proyecto "${proyFinal}" ${ver}:\n\n`+
@@ -13478,13 +13481,14 @@ async function ixExportarPresupuesto(){
 
     for(let i=0;i<ixLineas.length;i++){
       const l=ixLineas[i];
-      const pvpU=ixPvpCli(l.cst);
+      const pvpU=ixLinePvp(l);
+      const margenPct = l.cst > 0 ? ((pvpU/l.cst - 1)*100) : 0;
       await sbPost('presupuesto_lineas',{
         proyecto_id:proyFinal, version:ver,
         descripcion:'['+l.ref+'] '+l.desc+(l.nota?' — '+l.nota:''),
         unidad:'Ud', cantidad:l.cant,
         precio_base:parseFloat(l.cst.toFixed(4)),
-        margen_pct:parseFloat(margen.toFixed(2)),
+        margen_pct:parseFloat(margenPct.toFixed(2)),
         ci_gg_bi_pct:0,
         precio_venta:parseFloat(pvpU.toFixed(4)),
         subtotal:parseFloat((pvpU*l.cant).toFixed(4)),
