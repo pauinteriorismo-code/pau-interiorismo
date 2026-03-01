@@ -16650,7 +16650,9 @@ function edCalcPrecio(p){
     const pvpSinIva = edPvp(p.coste);
     return {coste:p.coste, pvpSinIva, pvpIva: pvpSinIva*1.21};
   }
-  const coste = p.pvpIva / 1.21;
+  /* Balay: P.Ref(IVA incl) /1.21 = PVP sin IVA → ×0.70 (dto 30%) = Coste PAU */
+  const baseSinIva = p.pvpIva / 1.21;
+  const coste = baseSinIva * 0.70;
   const pvpSinIva = edPvp(coste);
   return {coste, pvpSinIva, pvpIva: pvpSinIva * 1.21};
 }
