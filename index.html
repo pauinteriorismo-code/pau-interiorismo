@@ -3903,11 +3903,23 @@ function pfVistaPrevia(){
   if(!doc || !doc.querySelector('#pf-lineas')?.children.length){ toast('Carga un presupuesto primero','error'); return; }
   const w = window.open('','_blank','width=900,height=700');
   w.document.write(`<!DOCTYPE html><html><head><title>Presupuesto Final</title>
-    <style>*{margin:0;padding:0;box-sizing:border-box}body{background:#f5f5f5;padding:20px;font-family:Arial,sans-serif}
-    .doc{background:white;max-width:800px;margin:0 auto;padding:32px 40px;box-shadow:0 2px 12px rgba(0,0,0,.1);font-size:12px}
-    table{width:100%;border-collapse:collapse}@media print{body{background:white;padding:0}.doc{box-shadow:none;padding:20px}}</style>
-  </head><body><div class="doc">${doc.innerHTML}</div>
-  <script>setTimeout(()=>window.print(),500)<\/script></body></html>`);
+    <style>*{margin:0;padding:0;box-sizing:border-box}body{background:#f5f5f5;font-family:Arial,sans-serif}
+    .toolbar{position:sticky;top:0;z-index:100;background:#1e293b;padding:10px 20px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+    .toolbar button{border:none;border-radius:6px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s}
+    .btn-back{background:rgba(255,255,255,.15);color:#fff}.btn-back:hover{background:rgba(255,255,255,.25)}
+    .btn-print{background:#b87333;color:#fff}.btn-print:hover{background:#a0622a}
+    .toolbar span{color:#fff;font-size:13px;font-weight:600;margin-left:8px}
+    .doc{background:white;max-width:800px;margin:20px auto;padding:32px 40px;box-shadow:0 2px 12px rgba(0,0,0,.1);font-size:12px}
+    table{width:100%;border-collapse:collapse}
+    @media print{.toolbar{display:none!important}body{background:white;padding:0}.doc{box-shadow:none;padding:20px;margin:0}}</style>
+  </head><body>
+  <div class="toolbar">
+    <button class="btn-back" onclick="window.close()">← Volver</button>
+    <span>Vista previa · Presupuesto Final</span>
+    <button class="btn-print" style="margin-left:auto" onclick="window.print()">🖨️ Imprimir</button>
+  </div>
+  <div class="doc">${doc.innerHTML}</div>
+  </body></html>`);
   w.document.close();
 }
 
@@ -5482,7 +5494,8 @@ async function saveLineaPresupuesto(){
   const precio=parseFloat(document.getElementById('pl-precio').value)||0,margen=parseFloat(document.getElementById('pl-margen').value)||0,ci=parseFloat(document.getElementById('pl-ci').value)||0,dto=parseFloat(document.getElementById('pl-dto').value)||0,cant=parseFloat(document.getElementById('pl-cant').value)||0;
   let pv=margen>0?precio*(1+margen/100):precio;if(ci>0)pv=pv*(1+ci/100);if(dto>0)pv=pv*(1-dto/100);
   const id=document.getElementById('pl-id').value;
-  const d={proyecto_id:proy,version:ver,descripcion:desc,ref_cype:document.getElementById('pl-cype-search').dataset.cypeRef||null,unidad:document.getElementById('pl-ud').value,cantidad:cant,precio_base:precio,margen_pct:margen,ci_gg_bi_pct:ci,dto_pct:dto,precio_venta:parseFloat(pv.toFixed(4)),subtotal:parseFloat((cant*pv).toFixed(4)),iva_pct:document.getElementById('pl-iva').value,partida:document.getElementById('pl-partida').value,es_capitulo:false,orden:PresC.length+1};
+  const existente=id?PresC.find(x=>x.id===id):null;
+  const d={proyecto_id:proy,version:ver,descripcion:desc,ref_cype:document.getElementById('pl-cype-search').dataset.cypeRef||null,unidad:document.getElementById('pl-ud').value,cantidad:cant,precio_base:precio,margen_pct:margen,ci_gg_bi_pct:ci,dto_pct:dto,precio_venta:parseFloat(pv.toFixed(4)),subtotal:parseFloat((cant*pv).toFixed(4)),iva_pct:document.getElementById('pl-iva').value,partida:document.getElementById('pl-partida').value,es_capitulo:false,orden:existente?existente.orden:PresC.length+1};
   try{if(id){await sbPatch('presupuesto_lineas',id,d);toast('Línea actualizada ✅');}else{await sbPost('presupuesto_lineas',d);toast('Línea añadida ✅');}closeModal('m-pres-linea');loadPresupuesto();}catch(e){toast('Error: '+e.message,'error');}
 }
 function addCapituloPresupuesto(){const proy=document.getElementById('pres-proyecto-sel').value;if(!proy){toast('Selecciona un proyecto primero','error');return;}document.getElementById('cap-nombre').value='';openModal('m-pres-cap');}
