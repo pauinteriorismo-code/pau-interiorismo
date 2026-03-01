@@ -1314,6 +1314,11 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
             <div class="cat-card-name">Mármoles Santamaría</div>
             <div class="cat-card-desc">Bancadas · Aplacados · Dekton · Silestone · XTONE</div>
           </div>
+          <div class="cat-card" data-cat="electrodom" onclick="catAbrir('electrodom')">
+            <div class="cat-card-icon">🔌</div>
+            <div class="cat-card-name">Electrodomésticos</div>
+            <div class="cat-card-desc">Balay &amp; Cata · Hornos, Placas, Fríos, Lavado</div>
+          </div>
           <div class="cat-card cat-card-new" onclick="toast('Próximamente: añadir fabricante','info')">
             <div class="cat-card-icon">＋</div>
             <div class="cat-card-name" style="color:var(--text-soft)">Nuevo</div>
@@ -2340,6 +2345,62 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 
 
     <!-- PANEL: MÁRMOLES SANTAMARÍA -->
+    <!-- PANEL: ELECTRODOMÉSTICOS BALAY -->
+    <div class="cat-panel" id="cat-panel-electrodom">
+      <div class="cat-header">
+        <button class="cat-back" onclick="catVolver()">← Catálogos</button>
+        <span class="cat-header-title">🔌 Electrodomésticos — Balay &amp; Cata</span>
+        <span class="cat-header-desc">P. Referencia Balay (IVA incl.) · Margen 35% sobre coste</span>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <label style="font-size:12px;font-weight:600;color:var(--text-soft)">Proyecto:</label>
+          <select class="form-input" id="ed-proyecto" style="width:200px"><option value="">— Seleccionar —</option></select>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <label style="font-size:12px;font-weight:600;color:var(--text-soft)">Margen %:</label>
+          <input type="number" class="form-input" id="ed-margen" value="35" min="0" max="80" step="1" style="width:60px;text-align:center" onchange="edRenderCatalogo()">
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <label style="font-size:12px;font-weight:600;color:var(--text-soft)">Categoría:</label>
+          <select class="form-input" id="ed-catfiltro" style="width:160px" onchange="edRenderCatalogo()">
+            <option value="">Todas</option>
+            <option value="Hornos">Hornos</option>
+            <option value="Microondas">Microondas</option>
+            <option value="Placas">Placas extractor</option>
+            <option value="Frigoríficos">Frigoríficos</option>
+            <option value="Lavavajillas">Lavavajillas</option>
+            <option value="Lavadoras">Lavadoras</option>
+            <option value="Secadoras">Secadoras</option>
+            <option value="Accesorios">Accesorios</option>
+          </select>
+        </div>
+        <div class="search-wrap" style="flex:1;min-width:140px"><span class="search-icon">🔍</span>
+          <input class="form-input" id="ed-buscar" placeholder="Buscar referencia…" oninput="edRenderCatalogo()">
+        </div>
+      </div>
+      <div style="display:flex;gap:2px;margin-bottom:10px;background:var(--bg-main);border-radius:8px;padding:2px;border:1px solid var(--border)">
+        <button class="btn btn-sm ed-tab active" id="ed-tab-cat" onclick="edSetTab('cat')" style="flex:1;border-radius:6px;background:var(--copper);color:#fff">◆ Catálogo</button>
+        <button class="btn btn-sm ed-tab" id="ed-tab-val" onclick="edSetTab('val')" style="flex:1;border-radius:6px">📋 Valoración <span id="ed-val-badge" style="background:var(--copper);color:#fff;border-radius:99px;padding:0 6px;font-size:10px;margin-left:4px;display:none">0</span></button>
+      </div>
+      <div id="ed-content-cat"></div>
+      <div id="ed-content-val" style="display:none"></div>
+      <div id="ed-budget" style="position:sticky;bottom:0;background:var(--bg-card);border-top:2px solid var(--copper);border-radius:10px 10px 0 0;padding:12px 16px;margin-top:12px;box-shadow:0 -4px 20px rgba(0,0,0,.15)">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+          <div style="display:flex;gap:16px;align-items:center">
+            <div><span style="font-size:11px;color:var(--text-soft)">Coste</span><div style="font-weight:700;font-size:15px" id="ed-tot-coste">0,00€</div></div>
+            <div><span style="font-size:11px;color:var(--text-soft)">PVP s/IVA</span><div style="font-weight:700;font-size:15px;color:var(--copper)" id="ed-tot-pvp">0,00€</div></div>
+            <div><span style="font-size:11px;color:var(--text-soft)">PVP c/IVA</span><div style="font-weight:700;font-size:15px" id="ed-tot-iva">0,00€</div></div>
+            <div><span style="font-size:11px;color:var(--text-soft)">Instalación</span><div style="font-weight:700;font-size:15px;color:var(--navy-mid)" id="ed-tot-inst">0,00€</div></div>
+          </div>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-primary btn-sm" onclick="edExportarPresupuesto()" style="background:var(--copper)">📤 Exportar al presupuesto</button>
+            <button class="btn btn-ghost btn-sm" onclick="edLimpiar()">🗑 Vaciar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="cat-panel" id="cat-panel-marmoles">
       <div class="cat-header">
         <button class="cat-back" onclick="catVolver()">← Catálogos</button>
@@ -13707,12 +13768,15 @@ function catAbrir(fab){
   } else if(fab === 'saitra'){
     document.getElementById('cat-panel-saitra').classList.add('open');
     if(typeof initSaitraLinea === 'function') initSaitraLinea();
+  } else if(fab === 'electrodom'){
+    document.getElementById('cat-panel-electrodom').classList.add('open');
+    edRenderCatalogo();
   } else if(fab === 'marmoles'){
     document.getElementById('cat-panel-marmoles').classList.add('open');
     msInit();
   }
   // Actualizar título topbar
-  const nombres = {saitra:'Saitra · Cocinas', imex:'IMEX · Griferías', campoaras:'Campoaras · Baño', fregaderos:"Plados · D'Aqua", genexia:'Genexia · Espejos', mamparas:'Mámparas · Deyban', platos:'Platos de Ducha · Fiora', roca:'Roca · Sanitarios', marmoles:'Mármoles Santamaría · Bancadas'};
+  const nombres = {saitra:'Saitra · Cocinas', imex:'IMEX · Griferías', campoaras:'Campoaras · Baño', fregaderos:"Plados · D'Aqua", genexia:'Genexia · Espejos', mamparas:'Mámparas · Deyban', platos:'Platos de Ducha · Fiora', roca:'Roca · Sanitarios', electrodom:'Electrodomésticos · Balay & Cata', marmoles:'Mármoles Santamaría · Bancadas'};
   document.getElementById('tb-title').textContent = 'Catálogos · ' + (nombres[fab]||fab);
   document.getElementById('tb-bc').textContent = 'Catálogos de precios → Exportar al presupuesto';
 }
@@ -13851,7 +13915,7 @@ function msInit(){
   msRenderCatalogo(); msRenderExtras(); msRenderValoracion(); msRenderPromos(); msUpdateTotals();
 }
 
-function msPvp(coste){ const m=parseFloat(document.getElementById('ms-margen')?.value)||35; return coste/(1-m/100); }
+function msPvp(coste){ const m=parseFloat(document.getElementById('ms-margen')?.value)||35; return coste*(1+m/100); }
 function msFmt(n){ return n.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 
 function msSetTab(t){
@@ -16528,6 +16592,219 @@ loadProyectos = async function(){
   await _origLoadProyectos();
   if(_vistaProyActual==='kanban') renderKanban();
 };
+
+
+/* ====== ELECTRODOMÉSTICOS BALAY & CATA ====== */
+const ED_PRODUCTOS = [
+  /* HORNOS */
+  {ref:"3HB5879N7",nombre:"Horno pirolítico Vapor Plus 60cm",cat:"Hornos",color:"Cristal negro",pvpIva:799,img:"25076052",acabados:["3HB5879B7|Cristal blanco"]},
+  {ref:"3HB4821G3",nombre:"Horno pirolítico 60cm",cat:"Hornos",color:"Grafito",pvpIva:709,img:"25076034",acabados:["3HB4841X3|Acero inox"]},
+  {ref:"3HB4841X3",nombre:"Horno pirolítico 60cm",cat:"Hornos",color:"Acero inoxidable",pvpIva:649,img:"25076014",acabados:["3HB4821G3|Grafito"]},
+  {ref:"3HB5159N4",nombre:"Horno multifunción Air Fry 60cm",cat:"Hornos",color:"Cristal negro",pvpIva:579,img:"26746420",acabados:[]},
+  {ref:"3HB5131N3",nombre:"Horno multifunción 60cm",cat:"Hornos",color:"Cristal negro",pvpIva:479,img:"25076030",acabados:[]},
+  {ref:"3HA4821G3",nombre:"Horno Vapor pirolítico 60cm",cat:"Hornos",color:"Grafito",pvpIva:839,img:"25076033",acabados:[]},
+  /* MICROONDAS */
+  {ref:"3CG5175N2",nombre:"Microondas grill integrable 25L",cat:"Microondas",color:"Cristal negro",pvpIva:369,img:"25079570",acabados:[]},
+  {ref:"3CP5002N3",nombre:"Microondas integrable 20L",cat:"Microondas",color:"Cristal negro",pvpIva:299,img:"25079574",acabados:[]},
+  /* PLACAS CON EXTRACTOR */
+  {ref:"3EBC989MH",nombre:"Placa inducción extractor 80cm Mate",cat:"Placas",color:"Negro mate",pvpIva:1959,img:"26491638",acabados:[]},
+  {ref:"3EBC983ER",nombre:"Placa inducción extractor 80cm",cat:"Placas",color:"Negro",pvpIva:1729,img:"22213753",acabados:[]},
+  {ref:"3EBC989LH",nombre:"Placa FlexInducción extractor 80cm",cat:"Placas",color:"Negro",pvpIva:1869,img:"22213752",acabados:[]},
+  {ref:"3EBC976LH",nombre:"Placa inducción extractor 70cm",cat:"Placas",color:"Negro",pvpIva:1749,img:"22213751",acabados:[]},
+  /* FRIGORÍFICOS */
+  {ref:"3KID967F",nombre:"Combi integrable NoFrost 193×71cm",cat:"Frigoríficos",color:"",pvpIva:1759,img:"20998520",acabados:[]},
+  {ref:"3KID834F",nombre:"Combi integrable NoFrost 193×56cm",cat:"Frigoríficos",color:"",pvpIva:1589,img:"21135120",acabados:[]},
+  {ref:"3KIE934F",nombre:"Combi integrable NoFrost 193×71cm",cat:"Frigoríficos",color:"",pvpIva:1645,img:"21135110",acabados:[]},
+  {ref:"3FID737S",nombre:"Frigorífico integrable 177×56cm",cat:"Frigoríficos",color:"",pvpIva:969,img:"21135100",acabados:[]},
+  {ref:"3FIE734S",nombre:"Frigorífico integrable 177×56cm",cat:"Frigoríficos",color:"",pvpIva:969,img:"21135090",acabados:[]},
+  /* LAVAVAJILLAS */
+  {ref:"3VH5332DP",nombre:"Lavavajillas integrable 60cm 13cub",cat:"Lavavajillas",color:"",pvpIva:769,img:"22116000",acabados:[]},
+  {ref:"3VF5012NP",nombre:"Lavavajillas integrable 60cm 12cub",cat:"Lavavajillas",color:"",pvpIva:569,img:"22115985",acabados:[]},
+  {ref:"3VT5331DA",nombre:"Lavavajillas integrable 45cm 10cub",cat:"Lavavajillas",color:"",pvpIva:769,img:"22116010",acabados:[]},
+  {ref:"3VT4031NA",nombre:"Lavavajillas integrable 45cm 10cub",cat:"Lavavajillas",color:"",pvpIva:479,img:"22116020",acabados:[]},
+  /* LAVADORAS */
+  {ref:"3TI983B",nombre:"Lavadora integrable 8kg 1200rpm",cat:"Lavadoras",color:"",pvpIva:869,img:"22116030",acabados:[]},
+  {ref:"3TS395BDS",nombre:"Lavadora 9kg 1400rpm AutoDosificación",cat:"Lavadoras",color:"Blanco",pvpIva:769,img:"22116040",acabados:[]},
+  /* SECADORAS */
+  {ref:"3SB3091BR",nombre:"Secadora bomba calor 9kg",cat:"Secadoras",color:"Blanco",pvpIva:889,img:"22116050",acabados:[]},
+  /* ACCESORIOS */
+  {ref:"HEZ9VDKR1",nombre:"Kit recirculación encimeras ≥60cm fondo",cat:"Accesorios",color:"",pvpIva:0,coste:143,esAccesorio:true,img:""},
+  /* CAMPANAS (Cata) */
+  {ref:"GC DUAL A BK",nombre:"Campana Cata GC DUAL A BK 820m³/h 75cm",cat:"Accesorios",color:"Cristal negro",pvpIva:0,coste:250,esAccesorio:true,marca:"Cata",img:""}
+];
+
+let edValoracion = [];
+
+function edImgUrl(p){
+  if(!p.img) return '';
+  return 'https://media3.bsh-group.com/Product_Shots/'+p.img+'_'+p.ref+'_STP_def.webp';
+}
+
+function edPvp(coste){
+  const m = parseFloat(document.getElementById('ed-margen')?.value) || 35;
+  return coste * (1 + m/100);
+}
+
+function edCalcPrecio(p){
+  if(p.esAccesorio){
+    const pvpSinIva = edPvp(p.coste);
+    return {coste:p.coste, pvpSinIva, pvpIva: pvpSinIva*1.21};
+  }
+  const coste = p.pvpIva / 1.21;
+  const pvpSinIva = edPvp(coste);
+  return {coste, pvpSinIva, pvpIva: pvpSinIva * 1.21};
+}
+
+function edSetTab(t){
+  document.querySelectorAll('.ed-tab').forEach(b=>{b.classList.remove('active');b.style.background='';b.style.color=''});
+  const btn=document.getElementById('ed-tab-'+t);
+  if(btn){btn.classList.add('active');btn.style.background='var(--copper)';btn.style.color='#fff'}
+  document.getElementById('ed-content-cat').style.display = t==='cat'?'':'none';
+  document.getElementById('ed-content-val').style.display = t==='val'?'':'none';
+  if(t==='val') edRenderValoracion();
+}
+
+function edRenderCatalogo(){
+  const catF = document.getElementById('ed-catfiltro')?.value || '';
+  const buscar = (document.getElementById('ed-buscar')?.value || '').toLowerCase();
+  let filtrados = ED_PRODUCTOS.filter(p=>{
+    if(catF && p.cat !== catF) return false;
+    if(buscar && !p.ref.toLowerCase().includes(buscar) && !p.nombre.toLowerCase().includes(buscar)) return false;
+    return true;
+  });
+  const cont = document.getElementById('ed-content-cat');
+  if(!filtrados.length){cont.innerHTML='<div style="text-align:center;padding:40px;color:var(--text-soft)">Sin resultados</div>';return}
+  let h = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">';
+  filtrados.forEach((p,i)=>{
+    const precio = edCalcPrecio(p);
+    const imgSrc = edImgUrl(p);
+    const imgHtml = imgSrc
+      ? '<img src="'+imgSrc+'" style="width:100%;height:160px;object-fit:contain;border-radius:8px 8px 0 0;background:#f8f8fa" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
+        +'<div style="display:none;width:100%;height:160px;align-items:center;justify-content:center;background:#f0f2f5;border-radius:8px 8px 0 0;font-size:48px;color:#ccc">📦</div>'
+      : '<div style="width:100%;height:100px;display:flex;align-items:center;justify-content:center;background:#f0f2f5;border-radius:8px 8px 0 0;font-size:48px;color:#ccc">'+(p.marca==='Cata'?'🌀':'📦')+'</div>';
+    const acabTxt = p.acabados && p.acabados.length ? '<div style="font-size:10px;color:var(--text-soft);margin-top:2px">También: '+p.acabados.map(a=>a.split('|')[1]).join(', ')+'</div>' : '';
+    const pvpTxt = p.esAccesorio
+      ? '<span style="font-size:11px;color:var(--text-soft)">Coste: '+precio.coste.toFixed(2)+'€</span><br><span style="font-weight:700;color:var(--copper)">PVP: '+precio.pvpIva.toFixed(2)+'€</span>'
+      : '<span style="font-size:11px;color:var(--text-soft)">P.Ref Balay: '+p.pvpIva+'€ IVA incl.</span><br><span style="font-weight:700;color:var(--copper)">PVP: '+precio.pvpIva.toFixed(2)+'€</span>';
+    h += '<div style="background:var(--white);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:all .2s" onmouseenter="this.style.boxShadow=\'var(--shadow)\'" onmouseleave="this.style.boxShadow=\'none\'">';
+    h += imgHtml;
+    h += '<div style="padding:10px 12px">';
+    h += '<div style="font-size:10px;color:var(--text-soft);font-weight:600">'+p.cat+(p.marca==='Cata'?' · CATA':' · BALAY')+'</div>';
+    h += '<div style="font-size:13px;font-weight:700;color:var(--navy);margin:2px 0">'+p.ref+'</div>';
+    h += '<div style="font-size:11px;line-height:1.4">'+p.nombre+'</div>';
+    if(p.color) h += '<div style="font-size:10px;color:var(--text-soft)">'+p.color+'</div>';
+    h += acabTxt;
+    h += '<div style="margin-top:6px">'+pvpTxt+'</div>';
+    h += '<div style="display:flex;gap:6px;margin-top:8px;align-items:center">';
+    h += '<select class="form-input" id="ed-inst-'+i+'" style="font-size:10px;padding:2px 4px;width:auto"><option value="0">Sin instalación</option><option value="50">Instal. 50€</option><option value="100">Instal. 100€</option></select>';
+    h += '<button class="btn btn-primary btn-sm" onclick="edAnadir('+i+')" style="background:var(--copper);font-size:11px;padding:4px 10px">+ Añadir</button>';
+    h += '</div></div></div>';
+  });
+  h += '</div>';
+  cont.innerHTML = h;
+  // Load project selector
+  edCargarProyectos();
+}
+
+function edAnadir(idx){
+  const p = ED_PRODUCTOS[idx];
+  const instEl = document.getElementById('ed-inst-'+idx);
+  const inst = instEl ? parseFloat(instEl.value) : 0;
+  edValoracion.push({...p, instalacion: inst});
+  const badge = document.getElementById('ed-val-badge');
+  if(badge){badge.style.display='inline';badge.textContent=edValoracion.length}
+  edActualizarTotales();
+  toast('Añadido: '+p.ref,'success');
+}
+
+function edRenderValoracion(){
+  const cont = document.getElementById('ed-content-val');
+  if(!edValoracion.length){
+    cont.innerHTML='<div style="text-align:center;padding:40px;color:var(--text-soft)">Valoración vacía. Añade productos desde el catálogo.</div>';
+    return;
+  }
+  let h='<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:var(--bg-main);border-bottom:2px solid var(--border)">';
+  h+='<th style="padding:8px;text-align:left">Ref.</th><th style="text-align:left">Descripción</th><th style="text-align:right">Coste</th><th style="text-align:right">PVP s/IVA</th><th style="text-align:right">PVP c/IVA</th><th style="text-align:right">Instal.</th><th></th></tr></thead><tbody>';
+  edValoracion.forEach((p,i)=>{
+    const pr = edCalcPrecio(p);
+    h+='<tr style="border-bottom:1px solid var(--border)">';
+    h+='<td style="padding:6px 8px;font-weight:700">'+p.ref+'</td>';
+    h+='<td>'+p.nombre+(p.color?' · '+p.color:'')+'</td>';
+    h+='<td style="text-align:right">'+pr.coste.toFixed(2)+'€</td>';
+    h+='<td style="text-align:right;color:var(--copper);font-weight:600">'+pr.pvpSinIva.toFixed(2)+'€</td>';
+    h+='<td style="text-align:right;font-weight:600">'+pr.pvpIva.toFixed(2)+'€</td>';
+    h+='<td style="text-align:right">'+p.instalacion+'€</td>';
+    h+='<td style="text-align:center"><button class="btn btn-ghost btn-sm" onclick="edQuitar('+i+')" style="color:var(--danger);padding:2px 6px">✕</button></td>';
+    h+='</tr>';
+  });
+  h+='</tbody></table>';
+  cont.innerHTML=h;
+}
+
+function edQuitar(i){
+  edValoracion.splice(i,1);
+  const badge=document.getElementById('ed-val-badge');
+  if(badge){badge.textContent=edValoracion.length;if(!edValoracion.length)badge.style.display='none'}
+  edRenderValoracion();
+  edActualizarTotales();
+}
+
+function edLimpiar(){
+  edValoracion=[];
+  const badge=document.getElementById('ed-val-badge');
+  if(badge){badge.style.display='none';badge.textContent='0'}
+  edRenderValoracion();
+  edActualizarTotales();
+  toast('Valoración vaciada','info');
+}
+
+function edActualizarTotales(){
+  let tCoste=0,tPvp=0,tIva=0,tInst=0;
+  edValoracion.forEach(p=>{
+    const pr=edCalcPrecio(p);
+    tCoste+=pr.coste;tPvp+=pr.pvpSinIva;tIva+=pr.pvpIva;tInst+=(p.instalacion||0);
+  });
+  const fmt=v=>v.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€';
+  document.getElementById('ed-tot-coste').textContent=fmt(tCoste);
+  document.getElementById('ed-tot-pvp').textContent=fmt(tPvp);
+  document.getElementById('ed-tot-iva').textContent=fmt(tIva);
+  document.getElementById('ed-tot-inst').textContent=fmt(tInst);
+}
+
+async function edExportarPresupuesto(){
+  const pryId=document.getElementById('ed-proyecto')?.value;
+  if(!pryId){toast('Selecciona un proyecto primero','warning');return}
+  if(!edValoracion.length){toast('Valoración vacía','warning');return}
+  let ok=0;
+  for(const p of edValoracion){
+    const pr=edCalcPrecio(p);
+    const desc=p.nombre+(p.color?' · '+p.color:'')+(p.instalacion?' (incl. instal. '+p.instalacion+'€)':'');
+    const pvpVenta=parseFloat((pr.pvpSinIva+(p.instalacion||0)).toFixed(2));
+    try{
+      await sbPost('presupuesto_lineas',{
+        proyecto_id:pryId,
+        partida:'Electrodomésticos',
+        descripcion:(p.marca==='Cata'?'Cata':'Balay')+' '+p.ref+' — '+desc,
+        unidad:'Ud',
+        cantidad:1,
+        precio_coste:parseFloat(pr.coste.toFixed(2)),
+        precio_venta:pvpVenta,
+        proveedor:p.marca==='Cata'?'Mundobaño':'Balay'
+      });
+      ok++;
+    }catch(e){console.error(e)}
+  }
+  toast(ok+' líneas exportadas al presupuesto','success');
+}
+
+async function edCargarProyectos(){
+  const sel=document.getElementById('ed-proyecto');
+  if(!sel||sel.options.length>1) return;
+  try{
+    const data=await sbGet('proyectos','select=id,nombre&order=nombre');
+    if(data&&data.length){data.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.nombre;sel.appendChild(o)})}
+  }catch(e){}
+}
 
 </script>
 
