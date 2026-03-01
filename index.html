@@ -4389,6 +4389,56 @@ let LISTAS={
 };
 const LISTA_MAP={'trabajadores-list':'trabajadores','estados-list':'estados_proyecto','tipos-proyecto-list':'tipos_proyecto','formas-pago-list':'formas_pago','tipos-cliente-list':'tipos_cliente','tipos-proveedor-list':'tipos_proveedor','estancias-list':'estancias','categorias-list':'categorias_tarifario'};
 
+// ═══════════════════════════════════════════
+// CONTEXTO ACTIVO DEL PRESUPUESTO (eje central)
+// ═══════════════════════════════════════════
+let PRES_ACTIVO = { clienteId:'', proyectoId:'', version:'v1' };
+
+function updatePresActivo(){
+  PRES_ACTIVO.clienteId = document.getElementById('filter-cliente-presupuesto')?.value || '';
+  PRES_ACTIVO.proyectoId = document.getElementById('pres-proyecto-sel')?.value || '';
+  PRES_ACTIVO.version = document.getElementById('pres-version-sel')?.value || 'v1';
+  // Persist in sessionStorage
+  if(PRES_ACTIVO.proyectoId) sessionStorage.setItem('pres_activo_proy', PRES_ACTIVO.proyectoId);
+  if(PRES_ACTIVO.version) sessionStorage.setItem('pres_activo_ver', PRES_ACTIVO.version);
+  if(PRES_ACTIVO.clienteId) sessionStorage.setItem('pres_activo_cli', PRES_ACTIVO.clienteId);
+}
+
+function syncPresContext(){
+  const {clienteId, proyectoId, version} = PRES_ACTIVO;
+  if(!proyectoId) return;
+  // 1. Catálogos IMEX sidebar
+  const ixProy = document.getElementById('ix-export-proy');
+  if(ixProy) ixProy.value = proyectoId;
+  const ixVer = document.getElementById('ix-export-ver');
+  if(ixVer) ixVer.value = version;
+  // 2. Catálogo Visek sidebar
+  const vkProy = document.getElementById('vk-export-proy');
+  if(vkProy) vkProy.value = proyectoId;
+  const vkVer = document.getElementById('vk-export-ver');
+  if(vkVer) vkVer.value = version;
+  // 3. Saitra
+  const sProy = document.getElementById('s-proyecto');
+  if(sProy) sProy.value = proyectoId;
+  // 4. Mármoles
+  const msProy = document.getElementById('ms-proyecto');
+  if(msProy) msProy.value = proyectoId;
+  // 5. Electrodomésticos
+  const edProy = document.getElementById('ed-proyecto');
+  if(edProy) edProy.value = proyectoId;
+  // 6. Presupuesto Final
+  if(clienteId){
+    const pfCli = document.getElementById('filter-cliente-pres_final');
+    if(pfCli){ pfCli.value = clienteId; cascadaModulo('pres_final','pf-proyecto-sel',null); }
+    setTimeout(()=>{
+      const pfProy = document.getElementById('pf-proyecto-sel');
+      if(pfProy) pfProy.value = proyectoId;
+      const pfVer = document.getElementById('pf-version-sel');
+      if(pfVer) pfVer.value = version;
+    },100);
+  }
+}
+
 // familias gestionadas aparte via familias_tarifario (tabla supabase)
 
 // ── GESTIÓN DE FAMILIAS DEL TARIFARIO ──
@@ -4785,6 +4835,7 @@ function poblarFiltrosCliente(){
 function cascadaClienteProyecto(mod){
   const clienteSel=document.getElementById(`filter-cliente-${mod}`);
   const clienteId=clienteSel?clienteSel.value:'';
+  if(mod==='presupuesto') PRES_ACTIVO.clienteId = clienteId;
 
   // Filtrar selector de proyectos según cliente
   const proySel = mod==='presupuesto'
@@ -5410,6 +5461,15 @@ async function initPresupuesto(){
   // Restaurar último proyecto seleccionado
   const lp=sessionStorage.getItem('pres_last_proy');
   const lv=sessionStorage.getItem('pres_last_ver');
+  const lc=sessionStorage.getItem('pres_activo_cli');
+  // Restaurar cliente primero (filtra proyectos)
+  if(lc){
+    const cliSel=document.getElementById('filter-cliente-presupuesto');
+    if(cliSel&&Array.from(cliSel.options).some(o=>o.value===lc)){
+      cliSel.value=lc;
+      cascadaClienteProyecto('presupuesto');
+    }
+  }
   const pSel=document.getElementById('pres-proyecto-sel');
   if(lp&&pSel&&PC.some(p=>p.proyecto_id===lp)){
     pSel.value=lp;
@@ -5419,6 +5479,7 @@ async function initPresupuesto(){
   }
 }
 async function loadPresupuesto(){
+  updatePresActivo();
   const proy=document.getElementById('pres-proyecto-sel').value;
   const ver=document.getElementById('pres-version-sel').value;
   const tbody=document.getElementById('pres-tbody');
@@ -9934,6 +9995,17 @@ const loaders={
         return;
       }
       sel.innerHTML='<option value="">Seleccionar proyecto…</option>'+PC.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
+      // Sincronizar desde contexto presupuesto activo
+      if(PRES_ACTIVO.clienteId){
+        const pfCli=document.getElementById('filter-cliente-pres_final');
+        if(pfCli){ pfCli.value=PRES_ACTIVO.clienteId; cascadaModulo('pres_final','pf-proyecto-sel',null); }
+        setTimeout(()=>{
+          if(PRES_ACTIVO.proyectoId) sel.value=PRES_ACTIVO.proyectoId;
+          const pfVer=document.getElementById('pf-version-sel');
+          if(pfVer && PRES_ACTIVO.version) pfVer.value=PRES_ACTIVO.version;
+          loadPresupuestoFinal();
+        },150);
+      }
     }catch(e){
       sel.innerHTML='<option value="">Error al cargar: '+e.message+'</option>';
       toast('Error cargando proyectos: '+e.message,'error');
@@ -13928,6 +14000,8 @@ function catAbrir(fab){
   const nombres = {saitra:'Saitra · Cocinas', imex:'IMEX · Griferías', campoaras:'Campoaras · Baño', fregaderos:"Plados · D'Aqua", genexia:'Genexia · Espejos', mamparas:'Mámparas · Deyban', roca:'Roca · Sanitarios', electrodom:'Electrodomésticos · Balay & Cata', marmoles:'Mármoles Santamaría · Bancadas', visek:'Platos Visek · Minimal Collection'};
   document.getElementById('tb-title').textContent = 'Catálogos · ' + (nombres[fab]||fab);
   document.getElementById('tb-bc').textContent = 'Catálogos de precios → Exportar al presupuesto';
+  // Sincronizar proyecto activo del presupuesto a los selectores del catálogo
+  syncPresContext();
 }
 
 function catVolver(){
@@ -15515,6 +15589,7 @@ window.ixSetTab = function(tab){
   
   // Populate project selector when panel opens
   ixPopulateProyectoSel();
+  syncPresContext();
 
   // Actualizar info box según tab
   if(infoBox){
