@@ -1088,7 +1088,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         </div>
       </div>
       <div class="card">
-        <div class="table-wrap"><table><thead><tr style="background:#f7f4ef"><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">#</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Descripción</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Ud.</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Cant.</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Precio Base</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Margen %</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">CI+GG+BI</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">P.Venta</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Subtotal</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">IVA</th><th></th></tr></thead>
+        <div class="table-wrap"><table><thead><tr style="background:#f7f4ef"><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">#</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Descripción</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Ud.</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Cant.</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Precio Base</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Margen %</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">CI+GG+BI</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">P.Venta</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Subtotal s/IVA</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Total c/IVA</th><th></th></tr></thead>
         <tbody id="pres-tbody"><tr><td colspan="11"><div class="empty"><div class="empty-icon">💰</div><div class="empty-text">Selecciona un proyecto</div></div></td></tr></tbody></table></div>
       </div>
     </div>
@@ -5522,7 +5522,7 @@ function renderPresupuesto(){
     const pv=l.precio_venta||0,ci=l.ci_gg_bi_pct||0,sub=(l.cantidad||0)*pv,subCI=ci>0?sub*(1+ci/100):sub;
     const ivaPctNum=parseFloat(l.iva_pct)||10,ivaImporte=subCI*ivaPctNum/100;
     totBase+=(l.cantidad||0)*(l.precio_base||0);totCI+=subCI-sub;totVenta+=subCI;
-    return`<tr data-search="${(l.descripcion||'').toLowerCase()}"><td style="color:var(--text-soft);font-size:11px">${i+1}</td><td><strong>${l.descripcion||'—'}</strong>${l.ref_cype?`<br><span style="font-size:9px;color:var(--text-soft)">${l.ref_cype}</span>`:''}</td><td style="text-align:center">${l.unidad||'—'}</td><td class="td-mono">${l.cantidad||0}</td><td class="td-mono">${fmt(l.precio_base)}</td><td class="td-mono" style="color:var(--green)">${l.margen_pct>0?fmtP(l.margen_pct):'—'}</td><td class="td-mono" style="color:var(--amber)">${ci>0?fmtP(ci):'—'}</td><td class="td-mono" style="font-weight:700">${fmt(pv)}</td><td class="td-mono" style="font-weight:700;color:var(--navy)">${fmt(subCI)}</td><td class="td-mono" style="font-size:11px"><span class="badge b-gray" style="margin-bottom:2px">${l.iva_pct||'10%'}</span><br>${fmt(ivaImporte)}</td><td><div class="td-actions"><button class="btn btn-ghost btn-icon btn-sm" onclick="editLineaPresupuesto('${l.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('presupuesto_lineas','${l.id}','${(l.descripcion||'').replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`;
+    return`<tr data-search="${(l.descripcion||'').toLowerCase()}"><td style="color:var(--text-soft);font-size:11px">${i+1}</td><td><strong>${l.descripcion||'—'}</strong>${l.ref_cype?`<br><span style="font-size:9px;color:var(--text-soft)">${l.ref_cype}</span>`:''}</td><td style="text-align:center">${l.unidad||'—'}</td><td class="td-mono">${l.cantidad||0}</td><td class="td-mono">${fmt(l.precio_base)}</td><td class="td-mono" style="color:var(--green)">${l.margen_pct>0?fmtP(l.margen_pct):'—'}</td><td class="td-mono" style="color:var(--amber)">${ci>0?fmtP(ci):'—'}</td><td class="td-mono" style="font-weight:700">${fmt(pv)}</td><td class="td-mono" style="font-weight:700;color:var(--navy)">${fmt(subCI)}</td><td class="td-mono" style="font-weight:700;color:var(--copper)"><span class="badge b-gray" style="margin-bottom:2px">${l.iva_pct||'10%'}</span><br>${fmt(subCI+ivaImporte)}</td><td><div class="td-actions"><button class="btn btn-ghost btn-icon btn-sm" onclick="editLineaPresupuesto('${l.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('presupuesto_lineas','${l.id}','${(l.descripcion||'').replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`;
   }).join('');
   // Calcular IVA por tramos según el iva_pct de cada línea
   let ivaDesglose={};
@@ -8552,29 +8552,26 @@ function previsualizarPresupuesto(){
     +'</div>'
     +'<div class=\"foot\">PAU INTERIORISMO S.L. · CIF B-56909641 · C/ Tomás y Valiente Nº 6 Bajo · 46290 Alcàsser (Valencia) · Tel: 961 20 01 87</div>'
   +'</div></body></html>';
-  const win = window.open('','_blank','width=870,height=950');
-  if(!win){ toast('Activa las ventanas emergentes','error'); return; }
-  win.document.write(html);
-  win.document.close();
-  const s=win.document.createElement('script');
-  s.src='https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-  s.onload=function(){
-    const s2=win.document.createElement('script');
-    s2.textContent='function dlPDF(){'
+  // Embeber scripts en HTML para que funcionen tras document.write
+  const htmlFinal = html.replace('</body></html>',
+    '<scr'+'ipt src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"><\/scr'+'ipt>'
+    +'<scr'+'ipt>function dlPDF(){'
       +'var btn=document.getElementById("btn-pdf");'
       +'btn.textContent="⏳ Generando…";btn.disabled=true;'
       +'html2pdf().set({'
       +'margin:8,'
-      +'filename:"'+filename.replace(/"/g,'')+'",'
+      +'filename:"'+filename.replace(/"/g,'')+'",  '
       +'image:{type:"jpeg",quality:0.98},'
       +'html2canvas:{scale:2,useCORS:true,logging:false},'
       +'jsPDF:{unit:"mm",format:"a4",orientation:"portrait"}'
       +'}).from(document.getElementById("fpdf")).save().then(function(){'
       +'btn.textContent="📥 Guardar PDF";btn.disabled=false;'
-      +'});}';
-    win.document.head.appendChild(s2);
-  };
-  win.document.head.appendChild(s);
+      +'});}<\/scr'+'ipt></body></html>');
+  const win = window.open('','_blank','width=870,height=950');
+  if(!win){ toast('Activa las ventanas emergentes en el navegador','error'); return; }
+  win.document.open();
+  win.document.write(htmlFinal);
+  win.document.close();
 }
 // ═══ EDITAR HORAS ═══
 function editHora(id){
@@ -9794,9 +9791,14 @@ async function saveFactura(){
     importe_vto2: esC?(parseFloat(document.getElementById('f-importe-vto2')?.value)||null):null,
     importe_vto3: esC?(parseFloat(document.getElementById('f-importe-vto3')?.value)||null):null,
     importe_vto4: esC?(parseFloat(document.getElementById('f-importe-vto4')?.value)||null):null,
-    // PDF adjunto
-    adjunto_pdf:     document.getElementById('f-pdf-b64')?.value||null,
   };
+
+  // PDF adjunto — solo incluir si hay valor (la columna debe existir en Supabase)
+  const pdfB64Fac = document.getElementById('f-pdf-b64')?.value||null;
+  if(pdfB64Fac){
+    d.adjunto_pdf = pdfB64Fac;
+    d.adjunto_nombre = document.getElementById('f-pdf-nombre')?.value||'factura.pdf';
+  }
 
   // Si no hay importe_vto1 pero hay fecha, poner el total como importe
   if(esC && d.fecha_vencimiento && !d.importe_vto1){
