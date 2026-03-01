@@ -3996,34 +3996,7 @@ function pfVistaPrevia(){
     .doc{background:white;max-width:800px;margin:0 auto;padding:32px 40px;box-shadow:0 2px 12px rgba(0,0,0,.1);font-size:12px}
     table{width:100%;border-collapse:collapse}@media print{body{background:white;padding:0}.doc{box-shadow:none;padding:20px}}</style>
   </head><body><div class="doc">${doc.innerHTML}</div>
-  <script>setTimeout(()=>window.print(),500)<\/script>
-<!-- MODAL VISTA PREVIA PRESUPUESTO -->
-<div id="m-vista-previa" style="display:none;position:fixed;inset:0;z-index:9000;flex-direction:column;">
-  <div id="vp-toolbar" style="display:flex;align-items:center;justify-content:space-between;background:#4a3728;padding:10px 18px;flex-shrink:0;z-index:9001;position:relative">
-    <span style="color:#fff;font-weight:700;font-size:14px">👁 Vista previa del presupuesto</span>
-    <div style="display:flex;gap:8px">
-      <button onclick="vpImprimir()" style="background:#b87333;color:#fff;border:none;border-radius:5px;padding:7px 16px;font-size:12px;font-weight:700;cursor:pointer">🖨️ Imprimir</button>
-      <button onclick="vpGuardarPDF()" id="vp-btn-pdf" style="background:#27405b;color:#fff;border:none;border-radius:5px;padding:7px 16px;font-size:12px;font-weight:700;cursor:pointer">📥 Guardar PDF</button>
-      <button onclick="document.getElementById('m-vista-previa').style.display='none';document.body.style.overflow=''" style="background:rgba(255,255,255,.2);color:#fff;border:none;border-radius:5px;padding:7px 14px;font-size:12px;cursor:pointer">✕ Cerrar</button>
-    </div>
-  </div>
-  <div id="vp-content" style="flex:1;overflow-y:auto;background:#f5f3ef;"></div>
-</div>
-
-<!-- MODAL VISOR PDF ADJUNTO -->
-<div id="m-pdf-viewer" style="display:none;position:fixed;inset:0;z-index:9500;flex-direction:column;background:rgba(10,20,30,.85);">
-  <div style="display:flex;align-items:center;justify-content:space-between;background:#1a2a3a;padding:10px 18px;flex-shrink:0">
-    <span id="pdf-viewer-title" style="color:#fff;font-weight:700;font-size:13px">📄 PDF adjunto</span>
-    <div style="display:flex;gap:8px">
-      <button onclick="pdfViewerDescargar()" style="background:#b87333;color:#fff;border:none;border-radius:5px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer">⬇️ Descargar</button>
-      <button onclick="pdfViewerCerrar()" style="background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:5px;padding:6px 12px;font-size:12px;cursor:pointer">✕ Cerrar</button>
-    </div>
-  </div>
-  <div style="flex:1;overflow:hidden;background:#525659;">
-    <embed id="pdf-viewer-embed" src="" type="application/pdf" style="width:100%;height:100%;border:none;">
-  </div>
-</div>
-</body></html>`);
+  <script>setTimeout(()=>window.print(),500)<\/script></body></html>`);
   w.document.close();
 }
 
@@ -17550,7 +17523,6 @@ window._pdfViewerBlobUrl = null;
 
 function abrirVisorPDF(b64, nombre){
   if(!b64){ toast('Sin PDF adjunto','error'); return; }
-  // Revocar blob anterior si existe
   if(window._pdfViewerBlobUrl) URL.revokeObjectURL(window._pdfViewerBlobUrl);
 
   const bin=atob(b64), bytes=new Uint8Array(bin.length);
@@ -17558,17 +17530,17 @@ function abrirVisorPDF(b64, nombre){
   const blob = new Blob([bytes],{type:'application/pdf'});
   const url  = URL.createObjectURL(blob);
 
-  window._pdfViewerB64    = b64;
-  window._pdfViewerNombre = nombre || 'documento.pdf';
+  window._pdfViewerB64     = b64;
+  window._pdfViewerNombre  = nombre || 'documento.pdf';
   window._pdfViewerBlobUrl = url;
 
   const modal = document.getElementById('m-pdf-viewer');
-  const embed = document.getElementById('pdf-viewer-embed');
+  const frame = document.getElementById('pdf-viewer-embed');
   const title = document.getElementById('pdf-viewer-title');
-  if(!modal||!embed){ toast('Error: visor PDF no encontrado','error'); return; }
+  if(!modal||!frame){ toast('Error: visor PDF no encontrado','error'); return; }
 
   if(title) title.textContent = '📄 ' + window._pdfViewerNombre;
-  embed.src = url;
+  frame.src = url;
   modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
 }
@@ -17576,7 +17548,6 @@ function pdfViewerCerrar(){
   const modal = document.getElementById('m-pdf-viewer');
   if(modal) modal.style.display = 'none';
   document.body.style.overflow = '';
-  // No revocar aquí — mantener URL válida para descarga posterior
 }
 function pdfViewerDescargar(){
   if(!window._pdfViewerBlobUrl){ toast('Sin PDF','error'); return; }
@@ -18165,5 +18136,33 @@ function pdfViewerDescargar(){
         <button class="btn btn-primary" onclick="fregImportar()">📥 Importar</button>
       </div>
     </div>
+  </div>
+</div>
+
+
+<!-- MODAL VISTA PREVIA PRESUPUESTO -->
+<div id="m-vista-previa" style="display:none;position:fixed;inset:0;z-index:9000;flex-direction:column;">
+  <div id="vp-toolbar" style="display:flex;align-items:center;justify-content:space-between;background:#4a3728;padding:10px 18px;flex-shrink:0;z-index:9001;position:relative">
+    <span style="color:#fff;font-weight:700;font-size:14px">👁 Vista previa del presupuesto</span>
+    <div style="display:flex;gap:8px">
+      <button onclick="vpImprimir()" style="background:#b87333;color:#fff;border:none;border-radius:5px;padding:7px 16px;font-size:12px;font-weight:700;cursor:pointer">🖨️ Imprimir</button>
+      <button onclick="vpGuardarPDF()" id="vp-btn-pdf" style="background:#27405b;color:#fff;border:none;border-radius:5px;padding:7px 16px;font-size:12px;font-weight:700;cursor:pointer">📥 Guardar PDF</button>
+      <button onclick="document.getElementById('m-vista-previa').style.display='none';document.body.style.overflow=''" style="background:rgba(255,255,255,.2);color:#fff;border:none;border-radius:5px;padding:7px 14px;font-size:12px;cursor:pointer">✕ Cerrar</button>
+    </div>
+  </div>
+  <div id="vp-content" style="flex:1;overflow-y:auto;background:#f5f3ef;"></div>
+</div>
+
+<!-- MODAL VISOR PDF ADJUNTO -->
+<div id="m-pdf-viewer" style="display:none;position:fixed;inset:0;z-index:9500;flex-direction:column;background:rgba(10,20,30,.85);">
+  <div style="display:flex;align-items:center;justify-content:space-between;background:#1a2a3a;padding:10px 18px;flex-shrink:0">
+    <span id="pdf-viewer-title" style="color:#fff;font-weight:700;font-size:13px">📄 PDF adjunto</span>
+    <div style="display:flex;gap:8px">
+      <button onclick="pdfViewerDescargar()" style="background:#b87333;color:#fff;border:none;border-radius:5px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer">⬇️ Descargar</button>
+      <button onclick="pdfViewerCerrar()" style="background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:5px;padding:6px 12px;font-size:12px;cursor:pointer">✕ Cerrar</button>
+    </div>
+  </div>
+  <div style="flex:1;overflow:hidden;background:#525659;">
+    <iframe id="pdf-viewer-embed" src="about:blank" style="width:100%;height:100%;border:none;" title="Visor PDF"></iframe>
   </div>
 </div>
