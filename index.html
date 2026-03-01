@@ -3478,6 +3478,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <!-- PDF ADJUNTO -->
       <div class="form-group fg-full">
         <label class="form-label">📎 Factura PDF del proveedor</label>
+        <!-- Zona de carga — solo activa cuando NO hay PDF -->
         <div id="co-pdf-zone" style="border:2px dashed var(--border);border-radius:8px;padding:14px;text-align:center;cursor:pointer;transition:all .15s;background:var(--bg-card)" 
              onclick="document.getElementById('co-pdf-input').click()"
              ondragover="event.preventDefault();this.style.borderColor='var(--navy)'"
@@ -3486,8 +3487,9 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <div id="co-pdf-label" style="color:var(--text-soft);font-size:12px">
             📄 Arrastra el PDF aquí o <u style="color:var(--navy);cursor:pointer">haz clic para seleccionar</u>
           </div>
-          <div id="co-pdf-preview" style="display:none;margin-top:8px;align-items:center;gap:8px;justify-content:center"></div>
         </div>
+        <!-- Preview PDF — FUERA de la zona de clic para evitar abrir selector de archivos -->
+        <div id="co-pdf-preview" style="display:none;margin-top:8px;align-items:center;gap:8px;padding:10px 12px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px"></div>
         <input type="file" id="co-pdf-input" accept=".pdf,application/pdf" style="display:none" onchange="coHandleFile(this.files[0])">
         <input type="hidden" id="co-pdf-b64">
         <input type="hidden" id="co-pdf-nombre">
@@ -8655,15 +8657,21 @@ function editCompra(id){
   coResetPDF();
   if(c.adjunto_pdf){
     window._coPDFActual = c.adjunto_pdf;
+    document.getElementById('co-pdf-b64').value = c.adjunto_pdf;
+    document.getElementById('co-pdf-nombre').value = c.adjunto_nombre||'factura.pdf';
     const lbl=document.getElementById('co-pdf-label');
     const prev=document.getElementById('co-pdf-preview');
     const btnVer=document.getElementById('co-pdf-btn-ver');
+    const zone=document.getElementById('co-pdf-zone');
+    if(zone) zone.style.display='none';
     if(lbl) lbl.style.display='none';
-    if(btnVer) btnVer.style.display='block';
+    if(btnVer) btnVer.style.display='none';
     if(prev){
+      const nombre = c.adjunto_nombre||'factura.pdf';
       prev.style.display='flex';
-      prev.innerHTML=`<span style="font-size:12px;color:var(--navy)">📎 ${c.adjunto_nombre||'factura.pdf'}</span>
-        <button class="btn btn-ghost btn-sm" style="font-size:11px;color:var(--red)" onclick="coQuitarPDF()">✕ Quitar</button>`;
+      prev.innerHTML=`<span style="font-size:13px">📄</span>
+        <button class="btn btn-ghost btn-sm" style="font-size:12px;color:var(--navy);font-weight:600;text-decoration:underline;cursor:pointer" onclick="coVerPDF()" title="Abrir PDF">${nombre}</button>
+        <button class="btn btn-ghost btn-sm" style="font-size:11px;color:var(--red);margin-left:4px" onclick="coQuitarPDF()">✕ Quitar</button>`;
     }
   }
   document.querySelector('#m-compra .modal-title').textContent='✏️ Editar compra';
@@ -16189,12 +16197,16 @@ function coHandleFile(file){
     const lbl=document.getElementById('co-pdf-label');
     const prev=document.getElementById('co-pdf-preview');
     const btnVer=document.getElementById('co-pdf-btn-ver');
+    const zone=document.getElementById('co-pdf-zone');
+    if(zone) zone.style.display='none';
     if(lbl) lbl.style.display='none';
-    if(btnVer) btnVer.style.display='block';
+    if(btnVer) btnVer.style.display='none'; // botón inferior ya no necesario
     if(prev){
       prev.style.display='flex';
-      prev.innerHTML=`<span style="font-size:12px;color:var(--navy)">✅ ${file.name} (${(file.size/1024).toFixed(0)} KB)</span>
-        <button class="btn btn-ghost btn-sm" style="font-size:11px;color:var(--red)" onclick="coQuitarPDF()">✕ Quitar</button>`;
+      prev.innerHTML=`<span style="font-size:13px">📄</span>
+        <button class="btn btn-ghost btn-sm" style="font-size:12px;color:var(--navy);font-weight:600;text-decoration:underline;cursor:pointer" onclick="coVerPDF()" title="Abrir PDF">${file.name}</button>
+        <span style="font-size:11px;color:var(--text-soft)">(${(file.size/1024).toFixed(0)} KB)</span>
+        <button class="btn btn-ghost btn-sm" style="font-size:11px;color:var(--red);margin-left:4px" onclick="coQuitarPDF()">✕ Quitar</button>`;
     }
     toast('PDF cargado ✅');
   };
@@ -16213,6 +16225,8 @@ function coQuitarPDF(){
   const lbl=document.getElementById('co-pdf-label');
   const prev=document.getElementById('co-pdf-preview');
   const btnVer=document.getElementById('co-pdf-btn-ver');
+  const zone=document.getElementById('co-pdf-zone');
+  if(zone) zone.style.display='';
   if(lbl) lbl.style.display='';
   if(prev){ prev.style.display='none'; prev.innerHTML=''; }
   if(btnVer) btnVer.style.display='none';
