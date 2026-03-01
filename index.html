@@ -2350,7 +2350,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="cat-header">
         <button class="cat-back" onclick="catVolver()">← Catálogos</button>
         <span class="cat-header-title">🔌 Electrodomésticos — Balay &amp; Cata</span>
-        <span class="cat-header-desc">P. Referencia Balay (IVA incl.) · Margen 35% sobre coste</span>
+        <span class="cat-header-desc">P. Referencia Balay (IVA incl.) · Dto 30% + Margen 40%</span>
       </div>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
         <div style="display:flex;align-items:center;gap:8px">
@@ -2359,7 +2359,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
           <label style="font-size:12px;font-weight:600;color:var(--text-soft)">Margen %:</label>
-          <input type="number" class="form-input" id="ed-margen" value="35" min="0" max="80" step="1" style="width:60px;text-align:center" onchange="edRenderCatalogo()">
+          <input type="number" class="form-input" id="ed-margen" value="40" min="0" max="80" step="1" style="width:60px;text-align:center" onchange="edRenderCatalogo()">
         </div>
         <div style="display:flex;align-items:center;gap:8px">
           <label style="font-size:12px;font-weight:600;color:var(--text-soft)">Categoría:</label>
@@ -16628,9 +16628,9 @@ const ED_PRODUCTOS = [
   /* SECADORAS */
   {ref:"3SB3091BR",nombre:"Secadora bomba calor 9kg",cat:"Secadoras",color:"Blanco",pvpIva:889,img:"22116050",acabados:[]},
   /* ACCESORIOS */
-  {ref:"HEZ9VDKR1",nombre:"Kit recirculación encimeras ≥60cm fondo",cat:"Accesorios",color:"",pvpIva:0,coste:143,esAccesorio:true,img:""},
+  {ref:"HEZ9VDKR1",nombre:"Kit recirculación encimeras ≥60cm fondo",cat:"Accesorios",color:"",pvpIva:143,img:""},
   /* CAMPANAS (Cata) */
-  {ref:"GC DUAL A BK",nombre:"Campana Cata GC DUAL A BK 820m³/h 75cm",cat:"Accesorios",color:"Cristal negro",pvpIva:0,coste:250,esAccesorio:true,marca:"Cata",img:""}
+  {ref:"GC DUAL A BK",nombre:"Campana Cata GC DUAL A BK 820m³/h 75cm",cat:"Accesorios",color:"Cristal negro",pvpIva:250,marca:"Cata",img:""}
 ];
 
 let edValoracion = [];
@@ -16641,16 +16641,12 @@ function edImgUrl(p){
 }
 
 function edPvp(coste){
-  const m = parseFloat(document.getElementById('ed-margen')?.value) || 35;
+  const m = parseFloat(document.getElementById('ed-margen')?.value) || 40;
   return coste * (1 + m/100);
 }
 
 function edCalcPrecio(p){
-  if(p.esAccesorio){
-    const pvpSinIva = edPvp(p.coste);
-    return {coste:p.coste, pvpSinIva, pvpIva: pvpSinIva*1.21};
-  }
-  /* Balay: P.Ref(IVA incl) /1.21 = PVP sin IVA → ×0.70 (dto 30%) = Coste PAU */
+  /* Todos igual: PVP(IVA incl) /1.21 → ×0.70 (dto 30%) = Coste PAU */
   const baseSinIva = p.pvpIva / 1.21;
   const coste = baseSinIva * 0.70;
   const pvpSinIva = edPvp(coste);
@@ -16685,9 +16681,7 @@ function edRenderCatalogo(){
         +'<div style="display:none;width:100%;height:160px;align-items:center;justify-content:center;background:#f0f2f5;border-radius:8px 8px 0 0;font-size:48px;color:#ccc">📦</div>'
       : '<div style="width:100%;height:100px;display:flex;align-items:center;justify-content:center;background:#f0f2f5;border-radius:8px 8px 0 0;font-size:48px;color:#ccc">'+(p.marca==='Cata'?'🌀':'📦')+'</div>';
     const acabTxt = p.acabados && p.acabados.length ? '<div style="font-size:10px;color:var(--text-soft);margin-top:2px">También: '+p.acabados.map(a=>a.split('|')[1]).join(', ')+'</div>' : '';
-    const pvpTxt = p.esAccesorio
-      ? '<span style="font-size:11px;color:var(--text-soft)">Coste: '+precio.coste.toFixed(2)+'€</span><br><span style="font-weight:700;color:var(--copper)">PVP: '+precio.pvpIva.toFixed(2)+'€</span>'
-      : '<span style="font-size:11px;color:var(--text-soft)">P.Ref Balay: '+p.pvpIva+'€ IVA incl.</span><br><span style="font-weight:700;color:var(--copper)">PVP: '+precio.pvpIva.toFixed(2)+'€</span>';
+    const pvpTxt = '<span style="font-size:11px;color:var(--text-soft)">P.Ref: '+p.pvpIva+'€ IVA incl. · Coste: '+precio.coste.toFixed(2)+'€</span><br><span style="font-weight:700;color:var(--copper)">PVP: '+precio.pvpIva.toFixed(2)+'€</span>';
     h += '<div style="background:var(--white);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:all .2s" onmouseenter="this.style.boxShadow=\'var(--shadow)\'" onmouseleave="this.style.boxShadow=\'none\'">';
     h += imgHtml;
     h += '<div style="padding:10px 12px">';
@@ -16698,7 +16692,7 @@ function edRenderCatalogo(){
     h += acabTxt;
     h += '<div style="margin-top:6px">'+pvpTxt+'</div>';
     h += '<div style="display:flex;gap:6px;margin-top:8px;align-items:center">';
-    h += '<select class="form-input" id="ed-inst-'+i+'" style="font-size:10px;padding:2px 4px;width:auto"><option value="0">Sin instalación</option><option value="50">Instal. 50€</option><option value="100">Instal. 100€</option></select>';
+    h += '<select class="form-input" id="ed-inst-'+i+'" style="font-size:10px;padding:2px 4px;width:auto"><option value="incl">Instalación incluida</option><option value="0">Sin instalación</option><option value="50">Instal. 50€</option><option value="100">Instal. 100€</option></select>';
     h += '<button class="btn btn-primary btn-sm" onclick="edAnadir('+i+')" style="background:var(--copper);font-size:11px;padding:4px 10px">+ Añadir</button>';
     h += '</div></div></div>';
   });
@@ -16711,8 +16705,9 @@ function edRenderCatalogo(){
 function edAnadir(idx){
   const p = ED_PRODUCTOS[idx];
   const instEl = document.getElementById('ed-inst-'+idx);
-  const inst = instEl ? parseFloat(instEl.value) : 0;
-  edValoracion.push({...p, instalacion: inst});
+  const inst = instEl ? (instEl.value==='incl' ? 0 : parseFloat(instEl.value)) : 0;
+  const instIncl = instEl ? instEl.value==='incl' : false;
+  edValoracion.push({...p, instalacion: inst, instIncluida: instIncl});
   const badge = document.getElementById('ed-val-badge');
   if(badge){badge.style.display='inline';badge.textContent=edValoracion.length}
   edActualizarTotales();
@@ -16735,7 +16730,7 @@ function edRenderValoracion(){
     h+='<td style="text-align:right">'+pr.coste.toFixed(2)+'€</td>';
     h+='<td style="text-align:right;color:var(--copper);font-weight:600">'+pr.pvpSinIva.toFixed(2)+'€</td>';
     h+='<td style="text-align:right;font-weight:600">'+pr.pvpIva.toFixed(2)+'€</td>';
-    h+='<td style="text-align:right">'+p.instalacion+'€</td>';
+    h+='<td style="text-align:right">'+(p.instIncluida?'<span style="color:var(--success)">Incluida</span>':p.instalacion+'€')+'</td>';
     h+='<td style="text-align:center"><button class="btn btn-ghost btn-sm" onclick="edQuitar('+i+')" style="color:var(--danger);padding:2px 6px">✕</button></td>';
     h+='</tr>';
   });
@@ -16780,7 +16775,7 @@ async function edExportarPresupuesto(){
   let ok=0;
   for(const p of edValoracion){
     const pr=edCalcPrecio(p);
-    const desc=p.nombre+(p.color?' · '+p.color:'')+(p.instalacion?' (incl. instal. '+p.instalacion+'€)':'');
+    const desc=p.nombre+(p.color?' · '+p.color:'')+(p.instIncluida?' (instal. incluida)':p.instalacion?' (incl. instal. '+p.instalacion+'€)':'');
     const pvpVenta=parseFloat((pr.pvpSinIva+(p.instalacion||0)).toFixed(2));
     try{
       await sbPost('presupuesto_lineas',{
