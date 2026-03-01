@@ -504,7 +504,8 @@ th.sortable:not(.sort-asc):not(.sort-desc) .sort-arrow::after{content:'⇅'}
         </div>
         <!-- Condiciones -->
         <div style="margin-top:24px;padding-top:16px;border-top:1px solid #ddd;color:#888;font-size:10px">
-          <strong style="color:#333">Condiciones:</strong> Presupuesto válido por 30 días desde su emisión. En caso de aceptación, sírvase firmar y devolver una copia. Cualquier trabajo que no esté contemplado en este documento se valorará a parte.
+          <strong style="color:#333">Condiciones:</strong> Presupuesto válido por 30 días desde su emisión. Los precios incluyen mano de obra y materiales salvo indicación contraria. IVA no incluido salvo indicación. 
+          En caso de aceptación, sírvase firmar y devolver una copia.
         </div>
         <div style="margin-top:24px;display:grid;grid-template-columns:1fr 1fr;gap:30px">
           <div><div style="border-top:1px solid #333;padding-top:8px;color:#666;font-size:10px">Firma PAU INTERIORISMO S.L.</div></div>
@@ -1007,22 +1008,15 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     <div class="view" id="view-presupuesto">
       <style>
         /* Layout 2 columnas presupuesto */
-        #view-presupuesto .pres-layout{display:grid;grid-template-columns:1fr 310px;gap:0;height:calc(100vh - 56px - 36px);margin:-18px -20px;overflow:hidden}
-        #view-presupuesto .pres-doc{overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:12px;min-height:0}
-        #view-presupuesto .pres-doc>.card{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
-        #view-presupuesto .pres-doc>.card>.table-wrap{flex:1;overflow-y:auto;overflow-x:auto}
-        #view-presupuesto .pres-doc>.card>.table-wrap thead th{position:sticky;top:0;z-index:2}
-        @media(max-width:1024px){
-          #view-presupuesto .pres-layout{grid-template-columns:1fr;grid-template-rows:1fr 280px}
-          .pres-panel{border-left:none;border-top:1px solid var(--border)}
-        }
+        #view-presupuesto .pres-layout{margin:-18px -20px;padding:0}
+        #view-presupuesto .pres-doc{padding:14px 16px;display:flex;flex-direction:column;gap:12px}
         #view-presupuesto .pres-topbar{padding:10px 16px;background:var(--white);border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;gap:7px;align-items:center;flex-shrink:0}
         /* Panel fuentes */
-        .pres-panel{background:var(--white);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
-        .pres-panel-tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--sand)}
-        .pp-tab{flex:1;padding:7px 4px;font-size:10px;font-weight:700;border:none;cursor:pointer;background:transparent;color:var(--text-soft);transition:all .15s;letter-spacing:.03em;text-transform:uppercase;border-bottom:2px solid transparent}
-        .pp-tab.active{background:var(--white);color:var(--navy);border-bottom-color:var(--copper)}
-        .pres-panel-body{flex:1;overflow-y:auto;display:flex;flex-direction:column}
+        
+        
+        
+        
+        
         .pp-search-wrap{padding:10px 10px 8px;border-bottom:1px solid var(--border);flex-shrink:0}
         .pp-search-wrap input{width:100%;padding:6px 9px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;outline:none}
         .pp-search-wrap input:focus{border-color:var(--navy-light)}
@@ -1096,99 +1090,11 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <tbody id="pres-tbody"><tr><td colspan="12"><div class="empty"><div class="empty-icon">💰</div><div class="empty-text">Selecciona un proyecto</div></div></td></tr></tbody></table></div>
       </div>
     </div>
-      <!-- /pres-doc -->
 
-      <!-- ════ PANEL LATERAL FUENTES ════ -->
-      <div class="pres-panel">
-        <div class="pres-panel-tabs">
-          <button class="pp-tab active" id="pp-tab-cype"    onclick="ppSetTab('cype')">CYPE</button>
-          <button class="pp-tab"        id="pp-tab-tarif"   onclick="ppSetTab('tarif')">Tarifario</button>
-          <button class="pp-tab"        id="pp-tab-cat"     onclick="ppSetTab('cat')">Catálogos</button>
-          <button class="pp-tab"        id="pp-tab-libre"   onclick="ppSetTab('libre')">Libre</button>
-        </div>
 
-        <!-- CYPE -->
-        <div id="pp-body-cype" class="pres-panel-body">
-          <div class="pp-search-wrap">
-            <input type="text" id="pp-cype-q" placeholder="Buscar en CYPE 2026…" oninput="ppSearchCype()">
-            <select class="pp-filter" id="pp-cype-cap" onchange="ppSearchCype()">
-              <option value="">Todos los capítulos</option>
-            </select>
-          </div>
-          <div class="pp-results" id="pp-cype-res">
-            <div class="pp-empty"><div class="ico">📐</div>Escribe para buscar en las 524 partidas CYPE</div>
-          </div>
-        </div>
+      </div><!-- /pres-doc -->
 
-        <!-- TARIFARIO -->
-        <div id="pp-body-tarif" class="pres-panel-body" style="display:none">
-          <div class="pp-search-wrap">
-            <input type="text" id="pp-tarif-q" placeholder="Buscar en tu tarifario…" oninput="ppSearchTarif()">
-            <select class="pp-filter" id="pp-tarif-cat" onchange="ppSearchTarif()">
-              <option value="">Todas las categorías</option>
-            </select>
-          </div>
-          <div class="pp-results" id="pp-tarif-res">
-            <div class="pp-empty"><div class="ico">📋</div>Escribe para buscar en el tarifario</div>
-          </div>
-        </div>
 
-        <!-- CATÁLOGOS -->
-        <div id="pp-body-cat" class="pres-panel-body" style="display:none">
-          <!-- Nivel 1: Fabricante -->
-          <div id="pp-cat-fab-wrap">
-            <div style="padding:8px 10px 4px;font-size:10px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.05em">Fabricante</div>
-            <div id="pp-cat-fab-list" style="display:flex;flex-direction:column;gap:2px;padding:0 8px 8px"></div>
-          </div>
-          <!-- Nivel 2: Modelo (dentro del fabricante) -->
-          <div id="pp-cat-mod-wrap" style="display:none">
-            <div style="display:flex;align-items:center;gap:6px;padding:6px 10px;border-bottom:1px solid var(--border)">
-              <button onclick="ppCatBack()" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--text-soft);padding:0;line-height:1">←</button>
-              <span id="pp-cat-fab-label" style="font-size:11px;font-weight:700;color:var(--navy)"></span>
-            </div>
-            <div id="pp-cat-mod-list" style="display:flex;flex-direction:column;gap:2px;padding:6px 8px 6px"></div>
-          </div>
-          <!-- Nivel 3: Búsqueda dentro del modelo -->
-          <div id="pp-cat-search-wrap" style="display:none;flex-direction:column;flex:1;overflow:hidden">
-            <div style="display:flex;align-items:center;gap:6px;padding:6px 10px;border-bottom:1px solid var(--border);flex-shrink:0">
-              <button onclick="ppCatBackToMod()" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--text-soft);padding:0;line-height:1">←</button>
-              <span id="pp-cat-mod-label" style="font-size:11px;font-weight:700;color:var(--navy)"></span>
-            </div>
-            <div class="pp-search-wrap" style="flex-shrink:0">
-              <input type="text" id="pp-cat-q" placeholder="Buscar tipo de mueble…" oninput="ppSearchCat()">
-              <select class="pp-filter" id="pp-cat-serie" onchange="ppSearchCat()">
-                <option value="">Todos los tipos</option>
-              </select>
-            </div>
-            <div class="pp-results" id="pp-cat-res" style="flex:1;overflow-y:auto">
-              <div class="pp-empty"><div class="ico">🚿</div>Escribe o filtra por tipo</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- TEXTO LIBRE -->
-        <div id="pp-body-libre" class="pres-panel-body" style="display:none">
-          <div class="pp-libre">
-            <label>Descripción *</label>
-            <input type="text" id="pp-l-desc" placeholder="Descripción de la partida…">
-            <div class="pp-libre-grid">
-              <div><label>Precio base (€)</label><input type="number" id="pp-l-precio" step="0.01" value="0" oninput="ppLibreCalc()"></div>
-              <div><label>Margen %</label><input type="number" id="pp-l-margen" step="0.1" value="0" oninput="ppLibreCalc()"></div>
-              <div><label>Cantidad</label><input type="number" id="pp-l-cant" step="0.01" value="1" oninput="ppLibreCalc()"></div>
-              <div><label>Unidad</label>
-                <select id="pp-l-ud"><option>Ud</option><option>m²</option><option>ml</option><option>m³</option><option>kg</option><option>h</option><option>PA</option></select>
-              </div>
-            </div>
-            <label>IVA</label>
-            <select id="pp-l-iva"><option>10%</option><option>21%</option><option>4%</option><option>Exento</option></select>
-            <div style="margin-top:8px;padding:7px 9px;background:var(--blue-light);border-radius:var(--radius-sm);font-size:11px;color:var(--navy)">
-              P.Venta: <strong id="pp-l-pv">—</strong> · Subtotal: <strong id="pp-l-sub">—</strong>
-            </div>
-            <button class="btn-pp-add" onclick="ppLibreAdd()">＋ Añadir al presupuesto</button>
-          </div>
-        </div>
-
-      </div><!-- /pres-panel -->
       </div><!-- /pres-layout -->
 
     <!-- ═══ COMPARATIVA OFERTAS ═══ -->
@@ -2949,10 +2855,9 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="form-group"><label class="form-label">Unidad</label><select class="form-input" id="pl-ud"><option>m²</option><option>m³</option><option>ml</option><option>Ud</option><option>kg</option><option>h</option><option>PA</option><option>m</option></select></div>
       <div class="form-group"><label class="form-label">Cantidad</label><input class="form-input" id="pl-cant" type="number" step="0.01" value="1" oninput="calcLineaPres()"></div>
       <div class="form-group"><label class="form-label">Precio Base (coste)</label><input class="form-input" id="pl-precio" type="number" step="0.01" oninput="calcLineaPres()"></div>
-      <div class="form-group"><label class="form-label">Dto %</label><input class="form-input" id="pl-dto" type="number" step="0.1" value="0" oninput="calcLineaPres()" placeholder="0" title="Descuento opcional sobre precio base"></div>
       <div class="form-group"><label class="form-label">Margen %</label><input class="form-input" id="pl-margen" type="number" step="0.1" value="0" oninput="calcLineaPres()"></div>
       <div class="form-group"><label class="form-label">CI+GG+BI %</label><input class="form-input" id="pl-ci" type="number" step="0.1" value="0" oninput="calcLineaPres()"></div>
-      <div class="form-group"><label class="form-label">Dto% (descuento)</label><input class="form-input" id="pl-dto" type="number" step="0.1" value="0" min="0" max="100" oninput="calcLineaPres()"></div>
+      <div class="form-group"><label class="form-label">Dto %</label><input class="form-input" id="pl-dto" type="number" step="0.1" value="0" oninput="calcLineaPres()"></div>
       <div class="form-group"><label class="form-label">Precio Venta</label><input class="form-input calc" id="pl-pventa" readonly=""></div>
       <div class="form-group"><label class="form-label">Subtotal</label><input class="form-input calc" id="pl-subtotal" readonly=""></div>
       <div class="form-group"><label class="form-label">IVA</label><select class="form-input" id="pl-iva"><option>10%</option><option>21%</option><option>4%</option><option>Exento</option></select></div>
@@ -3729,7 +3634,7 @@ async function loadPresupuestoFinal(){
     const tbody=document.getElementById('pf-lineas');
     tbody.innerHTML=lineas.map((l,i)=>{
       if(l.es_capitulo)return`<tr><td colspan="5" style="padding:10px 8px;font-weight:700;background:#f7f4ef;color:#4a3728;font-size:12px;border-bottom:1px solid #b87333">${l.descripcion}</td></tr>`;
-      const pv=l.precio_venta||0,ci=l.ci_gg_bi_pct||0,dto=l.dto_pct||0,sub=(l.cantidad||0)*pv*(ci>0?(1+ci/100):1);
+      const pv=l.precio_venta||0,ci=l.ci_gg_bi_pct||0,sub=(l.cantidad||0)*pv*(ci>0?(1+ci/100):1);
       totalBase+=sub;
       const bg=i%2===0?'white':'#f9f9f9';
       return`<tr style="background:${bg};border-bottom:1px solid #eee"><td style="padding:7px 8px">${l.descripcion}</td><td style="padding:7px 8px;text-align:center">${l.unidad||''}</td><td style="padding:7px 8px;text-align:right">${l.cantidad||0}</td><td style="padding:7px 8px;text-align:right">${(pv*(ci>0?1+ci/100:1)).toFixed(2)}€</td><td style="padding:7px 8px;text-align:right;font-weight:600">${sub.toFixed(2)}€</td></tr>`;
@@ -5162,7 +5067,7 @@ async function loadPresupuesto(){
   const tbody=document.getElementById('pres-tbody');
   document.getElementById('btn-comparativa').style.display=proy?'':'none';
   if(proy){sessionStorage.setItem('pres_last_proy',proy);sessionStorage.setItem('pres_last_ver',ver||'v1');}
-  if(!proy){tbody.innerHTML=`<tr><td colspan="12" style="text-align:center;padding:40px;color:var(--text-soft)">
+  if(!proy){tbody.innerHTML=`<tr><td colspan="11" style="text-align:center;padding:40px;color:var(--text-soft)">
       <div style="font-size:32px;margin-bottom:10px">📁</div>
       <div style="font-size:14px;font-weight:600;margin-bottom:6px">Selecciona un cliente y proyecto</div>
       <div style="font-size:12px">El presupuesto aparecerá aquí una vez seleccionado el proyecto</div>
@@ -5170,17 +5075,17 @@ async function loadPresupuesto(){
   try{
     PresC=await sbGet('presupuesto_lineas',`?proyecto_id=eq.${proy}&version=eq.${ver}&order=orden.asc`);
     renderPresupuesto();
-  }catch(e){tbody.innerHTML=`<tr><td colspan="12" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
+  }catch(e){tbody.innerHTML=`<tr><td colspan="11" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
 }
 function renderPresupuesto(){
   const tbody=document.getElementById('pres-tbody');
   if(!PresC.length){tbody.innerHTML=`<tr><td colspan="12"><div class="empty"><div class="empty-icon">💰</div><div class="empty-text">Presupuesto vacío</div><button class="btn btn-ghost" onclick="addCapituloPresupuesto()">＋ Capítulo</button></div></td></tr>`;document.getElementById('pres-resumen').style.display='none';return;}
   let totBase=0,totCI=0,totVenta=0;
   tbody.innerHTML=PresC.map((l,i)=>{
-    if(l.es_capitulo)return`<tr style="background:var(--navy);color:#fff"><td colspan="10" style="padding:9px 10px;font-weight:700;font-size:12px">${l.descripcion}</td><td></td><td><button class="btn btn-icon btn-sm" style="background:rgba(255,255,255,.1);border:none;color:#fff" onclick="confirmDelete('presupuesto_lineas','${l.id}','${l.descripcion.replace(/'/g,"\\'")}')">🗑</button></td></tr>`;
-    const pv=l.precio_venta||0,ci=l.ci_gg_bi_pct||0,dto=l.dto_pct||0,sub=(l.cantidad||0)*pv,subCI=ci>0?sub*(1+ci/100):sub;
+    if(l.es_capitulo)return`<tr style="background:#f7f4ef"><td colspan="10" style="padding:9px 10px;font-weight:700;font-size:12px;color:#4a3728;border-bottom:1px solid #b87333">${l.descripcion}</td><td></td><td><button class="btn btn-icon btn-sm" style="background:rgba(74,55,40,.1);border:none;color:#4a3728" onclick="confirmDelete('presupuesto_lineas','${l.id}','${l.descripcion.replace(/'/g,"\\'")}')">🗑</button></td></tr>`;
+    const pv=l.precio_venta||0,ci=l.ci_gg_bi_pct||0,sub=(l.cantidad||0)*pv,subCI=ci>0?sub*(1+ci/100):sub;
     totBase+=(l.cantidad||0)*(l.precio_base||0);totCI+=subCI-sub;totVenta+=subCI;
-    return`<tr data-search="${(l.descripcion||'').toLowerCase()}"><td style="color:var(--text-soft);font-size:11px">${i+1}</td><td><strong>${l.descripcion||'—'}</strong>${l.ref_cype?`<br><span style="font-size:9px;color:var(--text-soft)">${l.ref_cype}</span>`:''}</td><td style="text-align:center">${l.unidad||'—'}</td><td class="td-mono">${l.cantidad||0}</td><td class="td-mono">${fmt(l.precio_base)}</td><td class="td-mono" style="color:var(--green)">${l.margen_pct>0?fmtP(l.margen_pct):'—'}</td><td class="td-mono" style="color:var(--amber)">${ci>0?fmtP(ci):'—'}</td><td class="td-mono" style="font-weight:700">${fmt(pv)}</td><td class="td-mono" style="color:var(--red)">${dto>0?fmtP(dto):'—'}</td><td class="td-mono" style="font-weight:700;color:var(--navy)">${fmt(subCI)}</td><td><span class="badge b-gray">${l.iva_pct||'10%'}</span></td><td><div class="td-actions"><button class="btn btn-ghost btn-icon btn-sm" onclick="editLineaPresupuesto('${l.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('presupuesto_lineas','${l.id}','${(l.descripcion||'').replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`;
+    return`<tr data-search="${(l.descripcion||'').toLowerCase()}"><td style="color:var(--text-soft);font-size:11px">${i+1}</td><td><strong>${l.descripcion||'—'}</strong>${l.ref_cype?`<br><span style="font-size:9px;color:var(--text-soft)">${l.ref_cype}</span>`:''}</td><td style="text-align:center">${l.unidad||'—'}</td><td class="td-mono">${l.cantidad||0}</td><td class="td-mono">${fmt(l.precio_base)}</td><td class="td-mono" style="color:var(--green)">${l.margen_pct>0?fmtP(l.margen_pct):'—'}</td><td class="td-mono" style="color:var(--amber)">${ci>0?fmtP(ci):'—'}</td><td class="td-mono" style="font-weight:700">${fmt(pv)}</td><td class="td-mono" style="color:var(--red)">${l.dto_pct>0?fmtP(l.dto_pct):'—'}</td><td class="td-mono" style="font-weight:700;color:var(--navy)">${fmt(subCI)}</td><td><span class="badge b-gray">${l.iva_pct||'10%'}</span></td><td><div class="td-actions"><button class="btn btn-ghost btn-icon btn-sm" onclick="editLineaPresupuesto('${l.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('presupuesto_lineas','${l.id}','${(l.descripcion||'').replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`;
   }).join('');
   // Calcular IVA por tramos según el iva_pct de cada línea
   let ivaDesglose={};
@@ -5203,7 +5108,19 @@ function renderPresupuesto(){
   document.getElementById('pres-total-lbl').textContent=`TOTAL c/IVA: ${fmt(totalConIva)}`;
   document.getElementById('pres-resumen').style.display='block';
 }
-function calcLineaPres(){const precio=parseFloat(document.getElementById('pl-precio').value)||0,margen=parseFloat(document.getElementById('pl-margen').value)||0,ci=parseFloat(document.getElementById('pl-ci').value)||0,dto=parseFloat(document.getElementById('pl-dto').value)||0,cant=parseFloat(document.getElementById('pl-cant').value)||0;let pv=margen>0?precio*(1+margen/100):precio;if(ci>0)pv=pv*(1+ci/100);const pvDto=dto>0?pv*(1-dto/100):pv;const sub=cant*pvDto;document.getElementById('pl-pventa').value=pv>0?(dto>0?pvDto.toFixed(2)+' € (dto '+dto+'%)':pv.toFixed(2)+' €'):'—';document.getElementById('pl-subtotal').value=sub>0?sub.toFixed(2)+' €':'—';}
+function calcLineaPres(){
+  const precio=parseFloat(document.getElementById('pl-precio').value)||0;
+  const margen=parseFloat(document.getElementById('pl-margen').value)||0;
+  const ci=parseFloat(document.getElementById('pl-ci').value)||0;
+  const dto=parseFloat(document.getElementById('pl-dto').value)||0;
+  const cant=parseFloat(document.getElementById('pl-cant').value)||0;
+  let pv=margen>0?precio*(1+margen/100):precio;
+  if(ci>0) pv=pv*(1+ci/100);
+  if(dto>0) pv=pv*(1-dto/100);
+  const sub=cant*pv;
+  document.getElementById('pl-pventa').value=pv>0?pv.toFixed(2)+' €':'—';
+  document.getElementById('pl-subtotal').value=sub>0?sub.toFixed(2)+' €':'—';
+}
 function searchCypeLinea(){const q=document.getElementById('pl-cype-search').value.toLowerCase(),res=document.getElementById('pl-cype-results');if(q.length<2){res.style.display='none';return;}const matches=CyCache.filter(c=>c.codigo.toLowerCase().includes(q)||c.descripcion.toLowerCase().includes(q)).slice(0,8);if(!matches.length){res.style.display='none';return;}res.style.display='block';res.innerHTML=matches.map(c=>`<div onclick="selectCype('${c.id}')" style="padding:7px 11px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--border)" onmouseover="this.style.background='var(--blue-light)'" onmouseout="this.style.background=''"><strong style="color:var(--navy-mid)">${c.codigo}</strong> · ${c.descripcion} <span style="float:right;color:var(--green);font-weight:700">${fmt(c.precio)}/${c.unidad}</span></div>`).join('');}
 function selectCype(id){const c=CyCache.find(x=>x.id===id);if(!c)return;document.getElementById('pl-desc').value=c.descripcion;document.getElementById('pl-precio').value=c.precio;document.getElementById('pl-ud').value=c.unidad||'m²';document.getElementById('pl-cype-search').value=`${c.codigo} · ${c.descripcion}`;document.getElementById('pl-cype-search').dataset.cypeRef=c.codigo;document.getElementById('pl-cype-results').style.display='none';calcLineaPres();}
 function loadTarifLinea(){const id=document.getElementById('pl-tarif-sel').value;if(!id)return;const t=TC.find(x=>x.id===id);if(!t)return;document.getElementById('pl-desc').value=t.descripcion;document.getElementById('pl-precio').value=t.precio_coste||0;document.getElementById('pl-margen').value=t.margen_pct||0;document.getElementById('pl-ud').value=t.unidad||'Ud';calcLineaPres();}
@@ -5213,9 +5130,9 @@ async function saveLineaPresupuesto(){
   const desc=document.getElementById('pl-desc').value.trim();if(!desc){toast('La descripción es obligatoria','error');return;}
   const proy=document.getElementById('pres-proyecto-sel').value,ver=document.getElementById('pres-version-sel').value;
   const precio=parseFloat(document.getElementById('pl-precio').value)||0,margen=parseFloat(document.getElementById('pl-margen').value)||0,ci=parseFloat(document.getElementById('pl-ci').value)||0,dto=parseFloat(document.getElementById('pl-dto').value)||0,cant=parseFloat(document.getElementById('pl-cant').value)||0;
-  let pv=margen>0?precio*(1+margen/100):precio;if(ci>0)pv=pv*(1+ci/100);const pvDto=dto>0?pv*(1-dto/100):pv;
+  let pv=margen>0?precio*(1+margen/100):precio;if(ci>0)pv=pv*(1+ci/100);if(dto>0)pv=pv*(1-dto/100);
   const id=document.getElementById('pl-id').value;
-  const d={proyecto_id:proy,version:ver,descripcion:desc,ref_cype:document.getElementById('pl-cype-search').dataset.cypeRef||null,unidad:document.getElementById('pl-ud').value,cantidad:cant,precio_base:precio,margen_pct:margen,ci_gg_bi_pct:ci,dto_pct:dto,precio_venta:parseFloat(pvDto.toFixed(4)),subtotal:parseFloat((cant*pvDto).toFixed(4)),iva_pct:document.getElementById('pl-iva').value,partida:document.getElementById('pl-partida').value,es_capitulo:false,orden:PresC.length+1};
+  const d={proyecto_id:proy,version:ver,descripcion:desc,ref_cype:document.getElementById('pl-cype-search').dataset.cypeRef||null,unidad:document.getElementById('pl-ud').value,cantidad:cant,precio_base:precio,margen_pct:margen,ci_gg_bi_pct:ci,dto_pct:dto,precio_venta:parseFloat(pv.toFixed(4)),subtotal:parseFloat((cant*pv).toFixed(4)),iva_pct:document.getElementById('pl-iva').value,partida:document.getElementById('pl-partida').value,es_capitulo:false,orden:PresC.length+1};
   try{if(id){await sbPatch('presupuesto_lineas',id,d);toast('Línea actualizada ✅');}else{await sbPost('presupuesto_lineas',d);toast('Línea añadida ✅');}closeModal('m-pres-linea');loadPresupuesto();}catch(e){toast('Error: '+e.message,'error');}
 }
 function addCapituloPresupuesto(){const proy=document.getElementById('pres-proyecto-sel').value;if(!proy){toast('Selecciona un proyecto primero','error');return;}document.getElementById('cap-nombre').value='';openModal('m-pres-cap');}
@@ -8179,8 +8096,8 @@ function previsualizarPresupuesto(){
     +'</div>'
     +'<div class=\"cond\">'
       +'<strong style=\"color:#666\">Condiciones:</strong> Presupuesto válido por 30 días desde su emisión. '
-      +'En caso de aceptación, sírvase firmar y devolver una copia. '
-      +'Cualquier trabajo que no esté contemplado en este documento se valorará a parte.'
+      +'Los precios incluyen mano de obra y materiales salvo indicación contraria. IVA no incluido salvo indicación. '
+      +'En caso de aceptación, sírvase firmar y devolver una copia.'
     +'</div>'
     +'<div class=\"sigs\">'
       +'<div><div class=\"sig-line\"></div><div class=\"sig-lbl\">Firma PAU INTERIORISMO S.L.</div></div>'
@@ -13162,11 +13079,7 @@ async function ixExportarPresupuesto(){
 }
 
 
-// ═══════════════════════════════════════════════════════════════
-// PANEL LATERAL FUENTES — PRESUPUESTO
-// ═══════════════════════════════════════════════════════════════
-let ppTabActual  = 'cype';
-// ppCatSub eliminado - ahora se usa ppCatFab + ppCatMod
+// Panel lateral eliminado en v73.25
 let ciActivo     = false;  // CI+GG+BI toggle
 
 // ── CI+GG+BI TOGGLE ──────────────────────────────────────────
@@ -13200,379 +13113,10 @@ addLineaPresupuesto = function(){
   }
 };
 
-// ── TABS DEL PANEL ────────────────────────────────────────────
-function ppSetTab(t){
-  ppTabActual = t;
-  ['cype','tarif','cat','libre'].forEach(k=>{
-    document.getElementById('pp-tab-'+k)?.classList.toggle('active', k===t);
-    document.getElementById('pp-body-'+k) && (document.getElementById('pp-body-'+k).style.display = k===t ? 'flex' : 'none');
-  });
-  if(t==='cype')  ppInitCype();
-  if(t==='tarif') ppInitTarif();
-  if(t==='cat')   ppInitCat();
-}
-
-// ── CYPE ──────────────────────────────────────────────────────
-function ppInitCype(){
-  const sel = document.getElementById('pp-cype-cap');
-  if(!sel || sel.options.length > 1) return;
-  const caps = [...new Set(CyCache.map(c=>c.capitulo).filter(Boolean))].sort();
-  sel.innerHTML = '<option value="">Todos los capítulos</option>'
-    + caps.map(c=>'<option value="'+c+'">'+c+'</option>').join('');
-}
-
-function ppSearchCype(){
-  const q   = (document.getElementById('pp-cype-q')?.value||'').toLowerCase().trim();
-  const cap = document.getElementById('pp-cype-cap')?.value||'';
-  const res = document.getElementById('pp-cype-res');
-  if(!res) return;
-  if(!q && !cap){ res.innerHTML='<div class="pp-empty"><div class="ico">📐</div>Escribe para buscar en las 524 partidas CYPE</div>'; return; }
-  let list = CyCache;
-  if(cap) list = list.filter(c=>c.capitulo===cap);
-  if(q)   list = list.filter(c=>(c.codigo||'').toLowerCase().includes(q)||(c.descripcion||'').toLowerCase().includes(q));
-  list = list.slice(0,40);
-  if(!list.length){ res.innerHTML='<div class="pp-empty">Sin resultados</div>'; return; }
-  res.innerHTML = list.map(c=>
-    '<div class="pp-item" onclick="ppUseCype(\''+c.id+'\')">'+
-      '<div class="pp-item-top">'+
-        '<span class="pp-badge pp-b-cype">CYPE</span>'+
-        '<span class="pp-item-desc">'+escH(c.descripcion)+'</span>'+
-      '</div>'+
-      '<div style="display:flex;justify-content:space-between;align-items:center">'+
-        '<span class="pp-item-ref">'+escH(c.codigo)+'</span>'+
-        '<span class="pp-item-price">'+fmt(c.precio)+'/'+escH(c.unidad||'ud')+'</span>'+
-      '</div>'+
-    '</div>'
-  ).join('');
-}
-
-function ppUseCype(id){
-  const c = CyCache.find(x=>x.id===id);
-  if(!c) return;
-  const proy = document.getElementById('pres-proyecto-sel')?.value;
-  if(!proy){ toast('Selecciona un proyecto primero','error'); return; }
-  // Prellenar modal
-  addLineaPresupuesto();
-  setTimeout(()=>{
-    document.getElementById('pl-desc').value   = c.descripcion||'';
-    document.getElementById('pl-precio').value = c.precio||0;
-    document.getElementById('pl-ud').value     = c.unidad||'m²';
-    document.getElementById('pl-cype-search').value = (c.codigo||'')+' · '+(c.descripcion||'');
-    document.getElementById('pl-cype-search').dataset.cypeRef = c.codigo||'';
-    if(!ciActivo){ document.getElementById('pl-ci').value='0'; }
-    calcLineaPres();
-  }, 50);
-}
-
-// ── TARIFARIO ─────────────────────────────────────────────────
-function ppInitTarif(){
-  const sel = document.getElementById('pp-tarif-cat');
-  if(!sel || sel.options.length > 1) return;
-  const cats = [...new Set(TC.map(t=>t.categoria).filter(Boolean))].sort();
-  sel.innerHTML = '<option value="">Todas las categorías</option>'
-    + cats.map(c=>'<option value="'+escH(c)+'">'+escH(c)+'</option>').join('');
-}
-
-function ppSearchTarif(){
-  const q   = (document.getElementById('pp-tarif-q')?.value||'').toLowerCase().trim();
-  const cat = document.getElementById('pp-tarif-cat')?.value||'';
-  const res = document.getElementById('pp-tarif-res');
-  if(!res) return;
-  if(!q && !cat){ res.innerHTML='<div class="pp-empty"><div class="ico">📋</div>Escribe para buscar en el tarifario</div>'; return; }
-  let list = TC;
-  if(cat) list = list.filter(t=>t.categoria===cat);
-  if(q)   list = list.filter(t=>(t.descripcion||'').toLowerCase().includes(q)||(t.referencia||'').toLowerCase().includes(q));
-  list = list.slice(0,40);
-  if(!list.length){ res.innerHTML='<div class="pp-empty">Sin resultados</div>'; return; }
-  res.innerHTML = list.map(t=>
-    '<div class="pp-item" onclick="ppUseTarif(\''+t.id+'\')">'+
-      '<div class="pp-item-top">'+
-        '<span class="pp-badge pp-b-tarif">TARIF</span>'+
-        '<span class="pp-item-desc">'+escH(t.descripcion)+'</span>'+
-      '</div>'+
-      '<div style="display:flex;justify-content:space-between;align-items:center">'+
-        '<span class="pp-item-ref">'+escH(t.referencia||t.categoria||'')+'</span>'+
-        '<span class="pp-item-price">'+fmt(t.precio_coste||0)+' coste</span>'+
-      '</div>'+
-    '</div>'
-  ).join('');
-}
-
-function ppUseTarif(id){
-  const t = TC.find(x=>x.id===id);
-  if(!t) return;
-  const proy = document.getElementById('pres-proyecto-sel')?.value;
-  if(!proy){ toast('Selecciona un proyecto primero','error'); return; }
-  addLineaPresupuesto();
-  setTimeout(()=>{
-    document.getElementById('pl-desc').value   = t.descripcion||'';
-    document.getElementById('pl-precio').value = t.precio_coste||0;
-    document.getElementById('pl-margen').value = t.margen_pct||0;
-    document.getElementById('pl-ud').value     = t.unidad||'Ud';
-    if(!ciActivo){ document.getElementById('pl-ci').value='0'; }
-    calcLineaPres();
-  }, 50);
-}
-
-// ── CATÁLOGOS ─────────────────────────────────────────────────
-// Estado: {fab: null|'imex'|'camp', mod: null|'imex-bano'|'imex-cocina'|'camp-aqua'|'camp-drop'}
-let ppCatFab = null;
-let ppCatMod = null;
-
-const CAT_FABRICANTES = [
-  { id:'imex',  label:'IMEX',      icon:'🚿', desc:'Grifería y accesorios de baño/cocina' },
-  { id:'camp',  label:'Campoaras', icon:'🛁', desc:'Muebles de baño AQUA y DROP' }
-];
-const CAT_MODELOS = {
-  imex: [
-    { id:'imex-bano',   label:'Baño',   icon:'🚿' },
-    { id:'imex-cocina', label:'Cocina',  icon:'🍳' }
-  ],
-  camp: [
-    { id:'camp-aqua', label:'AQUA', icon:'💧' },
-    { id:'camp-drop', label:'DROP', icon:'🌊' }
-  ]
-};
-
-function ppInitCat(){
-  ppCatShowFab();
-}
-
-function ppCatShowFab(){
-  ppCatFab = null; ppCatMod = null;
-  document.getElementById('pp-cat-fab-wrap').style.display='block';
-  document.getElementById('pp-cat-mod-wrap').style.display='none';
-  document.getElementById('pp-cat-search-wrap').style.display='none';
-  const list = document.getElementById('pp-cat-fab-list');
-  list.innerHTML = CAT_FABRICANTES.map(f=>
-    '<button onclick="ppCatSelFab(\'' + f.id + '\')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);cursor:pointer;text-align:left;transition:background .15s;width:100%" onmouseover="this.style.background=\'var(--bg-alt)\'" onmouseout="this.style.background=\'var(--bg)\'">'
-    +'<span style="font-size:22px">'+f.icon+'</span>'
-    +'<div><div style="font-size:12px;font-weight:700;color:var(--navy)">'+f.label+'</div>'
-    +'<div style="font-size:10px;color:var(--text-soft)">'+f.desc+'</div></div>'
-    +'</button>'
-  ).join('');
-}
-
-function ppCatSelFab(fab){
-  ppCatFab = fab;
-  document.getElementById('pp-cat-fab-wrap').style.display='none';
-  document.getElementById('pp-cat-mod-wrap').style.display='block';
-  document.getElementById('pp-cat-search-wrap').style.display='none';
-  document.getElementById('pp-cat-fab-label').textContent = CAT_FABRICANTES.find(f=>f.id===fab)?.label || fab;
-  const modList = document.getElementById('pp-cat-mod-list');
-  modList.innerHTML = (CAT_MODELOS[fab]||[]).map(m=>
-    '<button onclick="ppCatSelMod(\'' + m.id + '\')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);cursor:pointer;text-align:left;transition:background .15s;width:100%" onmouseover="this.style.background=\'var(--bg-alt)\'" onmouseout="this.style.background=\'var(--bg)\'">'
-    +'<span style="font-size:20px">'+m.icon+'</span>'
-    +'<div style="font-size:12px;font-weight:700;color:var(--navy)">'+m.label+'</div>'
-    +'</button>'
-  ).join('');
-}
-
-function ppCatBack(){ ppCatShowFab(); }
-
-function ppCatBackToMod(){
-  ppCatMod = null;
-  document.getElementById('pp-cat-mod-wrap').style.display='block';
-  document.getElementById('pp-cat-search-wrap').style.display='none';
-}
-
-function ppCatSelMod(mod){
-  ppCatMod = mod;
-  document.getElementById('pp-cat-mod-wrap').style.display='none';
-  const sw = document.getElementById('pp-cat-search-wrap');
-  sw.style.display='flex';
-  document.getElementById('pp-cat-mod-label').textContent =
-    (CAT_MODELOS[ppCatFab]||[]).find(m=>m.id===mod)?.label || mod;
-  const sel = document.getElementById('pp-cat-serie');
-  sel.innerHTML = '<option value="">Todos los tipos</option>';
-  if(mod.startsWith('imex')){
-    const datos = mod==='imex-bano' ? IMEX_BANO : IMEX_COCINA;
-    const series = [...new Set(datos.map(p=>p.serie))].filter(Boolean).sort();
-    sel.innerHTML += series.map(s=>'<option value="'+escH(s)+'">'+escH(s)+'</option>').join('');
-  } else {
-    const data = mod==='camp-aqua' ? CAMP_AQUA : CAMP_DROP;
-    const tipos = [...new Set(data.map(p=>p.tipo))].filter(Boolean).sort();
-    sel.innerHTML += tipos.map(t=>'<option value="'+escH(t)+'">'+escH(t)+'</option>').join('');
-  }
-  document.getElementById('pp-cat-q').value='';
-  ppSearchCat();
-}
-
-function ppSearchCat(){
-  const q    = (document.getElementById('pp-cat-q')?.value||'').toLowerCase().trim();
-  const tipo = document.getElementById('pp-cat-serie')?.value||'';
-  const res  = document.getElementById('pp-cat-res');
-  if(!res || !ppCatMod) return;
-
-  if(ppCatMod.startsWith('imex')){
-    let list = ppCatMod==='imex-bano' ? IMEX_BANO : IMEX_COCINA;
-    if(tipo) list = list.filter(p=>p.serie===tipo);
-    if(q)    list = list.filter(p=>(p.desc||'').toLowerCase().includes(q)||(p.ref||'').toLowerCase().includes(q)||(p.serie||'').toLowerCase().includes(q));
-    else if(!tipo){ res.innerHTML='<div class="pp-empty"><div class="ico">🚿</div>Escribe o filtra por serie</div>'; return; }
-    list = list.slice(0,40);
-    if(!list.length){ res.innerHTML='<div class="pp-empty">Sin resultados</div>'; return; }
-    res.innerHTML = list.map(p=>{
-      const coste = p.pvp * IMEX_INC * (1-IMEX_DTO);
-      return '<div class="pp-item" onclick="ppUseCatImex(\'' + escH(p.ref).replace(/\'/g,"&#39;") + '\')">'
-        +'<div class="pp-item-top"><span class="pp-badge pp-b-imex">IMEX</span><span class="pp-item-desc">'+escH(p.desc)+'</span></div>'
-        +'<div style="display:flex;justify-content:space-between;align-items:center;gap:6px">'
-          +'<span class="pp-item-ref">'+escH(p.ref)+' · '+escH(p.serie)+'</span>'
-          +'<span class="pp-item-price">'+coste.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€</span>'
-        +'</div></div>';
-    }).join('');
-  } else {
-    const data     = ppCatMod==='camp-aqua' ? CAMP_AQUA : CAMP_DROP;
-    const acabados = ppCatMod==='camp-aqua' ? CAMP_ACABADOS_AQUA : CAMP_ACABADOS_DROP;
-    let list = data;
-    if(tipo) list = list.filter(p=>p.tipo===tipo);
-    if(q)    list = list.filter(p=>p.tipo.toLowerCase().includes(q)||p.alt.toLowerCase().includes(q)||String(p.a).includes(q)||p.r1.includes(q)||(p.r2&&p.r2.includes(q)));
-    else if(!tipo){ res.innerHTML='<div class="pp-empty"><div class="ico">🛁</div>Escribe o filtra por tipo de mueble</div>'; return; }
-    list = list.slice(0,30);
-    if(!list.length){ res.innerHTML='<div class="pp-empty">Sin resultados</div>'; return; }
-    const modelLabel = ppCatMod==='camp-aqua'?'AQUA':'DROP';
-    res.innerHTML = list.map((p,i)=>{
-      const key = 'camp_'+i+'_'+p.r1;
-      const minCoste = Math.min(...p.p) * CAMP_INC * (1-CAMP_DTO);
-      const acabOpts = acabados.map((a,ai)=>'<option value="'+ai+'">'+escH(a)+'</option>').join('');
-      const dataP = JSON.stringify(p.p).replace(/"/g,'&quot;');
-      const dataR = JSON.stringify([p.r1,p.r2]).replace(/"/g,'&quot;');
-      return '<div class="pp-item" style="cursor:default">'
-        +'<div class="pp-item-top"><span class="pp-badge" style="background:#e8f4fd;color:#0d6ca3">'+modelLabel+'</span>'
-          +'<span class="pp-item-desc">'+escH(p.tipo)+' '+escH(p.alt)+'</span></div>'
-        +'<div style="font-size:10px;color:var(--text-soft);margin:2px 0 6px">Ancho '+p.a+'cm · Ref. F37.8: '+p.r1+(p.r2?' | F44.8: '+p.r2:'')+'</div>'
-        +'<div style="background:var(--bg-alt);border-radius:6px;padding:8px;display:flex;flex-direction:column;gap:6px">'
-          +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">'
-            +'<div style="font-size:10px;color:var(--text-soft)">Fondo</div>'
-            +'<select id="fondo_'+key+'" style="font-size:11px;padding:3px 5px;border:1px solid var(--border);border-radius:4px;background:var(--bg)" onchange="ppCampUpdatePrice(this,\''+key+'\','+dataP+','+dataR+')">'
-              +'<option value="0">F37.8 cm</option>'+(p.r2?'<option value="1">F44.8 cm</option>':'')
-            +'</select>'
-            +'<div style="font-size:10px;color:var(--text-soft)">Acabado</div>'
-            +'<select id="acab_'+key+'" style="font-size:11px;padding:3px 5px;border:1px solid var(--border);border-radius:4px;background:var(--bg)" onchange="ppCampUpdatePrice(this,\''+key+'\','+dataP+','+dataR+')">'
-              +acabOpts
-            +'</select>'
-          +'</div>'
-          +'<div style="display:flex;justify-content:space-between;align-items:center">'
-            +'<span id="price_'+key+'" style="font-size:13px;font-weight:700;color:var(--navy)">'+minCoste.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€</span>'
-            +'<button onclick="ppUseCamp(\'' + key + '\','+JSON.stringify(p).replace(/"/g,"'")+')" style="background:var(--navy);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;font-weight:600">+ Añadir</button>'
-          +'</div>'
-        +'</div></div>';
-    }).join('');
-  }
-}
-
-function ppCampUpdatePrice(el, key, precios, refs){
-  const fondoEl = document.getElementById('fondo_'+key);
-  const acabEl  = document.getElementById('acab_'+key);
-  if(!fondoEl||!acabEl) return;
-  const acabIdx = parseInt(acabEl.value)||0;
-  const pvp = precios[acabIdx] || precios[0];
-  const coste = pvp * CAMP_INC * (1-CAMP_DTO);
-  const priceEl = document.getElementById('price_'+key);
-  if(priceEl) priceEl.textContent = coste.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€';
-}
-
-function ppUseCamp(key, prod){
-  const proy = document.getElementById('pres-proyecto-sel')?.value;
-  if(!proy){ toast('Selecciona un proyecto primero','error'); return; }
-  const fondoEl = document.getElementById('fondo_'+key);
-  const acabEl  = document.getElementById('acab_'+key);
-  const fondoIdx = parseInt(fondoEl?.value)||0;
-  const acabIdx  = parseInt(acabEl?.value)||0;
-  const acabados = ppCatMod==='camp-aqua' ? CAMP_ACABADOS_AQUA : CAMP_ACABADOS_DROP;
-  const ref = fondoIdx===1 && prod.r2 ? prod.r2 : prod.r1;
-  const pvp = prod.p[acabIdx] || prod.p[0];
-  const coste = pvp * CAMP_INC * (1-CAMP_DTO);
-  const modelLabel = ppCatMod==='camp-aqua'?'AQUA':'DROP';
-  const desc = 'Campoaras '+modelLabel+' '+prod.tipo+' '+prod.alt+' '+prod.a+'cm '+acabados[acabIdx];
-  addLineaPresupuesto();
-  setTimeout(()=>{
-    document.getElementById('pl-desc').value   = desc;
-    document.getElementById('pl-precio').value = coste.toFixed(4);
-    document.getElementById('pl-margen').value = '0';
-    document.getElementById('pl-ud').value     = 'Ud';
-    if(!ciActivo){ document.getElementById('pl-ci').value='0'; }
-    document.getElementById('pl-cype-search').value = ref+' · '+desc;
-    document.getElementById('pl-cype-search').dataset.cypeRef = ref;
-    calcLineaPres();
-    toast('Mueble Campoaras añadido','ok');
-  }, 50);
-}
-
-function ppUseCatImex(ref){
-  const datos = ppCatMod==='imex-bano' ? IMEX_BANO : IMEX_COCINA;
-  const p = datos.find(x=>x.ref===ref);
-  if(!p) return;
-  const proy = document.getElementById('pres-proyecto-sel')?.value;
-  if(!proy){ toast('Selecciona un proyecto primero','error'); return; }
-  const coste = p.pvp * IMEX_INC * (1-IMEX_DTO);
-  addLineaPresupuesto();
-  setTimeout(()=>{
-    document.getElementById('pl-desc').value   = p.desc||'';
-    document.getElementById('pl-precio').value = coste.toFixed(4);
-    document.getElementById('pl-margen').value = '0';
-    document.getElementById('pl-ud').value     = 'Ud';
-    if(!ciActivo){ document.getElementById('pl-ci').value='0'; }
-    document.getElementById('pl-cype-search').value = p.ref+' · '+p.desc;
-    document.getElementById('pl-cype-search').dataset.cypeRef = p.ref;
-    calcLineaPres();
-  }, 50);
-}
-
-// ── TEXTO LIBRE ───────────────────────────────────────────────
-function ppLibreCalc(){
-  const precio  = parseFloat(document.getElementById('pp-l-precio')?.value)||0;
-  const margen  = parseFloat(document.getElementById('pp-l-margen')?.value)||0;
-  const cant    = parseFloat(document.getElementById('pp-l-cant')?.value)||1;
-  const pv      = margen>0 ? precio*(1+margen/100) : precio;
-  const sub     = pv*cant;
-  const fmtL = n=>n.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€';
-  const pvEl  = document.getElementById('pp-l-pv');
-  const subEl = document.getElementById('pp-l-sub');
-  if(pvEl)  pvEl.textContent  = fmtL(pv);
-  if(subEl) subEl.textContent = fmtL(sub);
-}
-
-async function ppLibreAdd(){
-  const desc = (document.getElementById('pp-l-desc')?.value||'').trim();
-  if(!desc){ toast('Escribe una descripción','error'); return; }
-  const proy = document.getElementById('pres-proyecto-sel')?.value;
-  const ver  = document.getElementById('pres-version-sel')?.value;
-  if(!proy){ toast('Selecciona un proyecto primero','error'); return; }
-  const precio = parseFloat(document.getElementById('pp-l-precio')?.value)||0;
-  const margen = parseFloat(document.getElementById('pp-l-margen')?.value)||0;
-  const cant   = parseFloat(document.getElementById('pp-l-cant')?.value)||1;
-  const ud     = document.getElementById('pp-l-ud')?.value||'Ud';
-  const iva    = document.getElementById('pp-l-iva')?.value||'10%';
-  const ci     = ciActivo ? (parseFloat(document.getElementById('pl-ci')?.value)||0) : 0;
-  let pv = margen>0 ? precio*(1+margen/100) : precio;
-  if(ci>0) pv = pv*(1+ci/100);
-  const d = {
-    proyecto_id:proy, version:ver,
-    descripcion:desc, unidad:ud, cantidad:cant,
-    precio_base:precio, margen_pct:margen, ci_gg_bi_pct:ci,
-    precio_venta:parseFloat(pv.toFixed(4)),
-    subtotal:parseFloat((cant*pv).toFixed(4)),
-    iva_pct:iva, es_capitulo:false, orden:PresC.length+1
-  };
-  try{
-    await sbPost('presupuesto_lineas',d);
-    toast('✅ Añadido al presupuesto','success');
-    // Limpiar
-    document.getElementById('pp-l-desc').value   = '';
-    document.getElementById('pp-l-precio').value = '0';
-    document.getElementById('pp-l-margen').value = '0';
-    document.getElementById('pp-l-cant').value   = '1';
-    ppLibreCalc();
-    loadPresupuesto();
-  }catch(e){ toast('Error: '+e.message,'error'); }
-}
-
 // ── INICIALIZACIÓN DEL PANEL ──────────────────────────────────
 // Iniciar estado visual CI
 document.addEventListener('DOMContentLoaded', ()=>{
   // Panel inicia en CYPE
-  ppSetTab('cype');
-  ppLibreCalc();
   // Ocultar KPI CI por defecto
   setTimeout(()=>{
     const kpiCI = document.getElementById('pres-k-ci');
@@ -15394,9 +14938,9 @@ renderPresupuesto=function(){
   _origRenderPres();
   const tbody=document.getElementById('pres-tbody'); if(!tbody||!PresC.length) return;
   tbody.innerHTML=PresC.map((l,i)=>{
-    if(l.es_capitulo) return `<tr style="background:var(--navy);color:#fff"><td colspan="9" style="padding:9px 10px;font-weight:700;font-size:12px">${l.descripcion}</td><td></td><td><div style="display:flex;gap:3px"><button class="btn btn-icon btn-sm" style="background:rgba(255,255,255,.15);border:none;color:#fff;font-size:10px;padding:3px 7px;white-space:nowrap" title="Duplicar capítulo completo" onclick="duplicarCapituloCompleto('${l.id}')">📋 Dup.</button><button class="btn btn-icon btn-sm" style="background:rgba(255,255,255,.1);border:none;color:#fff" onclick="confirmDelete('presupuesto_lineas','${l.id}','${l.descripcion.replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`;
+    if(l.es_capitulo) return `<tr style="background:var(--navy);color:#fff"><td colspan="9" style="padding:9px 10px;font-weight:700;font-size:12px">${l.descripcion}</td><td></td><td><div style="display:flex;gap:3px"><button class="btn btn-icon btn-sm" style="background:rgba(255,255,255,.15);border:none;color:#fff;font-size:10px;padding:3px 7px;white-space:nowrap" title="Duplicar capítulo completo" onclick="duplicarCapituloCompleto('${l.id}')">📋 Dup.</button><button class="btn btn-icon btn-sm" style="background:rgba(74,55,40,.1);border:none;color:#4a3728" onclick="confirmDelete('presupuesto_lineas','${l.id}','${l.descripcion.replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`;
     const pv=l.precio_venta||0,ci=l.ci_gg_bi_pct||0,sub=(l.cantidad||0)*pv,subCI=ci>0?sub*(1+ci/100):sub;
-    return `<tr data-search="${(l.descripcion||'').toLowerCase()}"><td style="color:var(--text-soft);font-size:11px">${i+1}</td><td><strong>${l.descripcion||'—'}</strong>${l.ref_cype?`<br><span style="font-size:9px;color:var(--text-soft)">${l.ref_cype}</span>`:''}</td><td style="text-align:center">${l.unidad||'—'}</td><td class="td-mono">${l.cantidad||0}</td><td class="td-mono">${fmt(l.precio_base)}</td><td class="td-mono" style="color:var(--green)">${l.margen_pct>0?fmtP(l.margen_pct):'—'}</td><td class="td-mono" style="color:var(--amber)">${ci>0?fmtP(ci):'—'}</td><td class="td-mono" style="font-weight:700">${fmt(pv)}</td><td class="td-mono" style="font-weight:700;color:var(--navy)">${fmt(subCI)}</td><td><span class="badge b-gray">${l.iva_pct||'10%'}</span></td><td><div class="td-actions"><button class="btn btn-ghost btn-icon btn-sm" title="Duplicar" onclick="duplicarLineaPresupuesto('${l.id}')">⧉</button><button class="btn btn-ghost btn-icon btn-sm" onclick="editLineaPresupuesto('${l.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('presupuesto_lineas','${l.id}','${(l.descripcion||'').replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`;
+    return `<tr data-search="${(l.descripcion||'').toLowerCase()}"><td style="color:var(--text-soft);font-size:11px">${i+1}</td><td><strong>${l.descripcion||'—'}</strong>${l.ref_cype?`<br><span style="font-size:9px;color:var(--text-soft)">${l.ref_cype}</span>`:''}</td><td style="text-align:center">${l.unidad||'—'}</td><td class="td-mono">${l.cantidad||0}</td><td class="td-mono">${fmt(l.precio_base)}</td><td class="td-mono" style="color:var(--green)">${l.margen_pct>0?fmtP(l.margen_pct):'—'}</td><td class="td-mono" style="color:var(--amber)">${ci>0?fmtP(ci):'—'}</td><td class="td-mono" style="font-weight:700">${fmt(pv)}</td><td class="td-mono" style="color:var(--red)">${l.dto_pct>0?fmtP(l.dto_pct):'—'}</td><td class="td-mono" style="font-weight:700;color:var(--navy)">${fmt(subCI)}</td><td><span class="badge b-gray">${l.iva_pct||'10%'}</span></td><td><div class="td-actions"><button class="btn btn-ghost btn-icon btn-sm" title="Duplicar" onclick="duplicarLineaPresupuesto('${l.id}')">⧉</button><button class="btn btn-ghost btn-icon btn-sm" onclick="editLineaPresupuesto('${l.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('presupuesto_lineas','${l.id}','${(l.descripcion||'').replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`;
   }).join('');
 };
 
