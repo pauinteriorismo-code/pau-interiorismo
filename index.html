@@ -242,19 +242,26 @@ tbody td{padding:7px 10px;vertical-align:middle}
   .doc-print-wrap {
     width: 100% !important;
     border-collapse: collapse !important;
-    table-layout: fixed !important;
   }
   .doc-print-wrap thead {
     display: table-header-group !important;
   }
   .doc-print-wrap thead th {
-    padding: 0 0 12px 0 !important;
+    padding: 0 0 16px 0 !important;
     font-weight: normal !important;
     text-align: left !important;
+  }
+  .doc-print-wrap tbody,
+  .doc-print-wrap tbody tr {
+    page-break-inside: auto !important;
+    break-inside: auto !important;
   }
   .doc-print-wrap tbody td {
     padding: 0 !important;
     vertical-align: top !important;
+    display: block !important;
+    page-break-inside: auto !important;
+    break-inside: auto !important;
   }
   /* Page setup */
   @page {
@@ -474,7 +481,7 @@ th.sortable:not(.sort-asc):not(.sort-desc) .sort-arrow::after{content:'⇅'}
         <button class="btn btn-ghost no-print" onclick="window.print()">🖨️ Imprimir</button>
       </div>
       <div id="pf-doc" style="background:white;max-width:800px;margin:0 auto;padding:32px 40px;border:1px solid var(--border);border-radius:var(--radius);font-family:Arial,sans-serif;font-size:12px">
-        <table class="doc-print-wrap" style="width:100%;border-collapse:collapse;table-layout:fixed"><thead><tr><th style="padding:0 0 12px 0;font-weight:normal;text-align:left">
+        <table class="doc-print-wrap" style="width:100%;border-collapse:collapse"><thead><tr><th style="padding:0 0 12px 0;font-weight:normal;text-align:left">
         <!-- Cabecera empresa -->
         <div class="doc-repeat-header" style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid #b87333">
           <div>
@@ -548,7 +555,7 @@ th.sortable:not(.sort-asc):not(.sort-desc) .sort-arrow::after{content:'⇅'}
         <button class="btn btn-primary" onclick="window.print()">🖨️ Imprimir / PDF</button>
       </div>
       <div id="ct-doc" style="background:white;max-width:800px;margin:0 auto;padding:32px 40px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;line-height:1.7;font-family:Arial,sans-serif">
-        <table class="doc-print-wrap" style="width:100%;border-collapse:collapse;table-layout:fixed"><thead><tr><th style="padding:0 0 12px 0;font-weight:normal;text-align:left">
+        <table class="doc-print-wrap" style="width:100%;border-collapse:collapse"><thead><tr><th style="padding:0 0 12px 0;font-weight:normal;text-align:left">
         <!-- Cabecera empresa - repeat en todas las páginas -->
         <div class="doc-repeat-header" style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;padding-bottom:14px;border-bottom:2px solid #b87333">
           <div>
@@ -621,7 +628,7 @@ th.sortable:not(.sort-asc):not(.sort-desc) .sort-arrow::after{content:'⇅'}
       </div>
       <!-- DOCUMENTO PEDIDO EDITABLE + IMPRIMIBLE -->
       <div id="pd-doc" style="background:white;max-width:720px;margin:0 auto;padding:32px 40px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;font-family:Arial,sans-serif">
-        <table class="doc-print-wrap" style="width:100%;border-collapse:collapse;table-layout:fixed"><thead><tr><th style="padding:0 0 12px 0;font-weight:normal;text-align:left">
+        <table class="doc-print-wrap" style="width:100%;border-collapse:collapse"><thead><tr><th style="padding:0 0 12px 0;font-weight:normal;text-align:left">
         <!-- CABECERA -->
         <div class="doc-repeat-header" style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;padding-bottom:14px;border-bottom:2px solid #b87333">
           <div>
