@@ -4329,6 +4329,7 @@ function filterTable(tbId,inId){const q=document.getElementById(inId)?.value.toL
 // ═══════════════════════════════════════════
 let connTimeout;
 let CC=[],PC=[],TC=[],ProvC=[],IntC=[],CoC=[],ScC=[],HC=[],FC=[],PedC=[],CmpC=[],PresC=[],CyCache=[];
+let FAMILIA_ICON_MAP = {}; // cache: 'cat::fam' => icon emoji
 let TRABAJADORES=['Paco','Raúl','Boro','Julio','Pau','Jose Asins'];
 let LISTAS={
   estados_proyecto:['Nuevo lead','Presupuesto enviado','Aprobado','En ejecución','Finalizado','Facturado','Cobrado','Cancelado'],
@@ -4404,8 +4405,9 @@ async function loadFamiliasTarifario(){
       try{ items = await sbGet('tarifario','?order=categoria,descripcion'); }catch(e){ items=[]; }
     }
 
-    // Build famMap from TC
+    // Build famMap from TC: {cat: {fam: icon}}
     const famMap = {};
+    const iconMap = {}; // key: cat::fam => icon
     items.forEach(t=>{
       if(!t.familia) return;
       const cat = t.categoria||'Sin categoría';
@@ -4413,20 +4415,24 @@ async function loadFamiliasTarifario(){
       famMap[cat].add(t.familia);
     });
 
-    // Also load manually saved families
+    // Also load manually saved families (format: cat::fam or cat::fam::icon)
     try{
       const cfg = await sbGet('configuracion','?clave=eq.familias_tarifario');
       if(cfg.length && cfg[0].valor){
         cfg[0].valor.split('||').filter(Boolean).forEach(f=>{
           const parts = f.split('::');
-          if(parts.length===2){
+          if(parts.length>=2){
             const [cat,fam] = parts;
+            const icon = parts[2]||'📦';
             if(!famMap[cat]) famMap[cat]=new Set();
             famMap[cat].add(fam);
+            iconMap[`${cat}::${fam}`] = icon;
           }
         });
       }
     }catch(e){}
+    // Update global icon map cache for sidebar tree
+    FAMILIA_ICON_MAP = {...iconMap};
 
     if(!Object.keys(famMap).length){
       container.innerHTML='<div style="color:var(--text-soft);font-size:13px;text-align:center;padding:24px">No hay familias definidas aún.<br>Pulsa <strong>＋ Añadir familia</strong> o crea artículos en el tarifario con familia asignada.</div>';
@@ -4441,9 +4447,11 @@ async function loadFamiliasTarifario(){
       fams.forEach(fam=>{
         const catE = cat.replace(/'/g,"\\'");
         const famE = fam.replace(/'/g,"\\'");
+        const ico = iconMap[`${cat}::${fam}`] || '📦';
         html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 8px;background:white;border-radius:6px;margin-bottom:4px;border:1px solid #eee">`;
-        html += `<span style="font-size:12px">📦 ${fam}</span>`;
+        html += `<span style="font-size:12px">${ico} ${fam}</span>`;
         html += `<div style="display:flex;gap:2px">`;
+        html += `<button onclick="changeFamiliaIcon('${catE}','${famE}')" style="background:none;border:none;cursor:pointer;padding:2px 5px;border-radius:4px;font-size:13px" title="Cambiar icono">🎨</button>`;
         html += `<button onclick="renameFamilia('${catE}','${famE}')" style="background:none;border:none;cursor:pointer;padding:2px 5px;border-radius:4px;font-size:13px" title="Renombrar">✏️</button>`;
         html += `<button onclick="deleteFamilia('${catE}','${famE}')" style="background:none;border:none;cursor:pointer;padding:2px 5px;border-radius:4px;font-size:13px" title="Eliminar">🗑</button>`;
         html += `</div></div>`;
@@ -4461,20 +4469,26 @@ async function addFamiliaTarifario(){
   const cats = LISTAS.categorias_tarifario || [];
   if(!cats.length){ toast('Primero añade categorías en la lista de arriba','error'); return; }
   
-  // Show a simple modal-style prompt
+  // Step 1: Select category
   const cat = await seleccionarOpcion('Categoría', cats);
   if(!cat) return;
+  // Step 2: Name
   const fam = prompt(`Nueva familia dentro de "${cat}":`);
   if(!fam||!fam.trim()) return;
+  // Step 3: Select icon
+  const icon = await seleccionarIcono('📦');
+  if(!icon) return;
   
-  // Save to configuracion as a combined string
+  // Save to configuracion as categoria::familia::icon
   try{
     const cfg = await sbGet('configuracion','?clave=eq.familias_tarifario');
     let vals = cfg.length ? cfg[0].valor.split('||').filter(Boolean) : [];
-    const key = `${cat}::${fam.trim()}`;
-    if(!vals.includes(key)) vals.push(key);
+    // Check duplicates (ignore icon part)
+    const exists = vals.some(v=>{ const p=v.split('::'); return p[0]===cat && p[1]===fam.trim(); });
+    if(exists){ toast('Esta familia ya existe','error'); return; }
+    vals.push(`${cat}::${fam.trim()}::${icon}`);
     await upsertConfig('familias_tarifario', vals.join('||'));
-    toast(`Familia "${fam.trim()}" añadida ✅`);
+    toast(`Familia "${fam.trim()}" ${icon} añadida ✅`);
     loadFamiliasTarifario();
   }catch(e){ toast('Error: '+e.message,'error'); }
 }
@@ -4488,16 +4502,52 @@ async function renameFamilia(cat, oldFam){
     for(const item of items){
       await sbPatch('tarifario', item.id, {familia: newFam.trim()});
     }
-    // Update saved families in configuracion
+    // Update saved families in configuracion (preserve icon)
     const cfg = await sbGet('configuracion','?clave=eq.familias_tarifario');
     if(cfg.length){
       const vals = cfg[0].valor.split('||').filter(Boolean);
-      const newVals = vals.map(v => v===`${cat}::${oldFam}` ? `${cat}::${newFam.trim()}` : v);
+      const newVals = vals.map(v => {
+        const p=v.split('::');
+        if(p[0]===cat && p[1]===oldFam){
+          return `${cat}::${newFam.trim()}::${p[2]||'📦'}`;
+        }
+        return v;
+      });
       await upsertConfig('familias_tarifario', newVals.join('||'));
     }
     toast(`Familia renombrada a "${newFam.trim()}" ✅`);
     loadFamiliasTarifario();
     loadTarifario();
+  }catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+async function changeFamiliaIcon(cat, fam){
+  // Get current icon
+  let currentIcon = '📦';
+  try{
+    const cfg = await sbGet('configuracion','?clave=eq.familias_tarifario');
+    if(cfg.length && cfg[0].valor){
+      const entry = cfg[0].valor.split('||').find(v=>{ const p=v.split('::'); return p[0]===cat && p[1]===fam; });
+      if(entry){ const p=entry.split('::'); currentIcon=p[2]||'📦'; }
+    }
+  }catch(e){}
+
+  const icon = await seleccionarIcono(currentIcon);
+  if(!icon) return;
+
+  try{
+    const cfg = await sbGet('configuracion','?clave=eq.familias_tarifario');
+    let vals = cfg.length ? cfg[0].valor.split('||').filter(Boolean) : [];
+    let found = false;
+    vals = vals.map(v=>{
+      const p=v.split('::');
+      if(p[0]===cat && p[1]===fam){ found=true; return `${cat}::${fam}::${icon}`; }
+      return v;
+    });
+    if(!found) vals.push(`${cat}::${fam}::${icon}`);
+    await upsertConfig('familias_tarifario', vals.join('||'));
+    toast(`Icono ${icon} asignado a "${fam}" ✅`);
+    loadFamiliasTarifario();
   }catch(e){ toast('Error: '+e.message,'error'); }
 }
 
@@ -4513,10 +4563,13 @@ async function deleteFamilia(cat, fam){
     for(const item of items){
       await sbPatch('tarifario', item.id, {familia: null});
     }
-    // Remove from configuracion
+    // Remove from configuracion (handle 2-part and 3-part format)
     const cfg = await sbGet('configuracion','?clave=eq.familias_tarifario');
     if(cfg.length){
-      const vals = cfg[0].valor.split('||').filter(Boolean).filter(v=>v!==`${cat}::${fam}`);
+      const vals = cfg[0].valor.split('||').filter(Boolean).filter(v=>{
+        const p=v.split('::');
+        return !(p[0]===cat && p[1]===fam);
+      });
       await upsertConfig('familias_tarifario', vals.join('||'));
     }
     toast(`Familia "${fam}" eliminada ✅`);
@@ -4540,6 +4593,45 @@ async function seleccionarOpcion(titulo, opciones){
       btn.onmouseout=()=>btn.style.background='white';
       btn.onclick=()=>{ ov.remove(); resolve(op); };
       box.appendChild(btn);
+    });
+    const cancel=document.createElement('button');
+    cancel.textContent='Cancelar';
+    cancel.style.cssText='display:block;width:100%;padding:8px;border:1px solid #ddd;border-radius:7px;background:none;cursor:pointer;font-size:12px;color:#888;margin-top:4px';
+    cancel.onclick=()=>{ ov.remove(); resolve(null); };
+    box.appendChild(cancel);
+    ov.appendChild(box);
+    ov.addEventListener('click',e=>{ if(e.target===ov){ ov.remove(); resolve(null); }});
+    document.body.appendChild(ov);
+  });
+}
+
+// ═══════════════════════════════════════════
+// ICON PICKER
+// ═══════════════════════════════════════════
+const FAMILIA_ICONS = [
+  '🍳','🚿','🛁','🛏️','🛋️','💡','🚰','⚡','🎨','🔨',
+  '🚪','🏗️','❄️','🔥','🪚','📦','🪞','🧱','🪣','🏠',
+  '🔧','⚙️','🪜','🧹','🪟','🪵','🛠️','🏢','🪑','🧊',
+  '📐','🪶','🎯','🧺','💎','🌿','🖼️','🫧','🔩','✨'
+];
+function seleccionarIcono(currentIcon){
+  return new Promise(resolve=>{
+    const ov=document.createElement('div');
+    ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px';
+    const box=document.createElement('div');
+    box.style.cssText='background:white;border-radius:14px;padding:20px;max-width:340px;width:100%';
+    box.innerHTML=`<div style="font-weight:800;font-size:15px;margin-bottom:4px">🎨 Elegir icono</div>
+      <div style="font-size:11px;color:var(--text-soft);margin-bottom:14px">Selecciona un icono para esta familia</div>
+      <div id="icon-grid" style="display:grid;grid-template-columns:repeat(8,1fr);gap:4px;margin-bottom:14px"></div>`;
+    const grid=box.querySelector('#icon-grid');
+    FAMILIA_ICONS.forEach(ico=>{
+      const btn=document.createElement('button');
+      btn.textContent=ico;
+      btn.style.cssText='font-size:22px;padding:6px;border-radius:8px;border:2px solid '+(ico===currentIcon?'var(--copper)':'transparent')+';background:'+(ico===currentIcon?'#fef3e2':'#f8f9fb')+';cursor:pointer;transition:all .12s;line-height:1;aspect-ratio:1;display:flex;align-items:center;justify-content:center';
+      btn.onmouseover=()=>{if(ico!==currentIcon){btn.style.background='#ede9fe';btn.style.borderColor='#c4b5fd';}};
+      btn.onmouseout=()=>{if(ico!==currentIcon){btn.style.background='#f8f9fb';btn.style.borderColor='transparent';}};
+      btn.onclick=()=>{ ov.remove(); resolve(ico); };
+      grid.appendChild(btn);
     });
     const cancel=document.createElement('button');
     cancel.textContent='Cancelar';
@@ -5731,6 +5823,18 @@ async function saveComparativa(){
 async function loadTarifario(){
   TC = await sbGet('tarifario','?order=categoria,familia,descripcion').catch(()=>[]);
   document.getElementById('tarif-total-badge').textContent = TC.length;
+  // Load family icons if not cached
+  if(!Object.keys(FAMILIA_ICON_MAP).length){
+    try{
+      const cfg = await sbGet('configuracion','?clave=eq.familias_tarifario');
+      if(cfg.length && cfg[0].valor){
+        cfg[0].valor.split('||').filter(Boolean).forEach(f=>{
+          const p=f.split('::');
+          if(p.length>=3) FAMILIA_ICON_MAP[`${p[0]}::${p[1]}`]=p[2];
+        });
+      }
+    }catch(e){}
+  }
   renderTarifTree();
   renderTarifPanel(TC, '', '');
 }
@@ -5777,9 +5881,10 @@ function renderTarifTree(){
       <div class="tarif-subs" id="ts-${cat}" style="display:none">`;
     subList.forEach(sub => {
       const cnt = TC.filter(t=>(t.categoria||'Sin categoría')===cat && (t.familia||'Sin subcategoría')===sub).length;
+      const famIco = FAMILIA_ICON_MAP[`${cat}::${sub}`] || '';
       html += `<div class="tarif-tree-item tarif-fam-item" onclick="selTarifFam('${cat.replace(/'/g,"\\'")}','${sub.replace(/'/g,"\\'")}')"
         style="padding:6px 10px 6px 24px;font-size:11px">
-        <span style="color:var(--text-soft)">└ ${sub}</span>
+        <span style="color:var(--text-soft)">└ ${famIco?famIco+' ':''}${sub}</span>
         <span style="font-size:10px;color:var(--text-soft)">${cnt}</span>
       </div>`;
     });
