@@ -3820,7 +3820,16 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 
 <div class="toast error" id="toast">Error al cargar datos: </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+// Si el CDN falla, la app NO debe quedarse en blanco.
+window.addEventListener("error", function(ev){
+  if(String(ev?.filename||"").includes("html2pdf")){
+    console.warn("html2pdf no ha cargado (CDN). La app seguirá funcionando sin exportar PDF.");
+    window.html2pdf = window.html2pdf || null;
+  }
+}, true);
+</script>
 <script>
 // ═══ ANTI-CACHÉ: Ejecutar LO PRIMERO antes de todo ═══
 (function(){
