@@ -492,6 +492,7 @@ th.sortable:not(.sort-asc):not(.sort-desc) .sort-arrow::after{content:'⇅'}
               <th style="padding:8px;text-align:center;width:40px;color:#4a3728;border-bottom:1px solid #e8e0d4;font-size:10px;text-transform:uppercase">Ud.</th>
               <th style="padding:8px;text-align:right;width:60px;color:#4a3728;border-bottom:1px solid #e8e0d4;font-size:10px;text-transform:uppercase">Cant.</th>
               <th style="padding:8px;text-align:right;width:90px;color:#4a3728;border-bottom:1px solid #e8e0d4;font-size:10px;text-transform:uppercase">P.Unitario</th>
+              <th class="pf-dto-col" style="padding:8px;text-align:center;width:55px;color:#4a3728;border-bottom:1px solid #e8e0d4;font-size:10px;text-transform:uppercase">Dto%</th>
               <th style="padding:8px;text-align:right;width:90px;color:#4a3728;border-bottom:1px solid #e8e0d4;font-size:10px;text-transform:uppercase">Subtotal</th>
             </tr>
           </thead>
@@ -3871,18 +3872,26 @@ async function loadPresupuestoFinal(){
     // Lineas
     let totalBase=0;
     let ivaDesglose={};
+    const hayDto=lineas.some(l=>!l.es_capitulo && (l.dto_pct||0)>0);
+    const colSpan=hayDto?6:5;
     const tbody=document.getElementById('pf-lineas');
     tbody.innerHTML=lineas.map((l,i)=>{
-      if(l.es_capitulo)return`<tr><td colspan="5" style="padding:10px 8px;font-weight:700;background:#f7f4ef;color:#4a3728;font-size:12px;border-bottom:1px solid #b87333">${l.descripcion}</td></tr>`;
-      const pv=l.precio_venta||0,ci=l.ci_gg_bi_pct||0,sub=(l.cantidad||0)*pv*(ci>0?(1+ci/100):1);
+      if(l.es_capitulo)return`<tr><td colspan="${colSpan}" style="padding:10px 8px;font-weight:700;background:#f7f4ef;color:#4a3728;font-size:12px;border-bottom:1px solid #b87333">${l.descripcion}</td></tr>`;
+      const pv=l.precio_venta||0,ci=l.ci_gg_bi_pct||0,dto=l.dto_pct||0;
+      const pvUnit=pv*(ci>0?(1+ci/100):1);
+      const pvConDto=dto>0?pvUnit*(1-dto/100):pvUnit;
+      const sub=(l.cantidad||0)*pvConDto;
       totalBase+=sub;
       const tipoIva=l.iva_pct||'10%';
       const pctIva=parseFloat(tipoIva)||10;
       if(!ivaDesglose[tipoIva]) ivaDesglose[tipoIva]={pct:pctIva, base:0};
       ivaDesglose[tipoIva].base += sub;
       const bg=i%2===0?'white':'#f9f9f9';
-      return`<tr style="background:${bg};border-bottom:1px solid #eee"><td style="padding:7px 8px">${l.descripcion}</td><td style="padding:7px 8px;text-align:center">${l.unidad||''}</td><td style="padding:7px 8px;text-align:right">${l.cantidad||0}</td><td style="padding:7px 8px;text-align:right">${(pv*(ci>0?1+ci/100:1)).toFixed(2)}€</td><td style="padding:7px 8px;text-align:right;font-weight:600">${sub.toFixed(2)}€</td></tr>`;
+      const dtoTd=hayDto?`<td style="padding:7px 8px;text-align:center;color:#c06000;font-size:11px">${dto>0?(dto+'%'):'—'}</td>`:'';
+      return`<tr style="background:${bg};border-bottom:1px solid #eee"><td style="padding:7px 8px">${l.descripcion}</td><td style="padding:7px 8px;text-align:center">${l.unidad||''}</td><td style="padding:7px 8px;text-align:right">${l.cantidad||0}</td><td style="padding:7px 8px;text-align:right">${pvUnit.toFixed(2)}€</td>${dtoTd}<td style="padding:7px 8px;text-align:right;font-weight:600">${sub.toFixed(2)}€</td></tr>`;
     }).join('');
+    // Show/hide Dto% header column
+    document.querySelectorAll('.pf-dto-col').forEach(el=>{el.style.display=hayDto?'':'none';});
     const totalIva = Object.values(ivaDesglose).reduce((s,v)=>s+v.base*v.pct/100, 0);
     const total=totalBase+totalIva;
     document.getElementById('pf-base').textContent=totalBase.toFixed(2)+'€';
@@ -5444,7 +5453,7 @@ function renderPresupuesto(){
   let totBase=0,totCI=0,totVenta=0;
   tbody.innerHTML=PresC.map((l,i)=>{
     if(l.es_capitulo)return`<tr style="background:#f7f4ef"><td colspan="11" style="padding:9px 10px;font-weight:700;font-size:12px;color:#4a3728;border-bottom:2px solid #b87333">${l.descripcion}</td><td></td><td><button class="btn btn-icon btn-sm" style="background:#e8e0d4;border:none;color:#4a3728" onclick="confirmDelete('presupuesto_lineas','${l.id}','${l.descripcion.replace(/'/g,"\\'")}')">🗑</button></td></tr>`;
-    const pv=l.precio_venta||0,ci=l.ci_gg_bi_pct||0,sub=(l.cantidad||0)*pv,subCI=ci>0?sub*(1+ci/100):sub;
+    const pv=l.precio_venta||0,ci=l.ci_gg_bi_pct||0,dto=l.dto_pct||0,pvConDto=dto>0?pv*(1-dto/100):pv,sub=(l.cantidad||0)*pvConDto,subCI=ci>0?sub*(1+ci/100):sub;
     const ivaPctNum=parseFloat(l.iva_pct)||10,ivaImporte=subCI*ivaPctNum/100;
     totBase+=(l.cantidad||0)*(l.precio_base||0);totCI+=subCI-sub;totVenta+=subCI;
     return`<tr data-search="${(l.descripcion||'').toLowerCase()}"><td style="color:var(--text-soft);font-size:11px">${i+1}</td><td><strong>${l.descripcion||'—'}</strong>${l.ref_cype?`<br><span style="font-size:9px;color:var(--text-soft)">${l.ref_cype}</span>`:''}</td><td style="text-align:center">${l.unidad||'—'}</td><td class="td-mono">${l.cantidad||0}</td><td class="td-mono">${fmt(l.precio_base)}</td><td class="td-mono" style="color:var(--green)">${l.margen_pct>0?fmtP(l.margen_pct):'—'}</td><td class="td-mono" style="color:var(--amber)">${ci>0?fmtP(ci):'—'}</td><td class="td-mono" style="font-weight:700">${fmt(pv)}</td><td class="td-mono" style="color:#c06000">${l.dto_pct>0?(l.dto_pct+'%'):'—'}</td><td class="td-mono" style="font-weight:700;color:var(--navy)">${fmt(subCI)}</td><td style="text-align:center;vertical-align:middle"><span class="badge b-gray">${l.iva_pct||'10%'}</span></td><td class="td-mono" style="font-weight:700;color:var(--copper)">${fmt(subCI+ivaImporte)}</td><td><div class="td-actions"><button class="btn btn-ghost btn-icon btn-sm" onclick="editLineaPresupuesto('${l.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('presupuesto_lineas','${l.id}','${(l.descripcion||'').replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`;
@@ -5453,8 +5462,9 @@ function renderPresupuesto(){
   let ivaDesglose={};
   PresC.forEach(l=>{
     if(l.es_capitulo) return;
-    const pv=l.precio_venta||0, ci=l.ci_gg_bi_pct||0;
-    const sub=(l.cantidad||0)*pv, subCI=ci>0?sub*(1+ci/100):sub;
+    const pv=l.precio_venta||0, ci=l.ci_gg_bi_pct||0, dto=l.dto_pct||0;
+    const pvConDto=dto>0?pv*(1-dto/100):pv;
+    const sub=(l.cantidad||0)*pvConDto, subCI=ci>0?sub*(1+ci/100):sub;
     const tipoIva=l.iva_pct||'10%';
     const pctIva=parseFloat(tipoIva)||10;
     if(!ivaDesglose[tipoIva]) ivaDesglose[tipoIva]={pct:pctIva, base:0, iva:0};
@@ -5478,8 +5488,9 @@ function calcLineaPres(){
   const cant=parseFloat(document.getElementById('pl-cant').value)||0;
   let pv=margen>0?precio*(1+margen/100):precio;
   if(ci>0) pv=pv*(1+ci/100);
-  if(dto>0) pv=pv*(1-dto/100);
-  const sub=cant*pv;
+  // pv = precio venta SIN descuento (se muestra al cliente como P.Unitario)
+  const pvConDto=dto>0?pv*(1-dto/100):pv;
+  const sub=cant*pvConDto;
   document.getElementById('pl-pventa').value=pv>0?pv.toFixed(2)+' €':'—';
   document.getElementById('pl-subtotal').value=sub>0?sub.toFixed(2)+' €':'—';
 }
@@ -5492,10 +5503,11 @@ async function saveLineaPresupuesto(){
   const desc=document.getElementById('pl-desc').value.trim();if(!desc){toast('La descripción es obligatoria','error');return;}
   const proy=document.getElementById('pres-proyecto-sel').value,ver=document.getElementById('pres-version-sel').value;
   const precio=parseFloat(document.getElementById('pl-precio').value)||0,margen=parseFloat(document.getElementById('pl-margen').value)||0,ci=parseFloat(document.getElementById('pl-ci').value)||0,dto=parseFloat(document.getElementById('pl-dto').value)||0,cant=parseFloat(document.getElementById('pl-cant').value)||0;
-  let pv=margen>0?precio*(1+margen/100):precio;if(ci>0)pv=pv*(1+ci/100);if(dto>0)pv=pv*(1-dto/100);
+  let pv=margen>0?precio*(1+margen/100):precio;if(ci>0)pv=pv*(1+ci/100);
+  const pvConDto=dto>0?pv*(1-dto/100):pv;
   const id=document.getElementById('pl-id').value;
   const existente=id?PresC.find(x=>x.id===id):null;
-  const d={proyecto_id:proy,version:ver,descripcion:desc,ref_cype:document.getElementById('pl-cype-search').dataset.cypeRef||null,unidad:document.getElementById('pl-ud').value,cantidad:cant,precio_base:precio,margen_pct:margen,ci_gg_bi_pct:ci,dto_pct:dto,precio_venta:parseFloat(pv.toFixed(4)),subtotal:parseFloat((cant*pv).toFixed(4)),iva_pct:document.getElementById('pl-iva').value,partida:document.getElementById('pl-partida').value,es_capitulo:false,orden:existente?existente.orden:PresC.length+1};
+  const d={proyecto_id:proy,version:ver,descripcion:desc,ref_cype:document.getElementById('pl-cype-search').dataset.cypeRef||null,unidad:document.getElementById('pl-ud').value,cantidad:cant,precio_base:precio,margen_pct:margen,ci_gg_bi_pct:ci,dto_pct:dto,precio_venta:parseFloat(pv.toFixed(4)),subtotal:parseFloat((cant*pvConDto).toFixed(4)),iva_pct:document.getElementById('pl-iva').value,partida:document.getElementById('pl-partida').value,es_capitulo:false,orden:existente?existente.orden:PresC.length+1};
   try{if(id){await sbPatch('presupuesto_lineas',id,d);toast('Línea actualizada ✅');}else{await sbPost('presupuesto_lineas',d);toast('Línea añadida ✅');}closeModal('m-pres-linea');loadPresupuesto();}catch(e){toast('Error: '+e.message,'error');}
 }
 function addCapituloPresupuesto(){const proy=document.getElementById('pres-proyecto-sel').value;if(!proy){toast('Selecciona un proyecto primero','error');return;}document.getElementById('cap-nombre').value='';openModal('m-pres-cap');}
@@ -8340,21 +8352,26 @@ function previsualizarPresupuesto(){
 
   // Build line items from PresC data (client-facing: no margin/CI columns)
   let totVenta=0;
+  const hayDto=PresC.some(l=>!l.es_capitulo && (l.dto_pct||0)>0);
+  const colSpanCap=hayDto?6:5;
   const filasHtml = PresC.map((l,i)=>{
     if(l.es_capitulo){
-      return '<tr style="background:#f7f4ef"><td colspan="6" style="padding:9px 10px;font-weight:700;color:#4a3728;border-bottom:1px solid #b87333;font-size:12px">'+escH(l.descripcion)+'</td></tr>';
+      return '<tr style="background:#f7f4ef"><td colspan="'+colSpanCap+'" style="padding:9px 10px;font-weight:700;color:#4a3728;border-bottom:1px solid #b87333;font-size:12px">'+escH(l.descripcion)+'</td></tr>';
     }
-    const pv=l.precio_venta||0, ci=l.ci_gg_bi_pct||0;
-    const pvFinal = ci>0 ? pv*(1+ci/100) : pv;
-    const sub = (l.cantidad||0) * pvFinal;
+    const pv=l.precio_venta||0, ci=l.ci_gg_bi_pct||0, dto=l.dto_pct||0;
+    const pvUnit = ci>0 ? pv*(1+ci/100) : pv;
+    const pvConDto = dto>0 ? pvUnit*(1-dto/100) : pvUnit;
+    const sub = (l.cantidad||0) * pvConDto;
     totVenta += sub;
     const bg = i%2===0 ? '#fff' : '#fdfcfa';
+    const dtoTd = hayDto ? '<td style="padding:7px 8px;text-align:center;font-size:11px;color:#c06000">'+(dto>0?(dto+'%'):'—')+'</td>' : '';
     return '<tr style="background:'+bg+';border-bottom:1px solid #f0ece5">'
       +'<td style="padding:7px 10px;font-size:11px">'+escH(l.descripcion||'—')
         +(l.ref_cype?'<br><span style="font-size:9px;color:#aaa">'+escH(l.ref_cype)+'</span>':'')+'</td>'
       +'<td style="padding:7px 8px;text-align:center;font-size:11px">'+(l.unidad||'Ud')+'</td>'
       +'<td style="padding:7px 8px;text-align:right;font-size:11px">'+(l.cantidad||0)+'</td>'
-      +'<td style="padding:7px 8px;text-align:right;font-size:11px">'+Number(pvFinal).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€</td>'
+      +'<td style="padding:7px 8px;text-align:right;font-size:11px">'+Number(pvUnit).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€</td>'
+      +dtoTd
       +'<td style="padding:7px 8px;text-align:right;font-size:11px;font-weight:600;color:#4a3728">'+Number(sub).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€</td>'
     +'</tr>';
   }).join('');
@@ -8363,9 +8380,10 @@ function previsualizarPresupuesto(){
   let ivaDesglose={};
   PresC.forEach(l=>{
     if(l.es_capitulo) return;
-    const pv=l.precio_venta||0, ci=l.ci_gg_bi_pct||0;
-    const pvFinal = ci>0 ? pv*(1+ci/100) : pv;
-    const sub = (l.cantidad||0) * pvFinal;
+    const pv=l.precio_venta||0, ci=l.ci_gg_bi_pct||0, dto=l.dto_pct||0;
+    const pvUnit = ci>0 ? pv*(1+ci/100) : pv;
+    const pvConDto = dto>0 ? pvUnit*(1-dto/100) : pvUnit;
+    const sub = (l.cantidad||0) * pvConDto;
     const tipoIva=l.iva_pct||'10%';
     const pctIva=parseFloat(tipoIva)||10;
     if(!ivaDesglose[tipoIva]) ivaDesglose[tipoIva]={pct:pctIva, base:0};
@@ -8467,6 +8485,7 @@ function previsualizarPresupuesto(){
       +'<th style=\"background:#f7f4ef;color:#b87333;font-size:10px;font-weight:700;text-transform:uppercase;padding:9px 8px;border-bottom:1px solid #e8e0d4;text-align:center;width:50px\">Ud.</th>'
       +'<th style=\"background:#f7f4ef;color:#b87333;font-size:10px;font-weight:700;text-transform:uppercase;padding:9px 8px;border-bottom:1px solid #e8e0d4;text-align:right;width:60px\">Cant.</th>'
       +'<th style=\"background:#f7f4ef;color:#b87333;font-size:10px;font-weight:700;text-transform:uppercase;padding:9px 8px;border-bottom:1px solid #e8e0d4;text-align:right;width:100px\">P. Unitario</th>'
+      +(hayDto?'<th style=\"background:#f7f4ef;color:#b87333;font-size:10px;font-weight:700;text-transform:uppercase;padding:9px 8px;border-bottom:1px solid #e8e0d4;text-align:center;width:55px\">Dto%</th>':'')
       +'<th style=\"background:#f7f4ef;color:#b87333;font-size:10px;font-weight:700;text-transform:uppercase;padding:9px 8px;border-bottom:1px solid #e8e0d4;text-align:right;width:110px\">Subtotal</th>'
     +'</tr></thead>'
     +'<tbody>'+filasHtml+'</tbody>'
@@ -15988,7 +16007,7 @@ renderPresupuesto=function(){
   const tbody=document.getElementById('pres-tbody'); if(!tbody||!PresC.length) return;
   tbody.innerHTML=PresC.map((l,i)=>{
     if(l.es_capitulo) return `<tr draggable="true" data-id="${l.id}" data-orden="${l.orden}" style="background:#f7f4ef"><td style="padding:4px 3px;cursor:grab;color:#bbb;text-align:center;font-size:14px;user-select:none" title="Arrastrar">⠿</td><td colspan="${ciActivo?10:9}" style="padding:9px 10px;font-weight:700;font-size:12px;color:#4a3728;border-bottom:2px solid #b87333">${l.descripcion}</td><td></td><td><div style="display:flex;gap:3px"><button class="btn btn-icon btn-sm" style="background:#e8e0d4;border:none;color:#4a3728;font-size:10px;padding:3px 7px;white-space:nowrap" title="Duplicar capítulo completo" onclick="duplicarCapituloCompleto('${l.id}')">📋 Dup.</button><button class="btn btn-icon btn-sm" style="background:#e8e0d4;border:none;color:#4a3728" onclick="confirmDelete('presupuesto_lineas','${l.id}','${l.descripcion.replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`;
-    const pv=l.precio_venta||0,ci=l.ci_gg_bi_pct||0,sub=(l.cantidad||0)*pv,subCI=ci>0?sub*(1+ci/100):sub;
+    const pv=l.precio_venta||0,ci=l.ci_gg_bi_pct||0,dto=l.dto_pct||0,pvConDto=dto>0?pv*(1-dto/100):pv,sub=(l.cantidad||0)*pvConDto,subCI=ci>0?sub*(1+ci/100):sub;
     const ivaPctNum=parseFloat(l.iva_pct)||10,ivaImporte=subCI*ivaPctNum/100;
     return `<tr draggable="true" data-id="${l.id}" data-orden="${l.orden}" data-search="${(l.descripcion||'').toLowerCase()}"><td style="padding:4px 3px;cursor:grab;color:#bbb;text-align:center;font-size:14px;user-select:none" title="Arrastrar para reordenar">⠿</td><td style="color:var(--text-soft);font-size:11px">${i+1}</td><td><strong>${l.descripcion||'—'}</strong>${l.ref_cype?`<br><span style="font-size:9px;color:var(--text-soft)">${l.ref_cype}</span>`:''}</td><td style="text-align:center">${l.unidad||'—'}</td><td class="td-mono">${l.cantidad||0}</td><td class="td-mono">${fmt(l.precio_base)}</td><td class="td-mono" style="color:var(--green)">${l.margen_pct>0?fmtP(l.margen_pct):'—'}</td><td class="td-mono" style="color:var(--amber)">${ci>0?fmtP(ci):'—'}</td><td class="td-mono" style="font-weight:700">${fmt(pv)}</td><td class="td-mono" style="color:#c06000">${l.dto_pct>0?(l.dto_pct+'%'):'—'}</td><td class="td-mono" style="font-weight:700;color:var(--navy)">${fmt(subCI)}</td><td style="text-align:center;vertical-align:middle"><span class="badge b-gray">${l.iva_pct||'10%'}</span></td><td class="td-mono" style="font-weight:700;color:var(--copper)">${fmt(subCI+ivaImporte)}</td><td><div class="td-actions"><button class="btn btn-ghost btn-icon btn-sm" title="Duplicar" onclick="duplicarLineaPresupuesto('${l.id}')">⧉</button><button class="btn btn-ghost btn-icon btn-sm" onclick="editLineaPresupuesto('${l.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('presupuesto_lineas','${l.id}','${(l.descripcion||'').replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`;
   }).join('');
@@ -16187,7 +16206,7 @@ async function calcExpKPIs(proyId){
   let presTot = 0;
   try{
     const lineas = await sbGet('presupuesto_lineas', `?proyecto_id=eq.${proyId}&es_capitulo=eq.false`);
-    lineas.forEach(l=>{ const pv=l.precio_venta||0,ci=l.ci_gg_bi_pct||0,sub=(l.cantidad||0)*pv; presTot+=ci>0?sub*(1+ci/100):sub; });
+    lineas.forEach(l=>{ const pv=l.precio_venta||0,ci=l.ci_gg_bi_pct||0,dto=l.dto_pct||0,pvD=dto>0?pv*(1-dto/100):pv,sub=(l.cantidad||0)*pvD; presTot+=ci>0?sub*(1+ci/100):sub; });
   }catch(e){}
 
   // Facturas de venta del proyecto
@@ -16450,7 +16469,7 @@ async function renderExpRentabilidad(body){
   const caps = lineas.filter(l=>l.es_capitulo);
   const lins = lineas.filter(l=>!l.es_capitulo);
   let presTotalVenta = 0;
-  lins.forEach(l=>{ const pv=l.precio_venta||0,ci=l.ci_gg_bi_pct||0,sub=(l.cantidad||0)*pv; presTotalVenta+=ci>0?sub*(1+ci/100):sub; });
+  lins.forEach(l=>{ const pv=l.precio_venta||0,ci=l.ci_gg_bi_pct||0,dto=l.dto_pct||0,pvD=dto>0?pv*(1-dto/100):pv,sub=(l.cantidad||0)*pvD; presTotalVenta+=ci>0?sub*(1+ci/100):sub; });
 
   // Totales reales
   const costesReales = compProy.reduce((s,c)=>s+(c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100),0)
@@ -16466,7 +16485,7 @@ async function renderExpRentabilidad(body){
   // Desglose por capítulo
   const capRows = caps.map(cap=>{
     const capLines = lins.filter(l=>l.partida===cap.descripcion||false);
-    const presCapTotal = capLines.reduce((s,l)=>{ const pv=l.precio_venta||0,ci=l.ci_gg_bi_pct||0,sub=(l.cantidad||0)*pv; return s+(ci>0?sub*(1+ci/100):sub); },0);
+    const presCapTotal = capLines.reduce((s,l)=>{ const pv=l.precio_venta||0,ci=l.ci_gg_bi_pct||0,dto=l.dto_pct||0,pvD=dto>0?pv*(1-dto/100):pv,sub=(l.cantidad||0)*pvD; return s+(ci>0?sub*(1+ci/100):sub); },0);
     return { nombre: cap.descripcion, pres: presCapTotal };
   });
 
