@@ -3334,7 +3334,8 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       </div>
       <div class="form-group">
         <label class="form-label">Marca / Proveedor</label>
-        <input class="form-input" id="t-marca" placeholder="Ej: PIKOLIN, SIMPUR…">
+        <input class="form-input" id="t-marca" list="t-marca-list" placeholder="Seleccionar o escribir…">
+        <datalist id="t-marca-list"></datalist>
       </div>
       <div class="form-group fg-full">
         <label class="form-label">Notas adicionales</label>
@@ -4991,7 +4992,7 @@ function populateTrabajadores(){
   });
 }
 async function populateSelects(){
-  if(!CC.length)CC=await sbGet('clientes').catch(()=>[]);
+  if(!CC.length)CC=await sbGet('clientes','?order=nombre.asc').catch(()=>[]);
   if(!PC.length)PC=await sbGet('proyectos').catch(()=>[]);
   if(!ProvC.length)ProvC=await sbGet('proveedores','?order=nombre.asc').catch(()=>[]);
   ['p-cliente','f-cliente'].forEach(id=>{const el=document.getElementById(id);if(!el)return;const cur=el.value;el.innerHTML='<option value="">Seleccionar…</option>'+CC.map(c=>`<option value="${c.cliente_id}">${c.nombre}</option>`).join('');if(cur)el.value=cur;});
@@ -5307,7 +5308,7 @@ function exportarInformeFacturas(){
 async function loadGerencia(){
   try{
     const [cl,pr,ta,cy,comp,subc,hor,fac]=await Promise.all([
-      sbGet('clientes'),sbGet('proyectos'),sbGet('tarifario'),
+      sbGet('clientes','?order=nombre.asc'),sbGet('proyectos'),sbGet('tarifario'),
       sbGet('precios_cype','?select=id'),
       sbGet('compras'),sbGet('subcontratas'),sbGet('horas'),sbGet('facturas')
     ]);
@@ -5457,7 +5458,7 @@ async function loadGerencia(){
 async function loadClientes(){
   const tb=document.getElementById('clientes-tbody');
   try{
-    CC=await sbGet('clientes','?order=created_at.desc');
+    CC=await sbGet('clientes','?order=nombre.asc');
     document.getElementById('clientes-count').textContent=CC.length+' clientes';
     if(!CC.length){tb.innerHTML=`<tr><td colspan="7"><div class="empty"><div class="empty-icon">🤝</div><div class="empty-text">Sin clientes</div><button class="btn btn-primary" onclick="openModal('m-cliente')">＋ Nuevo</button></div></td></tr>`;return;}
     tb.innerHTML=CC.map(c=>`<tr data-search="${(c.nombre+c.cif+c.email+c.tipo).toLowerCase()}"><td class="td-mono" style="color:var(--text-soft)">${c.cliente_id||'—'}</td><td><strong>${c.nombre}</strong></td><td class="td-mono">${c.cif||'—'}</td><td>${c.telefono||'—'}</td><td style="color:var(--navy-mid)">${c.email||'—'}</td><td>${bE(c.tipo)}</td><td><div class="td-actions"><button class="btn btn-ghost btn-icon btn-sm" onclick="editCliente('${c.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('clientes','${c.id}','${c.nombre.replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`).join('');
@@ -5478,7 +5479,7 @@ async function saveCliente(){
 async function loadProyectos(){
   const tb=document.getElementById('proyectos-tbody');
   try{
-    PC=await sbGet('proyectos','?order=created_at.desc');
+    PC=await sbGet('proyectos','?order=nombre.asc');
     document.getElementById('proyectos-count').textContent=PC.length+' proyectos';
     if(!PC.length){tb.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="empty-icon">📁</div><div class="empty-text">Sin proyectos</div><button class="btn btn-primary" onclick="openModal('m-proyecto')">＋ Nuevo</button></div></td></tr>`;return;}
     tb.innerHTML=PC.map(p=>`<tr data-search="${(p.proyecto_id+p.nombre+p.cliente_id+p.tipo+p.estado).toLowerCase()}"><td class="td-mono" style="color:var(--text-soft)">${p.proyecto_id||'—'}</td><td><strong style="cursor:pointer;color:var(--navy)" onclick="abrirExpediente('${p.proyecto_id}')" title="Ver expediente completo">${p.nombre}</strong></td><td>${p.cliente_id||'—'}</td><td>${bE(p.tipo)}</td><td>${bE(p.estado)}</td><td>${p.responsable||'—'}</td><td>${fmtD(p.fecha_inicio)}</td><td class="td-mono" style="text-align:right">${(()=>{const fv=(FC||[]).filter(f=>f.proyecto_id===p.proyecto_id&&(f.tipo_factura||'Venta')==='Venta');const t=fv.reduce((s,f)=>s+(f.base_imponible||0),0);return t>0?'<span style="font-size:11px">'+fmt(t)+'</span>':'<span style="color:var(--text-soft)">—</span>';})()}</td><td class="td-mono" style="text-align:right">${(()=>{const fv=(FC||[]).filter(f=>f.proyecto_id===p.proyecto_id&&(f.tipo_factura||'Venta')==='Venta');const v=fv.reduce((s,f)=>s+(f.base_imponible||0),0);const co=(CoC||[]).filter(c=>c.proyecto_id===p.proyecto_id).reduce((s,c)=>s+(c.base_imponible||0),0);const sc=(ScC||[]).filter(s=>s.proyecto_id===p.proyecto_id).reduce((s,c)=>s+(c.importe||0),0);const m=v>0?((v-co-sc)/v)*100:null;if(m===null)return'<span style="color:var(--text-soft)">—</span>';const c=m>=20?'var(--green)':m>=10?'var(--amber)':'var(--red)';return'<span style="font-weight:700;color:'+c+'">'+fmtP(m)+'</span>';})()}</td><td><div class="td-actions"><button class="btn btn-ghost btn-sm" style="font-size:11px;color:var(--navy);font-weight:600" onclick="abrirExpediente('${p.proyecto_id}')">📁 Exp.</button><button class="btn btn-ghost btn-icon btn-sm" onclick="editProyecto('${p.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('proyectos','${p.id}','${p.nombre.replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`).join('');
@@ -5774,7 +5775,7 @@ function poblarProveedoresComparativa(){
 }
 async function initComparativa(){
   if(!PC.length)PC=await sbGet('proyectos').catch(()=>[]);
-  if(!CC.length)CC=await sbGet('clientes').catch(()=>[]);
+  if(!CC.length)CC=await sbGet('clientes','?order=nombre.asc').catch(()=>[]);
   populateSelects();
   poblarClientesComparativa();
 }
@@ -6032,6 +6033,7 @@ function abrirNuevoTarifario(){
   if(activeCat) document.getElementById('t-cat').value = activeCat;
   else document.getElementById('t-cat').value = LISTAS.categorias_tarifario?.[0] || 'Mobiliario';
   actualizarFamiliasModal();
+  poblarMarcasTarifario();
   openModal('m-tarifario');
 }
 
@@ -6098,9 +6100,20 @@ function editTarifario(id){
   document.getElementById('t-notas').value=t.notas||'';
   actualizarFamiliasModal();
   document.getElementById('t-familia').value=t.familia||'';
+  poblarMarcasTarifario();
   calcPrecioVenta();
   updateTarifRuta();
   openModal('m-tarifario');
+}
+
+function poblarMarcasTarifario(){
+  const dl=document.getElementById('t-marca-list');
+  if(!dl) return;
+  // Combine providers + existing marca values from tarifario
+  const names=new Set();
+  ProvC.forEach(p=>{ if(p.nombre) names.add(p.nombre); });
+  TC.forEach(t=>{ if(t.marca) names.add(t.marca); });
+  dl.innerHTML=[...names].sort((a,b)=>a.localeCompare(b,'es')).map(n=>`<option value="${n}">`).join('');
 }
 
 async function saveTarifario(){
@@ -9024,7 +9037,7 @@ async function saveProveedor(){const nombre=document.getElementById('pv-nombre')
 // ═══════════════════════════════════════════
 async function initRentabilidad(){
   if(!PC.length) PC=await sbGet('proyectos').catch(()=>[]);
-  if(!CC.length) CC=await sbGet('clientes').catch(()=>[]);
+  if(!CC.length) CC=await sbGet('clientes','?order=nombre.asc').catch(()=>[]);
   // Poblar clientes
   const selCli=document.getElementById('rent-cliente-sel');
   if(selCli){
@@ -10132,8 +10145,8 @@ const loaders={
     const sel=document.getElementById('pf-proyecto-sel');
     sel.innerHTML='<option value="">Cargando proyectos…</option>';
     try{
-      PC=await sbGet('proyectos','?order=created_at.desc');
-      CC=await sbGet('clientes');
+      PC=await sbGet('proyectos','?order=nombre.asc');
+      CC=await sbGet('clientes','?order=nombre.asc');
       if(!PC.length){
         sel.innerHTML='<option value="">Sin proyectos — crea uno primero</option>';
         return;
@@ -10159,8 +10172,8 @@ const loaders={
     const sel=document.getElementById('ct-proyecto-sel');
     sel.innerHTML='<option value="">Cargando…</option>';
     try{
-      PC=await sbGet('proyectos','?order=created_at.desc');
-      CC=await sbGet('clientes');
+      PC=await sbGet('proyectos','?order=nombre.asc');
+      CC=await sbGet('clientes','?order=nombre.asc');
       sel.innerHTML='<option value="">Seleccionar proyecto…</option>'+PC.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
     }catch(e){
       sel.innerHTML='<option value="">Error: '+e.message+'</option>';
