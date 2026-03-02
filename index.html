@@ -1119,6 +1119,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="search-bar" style="margin-bottom:12px">
         <div class="search-wrap" style="flex:1"><span class="search-icon">🔍</span><input class="form-input" id="search-tarifario" placeholder="Buscar en todo el tarifario…" oninput="buscarTarifario()"></div>
         <button class="btn btn-primary" onclick="abrirNuevoTarifario()">＋ Nuevo artículo</button>
+        <button class="btn btn-ghost btn-sm" onclick="recalcularPreciosTarifario()" style="border:1px solid var(--green);color:var(--green)" title="Recalcular precio_venta = coste × (1+margen%)">🔄 Recalcular precios</button>
         <div style="position:relative;display:inline-block" id="tarif-import-wrap">
           <button class="btn btn-ghost" onclick="toggleImportMenu()" style="border:1px dashed var(--copper);color:var(--copper)">📥 Importar lote ▾</button>
           <div id="tarif-import-menu" style="display:none;position:absolute;top:100%;left:0;margin-top:4px;background:white;border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:100;min-width:280px;overflow:hidden">
@@ -6109,12 +6110,36 @@ async function saveTarifario(){
   const costeV=parseFloat(document.getElementById('t-coste').value)||0,margenV=parseFloat(document.getElementById('t-margen').value)||30;
   const pvV=margenV>0?parseFloat((costeV*(1+margenV/100)).toFixed(4)):costeV;
   const familiaV=(document.getElementById('t-familia').value||'').trim();
-  const d={codigo,descripcion:desc,unidad:document.getElementById('t-unidad').value,precio_coste:costeV,margen_pct:margenV,categoria:document.getElementById('t-cat').value,familia:familiaV||null,marca:document.getElementById('t-marca').value,notas:document.getElementById('t-notas').value};
+  const d={codigo,descripcion:desc,unidad:document.getElementById('t-unidad').value,precio_coste:costeV,margen_pct:margenV,precio_venta:pvV,categoria:document.getElementById('t-cat').value,familia:familiaV||null,marca:document.getElementById('t-marca').value,notas:document.getElementById('t-notas').value};
   try{
     if(id){await sbPatch('tarifario',id,d);toast('Artículo actualizado ✅');}
     else{await sbPost('tarifario',d);toast('Artículo añadido ✅');}
     closeModal('m-tarifario');document.getElementById('t-id').value='';loadTarifario();
   }catch(e){toast('Error: '+e.message,'error');}
+}
+
+async function recalcularPreciosTarifario(){
+  if(!TC.length){ toast('No hay artículos en el tarifario','error'); return; }
+  const sinPrecio = TC.filter(t=>{
+    const coste=t.precio_coste||0, margen=t.margen_pct||0;
+    if(coste<=0) return false;
+    const correcto = parseFloat((coste*(1+margen/100)).toFixed(4));
+    return Math.abs((t.precio_venta||0)-correcto)>0.01;
+  });
+  if(!sinPrecio.length){ toast('Todos los precios ya están correctos ✅'); return; }
+  if(!confirm(`Se van a recalcular ${sinPrecio.length} artículos con precio de venta incorrecto.\n\nFórmula: Coste × (1 + Margen%)\n\n¿Continuar?`)) return;
+  let ok=0, err=0;
+  toast(`Recalculando ${sinPrecio.length} artículos…`,'info');
+  for(const t of sinPrecio){
+    const coste=t.precio_coste||0, margen=t.margen_pct||0;
+    const pvNuevo = parseFloat((coste*(1+margen/100)).toFixed(4));
+    try{
+      await sbPatch('tarifario', t.id, {precio_venta: pvNuevo});
+      ok++;
+    }catch(e){ err++; }
+  }
+  toast(`✅ ${ok} precios recalculados${err?' · ❌ '+err+' errores':''}`);
+  await loadTarifario();
 }
 
 
