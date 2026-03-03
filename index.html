@@ -423,6 +423,9 @@ function pfVistaPrevia(){
     table{width:100%;border-collapse:collapse}@media print{body{background:white;padding:0}.doc{box-shadow:none;padding:20px}}</style>
   </head><body><div class="doc">${doc.innerHTML}</div>
   <script>setTimeout(()=>window.print(),500)<\/script>
+</body></html>`);
+ w.document.close();
+}
 <script>
 
 // ═══════════════════════════════════════════════════
@@ -1525,9 +1528,6 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 });
 </script>
-</body></html>`);
- w.document.close();
-}
 /* ═══════════════════════════════════════════════════════
  exportarDocPDF(docId, filename)
  Genera PDF con el encabezado repetido en TODAS las páginas.
