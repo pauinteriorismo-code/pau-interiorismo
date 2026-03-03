@@ -2705,8 +2705,8 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <select class="form-input" style="width:200px;flex-shrink:0" id="filter-cliente-pedidos" onchange="cascadaClienteProyecto(&#39;pedidos&#39;)"><option value="">👤 Cliente…</option><option value="CLI-H015">4F Fernando</option><option value="CLI-H014">4G daniel Dominguez</option><option value="CLI-H018">Amparo Forner Pastor</option><option value="CLI-H026">Ana María Palau Sastre</option><option value="CLI-H031">Belinda</option><option value="CLI-H004">CARMELO RODRIGUEZ VILA</option><option value="CLI-H032">Daniel palma gallardo</option><option value="CLI-H003">DESIRE NAVARRO MARI</option><option value="CLI-033">Estudi Encis SL</option><option value="CLI-H009">FERNANDO JOSE SAN GERMAN IBORRA</option><option value="CLI-H029">Francisco Navarro Garcia</option><option value="CLI-H019">Jose Antonio Martos Ortiz</option><option value="CLI-H013">Jose Manuel Garcia Seller Nº 7 Pta 4</option><option value="CLI-H030">Jose Manuel Pinzón Valbuena</option><option value="CLI-H007">Juanmi</option><option value="CLI-H012">Júlia Fabregat Mestre</option><option value="CLI-H028">Lara Blasco - Lara Blasco Iborra</option><option value="CLI-H027">Laura Doria Gomez</option><option value="CLI-H021">MERCEDES HIGUERAS GOMEZ</option><option value="CLI-H024">MICHELL BENITO</option><option value="CLI-H022">Miguel cocina</option><option value="CLI-001">Miguel Zaragozá Garzón</option><option value="CLI-H023">Miguel Zaragozá Garzón</option><option value="CLI-H002">Mª PAU BRAVO JOSE</option><option value="CLI-H005">PATRI</option><option value="CLI-H020">Rafael Francés Llàcer</option><option value="CLI-H010">REME IBORRA GIL</option><option value="CLI-H001">ROSA CHANZA SOLER</option><option value="CLI-H016">Sara Muñoz Abella</option><option value="CLI-H011">TONI TATAY DAVID</option><option value="CLI-H025">URKO Y FRANCESC</option><option value="CLI-H008">VICENT MARI SERRA</option><option value="CLI-034">Vicenta Baixauli Hernandez</option><option value="CLI-002">Vicenta Folch Gil</option><option value="CLI-H006">Vicenta Folch Gil</option><option value="CLI-H017">Yasmina Cabezuelo Alaminos</option></select>
         <select class="form-input" style="width:220px;flex-shrink:0" id="filter-proyecto-pedidos" onchange="filtrarModuloPorProyecto(&#39;pedidos&#39;)"><option value="">📁 Proyecto…</option><option value="PRY-001">PRY-001 · Mobiliario de cocina</option><option value="PRY-002">PRY-002 · Rehabilitación lateral fachada</option><option value="PRY-003">PRY-003 · Pavimento/revestimiento vivienda.</option><option value="PRY-004">PRY-004 · Rehabilitación estudio</option><option value="PRY-005">PRY-005 · Trabajos en terraza</option></select>
         <div class="search-wrap" style="flex:1;min-width:160px"><span class="search-icon">🔍</span><input class="form-input" id="search-pedidos" placeholder="Buscar…" oninput="filterTable(&#39;pedidos-tbody&#39;,&#39;search-pedidos&#39;)"></div>
-        <button class="btn btn-primary" onclick="<button class="btn btn-ghost btn-sm" onclick="exportarExcel('pedidos')" style="font-size:11px">📊 Excel</button>
-openPedidoModal()">＋ Nuevo pedido</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportarExcel('pedidos')" style="font-size:11px">📊 Excel</button>
+        <button class="btn btn-primary" onclick="openPedidoModal()">＋ Nuevo pedido</button>
       </div>
       <div class="card">
         <div class="card-header"><div class="card-title">📦 Registro de pedidos<span id="pedidos-count" style="font-size:11px;font-weight:400;color:var(--text-soft);margin-left:6px"></span></div></div>
@@ -3838,7 +3838,7 @@ openPedidoModal()">＋ Nuevo pedido</button>
       <div class="form-group">
         <label class="form-label">🏭 Proveedor <span style="color:var(--text-soft);font-weight:400">(escribe para filtrar)</span></label>
         <div style="position:relative">
-          <input class="form-input" id="ped-prov-search" placeholder="Buscar proveedor…" autocomplete="off" oninput="filtrarSearchSelect(&#39;ped-prov-search&#39;,&#39;ped-prov-dd&#39;,&#39;ped-prov-id&#39;,&#39;ped-prov-val&#39;,ProvC,&#39;nombre&#39;,&#39;id&#39;)" onfocus="abrirSearchDd(&#39;ped-prov-dd&#39;)" onblur="setTimeout(()=&gt;cerrarSearchDd(&#39;ped-prov-dd&#39;),200)">
+          <input class="form-input" id="ped-prov-search" placeholder="Buscar proveedor…" autocomplete="off" oninput="filtrarSearchSelect(&#39;ped-prov-search&#39;,&#39;ped-prov-dd&#39;,&#39;ped-prov-id&#39;,&#39;ped-prov-val&#39;,ProvC,&#39;nombre&#39;,&#39;id&#39;)" onfocus="filtrarSearchSelect('ped-prov-search','ped-prov-dd','ped-prov-id','ped-prov-val',ProvC,'nombre','id');abrirSearchDd('ped-prov-dd')" onblur="setTimeout(()=&gt;cerrarSearchDd(&#39;ped-prov-dd&#39;),200)">
           <input type="hidden" id="ped-prov-id">
           <input type="hidden" id="ped-prov-val">
           <div id="ped-prov-dd" class="search-dd" style="display:none"></div>
@@ -5356,9 +5356,14 @@ function selecSearchDd(inputId, ddId, hiddenId, hiddenValId, val, lbl){
   // Trigger cascada proyecto si cambió cliente
   if(inputId === 'ped-cliente-search') pedClienteChanged();
 }
-function abrirSearchDd(ddId){
+function abrirSearchDd(ddId, inputId, arr, labelField, valueField){
   const dd = document.getElementById(ddId);
-  if(dd && dd.innerHTML) dd.style.display='';
+  if(!dd) return;
+  // If dd is empty and we have data, populate it first
+  if(!dd.innerHTML && arr && arr.length && inputId){
+    filtrarSearchSelect(inputId, ddId, null, null, arr, labelField||'nombre', valueField||'id');
+  }
+  dd.style.display='';
 }
 function cerrarSearchDd(ddId){
   const dd = document.getElementById(ddId);
