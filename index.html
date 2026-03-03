@@ -19086,7 +19086,7 @@ ${empresa}`;
 
   document.getElementById('email-doc-tipo').textContent = titulo;
   document.getElementById('email-para').value = clienteEmail;
-  document.getElementById('email-cc').value = 'info@pauinteriorismo.es';
+  document.getElementById('email-cc').value = '';
   document.getElementById('email-asunto').value = asunto;
   document.getElementById('email-cuerpo').value = cuerpo;
 
@@ -19121,16 +19121,18 @@ async function ejecutarEnvioEmail(){
     return;
   }
 
-  // 2. Abrir Gmail compose con datos pre-rellenados
+  // 2. Abrir webmail Roundcube con datos pre-rellenados
   setTimeout(()=>{
-    const gmailUrl = 'https://mail.google.com/mail/?view=cm&fs=1'
-      + '&to='   + encodeURIComponent(para)
-      + (cc ? '&cc='+encodeURIComponent(cc) : '')
-      + '&su='   + encodeURIComponent(asunto)
-      + '&body=' + encodeURIComponent(cuerpo + '\n\n⚠️ Recuerda adjuntar el PDF descargado: ' + _emailFilename);
-    window.open(gmailUrl, '_blank');
+    const desde  = document.getElementById('email-desde')?.value || 'presupuestos@pauinteriorismo.es';
+    const rcUrl  = 'https://correo01.vadavo.com:2096/'
+      + '?_task=mail&_action=compose'
+      + '&_to='      + encodeURIComponent(para)
+      + (cc ? '&_cc='+encodeURIComponent(cc) : '')
+      + '&_subject=' + encodeURIComponent(asunto)
+      + '&_body='    + encodeURIComponent(cuerpo + 'Recuerda adjuntar el PDF: ' + _emailFilename);
+    window.open(rcUrl, '_blank');
     closeModal('m-enviar-email');
-    toast('Gmail abierto – adjunta el PDF descargado 📎','success');
+    toast('Webmail abierto - adjunta el PDF','success');
   }, 1500);
 }
 
@@ -19757,6 +19759,14 @@ async function ejecutarEnvioEmail(){
       <strong>📄 Documento:</strong> <span id="email-doc-tipo">—</span>
     </div>
     <div class="form-group">
+      <label class="form-label">Desde (cuenta remitente)</label>
+      <select class="form-input" id="email-desde">
+        <option value="presupuestos@pauinteriorismo.es">presupuestos@pauinteriorismo.es</option>
+        <option value="info@pauinteriorismo.es">info@pauinteriorismo.es</option>
+        <option value="administracion@pauinteriorismo.es">administracion@pauinteriorismo.es</option>
+      </select>
+    </div>
+    <div class="form-group">
       <label class="form-label">Para (email destinatario)</label>
       <input class="form-input" id="email-para" type="email" placeholder="cliente@ejemplo.com">
     </div>
@@ -19774,7 +19784,7 @@ async function ejecutarEnvioEmail(){
     </div>
     <div style="background:#fff8e1;border:1px solid #ffe082;border-radius:6px;padding:10px 12px;font-size:11px;color:#795548">
       💡 <strong>Cómo funciona:</strong> Se generará el PDF del documento, se descargará en tu equipo 
-      y se abrirá Gmail con el asunto y mensaje ya rellenados. Solo tendrás que adjuntar el PDF descargado.
+      y se abrirá tu webmail (Roundcube) con el asunto y mensaje ya rellenados. Solo tendrás que adjuntar el PDF descargado.
     </div>
     <div style="display:flex;gap:10px;justify-content:flex-end;padding-top:4px">
       <button class="btn btn-ghost" onclick="closeModal('m-enviar-email')">Cancelar</button>
