@@ -10345,7 +10345,7 @@ async function init(){
   }, 15000);
   const today=new Date().toISOString().split('T')[0];
   ['co-fecha','sc-fecha','h-fecha','f-fecha','ped-fecha'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=today;});
-  await navTo('gerencia');
+  await loadGerencia();
   // Cargar proveedores al inicio para tenerlos siempre disponibles
   try{ ProvC=await sbGet('proveedores','?order=nombre.asc'); }catch(e){ ProvC=[]; }
   // Cargar trabajadores personalizados desde Supabase
