@@ -4521,7 +4521,7 @@ const META={
   pedido_doc:{t:'Documento de pedido',b:'Hoja de pedido a proveedor imprimible'},
   listas:{t:'Listas · Gestión de desplegables',b:'Edita trabajadores, estados, partidas y más'},
   rrhh:{t:'RR.HH. · Nóminas',b:'Fichas de trabajadores · Nóminas · Coste empresa'},
-  configuracion:{t:'Configuración',b:'Empresa · CI+GG+BI · Parámetros'},,
+  configuracion:{t:'Configuración',b:'Empresa · CI+GG+BI · Parámetros'},
   certificaciones:{t:'Certificaciones de obra',b:'Control de ejecución y cobros por avance'},
   albaranes:{t:'Albaranes de entrega',b:'Documentos de entrega de materiales y mobiliario'}
 };
@@ -10326,7 +10326,7 @@ const loaders={
     // Load familias
     if(!TC.length) try{ TC=await sbGet('tarifario','?select=id,categoria,familia&order=categoria'); }catch(e){ TC=[]; }
     await loadFamiliasTarifario();
-  },,
+  },
   certificaciones:loadCertificaciones,
   albaranes:loadAlbaranes
 };
