@@ -17079,11 +17079,18 @@ async function calcExpKPIs(proyId){
   const compProy = (CoC||[]).filter(c=>c.proyecto_id===proyId);
   const compTotal = compProy.reduce((s,c)=>s+(c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100), 0);
 
-  const margen = factTotal>0 ? ((factTotal-compTotal)/factTotal)*100 : 0;
+  // Horas / mano de obra del proyecto
+  const horProy = (HC||[]).filter(h=>h.proyecto_id===proyId);
+  const costeHoras = horProy.reduce((s,h)=>s+(h.total||0), 0);
+
+  // Coste total = compras + mano de obra
+  const costeTotal = compTotal + costeHoras;
+
+  const margen = factTotal>0 ? ((factTotal-costeTotal)/factTotal)*100 : 0;
 
   const setEl = (id,val,style) => { const el=document.getElementById(id); if(el){el.textContent=val; if(style) Object.assign(el.style,style);} };
   setEl('exp-k-pres', presTot>0 ? fmt(presTot) : '—');
-  setEl('exp-k-costes', fmt(compTotal));
+  setEl('exp-k-costes', fmt(costeTotal));
   setEl('exp-k-fact', fmt(factTotal));
   setEl('exp-k-margen', margen>0 ? fmtP(margen) : '—', {color: margen>=20?'var(--green)':margen>0?'var(--amber)':'var(--red)'});
 }
@@ -17127,6 +17134,7 @@ function renderExpResumen(body){
   // Progress: compras vs presupuesto
   const compTotal = compProy.reduce((s,c)=>s+(c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100),0);
   const factTotal = factProy.reduce((s,f)=>s+(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100),0);
+  const costeTotalRes = compTotal + costeHoras; // compras + mano de obra
 
   body.innerHTML = `
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
@@ -17149,7 +17157,7 @@ function renderExpResumen(body){
     <div>
       <div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Financiero</div>
       ${[
-        ['Compras / costes acumulados', fmt(compTotal), compTotal>0?'var(--amber)':''],
+        ['Compras / costes acumulados', fmt(costeTotalRes), costeTotalRes>0?'var(--amber)':''],
         ['Compras pendientes pago', fmt(compPend), compPend>0?'var(--red)':''],
         ['Facturas emitidas', fmt(factTotal), 'var(--green)'],
         ['Pendiente cobrar', fmt(factPend), factPend>0?'var(--amber)':''],
