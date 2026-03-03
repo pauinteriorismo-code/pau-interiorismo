@@ -3790,10 +3790,12 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="form-group"><label class="form-label">Importe base €</label><input class="form-input" id="sc-importe" type="number" step="0.01"></div>
       <div class="form-group"><label class="form-label">Estado pago</label><select class="form-input" id="sc-estado"><option>Pagado</option><option>Parcial</option><option>Pendiente</option><option>Vencido</option></select></div>
       <div class="form-group"><label class="form-label">Fecha vencimiento</label><input class="form-input" id="sc-vto" type="date"></div>
+      <div class="form-group fg-full"><label class="form-label">&#128206; Factura PDF del subcontratista</label><div id="sc-pdf-zone" style="border:2px dashed var(--border);border-radius:8px;padding:14px;text-align:center;cursor:pointer;background:var(--bg-card)" onclick="document.getElementById('sc-pdf-input').click()" ondragover="event.preventDefault();this.style.borderColor='var(--navy)'" ondragleave="this.style.borderColor='var(--border)'" ondrop="scHandleDrop(event)"><div id="sc-pdf-label" style="color:var(--text-soft);font-size:12px">&#128196; Arrastra el PDF aqui o <u style="color:var(--navy)">haz clic para seleccionar</u></div></div><div id="sc-pdf-preview" style="display:none;margin-top:8px;align-items:center;gap:8px;padding:10px 12px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px"></div><input type="file" id="sc-pdf-input" accept=".pdf,application/pdf" style="display:none" onchange="scHandleFile(this.files[0])"><input type="hidden" id="sc-pdf-b64"></div>
     </div>
   </div>
-  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal(&#39;m-subcontrata&#39;)">Cancelar</button><button class="btn btn-primary" onclick="saveSubcontrata()">💾 Guardar</button></div>
+  <div class="modal-foot"><div id="sc-pdf-btn-ver" style="display:none"><button class="btn btn-ghost btn-sm" onclick="scVerPDF()" style="color:var(--navy)">&#128196; Ver PDF adjunto</button></div><div style="display:flex;gap:8px"><button class="btn btn-ghost" onclick="closeModal(&#39;m-subcontrata&#39;)">Cancelar</button><button class="btn btn-primary" onclick="saveSubcontrata()">&#128190; Guardar</button></div></div>
 </div></div>
+
 
 <!-- HORA -->
 <div class="overlay" id="m-hora"><div class="modal" style="width:420px">
@@ -8433,20 +8435,27 @@ async function loadSubcontratas(){
     ScC=await sbGet('subcontratas','?order=fecha.desc');
     document.getElementById('subcontratas-count').textContent=ScC.length+' registros';
     if(!ScC.length){tb.innerHTML=`<tr><td colspan="9"><div class="empty"><div class="empty-icon">👷</div><div class="empty-text">Sin subcontratas</div><button class="btn btn-primary" onclick="openModal('m-subcontrata')">＋ Nueva</button></div></td></tr>`;return;}
-    tb.innerHTML=ScC.map(s=>{const tot=s.importe*(1+ivaPct(s.iva_pct)/100);return`<tr data-search="${(s.proyecto_id+s.proveedor_id+s.trabajo).toLowerCase()}"><td>${fmtD(s.fecha)}</td><td class="td-mono">${s.proyecto_id?`<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:1px 5px;color:var(--navy);font-weight:700" title="Ver expediente" onclick="abrirExpediente('${s.proyecto_id}')">${s.proyecto_id}</button>`:"<span style='color:var(--text-soft)'>—</span>"}</td><td>${s.proveedor_id||'—'}</td><td>${s.trabajo||'—'}</td><td class="td-mono">${fmt(s.importe)}</td><td class="td-mono">${s.iva_pct}</td><td class="td-mono" style="font-weight:700">${fmt(tot)}</td><td>${bE(s.estado_pago)}</td><td style="display:flex;gap:4px"><button class="btn btn-ghost btn-icon btn-sm" onclick="editSubcontrata('${s.id}')" style="font-size:11px">Editar</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('subcontratas','${s.id}','${(s.trabajo||'subcontrata').replace(/'/g,"\\'")}')">🗑</button></td></tr>`;}).join('');
+    tb.innerHTML=ScC.map(s=>{const tot=s.importe*(1+ivaPct(s.iva_pct)/100);return`<tr data-search="${(s.proyecto_id+s.proveedor_id+s.trabajo).toLowerCase()}"><td>${fmtD(s.fecha)}</td><td class="td-mono">${s.proyecto_id?`<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:1px 5px;color:var(--navy);font-weight:700" title="Ver expediente" onclick="abrirExpediente('${s.proyecto_id}')">${s.proyecto_id}</button>`:"<span style='color:var(--text-soft)'>—</span>"}</td><td>${s.proveedor_id||'—'}</td><td>${s.trabajo||'—'}</td><td class="td-mono">${fmt(s.importe)}</td><td class="td-mono">${s.iva_pct}</td><td class="td-mono" style="font-weight:700">${fmt(tot)}</td><td>${bE(s.estado_pago)}</td><td style="display:flex;gap:4px">${s.adjunto_pdf?`<button class="btn btn-ghost btn-icon btn-sm" onclick="scVerPDFById('${s.id}')" style="font-size:11px;color:var(--navy)" title="Ver PDF">&#128196;</button>`:''}<button class="btn btn-ghost btn-icon btn-sm" onclick="editSubcontrata('${s.id}')" style="font-size:11px">Editar</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('subcontratas','${s.id}','${(s.trabajo||'subcontrata').replace(/'/g,"\\'")}')">🗑</button></td></tr>`;}).join('');
   }catch(e){tb.innerHTML=`<tr><td colspan="9" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
   // Re-apply project filter after load
   filtrarModuloPorProyecto('subcontratas');
 }
 async function saveSubcontrata(){
   const id=document.getElementById('sc-id')?.value;
+  const pdfB64=document.getElementById('sc-pdf-b64')?.value||null;
   const d={fecha:document.getElementById('sc-fecha').value||new Date().toISOString().split('T')[0],proyecto_id:document.getElementById('sc-proyecto').value||null,proveedor_id:document.getElementById('sc-prov').value||null,trabajo:document.getElementById('sc-trabajo').value,importe:parseFloat(document.getElementById('sc-importe').value)||0,iva_pct:document.getElementById('sc-iva').value,estado_pago:document.getElementById('sc-estado').value,fecha_vencimiento:document.getElementById('sc-vto').value||null};
   try{
-    if(id){await sb('subcontratas','PATCH',d,null,`?id=eq.${id}`);toast('Subcontrata actualizada ✅');}
-    else{await sbPost('subcontratas',d);toast('Subcontrata registrada ✅');}
+    let savedId=id;
+    if(id){ await sb('subcontratas','PATCH',d,null,`?id=eq.${id}`); }
+    else{ const res=await sbPost('subcontratas',d); if(res&&res[0]&&res[0].id) savedId=res[0].id; }
+    if(pdfB64&&window._scPDFChanged&&savedId){
+      try{ await sb('subcontratas','PATCH',{adjunto_pdf:pdfB64},null,`?id=eq.${savedId}`); }
+      catch(ep){ console.warn('PDF no guardado:',ep.message); }
+    }
+    toast(id?'Subcontrata actualizada ✅':'Subcontrata registrada ✅');
     document.getElementById('sc-id').value='';
     document.querySelector('#m-subcontrata .modal-title').textContent='👷 Nueva subcontrata';
-    closeModal('m-subcontrata');loadSubcontratas();
+    scResetPDF(); closeModal('m-subcontrata'); loadSubcontratas();
   }catch(e){toast('Error: '+e.message,'error');}
 }
 
@@ -8982,6 +8991,17 @@ function editSubcontrata(id){
   document.getElementById('sc-iva').value=s.iva_pct||'21%';
   document.getElementById('sc-estado').value=s.estado_pago||'Pendiente';
   document.getElementById('sc-vto').value=s.fecha_vencimiento||'';
+  const scPrev=document.getElementById('sc-pdf-preview');
+  const scZone=document.getElementById('sc-pdf-zone');
+  const scBtnVer=document.getElementById('sc-pdf-btn-ver');
+  const scB64el=document.getElementById('sc-pdf-b64');
+  window._scPDFChanged=false;
+  if(s.adjunto_pdf){
+    if(scB64el) scB64el.value=s.adjunto_pdf;
+    if(scZone) scZone.style.display='none';
+    if(scBtnVer) scBtnVer.style.display='flex';
+    if(scPrev){ scPrev.style.display='flex'; scPrev.innerHTML='<span>&#128196;</span><button class="btn btn-ghost btn-sm" style="font-size:12px;color:var(--navy);font-weight:600;text-decoration:underline" onclick="scVerPDF()">factura_subcontrata.pdf</button><button class="btn btn-ghost btn-sm" style="font-size:11px;color:var(--red);margin-left:4px" onclick="scQuitarPDF()">✕ Quitar</button>'; }
+  } else { scResetPDF(); }
   document.querySelector('#m-subcontrata .modal-title').textContent='✏️ Editar subcontrata';
   openModal('m-subcontrata');
 }
@@ -16592,6 +16612,42 @@ function coVerPDFById(id){
   if(!c||!c.adjunto_pdf){ toast('Sin PDF adjunto','error'); return; }
   abrirVisorPDF(c.adjunto_pdf, c.adjunto_nombre||'factura_compra.pdf');
 }
+
+// ── PDF adjunto para SUBCONTRATAS ──
+function scHandleFile(file){
+  window._scPDFChanged=true;
+  if(!file) return;
+  if(file.type!=='application/pdf'&&!file.name.endsWith('.pdf')){toast('Solo se admiten archivos PDF','error');return;}
+  if(file.size>5*1024*1024){toast('El PDF no puede superar 5MB','error');return;}
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const b64=e.target.result.split(',')[1];
+    document.getElementById('sc-pdf-b64').value=b64;
+    const prev=document.getElementById('sc-pdf-preview');
+    const zone=document.getElementById('sc-pdf-zone');
+    const btnVer=document.getElementById('sc-pdf-btn-ver');
+    if(zone) zone.style.display='none';
+    if(btnVer) btnVer.style.display='none';
+    if(prev){prev.style.display='flex';prev.innerHTML='<span>&#128196;</span><button class="btn btn-ghost btn-sm" style="font-size:12px;color:var(--navy);font-weight:600;text-decoration:underline" onclick="scVerPDF()">'+file.name+'</button><span style="font-size:11px;color:var(--text-soft)">('+Math.round(file.size/1024)+' KB)</span><button class="btn btn-ghost btn-sm" style="font-size:11px;color:var(--red);margin-left:4px" onclick="scQuitarPDF()">✕ Quitar</button>';}
+    toast('PDF cargado ✅');
+  };
+  reader.readAsDataURL(file);
+}
+function scHandleDrop(e){e.preventDefault();document.getElementById('sc-pdf-zone').style.borderColor='var(--border)';const f=e.dataTransfer.files[0];if(f)scHandleFile(f);}
+function scQuitarPDF(){
+  document.getElementById('sc-pdf-b64').value='';
+  const inp=document.getElementById('sc-pdf-input');if(inp)inp.value='';
+  window._scPDFChanged=true;
+  const prev=document.getElementById('sc-pdf-preview');
+  const btnVer=document.getElementById('sc-pdf-btn-ver');
+  const zone=document.getElementById('sc-pdf-zone');
+  if(zone)zone.style.display='';
+  if(prev){prev.style.display='none';prev.innerHTML='';}
+  if(btnVer)btnVer.style.display='none';
+}
+function scResetPDF(){window._scPDFChanged=undefined;scQuitarPDF();}
+function scVerPDF(){const b64=document.getElementById('sc-pdf-b64')?.value;if(!b64){toast('No hay PDF adjunto','error');return;}abrirVisorPDF(b64,'factura_subcontrata.pdf');}
+function scVerPDFById(id){const s=ScC.find(x=>String(x.id)===String(id));if(!s||!s.adjunto_pdf){toast('Sin PDF adjunto','error');return;}abrirVisorPDF(s.adjunto_pdf,'factura_subcontrata.pdf');}
 
 // ── PDF adjunto para FACTURAS ──
 function fHandleFile(file){
