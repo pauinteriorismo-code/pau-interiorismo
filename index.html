@@ -5570,29 +5570,39 @@ function exportarInformeFacturas(){
   <div class="footer">PAU INTERIORISMO S.L. · CIF B-56909641 · info@pauinteriorismo.es · Tel: 961 20 01 87</div>
   </body></html>`;
 
-  // Abrir en ventana nueva y lanzar impresión/PDF
+  // Abrir ventana de vista previa
   const win = window.open('','_blank','width=1100,height=750');
   win.document.write(html);
   win.document.close();
-  // Usar html2pdf si está disponible, si no abrir ventana con botones
-  win.onload = ()=>{
-    win.focus();
-    // Intentar inyectar html2pdf para guardado directo
-    const s=win.document.createElement("script");
-    s.src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
+  win.focus();
+  // Generar PDF directamente con html2pdf desde la ventana abierta
+  setTimeout(()=>{
+    const s=win.document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
     s.onload=()=>{
-      const btn=win.document.getElementById("btn-pdf");
-      if(btn){
+      const btn=win.document.getElementById('btn-pdf');
+      const page=win.document.querySelector('.page');
+      if(btn&&page){
         btn.onclick=()=>{
-          btn.textContent="Generando..."; btn.disabled=true;
-          win.html2pdf().set({margin:8,filename:"Informe_Facturas_PAU.pdf",image:{type:"jpeg",quality:0.98},html2canvas:{scale:2,useCORS:true},jsPDF:{unit:"mm",format:"a4",orientation:"landscape"}})
-            .from(win.document.querySelector(".page")).save()
-            .then(()=>{btn.textContent="&#128190; Guardar PDF";btn.disabled=false;});
+          btn.textContent='Generando...'; btn.disabled=true;
+          const toolbar=win.document.querySelector('.toolbar');
+          if(toolbar) toolbar.style.display='none';
+          win.html2pdf().set({
+            margin:[8,8,8,8],
+            filename:'Informe_Facturas_PAU.pdf',
+            image:{type:'jpeg',quality:0.98},
+            html2canvas:{scale:2,useCORS:true,logging:false},
+            jsPDF:{unit:'mm',format:'a4',orientation:'landscape'}
+          }).from(win.document.body).save()
+          .then(()=>{
+            if(toolbar) toolbar.style.display='';
+            btn.textContent='&#128190; Guardar PDF'; btn.disabled=false;
+          });
         };
       }
     };
     win.document.head.appendChild(s);
-  };
+  }, 300);
 }
 
 async function loadGerencia(){
@@ -10506,7 +10516,7 @@ const loaders={
     if(!TC.length) try{ TC=await sbGet('tarifario','?select=id,categoria,familia&order=categoria'); }catch(e){ TC=[]; }
     await loadFamiliasTarifario();
   },
-  certificaciones:()=>loadCertificaciones(),
+  certificaciones:async()=>{ await loadCertificaciones(); },
   albaranes:()=>loadAlbaranes()
 };
 
@@ -18186,7 +18196,7 @@ async function loadCertificaciones() {
   }).join('');
 }
 
-async async function nuevaCertificacion() {
+async function nuevaCertificacion() {
   if (!_certProyId) return;
   _certEditing = null;
   document.getElementById('cert-modal-title').textContent = '🏗️ Nueva certificación';
