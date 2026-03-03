@@ -8394,17 +8394,33 @@ async function loadCompras(){
 async function saveCompra(){
   const id=document.getElementById('co-id')?.value;
   const pdfB64=document.getElementById('co-pdf-b64')?.value||null;
-  const pdfNombre=document.getElementById('co-pdf-nombre')?.value||null;
+  // Datos base SIN PDF para evitar error de columna en schema cache
   const d={fecha:document.getElementById('co-fecha').value||new Date().toISOString().split('T')[0],proyecto_id:document.getElementById('co-proyecto').value||null,proveedor_id:document.getElementById('co-prov').value||null,concepto:document.getElementById('co-concepto').value,base_imponible:parseFloat(document.getElementById('co-base').value)||0,iva_pct:document.getElementById('co-iva').value,estado_pago:document.getElementById('co-estado').value,fecha_vencimiento:document.getElementById('co-vto').value||null,notas:document.getElementById('co-notas').value};
-  // Solo actualizar PDF si se ha cargado uno NUEVO (flag _coPDFChanged)
-  if(pdfB64 && window._coPDFChanged){d.adjunto_pdf=pdfB64;}
   try{
-    if(id){await sb('compras','PATCH',d,null,`?id=eq.${id}`);toast('Compra actualizada ✅');}
-    else{await sbPost('compras',d);toast('Compra registrada ✅');}
+    let savedId = id;
+    if(id){
+      await sb('compras','PATCH',d,null,`?id=eq.${id}`);
+    } else {
+      const res = await sbPost('compras',d);
+      // Obtener el id del registro recién creado
+      if(res && res[0] && res[0].id) savedId = res[0].id;
+    }
+    // Paso 2: guardar PDF por separado (PATCH independiente) si hay uno nuevo
+    if(pdfB64 && window._coPDFChanged && savedId){
+      try{
+        await sb('compras','PATCH',{adjunto_pdf:pdfB64},null,`?id=eq.${savedId}`);
+      }catch(ePDF){
+        console.warn('PDF no guardado (columna no disponible):', ePDF.message);
+        toast('Compra guardada. PDF no adjuntado (error de columna) ⚠️','warning');
+        document.getElementById('co-id').value='';
+        document.querySelector('#m-compra .modal-title').textContent='🛒 Nueva compra';
+        coResetPDF(); closeModal('m-compra'); loadCompras(); return;
+      }
+    }
+    toast(id?'Compra actualizada ✅':'Compra registrada ✅');
     document.getElementById('co-id').value='';
     document.querySelector('#m-compra .modal-title').textContent='🛒 Nueva compra';
-    coResetPDF();
-    closeModal('m-compra');loadCompras();
+    coResetPDF(); closeModal('m-compra'); loadCompras();
   }catch(e){toast('Error: '+e.message,'error');}
 }
 
