@@ -374,6 +374,21 @@ th.sortable:not(.sort-asc):not(.sort-desc) .sort-arrow::after{content:'⇅'}
 .kanban-card:hover { transform: translateY(-1px); }
 .kanban-col.drag-over { outline: 2px dashed var(--navy) !important; background: var(--blue-light) !important; }
 .exp-tab:hover { background: #f5f7fa; }
+
+<!-- VISOR PDF -->
+<div id="m-pdf-viewer" style="display:none;position:fixed;inset:0;background:rgba(10,20,30,.85);z-index:9999;flex-direction:column;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:12px;width:min(900px,96vw);height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.4)">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--navy);color:#fff;flex-shrink:0">
+      <div id="pdf-viewer-title" style="font-size:14px;font-weight:600">&#128196; Documento PDF</div>
+      <div style="display:flex;gap:8px">
+        <button onclick="pdfViewerDescargar()" style="background:rgba(255,255,255,.15);border:none;color:#fff;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px">&#11123; Descargar</button>
+        <button onclick="pdfViewerCerrar()" style="background:rgba(255,255,255,.15);border:none;color:#fff;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:700">&#215;</button>
+      </div>
+    </div>
+    <iframe id="pdf-viewer-embed" style="flex:1;border:none;width:100%" src=""></iframe>
+  </div>
+</div>
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
