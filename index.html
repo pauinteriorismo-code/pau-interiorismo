@@ -453,7 +453,7 @@ th.sortable:not(.sort-asc):not(.sort-desc) .sort-arrow::after{content:'⇅'}
       <button onclick="abrirBusquedaGlobal()" style="display:flex;align-items:center;gap:7px;padding:6px 14px;background:#f5f7fa;border:1px solid var(--border);border-radius:8px;cursor:pointer;color:var(--text-mid);font-size:12px;transition:all .15s" onmouseover="this.style.background='var(--blue-light)'" onmouseout="this.style.background='#f5f7fa'">
         <span>🔍</span><span style="color:var(--text-soft)">Buscar…</span><kbd style="background:#e8e8e8;border-radius:3px;padding:1px 5px;font-size:10px;color:var(--text-soft)">Ctrl K</kbd>
       </button>
-      <div id="conn-status" style="font-size: 11px; padding: 3px 9px; border-radius: 10px; background: var(--red-soft); color: var(--red); font-weight: 600;"></div>
+      <div id="conn-status" style="font-size: 11px; padding: 3px 9px; border-radius: 10px; background: var(--amber-soft); color: var(--amber); font-weight: 600; cursor:pointer;" onclick="reconectarApp()" title="Clic para reconectar">🟡 Conectando…</div>
       <button class="btn btn-ghost btn-sm" onclick="doLogout()">Salir</button>
       <button class="btn btn-primary btn-sm" onclick="openModal('m-quick')">＋ Nuevo</button>
     </div>
@@ -5654,8 +5654,8 @@ async function loadGerencia(){
   }catch(e){
     console.error('loadGerencia error:',e);
     const s=document.getElementById('conn-status');
-    if(s){ s.style.background='var(--red-soft)';s.style.color='var(--red)';s.textContent='🔴 Error: '+e.message.substring(0,40); }
-    toast('Error al cargar datos: '+e.message,'error');
+    if(s){ s.style.background='var(--red-soft)';s.style.color='var(--red)';s.textContent='🔴 Error (clic para reintentar)'; }
+    toast('❌ Error Supabase: '+e.message.substring(0,80),'error');
   }
 }
 
@@ -10375,6 +10375,18 @@ const loaders={
 // ═══════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════
+
+async function reconectarApp(){
+  const s=document.getElementById('conn-status');
+  if(s){s.style.background='var(--amber-soft)';s.style.color='var(--amber)';s.textContent='🟡 Reconectando…';}
+  try{
+    await loadGerencia();
+    toast('Datos recargados ✅','success');
+  }catch(e){
+    toast('Error al reconectar: '+e.message,'error');
+  }
+}
+
 async function init(){
   // Timeout: si en 15s no conecta, mostrar error
   connTimeout = setTimeout(()=>{
