@@ -10368,8 +10368,8 @@ const loaders={
     if(!TC.length) try{ TC=await sbGet('tarifario','?select=id,categoria,familia&order=categoria'); }catch(e){ TC=[]; }
     await loadFamiliasTarifario();
   },
-  certificaciones:loadCertificaciones,
-  albaranes:loadAlbaranes
+  certificaciones:()=>loadCertificaciones(),
+  albaranes:()=>loadAlbaranes()
 };
 
 // ═══════════════════════════════════════════
