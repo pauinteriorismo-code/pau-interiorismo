@@ -8396,8 +8396,8 @@ async function saveCompra(){
   const pdfB64=document.getElementById('co-pdf-b64')?.value||null;
   const pdfNombre=document.getElementById('co-pdf-nombre')?.value||null;
   const d={fecha:document.getElementById('co-fecha').value||new Date().toISOString().split('T')[0],proyecto_id:document.getElementById('co-proyecto').value||null,proveedor_id:document.getElementById('co-prov').value||null,concepto:document.getElementById('co-concepto').value,base_imponible:parseFloat(document.getElementById('co-base').value)||0,iva_pct:document.getElementById('co-iva').value,estado_pago:document.getElementById('co-estado').value,fecha_vencimiento:document.getElementById('co-vto').value||null,notas:document.getElementById('co-notas').value};
-  // Solo actualizar PDF si hay uno nuevo cargado
-  if(pdfB64){d.adjunto_pdf=pdfB64;d.adjunto_nombre=pdfNombre;}
+  // Solo actualizar PDF si se ha cargado uno NUEVO (flag _coPDFChanged)
+  if(pdfB64 && window._coPDFChanged){d.adjunto_pdf=pdfB64;}
   try{
     if(id){await sb('compras','PATCH',d,null,`?id=eq.${id}`);toast('Compra actualizada ✅');}
     else{await sbPost('compras',d);toast('Compra registrada ✅');}
@@ -8934,16 +8934,17 @@ function editCompra(id){
   if(c.adjunto_pdf){
     window._coPDFActual = c.adjunto_pdf;
     document.getElementById('co-pdf-b64').value = c.adjunto_pdf;
-    document.getElementById('co-pdf-nombre').value = c.adjunto_nombre||'factura.pdf';
+    document.getElementById('co-pdf-nombre').value = 'factura_compra.pdf';
+    window._coPDFChanged = false; // PDF sin cambios hasta que el usuario suba uno nuevo
     const lbl=document.getElementById('co-pdf-label');
     const prev=document.getElementById('co-pdf-preview');
     const btnVer=document.getElementById('co-pdf-btn-ver');
     const zone=document.getElementById('co-pdf-zone');
     if(zone) zone.style.display='none';
     if(lbl) lbl.style.display='none';
-    if(btnVer) btnVer.style.display='none';
+    if(btnVer) btnVer.style.display='flex';
     if(prev){
-      const nombre = c.adjunto_nombre||'factura.pdf';
+      const nombre = 'factura_compra.pdf';
       prev.style.display='flex';
       prev.innerHTML=`<span style="font-size:13px">📄</span>
         <button class="btn btn-ghost btn-sm" style="font-size:12px;color:var(--navy);font-weight:600;text-decoration:underline;cursor:pointer" onclick="coVerPDF()" title="Abrir PDF">${nombre}</button>
@@ -16513,6 +16514,7 @@ document.addEventListener('keydown', e => {
 window._coPDFActual = null;
 
 function coHandleFile(file){
+  window._coPDFChanged = true;
   if(!file) return;
   if(file.type !== 'application/pdf' && !file.name.endsWith('.pdf')){
     toast('Solo se admiten archivos PDF','error'); return;
@@ -16561,7 +16563,8 @@ function coQuitarPDF(){
   if(prev){ prev.style.display='none'; prev.innerHTML=''; }
   if(btnVer) btnVer.style.display='none';
 }
-function coResetPDF(){ coQuitarPDF(); }
+function coResetPDF(){
+  window._coPDFChanged = undefined; coQuitarPDF(); }
 function coVerPDF(){
   const b64=window._coPDFActual||document.getElementById('co-pdf-b64')?.value;
   const nombre=document.getElementById('co-pdf-nombre')?.value||'factura_compra.pdf';
