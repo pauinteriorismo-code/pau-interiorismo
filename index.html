@@ -2637,7 +2637,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     </div>
 
     <!-- ═══ PEDIDOS ═══ -->
-    <div class="view" id="view-albaranes" style="display:none">
+    <div class="view" id="view-albaranes">
   <div class="search-bar" style="gap:8px;flex-wrap:wrap;align-items:center">
     <select class="form-input" style="width:280px" id="alb-proyecto-sel" onchange="loadAlbaranes()"><option value="">📁 Seleccionar proyecto…</option></select>
     <button class="btn btn-ghost btn-sm" onclick="exportarExcel('albaranes')" style="font-size:11px">📊 Excel</button>
@@ -2775,7 +2775,7 @@ openPedidoModal()">＋ Nuevo pedido</button>
     </div>
 
     <!-- ═══ FACTURAS ═══ -->
-    <div class="view" id="view-certificaciones" style="display:none">
+    <div class="view" id="view-certificaciones">
   <div class="search-bar" style="gap:8px;flex-wrap:wrap;align-items:center">
     <select class="form-input" style="width:220px" id="cert-proyecto-sel" onchange="loadCertificaciones()"><option value="">📁 Seleccionar proyecto…</option></select>
     <button class="btn btn-primary" onclick="nuevaCertificacion()" id="cert-btn-nueva" disabled>＋ Nueva certificación</button>
@@ -4527,13 +4527,24 @@ const META={
 };
 document.querySelectorAll('.nav-item[data-view]').forEach(el=>el.addEventListener('click',()=>navTo(el.dataset.view)));
 async function navTo(v){
+  // Highlight active nav item
   document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
   document.querySelector(`[data-view="${v}"]`)?.classList.add('active');
-  document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
-  document.getElementById('view-'+v)?.classList.add('active');
+  // Switch views — use BOTH class AND inline style to guarantee visibility
+  document.querySelectorAll('.view').forEach(x=>{
+    x.classList.remove('active');
+    x.style.display = 'none';
+  });
+  const target = document.getElementById('view-'+v);
+  if(target){
+    target.classList.add('active');
+    target.style.display = 'block';
+  }
+  // Update topbar
   const m=META[v]||{};
   document.getElementById('tb-title').textContent=m.t||v;
   document.getElementById('tb-bc').textContent=m.b||'';
+  // Run loader
   if(loaders[v]) try{ await loaders[v](); }catch(e){ console.error('navTo loader error ['+v+']:',e); toast('Error cargando sección: '+e.message,'error'); }
 }
 
@@ -10334,7 +10345,7 @@ async function init(){
   }, 15000);
   const today=new Date().toISOString().split('T')[0];
   ['co-fecha','sc-fecha','h-fecha','f-fecha','ped-fecha'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=today;});
-  await loadGerencia();
+  await navTo('gerencia');
   // Cargar proveedores al inicio para tenerlos siempre disponibles
   try{ ProvC=await sbGet('proveedores','?order=nombre.asc'); }catch(e){ ProvC=[]; }
   // Cargar trabajadores personalizados desde Supabase
