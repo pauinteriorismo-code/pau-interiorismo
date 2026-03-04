@@ -18653,24 +18653,45 @@ window._pdfViewerBlobUrl = null;
 
 function abrirVisorPDF(b64, nombre){
   if(!b64){ toast('Sin PDF adjunto','error'); return; }
-  if(window._pdfViewerBlobUrl) URL.revokeObjectURL(window._pdfViewerBlobUrl);
 
-  const bin=atob(b64), bytes=new Uint8Array(bin.length);
-  for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
-  const blob = new Blob([bytes],{type:'application/pdf'});
-  const url  = URL.createObjectURL(blob);
+  // Limpiar b64 por si viene con prefijo data:
+  const cleanB64 = b64.includes(',') ? b64.split(',')[1] : b64;
 
-  window._pdfViewerB64     = b64;
-  window._pdfViewerNombre  = nombre || 'documento.pdf';
-  window._pdfViewerBlobUrl = url;
+  window._pdfViewerB64    = cleanB64;
+  window._pdfViewerNombre = nombre || 'documento.pdf';
+
+  // Revocar blob anterior si existe
+  if(window._pdfViewerBlobUrl){ URL.revokeObjectURL(window._pdfViewerBlobUrl); window._pdfViewerBlobUrl=null; }
 
   const modal = document.getElementById('m-pdf-viewer');
   const frame = document.getElementById('pdf-viewer-embed');
   const title = document.getElementById('pdf-viewer-title');
   if(!modal||!frame){ toast('Error: visor PDF no encontrado','error'); return; }
 
+  // Intentar blob: URL primero; si falla, usar data: URL
+  try {
+    const bin=atob(cleanB64), bytes=new Uint8Array(bin.length);
+    for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
+    const blob = new Blob([bytes],{type:'application/pdf'});
+    const url  = URL.createObjectURL(blob);
+    window._pdfViewerBlobUrl = url;
+    frame.src = url;
+    // Fallback: si el iframe no carga en 1.5s, abrir en nueva pestaña
+    const fallbackTimer = setTimeout(()=>{
+      if(frame.contentDocument===null || frame.contentDocument.body?.innerHTML===''){
+        URL.revokeObjectURL(url);
+        window._pdfViewerBlobUrl = null;
+        // Usar data URL como fallback
+        frame.src = 'data:application/pdf;base64,'+cleanB64;
+      }
+    }, 1500);
+    frame.onload = ()=>{ clearTimeout(fallbackTimer); };
+  } catch(e) {
+    // Fallback directo a data URL
+    frame.src = 'data:application/pdf;base64,'+cleanB64;
+  }
+
   if(title) title.textContent = '📄 ' + window._pdfViewerNombre;
-  frame.src = url;
   modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
 }
@@ -18680,9 +18701,13 @@ function pdfViewerCerrar(){
   document.body.style.overflow = '';
 }
 function pdfViewerDescargar(){
-  if(!window._pdfViewerBlobUrl){ toast('Sin PDF','error'); return; }
+  if(!window._pdfViewerB64){ toast('Sin PDF','error'); return; }
   const a = document.createElement('a');
-  a.href     = window._pdfViewerBlobUrl;
+  if(window._pdfViewerBlobUrl){
+    a.href = window._pdfViewerBlobUrl;
+  } else {
+    a.href = 'data:application/pdf;base64,'+window._pdfViewerB64;
+  }
   a.download = window._pdfViewerNombre || 'documento.pdf';
   document.body.appendChild(a);
   a.click();
