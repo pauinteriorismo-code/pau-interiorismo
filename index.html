@@ -5719,7 +5719,6 @@ function exportarInformeFacturas(){
   const btn = document.querySelector('[onclick="exportarInformeFacturas()"]');
   if (btn) { btn.textContent = '⏳ Generando…'; btn.disabled = true; }
 
-  const tab = window._facTabActivo || 'todas';
   const fname = `Informe_Facturas_${tab}_PAU.pdf`;
   html2pdf().set({
     margin: [8,5,8,5],
