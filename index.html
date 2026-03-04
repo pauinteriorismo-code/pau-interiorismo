@@ -4273,7 +4273,7 @@ async function loadPresupuestoFinal(){
     document.getElementById('pf-num').textContent=`Presupuesto Nº: ${proy}-${ver.toUpperCase()}`;
     document.getElementById('pf-fecha').textContent=new Date().toLocaleDateString('es-ES');
     document.getElementById('pf-cliente-nombre').textContent=cliente.nombre||'—';
-    document.getElementById('pf-cliente-cif').textContent=cliente.cif?`CIF: ${cliente.cif}`:'';
+    document.getElementById('pf-cliente-cif').textContent=cliente.cif?`${cliente.cif}`:'';
     document.getElementById('pf-cliente-dir').textContent=cliente.direccion||'';
     document.getElementById('pf-proyecto-nombre').textContent=p.nombre||'—';
     document.getElementById('pf-proyecto-dir').textContent=p.direccion_obra||'';
@@ -4442,7 +4442,7 @@ async function loadContrato(){
     const hoy=new Date().toLocaleDateString('es-ES');
     document.getElementById('ct-fecha').textContent=hoy;
     document.getElementById('ct-cliente-nombre').textContent=cliente.nombre||'[CLIENTE]';
-    document.getElementById('ct-cliente-cif').textContent=cliente.cif||'[CIF]';
+    document.getElementById('ct-cliente-cif').textContent=cliente.cif||'';
     document.getElementById('ct-cliente-dir').textContent=cliente.direccion||'[DIRECCIÓN]';
     document.getElementById('ct-proyecto-nombre').textContent=p.nombre||'[PROYECTO]';
     document.getElementById('ct-proyecto-dir').textContent=p.direccion_obra||'[DIRECCIÓN OBRA]';
@@ -5917,7 +5917,7 @@ function exportarInformeFacturas(){
     image: { type: 'jpeg', quality: 0.98 },
     html2canvas: { scale: 2, useCORS: true, logging: false },
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
-    pagebreak: { mode: ['avoid-all', 'css'] }
+    pagebreak: { mode: ['css'] }
   }).from(wrap).save().then(() => {
     wrap.style.display = 'none';
     wrap.innerHTML = '';
@@ -9120,7 +9120,7 @@ async function exportarPDF(elementId, nombreArchivo){
     image:        { type: 'jpeg', quality: 0.98 },
     html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
     jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-    pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+    pagebreak:    { mode: ['css', 'legacy'] }
   };
   try {
     await html2pdf().set(opt).from(el).toPdf().get('pdf').then(async function(pdf){
@@ -9325,7 +9325,7 @@ function previsualizarPresupuesto(){
       +'<div class=\"icell\">'
         +'<div class=\"ilbl\">Cliente</div>'
         +'<div class=\"ival\">'+escH(cliente.nombre||'—')+'</div>'
-        +(cliente.cif?'<div class=\"isub\">CIF/NIF: '+escH(cliente.cif)+'</div>':'')
+        +(cliente.cif?'<div class=\"isub\">'+escH(cliente.cif)+'</div>':'')
         +(cliente.direccion?'<div class=\"isub\">'+escH(cliente.direccion)+'</div>':'')
         +(cliente.email?'<div class=\"isub\">'+escH(cliente.email)+' '+(cliente.telefono||'')+'</div>':'')
       +'</div>'
@@ -19971,7 +19971,7 @@ async function ejecutarEnvioEmail(){
       image:{type:'jpeg',quality:0.98},
       html2canvas:{scale:2,useCORS:true},
       jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
-      pagebreak:{mode:['avoid-all','css','legacy']}
+      pagebreak:{mode:['css','legacy']}
     };
     await html2pdf().set(opt).from(_emailDocEl).toPdf().get('pdf').then(async function(pdf){
       await añadirCabeceraPDF(pdf,_emailDocEl);
@@ -20025,7 +20025,7 @@ async function reDescargarPDF(){
     const opt={margin:[8,8,8,8],filename:window._pdfReFn||'documento.pdf',
       image:{type:'jpeg',quality:0.98},html2canvas:{scale:2,useCORS:true},
       jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
-      pagebreak:{mode:['avoid-all','css','legacy']}};
+      pagebreak:{mode:['css','legacy']}};
     await html2pdf().set(opt).from(window._pdfReDoc).toPdf().get('pdf').then(async function(pdf){
       await añadirCabeceraPDF(pdf,window._pdfReDoc);
     }).save();
@@ -20046,7 +20046,7 @@ function vpGuardarPDF(){
     html2pdf().set({margin:[8,8,8,8],filename:fn,
       image:{type:'jpeg',quality:0.98},html2canvas:{scale:2,useCORS:true,logging:false},
       jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
-      pagebreak:{mode:['avoid-all','css','legacy']}
+      pagebreak:{mode:['css','legacy']}
     }).from(el).save()
     .then(function(){if(btn){btn.textContent='Guardar PDF';btn.disabled=false;}})
     .catch(function(e){alert('Error: '+e.message);if(btn){btn.textContent='Guardar PDF';btn.disabled=false;}});
