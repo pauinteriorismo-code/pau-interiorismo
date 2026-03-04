@@ -1064,10 +1064,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     <div class="view" id="view-presupuesto">
       <style>
         /* Layout 2 columnas presupuesto */
-        /* Make .content non-scrolling when presupuesto is active */
-        .content:has(#view-presupuesto.active){overflow:hidden;padding:0}
-        /* presupuesto view fills content area */
-        #view-presupuesto.active{display:flex;flex-direction:column;height:100%} #view-presupuesto .pres-layout{display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden}
+        #view-presupuesto .pres-layout{display:flex;flex-direction:column;overflow:hidden}
         #view-presupuesto .pres-doc{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:12px;min-height:0}
         #view-presupuesto .pres-topbar{padding:10px 16px;background:var(--white);border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;gap:7px;align-items:center;flex-shrink:0}
         /* Panel fuentes */
@@ -4750,18 +4747,35 @@ async function navTo(v){
   // Highlight active nav item
   document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
   document.querySelector(`[data-view="${v}"]`)?.classList.add('active');
-  // Switch views — use BOTH class AND inline style to guarantee visibility
+  // Switch views
   document.querySelectorAll('.view').forEach(x=>{
     x.classList.remove('active');
     x.style.display = 'none';
+    x.style.height = '';
+    x.style.flexDirection = '';
   });
   const target = document.getElementById('view-'+v);
+  const content = document.querySelector('.content');
+  // Views that need their own internal scroll (flex column, fixed height)
+  const ownScrollViews = ['presupuesto'];
   if(target){
     target.classList.add('active');
-    // Some views manage their own layout (flex column)
-    const flexViews = ['presupuesto'];
-    target.style.display = flexViews.includes(v) ? 'flex' : 'block';
-    if(flexViews.includes(v)) target.style.flexDirection = 'column';
+    if(ownScrollViews.includes(v)){
+      // Give the view exact pixel height = content height, disable content scroll
+      const h = content ? content.clientHeight : window.innerHeight - 56 - 36;
+      target.style.display = 'flex';
+      target.style.flexDirection = 'column';
+      target.style.height = h + 'px';
+      if(content){ content.style.overflow = 'hidden'; content.style.padding = '0'; }
+      // Size pres-layout to fill the view minus topbar
+      const topbar = target.querySelector('.pres-topbar');
+      const topH = topbar ? topbar.offsetHeight : 48;
+      const layout = target.querySelector('.pres-layout');
+      if(layout) layout.style.height = (h - topH) + 'px';
+    } else {
+      target.style.display = 'block';
+      if(content){ content.style.overflow = ''; content.style.padding = ''; }
+    }
   }
   // Update topbar
   const m=META[v]||{};
@@ -4922,7 +4936,7 @@ async function loadFamiliasTarifario(){
     Object.keys(famMap).sort().forEach(cat=>{
       const fams = [...famMap[cat]].sort();
       html += `<div style="background:#f8f9fb;border-radius:8px;padding:12px;border:1px solid var(--border)">`;
-      html += `<div style="font-size:11px;font-weight:800;color:var(--navy-mid);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)">${cat} <span style="font-weight:400;color:var(--text-soft)">(${fams.length})</span></div>`;
+      html += `<div style="font-size:11px;font-weight:800;color:var(--navy-mid);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between"><span>${cat} <span style="font-weight:400;color:var(--text-soft)">(${fams.length})</span></span><button onclick="renameCategoriaTarifario('${catE}')" style="background:none;border:none;cursor:pointer;padding:2px 5px;border-radius:4px;font-size:12px;color:var(--text-soft)" title="Renombrar categoría">✏️</button></div>`;
       fams.forEach(fam=>{
         const catE = cat.replace(/'/g,"\\'");
         const famE = fam.replace(/'/g,"\\'");
@@ -4985,6 +4999,39 @@ async function renameFamilia(cat, oldFam){
     loadTarifario();
   }catch(e){ toast('Error: '+e.message,'error'); }
 }
+async function renameCategoriaTarifario(oldCat){
+  const newCat = prompt(`Renombrar categoría "${oldCat}" a:`, oldCat);
+  if(!newCat||!newCat.trim()||newCat.trim()===oldCat) return;
+  const nc = newCat.trim();
+  try{
+    // Update all tarifario items with this categoria
+    const items = TC.filter(t=>(t.categoria||'')===oldCat);
+    if(items.length){
+      toast(`Actualizando ${items.length} artículos…`);
+      for(const item of items){
+        await sbPatch('tarifario', item.id, {categoria: nc});
+      }
+    }
+    // Update categorias_tarifario list in configuracion
+    const cfgCat = await sbGet('configuracion','?clave=eq.categorias_tarifario').catch(()=>[]);
+    if(cfgCat.length && cfgCat[0].valor){
+      const cats = cfgCat[0].valor.split('||').filter(Boolean)
+        .map(c => c===oldCat ? nc : c);
+      await upsertConfig('categorias_tarifario', cats.join('||'));
+    }
+    // Update familias_tarifario keys (stored as "Cat::Familia")
+    const cfgFam = await sbGet('configuracion','?clave=eq.familias_tarifario').catch(()=>[]);
+    if(cfgFam.length && cfgFam[0].valor){
+      const fams = cfgFam[0].valor.split('||').filter(Boolean)
+        .map(f => { const [c,n]=f.split('::'); return c===oldCat ? `${nc}::${n}` : f; });
+      await upsertConfig('familias_tarifario', fams.join('||'));
+    }
+    toast(`Categoría renombrada a "${nc}" ✅`);
+    loadTarifario();
+    loadFamiliasTarifario();
+  }catch(e){ toast('Error: '+e.message,'error'); }
+}
+
 
 async function deleteFamilia(cat, fam){
   const count = TC.filter(t=>(t.categoria||'')===cat && (t.familia||'')===fam).length;
