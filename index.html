@@ -10394,7 +10394,7 @@ function previsualizarFactura(){
         +(d.contraEmail?'<div class="isub">'+escH(d.contraEmail)+'</div>':'')
       +'</div>'
       +'<div class="icell"><div class="ilbl">Fechas</div><div class="ival">Emisión: '+fmtD(d.fecha)+'</div>'
-        +(d.vto?'<div class="isub">Vencimiento: '+fmtD(d.vto)+'</div>':'')
+        
       +'</div>'
       +'<div class="icell"><div class="ilbl">Forma de pago</div><div class="ival">'+escH(d.fpago||'—')+'</div>'
         +(d.concepto?'<div class="isub">'+escH(d.concepto)+'</div>':'')
@@ -10420,7 +10420,7 @@ function previsualizarFactura(){
     +'<div class="tr tf"><span>TOTAL</span><span>'+fmtE(d.total)+'</span></div>'
     +'</div>'
     +'</div>'
-    +'<div style="padding:12px 32px 0">'+_getPieHtml()+'</div>'
+    +'<div style="padding:12px 32px 0">'+_getPieHtml(d.esC)+'</div>'
     +'<div class="foot">PAU INTERIORISMO S.L. · CIF B-56909641 · C/ Tomás y Valiente Nº 6 Bajo · 46290 Alcàsser (Valencia) · Tel: 961 20 01 87</div>'
   +'</div>'
   +'</body></html>';
@@ -10849,21 +10849,24 @@ async function savePieFactura(){
   }catch(e){ toast('Error: '+e.message,'error'); }
 }
 
-function _getPieHtml(){
+function _getPieHtml(esC=false){
   const iban  = _PIE_FACTURA.pie_iban||'';
   const banco = _PIE_FACTURA.pie_banco||'';
   const cond  = _PIE_FACTURA.pie_condiciones||'';
   const legal = _PIE_FACTURA.pie_nota_legal||'';
   const extra = _PIE_FACTURA.pie_extra||'';
-  if(!iban&&!banco&&!cond&&!legal&&!extra) return '';
+  const hasContent = (!esC&&(iban||banco||cond))||legal||extra;
+  if(!hasContent) return '';
   let html='<div style="border-top:1px solid #ddd;padding-top:12px;margin-top:8px;font-size:10px;color:#555">';
-  if(iban||banco){
-    html+='<div style="display:flex;gap:24px;margin-bottom:6px;flex-wrap:wrap">';
-    if(iban)  html+=`<span><strong style="color:#4a3728">Cuenta bancaria:</strong> ${escH(iban)}</span>`;
-    if(banco) html+=`<span><strong style="color:#4a3728">Banco:</strong> ${escH(banco)}</span>`;
-    html+='</div>';
+  if(!esC){
+    if(iban||banco){
+      html+='<div style="display:flex;gap:24px;margin-bottom:6px;flex-wrap:wrap">';
+      if(iban)  html+=`<span><strong style="color:#4a3728">Cuenta bancaria:</strong> ${escH(iban)}</span>`;
+      if(banco) html+=`<span><strong style="color:#4a3728">Banco:</strong> ${escH(banco)}</span>`;
+      html+='</div>';
+    }
+    if(cond) html+=`<div style="margin-bottom:5px"><strong style="color:#4a3728">Condiciones de pago:</strong> ${escH(cond)}</div>`;
   }
-  if(cond)  html+=`<div style="margin-bottom:5px"><strong style="color:#4a3728">Condiciones de pago:</strong> ${escH(cond)}</div>`;
   if(legal) html+=`<div style="margin-bottom:5px;color:#777">${escH(legal)}</div>`;
   if(extra) html+=`<div style="color:#777">${escH(extra)}</div>`;
   html+='</div>';
@@ -11166,7 +11169,7 @@ async function enviarFacturaEmail(id){
   const base = f.base_imponible||0;
   const ivaN = ivaPct(f.iva_pct||'21%');
   const total = base*(1+ivaN/100);
-  const pie = _getPieHtml();
+  const esC = f.tipo==='Compra'; const pie = _getPieHtml(esC);
 
   const htmlFactura = `
     <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:700px;margin:0 auto">
@@ -11192,7 +11195,7 @@ async function enviarFacturaEmail(id){
         <div style="padding:14px 16px;border-right:1px solid #e8e0d4">
           <div style="font-size:9px;text-transform:uppercase;font-weight:700;color:#b87333;margin-bottom:4px">Fechas</div>
           <div style="font-size:13px;font-weight:700;color:#4a3728">Emisión: ${fmtD(f.fecha_emision)}</div>
-          ${f.fecha_vencimiento?`<div style="font-size:10px;color:#888">Vencimiento: ${fmtD(f.fecha_vencimiento)}</div>`:''}
+          
         </div>
         <div style="padding:14px 16px">
           <div style="font-size:9px;text-transform:uppercase;font-weight:700;color:#b87333;margin-bottom:4px">Forma de pago</div>
