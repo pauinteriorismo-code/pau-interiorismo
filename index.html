@@ -793,6 +793,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <div class="card-header">
             <div class="card-title">📂 Familias del tarifario <span style="font-size:11px;font-weight:400;color:var(--text-soft)">— agrupaciones dentro de cada categoría</span></div>
             <button class="btn btn-ghost btn-sm" onclick="addFamiliaTarifario()">＋ Añadir familia</button>
+            <button class="btn btn-ghost btn-sm" style="color:var(--red);border-color:var(--red)" onclick="eliminarFamiliaDesdeBoton()">🗑 Eliminar familia</button>
           </div>
           <div id="familias-tarifario-container" style="padding:12px">
             <div style="color:var(--text-soft);font-size:12px;text-align:center;padding:20px">Cargando familias…</div>
@@ -1279,6 +1280,10 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
             <div class="tarif-import-item" onclick="closeImportMenu();if(confirm('¿Importar 23 partidas de Reforma Cocina? Categoría: Rehab. Cocina'))importarReformaCocina()">
               <div style="font-weight:600;font-size:12px">🍳 Reforma Cocina Completa</div>
               <div style="font-size:11px;color:var(--text-soft)">23 partidas · 12 capítulos · Categoría: Rehab. Cocina · Margen 30%</div>
+            </div>
+            <div class="tarif-import-item" onclick="closeImportMenu();if(confirm('¿Importar 23 partidas de Rehabilitación Fachada? Categoría: Rehab. Fachada'))importarReformaFachada()">
+              <div style="font-weight:600;font-size:12px">🏠 Rehabilitación Fachada</div>
+              <div style="font-size:11px;color:var(--text-soft)">23 partidas · 8 capítulos · Categoría: Rehab. Fachada · Margen 30%</div>
             </div>
           </div>
         </div>
@@ -4998,6 +5003,88 @@ async function deleteFamilia(cat, fam){
   }catch(e){ toast('Error: '+e.message,'error'); }
 }
 
+async function eliminarFamiliaDesdeBoton(){
+  // Build list of all current families from TC + config
+  const famMap = {};
+  TC.forEach(t => {
+    if(!t.familia) return;
+    const cat = t.categoria||'Sin categoría';
+    if(!famMap[cat]) famMap[cat] = new Set();
+    famMap[cat].add(t.familia);
+  });
+  try {
+    const cfg = await sbGet('configuracion','?clave=eq.familias_tarifario');
+    if(cfg.length && cfg[0].valor){
+      cfg[0].valor.split('||').filter(Boolean).forEach(f => {
+        const parts = f.split('::');
+        if(parts.length===2){
+          const [cat,fam] = parts;
+          if(!famMap[cat]) famMap[cat] = new Set();
+          famMap[cat].add(fam);
+        }
+      });
+    }
+  } catch(e){}
+
+  const cats = Object.keys(famMap).sort();
+  if(!cats.length){ toast('No hay familias para eliminar','error'); return; }
+
+  // Build a simple select dialog via modal overlay
+  const options = [];
+  cats.forEach(cat => {
+    [...famMap[cat]].sort().forEach(fam => {
+      options.push({ label: `${cat} → ${fam}`, cat, fam });
+    });
+  });
+
+  // Create temporary modal
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center';
+  overlay.innerHTML = `
+    <div style="background:white;border-radius:12px;padding:24px;width:420px;max-height:80vh;display:flex;flex-direction:column;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,.2)">
+      <div style="font-weight:700;font-size:15px;color:var(--navy)">🗑 Eliminar familia</div>
+      <div style="font-size:12px;color:var(--text-soft)">Selecciona la familia a eliminar. Los artículos que la tengan asignada quedarán sin familia.</div>
+      <select id="del-fam-sel" class="form-input" style="font-size:13px">
+        <option value="">— Selecciona una familia —</option>
+        ${options.map((o,i) => `<option value="${i}">${o.label}</option>`).join('')}
+      </select>
+      <div id="del-fam-info" style="font-size:12px;color:var(--amber);min-height:18px"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button id="del-fam-cancel" class="btn btn-ghost">Cancelar</button>
+        <button id="del-fam-ok" class="btn btn-danger" disabled>Eliminar</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  const sel   = overlay.querySelector('#del-fam-sel');
+  const info  = overlay.querySelector('#del-fam-info');
+  const btnOk = overlay.querySelector('#del-fam-ok');
+  const btnCancel = overlay.querySelector('#del-fam-cancel');
+
+  sel.onchange = () => {
+    const idx = sel.value;
+    if(idx === ''){ info.textContent=''; btnOk.disabled=true; return; }
+    const {cat,fam} = options[parseInt(idx)];
+    const count = TC.filter(t=>(t.categoria||'')===cat&&(t.familia||'')===fam).length;
+    info.textContent = count > 0
+      ? `⚠️ ${count} artículo${count>1?'s':''} quedarán sin familia`
+      : 'Sin artículos asignados';
+    btnOk.disabled = false;
+  };
+
+  btnCancel.onclick = () => document.body.removeChild(overlay);
+  overlay.onclick = (e) => { if(e.target===overlay) document.body.removeChild(overlay); };
+
+  btnOk.onclick = async () => {
+    const idx = sel.value;
+    if(idx === '') return;
+    const {cat, fam} = options[parseInt(idx)];
+    document.body.removeChild(overlay);
+    await deleteFamilia(cat, fam);
+  };
+}
+
+
 async function seleccionarOpcion(titulo, opciones){
   return new Promise(resolve=>{
     const ov=document.createElement('div');
@@ -8581,6 +8668,44 @@ function importarReformaCocina(){
   (async()=>{
     let ok=0, err=0;
     toast('Importando ' + productos.length + ' partidas de cocina…');
+    for(const p of productos){
+      try{ await sbPost('tarifario', p); ok++; }
+      catch(e){ console.error(p.codigo, e.message); err++; }
+    }
+    toast(ok + ' partidas importadas' + (err?' · '+err+' errores':'') + ' ✅');
+    loadTarifario();
+  })();
+}
+
+function importarReformaFachada(){
+  const productos = [
+    {codigo:"FAC-01-01",descripcion:"Soltar y recolocar cableado eléctrico en fachada",unidad:"pa",precio_coste:292.3077,margen_pct:30,categoria:"Rehab. Fachada",familia:"Trabajos previos y demolición",marca:"",notas:"Partida modelo · Rehabilitación fachada unifamiliar"},
+    {codigo:"FAC-01-02",descripcion:"Picado completo de revestimiento existente en fachada",unidad:"m²",precio_coste:9.2308,margen_pct:30,categoria:"Rehab. Fachada",familia:"Trabajos previos y demolición",marca:"",notas:"Partida modelo · Rehabilitación fachada unifamiliar"},
+    {codigo:"FAC-01-03",descripcion:"Eliminación de rejas en ventanas",unidad:"ud",precio_coste:73.0769,margen_pct:30,categoria:"Rehab. Fachada",familia:"Trabajos previos y demolición",marca:"",notas:"Partida modelo · Rehabilitación fachada unifamiliar"},
+    {codigo:"FAC-01-04",descripcion:"Retirada de ventanas y puerta de entrada existentes",unidad:"pa",precio_coste:323.0769,margen_pct:30,categoria:"Rehab. Fachada",familia:"Trabajos previos y demolición",marca:"",notas:"Partida modelo · Rehabilitación fachada unifamiliar"},
+    {codigo:"FAC-02-01",descripcion:"Apertura y formación de hornacinas para contadores de agua y electricidad",unidad:"ud",precio_coste:246.1538,margen_pct:30,categoria:"Rehab. Fachada",familia:"Albañilería y preparación",marca:"",notas:"Partida modelo · Rehabilitación fachada unifamiliar"},
+    {codigo:"FAC-02-02",descripcion:"Puertas galvanizadas panelables para hornacinas",unidad:"ud",precio_coste:215.3846,margen_pct:30,categoria:"Rehab. Fachada",familia:"Albañilería y preparación",marca:"",notas:"Partida modelo · Rehabilitación fachada unifamiliar"},
+    {codigo:"FAC-02-03",descripcion:"Picado de desperfectos y formación de aristas en perímetros de huecos",unidad:"pa",precio_coste:500.0,margen_pct:30,categoria:"Rehab. Fachada",familia:"Albañilería y preparación",marca:"",notas:"Partida modelo · Rehabilitación fachada unifamiliar"},
+    {codigo:"FAC-02-04",descripcion:"Maestreado de fachada planta baja",unidad:"m²",precio_coste:16.9231,margen_pct:30,categoria:"Rehab. Fachada",familia:"Albañilería y preparación",marca:"",notas:"Partida modelo · Rehabilitación fachada unifamiliar"},
+    {codigo:"FAC-02-05",descripcion:"Maestreado de fachada primera planta",unidad:"m²",precio_coste:16.9231,margen_pct:30,categoria:"Rehab. Fachada",familia:"Albañilería y preparación",marca:"",notas:"Partida modelo · Rehabilitación fachada unifamiliar"},
+    {codigo:"FAC-03-01",descripcion:"Revestimiento cerámico en zócalo planta baja — h máx. 120 cm",unidad:"m²",precio_coste:42.3077,margen_pct:30,categoria:"Rehab. Fachada",familia:"Revestimiento zócalo",marca:"",notas:"Partida modelo · Rehabilitación fachada unifamiliar"},
+    {codigo:"FAC-03-02",descripcion:"Vierteaguas de piedra natural en alféizar de ventanas y puertas",unidad:"ml",precio_coste:65.3846,margen_pct:30,categoria:"Rehab. Fachada",familia:"Revestimiento zócalo",marca:"",notas:"Partida modelo · Rehabilitación fachada unifamiliar"},
+    {codigo:"FAC-04-01",descripcion:"Lucido de fachada con mortero monocapa de exterior — color blanco",unidad:"m²",precio_coste:13.8462,margen_pct:30,categoria:"Rehab. Fachada",familia:"Acabados de fachada",marca:"",notas:"Partida modelo · Rehabilitación fachada unifamiliar"},
+    {codigo:"FAC-04-02",descripcion:"Pintura de fachada con pintura plástica de exterior anticarbonatación",unidad:"m²",precio_coste:6.1538,margen_pct:30,categoria:"Rehab. Fachada",familia:"Acabados de fachada",marca:"",notas:"Partida modelo · Rehabilitación fachada unifamiliar"},
+    {codigo:"FAC-05-01",descripcion:"Ventanas de PVC o aluminio lacado con doble acristalamiento y persiana",unidad:"ud",precio_coste:753.8462,margen_pct:30,categoria:"Rehab. Fachada",familia:"Carpintería exterior",marca:"",notas:"Partida modelo · Rehabilitación fachada unifamiliar"},
+    {codigo:"FAC-05-02",descripcion:"Puerta de entrada principal con panel lateral fijo de vidrio",unidad:"ud",precio_coste:1692.3077,margen_pct:30,categoria:"Rehab. Fachada",familia:"Carpintería exterior",marca:"",notas:"Partida modelo · Rehabilitación fachada unifamiliar"},
+    {codigo:"FAC-06-01",descripcion:"Rejas o barandillas en ventanas primera planta — acero galvanizado lacado",unidad:"ud",precio_coste:369.2308,margen_pct:30,categoria:"Rehab. Fachada",familia:"Cerrajería y metálicos",marca:"",notas:"Partida modelo · Rehabilitación fachada unifamiliar"},
+    {codigo:"FAC-06-02",descripcion:"Canalón de PVC para recogida de aguas pluviales con bajante",unidad:"ml",precio_coste:29.2308,margen_pct:30,categoria:"Rehab. Fachada",familia:"Cerrajería y metálicos",marca:"",notas:"Partida modelo · Rehabilitación fachada unifamiliar"},
+    {codigo:"FAC-07-01",descripcion:"Canal de PVC para cableado eléctrico en fachada",unidad:"ml",precio_coste:13.8462,margen_pct:30,categoria:"Rehab. Fachada",familia:"Instalaciones",marca:"",notas:"Partida modelo · Rehabilitación fachada unifamiliar"},
+    {codigo:"FAC-07-02",descripcion:"Mano de obra fontanería — instalación y conexión contador de agua",unidad:"ud",precio_coste:369.2308,margen_pct:30,categoria:"Rehab. Fachada",familia:"Instalaciones",marca:"",notas:"Partida modelo · Rehabilitación fachada unifamiliar"},
+    {codigo:"FAC-07-03",descripcion:"Mano de obra electricidad — instalación y conexión contador eléctrico",unidad:"ud",precio_coste:446.1538,margen_pct:30,categoria:"Rehab. Fachada",familia:"Instalaciones",marca:"",notas:"Partida modelo · Rehabilitación fachada unifamiliar"},
+    {codigo:"FAC-07-04",descripcion:"Tramitación y gestión altas contador agua y electricidad",unidad:"pa",precio_coste:292.3077,margen_pct:30,categoria:"Rehab. Fachada",familia:"Instalaciones",marca:"",notas:"Partida modelo · Rehabilitación fachada unifamiliar"},
+    {codigo:"FAC-08-01",descripcion:"Alquiler de máquina elevadora de tijera — incluye transporte y seguro",unidad:"sem",precio_coste:523.0769,margen_pct:30,categoria:"Rehab. Fachada",familia:"Medios auxiliares",marca:"",notas:"Partida modelo · Rehabilitación fachada unifamiliar"},
+    {codigo:"FAC-08-02",descripcion:"Medios auxiliares, protecciones y limpieza final de obra",unidad:"pa",precio_coste:369.2308,margen_pct:30,categoria:"Rehab. Fachada",familia:"Medios auxiliares",marca:"",notas:"Partida modelo · Rehabilitación fachada unifamiliar"},
+  ];
+  (async()=>{
+    let ok=0, err=0;
+    toast('Importando ' + productos.length + ' partidas de fachada…');
     for(const p of productos){
       try{ await sbPost('tarifario', p); ok++; }
       catch(e){ console.error(p.codigo, e.message); err++; }
