@@ -10296,8 +10296,8 @@ function _buildFacturaPDF(){
     if(cli){ contra=cli.nombre||'—'; contraDir=cli.direccion||''; contraCIF=cli.cif||''; contraTel=cli.telefono||''; contraEmail=cli.email||''; }
   } else {
     const provId=document.getElementById('f-proveedor').value;
-    const prov=ProvC.find(p=>String(p.id)===String(provId));
-    if(prov){ contra=prov.nombre||'—'; contraCIF=prov.cif||''; contraTel=prov.telefono||''; contraEmail=prov.email||''; }
+    const prov=ProvC.find(p=>p.nombre===provId||String(p.id)===String(provId)||p.proveedor_id===provId);
+    if(prov){ contra=prov.nombre||'—'; contraDir=prov.direccion||''; contraCIF=prov.cif||''; contraTel=prov.telefono||''; contraEmail=prov.email||''; }
   }
 
   let filasLineas='';
@@ -10325,7 +10325,7 @@ function _buildFacturaPDF(){
   const hoy=new Date().toLocaleDateString('es-ES');
 
   return {num,fecha,vto,base,ivaSel,ivaN,total,cobrado,pdte,estado,concepto,fpago,
-          contra,contraDir,contraCIF,contraTel,contraEmail,filasLineas,ivaImporte,estColor,tipoLabel,hoy};
+          contra,contraDir,contraCIF,contraTel,contraEmail,filasLineas,ivaImporte,estColor,tipoLabel,hoy,esC};
 }
 
 function escH(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -11182,7 +11182,7 @@ async function enviarFacturaEmail(id){
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid #e8e0d4">
         <div style="padding:14px 16px;border-right:1px solid #e8e0d4">
-          <div style="font-size:9px;text-transform:uppercase;font-weight:700;color:#b87333;margin-bottom:4px">Cliente</div>
+          <div style="font-size:9px;text-transform:uppercase;font-weight:700;color:#b87333;margin-bottom:4px">${d.esC?"Proveedor":"Cliente"}</div>
           <div style="font-size:13px;font-weight:700;color:#4a3728">${escH(d.contra)}</div>
           ${d.contraCIF?`<div style="font-size:10px;color:#888">${escH(d.contraCIF)}</div>`:''}
           ${d.contraDir?`<div style="font-size:10px;color:#888">${escH(d.contraDir)}</div>`:''}
