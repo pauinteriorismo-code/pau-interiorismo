@@ -4320,9 +4320,18 @@ function abrirVistaPrevia(docId, titulo, autoPrint=false){
   const w = window.open('','_blank','width=980,height=820');
   w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
   <title>Vista previa \u2013 ${titulo}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
-    body{background:#d8d8d8;font-family:Arial,sans-serif}
+    body{
+      background:#d8d8d8;
+      font-family:'Inter',Arial,sans-serif;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      text-rendering:optimizeLegibility;
+    }
     .toolbar{position:fixed;top:0;left:0;right:0;height:52px;background:#1e2d3d;
       display:flex;align-items:center;gap:8px;padding:0 20px;z-index:9999;
       box-shadow:0 2px 8px rgba(0,0,0,.4)}
@@ -4332,10 +4341,24 @@ function abrirVistaPrevia(docId, titulo, autoPrint=false){
     .btn-print{background:#b87333;color:white}
     .toolbar-info{color:#aaa;font-size:11px;margin-left:6px;flex:1}
     .wrap{margin-top:52px;padding:20px;display:flex;justify-content:center}
-    .doc{background:white;width:820px;padding:32px 40px;
-      box-shadow:0 4px 20px rgba(0,0,0,.2);font-size:12px;font-family:Arial,sans-serif}
+    .doc{
+      background:white;
+      width:820px;
+      padding:32px 40px;
+      box-shadow:0 4px 20px rgba(0,0,0,.2);
+      font-size:12px;
+      font-family:'Inter',Arial,sans-serif;
+      -webkit-font-smoothing:antialiased;
+      text-rendering:optimizeLegibility;
+    }
     table{width:100%;border-collapse:collapse}
     @media print{
+      *{
+        -webkit-print-color-adjust:exact!important;
+        print-color-adjust:exact!important;
+        -webkit-font-smoothing:antialiased!important;
+        text-rendering:optimizeLegibility!important;
+      }
       .toolbar{display:none!important}
       body,html{background:white!important}
       .wrap{margin:0;padding:0}
@@ -4343,7 +4366,8 @@ function abrirVistaPrevia(docId, titulo, autoPrint=false){
         box-shadow:none!important;
         width:100%!important;
         padding:10mm 12mm!important;
-        font-size:11px!important;
+        font-size:11.5px!important;
+        font-family:'Inter',Arial,sans-serif!important;
       }
       .doc-repeat-header{
         position:running(header);
@@ -4376,7 +4400,7 @@ function abrirVistaPrevia(docId, titulo, autoPrint=false){
         while(node){const next=node.nextSibling;body.appendChild(node);node=next;}
         docEl.appendChild(body);
       }
-      if(autoPrint){ setTimeout(function(){ window.print(); }, 400); }
+      if(autoPrint){ setTimeout(function(){ window.print(); }, 600); }
     });
   \u003c/script>\n  </body></html>`);
   w.document.close();
@@ -4385,8 +4409,7 @@ function abrirVistaPrevia(docId, titulo, autoPrint=false){
 async function pfExportarPDF(){
   const doc = document.getElementById('pf-doc');
   if(!doc || !doc.querySelector('#pf-lineas')?.children.length){ toast('Carga un presupuesto primero','error'); return; }
-  // Usamos el mismo motor que Vista Previa (window.print nativo del navegador)
-  // para respetar correctamente los márgenes A4 y los saltos de página
+  // Motor nativo del navegador: texto vectorial, márgenes correctos, sin pixelado
   abrirVistaPrevia('pf-doc','Presupuesto', true);
 }
 // ═══════════════════════════════════════════
