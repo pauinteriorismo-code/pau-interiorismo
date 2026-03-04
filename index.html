@@ -375,6 +375,12 @@ th.sortable:not(.sort-asc):not(.sort-desc) .sort-arrow::after{content:'⇅'}
 .kanban-col.drag-over { outline: 2px dashed var(--navy) !important; background: var(--blue-light) !important; }
 .exp-tab:hover { background: #f5f7fa; }
 
+
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+
 <!-- VISOR PDF -->
 <div id="m-pdf-viewer" style="display:none;position:fixed;inset:0;background:rgba(10,20,30,.85);z-index:9999;flex-direction:column;align-items:center;justify-content:center">
   <div style="background:#fff;border-radius:12px;width:min(900px,96vw);height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.4)">
@@ -389,10 +395,6 @@ th.sortable:not(.sort-asc):not(.sort-desc) .sort-arrow::after{content:'⇅'}
   </div>
 </div>
 
-</style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-</head>
-<body>
 
 <!-- LOGIN -->
 <div id="login-screen" class="login-screen" style="display: none; z-index: 9999;">
