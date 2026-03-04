@@ -6215,10 +6215,10 @@ async function saveLineaPresupuesto(){
   let pv=margen>0?precio*(1+margen/100):precio;if(ci>0)pv=pv*(1+ci/100);
   const id=document.getElementById('pl-id').value;
   const d={proyecto_id:proy,version:ver,descripcion:desc,ref_cype:document.getElementById('pl-cype-search').dataset.cypeRef||null,unidad:document.getElementById('pl-ud').value,cantidad:cant,precio_base:precio,margen_pct:margen,ci_gg_bi_pct:ci,precio_venta:parseFloat(pv.toFixed(4)),subtotal:parseFloat((cant*pv).toFixed(4)),iva_pct:document.getElementById('pl-iva').value,partida:document.getElementById('pl-partida').value,es_capitulo:false,orden:PresC.length+1};
-  try{if(id){await sbPatch('presupuesto_lineas',id,d);toast('Línea actualizada ✅');}else{await sbPost('presupuesto_lineas',d);toast('Línea añadida ✅');}closeModal('m-pres-linea');loadPresupuesto();}catch(e){toast('Error: '+e.message,'error');}
+  try{if(id){await sbPatch('presupuesto_lineas',id,d);toast('Línea actualizada ✅');}else{await sbPost('presupuesto_lineas',d);toast('Línea añadida ✅');}closeModal('m-pres-linea');const _presScroll=document.querySelector('.content')?.scrollTop||0;await loadPresupuesto();requestAnimationFrame(()=>{const c=document.querySelector('.content');if(c)c.scrollTop=_presScroll;});}catch(e){toast('Error: '+e.message,'error');}
 }
 function addCapituloPresupuesto(){const proy=document.getElementById('pres-proyecto-sel').value;if(!proy){toast('Selecciona un proyecto primero','error');return;}document.getElementById('cap-nombre').value='';openModal('m-pres-cap');}
-async function saveCapitulo(){const nombre=document.getElementById('cap-nombre').value.trim();if(!nombre){toast('Escribe el nombre','error');return;}const proy=document.getElementById('pres-proyecto-sel').value,ver=document.getElementById('pres-version-sel').value;try{await sbPost('presupuesto_lineas',{proyecto_id:proy,version:ver,descripcion:nombre,es_capitulo:true,orden:PresC.length+1,cantidad:0,precio_base:0,precio_venta:0,subtotal:0});toast('Capítulo añadido ✅');closeModal('m-pres-cap');loadPresupuesto();}catch(e){toast('Error: '+e.message,'error');}
+async function saveCapitulo(){const nombre=document.getElementById('cap-nombre').value.trim();if(!nombre){toast('Escribe el nombre','error');return;}const proy=document.getElementById('pres-proyecto-sel').value,ver=document.getElementById('pres-version-sel').value;try{await sbPost('presupuesto_lineas',{proyecto_id:proy,version:ver,descripcion:nombre,es_capitulo:true,orden:PresC.length+1,cantidad:0,precio_base:0,precio_venta:0,subtotal:0});toast('Capítulo añadido ✅');closeModal('m-pres-cap');const _presScrCap=document.querySelector('.content')?.scrollTop||0;await loadPresupuesto();requestAnimationFrame(()=>{const c=document.querySelector('.content');if(c)c.scrollTop=_presScrCap;});}catch(e){toast('Error: '+e.message,'error');}
 }
 
 // ═══════════════════════════════════════════
@@ -14910,7 +14910,9 @@ async function ppLibreAdd(){
     document.getElementById('pp-l-margen').value = '0';
     document.getElementById('pp-l-cant').value   = '1';
     ppLibreCalc();
-    loadPresupuesto();
+    const _ppS=document.querySelector('.content')?.scrollTop||0;
+    await loadPresupuesto();
+    requestAnimationFrame(()=>{const c=document.querySelector('.content');if(c)c.scrollTop=_ppS;});
   }catch(e){ toast('Error: '+e.message,'error'); }
 }
 
