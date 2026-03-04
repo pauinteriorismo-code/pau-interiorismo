@@ -9168,127 +9168,275 @@ async function exportarPDF(elementId, nombreArchivo){
   }
 }
 
-async function exportarPresupuestoPDF(){
+async async function exportarPresupuestoPDF(){
   const proy = document.getElementById('pres-proyecto-sel')?.value;
   const ver  = document.getElementById('pres-version-sel')?.value || 'v1';
   if(!proy){ toast('Selecciona un proyecto primero','error'); return; }
-  // Get project and client info
+
+  const jsPDF = window.jspdf?.jsPDF;
+  if(!jsPDF){ toast('jsPDF no disponible','error'); return; }
+  toast('Generando PDF…');
+
   const proyecto = PC.find(p=>p.proyecto_id===proy)||{};
   const cliente  = CC.find(c=>c.cliente_id===proyecto.cliente_id)||{};
-  // Get rows from table
-  const tbody = document.getElementById('pres-tbody');
-  if(!tbody){ toast('Sin datos de presupuesto','error'); return; }
-  // Build a clean printable div
-  const totalEl = document.getElementById('pres-total-lbl');
-  const totalText = totalEl ? totalEl.textContent : '';
-  // Build rows as divs — page breaks measured manually before passing to html2pdf
-  const COL_W = ['8%','44%','8%','8%','16%','16%'];
-  const COL_ALIGN = ['left','left','center','right','right','right'];
-  const allRowDivs = Array.from(tbody.querySelectorAll('tr[data-search]'))
-    .filter(tr=>tr.style.display!=='none')
-    .map(tr=>{
-      const tds = tr.querySelectorAll('td');
-      const isCapitulo = tr.classList.contains('capitulo-row') || (tds[0]&&tds[0].colSpan>1);
-      if(isCapitulo){
-        return {isCapitulo:true, html:`<div class="pres-cap" style="background:#f7f4ef;padding:9px 10px;font-weight:700;font-size:12px;color:#4a3728;border-bottom:2px solid #b87333;border-top:1px solid #ddd;margin-top:6px">${tds[0]?.textContent||''}</div>`};
-      }
-      const cells = Array.from(tds).slice(0,-1);
-      return {isCapitulo:false, html:`<div style="display:flex;border-bottom:1px solid #eee;padding:3px 0">
-        ${cells.map((td,ci)=>`<div style="width:${COL_W[ci]||'auto'};flex-shrink:0;padding:5px 6px;font-size:11px;text-align:${COL_ALIGN[ci]||'left'}">${td.textContent}</div>`).join('')}
-      </div>`};
-    });
+  const cfg      = await getCfg();
 
-  // ── Step 1: measure row heights in a hidden off-screen container ──
-  const measurer = document.createElement('div');
-  measurer.style.cssText = 'position:fixed;left:-9999px;top:0;width:750px;visibility:hidden;pointer-events:none;z-index:-1';
-  measurer.innerHTML = allRowDivs.map(r=>r.html).join('');
-  document.body.appendChild(measurer);
-  const measuredHeights = Array.from(measurer.children).map(el=>el.getBoundingClientRect().height||24);
-  document.body.removeChild(measurer);
+  // ── Collect rows from current presupuesto ──
+  const lineas = (PresC||[]).filter(l=>l.proyecto_id===proy && (l.version||'v1')===ver);
+  if(!lineas.length){ toast('Sin líneas de presupuesto','error'); return; }
 
-  // ── Step 2: split rows into pages based on content height ──
-  // A4 at 96dpi ≈ 1122px; margins 10+15mm ≈ 94px; first-page header ≈ 210px
-  const PAGE_H      = 1000;   // conservative content height per page (px)
-  const FIRST_USED  = 220;    // approx height used by header on page 1
-  const COL_HDR_H   = 32;     // column header row height
-  const COL_HDR_HTML = `<div style="display:flex;background:#f7f4ef;font-size:11px;font-weight:700;color:#4a3728;border-bottom:2px solid #b87333;padding:6px 0;margin-bottom:2px">
-    <div style="width:8%;flex-shrink:0;padding:4px 6px">Cód.</div>
-    <div style="width:44%;flex-shrink:0;padding:4px 6px">Descripción</div>
-    <div style="width:8%;flex-shrink:0;padding:4px 6px;text-align:center">Ud.</div>
-    <div style="width:8%;flex-shrink:0;padding:4px 6px;text-align:right">Med.</div>
-    <div style="width:16%;flex-shrink:0;padding:4px 6px;text-align:right">P.Unit.</div>
-    <div style="width:16%;flex-shrink:0;padding:4px 6px;text-align:right">Total</div>
-  </div>`;
-
-  let pages = [];          // array of row-html strings per page
-  let curPage = COL_HDR_HTML;
-  let curH = FIRST_USED + COL_HDR_H;
-
-  allRowDivs.forEach((row, i) => {
-    const h = measuredHeights[i] || 24;
-    // If this row won't fit, start a new page
-    if(curH + h > PAGE_H && curPage !== COL_HDR_HTML) {
-      pages.push(curPage);
-      curPage = COL_HDR_HTML;
-      curH = COL_HDR_H;
-    }
-    curPage += row.html;
-    curH += h;
+  // ── Build ivaDesglose ──
+  const ivaDesglose = {};
+  let totBase=0, totVenta=0;
+  lineas.forEach(l=>{
+    if(l.es_capitulo) return;
+    const pv=l.precio_venta||0, ci=l.ci_gg_bi_pct||0;
+    const sub=(l.cantidad||0)*pv, subCI=ci>0?sub*(1+ci/100):sub;
+    totBase  += (l.cantidad||0)*(l.precio_base||0);
+    totVenta += subCI;
+    const tipo=l.iva_pct||'10%', pct=parseFloat(tipo)||10;
+    if(!ivaDesglose[tipo]) ivaDesglose[tipo]={pct,base:0,iva:0};
+    ivaDesglose[tipo].base += subCI;
+    ivaDesglose[tipo].iva  += subCI*pct/100;
   });
-  pages.push(curPage); // last page
+  const totalIva  = Object.values(ivaDesglose).reduce((s,v)=>s+v.iva,0);
+  const totalConIva = totVenta + totalIva;
 
-  // ── Step 3: build final HTML with explicit page-break divs ──
-  const rowsHtml = pages.map((pg, pi) =>
-    pi === 0
-      ? pg   // first page: no break needed
-      : `<div style="page-break-before:always;break-before:page;margin-top:0">${pg}</div>`
-  ).join('');
+  // ── PDF setup ──
+  const pdf = new jsPDF('p','mm','a4');
+  const pW=210, pH=297, mL=14, mR=14, mT=14, mB=20;
+  const cW = pW-mL-mR;   // content width = 182mm
 
+  // column X positions and widths (mm) — Cód · Descripción · Ud · Med · P.Unit · Total
+  const cols = [
+    {x:mL,       w:14,  align:'left'},    // Cód
+    {x:mL+14,    w:78,  align:'left'},    // Descripción
+    {x:mL+92,    w:12,  align:'center'},  // Ud
+    {x:mL+104,   w:14,  align:'right'},   // Med
+    {x:mL+118,   w:32,  align:'right'},   // P.Unit
+    {x:mL+150,   w:32,  align:'right'},   // Total
+  ];
 
-  printDiv.innerHTML = `
-    <style>
-      @media print { thead { display: table-header-group !important; } }
-      tr { page-break-inside: avoid !important; }
-      .cap-row { page-break-after: avoid !important; }
-    </style>
-    <div style="font-family:'Segoe UI',Arial,sans-serif;padding:20px;max-width:800px;margin:0 auto">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #b87333;padding-bottom:14px;margin-bottom:16px">
-        <div>
-          <img src="${LOGO_URL}" style="height:55px;margin-bottom:6px">
-          <div style="font-size:10px;color:#888">C/ Tomás y Valiente Nº 6 Bajo · 46290 Alcàsser · info@pauinteriorismo.es · CIF: B-56909641</div>
-        </div>
-        <div style="text-align:right">
-          <div style="font-size:18px;font-weight:800;color:#b87333;letter-spacing:1px">PRESUPUESTO</div>
-          <div style="font-size:11px;color:#888">${proy} · ${ver.toUpperCase()} · ${new Date().toLocaleDateString('es-ES')}</div>
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
-        <div style="background:#f7f4ef;padding:10px;border-radius:4px;border-left:3px solid #b87333">
-          <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#b87333;margin-bottom:4px">CLIENTE</div>
-          <div style="font-weight:700;color:#4a3728">${cliente.nombre||'—'}</div>
-          ${cliente.direccion ? '<div style="font-size:11px;color:#555">'+escH(cliente.direccion)+'</div>' : ''}
-          ${(cliente.cif||cliente.telefono||cliente.email) ? '<div style="font-size:10px;color:#888">'+(cliente.cif?escH(cliente.cif)+' · ':'')+escH(cliente.telefono||'')+(cliente.email?' · '+escH(cliente.email):'')+'</div>' : ''}
-        </div>
-        <div style="background:#f7f4ef;padding:10px;border-radius:4px;border-left:3px solid #b87333">
-          <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#b87333;margin-bottom:4px">PROYECTO</div>
-          <div style="font-weight:700;color:#4a3728">${proyecto.nombre||proy}</div>
-          ${proyecto.direccion_obra ? '<div style="font-size:11px;color:#555">'+escH(proyecto.direccion_obra)+'</div>' : ''}
-          ${proyecto.tipo ? '<div style="font-size:10px;color:#888">'+escH(proyecto.tipo)+'</div>' : ''}
-        </div>
-      </div>      <div id="pres-rows-container">
-${rowsHtml}
-      </div>
-      <div style="text-align:right;font-size:14px;font-weight:700;padding:10px;background:#f7f4ef;border-radius:4px;color:#4a3728;border-top:2px solid #b87333">${totalText}</div>
-      <div style="color:#bbb;font-size:9px;text-align:center;border-top:1px solid #e8e0d4;padding-top:10px;margin-top:16px">
-        PAU INTERIORISMO S.L. · CIF B-56909641 · info@pauinteriorismo.es · Tel: 961 20 01 87
-      </div>
-    </div>
-    </div>`;
-  document.body.appendChild(printDiv);
+  let y = mT;
+  let pageNum = 1;
+
+  // ── Helper: draw page header ──
+  function drawHeader(){
+    y = mT;
+    // Logo
+    try{ pdf.addImage(PAU_LOGO,'PNG',mL,y,28,14); }catch{}
+    // Company info
+    pdf.setFontSize(8); pdf.setTextColor(130);
+    pdf.setFont(undefined,'normal');
+    pdf.text(cfg.razon_social||'PAU INTERIORISMO S.L.', mL+30, y+4);
+    pdf.text((cfg.direccion||'C/ Tomás y Valiente Nº 6 Bajo · 46290 Alcàsser'), mL+30, y+8);
+    pdf.text(`Tel: ${cfg.telefono||'961 20 01 87'}  ·  ${cfg.web||'info@pauinteriorismo.es'}  ·  CIF: ${cfg.cif||'B-56909641'}`, mL+30, y+12);
+    // Title
+    pdf.setFontSize(20); pdf.setTextColor(184,115,51); pdf.setFont(undefined,'bold');
+    pdf.text('PRESUPUESTO', pW-mR, y+8, {align:'right'});
+    pdf.setFontSize(9); pdf.setTextColor(120); pdf.setFont(undefined,'normal');
+    pdf.text(`Presupuesto Nº: ${proy}-${ver.toUpperCase()}`, pW-mR, y+14, {align:'right'});
+    pdf.text(new Date().toLocaleDateString('es-ES'), pW-mR, y+19, {align:'right'});
+    y += 24;
+    // Separator line
+    pdf.setDrawColor(184,115,51); pdf.setLineWidth(0.5);
+    pdf.line(mL, y, pW-mR, y);
+    y += 5;
+  }
+
+  // ── Helper: draw cliente/proyecto boxes (page 1 only) ──
+  function drawClienteProyecto(){
+    const boxH = 22, boxW = (cW-6)/2;
+    // Left box: CLIENTE
+    pdf.setFillColor(247,244,239); pdf.rect(mL, y, boxW, boxH, 'F');
+    pdf.setDrawColor(184,115,51); pdf.setLineWidth(0.8);
+    pdf.line(mL, y, mL, y+boxH);
+    pdf.setFontSize(7); pdf.setTextColor(184,115,51); pdf.setFont(undefined,'bold');
+    pdf.text('CLIENTE', mL+3, y+5);
+    pdf.setFontSize(9); pdf.setTextColor(74,55,40); pdf.setFont(undefined,'bold');
+    pdf.text(cliente.nombre||'—', mL+3, y+10);
+    pdf.setFontSize(8); pdf.setTextColor(80); pdf.setFont(undefined,'normal');
+    if(cliente.direccion){
+      const dLines = pdf.splitTextToSize(cliente.direccion, boxW-6);
+      pdf.text(dLines[0]||'', mL+3, y+15);
+      if(dLines[1]) pdf.text(dLines[1], mL+3, y+19);
+    }
+    // Right box: PROYECTO
+    const x2 = mL+boxW+6;
+    pdf.setFillColor(247,244,239); pdf.rect(x2, y, boxW, boxH, 'F');
+    pdf.setDrawColor(184,115,51); pdf.setLineWidth(0.8);
+    pdf.line(x2, y, x2, y+boxH);
+    pdf.setFontSize(7); pdf.setTextColor(184,115,51); pdf.setFont(undefined,'bold');
+    pdf.text('PROYECTO', x2+3, y+5);
+    pdf.setFontSize(9); pdf.setTextColor(74,55,40); pdf.setFont(undefined,'bold');
+    pdf.text(proyecto.nombre||proy, x2+3, y+10);
+    pdf.setFontSize(8); pdf.setTextColor(80); pdf.setFont(undefined,'normal');
+    if(proyecto.direccion_obra){
+      const dLines = pdf.splitTextToSize(proyecto.direccion_obra, boxW-6);
+      pdf.text(dLines[0]||'', x2+3, y+15);
+      if(dLines[1]) pdf.text(dLines[1], x2+3, y+19);
+    }
+    y += boxH+6;
+  }
+
+  // ── Helper: draw column headers ──
+  function drawColHeaders(){
+    pdf.setFillColor(247,244,239);
+    pdf.rect(mL, y, cW, 7, 'F');
+    pdf.setFontSize(8); pdf.setFont(undefined,'bold'); pdf.setTextColor(74,55,40);
+    pdf.setDrawColor(232,224,212); pdf.setLineWidth(0.3);
+    pdf.line(mL, y+7, mL+cW, y+7);
+    const labels = ['Cód.','Descripción','Ud.','Med.','P.Unit.','Total'];
+    cols.forEach((c,i)=>{
+      pdf.text(labels[i], c.align==='right'?c.x+c.w:c.align==='center'?c.x+c.w/2:c.x+1, y+5, {align:c.align});
+    });
+    y += 8;
+  }
+
+  // ── Helper: new page ──
+  function newPage(){
+    // Draw page number on current page
+    pdf.setFontSize(7); pdf.setTextColor(180); pdf.setFont(undefined,'normal');
+    pdf.text(`Pág. ${pageNum}`, pW-mR, pH-8, {align:'right'});
+    pdf.addPage();
+    pageNum++;
+    drawHeader();
+    drawColHeaders();
+  }
+
+  // ── Helper: check space, new page if needed ──
+  function checkY(neededMm){
+    if(y + neededMm > pH - mB) newPage();
+  }
+
+  // ── Helper: draw a text cell with word wrap, returns row height used ──
+  function textCell(text, col, rowY, maxW, bold){
+    if(bold) pdf.setFont(undefined,'bold'); else pdf.setFont(undefined,'normal');
+    const lines = pdf.splitTextToSize(String(text||''), maxW-2);
+    const lineH = 4.2;
+    lines.forEach((ln,li)=>{
+      const ty = rowY + 4 + li*lineH;
+      const tx = col.align==='right' ? col.x+col.w-1 : col.align==='center' ? col.x+col.w/2 : col.x+1;
+      pdf.text(ln, tx, ty, {align:col.align});
+    });
+    return Math.max(lines.length * lineH + 3, 7);
+  }
+
+  // ═══════════ RENDER PAGE 1 ═══════════
+  drawHeader();
+  drawClienteProyecto();
+  drawColHeaders();
+
+  // ── Draw lines ──
+  let rowBg = false;
+  lineas.sort((a,b)=>(a.orden||0)-(b.orden||0)).forEach(l=>{
+    if(l.es_capitulo){
+      // Chapter header — needs ~8mm, keep with next row
+      checkY(16);
+      pdf.setFillColor(247,244,239);
+      pdf.rect(mL, y, cW, 8, 'F');
+      pdf.setDrawColor(184,115,51); pdf.setLineWidth(0.4);
+      pdf.line(mL, y+8, mL+cW, y+8);
+      pdf.setFontSize(9.5); pdf.setFont(undefined,'bold'); pdf.setTextColor(74,55,40);
+      pdf.text(l.descripcion||'', mL+2, y+5.5);
+      y += 9;
+      rowBg = false;
+      return;
+    }
+    // Data row — estimate height first
+    const pv = l.precio_venta||0, ci = l.ci_gg_bi_pct||0;
+    const subCI = ci>0?(l.cantidad||0)*pv*(1+ci/100):(l.cantidad||0)*pv;
+    const descLines = pdf.splitTextToSize(l.descripcion||'', cols[1].w-2);
+    const rowH = Math.max(descLines.length*4.2+3, 7);
+    checkY(rowH+1);
+    // Alternating row background
+    if(rowBg){ pdf.setFillColor(253,252,250); pdf.rect(mL,y,cW,rowH,'F'); }
+    rowBg = !rowBg;
+    pdf.setDrawColor(238,238,238); pdf.setLineWidth(0.2);
+    pdf.line(mL, y+rowH, mL+cW, y+rowH);
+    pdf.setFontSize(8.5); pdf.setTextColor(50);
+    // Cód
+    pdf.setFont(undefined,'normal');
+    pdf.text(l.referencia||'', cols[0].x+1, y+4.5);
+    // Descripción (multi-line)
+    descLines.forEach((ln,li)=>{
+      pdf.text(ln, cols[1].x+1, y+4.5+li*4.2);
+    });
+    // Ud
+    pdf.text(l.unidad||'', cols[2].x+cols[2].w/2, y+4.5, {align:'center'});
+    // Med
+    pdf.text(String(l.cantidad||0), cols[3].x+cols[3].w-1, y+4.5, {align:'right'});
+    // P.Unit
+    pdf.setFont(undefined,'normal');
+    pdf.text(fmtN(pv*(ci>0?1+ci/100:1)), cols[4].x+cols[4].w-1, y+4.5, {align:'right'});
+    // Total
+    pdf.setFont(undefined,'bold'); pdf.setTextColor(30);
+    pdf.text(fmtN(subCI), cols[5].x+cols[5].w-1, y+4.5, {align:'right'});
+    pdf.setFont(undefined,'normal'); pdf.setTextColor(50);
+    y += rowH+1;
+  });
+
+  // ── Totals block ──
+  checkY(30 + Object.keys(ivaDesglose).length*6);
+  y += 3;
+  pdf.setDrawColor(184,115,51); pdf.setLineWidth(0.5);
+  pdf.line(mL+100, y, mL+cW, y); y += 2;
+  const totX1=mL+100, totX2=mL+cW;
+
+  function totRow(label, value, bold){
+    pdf.setFontSize(9); pdf.setFont(undefined, bold?'bold':'normal');
+    pdf.setTextColor(bold?30:80);
+    pdf.text(label, totX1+2, y+4.5);
+    pdf.text(fmtN(value), totX2-1, y+4.5, {align:'right'});
+    pdf.setLineWidth(0.2); pdf.setDrawColor(220);
+    if(!bold) pdf.line(totX1, y+6, totX2, y+6);
+    y += 7;
+  }
+
+  totRow('Base imponible', totVenta, false);
+  Object.keys(ivaDesglose).sort().forEach(k=>{
+    const d=ivaDesglose[k];
+    totRow(`IVA ${k}`, d.iva, false);
+  });
+  // Total final
+  pdf.setFillColor(247,244,239); pdf.rect(totX1-2, y, totX2-totX1+2, 9, 'F');
+  pdf.setDrawColor(184,115,51); pdf.setLineWidth(0.5);
+  pdf.line(totX1-2, y, totX2, y); pdf.line(totX1-2, y+9, totX2, y+9);
+  pdf.setFontSize(11); pdf.setFont(undefined,'bold'); pdf.setTextColor(74,55,40);
+  pdf.text('TOTAL', totX1+2, y+6.5);
+  pdf.text(fmtN(totalConIva), totX2-1, y+6.5, {align:'right'});
+  y += 12;
+
+  // ── Conditions ──
+  checkY(20);
+  y += 2;
+  pdf.setDrawColor(220); pdf.setLineWidth(0.2); pdf.line(mL, y, mL+cW, y); y += 4;
+  pdf.setFontSize(7.5); pdf.setTextColor(100); pdf.setFont(undefined,'bold');
+  pdf.text('Condiciones:', mL, y); pdf.setFont(undefined,'normal');
+  const condText = 'Presupuesto válido por 30 días desde su emisión. Cualquier producto o trabajo que no esté reflejado en este documento se valorará a parte. En caso de aceptación, sírvase firmar y devolver una copia.';
+  const condLines = pdf.splitTextToSize(condText, cW-18);
+  pdf.text(condLines, mL+18, y);
+  y += condLines.length*3.8+6;
+
+  // ── Signatures ──
+  checkY(14);
+  pdf.setDrawColor(150); pdf.setLineWidth(0.3);
+  pdf.line(mL, y+10, mL+70, y+10);
+  pdf.line(mL+cW-70, y+10, mL+cW, y+10);
+  pdf.setFontSize(7.5); pdf.setTextColor(100);
+  pdf.text('Firma PAU INTERIORISMO S.L.', mL, y+14);
+  pdf.text('Firma y conformidad del cliente', mL+cW-70, y+14);
+
+  // ── Last page number ──
+  pdf.setFontSize(7); pdf.setTextColor(180);
+  pdf.text(`Pág. ${pageNum}`, pW-mR, pH-8, {align:'right'});
+
+  // ── Save ──
   const filename = `Presupuesto_${proy}_${ver}_${new Date().toISOString().split('T')[0]}.pdf`;
-  await exportarPDF(printDiv.firstElementChild, filename);
-  document.body.removeChild(printDiv);
+  pdf.save(filename);
+  toast('PDF descargado ✅');
 }
+
 
 function previsualizarPresupuesto(){
   const proy = document.getElementById('pres-proyecto-sel')?.value;
