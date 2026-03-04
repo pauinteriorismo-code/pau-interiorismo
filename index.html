@@ -793,6 +793,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <div class="card-header">
             <div class="card-title">📂 Familias del tarifario <span style="font-size:11px;font-weight:400;color:var(--text-soft)">— agrupaciones dentro de cada categoría</span></div>
             <button class="btn btn-ghost btn-sm" onclick="addFamiliaTarifario()">＋ Añadir familia</button>
+            <button class="btn btn-ghost btn-sm" onclick="renombrarFamiliaDesdeBoton()">✏️ Renombrar familia</button>
             <button class="btn btn-ghost btn-sm" style="color:var(--red);border-color:var(--red)" onclick="eliminarFamiliaDesdeBoton()">🗑 Eliminar familia</button>
           </div>
           <div id="familias-tarifario-container" style="padding:12px">
@@ -4757,7 +4758,10 @@ async function navTo(v){
   const target = document.getElementById('view-'+v);
   if(target){
     target.classList.add('active');
-    target.style.display = 'block';
+    // Some views manage their own layout (flex column)
+    const flexViews = ['presupuesto'];
+    target.style.display = flexViews.includes(v) ? 'flex' : 'block';
+    if(flexViews.includes(v)) target.style.flexDirection = 'column';
   }
   // Update topbar
   const m=META[v]||{};
@@ -5004,6 +5008,69 @@ async function deleteFamilia(cat, fam){
     loadFamiliasTarifario();
     loadTarifario();
   }catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+async function renombrarFamiliaDesdeBoton(){
+  const famMap = {};
+  TC.forEach(t => {
+    if(!t.familia) return;
+    const cat = t.categoria||'Sin categoría';
+    if(!famMap[cat]) famMap[cat] = new Set();
+    famMap[cat].add(t.familia);
+  });
+  try {
+    const cfg = await sbGet('configuracion','?clave=eq.familias_tarifario');
+    if(cfg.length && cfg[0].valor){
+      cfg[0].valor.split('||').filter(Boolean).forEach(f => {
+        const parts = f.split('::');
+        if(parts.length===2){
+          const [cat,fam] = parts;
+          if(!famMap[cat]) famMap[cat] = new Set();
+          famMap[cat].add(fam);
+        }
+      });
+    }
+  } catch(e){}
+  const options = [];
+  Object.keys(famMap).sort().forEach(cat => {
+    [...famMap[cat]].sort().forEach(fam => options.push({ label: `${cat} → ${fam}`, cat, fam }));
+  });
+  if(!options.length){ toast('No hay familias para renombrar','error'); return; }
+  const overlay = document.createElement('div');
+  overlay.className = 'overlay open';
+  overlay.style.zIndex = '9999';
+  overlay.innerHTML = `
+    <div style="background:white;border-radius:12px;padding:24px;width:420px;display:flex;flex-direction:column;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,.2)">
+      <div style="font-weight:700;font-size:15px;color:var(--navy)">✏️ Renombrar familia</div>
+      <div style="font-size:12px;color:var(--text-soft)">Se actualizará en todos los artículos del tarifario.</div>
+      <select id="ren-fam-sel" class="form-input" style="font-size:13px">
+        <option value="">— Selecciona una familia —</option>
+        ${options.map((o,i) => '<option value="'+i+'">'+o.label+'</option>').join('')}
+      </select>
+      <div id="ren-fam-info" style="font-size:12px;color:var(--navy);min-height:18px"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button id="ren-fam-cancel" class="btn btn-ghost">Cancelar</button>
+        <button id="ren-fam-ok" class="btn btn-primary" disabled>Renombrar</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const sel=overlay.querySelector('#ren-fam-sel'), info=overlay.querySelector('#ren-fam-info');
+  const btnOk=overlay.querySelector('#ren-fam-ok'), btnCan=overlay.querySelector('#ren-fam-cancel');
+  sel.onchange = () => {
+    const i=sel.value; if(i===''){info.textContent='';btnOk.disabled=true;return;}
+    const {cat,fam}=options[parseInt(i)];
+    const count=TC.filter(t=>(t.categoria||'')===cat&&(t.familia||'')===fam).length;
+    info.textContent=count+' artículo'+(count!==1?'s':'')+' en esta familia';
+    btnOk.disabled=false;
+  };
+  btnCan.onclick = () => document.body.removeChild(overlay);
+  overlay.onclick = e => { if(e.target===overlay) document.body.removeChild(overlay); };
+  btnOk.onclick = async () => {
+    const i=sel.value; if(i==='') return;
+    const {cat,fam}=options[parseInt(i)];
+    document.body.removeChild(overlay);
+    await renameFamilia(cat, fam);
+  };
 }
 
 async function eliminarFamiliaDesdeBoton(){
@@ -17268,7 +17335,7 @@ function guardarPlantilla(){
   if(!proy||!PresC.length){toast('No hay presupuesto activo','error');return;}
   const nombre=prompt('Nombre de la plantilla (p.ej. "Unifamiliar estándar"):');
   if(!nombre) return;
-  const lineas=PresC.map(l=>({descripcion:l.descripcion,unidad:l.unidad,cantidad:l.cantidad,precio_base:l.precio_base,margen_pct:l.margen_pct,ci_gg_bi_pct:l.ci_gg_bi_pct,precio_venta:l.precio_venta,iva_pct:l.iva_pct,ref_cype:l.ref_cype,partida:l.partida,es_capitulo:l.es_capitulo}));
+  const lineas=PresC.map(l=>({descripcion:l.descripcion,unidad:l.unidad,cantidad:l.cantidad,precio_base:l.precio_base,margen_pct:l.margen_pct,ci_gg_bi_pct:l.ci_gg_bi_pct,precio_venta:l.precio_venta,subtotal:l.subtotal||parseFloat(((l.cantidad||0)*(l.precio_venta||0)).toFixed(4)),iva_pct:l.iva_pct,ref_cype:l.ref_cype,partida:l.partida,es_capitulo:l.es_capitulo}));
   const plt=JSON.parse(localStorage.getItem('pau-plantillas')||'[]');
   plt.push({id:'plt-'+Date.now(),nombre,fecha:new Date().toISOString().split('T')[0],proyecto:proy,lineas});
   localStorage.setItem('pau-plantillas',JSON.stringify(plt));
@@ -17297,7 +17364,7 @@ function abrirModalPlantillas(){
       </div>
       <div style="display:flex;gap:6px">
         <button class="btn btn-primary btn-sm" onclick="aplicarPlantillaV2(${i})">▶ Aplicar</button>
-        ${isBuiltin(i)?'':`<button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="borrarPlantillaV2(${i})">🗑</button>`}
+        ${isBuiltin(i)?'':`<button class="btn btn-ghost btn-sm" onclick="renombrarPlantilla(${i})" title="Renombrar">✏️</button><button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="borrarPlantillaV2(${i})">🗑</button>`}
       </div>
     </div>`).join('')
   : '<div style="text-align:center;padding:20px;color:var(--text-soft)">Sin plantillas.</div>';
@@ -17332,7 +17399,7 @@ async function aplicarPlantillaV2(idx){
     closeModal('m-plantillas');
     // Show choice modal
     const ov = document.createElement('div');
-    ov.className = 'overlay';
+    ov.className = 'overlay open';
     ov.style.zIndex = '10000';
     ov.innerHTML = `
       <div class="modal" style="width:440px;max-width:95vw">
@@ -17395,14 +17462,53 @@ async function aplicarPlantillaV2(idx){
 
 async function _insertarLineasPlantilla(p, proy, ver, startOrder){
   toast('Aplicando plantilla…');
-  closeModal('m-plantillas');
+  // Close any open modals
+  document.querySelectorAll('.overlay.open').forEach(o=>o.classList.remove('open'));
+  document.querySelectorAll('.overlay[style*="opacity"]').forEach(o=>{ try{document.body.removeChild(o);}catch(e){} });
+  let ok=0;
   for(let i=0;i<p.lineas.length;i++){
-    await sbPost('presupuesto_lineas',{...p.lineas[i],proyecto_id:proy,version:ver,orden:startOrder+i+1});
+    const l = p.lineas[i];
+    const cant = l.cantidad||0;
+    const pv   = l.precio_venta||0;
+    const row = {
+      proyecto_id: proy,
+      version:     ver,
+      orden:       startOrder+i+1,
+      descripcion: l.descripcion||'',
+      unidad:      l.unidad||'',
+      cantidad:    cant,
+      precio_base: l.precio_base||0,
+      margen_pct:  l.margen_pct||0,
+      ci_gg_bi_pct:l.ci_gg_bi_pct||0,
+      precio_venta:pv,
+      subtotal:    parseFloat((cant*pv).toFixed(4)),
+      iva_pct:     l.iva_pct||10,
+      partida:     l.partida||'',
+      ref_cype:    l.ref_cype||null,
+      es_capitulo: l.es_capitulo||false,
+    };
+    try{ await sbPost('presupuesto_lineas', row); ok++; }
+    catch(e){ console.error('Error insertando línea',i,e); }
   }
-  toast(`✅ "${p.nombre}" aplicada — ${p.lineas.length} líneas añadidas`);
-  loadPresupuesto();
+  toast(`✅ "${p.nombre}" aplicada — ${ok} líneas añadidas`);
+  await loadPresupuesto();
 }
 
+
+function renombrarPlantilla(idx){
+  const userPlt = JSON.parse(localStorage.getItem('pau-plantillas')||'[]')
+    .filter(p => !p.id?.startsWith('plt-builtin-'));
+  const plt = [...PAU_PLANTILLAS_BUILTIN, ...userPlt];
+  const p = plt[idx];
+  if(!p||p.id?.startsWith('plt-builtin-')){toast('Las plantillas PAU no se pueden renombrar','error');return;}
+  const nuevo = prompt('Nuevo nombre para la plantilla:', p.nombre);
+  if(!nuevo||!nuevo.trim()||nuevo.trim()===p.nombre) return;
+  const saved = JSON.parse(localStorage.getItem('pau-plantillas')||'[]');
+  const target = saved.find(s => s.id === p.id);
+  if(target){ target.nombre = nuevo.trim(); localStorage.setItem('pau-plantillas', JSON.stringify(saved)); }
+  toast('Plantilla renombrada a "'+nuevo.trim()+'" ✅');
+  abrirModalPlantillas();
+}
 
 function borrarPlantillaV2(idx){
   const userPlt = JSON.parse(localStorage.getItem('pau-plantillas')||'[]')
