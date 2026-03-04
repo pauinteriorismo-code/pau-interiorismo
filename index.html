@@ -4369,8 +4369,7 @@ function abrirVistaPrevia(docId, titulo){
         docEl.appendChild(body);
       }
     });
-  <\/script>
-  </body></html>`);
+  \u003c/script>\n  </body></html>`);
   w.document.close();
 }
 
@@ -14790,87 +14789,49 @@ function ppSearchCat(){
         +'</div></div>';
     }).join('');
   } else if(ppCatMod && ppCatMod.startsWith('visek')) {
-    // ── Visek inline en panel ──────────────────────────────
-    const vkKey   = ppCatMod.replace('visek-','');
-    const keyMap  = {simply:'Simply',ministry:'Ministry',soul:'Soul',horizon:'Horizon',ray:'Ray',semi:'Semicircular'};
-    const realKey = keyMap[vkKey]||'Simply';
-    const vkM     = VK_MODELOS.find(m=>m.key===realKey);
+    // ── Visek inline en panel ─────────────────────────────
+    const vkKey  = ppCatMod.replace('visek-','');
+    const keyMap = {simply:'Simply',ministry:'Ministry',soul:'Soul',horizon:'Horizon',ray:'Ray',semi:'Semicircular'};
+    const realKey = keyMap[vkKey] || 'Simply';
+    const vkM = VK_MODELOS.find(function(m){ return m.key===realKey; });
     if(!vkM){ res.innerHTML='<div class="pp-empty">Modelo no encontrado</div>'; return; }
-    const isSemi  = vkM.grupo==='semi';
-    const anchos  = isSemi ? [75,80,90,100] : (vkM.anchos||[70,80,90,100]);
-    const anchoFil= parseInt(document.getElementById('pp-cat-serie')?.value)||0;
+    const isSemi = vkM.grupo==='semi';
+    const anchos = isSemi ? [75,80,90,100] : (vkM.anchos||[70,80,90,100]);
+    const anchoFil = parseInt(document.getElementById('pp-cat-serie')?.value)||0;
     const anchosList = anchoFil ? [anchoFil] : anchos;
     let html = '';
-    anchosList.forEach(ancho=>{
-      const largos = isSemi ? [ancho] : Object.keys((vkM.precios&&vkM.precios[ancho])||{}).map(Number).sort((a,b)=>a-b);
+    anchosList.forEach(function(ancho){
+      const largos = isSemi ? [ancho] : Object.keys((vkM.precios&&vkM.precios[ancho])||{}).map(Number).sort(function(a,b){return a-b;});
       if(!largos.length) return;
-      largos.forEach(largo=>{
+      largos.forEach(function(largo){
         const pvp = vkGetPrecio(vkM, ancho, isSemi?ancho:largo, false);
         if(pvp===null) return;
         const coste = pvp * 0.60;
-        const dimLabel = isSemi ? ancho+'×'+ancho+' cm' : largo+'×'+ancho+' cm';
+        const dimLabel = isSemi ? ancho+String.fromCharCode(215)+ancho+' cm' : largo+String.fromCharCode(215)+ancho+' cm';
         const uid = 'ppvk_'+ancho+'_'+largo;
+        const colOpts = VK_COLORES.map(function(c){ return '<option>'+c+'</option>'; }).join('');
         html += '<div class="pp-item" style="cursor:default">'
-          +'<div class="pp-item-top"><span class="pp-badge" style="background:#1a3a5c;color:#fff">Visek</span>'
-          +'<span class="pp-item-desc">'+realKey+(vkM.sub?' '+vkM.sub:'')+' '+dimLabel+'</span></div>'
-          +'<div style="display:flex;align-items:center;gap:6px;margin:6px 0">'
-            +'<span style="font-size:10px;font-weight:600;color:var(--text-soft)">Color:</span>'
-            +'<select id="'+uid+'_col" style="font-size:11px;padding:2px 5px;border:1px solid var(--border);border-radius:4px;flex:1">'
-            +VK_COLORES.map(c=>'<option>'+c+'</option>').join('')
-            +'</select>'
-          +'</div>'
-          +'<div style="display:flex;justify-content:space-between;align-items:center">'
-            +'<span style="font-size:13px;font-weight:700;color:var(--navy)">'+coste.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€</span>'
-            +'<button onclick="ppUseVisek(''+realKey+'','+ancho+','+(isSemi?ancho:largo)+',''+uid+'_col')" '
-            +'style="background:var(--navy);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;font-weight:600">+ Añadir</button>'
-          +'</div>'
-        +'</div>';
+          + '<div class="pp-item-top"><span class="pp-badge" style="background:#1a3a5c;color:#fff">Visek</span>'
+          + '<span class="pp-item-desc">'+realKey+(vkM.sub?' '+vkM.sub:'')+' '+dimLabel+'</span></div>'
+          + '<div style="display:flex;align-items:center;gap:6px;margin:6px 0">'
+          + '<span style="font-size:10px;font-weight:600;color:var(--text-soft)">Color:</span>'
+          + '<select id="'+uid+'_col" style="font-size:11px;padding:2px 5px;border:1px solid var(--border);border-radius:4px;flex:1">'+colOpts+'</select>'
+          + '</div>'
+          + '<div style="display:flex;justify-content:space-between;align-items:center">'
+          + '<span style="font-size:13px;font-weight:700;color:var(--navy)">'+coste.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€</span>'
+          + '<button class="pp-vk-add" data-key="'+realKey+'" data-ancho="'+ancho+'" data-largo="'+largo+'" data-col="'+uid+'_col"'
+          + ' style="background:var(--navy);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;font-weight:600">+ Añadir</button>'
+          + '</div></div>';
       });
     });
     if(!html) html='<div class="pp-empty">Sin dimensiones disponibles</div>';
     res.innerHTML = html;
-
-  } else if(ppCatMod && ppCatMod.startsWith('visek')) {
-    // ── Visek inline en panel ──────────────────────────────
-    const vkKey   = ppCatMod.replace('visek-','');
-    const keyMap  = {simply:'Simply',ministry:'Ministry',soul:'Soul',horizon:'Horizon',ray:'Ray',semi:'Semicircular'};
-    const realKey = keyMap[vkKey]||'Simply';
-    const vkM     = VK_MODELOS.find(m=>m.key===realKey);
-    if(!vkM){ res.innerHTML='<div class="pp-empty">Modelo no encontrado</div>'; return; }
-    const isSemi  = vkM.grupo==='semi';
-    const anchos  = isSemi ? [75,80,90,100] : (vkM.anchos||[70,80,90,100]);
-    const anchoFil= parseInt(document.getElementById('pp-cat-serie')?.value)||0;
-    const anchosList = anchoFil ? [anchoFil] : anchos;
-    let html = '';
-    anchosList.forEach(ancho=>{
-      const largos = isSemi ? [ancho] : Object.keys((vkM.precios&&vkM.precios[ancho])||{}).map(Number).sort((a,b)=>a-b);
-      if(!largos.length) return;
-      largos.forEach(largo=>{
-        const pvp = vkGetPrecio(vkM, ancho, isSemi?ancho:largo, false);
-        if(pvp===null) return;
-        const coste = pvp * 0.60;
-        const dimLabel = isSemi ? ancho+'×'+ancho+' cm' : largo+'×'+ancho+' cm';
-        const uid = 'ppvk_'+ancho+'_'+largo;
-        html += '<div class="pp-item" style="cursor:default">'
-          +'<div class="pp-item-top"><span class="pp-badge" style="background:#1a3a5c;color:#fff">Visek</span>'
-          +'<span class="pp-item-desc">'+realKey+(vkM.sub?' '+vkM.sub:'')+' '+dimLabel+'</span></div>'
-          +'<div style="display:flex;align-items:center;gap:6px;margin:6px 0">'
-            +'<span style="font-size:10px;font-weight:600;color:var(--text-soft)">Color:</span>'
-            +'<select id="'+uid+'_col" style="font-size:11px;padding:2px 5px;border:1px solid var(--border);border-radius:4px;flex:1">'
-            +VK_COLORES.map(c=>'<option>'+c+'</option>').join('')
-            +'</select>'
-          +'</div>'
-          +'<div style="display:flex;justify-content:space-between;align-items:center">'
-            +'<span style="font-size:13px;font-weight:700;color:var(--navy)">'+coste.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€</span>'
-            +'<button onclick="ppUseVisek(''+realKey+'','+ancho+','+(isSemi?ancho:largo)+',''+uid+'_col')" '
-            +'style="background:var(--navy);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;font-weight:600">+ Añadir</button>'
-          +'</div>'
-        +'</div>';
+    // Bind add buttons via event delegation (avoids inline quote issues)
+    res.querySelectorAll('.pp-vk-add').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        ppUseVisek(this.dataset.key, parseInt(this.dataset.ancho), parseInt(this.dataset.largo), this.dataset.col);
       });
     });
-    if(!html) html='<div class="pp-empty">Sin dimensiones disponibles</div>';
-    res.innerHTML = html;
-
   } else {
     const data     = ppCatMod==='camp-aqua' ? CAMP_AQUA : CAMP_DROP;
     const acabados = ppCatMod==='camp-aqua' ? CAMP_ACABADOS_AQUA : CAMP_ACABADOS_DROP;
@@ -15070,7 +15031,7 @@ let catActual = null;
 
 function catAbrir(fab){
   catActual = fab;
-  document.getElementById('cat-sefab === 'saitra'){
+  if(fab === 'saitra'){
     document.getElementById('cat-panel-saitra').classList.add('open');
     if(typeof initSaitraLinea === 'function') initSaitraLinea();
   } else if(fab === 'electrodom'){
