@@ -1063,7 +1063,10 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     <div class="view" id="view-presupuesto">
       <style>
         /* Layout 2 columnas presupuesto */
-        #view-presupuesto .pres-layout{display:flex;flex-direction:column;height:calc(100vh - 56px - 36px);margin:-18px -20px;overflow:hidden}
+        /* Make .content non-scrolling when presupuesto is active */
+        .content:has(#view-presupuesto.active){overflow:hidden;padding:0}
+        /* presupuesto view fills content area */
+        #view-presupuesto.active{display:flex;flex-direction:column;height:100%} #view-presupuesto .pres-layout{display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden}
         #view-presupuesto .pres-doc{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:12px;min-height:0}
         #view-presupuesto .pres-topbar{padding:10px 16px;background:var(--white);border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;gap:7px;align-items:center;flex-shrink:0}
         /* Panel fuentes */
@@ -17320,18 +17323,87 @@ async function aplicarPlantillaV2(idx){
   const plt = [...PAU_PLANTILLAS_BUILTIN, ...userPlt];
   const p = plt[idx];
   if(!p){toast('Plantilla no encontrada','error');return;}
-  const proy=document.getElementById('pres-proyecto-sel')?.value;
-  const ver=document.getElementById('pres-version-sel')?.value||'v1';
+  const proy = document.getElementById('pres-proyecto-sel')?.value;
+  const ver  = document.getElementById('pres-version-sel')?.value||'v1';
   if(!proy){toast('Selecciona un proyecto primero','error');closeModal('m-plantillas');return;}
-  if(!confirm(`¿Aplicar "${p.nombre}"?\nSe añadirán ${p.lineas.length} líneas al presupuesto actual.`)) return;
+
+  // If budget already has lines, ask what to do
+  if(PresC.length > 0){
+    closeModal('m-plantillas');
+    // Show choice modal
+    const ov = document.createElement('div');
+    ov.className = 'overlay';
+    ov.style.zIndex = '10000';
+    ov.innerHTML = `
+      <div class="modal" style="width:440px;max-width:95vw">
+        <div class="modal-head">
+          <div class="modal-title">📋 Aplicar plantilla</div>
+        </div>
+        <div class="modal-body" style="display:flex;flex-direction:column;gap:10px">
+          <div style="font-size:13px;font-weight:600;color:var(--navy)">${p.nombre}</div>
+          <div style="padding:10px 12px;background:#fff3cd;border-radius:8px;font-size:12px;color:#856404;border:1px solid #ffc107">
+            ⚠️ El presupuesto actual ya tiene <strong>${PresC.length} líneas</strong>.<br>
+            ¿Qué quieres hacer?
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
+            <button id="plt-replace" class="btn btn-primary" style="justify-content:flex-start;gap:10px;padding:10px 14px">
+              <span style="font-size:16px">🔄</span>
+              <div style="text-align:left"><div style="font-weight:700">Reemplazar presupuesto</div><div style="font-size:11px;opacity:.8">Borra las líneas actuales y carga la plantilla</div></div>
+            </button>
+            <button id="plt-add" class="btn btn-ghost" style="justify-content:flex-start;gap:10px;padding:10px 14px;border:1px solid var(--border)">
+              <span style="font-size:16px">➕</span>
+              <div style="text-align:left"><div style="font-weight:700">Añadir al final</div><div style="font-size:11px;color:var(--text-soft)">Mantiene las líneas actuales y añade la plantilla</div></div>
+            </button>
+            <button id="plt-cancel" class="btn btn-ghost" style="color:var(--text-soft)">Cancelar</button>
+          </div>
+        </div>
+      </div>`;
+    document.body.appendChild(ov);
+
+    const cleanup = () => document.body.removeChild(ov);
+    ov.querySelector('#plt-cancel').onclick = cleanup;
+    ov.onclick = e => { if(e.target===ov) cleanup(); };
+
+    ov.querySelector('#plt-replace').onclick = async () => {
+      cleanup();
+      if(!confirm(`¿Borrar las ${PresC.length} líneas actuales y cargar "${p.nombre}"?`)) return;
+      try{
+        // Delete all current lines
+        toast('Borrando presupuesto actual…');
+        for(const l of [...PresC]){
+          await sbDelete('presupuesto_lineas', l.id);
+        }
+        // Insert template lines
+        await _insertarLineasPlantilla(p, proy, ver, 0);
+      }catch(e){ toast('Error: '+e.message,'error'); }
+    };
+
+    ov.querySelector('#plt-add').onclick = async () => {
+      cleanup();
+      try{
+        await _insertarLineasPlantilla(p, proy, ver, PresC.length);
+      }catch(e){ toast('Error: '+e.message,'error'); }
+    };
+    return;
+  }
+
+  // No existing lines — apply directly
   try{
-    for(let i=0;i<p.lineas.length;i++){
-      await sbPost('presupuesto_lineas',{...p.lineas[i],proyecto_id:proy,version:ver,orden:PresC.length+i+1});
-    }
-    toast(`✅ "${p.nombre}" aplicada — ${p.lineas.length} líneas añadidas`);
-    closeModal('m-plantillas'); loadPresupuesto();
-  }catch(e){toast('Error: '+e.message,'error');}
+    await _insertarLineasPlantilla(p, proy, ver, 0);
+  }catch(e){ toast('Error: '+e.message,'error'); }
 }
+
+async function _insertarLineasPlantilla(p, proy, ver, startOrder){
+  toast('Aplicando plantilla…');
+  closeModal('m-plantillas');
+  for(let i=0;i<p.lineas.length;i++){
+    await sbPost('presupuesto_lineas',{...p.lineas[i],proyecto_id:proy,version:ver,orden:startOrder+i+1});
+  }
+  toast(`✅ "${p.nombre}" aplicada — ${p.lineas.length} líneas añadidas`);
+  loadPresupuesto();
+}
+
+
 function borrarPlantillaV2(idx){
   const userPlt = JSON.parse(localStorage.getItem('pau-plantillas')||'[]')
     .filter(p => !p.id?.startsWith('plt-builtin-'));
