@@ -536,7 +536,7 @@ th.sortable:not(.sort-asc):not(.sort-desc) .sort-arrow::after{content:'⇅'}
         <div style="display:flex;justify-content:flex-end">
           <div style="width:250px">
             <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #ddd;font-size:12px"><span>Base imponible</span><span id="pf-base">—</span></div>
-            <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #ddd;font-size:12px"><span id="pf-iva-lbl">IVA</span><span id="pf-iva">—</span></div>
+            <div id="pf-iva-rows"><div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #ddd;font-size:12px"><span id="pf-iva-lbl">IVA</span><span id="pf-iva">—</span></div></div>
             <div style="display:flex;justify-content:space-between;padding:9px 0;font-size:14px;font-weight:700;color:#4a3728"><span>TOTAL</span><span id="pf-total">—</span></div>
           </div>
         </div>
@@ -4297,14 +4297,17 @@ async function loadPresupuestoFinal(){
     const totalIva = Object.values(ivaDesglose).reduce((s,v)=>s+v.base*v.pct/100, 0);
     const total=totalBase+totalIva;
     document.getElementById('pf-base').textContent=totalBase.toFixed(2)+'€';
-    // Mostrar IVA desglosado si hay múltiples tipos
-    const ivaKeys = Object.keys(ivaDesglose);
-    if(ivaKeys.length === 1){
-      document.getElementById('pf-iva-lbl').textContent=`IVA (${ivaKeys[0]})`;
-    } else {
-      document.getElementById('pf-iva-lbl').textContent='IVA (varios)';
+    // Mostrar IVA desglosado por tipo
+    const ivaKeys = Object.keys(ivaDesglose).sort();
+    const pfIvaRows = document.getElementById('pf-iva-rows');
+    if(pfIvaRows){
+      const rowStyle = 'display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #ddd;font-size:12px';
+      pfIvaRows.innerHTML = ivaKeys.map(k=>{
+        const d = ivaDesglose[k];
+        const ivaImporte = d.base * d.pct / 100;
+        return '<div style="'+rowStyle+'"><span>IVA '+k+'</span><span style="color:#4a3728;font-weight:600">'+ivaImporte.toFixed(2)+'€</span></div>';
+      }).join('');
     }
-    document.getElementById('pf-iva').textContent=totalIva.toFixed(2)+'€';
     document.getElementById('pf-total').textContent=total.toFixed(2)+'€';
   }catch(e){toast('Error: '+e.message,'error');}
 }
@@ -9260,7 +9263,7 @@ function previsualizarPresupuesto(){
   } else {
     ivaKeys.forEach(k=>{
       const d=ivaDesglose[k];
-      ivaRowsHtml += '<div class=\"tr\"><span>IVA '+k+' (base '+fmtN(d.base)+')</span><span style=\"color:#4a3728;font-weight:600\">'+fmtN(d.base*d.pct/100)+'</span></div>';
+      ivaRowsHtml += '<div class=\"tr\"><span>IVA '+k+'</span><span style=\"color:#4a3728;font-weight:600\">'+fmtN(d.base*d.pct/100)+'</span></div>';
     });
   }
   const fmtN = n => Number(n).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€';
