@@ -488,7 +488,7 @@ th.sortable:not(.sort-asc):not(.sort-desc) .sort-arrow::after{content:'⇅'}
         <button class="btn btn-ghost no-print" onclick="pfExportarPDF()">⬇️ PDF</button>
         <button class="btn btn-ghost no-print" onclick="window.print()">🖨️ Imprimir</button>
       </div>
-      <div id="pf-doc" style="background:white;max-width:800px;margin:0 auto;padding:32px 40px;border:1px solid var(--border);border-radius:var(--radius);font-family:Arial,sans-serif;font-size:12px">
+      <div id="pf-doc" style="background:white;max-width:800px;margin:0 auto;padding:24px 40px 16px 40px;border:1px solid var(--border);border-radius:var(--radius);font-family:Arial,sans-serif;font-size:12px">
         <!-- Cabecera empresa -->
         <div class="doc-repeat-header" style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid #b87333">
           <div>
@@ -518,7 +518,7 @@ th.sortable:not(.sort-asc):not(.sort-desc) .sort-arrow::after{content:'⇅'}
           </div>
         </div>
         <!-- Tabla líneas -->
-        <table style="width:100%;border-collapse:collapse;margin-bottom:20px;font-size:11px">
+        <table style="width:100%;border-collapse:collapse;margin-bottom:10px;font-size:11px">
           <thead>
             <tr style="background:#f7f4ef">
               <th style="padding:8px;text-align:left;color:#4a3728;border-bottom:1px solid #e8e0d4;font-size:10px;text-transform:uppercase">Descripción</th>
@@ -539,10 +539,10 @@ th.sortable:not(.sort-asc):not(.sort-desc) .sort-arrow::after{content:'⇅'}
           </div>
         </div>
         <!-- Condiciones -->
-        <div style="margin-top:24px;padding-top:16px;border-top:1px solid #ddd;color:#888;font-size:10px">
+        <div style="margin-top:14px;padding-top:10px;border-top:1px solid #ddd;color:#888;font-size:10px">
           <strong style="color:#333">Condiciones:</strong> Presupuesto válido por 30 días desde su emisión. Cualquier producto o trabajo que no esté reflejado en este documento se valorará a parte. En caso de aceptación, sírvase firmar y devolver una copia.
         </div>
-        <div style="margin-top:24px;display:grid;grid-template-columns:1fr 1fr;gap:30px">
+        <div style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:30px">
           <div><div style="border-top:1px solid #333;padding-top:8px;color:#666;font-size:10px">Firma PAU INTERIORISMO S.L.</div></div>
           <div><div style="border-top:1px solid #333;padding-top:8px;color:#666;font-size:10px">Firma y conformidad del cliente</div></div>
         </div>
@@ -4381,7 +4381,7 @@ async function pfExportarPDF(){
   toast('Generando PDF…');
   try {
     const opt = {
-      margin: [10, 8, 10, 8],
+      margin: [10, 8, 6, 8],
       filename: filename,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true, letterRendering: true },
