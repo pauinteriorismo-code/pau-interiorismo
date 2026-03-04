@@ -1063,8 +1063,8 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     <div class="view" id="view-presupuesto">
       <style>
         /* Layout 2 columnas presupuesto */
-        #view-presupuesto .pres-layout{display:grid;grid-template-columns:1fr;gap:0;height:calc(100vh - 56px - 36px);margin:-18px -20px}
-        #view-presupuesto .pres-doc{overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:12px}
+        #view-presupuesto .pres-layout{display:flex;flex-direction:column;height:calc(100vh - 56px - 36px);margin:-18px -20px;overflow:hidden}
+        #view-presupuesto .pres-doc{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:12px;min-height:0}
         #view-presupuesto .pres-topbar{padding:10px 16px;background:var(--white);border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;gap:7px;align-items:center;flex-shrink:0}
         /* Panel fuentes */
         .pres-panel{background:var(--white);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
