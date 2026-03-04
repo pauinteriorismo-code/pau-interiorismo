@@ -1271,6 +1271,15 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
               <div style="font-weight:600;font-size:12px">Placa / Extractor / Ósmosis / Grifo</div>
               <div style="font-size:11px;color:var(--text-soft)">6 productos · Pres. 2025/00820 + Fac. 2026/FC/00157</div>
             </div>
+            <div style="height:1px;background:var(--border);margin:0 8px"></div>
+            <div class="tarif-import-item" onclick="closeImportMenu();if(confirm('¿Importar 24 partidas de Reforma Baño Completo?\n\nSe añadirán en Categoría: Rehabilitación'))importarReformaBano()">
+              <div style="font-weight:600;font-size:12px">🛁 Reforma Baño Completo</div>
+              <div style="font-size:11px;color:var(--text-soft)">24 partidas · 7 capítulos · Categoría: Rehabilitación · Margen 30%</div>
+            </div>
+            <div class="tarif-import-item" onclick="closeImportMenu();if(confirm('¿Importar 23 partidas de Reforma Cocina Completa?\n\nSe añadirán en Categoría: Rehabilitación'))importarReformaCocina()">
+              <div style="font-weight:600;font-size:12px">🍳 Reforma Cocina Completa</div>
+              <div style="font-size:11px;color:var(--text-soft)">23 partidas · 12 capítulos · Categoría: Rehabilitación · Margen 30%</div>
+            </div>
           </div>
         </div>
       </div>
@@ -2795,93 +2804,188 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 
     <!-- ═══ FACTURAS ═══ -->
     <div class="view" id="view-certificaciones">
+  <!-- Barra de selección -->
   <div class="search-bar" style="gap:8px;flex-wrap:wrap;align-items:center">
-    <select class="form-input" style="width:180px" id="cert-cliente-sel" onchange="certFiltrarProyectos()">
+    <select class="form-input" style="width:190px" id="cert-cliente-sel" onchange="certFiltrarProyectos()">
       <option value="">👤 Cliente…</option>
     </select>
-    <select class="form-input" style="width:220px" id="cert-proyecto-sel" onchange="certSelProyecto()">
+    <select class="form-input" style="width:240px" id="cert-proyecto-sel" onchange="certSelProyecto()">
       <option value="">📁 Proyecto…</option>
-    </select>
-    <select class="form-input" style="width:80px" id="cert-version-sel" onchange="loadCertificaciones()">
-      <option value="v1">v1</option><option value="v2">v2</option><option value="v3">v3</option>
     </select>
     <button class="btn btn-primary" onclick="nuevaCertificacion()" id="cert-btn-nueva" disabled>＋ Nueva certificación</button>
     <span id="cert-proy-info" style="font-size:11px;color:var(--text-soft)"></span>
   </div>
 
-  <!-- KPIs certificación -->
-  <div id="cert-kpis" style="display:none;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px">
-    <div class="kpi blue"><div class="kpi-label">Presupuesto base</div><div class="kpi-value" id="ck-pres">—</div></div>
-    <div class="kpi green"><div class="kpi-label">Total certificado</div><div class="kpi-value" id="ck-cert">—</div></div>
-    <div class="kpi amber"><div class="kpi-label">Pendiente certificar</div><div class="kpi-value" id="ck-pdte">—</div></div>
-    <div class="kpi" style="background:#fff;border:1px solid var(--border)"><div class="kpi-label">% Ejecutado</div><div class="kpi-value" id="ck-pct" style="color:var(--navy)">—</div></div>
+  <!-- KPIs -->
+  <div id="cert-kpis" style="display:none;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px">
+    <div class="kpi blue">
+      <div class="kpi-label">Presupuesto aprobado</div>
+      <div class="kpi-value" id="ck-pres">—</div>
+    </div>
+    <div class="kpi green">
+      <div class="kpi-label">Total certificado</div>
+      <div class="kpi-value" id="ck-cert">—</div>
+    </div>
+    <div class="kpi amber">
+      <div class="kpi-label">Pendiente certificar</div>
+      <div class="kpi-value" id="ck-pdte">—</div>
+    </div>
+    <div class="kpi" style="background:#fff;border:1px solid var(--border)">
+      <div class="kpi-label">% Ejecutado</div>
+      <div class="kpi-value" id="ck-pct" style="color:var(--navy)">—</div>
+    </div>
+    <div class="kpi" style="background:#fff;border:1px solid var(--border)">
+      <div class="kpi-label">Nº certificaciones</div>
+      <div class="kpi-value" id="ck-ncert" style="color:var(--navy)">—</div>
+    </div>
   </div>
 
-  <!-- Lista de certificaciones -->
+  <!-- Barra de progreso -->
+  <div id="cert-progress-wrap" style="display:none;margin-bottom:14px">
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-soft);margin-bottom:4px">
+      <span>Progreso de certificación</span>
+      <span id="cert-progress-label">0%</span>
+    </div>
+    <div style="height:8px;background:#e8edf3;border-radius:4px;overflow:hidden">
+      <div id="cert-progress-bar" style="height:100%;width:0%;background:var(--navy);border-radius:4px;transition:width .5s"></div>
+    </div>
+  </div>
+
+  <!-- Tabla de certificaciones -->
   <div class="card">
-    <div class="card-header"><div class="card-title">🏗️ Certificaciones</div></div>
+    <div class="card-header"><div class="card-title">🏗️ Certificaciones de obra</div></div>
     <div class="card-body" style="padding:0">
       <table class="data-table">
         <thead><tr>
-          <th>Nº Cert.</th><th>Fecha</th><th>Estado</th>
-          <th style="text-align:right">Base imp.</th><th style="text-align:right">IVA</th><th style="text-align:right">Total</th>
-          <th>Notas</th><th>Acciones</th>
+          <th>Nº Cert.</th>
+          <th>Fecha</th>
+          <th>Estado</th>
+          <th style="text-align:right">% Esta cert.</th>
+          <th style="text-align:right">% Acumulado</th>
+          <th style="text-align:right">Base imp.</th>
+          <th style="text-align:right">IVA</th>
+          <th style="text-align:right">Total</th>
+          <th>Concepto</th>
+          <th>Acciones</th>
         </tr></thead>
-        <tbody id="cert-tbody"><tr><td colspan="8"><div class="empty"><div class="empty-icon">🏗️</div><div class="empty-text">Selecciona un proyecto</div></div></td></tr></tbody>
+        <tbody id="cert-tbody">
+          <tr><td colspan="10"><div class="empty">
+            <div class="empty-icon">🏗️</div>
+            <div class="empty-text">Selecciona un cliente y proyecto</div>
+          </div></td></tr>
+        </tbody>
       </table>
     </div>
   </div>
 </div>
 
-<!-- Modal nueva/editar certificación -->
+
+<!-- Modal nueva/editar certificación (Opción B: % sobre total) -->
 <div class="overlay" id="m-certificacion" onclick="if(event.target===this)closeModal('m-certificacion')">
-  <div class="modal" style="width:min(1000px,97vw);max-height:94vh;display:flex;flex-direction:column">
-    <div class="modal-head" style="flex-shrink:0">
-      <div><div class="modal-title" id="cert-modal-title">🏗️ Nueva certificación</div>
-        <div id="cert-modal-sub" style="font-size:11px;color:var(--text-soft);margin-top:2px"></div></div>
+  <div class="modal" style="width:min(600px,96vw)">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title" id="cert-modal-title">🏗️ Nueva certificación</div>
+        <div id="cert-modal-sub" style="font-size:11px;color:var(--text-soft);margin-top:2px"></div>
+      </div>
       <button class="modal-close" onclick="closeModal('m-certificacion')">×</button>
     </div>
-    <div style="padding:12px 18px;border-bottom:1px solid var(--border);display:flex;gap:12px;flex-wrap:wrap;flex-shrink:0">
-      <div class="form-group" style="margin:0;min-width:140px"><label class="form-label">Fecha</label><input type="date" class="form-input" id="cert-fecha"></div>
-      <div class="form-group" style="margin:0;min-width:120px"><label class="form-label">Estado</label>
-        <select class="form-input" id="cert-estado"><option>Borrador</option><option>Emitida</option><option>Cobrada</option></select></div>
-      <div class="form-group" style="margin:0;flex:1;min-width:200px"><label class="form-label">Notas / Concepto</label><input class="form-input" id="cert-notas" placeholder="Descripción de la certificación…"></div>
-    </div>
-    <!-- Tabla de líneas -->
-    <div style="flex:1;overflow-y:auto;padding:0">
-      <table class="data-table" style="font-size:11px">
-        <thead style="position:sticky;top:0;background:#f8fafd;z-index:1"><tr>
-          <th style="width:35%">Descripción</th><th style="width:8%">Ud.</th>
-          <th style="text-align:right;width:8%">Cantidad</th>
-          <th style="text-align:right;width:9%">P.Unit.</th>
-          <th style="text-align:right;width:9%">Total</th>
-          <th style="text-align:center;width:8%">% Ant.</th>
-          <th style="text-align:center;width:9%">% Esta cert.</th>
-          <th style="text-align:center;width:7%">% Acum.</th>
-          <th style="text-align:right;width:9%">Importe cert.</th>
-        </tr></thead>
-        <tbody id="cert-lineas-tbody"></tbody>
-        <tfoot><tr style="background:#f8fafd;font-weight:700">
-          <td colspan="4" style="padding:8px 12px;text-align:right;font-size:12px">TOTALES:</td>
-          <td id="cert-tot-base" style="text-align:right;padding:8px 6px">—</td>
-          <td colspan="3"></td>
-          <td id="cert-tot-cert" style="text-align:right;padding:8px 6px;color:var(--green)">—</td>
-        </tr></tfoot>
-      </table>
-    </div>
-    <div class="modal-foot" style="flex-shrink:0">
-      <div style="display:flex;gap:8px;align-items:center">
-        <span style="font-size:12px;color:var(--text-soft)">Base: <strong id="cert-resumen-base">—</strong> · IVA: <strong id="cert-resumen-iva">—</strong> · <span style="color:var(--navy)">TOTAL: <strong id="cert-resumen-tot">—</strong></span></span>
+
+    <div style="padding:18px;display:flex;flex-direction:column;gap:14px">
+
+      <!-- Presupuesto base (informativo) -->
+      <div style="background:#f0f4fa;border-radius:8px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:11px;color:var(--text-soft);margin-bottom:2px">Presupuesto aprobado base</div>
+          <div style="font-size:20px;font-weight:800;color:var(--navy)" id="cert-base-display">—</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:11px;color:var(--text-soft);margin-bottom:2px">Ya certificado</div>
+          <div style="font-size:16px;font-weight:700;color:var(--amber)" id="cert-acum-display">—</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:11px;color:var(--text-soft);margin-bottom:2px">Disponible</div>
+          <div style="font-size:16px;font-weight:700;color:var(--green)" id="cert-disp-display">—</div>
+        </div>
       </div>
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-ghost" onclick="closeModal('m-certificacion')">Cancelar</button>
-        <button class="btn btn-ghost" onclick="exportarCertPDF()">⬇️ PDF</button>
-        <button class="btn btn-primary" onclick="guardarCertificacion()">💾 Guardar</button>
+
+      <!-- Fila fecha + estado -->
+      <div style="display:flex;gap:12px">
+        <div class="form-group" style="margin:0;flex:1">
+          <label class="form-label">Fecha</label>
+          <input type="date" class="form-input" id="cert-fecha">
+        </div>
+        <div class="form-group" style="margin:0;flex:1">
+          <label class="form-label">Estado</label>
+          <select class="form-input" id="cert-estado">
+            <option>Borrador</option>
+            <option>Emitida</option>
+            <option>Cobrada</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0;width:100px">
+          <label class="form-label">IVA %</label>
+          <select class="form-input" id="cert-iva">
+            <option value="21">21%</option>
+            <option value="10">10%</option>
+            <option value="0">Exento</option>
+          </select>
+        </div>
       </div>
+
+      <!-- % o importe directo -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group" style="margin:0">
+          <label class="form-label">% de esta certificación</label>
+          <div style="position:relative">
+            <input type="number" class="form-input" id="cert-pct" min="0" max="100" step="0.1"
+              placeholder="Ej: 30" style="padding-right:28px"
+              oninput="certPctToImporte()">
+            <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--text-soft);font-size:13px">%</span>
+          </div>
+        </div>
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Importe base (€)</label>
+          <input type="number" class="form-input" id="cert-importe" min="0" step="0.01"
+            placeholder="Se calcula automáticamente"
+            oninput="certImporteToPct()">
+        </div>
+      </div>
+
+      <!-- Resumen calculado -->
+      <div style="background:#f8fafd;border-radius:8px;padding:12px 16px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center">
+        <div>
+          <div style="font-size:10px;color:var(--text-soft);margin-bottom:3px">BASE</div>
+          <div style="font-size:16px;font-weight:800;color:var(--navy)" id="cert-res-base">0,00€</div>
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--text-soft);margin-bottom:3px">IVA</div>
+          <div style="font-size:16px;font-weight:800;color:var(--text-mid)" id="cert-res-iva">0,00€</div>
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--text-soft);margin-bottom:3px">TOTAL</div>
+          <div style="font-size:16px;font-weight:800;color:var(--green)" id="cert-res-tot">0,00€</div>
+        </div>
+      </div>
+
+      <!-- Concepto -->
+      <div class="form-group" style="margin:0">
+        <label class="form-label">Concepto / Notas</label>
+        <input class="form-input" id="cert-notas" placeholder="Ej: Trabajos de cimentación y estructura…">
+      </div>
+
+    </div>
+
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('m-certificacion')">Cancelar</button>
+      <button class="btn btn-ghost" id="cert-btn-pdf" onclick="exportarCertPDF()" disabled>⬇️ PDF</button>
+      <button class="btn btn-primary" onclick="guardarCertificacion()">💾 Guardar</button>
     </div>
   </div>
 </div>
+
 <div class="view" id="view-facturas">
+<div id="fac-informe-wrap" style="display:none;position:absolute;left:-9999px;top:0;width:297mm"></div>
 
       <!-- ═══ PANEL RESUMEN ═══ -->
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px">
@@ -5581,12 +5685,61 @@ function exportarInformeFacturas(){
 </div>
   </body></html>`;
 
-  // Abrir en nueva ventana con document.write
-  const win = window.open('', '_blank', 'width=1100,height=750');
-  win.document.open();
-  win.document.write(html);
-  win.document.close();
-  win.focus();
+  // Generar PDF directamente en la página (igual que Contrato)
+  const wrap = document.getElementById('fac-informe-wrap');
+  if (!wrap) { toast('Error: contenedor no encontrado', 'error'); return; }
+
+  // Extraer solo el cuerpo del informe (sin DOCTYPE/head/body del template)
+  const bodyMatch = html.match(/<div style="margin-top:52px">[\s\S]*<\/div>\s*<\/body>/);
+  const bodyContent = bodyMatch ? bodyMatch[0].replace(/<\/body>$/, '') : html;
+
+  // Inyectar CSS del informe en un <style> temporal
+  const styleTag = document.createElement('style');
+  styleTag.id = 'fac-informe-style';
+  styleTag.textContent = [
+    '#fac-informe-wrap{font-family:Segoe UI,Arial,sans-serif;font-size:12px;color:#333}',
+    '#fac-informe-wrap .header{background:#fff;padding:20px 24px;display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #b87333}',
+    '#fac-informe-wrap .header h1{margin:0;font-size:15px;font-weight:700;color:#4a3728}',
+    '#fac-informe-wrap .header p{margin:3px 0 0;font-size:10px;color:#888}',
+    '#fac-informe-wrap .stats{display:flex;gap:40px;padding:14px 24px;background:#fdf8f5;border-bottom:1px solid #e8d5c0}',
+    '#fac-informe-wrap .stat-val{font-size:18px;font-weight:900;color:#4a3728}',
+    '#fac-informe-wrap .stat-label{font-size:10px;color:#999;margin-bottom:2px}',
+    '#fac-informe-wrap table{width:100%;border-collapse:collapse;font-size:11px}',
+    '#fac-informe-wrap th{background:#1e3a5f;color:#fff;padding:6px 8px;text-align:left;font-size:10px}',
+    '#fac-informe-wrap td{padding:5px 8px;border-bottom:1px solid #f0f0f0}',
+    '#fac-informe-wrap tr:nth-child(even) td{background:#fafafa}',
+    '#fac-informe-wrap tfoot td{font-weight:700;background:#f5f0eb;border-top:2px solid #b87333}',
+    '#fac-informe-wrap .footer{text-align:center;padding:10px;font-size:9px;color:#aaa;border-top:1px solid #eee;margin-top:10px}',
+  ].join('');
+  document.head.appendChild(styleTag);
+
+  wrap.style.display = 'block';
+  wrap.innerHTML = bodyContent;
+
+  const btn = document.querySelector('[onclick="exportarInformeFacturas()"]');
+  if (btn) { btn.textContent = '⏳ Generando…'; btn.disabled = true; }
+
+  const tab = window._facTabActivo || 'todas';
+  const fname = `Informe_Facturas_${tab}_PAU.pdf`;
+  html2pdf().set({
+    margin: [8,5,8,5],
+    filename: fname,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true, logging: false },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
+    pagebreak: { mode: ['avoid-all', 'css'] }
+  }).from(wrap).save().then(() => {
+    wrap.style.display = 'none';
+    wrap.innerHTML = '';
+    const s = document.getElementById('fac-informe-style');
+    if (s) s.remove();
+    if (btn) { btn.textContent = '📄 Exportar PDF'; btn.disabled = false; }
+    toast('PDF generado ✅');
+  }).catch(e => {
+    wrap.style.display = 'none';
+    if (btn) { btn.textContent = '📄 Exportar PDF'; btn.disabled = false; }
+    toast('Error PDF: ' + e.message, 'error');
+  });
 }
 
 async function loadGerencia(){
@@ -8361,6 +8514,83 @@ async function importarProductosMundobano2(){
 // ═══════════════════════════════════════════
 // CYPE
 // ═══════════════════════════════════════════
+function importarReformaBano(){
+  const productos = [
+    {codigo:"BAÑ-01-01",descripcion:"Picado y retirada de alicatado existente en paredes y suelo",unidad:"m²",precio_coste:11.1538,margen_pct:30,categoria:"Rehabilitación",familia:"Demolición y preparación",marca:"",notas:"Partida modelo reforma baño completo"},
+    {codigo:"BAÑ-01-02",descripcion:"Desmontaje y retirada de sanitarios existentes",unidad:"ud",precio_coste:138.4615,margen_pct:30,categoria:"Rehabilitación",familia:"Demolición y preparación",marca:"",notas:"Partida modelo reforma baño completo"},
+    {codigo:"BAÑ-02-01",descripcion:"Realización de regatas en pared para instalaciones",unidad:"ml",precio_coste:13.8462,margen_pct:30,categoria:"Rehabilitación",familia:"Albañilería y soporte",marca:"",notas:"Partida modelo reforma baño completo"},
+    {codigo:"BAÑ-02-02",descripcion:"Cierre de regatas con mortero y malla anti-fisuras",unidad:"ml",precio_coste:9.2308,margen_pct:30,categoria:"Rehabilitación",familia:"Albañilería y soporte",marca:"",notas:"Partida modelo reforma baño completo"},
+    {codigo:"BAÑ-02-03",descripcion:"Maestreado y regularización de paramentos verticales",unidad:"m²",precio_coste:11.5385,margen_pct:30,categoria:"Rehabilitación",familia:"Albañilería y soporte",marca:"",notas:"Partida modelo reforma baño completo"},
+    {codigo:"BAÑ-02-04",descripcion:"Impermeabilización de zona húmeda con membrana elástica flexible",unidad:"m²",precio_coste:16.9231,margen_pct:30,categoria:"Rehabilitación",familia:"Albañilería y soporte",marca:"",notas:"Partida modelo reforma baño completo"},
+    {codigo:"BAÑ-03-01",descripcion:"Suministro y colocación de revestimiento cerámico en paredes",unidad:"m²",precio_coste:32.3077,margen_pct:30,categoria:"Rehabilitación",familia:"Revestimientos y pavimentos",marca:"",notas:"Partida modelo reforma baño completo"},
+    {codigo:"BAÑ-03-02",descripcion:"Suministro y colocación de pavimento cerámico en suelo",unidad:"m²",precio_coste:30.7692,margen_pct:30,categoria:"Rehabilitación",familia:"Revestimientos y pavimentos",marca:"",notas:"Partida modelo reforma baño completo"},
+    {codigo:"BAÑ-03-03",descripcion:"Rodapié de gres coordinado con el pavimento, h=8 cm",unidad:"ml",precio_coste:18.4615,margen_pct:30,categoria:"Rehabilitación",familia:"Revestimientos y pavimentos",marca:"",notas:"Partida modelo reforma baño completo"},
+    {codigo:"BAÑ-04-01",descripcion:"Falso techo de placas de yeso laminado hidrófugo (pladur WA) en baño",unidad:"m²",precio_coste:50.0,margen_pct:30,categoria:"Rehabilitación",familia:"Techo",marca:"",notas:"Partida modelo reforma baño completo"},
+    {codigo:"BAÑ-04-02",descripcion:"Tratamiento de juntas y acabado de falso techo listo para pintura",unidad:"ud",precio_coste:61.5385,margen_pct:30,categoria:"Rehabilitación",familia:"Techo",marca:"",notas:"Partida modelo reforma baño completo"},
+    {codigo:"BAÑ-05-01",descripcion:"Adaptación red de suministro AFS/ACS en tubo multicapa o PEX",unidad:"ud",precio_coste:446.1538,margen_pct:30,categoria:"Rehabilitación",familia:"Fontanería y desagües",marca:"",notas:"Partida modelo reforma baño completo"},
+    {codigo:"BAÑ-05-02",descripcion:"Red de saneamiento interior en PVC serie B",unidad:"ud",precio_coste:246.1538,margen_pct:30,categoria:"Rehabilitación",familia:"Fontanería y desagües",marca:"",notas:"Partida modelo reforma baño completo"},
+    {codigo:"BAÑ-06-01",descripcion:"Nueva instalación eléctrica completa de baño según REBT",unidad:"ud",precio_coste:323.0769,margen_pct:30,categoria:"Rehabilitación",familia:"Electricidad",marca:"",notas:"Partida modelo reforma baño completo"},
+    {codigo:"BAÑ-06-02",descripcion:"Punto de luz LED downlight empotrable IP44 — 10 W, 3000 K",unidad:"ud",precio_coste:73.0769,margen_pct:30,categoria:"Rehabilitación",familia:"Electricidad",marca:"",notas:"Partida modelo reforma baño completo"},
+    {codigo:"BAÑ-06-03",descripcion:"Enchufe doble estanco IP44 zona 2 de baño",unidad:"ud",precio_coste:50.0,margen_pct:30,categoria:"Rehabilitación",familia:"Electricidad",marca:"",notas:"Partida modelo reforma baño completo"},
+    {codigo:"BAÑ-06-04",descripcion:"Extractor de baño temporizado con humidostato — mín. 90 m³/h",unidad:"ud",precio_coste:142.3077,margen_pct:30,categoria:"Rehabilitación",familia:"Electricidad",marca:"",notas:"Partida modelo reforma baño completo"},
+    {codigo:"BAÑ-07-01",descripcion:"Plato de ducha de resina extraplano (h<3,5 cm) — medidas a definir",unidad:"ud",precio_coste:476.9231,margen_pct:30,categoria:"Rehabilitación",familia:"Sanitarios y equipamiento",marca:"",notas:"Partida modelo reforma baño completo"},
+    {codigo:"BAÑ-07-02",descripcion:"Fijo de ducha — mampara fija vidrio templado 8 mm, perfil aluminio",unidad:"ud",precio_coste:369.2308,margen_pct:30,categoria:"Rehabilitación",familia:"Sanitarios y equipamiento",marca:"",notas:"Partida modelo reforma baño completo"},
+    {codigo:"BAÑ-07-03",descripcion:"Grifo monomando/termostático de ducha con rociador y ducha de mano",unidad:"ud",precio_coste:292.3077,margen_pct:30,categoria:"Rehabilitación",familia:"Sanitarios y equipamiento",marca:"",notas:"Partida modelo reforma baño completo"},
+    {codigo:"BAÑ-07-04",descripcion:"Mueble de baño suspendido 100 cm con lavabo de porcelana integrado",unidad:"ud",precio_coste:753.8462,margen_pct:30,categoria:"Rehabilitación",familia:"Sanitarios y equipamiento",marca:"",notas:"Partida modelo reforma baño completo"},
+    {codigo:"BAÑ-07-05",descripcion:"Grifo monomando para lavabo — acabado cromado, cartucho cerámico",unidad:"ud",precio_coste:150.0,margen_pct:30,categoria:"Rehabilitación",familia:"Sanitarios y equipamiento",marca:"",notas:"Partida modelo reforma baño completo"},
+    {codigo:"BAÑ-07-06",descripcion:"Inodoro Roca modelo ONA a suelo con cisterna empotrada (in-wall)",unidad:"ud",precio_coste:753.8462,margen_pct:30,categoria:"Rehabilitación",familia:"Sanitarios y equipamiento",marca:"",notas:"Partida modelo reforma baño completo"},
+    {codigo:"BAÑ-07-07",descripcion:"Espejo con iluminación LED 100×70 cm, antivaho e interruptor táctil",unidad:"ud",precio_coste:246.1538,margen_pct:30,categoria:"Rehabilitación",familia:"Sanitarios y equipamiento",marca:"",notas:"Partida modelo reforma baño completo"},
+  ];
+  (async()=>{
+    let ok=0, err=0;
+    toast('Importando ' + productos.length + ' partidas…');
+    for(const p of productos){
+      try{ await sbPost('tarifario', p); ok++; }
+      catch(e){ console.error(p.codigo, e.message); err++; }
+    }
+    toast(ok + ' partidas importadas' + (err?' · '+err+' errores':'') + ' ✅');
+    loadTarifario();
+  })();
+}
+
+function importarReformaCocina(){
+  const productos = [
+    {codigo:"COC-01-01",descripcion:"Demolición de cocina existente — picado, retirada y transporte a vertedero",unidad:"pa",precio_coste:923.0769,margen_pct:30,categoria:"Rehabilitación",familia:"Demolición y preparación",marca:"",notas:"Partida modelo reforma cocina completa"},
+    {codigo:"COC-02-01",descripcion:"Regatas, rozas y remates de albañilería — regularización de paramentos",unidad:"pa",precio_coste:730.7692,margen_pct:30,categoria:"Rehabilitación",familia:"Albañilería y soporte",marca:"",notas:"Partida modelo reforma cocina completa"},
+    {codigo:"COC-03-01",descripcion:"Revestimiento cerámico porcelánico en paredes",unidad:"m²",precio_coste:32.3077,margen_pct:30,categoria:"Rehabilitación",familia:"Revestimientos y pavimentos",marca:"",notas:"Partida modelo reforma cocina completa"},
+    {codigo:"COC-03-02",descripcion:"Pavimento de gres porcelánico antideslizante",unidad:"m²",precio_coste:30.7692,margen_pct:30,categoria:"Rehabilitación",familia:"Revestimientos y pavimentos",marca:"",notas:"Partida modelo reforma cocina completa"},
+    {codigo:"COC-03-03",descripcion:"Rodapié de gres coordinado con el pavimento, h=8 cm",unidad:"ml",precio_coste:18.4615,margen_pct:30,categoria:"Rehabilitación",familia:"Revestimientos y pavimentos",marca:"",notas:"Partida modelo reforma cocina completa"},
+    {codigo:"COC-04-01",descripcion:"Falso techo de pladur 13 mm terminado y listo para pintura",unidad:"m²",precio_coste:47.6923,margen_pct:30,categoria:"Rehabilitación",familia:"Techo",marca:"",notas:"Partida modelo reforma cocina completa"},
+    {codigo:"COC-05-01",descripcion:"Pintura plástica lavable en techo — imprimación + 2 manos",unidad:"m²",precio_coste:10.7692,margen_pct:30,categoria:"Rehabilitación",familia:"Pintura",marca:"",notas:"Partida modelo reforma cocina completa"},
+    {codigo:"COC-06-01",descripcion:"Instalación de fontanería completa de cocina — AFS/ACS y saneamiento",unidad:"pa",precio_coste:846.1538,margen_pct:30,categoria:"Rehabilitación",familia:"Fontanería",marca:"",notas:"Partida modelo reforma cocina completa"},
+    {codigo:"COC-07-01",descripcion:"Instalación eléctrica completa de cocina según REBT",unidad:"pa",precio_coste:1076.9231,margen_pct:30,categoria:"Rehabilitación",familia:"Electricidad",marca:"",notas:"Partida modelo reforma cocina completa"},
+    {codigo:"COC-08-01",descripcion:"Mobiliario de cocina — casco 19 mm, frentes PET a elegir en gama presupuestada",unidad:"pa",precio_coste:6538.4615,margen_pct:30,categoria:"Rehabilitación",familia:"Mobiliario de cocina",marca:"",notas:"Partida modelo reforma cocina completa"},
+    {codigo:"COC-08-02",descripcion:"Bancada de porcelánico 12 mm — suministro y colocación",unidad:"ml",precio_coste:323.0769,margen_pct:30,categoria:"Rehabilitación",familia:"Mobiliario de cocina",marca:"",notas:"Partida modelo reforma cocina completa"},
+    {codigo:"COC-08-03",descripcion:"Fregadero bajo encimera con hueco pulido — incluye grifo monomando",unidad:"ud",precio_coste:523.0769,margen_pct:30,categoria:"Rehabilitación",familia:"Mobiliario de cocina",marca:"",notas:"Partida modelo reforma cocina completa"},
+    {codigo:"COC-09-01",descripcion:"Horno multifunción Balay gama media/alta — instalación incluida",unidad:"ud",precio_coste:523.0769,margen_pct:30,categoria:"Rehabilitación",familia:"Electrodomésticos",marca:"",notas:"Partida modelo reforma cocina completa"},
+    {codigo:"COC-09-02",descripcion:"Vitrocerámica de inducción Balay 4 zonas 60 cm — conexionado incluido",unidad:"ud",precio_coste:400.0,margen_pct:30,categoria:"Rehabilitación",familia:"Electrodomésticos",marca:"",notas:"Partida modelo reforma cocina completa"},
+    {codigo:"COC-09-03",descripcion:"Campana extractora Balay 60 cm — conexionado incluido",unidad:"ud",precio_coste:292.3077,margen_pct:30,categoria:"Rehabilitación",familia:"Electrodomésticos",marca:"",notas:"Partida modelo reforma cocina completa"},
+    {codigo:"COC-09-04",descripcion:"Lavavajillas integrable Balay 60 cm, 14 servicios — instalación incluida",unidad:"ud",precio_coste:446.1538,margen_pct:30,categoria:"Rehabilitación",familia:"Electrodomésticos",marca:"",notas:"Partida modelo reforma cocina completa"},
+    {codigo:"COC-09-05",descripcion:"Frigorífico combi Balay NoFrost gama media/alta — instalación incluida",unidad:"ud",precio_coste:753.8462,margen_pct:30,categoria:"Rehabilitación",familia:"Electrodomésticos",marca:"",notas:"Partida modelo reforma cocina completa"},
+    {codigo:"COC-10-01",descripcion:"Sistema de ósmosis inversa bajo fregadero 5 etapas — instalación incluida",unidad:"ud",precio_coste:369.2308,margen_pct:30,categoria:"Rehabilitación",familia:"Ósmosis y grifo filtrado",marca:"",notas:"Partida modelo reforma cocina completa"},
+    {codigo:"COC-10-02",descripcion:"Grifo monomando 3 vías con salida independiente para agua filtrada",unidad:"ud",precio_coste:215.3846,margen_pct:30,categoria:"Rehabilitación",familia:"Ósmosis y grifo filtrado",marca:"",notas:"Partida modelo reforma cocina completa"},
+    {codigo:"COC-11-01",descripcion:"Iluminación LED cálida 3000 K interior muebles altos con sensor de apertura",unidad:"ud",precio_coste:246.1538,margen_pct:30,categoria:"Rehabilitación",familia:"Accesorios de mobiliario",marca:"",notas:"Partida modelo reforma cocina completa"},
+    {codigo:"COC-11-02",descripcion:"Carro especiero extraíble con guías soft-close — capacidad 20 botes",unidad:"ud",precio_coste:138.4615,margen_pct:30,categoria:"Rehabilitación",familia:"Accesorios de mobiliario",marca:"",notas:"Partida modelo reforma cocina completa"},
+    {codigo:"COC-11-03",descripcion:"Carro esquinero con 4 bandejas extraíbles giratorias (magic-corner)",unidad:"ud",precio_coste:323.0769,margen_pct:30,categoria:"Rehabilitación",familia:"Accesorios de mobiliario",marca:"",notas:"Partida modelo reforma cocina completa"},
+    {codigo:"COC-12-01",descripcion:"Limpieza final, medios auxiliares y coordinación de obra",unidad:"pa",precio_coste:461.5385,margen_pct:30,categoria:"Rehabilitación",familia:"Gestión y limpieza",marca:"",notas:"Partida modelo reforma cocina completa"},
+  ];
+  (async()=>{
+    let ok=0, err=0;
+    toast('Importando ' + productos.length + ' partidas de cocina…');
+    for(const p of productos){
+      try{ await sbPost('tarifario', p); ok++; }
+      catch(e){ console.error(p.codigo, e.message); err++; }
+    }
+    toast(ok + ' partidas importadas' + (err?' · '+err+' errores':'') + ' ✅');
+    loadTarifario();
+  })();
+}
+
 async function loadCype(){
   const tb=document.getElementById('cype-tbody');
   try{
@@ -18103,114 +18333,142 @@ async function añadirCabeceraPDF(pdf, docEl, headerH) {
 // ═══════════════════════════════════════════════════
 let _certProyId = null;
 let _certEditing = null;
-let _certVersion = 'v1'; // id of cert being edited, null = new
+let _certVersion = 'v1';
+let _certPresBase = 0; // id of cert being edited, null = new
 
 async function loadCertificaciones() {
-  // Poblar selector de clientes si está vacío
+  // ── Poblar clientes ──────────────────────────────────────────
   const cliSel = document.getElementById('cert-cliente-sel');
   if (cliSel && cliSel.options.length <= 1) {
     const clientes = CC && CC.length ? CC : await sbGet('clientes');
-    [...clientes].sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||'')).forEach(c => {
-      const o = document.createElement('option');
-      o.value = c.cliente_id;
-      o.textContent = `${c.cliente_id} · ${c.nombre || c.cliente_id}`;
-      cliSel.appendChild(o);
-    });
+    [...clientes]
+      .sort((a,b) => (a.nombre||'').localeCompare(b.nombre||''))
+      .forEach(c => {
+        const o = document.createElement('option');
+        o.value = c.cliente_id;
+        o.textContent = `${c.cliente_id} · ${c.nombre || c.cliente_id}`;
+        cliSel.appendChild(o);
+      });
   }
 
   const proy = document.getElementById('cert-proyecto-sel')?.value || '';
-  const ver  = document.getElementById('cert-version-sel')?.value || 'v1';
-  const btnNueva = document.getElementById('cert-btn-nueva');
-  if (btnNueva) btnNueva.disabled = !proy;
+  const btn  = document.getElementById('cert-btn-nueva');
+  if (btn) btn.disabled = !proy;
 
   if (!proy) {
-    document.getElementById('cert-tbody').innerHTML = '<tr><td colspan="8"><div class="empty"><div class="empty-icon">🏗️</div><div class="empty-text">Selecciona cliente, proyecto y versión de presupuesto</div></div></td></tr>';
+    document.getElementById('cert-tbody').innerHTML =
+      '<tr><td colspan="10"><div class="empty"><div class="empty-icon">🏗️</div>' +
+      '<div class="empty-text">Selecciona un cliente y proyecto</div></div></td></tr>';
     document.getElementById('cert-kpis').style.display = 'none';
+    document.getElementById('cert-progress-wrap').style.display = 'none';
     return;
   }
+
   _certProyId = proy;
-  _certVersion = ver;
-  const p = (PC || []).find(x => x.proyecto_id === proy) || {};
+  const p = (PC || []).find(px => px.proyecto_id === proy) || {};
+  const cli = (CC || []).find(c => c.cliente_id === p.cliente_id) || {};
   const info = document.getElementById('cert-proy-info');
-  if (info) info.textContent = `${p.estado || ''} · Pres. ${ver.toUpperCase()}`;
+  if (info) info.textContent = `${cli.nombre || p.cliente_id || ''} · ${p.nombre || ''} · ${p.estado || ''}`;
 
-  // Load certs and presupuesto lines filtered by version
-  const [certs, lineas] = await Promise.all([
-    sbGet('certificaciones', `?proyecto_id=eq.${proy}&order=fecha.asc`),
-    sbGet('presupuesto_lineas', `?proyecto_id=eq.${proy}&version=eq.${ver}&es_capitulo=eq.false&order=orden.asc`)
-  ]);
+  // ── Calcular presupuesto base desde líneas (v1 por defecto) ──
+  let presBase = 0;
+  try {
+    const lineas = await sbGet('presupuesto_lineas',
+      `?proyecto_id=eq.${proy}&version=eq.v1&es_capitulo=eq.false`);
+    presBase = lineas.reduce((s, l) => {
+      const sub = (l.cantidad||0) * (l.precio_venta||0);
+      return s + (l.ci_gg_bi_pct > 0 ? sub*(1+l.ci_gg_bi_pct/100) : sub);
+    }, 0);
+  } catch(e) {}
+  _certPresBase = presBase;
 
-  // Calc presupuesto base from that version
-  const presBase = lineas.reduce((s, l) => {
-    const sub = (l.cantidad || 0) * (l.precio_venta || 0);
-    return s + (l.ci_gg_bi_pct > 0 ? sub * (1 + l.ci_gg_bi_pct / 100) : sub);
-  }, 0);
+  // ── Cargar certificaciones ──────────────────────────────────
+  const certs = await sbGet('certificaciones', `?proyecto_id=eq.${proy}&order=fecha.asc`);
+  const totalCert  = certs.reduce((s,c) => s+(c.base_imponible||0), 0);
+  const pdte       = presBase - totalCert;
+  const pct        = presBase > 0 ? (totalCert / presBase * 100) : 0;
 
-  const totalCert = certs.reduce((s, c) => s + (c.base_imponible || 0), 0);
-  const pdte = presBase - totalCert;
-  const pct = presBase > 0 ? (totalCert / presBase * 100) : 0;
-
-  // KPIs
+  // ── KPIs ─────────────────────────────────────────────────────
   const kEl = document.getElementById('cert-kpis');
-  if (kEl) {
-    kEl.style.display = 'grid';
-    document.getElementById('ck-pres').textContent = fmt(presBase);
-    document.getElementById('ck-cert').textContent = fmt(totalCert);
-    document.getElementById('ck-pdte').textContent = fmt(pdte);
-    document.getElementById('ck-pct').textContent = fmtP(pct);
+  kEl.style.display = 'grid';
+  document.getElementById('ck-pres').textContent  = presBase > 0 ? fmt(presBase) : '—';
+  document.getElementById('ck-cert').textContent  = fmt(totalCert);
+  document.getElementById('ck-pdte').textContent  = presBase > 0 ? fmt(pdte) : '—';
+  document.getElementById('ck-pct').textContent   = presBase > 0 ? fmtP(pct) : '—';
+  document.getElementById('ck-ncert').textContent = certs.length;
+
+  // ── Barra de progreso ─────────────────────────────────────────
+  const pw = document.getElementById('cert-progress-wrap');
+  if (presBase > 0) {
+    pw.style.display = 'block';
+    const pctClamped = Math.min(pct, 100);
+    document.getElementById('cert-progress-bar').style.width = pctClamped.toFixed(1) + '%';
+    document.getElementById('cert-progress-bar').style.background =
+      pct >= 100 ? 'var(--green)' : pct > 70 ? 'var(--amber)' : 'var(--navy)';
+    document.getElementById('cert-progress-label').textContent = pct.toFixed(1) + '%';
+  } else {
+    pw.style.display = 'none';
   }
 
-  const progressBar = `<div style="height:6px;background:#e8edf3;border-radius:3px;margin-bottom:10px;overflow:hidden"><div style="height:100%;width:${Math.min(pct,100).toFixed(1)}%;background:${pct>=100?'var(--green)':pct>70?'var(--amber)':'var(--navy)'};border-radius:3px;transition:width .5s"></div></div>`;
-
+  // ── Tabla ─────────────────────────────────────────────────────
   const tbody = document.getElementById('cert-tbody');
   if (!certs.length) {
     const msg = presBase > 0
-      ? `${progressBar}<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">Sin certificaciones. Presupuesto base: ${fmt(presBase)}</div></div>`
-      : `<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">El presupuesto ${ver.toUpperCase()} no tiene líneas. Verifica la versión.</div></div>`;
-    tbody.innerHTML = `<tr><td colspan="8">${msg}</td></tr>`;
+      ? `Sin certificaciones. Presupuesto aprobado: <strong>${fmt(presBase)}</strong>`
+      : 'Sin certificaciones. Pulsa "Nueva certificación" para comenzar.';
+    tbody.innerHTML = `<tr><td colspan="10"><div class="empty">
+      <div class="empty-icon">📋</div><div class="empty-text">${msg}</div></div></td></tr>`;
     return;
   }
 
   let acumBase = 0;
   tbody.innerHTML = certs.map(c => {
     acumBase += (c.base_imponible || 0);
+    const pctEsta = presBase > 0 ? ((c.base_imponible||0) / presBase * 100) : 0;
     const pctAcum = presBase > 0 ? (acumBase / presBase * 100) : 0;
-    const estadoColor = c.estado === 'Cobrada' ? 'var(--green)' : c.estado === 'Emitida' ? 'var(--amber)' : 'var(--text-soft)';
-    const iva = (c.base_imponible || 0) * (c.iva_pct || 21) / 100;
-    const total = (c.base_imponible || 0) + iva;
+    const estadoColor = {Cobrada:'var(--green)', Emitida:'var(--amber)', Borrador:'var(--text-soft)'}[c.estado] || 'var(--text-soft)';
+    const ivaPct = c.iva_pct != null ? c.iva_pct : 21;
+    const iva   = (c.base_imponible||0) * ivaPct / 100;
+    const total = (c.base_imponible||0) + iva;
     return `<tr>
-      <td class="td-mono">${c.num_cert || '—'}</td>
+      <td class="td-mono" style="font-weight:700">${c.num_cert||'—'}</td>
       <td>${fmtD(c.fecha)}</td>
-      <td><span style="font-size:11px;font-weight:700;color:${estadoColor}">${c.estado || '—'}</span></td>
+      <td><span class="badge ${c.estado==='Cobrada'?'b-green':c.estado==='Emitida'?'b-amber':'b-gray'}">${c.estado||'—'}</span></td>
+      <td class="td-mono" style="text-align:right;color:var(--navy)">${presBase>0?pctEsta.toFixed(1)+'%':'—'}</td>
+      <td class="td-mono" style="text-align:right;font-weight:600">${presBase>0?pctAcum.toFixed(1)+'%':'—'}</td>
       <td class="td-mono" style="text-align:right">${fmt(c.base_imponible)}</td>
-      <td class="td-mono" style="text-align:right">${fmt(iva)}</td>
+      <td class="td-mono" style="text-align:right;color:var(--text-soft)">${fmt(iva)}</td>
       <td class="td-mono" style="text-align:right;font-weight:700">${fmt(total)}</td>
-      <td style="font-size:11px;color:var(--text-soft);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.notas || '—'}</td>
+      <td style="font-size:11px;color:var(--text-soft);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.notas||'—'}</td>
       <td style="white-space:nowrap">
-        <button class="btn btn-ghost btn-sm" onclick="editarCertificacion('${c.id}')">✏️</button>
-        <button class="btn btn-ghost btn-sm" onclick="exportarCertPDFById('${c.id}')">⬇️</button>
-        <button class="btn btn-danger btn-sm" onclick="eliminarCertificacion('${c.id}')">🗑</button>
+        <button class="btn btn-ghost btn-sm" onclick="editarCertificacion('${c.id}')" title="Editar">✏️</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportarCertPDFById('${c.id}')" title="PDF">⬇️</button>
+        <button class="btn btn-danger btn-sm" onclick="eliminarCertificacion('${c.id}')" title="Eliminar">🗑</button>
       </td>
     </tr>`;
   }).join('');
 }
 
-// Cascade: when client changes, repopulate project selector
+// Cascada: cliente → proyectos
 function certFiltrarProyectos() {
-  const cliId = document.getElementById('cert-cliente-sel')?.value || '';
+  const cliId  = document.getElementById('cert-cliente-sel')?.value || '';
   const proySel = document.getElementById('cert-proyecto-sel');
   if (!proySel) return;
   proySel.innerHTML = '<option value="">📁 Proyecto…</option>';
   document.getElementById('cert-btn-nueva').disabled = true;
-  document.getElementById('cert-tbody').innerHTML = '<tr><td colspan="8"><div class="empty"><div class="empty-icon">🏗️</div><div class="empty-text">Selecciona un proyecto</div></div></td></tr>';
+  document.getElementById('cert-tbody').innerHTML =
+    '<tr><td colspan="10"><div class="empty"><div class="empty-icon">🏗️</div>' +
+    '<div class="empty-text">Selecciona un proyecto</div></div></td></tr>';
   document.getElementById('cert-kpis').style.display = 'none';
+  document.getElementById('cert-progress-wrap').style.display = 'none';
   if (!cliId) return;
-  const proysFiltrados = (PC || []).filter(p => p.cliente_id === cliId);
-  proysFiltrados.sort((a,b) => a.proyecto_id.localeCompare(b.proyecto_id,'es',{numeric:true}))
+  (PC||[])
+    .filter(p => p.cliente_id === cliId)
+    .sort((a,b) => a.proyecto_id.localeCompare(b.proyecto_id,'es',{numeric:true}))
     .forEach(p => {
       const o = document.createElement('option');
       o.value = p.proyecto_id;
-      o.textContent = `${p.proyecto_id} · ${p.nombre || ''}`;
+      o.textContent = `${p.proyecto_id} · ${p.nombre||''}`;
       proySel.appendChild(o);
     });
 }
@@ -18219,140 +18477,125 @@ async function certSelProyecto() {
   await loadCertificaciones();
 }
 
-
+// Abrir modal nueva certificación
 async function nuevaCertificacion() {
   if (!_certProyId) return;
   _certEditing = null;
+  const p   = (PC||[]).find(px => px.proyecto_id === _certProyId) || {};
+  const cli = (CC||[]).find(c  => c.cliente_id   === p.cliente_id) || {};
+
   document.getElementById('cert-modal-title').textContent = '🏗️ Nueva certificación';
-  const p = (PC || []).find(x => x.proyecto_id === _certProyId) || {};
-  const cliente = (CC||[]).find(c=>c.cliente_id===p.cliente_id);
-  document.getElementById('cert-modal-sub').textContent = `${_certProyId} · ${p.nombre || ''} · ${cliente?.nombre || p.cliente_id || ''} · Pres. ${(_certVersion||'v1').toUpperCase()}`;
-  document.getElementById('cert-fecha').value = new Date().toISOString().split('T')[0];
-  document.getElementById('cert-estado').value = 'Borrador';
-  document.getElementById('cert-notas').value = '';
-  try { await renderCertLineas(); } catch(e) { console.warn('renderCertLineas:', e.message); }
+  document.getElementById('cert-modal-sub').textContent =
+    `${_certProyId} · ${p.nombre||''} · ${cli.nombre||p.cliente_id||''}`;
+
+  document.getElementById('cert-fecha').value   = new Date().toISOString().split('T')[0];
+  document.getElementById('cert-estado').value  = 'Borrador';
+  document.getElementById('cert-iva').value     = '21';
+  document.getElementById('cert-notas').value   = '';
+  document.getElementById('cert-pct').value     = '';
+  document.getElementById('cert-importe').value = '';
+  document.getElementById('cert-btn-pdf').disabled = true;
+
+  // Calcular importes ya certificados
+  const prevCerts = await sbGet('certificaciones', `?proyecto_id=eq.${_certProyId}&order=fecha.asc`);
+  const acumPrev  = prevCerts.reduce((s,c) => s+(c.base_imponible||0), 0);
+  const dispBase  = _certPresBase - acumPrev;
+
+  certActualizarInfoBase(acumPrev, dispBase);
+  certActualizarResumen(0);
   openModal('m-certificacion');
 }
 
+// Editar certificación existente
 async function editarCertificacion(certId) {
   const certs = await sbGet('certificaciones', `?id=eq.${certId}`);
-  const cert = certs[0];
-  if (!cert) return;
+  const c = certs[0];
+  if (!c) return;
   _certEditing = certId;
-  document.getElementById('cert-modal-title').textContent = `✏️ Editar cert. ${cert.num_cert || certId}`;
-  document.getElementById('cert-modal-sub').textContent = cert.proyecto_id;
-  document.getElementById('cert-fecha').value = cert.fecha || '';
-  document.getElementById('cert-estado').value = cert.estado || 'Borrador';
-  document.getElementById('cert-notas').value = cert.notas || '';
-  await renderCertLineas(cert.lineas_detalle || null);
+  _certProyId  = c.proyecto_id;
+
+  const p   = (PC||[]).find(px => px.proyecto_id === _certProyId) || {};
+  const cli = (CC||[]).find(cx => cx.cliente_id  === p.cliente_id) || {};
+
+  document.getElementById('cert-modal-title').textContent = `✏️ Editar certificación ${c.num_cert||''}`;
+  document.getElementById('cert-modal-sub').textContent   =
+    `${_certProyId} · ${p.nombre||''} · ${cli.nombre||p.cliente_id||''}`;
+
+  document.getElementById('cert-fecha').value   = c.fecha||'';
+  document.getElementById('cert-estado').value  = c.estado||'Borrador';
+  document.getElementById('cert-iva').value     = String(c.iva_pct != null ? c.iva_pct : 21);
+  document.getElementById('cert-notas').value   = c.notas||'';
+  document.getElementById('cert-btn-pdf').disabled = false;
+
+  // Cert actual
+  const base = c.base_imponible || 0;
+  const pct  = _certPresBase > 0 ? (base / _certPresBase * 100) : 0;
+  document.getElementById('cert-pct').value     = pct > 0 ? pct.toFixed(2) : '';
+  document.getElementById('cert-importe').value = base > 0 ? base.toFixed(2) : '';
+
+  // Previas (excluyendo esta)
+  const prevCerts = await sbGet('certificaciones', `?proyecto_id=eq.${_certProyId}&order=fecha.asc`);
+  const acumPrev  = prevCerts.filter(pc => pc.id !== certId).reduce((s,c) => s+(c.base_imponible||0), 0);
+  const dispBase  = _certPresBase - acumPrev;
+  certActualizarInfoBase(acumPrev, dispBase);
+  certActualizarResumen(base);
   openModal('m-certificacion');
 }
 
-async function renderCertLineas(savedLineas) {
-  const ver = _certVersion || 'v1';
-  const lineas = await sbGet('presupuesto_lineas', `?proyecto_id=eq.${_certProyId}&version=eq.${ver}&es_capitulo=eq.false&order=orden.asc`);
-  const prevCerts = await sbGet('certificaciones', `?proyecto_id=eq.${_certProyId}&order=fecha.asc`);
-
-  // If editing, exclude current cert from prev accumulated
-  const prevLineasAcum = {};
-  prevCerts.filter(c => c.id !== _certEditing).forEach(c => {
-    (c.lineas_detalle || []).forEach(ld => {
-      prevLineasAcum[ld.linea_id] = (prevLineasAcum[ld.linea_id] || 0) + (ld.pct || 0);
-    });
-  });
-
-  const savedMap = {};
-  (savedLineas || []).forEach(ld => { savedMap[ld.linea_id] = ld.pct || 0; });
-
-  let totalBase = 0, totalCert = 0;
-
-  const tbody = document.getElementById('cert-lineas-tbody');
-  tbody.innerHTML = lineas.map(l => {
-    const sub = (l.cantidad || 0) * (l.precio_venta || 0);
-    const total = l.ci_gg_bi_pct > 0 ? sub * (1 + l.ci_gg_bi_pct / 100) : sub;
-    totalBase += total;
-    const pctAnterior = Math.min(prevLineasAcum[l.id] || 0, 100);
-    const pctEsta = savedMap[l.id] !== undefined ? savedMap[l.id] : 0;
-    const pctAcum = Math.min(pctAnterior + pctEsta, 100);
-    const importeCert = total * pctEsta / 100;
-    totalCert += importeCert;
-
-    return `<tr id="cl-row-${l.id}">
-      <td style="padding:5px 8px;font-size:11px">${l.descripcion || '—'}</td>
-      <td style="text-align:center;font-size:11px">${l.unidad || '—'}</td>
-      <td class="td-mono" style="text-align:right;font-size:11px">${(l.cantidad || 0).toFixed(2)}</td>
-      <td class="td-mono" style="text-align:right;font-size:11px">${fmt(l.precio_venta)}</td>
-      <td class="td-mono" style="text-align:right;font-size:11px">${fmt(total)}</td>
-      <td style="text-align:center;font-size:11px;color:var(--text-soft)">${pctAnterior.toFixed(0)}%</td>
-      <td style="padding:2px 4px">
-        <input type="number" min="0" max="${(100 - pctAnterior).toFixed(0)}" step="0.5"
-          value="${pctEsta.toFixed(1)}"
-          data-linea-id="${l.id}" data-total="${total}" data-pct-ant="${pctAnterior}"
-          style="width:70px;text-align:center;padding:3px 5px;border:1px solid var(--border);border-radius:4px;font-size:11px"
-          oninput="recalcCertTotals()" onchange="this.value=Math.min(Math.max(0,parseFloat(this.value)||0),(100-${pctAnterior}).toFixed(1))">
-      </td>
-      <td style="text-align:center;font-size:11px" id="cl-acum-${l.id}"><span style="color:${pctAcum>=100?'var(--green)':pctAcum>70?'var(--amber)':'var(--text-mid)'}">${pctAcum.toFixed(0)}%</span></td>
-      <td class="td-mono" style="text-align:right;font-size:11px;font-weight:700" id="cl-import-${l.id}">${fmt(importeCert)}</td>
-    </tr>`;
-  }).join('');
-
-  document.getElementById('cert-tot-base').textContent = fmt(totalBase);
-  document.getElementById('cert-tot-cert').textContent = fmt(totalCert);
-  recalcCertTotals();
+function certActualizarInfoBase(acumPrev, dispBase) {
+  document.getElementById('cert-base-display').textContent = _certPresBase > 0 ? fmt(_certPresBase) : 'Sin presupuesto';
+  document.getElementById('cert-acum-display').textContent = fmt(acumPrev);
+  document.getElementById('cert-disp-display').textContent = _certPresBase > 0 ? fmt(dispBase) : '—';
 }
 
-function recalcCertTotals() {
-  let totalCert = 0;
-  document.querySelectorAll('#cert-lineas-tbody input[data-linea-id]').forEach(inp => {
-    const total = parseFloat(inp.dataset.total) || 0;
-    const pct = parseFloat(inp.value) || 0;
-    const pctAnt = parseFloat(inp.dataset.pctAnt) || 0;
-    const importe = total * pct / 100;
-    totalCert += importe;
-    const lid = inp.dataset.lineaId;
-    const impEl = document.getElementById(`cl-import-${lid}`);
-    if (impEl) impEl.textContent = fmt(importe);
-    const pctAcum = Math.min(pctAnt + pct, 100);
-    const acumEl = document.getElementById(`cl-acum-${lid}`);
-    if (acumEl) acumEl.innerHTML = `<span style="color:${pctAcum>=100?'var(--green)':pctAcum>70?'var(--amber)':'var(--text-mid)'}">${pctAcum.toFixed(0)}%</span>`;
-  });
-  const iva = totalCert * 0.21;
-  document.getElementById('cert-tot-cert').textContent = fmt(totalCert);
-  document.getElementById('cert-resumen-base').textContent = fmt(totalCert);
-  document.getElementById('cert-resumen-iva').textContent = fmt(iva);
-  document.getElementById('cert-resumen-tot').textContent = fmt(totalCert + iva);
+function certActualizarResumen(base) {
+  const ivaPct = parseFloat(document.getElementById('cert-iva')?.value) || 21;
+  const iva    = base * ivaPct / 100;
+  document.getElementById('cert-res-base').textContent = fmt(base);
+  document.getElementById('cert-res-iva').textContent  = fmt(iva);
+  document.getElementById('cert-res-tot').textContent  = fmt(base + iva);
 }
 
+// % → importe
+function certPctToImporte() {
+  const pct    = parseFloat(document.getElementById('cert-pct').value) || 0;
+  const base   = _certPresBase > 0 ? (_certPresBase * pct / 100) : 0;
+  if (pct > 0 && _certPresBase > 0) {
+    document.getElementById('cert-importe').value = base.toFixed(2);
+  }
+  certActualizarResumen(base);
+}
+
+// importe → %
+function certImporteToPct() {
+  const base = parseFloat(document.getElementById('cert-importe').value) || 0;
+  const pct  = _certPresBase > 0 ? (base / _certPresBase * 100) : 0;
+  if (base > 0 && _certPresBase > 0) {
+    document.getElementById('cert-pct').value = pct.toFixed(2);
+  }
+  certActualizarResumen(base);
+}
+
+// Guardar
 async function guardarCertificacion() {
   if (!_certProyId) return;
-  const fecha = document.getElementById('cert-fecha').value;
+  const fecha  = document.getElementById('cert-fecha').value;
   const estado = document.getElementById('cert-estado').value;
-  const notas = document.getElementById('cert-notas').value;
+  const ivaPct = parseFloat(document.getElementById('cert-iva').value) || 21;
+  const notas  = document.getElementById('cert-notas').value;
+  const base   = parseFloat(document.getElementById('cert-importe').value) || 0;
 
-  // Collect lineas
-  const lineasDetalle = [];
-  let baseImponible = 0;
-  document.querySelectorAll('#cert-lineas-tbody input[data-linea-id]').forEach(inp => {
-    const pct = parseFloat(inp.value) || 0;
-    const total = parseFloat(inp.dataset.total) || 0;
-    const importe = total * pct / 100;
-    if (pct > 0) {
-      lineasDetalle.push({ linea_id: inp.dataset.lineaId, pct, importe });
-      baseImponible += importe;
-    }
-  });
-
-  if (baseImponible <= 0) { toast('No hay importes certificados', 'error'); return; }
+  if (base <= 0) { toast('Introduce el importe o porcentaje de la certificación', 'error'); return; }
+  if (!fecha)    { toast('Introduce la fecha', 'error'); return; }
 
   const payload = {
-    proyecto_id: _certProyId,
-    version: _certVersion || 'v1',
-    fecha: fecha || new Date().toISOString().split('T')[0],
-    estado,
-    notas,
-    base_imponible: Math.round(baseImponible * 100) / 100,
-    iva_pct: 21,
-    lineas_detalle: JSON.stringify(lineasDetalle)
+    proyecto_id:    _certProyId,
+    fecha:          fecha,
+    estado:         estado,
+    notas:          notas,
+    base_imponible: Math.round(base * 100) / 100,
+    iva_pct:        ivaPct,
+    lineas_detalle: null   // Opción B: no hay líneas detalladas
   };
 
   try {
@@ -18360,145 +18603,169 @@ async function guardarCertificacion() {
       await sbPatch('certificaciones', _certEditing, payload);
       toast('Certificación actualizada ✅');
     } else {
-      // Auto num_cert
-      const prev = await sbGet('certificaciones', `?proyecto_id=eq.${_certProyId}&order=num_cert.desc&limit=1`);
-      const lastNum = prev.length ? (parseInt(prev[0].num_cert?.replace(/\D/g, '')) || 0) : 0;
-      payload.num_cert = `C${String(lastNum + 1).padStart(2, '0')}`;
+      const prev    = await sbGet('certificaciones',
+        `?proyecto_id=eq.${_certProyId}&order=created_at.asc`);
+      const lastNum = prev.length
+        ? (parseInt(prev[prev.length-1].num_cert?.replace(/\D/g,'')) || 0)
+        : 0;
+      payload.num_cert = `C${String(lastNum+1).padStart(2,'0')}`;
       await sbPost('certificaciones', payload);
       toast('Certificación creada ✅');
     }
     closeModal('m-certificacion');
     await loadCertificaciones();
-  } catch (e) { toast('Error: ' + e.message, 'error'); }
+  } catch(e) { toast('Error: ' + e.message, 'error'); }
 }
 
 async function eliminarCertificacion(id) {
-  if (!confirm('¿Eliminar esta certificación?')) return;
+  if (!confirm('¿Eliminar esta certificación? No se puede deshacer.')) return;
   await sbDelete('certificaciones', id);
-  toast('Eliminada');
+  toast('Certificación eliminada');
   loadCertificaciones();
 }
 
+// PDF desde modal (borrador activo)
 async function exportarCertPDF() {
-  // Build cert data from current modal
-  const proy = _certProyId;
-  const p = (PC || []).find(x => x.proyecto_id === proy) || {};
-  const cfg = await getCfg();
+  const base  = parseFloat(document.getElementById('cert-importe').value) || 0;
+  const ivaPct = parseFloat(document.getElementById('cert-iva').value) || 21;
+  if (base <= 0) { toast('Primero introduce el importe', 'error'); return; }
+  const cfg   = await getCfg();
+  const p     = (PC||[]).find(px => px.proyecto_id === _certProyId) || {};
+  const cli   = (CC||[]).find(cx => cx.cliente_id  === p.cliente_id) || {};
   const fecha = document.getElementById('cert-fecha').value;
   const notas = document.getElementById('cert-notas').value;
-  const lineas = [];
-  document.querySelectorAll('#cert-lineas-tbody input[data-linea-id]').forEach(inp => {
-    const pct = parseFloat(inp.value) || 0;
-    if (pct > 0) {
-      const row = inp.closest('tr');
-      const cells = row.querySelectorAll('td');
-      lineas.push({
-        desc: cells[0]?.textContent || '',
-        ud: cells[1]?.textContent || '',
-        total: parseFloat(inp.dataset.total) || 0,
-        pct,
-        importe: (parseFloat(inp.dataset.total) || 0) * pct / 100
-      });
-    }
+  const iva   = base * ivaPct / 100;
+  generarCertPDFContenido({
+    proy: _certProyId, p, cli, cfg, fecha, notas,
+    base, iva, ivaPct, presBase: _certPresBase,
+    pct: _certPresBase > 0 ? base / _certPresBase * 100 : 0,
+    numCert: 'BORRADOR'
   });
-  const base = lineas.reduce((s, l) => s + l.importe, 0);
-  const iva = base * 0.21;
-  generarCertPDFContenido({ proy, p, cfg, fecha, notas, lineas, base, iva });
 }
 
+// PDF desde tabla (cert guardada)
 async function exportarCertPDFById(certId) {
   const certs = await sbGet('certificaciones', `?id=eq.${certId}`);
   const c = certs[0]; if (!c) return;
-  const lineas = await sbGet('presupuesto_lineas', `?proyecto_id=eq.${c.proyecto_id}&es_capitulo=eq.false`);
-  const p = (PC || []).find(x => x.proyecto_id === c.proyecto_id) || {};
   const cfg = await getCfg();
-  const certsLineas = (typeof c.lineas_detalle === 'string' ? JSON.parse(c.lineas_detalle) : c.lineas_detalle) || [];
-  const lineaMap = {};
-  lineas.forEach(l => { lineaMap[l.id] = l; });
-  const lineasPDF = certsLineas.map(ld => {
-    const l = lineaMap[ld.linea_id] || {};
-    const total = ((l.cantidad || 0) * (l.precio_venta || 0)) * (1 + (l.ci_gg_bi_pct || 0) / 100);
-    return { desc: l.descripcion || '—', ud: l.unidad || '', total, pct: ld.pct, importe: ld.importe };
+  const p   = (PC||[]).find(px => px.proyecto_id === c.proyecto_id) || {};
+  const cli = (CC||[]).find(cx => cx.cliente_id  === p.cliente_id) || {};
+  const base    = c.base_imponible || 0;
+  const ivaPct2 = c.iva_pct != null ? c.iva_pct : 21;
+  const iva     = base * ivaPct2 / 100;
+
+  // Recalculate presBase for this project
+  let presBase = 0;
+  try {
+    const lineas = await sbGet('presupuesto_lineas',
+      `?proyecto_id=eq.${c.proyecto_id}&version=eq.v1&es_capitulo=eq.false`);
+    presBase = lineas.reduce((s,l)=>{
+      const sub=(l.cantidad||0)*(l.precio_venta||0);
+      return s+(l.ci_gg_bi_pct>0?sub*(1+l.ci_gg_bi_pct/100):sub);
+    },0);
+  } catch(e){}
+
+  generarCertPDFContenido({
+    proy: c.proyecto_id, p, cli, cfg,
+    fecha: c.fecha, notas: c.notas,
+    base, iva, ivaPct: ivaPct2,
+    presBase, pct: presBase > 0 ? base/presBase*100 : 0,
+    numCert: c.num_cert
   });
-  const base = lineasPDF.reduce((s, l) => s + l.importe, 0);
-  const iva = base * (c.iva_pct || 21) / 100;
-  generarCertPDFContenido({ proy: c.proyecto_id, p, cfg, fecha: c.fecha, notas: c.notas, lineas: lineasPDF, base, iva, numCert: c.num_cert });
 }
 
 async function getCfg() {
-  try {
-    const r = await sbGet('configuracion', '?limit=1');
-    return r[0] || {};
-  } catch { return {}; }
+  try { const r = await sbGet('configuracion','?limit=1'); return r[0]||{}; }
+  catch { return {}; }
 }
 
-function generarCertPDFContenido({ proy, p, cfg, fecha, notas, lineas, base, iva, numCert }) {
+function generarCertPDFContenido({ proy, p, cli, cfg, fecha, notas, base, iva, ivaPct, presBase, pct, numCert }) {
   const jsPDF = window.jspdf?.jsPDF;
   if (!jsPDF) { toast('jsPDF no disponible', 'error'); return; }
-  const pdf = new jsPDF('p', 'mm', 'a4');
+  const pdf = new jsPDF('p','mm','a4');
   const pW = 210, mX = 14;
   let y = 14;
 
   // Header
-  try { pdf.addImage(PAU_LOGO, 'PNG', mX, y, 30, 15); } catch {}
+  try { pdf.addImage(PAU_LOGO,'PNG',mX,y,30,15); } catch {}
   pdf.setFontSize(9); pdf.setTextColor(100);
-  pdf.text(cfg.razon_social || 'PAU INTERIORISMO S.L.', mX + 33, y + 4);
-  pdf.text(cfg.direccion || '', mX + 33, y + 8);
-  pdf.text(`CIF: ${cfg.cif || ''}  ·  Tel: ${cfg.telefono || ''}`, mX + 33, y + 12);
-  pdf.setFontSize(14); pdf.setTextColor(30, 60, 100); pdf.setFont(undefined, 'bold');
-  pdf.text('CERTIFICACIÓN DE OBRA', pW - mX, y + 5, { align: 'right' });
-  pdf.setFontSize(10); pdf.setTextColor(100); pdf.setFont(undefined, 'normal');
-  pdf.text(`Nº ${numCert || 'BORRADOR'}  ·  ${fecha || ''}`, pW - mX, y + 11, { align: 'right' });
-  y += 22;
-  pdf.setDrawColor(184, 115, 51); pdf.setLineWidth(0.5); pdf.line(mX, y, pW - mX, y); y += 5;
+  pdf.text(cfg.razon_social||'PAU INTERIORISMO S.L.',  mX+33, y+4);
+  pdf.text(cfg.direccion||'',                           mX+33, y+8);
+  pdf.text(`CIF: ${cfg.cif||''}  ·  Tel: ${cfg.telefono||''}`, mX+33, y+12);
+  pdf.setFontSize(16); pdf.setTextColor(30,60,100); pdf.setFont(undefined,'bold');
+  pdf.text('CERTIFICACIÓN DE OBRA', pW-mX, y+6, {align:'right'});
+  pdf.setFontSize(10); pdf.setTextColor(100); pdf.setFont(undefined,'normal');
+  pdf.text(`Nº ${numCert||'BORRADOR'}  ·  Fecha: ${fmtD(fecha)||''}`, pW-mX, y+13, {align:'right'});
+  y += 24;
+  pdf.setDrawColor(184,115,51); pdf.setLineWidth(0.6); pdf.line(mX,y,pW-mX,y); y += 6;
 
-  // Project info
+  // Info proyecto/cliente
   pdf.setFontSize(9); pdf.setTextColor(50);
-  pdf.text(`Proyecto: ${proy} · ${p.nombre || ''}`, mX, y); y += 5;
-  pdf.text(`Cliente: ${p.cliente_id || '—'}  ·  Dirección: ${p.direccion_obra || '—'}`, mX, y); y += 5;
-  if (notas) { pdf.text(`Concepto: ${notas}`, mX, y); y += 5; }
-  y += 2;
+  pdf.text(`Proyecto:  ${proy} · ${p.nombre||''}`, mX, y); y += 5;
+  pdf.text(`Cliente:   ${cli.nombre||p.cliente_id||'—'}`, mX, y); y += 5;
+  pdf.text(`Dirección: ${p.direccion_obra||'—'}`, mX, y); y += 5;
+  if (notas) { pdf.text(`Concepto:  ${notas}`, mX, y); y += 5; }
+  y += 4;
 
-  // Table header
-  pdf.setFillColor(30, 60, 100); pdf.setTextColor(255); pdf.setFontSize(8); pdf.setFont(undefined, 'bold');
-  pdf.rect(mX, y, pW - 2*mX, 6, 'F');
-  const cols = [mX+1, 110, 120, 130, 148, 162, 180];
-  ['Descripción', 'Ud.', 'Importe', '% Ant.', '% Cert.', '% Acum.', 'Importe cert.'].forEach((h, i) => {
-    pdf.text(h, cols[i], y + 4);
-  });
-  y += 7;
+  // Cuadro de certificación
+  pdf.setFillColor(240,244,250); pdf.roundedRect(mX, y, pW-2*mX, 44, 2, 2, 'F');
+  pdf.setFont(undefined,'bold'); pdf.setFontSize(10); pdf.setTextColor(30,60,100);
+  pdf.text('RESUMEN DE CERTIFICACIÓN', mX+5, y+7);
+  pdf.setFont(undefined,'normal'); pdf.setFontSize(9); pdf.setTextColor(60);
 
-  // Table rows
-  pdf.setFont(undefined, 'normal'); pdf.setTextColor(40); pdf.setFontSize(8);
-  lineas.forEach((l, idx2) => {
-    if (y > 260) { pdf.addPage(); y = 20; }
-    const bg = idx2 % 2 === 0 ? [248, 250, 253] : [255, 255, 255];
-    pdf.setFillColor(...bg); pdf.rect(mX, y, pW - 2*mX, 5.5, 'F');
-    const pctAcum = Math.min((l.pct || 0), 100);
-    const descTrunc = l.desc.length > 55 ? l.desc.substring(0, 52) + '…' : l.desc;
-    pdf.text(descTrunc, cols[0], y + 4);
-    pdf.text(l.ud, cols[1], y + 4);
-    pdf.text(fmt(l.total), cols[2], y + 4);
-    pdf.text('—', cols[3], y + 4);
-    pdf.text(`${(l.pct||0).toFixed(1)}%`, cols[4], y + 4);
-    pdf.text(`${pctAcum.toFixed(0)}%`, cols[5], y + 4);
-    pdf.setFont(undefined, 'bold');
-    pdf.text(fmt(l.importe), cols[6], y + 4);
-    pdf.setFont(undefined, 'normal');
-    y += 5.5;
-  });
+  const col1 = mX+5, col2 = 130;
+  let yr = y+14;
 
-  // Totals
-  y += 3;
-  pdf.setDrawColor(184,115,51); pdf.line(mX, y, pW-mX, y); y += 4;
-  pdf.setFontSize(10); pdf.setFont(undefined, 'bold'); pdf.setTextColor(30,60,100);
-  pdf.text('Base imponible:', 130, y); pdf.text(fmt(base), pW-mX, y, {align:'right'});
-  y += 6; pdf.setFont(undefined, 'normal'); pdf.setTextColor(80);
-  pdf.text('IVA 21%:', 130, y); pdf.text(fmt(iva), pW-mX, y, {align:'right'});
-  y += 6; pdf.setFont(undefined, 'bold'); pdf.setTextColor(30,60,100);
-  pdf.text('TOTAL CERTIFICACIÓN:', 130, y); pdf.text(fmt(base+iva), pW-mX, y, {align:'right'});
+  if (presBase > 0) {
+    pdf.text('Presupuesto aprobado:', col1, yr);
+    pdf.setFont(undefined,'bold');
+    pdf.text(fmt(presBase), col2, yr, {align:'left'});
+    pdf.setFont(undefined,'normal');
+    yr += 6;
+    pdf.text('% certificado anteriormente:', col1, yr);
+    const pctAnt = presBase > 0 ? Math.max(0, ((presBase - base) / presBase * 100) - (pct||0)) : 0;
+    pdf.text(`${Math.max(0, (presBase > 0 ? ((presBase - base)/presBase*100) : 0) - (pct||0)).toFixed(1)}%`, col2, yr);
+    yr += 6;
+  }
 
-  pdf.save(`Certificacion_${proy}_${numCert||'nuevo'}_${fecha||'sin-fecha'}.pdf`);
+  pdf.text(`% de esta certificación (Nº ${numCert||'—'}):`, col1, yr);
+  pdf.setFont(undefined,'bold'); pdf.setTextColor(30,60,100);
+  pdf.text(`${(pct||0).toFixed(2)}%`, col2, yr);
+  pdf.setFont(undefined,'normal'); pdf.setTextColor(60);
+  yr += 6;
+
+  pdf.setDrawColor(200,210,230); pdf.setLineWidth(0.3); pdf.line(col1, yr-2, pW-mX-5, yr-2); yr += 2;
+
+  pdf.text('Base imponible:', col1, yr);
+  pdf.setFont(undefined,'bold');
+  pdf.text(fmt(base), col2, yr);
+  pdf.setFont(undefined,'normal'); yr += 6;
+
+  pdf.text(`IVA ${ivaPct||21}%:`, col1, yr);
+  pdf.text(fmt(iva), col2, yr); yr += 6;
+
+  pdf.setFont(undefined,'bold'); pdf.setFontSize(11); pdf.setTextColor(30,60,100);
+  pdf.text('TOTAL CERTIFICACIÓN:', col1, yr);
+  pdf.text(fmt(base+iva), col2, yr); yr += 4;
+
+  y = yr + 10;
+
+  // Firma
+  pdf.setDrawColor(150); pdf.setLineWidth(0.3);
+  pdf.line(mX,   y+20, mX+65, y+20);
+  pdf.line(pW-mX-65, y+20, pW-mX, y+20);
+  pdf.setFontSize(8); pdf.setTextColor(120); pdf.setFont(undefined,'normal');
+  pdf.text('Firma empresa',  mX+32,   y+24, {align:'center'});
+  pdf.text('Firma cliente',  pW-mX-32, y+24, {align:'center'});
+
+  // Footer
+  pdf.setFontSize(7); pdf.setTextColor(160);
+  pdf.text(
+    `${cfg.razon_social||'PAU INTERIORISMO S.L.'}  ·  CIF ${cfg.cif||''}  ·  ${cfg.email||'info@pauinteriorismo.es'}  ·  ${cfg.telefono||''}`,
+    pW/2, 290, {align:'center'}
+  );
+
+  pdf.save(`Certificacion_${proy}_${numCert||'borrador'}.pdf`);
   toast('PDF generado ✅');
 }
 
