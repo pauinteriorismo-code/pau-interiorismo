@@ -4381,18 +4381,17 @@ async function pfExportarPDF(){
   toast('Generando PDF…');
   try {
     const opt = {
-      margin: [8, 8, 8, 8],
+      margin: [10, 8, 10, 8],
       filename: filename,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true, letterRendering: true },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+      pagebreak: { mode: ['css', 'legacy'] }
     };
-    // Añadir margen superior extra en páginas 2+ para la cabecera repetida
+    // Calcular altura de cabecera repetida para páginas 2+
     const headerEl = doc.querySelector('.doc-repeat-header');
-    const headerH = headerEl ? (headerEl.getBoundingClientRect().height * 0.264583 + 6) : 0; // px → mm + 6mm padding
-    const optConCabecera = headerH > 10 ? {...opt, margin: [headerH + 10, 8, 8, 8]} : opt;
-    await html2pdf().set(optConCabecera).from(doc).toPdf().get('pdf').then(async function(pdf){
+    const headerH = headerEl ? (headerEl.getBoundingClientRect().height * 0.264583 + 4) : 0;
+    await html2pdf().set(opt).from(doc).toPdf().get('pdf').then(async function(pdf){
       await añadirCabeceraPDF(pdf, doc, headerH);
     }).save();
     toast('PDF descargado ✅');
