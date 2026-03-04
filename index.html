@@ -1272,13 +1272,13 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
               <div style="font-size:11px;color:var(--text-soft)">6 productos · Pres. 2025/00820 + Fac. 2026/FC/00157</div>
             </div>
             <div style="height:1px;background:var(--border);margin:0 8px"></div>
-            <div class="tarif-import-item" onclick="closeImportMenu();if(confirm('¿Importar 24 partidas de Reforma Baño Completo?\n\nSe añadirán en Categoría: Rehabilitación'))importarReformaBano()">
+            <div class="tarif-import-item" onclick="closeImportMenu();if(confirm('¿Importar 24 partidas de Reforma Baño? Categoría: Rehab. Baño'))importarReformaBano()">
               <div style="font-weight:600;font-size:12px">🛁 Reforma Baño Completo</div>
-              <div style="font-size:11px;color:var(--text-soft)">24 partidas · 7 capítulos · Categoría: Rehabilitación · Margen 30%</div>
+              <div style="font-size:11px;color:var(--text-soft)">24 partidas · 7 capítulos · Categoría: Rehab. Baño · Margen 30%</div>
             </div>
-            <div class="tarif-import-item" onclick="closeImportMenu();if(confirm('¿Importar 23 partidas de Reforma Cocina Completa?\n\nSe añadirán en Categoría: Rehabilitación'))importarReformaCocina()">
+            <div class="tarif-import-item" onclick="closeImportMenu();if(confirm('¿Importar 23 partidas de Reforma Cocina? Categoría: Rehab. Cocina'))importarReformaCocina()">
               <div style="font-weight:600;font-size:12px">🍳 Reforma Cocina Completa</div>
-              <div style="font-size:11px;color:var(--text-soft)">23 partidas · 12 capítulos · Categoría: Rehabilitación · Margen 30%</div>
+              <div style="font-size:11px;color:var(--text-soft)">23 partidas · 12 capítulos · Categoría: Rehab. Cocina · Margen 30%</div>
             </div>
           </div>
         </div>
@@ -4930,7 +4930,7 @@ async function loadFamiliasTarifario(){
   }
 }
 
-async function addFamiliaTarifario(){
+async async function addFamiliaTarifario(){
   const cats = LISTAS.categorias_tarifario || [];
   if(!cats.length){ toast('Primero añade categorías en la lista de arriba','error'); return; }
   
@@ -4952,7 +4952,7 @@ async function addFamiliaTarifario(){
   }catch(e){ toast('Error: '+e.message,'error'); }
 }
 
-async function renameFamilia(cat, oldFam){
+async async function renameFamilia(cat, oldFam){
   const newFam = prompt(`Renombrar "${oldFam}":`, oldFam);
   if(!newFam||!newFam.trim()||newFam.trim()===oldFam) return;
   try{
@@ -4974,7 +4974,7 @@ async function renameFamilia(cat, oldFam){
   }catch(e){ toast('Error: '+e.message,'error'); }
 }
 
-async function deleteFamilia(cat, fam){
+async async function deleteFamilia(cat, fam){
   const count = TC.filter(t=>(t.categoria||'')===cat && (t.familia||'')===fam).length;
   const msg = count > 0 
     ? `¿Eliminar familia "${fam}"? Los ${count} artículos quedarán sin familia asignada.`
@@ -8515,30 +8515,30 @@ async function importarProductosMundobano2(){
 // ═══════════════════════════════════════════
 function importarReformaBano(){
   const productos = [
-    {codigo:"BAÑ-01-01",descripcion:"Picado y retirada de alicatado existente en paredes y suelo",unidad:"m²",precio_coste:11.1538,margen_pct:30,categoria:"Rehabilitación",familia:"Demolición y preparación",marca:"",notas:"Partida modelo reforma baño completo"},
-    {codigo:"BAÑ-01-02",descripcion:"Desmontaje y retirada de sanitarios existentes",unidad:"ud",precio_coste:138.4615,margen_pct:30,categoria:"Rehabilitación",familia:"Demolición y preparación",marca:"",notas:"Partida modelo reforma baño completo"},
-    {codigo:"BAÑ-02-01",descripcion:"Realización de regatas en pared para instalaciones",unidad:"ml",precio_coste:13.8462,margen_pct:30,categoria:"Rehabilitación",familia:"Albañilería y soporte",marca:"",notas:"Partida modelo reforma baño completo"},
-    {codigo:"BAÑ-02-02",descripcion:"Cierre de regatas con mortero y malla anti-fisuras",unidad:"ml",precio_coste:9.2308,margen_pct:30,categoria:"Rehabilitación",familia:"Albañilería y soporte",marca:"",notas:"Partida modelo reforma baño completo"},
-    {codigo:"BAÑ-02-03",descripcion:"Maestreado y regularización de paramentos verticales",unidad:"m²",precio_coste:11.5385,margen_pct:30,categoria:"Rehabilitación",familia:"Albañilería y soporte",marca:"",notas:"Partida modelo reforma baño completo"},
-    {codigo:"BAÑ-02-04",descripcion:"Impermeabilización de zona húmeda con membrana elástica flexible",unidad:"m²",precio_coste:16.9231,margen_pct:30,categoria:"Rehabilitación",familia:"Albañilería y soporte",marca:"",notas:"Partida modelo reforma baño completo"},
-    {codigo:"BAÑ-03-01",descripcion:"Suministro y colocación de revestimiento cerámico en paredes",unidad:"m²",precio_coste:32.3077,margen_pct:30,categoria:"Rehabilitación",familia:"Revestimientos y pavimentos",marca:"",notas:"Partida modelo reforma baño completo"},
-    {codigo:"BAÑ-03-02",descripcion:"Suministro y colocación de pavimento cerámico en suelo",unidad:"m²",precio_coste:30.7692,margen_pct:30,categoria:"Rehabilitación",familia:"Revestimientos y pavimentos",marca:"",notas:"Partida modelo reforma baño completo"},
-    {codigo:"BAÑ-03-03",descripcion:"Rodapié de gres coordinado con el pavimento, h=8 cm",unidad:"ml",precio_coste:18.4615,margen_pct:30,categoria:"Rehabilitación",familia:"Revestimientos y pavimentos",marca:"",notas:"Partida modelo reforma baño completo"},
-    {codigo:"BAÑ-04-01",descripcion:"Falso techo de placas de yeso laminado hidrófugo (pladur WA) en baño",unidad:"m²",precio_coste:50.0,margen_pct:30,categoria:"Rehabilitación",familia:"Techo",marca:"",notas:"Partida modelo reforma baño completo"},
-    {codigo:"BAÑ-04-02",descripcion:"Tratamiento de juntas y acabado de falso techo listo para pintura",unidad:"ud",precio_coste:61.5385,margen_pct:30,categoria:"Rehabilitación",familia:"Techo",marca:"",notas:"Partida modelo reforma baño completo"},
-    {codigo:"BAÑ-05-01",descripcion:"Adaptación red de suministro AFS/ACS en tubo multicapa o PEX",unidad:"ud",precio_coste:446.1538,margen_pct:30,categoria:"Rehabilitación",familia:"Fontanería y desagües",marca:"",notas:"Partida modelo reforma baño completo"},
-    {codigo:"BAÑ-05-02",descripcion:"Red de saneamiento interior en PVC serie B",unidad:"ud",precio_coste:246.1538,margen_pct:30,categoria:"Rehabilitación",familia:"Fontanería y desagües",marca:"",notas:"Partida modelo reforma baño completo"},
-    {codigo:"BAÑ-06-01",descripcion:"Nueva instalación eléctrica completa de baño según REBT",unidad:"ud",precio_coste:323.0769,margen_pct:30,categoria:"Rehabilitación",familia:"Electricidad",marca:"",notas:"Partida modelo reforma baño completo"},
-    {codigo:"BAÑ-06-02",descripcion:"Punto de luz LED downlight empotrable IP44 — 10 W, 3000 K",unidad:"ud",precio_coste:73.0769,margen_pct:30,categoria:"Rehabilitación",familia:"Electricidad",marca:"",notas:"Partida modelo reforma baño completo"},
-    {codigo:"BAÑ-06-03",descripcion:"Enchufe doble estanco IP44 zona 2 de baño",unidad:"ud",precio_coste:50.0,margen_pct:30,categoria:"Rehabilitación",familia:"Electricidad",marca:"",notas:"Partida modelo reforma baño completo"},
-    {codigo:"BAÑ-06-04",descripcion:"Extractor de baño temporizado con humidostato — mín. 90 m³/h",unidad:"ud",precio_coste:142.3077,margen_pct:30,categoria:"Rehabilitación",familia:"Electricidad",marca:"",notas:"Partida modelo reforma baño completo"},
-    {codigo:"BAÑ-07-01",descripcion:"Plato de ducha de resina extraplano (h<3,5 cm) — medidas a definir",unidad:"ud",precio_coste:476.9231,margen_pct:30,categoria:"Rehabilitación",familia:"Sanitarios y equipamiento",marca:"",notas:"Partida modelo reforma baño completo"},
-    {codigo:"BAÑ-07-02",descripcion:"Fijo de ducha — mampara fija vidrio templado 8 mm, perfil aluminio",unidad:"ud",precio_coste:369.2308,margen_pct:30,categoria:"Rehabilitación",familia:"Sanitarios y equipamiento",marca:"",notas:"Partida modelo reforma baño completo"},
-    {codigo:"BAÑ-07-03",descripcion:"Grifo monomando/termostático de ducha con rociador y ducha de mano",unidad:"ud",precio_coste:292.3077,margen_pct:30,categoria:"Rehabilitación",familia:"Sanitarios y equipamiento",marca:"",notas:"Partida modelo reforma baño completo"},
-    {codigo:"BAÑ-07-04",descripcion:"Mueble de baño suspendido 100 cm con lavabo de porcelana integrado",unidad:"ud",precio_coste:753.8462,margen_pct:30,categoria:"Rehabilitación",familia:"Sanitarios y equipamiento",marca:"",notas:"Partida modelo reforma baño completo"},
-    {codigo:"BAÑ-07-05",descripcion:"Grifo monomando para lavabo — acabado cromado, cartucho cerámico",unidad:"ud",precio_coste:150.0,margen_pct:30,categoria:"Rehabilitación",familia:"Sanitarios y equipamiento",marca:"",notas:"Partida modelo reforma baño completo"},
-    {codigo:"BAÑ-07-06",descripcion:"Inodoro Roca modelo ONA a suelo con cisterna empotrada (in-wall)",unidad:"ud",precio_coste:753.8462,margen_pct:30,categoria:"Rehabilitación",familia:"Sanitarios y equipamiento",marca:"",notas:"Partida modelo reforma baño completo"},
-    {codigo:"BAÑ-07-07",descripcion:"Espejo con iluminación LED 100×70 cm, antivaho e interruptor táctil",unidad:"ud",precio_coste:246.1538,margen_pct:30,categoria:"Rehabilitación",familia:"Sanitarios y equipamiento",marca:"",notas:"Partida modelo reforma baño completo"},
+    {codigo:"BAN-01-01",descripcion:"Picado y retirada de alicatado existente en paredes y suelo",unidad:"m²",precio_coste:11.1538,margen_pct:30,categoria:"Rehab. Baño",familia:"Demolición y preparación",marca:"",notas:"Partida modelo · Reforma baño completo"},
+    {codigo:"BAN-01-02",descripcion:"Desmontaje y retirada de sanitarios existentes",unidad:"ud",precio_coste:138.4615,margen_pct:30,categoria:"Rehab. Baño",familia:"Demolición y preparación",marca:"",notas:"Partida modelo · Reforma baño completo"},
+    {codigo:"BAN-02-01",descripcion:"Realización de regatas en pared para instalaciones",unidad:"ml",precio_coste:13.8462,margen_pct:30,categoria:"Rehab. Baño",familia:"Albañilería y soporte",marca:"",notas:"Partida modelo · Reforma baño completo"},
+    {codigo:"BAN-02-02",descripcion:"Cierre de regatas con mortero y malla anti-fisuras",unidad:"ml",precio_coste:9.2308,margen_pct:30,categoria:"Rehab. Baño",familia:"Albañilería y soporte",marca:"",notas:"Partida modelo · Reforma baño completo"},
+    {codigo:"BAN-02-03",descripcion:"Maestreado y regularización de paramentos verticales",unidad:"m²",precio_coste:11.5385,margen_pct:30,categoria:"Rehab. Baño",familia:"Albañilería y soporte",marca:"",notas:"Partida modelo · Reforma baño completo"},
+    {codigo:"BAN-02-04",descripcion:"Impermeabilización de zona húmeda con membrana elástica flexible",unidad:"m²",precio_coste:16.9231,margen_pct:30,categoria:"Rehab. Baño",familia:"Albañilería y soporte",marca:"",notas:"Partida modelo · Reforma baño completo"},
+    {codigo:"BAN-03-01",descripcion:"Suministro y colocación de revestimiento cerámico en paredes",unidad:"m²",precio_coste:32.3077,margen_pct:30,categoria:"Rehab. Baño",familia:"Revestimientos y pavimentos",marca:"",notas:"Partida modelo · Reforma baño completo"},
+    {codigo:"BAN-03-02",descripcion:"Suministro y colocación de pavimento cerámico en suelo",unidad:"m²",precio_coste:30.7692,margen_pct:30,categoria:"Rehab. Baño",familia:"Revestimientos y pavimentos",marca:"",notas:"Partida modelo · Reforma baño completo"},
+    {codigo:"BAN-03-03",descripcion:"Rodapié de gres coordinado con el pavimento, h=8 cm",unidad:"ml",precio_coste:18.4615,margen_pct:30,categoria:"Rehab. Baño",familia:"Revestimientos y pavimentos",marca:"",notas:"Partida modelo · Reforma baño completo"},
+    {codigo:"BAN-04-01",descripcion:"Falso techo de placas de yeso laminado hidrófugo (pladur WA) en baño",unidad:"m²",precio_coste:50.0,margen_pct:30,categoria:"Rehab. Baño",familia:"Techo",marca:"",notas:"Partida modelo · Reforma baño completo"},
+    {codigo:"BAN-04-02",descripcion:"Tratamiento de juntas y acabado de falso techo listo para pintura",unidad:"ud",precio_coste:61.5385,margen_pct:30,categoria:"Rehab. Baño",familia:"Techo",marca:"",notas:"Partida modelo · Reforma baño completo"},
+    {codigo:"BAN-05-01",descripcion:"Adaptación red de suministro AFS/ACS en tubo multicapa o PEX",unidad:"ud",precio_coste:446.1538,margen_pct:30,categoria:"Rehab. Baño",familia:"Fontanería y desagües",marca:"",notas:"Partida modelo · Reforma baño completo"},
+    {codigo:"BAN-05-02",descripcion:"Red de saneamiento interior en PVC serie B",unidad:"ud",precio_coste:246.1538,margen_pct:30,categoria:"Rehab. Baño",familia:"Fontanería y desagües",marca:"",notas:"Partida modelo · Reforma baño completo"},
+    {codigo:"BAN-06-01",descripcion:"Nueva instalación eléctrica completa de baño según REBT",unidad:"ud",precio_coste:323.0769,margen_pct:30,categoria:"Rehab. Baño",familia:"Electricidad",marca:"",notas:"Partida modelo · Reforma baño completo"},
+    {codigo:"BAN-06-02",descripcion:"Punto de luz LED downlight empotrable IP44 — 10 W, 3000 K",unidad:"ud",precio_coste:73.0769,margen_pct:30,categoria:"Rehab. Baño",familia:"Electricidad",marca:"",notas:"Partida modelo · Reforma baño completo"},
+    {codigo:"BAN-06-03",descripcion:"Enchufe doble estanco IP44 zona 2 de baño",unidad:"ud",precio_coste:50.0,margen_pct:30,categoria:"Rehab. Baño",familia:"Electricidad",marca:"",notas:"Partida modelo · Reforma baño completo"},
+    {codigo:"BAN-06-04",descripcion:"Extractor de baño temporizado con humidostato — mín. 90 m³/h",unidad:"ud",precio_coste:142.3077,margen_pct:30,categoria:"Rehab. Baño",familia:"Electricidad",marca:"",notas:"Partida modelo · Reforma baño completo"},
+    {codigo:"BAN-07-01",descripcion:"Plato de ducha de resina extraplano (h<3,5 cm) — medidas a definir",unidad:"ud",precio_coste:476.9231,margen_pct:30,categoria:"Rehab. Baño",familia:"Sanitarios y equipamiento",marca:"",notas:"Partida modelo · Reforma baño completo"},
+    {codigo:"BAN-07-02",descripcion:"Fijo de ducha — mampara fija vidrio templado 8 mm, perfil aluminio",unidad:"ud",precio_coste:369.2308,margen_pct:30,categoria:"Rehab. Baño",familia:"Sanitarios y equipamiento",marca:"",notas:"Partida modelo · Reforma baño completo"},
+    {codigo:"BAN-07-03",descripcion:"Grifo monomando/termostático de ducha con rociador y ducha de mano",unidad:"ud",precio_coste:292.3077,margen_pct:30,categoria:"Rehab. Baño",familia:"Sanitarios y equipamiento",marca:"",notas:"Partida modelo · Reforma baño completo"},
+    {codigo:"BAN-07-04",descripcion:"Mueble de baño suspendido 100 cm con lavabo de porcelana integrado",unidad:"ud",precio_coste:753.8462,margen_pct:30,categoria:"Rehab. Baño",familia:"Sanitarios y equipamiento",marca:"",notas:"Partida modelo · Reforma baño completo"},
+    {codigo:"BAN-07-05",descripcion:"Grifo monomando para lavabo — acabado cromado, cartucho cerámico",unidad:"ud",precio_coste:150.0,margen_pct:30,categoria:"Rehab. Baño",familia:"Sanitarios y equipamiento",marca:"",notas:"Partida modelo · Reforma baño completo"},
+    {codigo:"BAN-07-06",descripcion:"Inodoro Roca modelo ONA a suelo con cisterna empotrada (in-wall)",unidad:"ud",precio_coste:753.8462,margen_pct:30,categoria:"Rehab. Baño",familia:"Sanitarios y equipamiento",marca:"",notas:"Partida modelo · Reforma baño completo"},
+    {codigo:"BAN-07-07",descripcion:"Espejo con iluminación LED 100×70 cm, antivaho e interruptor táctil",unidad:"ud",precio_coste:246.1538,margen_pct:30,categoria:"Rehab. Baño",familia:"Sanitarios y equipamiento",marca:"",notas:"Partida modelo · Reforma baño completo"},
   ];
   (async()=>{
     let ok=0, err=0;
@@ -8554,29 +8554,29 @@ function importarReformaBano(){
 
 function importarReformaCocina(){
   const productos = [
-    {codigo:"COC-01-01",descripcion:"Demolición de cocina existente — picado, retirada y transporte a vertedero",unidad:"pa",precio_coste:923.0769,margen_pct:30,categoria:"Rehabilitación",familia:"Demolición y preparación",marca:"",notas:"Partida modelo reforma cocina completa"},
-    {codigo:"COC-02-01",descripcion:"Regatas, rozas y remates de albañilería — regularización de paramentos",unidad:"pa",precio_coste:730.7692,margen_pct:30,categoria:"Rehabilitación",familia:"Albañilería y soporte",marca:"",notas:"Partida modelo reforma cocina completa"},
-    {codigo:"COC-03-01",descripcion:"Revestimiento cerámico porcelánico en paredes",unidad:"m²",precio_coste:32.3077,margen_pct:30,categoria:"Rehabilitación",familia:"Revestimientos y pavimentos",marca:"",notas:"Partida modelo reforma cocina completa"},
-    {codigo:"COC-03-02",descripcion:"Pavimento de gres porcelánico antideslizante",unidad:"m²",precio_coste:30.7692,margen_pct:30,categoria:"Rehabilitación",familia:"Revestimientos y pavimentos",marca:"",notas:"Partida modelo reforma cocina completa"},
-    {codigo:"COC-03-03",descripcion:"Rodapié de gres coordinado con el pavimento, h=8 cm",unidad:"ml",precio_coste:18.4615,margen_pct:30,categoria:"Rehabilitación",familia:"Revestimientos y pavimentos",marca:"",notas:"Partida modelo reforma cocina completa"},
-    {codigo:"COC-04-01",descripcion:"Falso techo de pladur 13 mm terminado y listo para pintura",unidad:"m²",precio_coste:47.6923,margen_pct:30,categoria:"Rehabilitación",familia:"Techo",marca:"",notas:"Partida modelo reforma cocina completa"},
-    {codigo:"COC-05-01",descripcion:"Pintura plástica lavable en techo — imprimación + 2 manos",unidad:"m²",precio_coste:10.7692,margen_pct:30,categoria:"Rehabilitación",familia:"Pintura",marca:"",notas:"Partida modelo reforma cocina completa"},
-    {codigo:"COC-06-01",descripcion:"Instalación de fontanería completa de cocina — AFS/ACS y saneamiento",unidad:"pa",precio_coste:846.1538,margen_pct:30,categoria:"Rehabilitación",familia:"Fontanería",marca:"",notas:"Partida modelo reforma cocina completa"},
-    {codigo:"COC-07-01",descripcion:"Instalación eléctrica completa de cocina según REBT",unidad:"pa",precio_coste:1076.9231,margen_pct:30,categoria:"Rehabilitación",familia:"Electricidad",marca:"",notas:"Partida modelo reforma cocina completa"},
-    {codigo:"COC-08-01",descripcion:"Mobiliario de cocina — casco 19 mm, frentes PET a elegir en gama presupuestada",unidad:"pa",precio_coste:6538.4615,margen_pct:30,categoria:"Rehabilitación",familia:"Mobiliario de cocina",marca:"",notas:"Partida modelo reforma cocina completa"},
-    {codigo:"COC-08-02",descripcion:"Bancada de porcelánico 12 mm — suministro y colocación",unidad:"ml",precio_coste:323.0769,margen_pct:30,categoria:"Rehabilitación",familia:"Mobiliario de cocina",marca:"",notas:"Partida modelo reforma cocina completa"},
-    {codigo:"COC-08-03",descripcion:"Fregadero bajo encimera con hueco pulido — incluye grifo monomando",unidad:"ud",precio_coste:523.0769,margen_pct:30,categoria:"Rehabilitación",familia:"Mobiliario de cocina",marca:"",notas:"Partida modelo reforma cocina completa"},
-    {codigo:"COC-09-01",descripcion:"Horno multifunción Balay gama media/alta — instalación incluida",unidad:"ud",precio_coste:523.0769,margen_pct:30,categoria:"Rehabilitación",familia:"Electrodomésticos",marca:"",notas:"Partida modelo reforma cocina completa"},
-    {codigo:"COC-09-02",descripcion:"Vitrocerámica de inducción Balay 4 zonas 60 cm — conexionado incluido",unidad:"ud",precio_coste:400.0,margen_pct:30,categoria:"Rehabilitación",familia:"Electrodomésticos",marca:"",notas:"Partida modelo reforma cocina completa"},
-    {codigo:"COC-09-03",descripcion:"Campana extractora Balay 60 cm — conexionado incluido",unidad:"ud",precio_coste:292.3077,margen_pct:30,categoria:"Rehabilitación",familia:"Electrodomésticos",marca:"",notas:"Partida modelo reforma cocina completa"},
-    {codigo:"COC-09-04",descripcion:"Lavavajillas integrable Balay 60 cm, 14 servicios — instalación incluida",unidad:"ud",precio_coste:446.1538,margen_pct:30,categoria:"Rehabilitación",familia:"Electrodomésticos",marca:"",notas:"Partida modelo reforma cocina completa"},
-    {codigo:"COC-09-05",descripcion:"Frigorífico combi Balay NoFrost gama media/alta — instalación incluida",unidad:"ud",precio_coste:753.8462,margen_pct:30,categoria:"Rehabilitación",familia:"Electrodomésticos",marca:"",notas:"Partida modelo reforma cocina completa"},
-    {codigo:"COC-10-01",descripcion:"Sistema de ósmosis inversa bajo fregadero 5 etapas — instalación incluida",unidad:"ud",precio_coste:369.2308,margen_pct:30,categoria:"Rehabilitación",familia:"Ósmosis y grifo filtrado",marca:"",notas:"Partida modelo reforma cocina completa"},
-    {codigo:"COC-10-02",descripcion:"Grifo monomando 3 vías con salida independiente para agua filtrada",unidad:"ud",precio_coste:215.3846,margen_pct:30,categoria:"Rehabilitación",familia:"Ósmosis y grifo filtrado",marca:"",notas:"Partida modelo reforma cocina completa"},
-    {codigo:"COC-11-01",descripcion:"Iluminación LED cálida 3000 K interior muebles altos con sensor de apertura",unidad:"ud",precio_coste:246.1538,margen_pct:30,categoria:"Rehabilitación",familia:"Accesorios de mobiliario",marca:"",notas:"Partida modelo reforma cocina completa"},
-    {codigo:"COC-11-02",descripcion:"Carro especiero extraíble con guías soft-close — capacidad 20 botes",unidad:"ud",precio_coste:138.4615,margen_pct:30,categoria:"Rehabilitación",familia:"Accesorios de mobiliario",marca:"",notas:"Partida modelo reforma cocina completa"},
-    {codigo:"COC-11-03",descripcion:"Carro esquinero con 4 bandejas extraíbles giratorias (magic-corner)",unidad:"ud",precio_coste:323.0769,margen_pct:30,categoria:"Rehabilitación",familia:"Accesorios de mobiliario",marca:"",notas:"Partida modelo reforma cocina completa"},
-    {codigo:"COC-12-01",descripcion:"Limpieza final, medios auxiliares y coordinación de obra",unidad:"pa",precio_coste:461.5385,margen_pct:30,categoria:"Rehabilitación",familia:"Gestión y limpieza",marca:"",notas:"Partida modelo reforma cocina completa"},
+    {codigo:"COC-01-01",descripcion:"Demolición de cocina existente — picado, retirada y transporte a vertedero",unidad:"pa",precio_coste:923.0769,margen_pct:30,categoria:"Rehab. Cocina",familia:"Demolición y preparación",marca:"",notas:"Partida modelo · Reforma cocina completa"},
+    {codigo:"COC-02-01",descripcion:"Regatas, rozas y remates de albañilería — regularización de paramentos",unidad:"pa",precio_coste:730.7692,margen_pct:30,categoria:"Rehab. Cocina",familia:"Albañilería y soporte",marca:"",notas:"Partida modelo · Reforma cocina completa"},
+    {codigo:"COC-03-01",descripcion:"Revestimiento cerámico porcelánico en paredes",unidad:"m²",precio_coste:32.3077,margen_pct:30,categoria:"Rehab. Cocina",familia:"Revestimientos y pavimentos",marca:"",notas:"Partida modelo · Reforma cocina completa"},
+    {codigo:"COC-03-02",descripcion:"Pavimento de gres porcelánico antideslizante",unidad:"m²",precio_coste:30.7692,margen_pct:30,categoria:"Rehab. Cocina",familia:"Revestimientos y pavimentos",marca:"",notas:"Partida modelo · Reforma cocina completa"},
+    {codigo:"COC-03-03",descripcion:"Rodapié de gres coordinado con el pavimento, h=8 cm",unidad:"ml",precio_coste:18.4615,margen_pct:30,categoria:"Rehab. Cocina",familia:"Revestimientos y pavimentos",marca:"",notas:"Partida modelo · Reforma cocina completa"},
+    {codigo:"COC-04-01",descripcion:"Falso techo de pladur 13 mm terminado y listo para pintura",unidad:"m²",precio_coste:47.6923,margen_pct:30,categoria:"Rehab. Cocina",familia:"Techo",marca:"",notas:"Partida modelo · Reforma cocina completa"},
+    {codigo:"COC-05-01",descripcion:"Pintura plástica lavable en techo — imprimación + 2 manos",unidad:"m²",precio_coste:10.7692,margen_pct:30,categoria:"Rehab. Cocina",familia:"Pintura",marca:"",notas:"Partida modelo · Reforma cocina completa"},
+    {codigo:"COC-06-01",descripcion:"Instalación de fontanería completa de cocina — AFS/ACS y saneamiento",unidad:"pa",precio_coste:846.1538,margen_pct:30,categoria:"Rehab. Cocina",familia:"Fontanería",marca:"",notas:"Partida modelo · Reforma cocina completa"},
+    {codigo:"COC-07-01",descripcion:"Instalación eléctrica completa de cocina según REBT",unidad:"pa",precio_coste:1076.9231,margen_pct:30,categoria:"Rehab. Cocina",familia:"Electricidad",marca:"",notas:"Partida modelo · Reforma cocina completa"},
+    {codigo:"COC-08-01",descripcion:"Mobiliario de cocina — casco 19 mm, frentes PET a elegir en gama presupuestada",unidad:"pa",precio_coste:6538.4615,margen_pct:30,categoria:"Rehab. Cocina",familia:"Mobiliario de cocina",marca:"",notas:"Partida modelo · Reforma cocina completa"},
+    {codigo:"COC-08-02",descripcion:"Bancada de porcelánico 12 mm — suministro y colocación",unidad:"ml",precio_coste:323.0769,margen_pct:30,categoria:"Rehab. Cocina",familia:"Mobiliario de cocina",marca:"",notas:"Partida modelo · Reforma cocina completa"},
+    {codigo:"COC-08-03",descripcion:"Fregadero bajo encimera con hueco pulido — incluye grifo monomando",unidad:"ud",precio_coste:523.0769,margen_pct:30,categoria:"Rehab. Cocina",familia:"Mobiliario de cocina",marca:"",notas:"Partida modelo · Reforma cocina completa"},
+    {codigo:"COC-09-01",descripcion:"Horno multifunción Balay gama media/alta — instalación incluida",unidad:"ud",precio_coste:523.0769,margen_pct:30,categoria:"Rehab. Cocina",familia:"Electrodomésticos",marca:"",notas:"Partida modelo · Reforma cocina completa"},
+    {codigo:"COC-09-02",descripcion:"Vitrocerámica de inducción Balay 4 zonas 60 cm — conexionado incluido",unidad:"ud",precio_coste:400.0,margen_pct:30,categoria:"Rehab. Cocina",familia:"Electrodomésticos",marca:"",notas:"Partida modelo · Reforma cocina completa"},
+    {codigo:"COC-09-03",descripcion:"Campana extractora Balay 60 cm — conexionado incluido",unidad:"ud",precio_coste:292.3077,margen_pct:30,categoria:"Rehab. Cocina",familia:"Electrodomésticos",marca:"",notas:"Partida modelo · Reforma cocina completa"},
+    {codigo:"COC-09-04",descripcion:"Lavavajillas integrable Balay 60 cm, 14 servicios — instalación incluida",unidad:"ud",precio_coste:446.1538,margen_pct:30,categoria:"Rehab. Cocina",familia:"Electrodomésticos",marca:"",notas:"Partida modelo · Reforma cocina completa"},
+    {codigo:"COC-09-05",descripcion:"Frigorífico combi Balay NoFrost gama media/alta — instalación incluida",unidad:"ud",precio_coste:753.8462,margen_pct:30,categoria:"Rehab. Cocina",familia:"Electrodomésticos",marca:"",notas:"Partida modelo · Reforma cocina completa"},
+    {codigo:"COC-10-01",descripcion:"Sistema de ósmosis inversa bajo fregadero 5 etapas — instalación incluida",unidad:"ud",precio_coste:369.2308,margen_pct:30,categoria:"Rehab. Cocina",familia:"Ósmosis y grifo filtrado",marca:"",notas:"Partida modelo · Reforma cocina completa"},
+    {codigo:"COC-10-02",descripcion:"Grifo monomando 3 vías con salida independiente para agua filtrada",unidad:"ud",precio_coste:215.3846,margen_pct:30,categoria:"Rehab. Cocina",familia:"Ósmosis y grifo filtrado",marca:"",notas:"Partida modelo · Reforma cocina completa"},
+    {codigo:"COC-11-01",descripcion:"Iluminación LED cálida 3000 K interior muebles altos con sensor de apertura",unidad:"ud",precio_coste:246.1538,margen_pct:30,categoria:"Rehab. Cocina",familia:"Accesorios de mobiliario",marca:"",notas:"Partida modelo · Reforma cocina completa"},
+    {codigo:"COC-11-02",descripcion:"Carro especiero extraíble con guías soft-close — capacidad 20 botes",unidad:"ud",precio_coste:138.4615,margen_pct:30,categoria:"Rehab. Cocina",familia:"Accesorios de mobiliario",marca:"",notas:"Partida modelo · Reforma cocina completa"},
+    {codigo:"COC-11-03",descripcion:"Carro esquinero con 4 bandejas extraíbles giratorias (magic-corner)",unidad:"ud",precio_coste:323.0769,margen_pct:30,categoria:"Rehab. Cocina",familia:"Accesorios de mobiliario",marca:"",notas:"Partida modelo · Reforma cocina completa"},
+    {codigo:"COC-12-01",descripcion:"Limpieza final, medios auxiliares y coordinación de obra",unidad:"pa",precio_coste:461.5385,margen_pct:30,categoria:"Rehab. Cocina",familia:"Gestión y limpieza",marca:"",notas:"Partida modelo · Reforma cocina completa"},
   ];
   (async()=>{
     let ok=0, err=0;
