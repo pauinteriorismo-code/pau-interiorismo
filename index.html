@@ -9204,7 +9204,7 @@ async function exportarPresupuestoPDF(){
 
   // ── PDF setup ──
   const pdf = new jsPDF('p','mm','a4');
-  const pW=210, pH=297, mL=14, mR=14, mT=14, mB=20;
+  const pW=210, pH=297, mL=14, mR=14, mT=14, mB=25;
   const cW = pW-mL-mR;   // content width = 182mm
 
   // column X positions and widths (mm) — Cód · Descripción · Ud · Med · P.Unit · Total
@@ -9282,8 +9282,8 @@ async function exportarPresupuestoPDF(){
   // ── Helper: draw column headers ──
   function drawColHeaders(){
     pdf.setFillColor(247,244,239);
-    pdf.rect(mL, y, cW, 7, 'F');
-    pdf.setFontSize(8); pdf.setFont(undefined,'bold'); pdf.setTextColor(74,55,40);
+    pdf.rect(mL, y, cW, 8, 'F');
+    pdf.setFontSize(8.5); pdf.setFont(undefined,'bold'); pdf.setTextColor(74,55,40);
     pdf.setDrawColor(232,224,212); pdf.setLineWidth(0.3);
     pdf.line(mL, y+7, mL+cW, y+7);
     const labels = ['Cód.','Descripción','Ud.','Med.','P.Unit.','Total'];
@@ -9331,8 +9331,8 @@ async function exportarPresupuestoPDF(){
   let rowBg = false;
   lineas.sort((a,b)=>(a.orden||0)-(b.orden||0)).forEach(l=>{
     if(l.es_capitulo){
-      // Chapter header — needs ~8mm, keep with next row
-      checkY(16);
+      // Chapter header — keep with next row (reserve ~22mm)
+      checkY(22);
       pdf.setFillColor(247,244,239);
       pdf.rect(mL, y, cW, 8, 'F');
       pdf.setDrawColor(184,115,51); pdf.setLineWidth(0.4);
@@ -9343,12 +9343,13 @@ async function exportarPresupuestoPDF(){
       rowBg = false;
       return;
     }
-    // Data row — estimate height first
+    // Data row — set font FIRST so splitTextToSize uses correct size
     const pv = l.precio_venta||0, ci = l.ci_gg_bi_pct||0;
     const subCI = ci>0?(l.cantidad||0)*pv*(1+ci/100):(l.cantidad||0)*pv;
+    pdf.setFontSize(8.5);
     const descLines = pdf.splitTextToSize(l.descripcion||'', cols[1].w-2);
-    const rowH = Math.max(descLines.length*4.2+3, 7);
-    checkY(rowH+1);
+    const rowH = Math.max(descLines.length*4.5+4, 8);  // extra padding per line
+    checkY(rowH+2);  // +2mm safety buffer
     // Alternating row background
     if(rowBg){ pdf.setFillColor(253,252,250); pdf.rect(mL,y,cW,rowH,'F'); }
     rowBg = !rowBg;
@@ -9373,7 +9374,7 @@ async function exportarPresupuestoPDF(){
     pdf.setFont(undefined,'bold'); pdf.setTextColor(30);
     pdf.text(fmtN(subCI), cols[5].x+cols[5].w-1, y+4.5, {align:'right'});
     pdf.setFont(undefined,'normal'); pdf.setTextColor(50);
-    y += rowH+1;
+    y += rowH+2;
   });
 
   // ── Totals block ──
