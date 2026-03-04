@@ -45,7 +45,7 @@ button,input,select,textarea{font-family:inherit}button{cursor:pointer}
 .topbar-title{font-size:14px;font-weight:700;color:var(--navy)}
 .topbar-bc{font-size:11px;color:var(--text-soft);margin-top:1px}
 .topbar-right{margin-left:auto;display:flex;align-items:center;gap:7px}
-.content{flex:1;overflow-y:auto;padding:18px 20px}.content.pres-mode{overflow:hidden;padding:0;display:flex;flex-direction:column}
+.content{flex:1;overflow-y:auto;padding:18px 20px}
 /* BUTTONS */
 .btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:var(--radius-sm);font-size:12px;font-weight:600;border:none;transition:all .15s;cursor:pointer}
 .btn-primary{background:var(--navy-mid);color:#fff}.btn-primary:hover{background:var(--navy)}
@@ -92,7 +92,7 @@ tbody td{padding:7px 10px;vertical-align:middle}
 .b-gray{background:var(--sand);color:var(--text-mid)}
 #pres-tbody tr[draggable]{cursor:default}#pres-tbody tr[draggable] td:first-child{cursor:grab}#pres-tbody tr.drag-over{outline:2px dashed var(--copper);outline-offset:-2px;background:var(--copper-light)!important}
 /* VIEWS */
-.view{display:none}.view.active{display:block}#view-presupuesto.active{display:flex;flex-direction:column}
+.view{display:none}.view.active{display:block}
 /* FORM */
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .fg-full{grid-column:1/-1}.fg-3{grid-column:span 1}
@@ -1064,9 +1064,8 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     <div class="view" id="view-presupuesto">
       <style>
         /* Layout 2 columnas presupuesto */
-        #view-presupuesto{flex:1;min-height:0;display:flex;flex-direction:column}
-        #view-presupuesto .pres-layout{flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden}
-        #view-presupuesto .pres-doc{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:12px;min-height:0}
+        #view-presupuesto .pres-layout{display:block}
+        #view-presupuesto .pres-doc{padding:14px 16px;display:flex;flex-direction:column;gap:12px}
         #view-presupuesto .pres-topbar{padding:10px 16px;background:var(--white);border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;gap:7px;align-items:center;flex-shrink:0}
         /* Panel fuentes */
         .pres-panel{background:var(--white);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
@@ -4758,18 +4757,10 @@ async function navTo(v){
   const target = document.getElementById('view-'+v);
   const content = document.querySelector('.content');
   // Views that need their own internal scroll (flex column, fixed height)
-  const ownScrollViews = ['presupuesto'];
   if(target){
     target.classList.add('active');
-    if(ownScrollViews.includes(v)){
-      target.style.display = '';  // let CSS flex handle it
-      target.style.height = '';
-      target.style.flexDirection = '';
-      if(content) content.classList.add('pres-mode');
-    } else {
-      target.style.display = 'block';
-      if(content) content.classList.remove('pres-mode');
-    }
+    target.style.display = 'block';
+    if(content) content.classList.remove('pres-mode');
   }
   // Update topbar
   const m=META[v]||{};
