@@ -14640,6 +14640,14 @@ const CAT_FABRICANTES = [
   { id:'electrodom', label:'Electrodomésticos',    icon:'🔌', desc:'Balay & Cata · Hornos · Placas' },
 ];
 const CAT_MODELOS = {
+  visek: [
+    { id:'visek-simply',   label:'Simply (Aligerado)', icon:'🔲' },
+    { id:'visek-ministry', label:'Ministry',           icon:'🔲' },
+    { id:'visek-soul',     label:'Soul',               icon:'🔲' },
+    { id:'visek-horizon',  label:'Horizon',            icon:'🔲' },
+    { id:'visek-ray',      label:'Ray',                icon:'🔲' },
+    { id:'visek-semi',     label:'Semicircular',       icon:'🔲' },
+  ],
   imex: [
     { id:'imex-bano',   label:'Baño',   icon:'🚿' },
     { id:'imex-cocina', label:'Cocina',  icon:'🍳' }
@@ -14665,7 +14673,7 @@ function ppCatShowFab(){
   const list = document.getElementById('pp-cat-fab-list');
   if(!list) return;
   list.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:6px';
-  const INLINE = ['imex','campoaras'];
+  const INLINE = ['imex','campoaras','visek'];
   list.innerHTML = CAT_FABRICANTES.map(function(f){
     var isInline = INLINE.indexOf(f.id) >= 0;
     var clickFn  = isInline ? "ppCatSelFabInline(&#39;"+f.id+"&#39;)" : "ppCatAbrirExterno(&#39;"+f.id+"&#39;)";
@@ -14741,7 +14749,21 @@ function ppCatSelMod(mod){
     const tipos = [...new Set(data.map(p=>p.tipo))].filter(Boolean).sort();
     sel.innerHTML += tipos.map(t=>'<option value="'+escH(t)+'">'+escH(t)+'</option>').join('');
   }
-  document.getElementById('pp-cat-q').value='';
+  if(mod.startsWith('visek')){
+    // For Visek: populate anchos based on model
+    const vkKey = mod.replace('visek-','');
+    const vkM = VK_MODELOS.find(m=>m.key.toLowerCase()===vkKey||m.key==='Simply'&&vkKey==='simply'||m.key==='Ministry'&&(vkKey==='ministry'||vkKey==='soul')||m.key===vkKey.charAt(0).toUpperCase()+vkKey.slice(1));
+    if(vkM){
+      const anchos = vkM.grupo==='semi'?[75,80,90,100]:(vkM.anchos||[70,80,90,100]);
+      sel.innerHTML = '<option value="">Todos los anchos</option>'+anchos.map(a=>'<option value="'+a+'">'+a+' cm</option>').join('');
+    }
+  }
+  const qEl = document.getElementById('pp-cat-q');
+  if(qEl){
+    qEl.value='';
+    qEl.placeholder = mod.startsWith('visek') ? 'Filtrar por ancho (cm)…' : mod.startsWith('imex') ? 'Buscar producto…' : 'Buscar tipo de mueble…';
+    qEl.style.display = mod.startsWith('visek') ? 'none' : '';
+  }
   ppSearchCat();
 }
 
@@ -14767,6 +14789,88 @@ function ppSearchCat(){
           +'<span class="pp-item-price">'+coste.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€</span>'
         +'</div></div>';
     }).join('');
+  } else if(ppCatMod && ppCatMod.startsWith('visek')) {
+    // ── Visek inline en panel ──────────────────────────────
+    const vkKey   = ppCatMod.replace('visek-','');
+    const keyMap  = {simply:'Simply',ministry:'Ministry',soul:'Soul',horizon:'Horizon',ray:'Ray',semi:'Semicircular'};
+    const realKey = keyMap[vkKey]||'Simply';
+    const vkM     = VK_MODELOS.find(m=>m.key===realKey);
+    if(!vkM){ res.innerHTML='<div class="pp-empty">Modelo no encontrado</div>'; return; }
+    const isSemi  = vkM.grupo==='semi';
+    const anchos  = isSemi ? [75,80,90,100] : (vkM.anchos||[70,80,90,100]);
+    const anchoFil= parseInt(document.getElementById('pp-cat-serie')?.value)||0;
+    const anchosList = anchoFil ? [anchoFil] : anchos;
+    let html = '';
+    anchosList.forEach(ancho=>{
+      const largos = isSemi ? [ancho] : Object.keys((vkM.precios&&vkM.precios[ancho])||{}).map(Number).sort((a,b)=>a-b);
+      if(!largos.length) return;
+      largos.forEach(largo=>{
+        const pvp = vkGetPrecio(vkM, ancho, isSemi?ancho:largo, false);
+        if(pvp===null) return;
+        const coste = pvp * 0.60;
+        const dimLabel = isSemi ? ancho+'×'+ancho+' cm' : largo+'×'+ancho+' cm';
+        const uid = 'ppvk_'+ancho+'_'+largo;
+        html += '<div class="pp-item" style="cursor:default">'
+          +'<div class="pp-item-top"><span class="pp-badge" style="background:#1a3a5c;color:#fff">Visek</span>'
+          +'<span class="pp-item-desc">'+realKey+(vkM.sub?' '+vkM.sub:'')+' '+dimLabel+'</span></div>'
+          +'<div style="display:flex;align-items:center;gap:6px;margin:6px 0">'
+            +'<span style="font-size:10px;font-weight:600;color:var(--text-soft)">Color:</span>'
+            +'<select id="'+uid+'_col" style="font-size:11px;padding:2px 5px;border:1px solid var(--border);border-radius:4px;flex:1">'
+            +VK_COLORES.map(c=>'<option>'+c+'</option>').join('')
+            +'</select>'
+          +'</div>'
+          +'<div style="display:flex;justify-content:space-between;align-items:center">'
+            +'<span style="font-size:13px;font-weight:700;color:var(--navy)">'+coste.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€</span>'
+            +'<button onclick="ppUseVisek(''+realKey+'','+ancho+','+(isSemi?ancho:largo)+',''+uid+'_col')" '
+            +'style="background:var(--navy);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;font-weight:600">+ Añadir</button>'
+          +'</div>'
+        +'</div>';
+      });
+    });
+    if(!html) html='<div class="pp-empty">Sin dimensiones disponibles</div>';
+    res.innerHTML = html;
+
+  } else if(ppCatMod && ppCatMod.startsWith('visek')) {
+    // ── Visek inline en panel ──────────────────────────────
+    const vkKey   = ppCatMod.replace('visek-','');
+    const keyMap  = {simply:'Simply',ministry:'Ministry',soul:'Soul',horizon:'Horizon',ray:'Ray',semi:'Semicircular'};
+    const realKey = keyMap[vkKey]||'Simply';
+    const vkM     = VK_MODELOS.find(m=>m.key===realKey);
+    if(!vkM){ res.innerHTML='<div class="pp-empty">Modelo no encontrado</div>'; return; }
+    const isSemi  = vkM.grupo==='semi';
+    const anchos  = isSemi ? [75,80,90,100] : (vkM.anchos||[70,80,90,100]);
+    const anchoFil= parseInt(document.getElementById('pp-cat-serie')?.value)||0;
+    const anchosList = anchoFil ? [anchoFil] : anchos;
+    let html = '';
+    anchosList.forEach(ancho=>{
+      const largos = isSemi ? [ancho] : Object.keys((vkM.precios&&vkM.precios[ancho])||{}).map(Number).sort((a,b)=>a-b);
+      if(!largos.length) return;
+      largos.forEach(largo=>{
+        const pvp = vkGetPrecio(vkM, ancho, isSemi?ancho:largo, false);
+        if(pvp===null) return;
+        const coste = pvp * 0.60;
+        const dimLabel = isSemi ? ancho+'×'+ancho+' cm' : largo+'×'+ancho+' cm';
+        const uid = 'ppvk_'+ancho+'_'+largo;
+        html += '<div class="pp-item" style="cursor:default">'
+          +'<div class="pp-item-top"><span class="pp-badge" style="background:#1a3a5c;color:#fff">Visek</span>'
+          +'<span class="pp-item-desc">'+realKey+(vkM.sub?' '+vkM.sub:'')+' '+dimLabel+'</span></div>'
+          +'<div style="display:flex;align-items:center;gap:6px;margin:6px 0">'
+            +'<span style="font-size:10px;font-weight:600;color:var(--text-soft)">Color:</span>'
+            +'<select id="'+uid+'_col" style="font-size:11px;padding:2px 5px;border:1px solid var(--border);border-radius:4px;flex:1">'
+            +VK_COLORES.map(c=>'<option>'+c+'</option>').join('')
+            +'</select>'
+          +'</div>'
+          +'<div style="display:flex;justify-content:space-between;align-items:center">'
+            +'<span style="font-size:13px;font-weight:700;color:var(--navy)">'+coste.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€</span>'
+            +'<button onclick="ppUseVisek(''+realKey+'','+ancho+','+(isSemi?ancho:largo)+',''+uid+'_col')" '
+            +'style="background:var(--navy);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;font-weight:600">+ Añadir</button>'
+          +'</div>'
+        +'</div>';
+      });
+    });
+    if(!html) html='<div class="pp-empty">Sin dimensiones disponibles</div>';
+    res.innerHTML = html;
+
   } else {
     const data     = ppCatMod==='camp-aqua' ? CAMP_AQUA : CAMP_DROP;
     const acabados = ppCatMod==='camp-aqua' ? CAMP_ACABADOS_AQUA : CAMP_ACABADOS_DROP;
@@ -14842,6 +14946,33 @@ function ppUseCamp(key, prod){
     document.getElementById('pl-cype-search').dataset.cypeRef = ref;
     calcLineaPres();
     toast('Mueble Campoaras añadido','ok');
+  }, 50);
+}
+
+function ppUseVisek(modelKey, ancho, largo, colorElId){
+  const proy = document.getElementById('pres-proyecto-sel')?.value;
+  if(!proy){ toast('Selecciona un proyecto primero','error'); return; }
+  const vkM = VK_MODELOS.find(m=>m.key===modelKey);
+  if(!vkM){ toast('Modelo Visek no encontrado','error'); return; }
+  const isSemi = vkM.grupo==='semi';
+  const color = document.getElementById(colorElId)?.value || 'Blanco';
+  const pvp = vkGetPrecio(vkM, ancho, isSemi?ancho:largo, false);
+  if(pvp===null){ toast('Medida no disponible','error'); return; }
+  const coste = pvp * 0.60;
+  const dimLabel = isSemi ? ancho+'×'+ancho : largo+'×'+ancho;
+  const desc = 'Plato ducha Visek '+modelKey+(vkM.sub?' '+vkM.sub:'')+' '+dimLabel+' cm · '+color;
+  const ref  = 'VISEK-'+modelKey.toUpperCase()+'-'+largo+'x'+ancho;
+  addLineaPresupuesto();
+  setTimeout(()=>{
+    document.getElementById('pl-desc').value   = desc;
+    document.getElementById('pl-precio').value = coste.toFixed(4);
+    document.getElementById('pl-margen').value = '0';
+    document.getElementById('pl-ud').value     = 'Ud';
+    if(!ciActivo){ document.getElementById('pl-ci').value='0'; }
+    document.getElementById('pl-cype-search').value = ref+' · '+desc;
+    document.getElementById('pl-cype-search').dataset.cypeRef = ref;
+    calcLineaPres();
+    toast('Plato Visek '+modelKey+' '+dimLabel+' añadido ✅','success');
   }, 50);
 }
 
@@ -14939,52 +15070,7 @@ let catActual = null;
 
 function catAbrir(fab){
   catActual = fab;
-  document.getElementById('cat-selector').style.display = 'none';
-  document.querySelectorAll('.cat-panel').forEach(p => p.classList.remove('open'));
-  document.querySelectorAll('.cat-card[data-cat]').forEach(c => c.classList.remove('active'));
-  const card = document.querySelector('.cat-card[data-cat="'+fab+'"]');
-  if(card) card.classList.add('active');
-
-  if(fab === 'fregaderos'){
-    document.getElementById('cat-imex-title').innerHTML = "🚿 Plados · D'Aqua · Fregaderos & Grifería";
-    document.getElementById('cat-imex-desc').textContent = 'Fregaderos Plados · Grifería Bradano/Tecnika · PVP directo · Dto 60%';
-    document.getElementById('cat-panel-imex').classList.add('open');
-    ixFillSeries();
-    ixSetTab('fregaderos');
-  } else if(fab === 'campoaras'){
-    // Campoaras: usa el mismo panel IMEX pero con tab campoaras
-    document.getElementById('cat-imex-title').innerHTML = '🛁 Campoaras — Muebles de Baño';
-    document.getElementById('cat-imex-desc').textContent = 'Tarifa +5% · Dto 40% · Series AQUA & DROP · Tapas';
-    document.getElementById('cat-panel-imex').classList.add('open');
-    ixFillSeries();
-    ixSetTab('campoaras');
-  } else if(fab === 'lavabos'){
-    // Lavabos: usa el panel IMEX con tab lavabos
-    document.getElementById('cat-panel-imex').classList.add('open');
-    ixFillSeries();
-    ixSetTab('lavabos');
-  } else if(fab === 'imex'){
-    document.getElementById('cat-imex-title').innerHTML = '🚿 IMEX — Griferías';
-    document.getElementById('cat-imex-desc').textContent = 'Tarifa +3% · Dto 40% · Margen ajustable';
-    document.getElementById('cat-panel-imex').classList.add('open');
-    ixFillSeries();
-    ixSetTab('bano');
-  } else if(fab === 'roca'){
-    document.getElementById('cat-imex-title').innerHTML = '🔵 Roca — Sanitarios';
-    document.getElementById('cat-imex-desc').textContent = 'Serie ONA · Inodoros · Bidets · Sistemas · Placas · Dto 40%';
-    document.getElementById('cat-panel-imex').classList.add('open');
-    ixFillSeries(); ixSetTab('roca');
-  } else if(fab === 'mamparas'){
-    document.getElementById('cat-imex-title').innerHTML = '🚿 Mámparas';
-    document.getElementById('cat-imex-desc').textContent = 'Venecia · Riaza · PVP directo · Dto 40%';
-    document.getElementById('cat-panel-imex').classList.add('open');
-    ixFillSeries(); ixSetTab('mamparas');
-  } else if(fab === 'genexia'){
-    document.getElementById('cat-imex-title').innerHTML = '🪞 Genexia — Espejos';
-    document.getElementById('cat-imex-desc').textContent = 'Espejos LED · PVP directo · Dto 40%';
-    document.getElementById('cat-panel-imex').classList.add('open');
-    ixFillSeries(); ixSetTab('genexia');
-  } else if(fab === 'saitra'){
+  document.getElementById('cat-sefab === 'saitra'){
     document.getElementById('cat-panel-saitra').classList.add('open');
     if(typeof initSaitraLinea === 'function') initSaitraLinea();
   } else if(fab === 'electrodom'){
