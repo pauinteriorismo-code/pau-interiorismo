@@ -10274,6 +10274,17 @@ function addFacLinea(){
   },30);
 }
 
+
+function _fmtDocId(v){
+  if(!v) return '';
+  if(v.indexOf(':')>=0) return v; // already labelled
+  const s=v.trim().toUpperCase();
+  let lbl='NIF';
+  if(/^[A-Z]\d{7}[A-Z0-9]$/.test(s)) lbl='CIF';
+  else if(/^\d{8}[A-Z]$/.test(s)) lbl='DNI';
+  else if(/^[XYZ]\d{7}[A-Z]$/.test(s)) lbl='NIE';
+  return lbl+': '+v;
+}
 function _buildFacturaPDF(){
   const esC = document.getElementById('f-tipo').value==='Compra';
   const num  = document.getElementById('f-num').value||'BORRADOR';
@@ -10316,7 +10327,7 @@ function _buildFacturaPDF(){
       +'</tr>';
     }).join('');
   } else {
-    filasLineas='<tr><td colspan="6" style="padding:14px;text-align:center;color:#888">'+(concepto||'Sin líneas detalladas')+'</td></tr>';
+    filasLineas=concepto?'<tr><td colspan="6" style="padding:14px;text-align:center;color:#555">'+escH(concepto)+'</td></tr>':'';
   }
 
   const ivaImporte=base*ivaN/100;
@@ -10388,7 +10399,7 @@ function previsualizarFactura(){
     +'</div>'
     +'<div class="iband">'
       +'<div class="icell"><div class="ilbl">'+(d.esC?'Proveedor':'Cliente')+'</div><div class="ival">'+escH(d.contra)+'</div>'
-        +(d.contraCIF?'<div class="isub">'+escH(d.contraCIF)+'</div>':'')
+        +(d.contraCIF?'<div class="isub">'+escH(_fmtDocId(d.contraCIF))+'</div>':'')
         +(d.contraDir?'<div class="isub">'+escH(d.contraDir)+'</div>':'')
         +(d.contraTel?'<div class="isub">Tel: '+escH(d.contraTel)+'</div>':'')
         +(d.contraEmail?'<div class="isub">'+escH(d.contraEmail)+'</div>':'')
@@ -11187,7 +11198,7 @@ async function enviarFacturaEmail(id){
         <div style="padding:14px 16px;border-right:1px solid #e8e0d4">
           <div style="font-size:9px;text-transform:uppercase;font-weight:700;color:#b87333;margin-bottom:4px">${d.esC?"Proveedor":"Cliente"}</div>
           <div style="font-size:13px;font-weight:700;color:#4a3728">${escH(d.contra)}</div>
-          ${d.contraCIF?`<div style="font-size:10px;color:#888">${escH(d.contraCIF)}</div>`:''}
+          ${d.contraCIF?`<div style="font-size:10px;color:#888">${escH(_fmtDocId(d.contraCIF))}</div>`:''}
           ${d.contraDir?`<div style="font-size:10px;color:#888">${escH(d.contraDir)}</div>`:''}
           ${d.contraTel?`<div style="font-size:10px;color:#888">Tel: ${escH(d.contraTel)}</div>`:''}
           ${d.contraEmail?`<div style="font-size:10px;color:#888">${escH(d.contraEmail)}</div>`:''}
@@ -11212,7 +11223,7 @@ async function enviarFacturaEmail(id){
             <th style="padding:8px;text-align:center;font-size:10px;color:#4a3728;border-bottom:1px solid #e8e0d4">IVA</th>
             <th style="padding:8px;text-align:right;font-size:10px;color:#4a3728;border-bottom:1px solid #e8e0d4">Subtotal</th>
           </tr></thead>
-          <tbody>${d.filasLineas||`<tr><td colspan="6" style="padding:12px;text-align:center;color:#888">${escH(f.concepto||'—')}</td></tr>`}</tbody>
+          <tbody>${d.filasLineas||(f.concepto?`<tr><td colspan="6" style="padding:12px;text-align:center;color:#555">${escH(f.concepto)}</td></tr>`:'')}</tbody>
         </table>
       </div>
       <div style="background:#f7f4ef;border-top:2px solid #b87333;padding:14px 16px">
