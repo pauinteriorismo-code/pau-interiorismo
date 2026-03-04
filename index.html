@@ -4930,7 +4930,7 @@ async function loadFamiliasTarifario(){
   }
 }
 
-async async function addFamiliaTarifario(){
+async function addFamiliaTarifario(){
   const cats = LISTAS.categorias_tarifario || [];
   if(!cats.length){ toast('Primero añade categorías en la lista de arriba','error'); return; }
   
@@ -4952,7 +4952,7 @@ async async function addFamiliaTarifario(){
   }catch(e){ toast('Error: '+e.message,'error'); }
 }
 
-async async function renameFamilia(cat, oldFam){
+async function renameFamilia(cat, oldFam){
   const newFam = prompt(`Renombrar "${oldFam}":`, oldFam);
   if(!newFam||!newFam.trim()||newFam.trim()===oldFam) return;
   try{
@@ -4974,7 +4974,7 @@ async async function renameFamilia(cat, oldFam){
   }catch(e){ toast('Error: '+e.message,'error'); }
 }
 
-async async function deleteFamilia(cat, fam){
+async function deleteFamilia(cat, fam){
   const count = TC.filter(t=>(t.categoria||'')===cat && (t.familia||'')===fam).length;
   const msg = count > 0 
     ? `¿Eliminar familia "${fam}"? Los ${count} artículos quedarán sin familia asignada.`
