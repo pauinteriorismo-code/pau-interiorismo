@@ -5482,12 +5482,15 @@ function poblarFiltrosProyecto(){
       +[...PC].sort((a,b)=>a.proyecto_id.localeCompare(b.proyecto_id,'es',{numeric:true})).map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
     if(cur)sel.value=cur;
   });
-  // Presupuesto: poblar su propio selector
+  // Presupuesto: poblar selector de proyectos respetando el cliente seleccionado
   const presSel=document.getElementById('pres-proyecto-sel');
   if(presSel){
     const cur=presSel.value;
+    const cliSel=document.getElementById('filter-cliente-presupuesto');
+    const cliId=cliSel?cliSel.value:'';
+    const proyFiltrados=cliId ? PC.filter(p=>p.cliente_id===cliId) : PC;
     presSel.innerHTML='<option value="">📁 Proyecto…</option>'
-      +[...PC].sort((a,b)=>a.proyecto_id.localeCompare(b.proyecto_id,'es',{numeric:true})).map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
+      +[...proyFiltrados].sort((a,b)=>a.proyecto_id.localeCompare(b.proyecto_id,'es',{numeric:true})).map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
     if(cur)presSel.value=cur;
   }
 }
