@@ -4360,7 +4360,7 @@ function abrirVistaPrevia(docId, titulo){
     <span class="toolbar-info">Usar "Imprimir &rarr; Destino: Guardar como PDF"</span>
   </div>
   <div class="wrap"><div class="doc" id="vp-doc">${doc.innerHTML}</div></div>
-  <script>
+  \u003cscript>
     document.addEventListener('DOMContentLoaded',function(){
       const hdr=document.querySelector('#vp-doc .doc-repeat-header');
       const docEl=document.getElementById('vp-doc');
@@ -9168,7 +9168,7 @@ async function exportarPDF(elementId, nombreArchivo){
   }
 }
 
-async async function exportarPresupuestoPDF(){
+async function exportarPresupuestoPDF(){
   const proy = document.getElementById('pres-proyecto-sel')?.value;
   const ver  = document.getElementById('pres-version-sel')?.value || 'v1';
   if(!proy){ toast('Selecciona un proyecto primero','error'); return; }
