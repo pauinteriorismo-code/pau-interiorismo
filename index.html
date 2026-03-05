@@ -4077,6 +4077,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div style="display:flex;justify-content:space-between;align-items:center;margin:12px 0 6px">
         <div style="font-size:12px;font-weight:700;color:var(--navy)">📝 Líneas de factura</div>
         <button type="button" class="btn btn-ghost btn-sm" onclick="addFacLinea()">＋ Añadir línea</button>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="addFacEntrega()" style="background:#fff8f0;color:#b87333;border-color:#e8c99a;font-size:11px" title="Añade una línea de descuento por entrega o anticipo ya cobrado">➖ Entrega a cuenta</button>
       </div>
       <div style="border:1px solid var(--border);border-radius:6px;overflow:hidden">
         <table style="width:100%;border-collapse:collapse;font-size:11px">
@@ -10102,7 +10103,7 @@ function renderFacLineas(){
       const prec=parseFloat(l.precio)||0;
       const sub=cant*prec;
       const cell=tbody.querySelector(`tr:nth-child(${i+1}) td:nth-child(6)`);
-      if(cell) cell.textContent=sub>0?Number(sub).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€':'0,00€';
+      if(cell) cell.textContent=sub!==0?Number(sub).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€':'0,00€';
     });
   } else {
     // Rerenderizar completo
@@ -10135,8 +10136,8 @@ function renderFacLineas(){
           +'<select class="form-input" style="font-size:11px;padding:3px 4px;width:64px"'
           +' onchange="_facLineas['+i+'].iva=this.value;renderFacLineas()">'+ivaOpts+'</select>'
         +'</td>'
-        +'<td style="padding:4px 6px;text-align:right;font-weight:700;font-size:12px;color:var(--navy);white-space:nowrap;min-width:80px">'
-          +(sub>0?Number(sub).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€':'0,00€')
+        +'<td style="padding:4px 6px;text-align:right;font-weight:700;font-size:12px;white-space:nowrap;min-width:80px;color:'+(sub<0?'var(--red)':'var(--navy)')+'">'
+          +(sub!==0?Number(sub).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€':'0,00€')
         +'</td>'
         +'<td style="padding:4px 2px;text-align:center">'
           +'<button type="button" onclick="eliminarFacLinea('+i+')"'
@@ -10156,6 +10157,21 @@ function recalcFacLineas(){ renderFacLineas(); }
 function addFacLinea(){
   _facLineas.push({desc:'',ud:'Ud',cantidad:1,precio:0,iva:'21%'});
   renderFacLineas();
+
+function addFacEntrega(){
+  const hoy = new Date().toLocaleDateString('es-ES');
+  _facLineas.push({
+    desc: 'Entrega a cuenta ' + hoy,
+    ud: 'Ud',
+    cantidad: -1,
+    precio: 0,
+    iva: '21%'
+  });
+  renderFacLineas();
+  // Scroll to the new line
+  const tbody = document.getElementById('f-lineas-tbody');
+  if(tbody) setTimeout(()=>{ const inputs=tbody.querySelectorAll('input'); if(inputs.length) inputs[inputs.length-4].focus(); }, 60);
+}
   setTimeout(()=>{
     const rows=document.querySelectorAll('#f-lineas-tbody tr');
     if(rows.length){ const last=rows[rows.length-1]; const inp=last.querySelector('input'); if(inp) inp.focus(); }
