@@ -1,0 +1,2045 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manual de Uso · PAU Interiorismo</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:        #1a2e4a;
+    --navy-mid:    #2d4a6e;
+    --navy-light:  #e8eef6;
+    --cream:       #faf8f4;
+    --warm-white:  #ffffff;
+    --gold:        #c8a96e;
+    --gold-light:  #f5edd8;
+    --sage:        #6b8f71;
+    --sage-light:  #e8f0e9;
+    --rose:        #c97b84;
+    --rose-light:  #faeaec;
+    --amber:       #d4874a;
+    --amber-light: #fdf0e6;
+    --slate:       #7a8a9e;
+    --border:      #e4e9f0;
+    --text:        #1a2e4a;
+    --text-mid:    #4a5568;
+    --text-soft:   #8a9ab0;
+    --shadow-sm:   0 2px 8px rgba(26,46,74,.08);
+    --shadow-md:   0 6px 24px rgba(26,46,74,.12);
+    --shadow-lg:   0 16px 48px rgba(26,46,74,.16);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--text);
+    line-height: 1.6;
+    font-size: 15px;
+  }
+
+  /* ── PORTADA ── */
+  .cover {
+    min-height: 100vh;
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 60%, #3d6b99 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    padding: 60px 40px;
+    text-align: center;
+  }
+
+  .cover::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 80%, rgba(200,169,110,.15) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 80% at 80% 20%, rgba(61,107,153,.3) 0%, transparent 60%);
+  }
+
+  .cover-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+
+  .cover-badge {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: 100px;
+    padding: 8px 20px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,.85);
+    margin-bottom: 32px;
+    backdrop-filter: blur(8px);
+  }
+
+  .cover-logo {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    background: rgba(255,255,255,.15);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    margin: 0 auto 32px;
+    border: 1px solid rgba(255,255,255,.2);
+    backdrop-filter: blur(12px);
+  }
+
+  .cover h1 {
+    position: relative;
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(36px, 5vw, 64px);
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.15;
+    margin-bottom: 16px;
+    letter-spacing: -.02em;
+  }
+
+  .cover h1 span {
+    color: var(--gold);
+  }
+
+  .cover-sub {
+    position: relative;
+    font-size: 18px;
+    color: rgba(255,255,255,.7);
+    font-weight: 300;
+    max-width: 560px;
+    margin-bottom: 48px;
+    line-height: 1.7;
+  }
+
+  .cover-chips {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+  }
+
+  .chip {
+    background: rgba(255,255,255,.1);
+    border: 1px solid rgba(255,255,255,.18);
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 13px;
+    color: rgba(255,255,255,.8);
+    font-weight: 500;
+    backdrop-filter: blur(6px);
+  }
+
+  .cover-scroll {
+    position: absolute;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    color: rgba(255,255,255,.4);
+    font-size: 11px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+  }
+
+  .scroll-line {
+    width: 1px;
+    height: 40px;
+    background: linear-gradient(to bottom, rgba(255,255,255,.4), transparent);
+  }
+
+  /* ── ÍNDICE ── */
+  .index-section {
+    background: var(--warm-white);
+    padding: 80px 40px;
+  }
+
+  .index-inner {
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  .section-eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .15em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 12px;
+  }
+
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(28px, 3vw, 42px);
+    font-weight: 600;
+    color: var(--navy);
+    margin-bottom: 48px;
+    line-height: 1.25;
+  }
+
+  .index-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+  }
+
+  .index-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 18px;
+    border-radius: 14px;
+    background: var(--cream);
+    border: 1px solid var(--border);
+    cursor: default;
+    transition: all .2s;
+  }
+
+  .index-item:hover {
+    border-color: var(--navy-mid);
+    box-shadow: var(--shadow-sm);
+    transform: translateY(-2px);
+  }
+
+  .index-num {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: var(--navy);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .index-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-mid);
+    line-height: 1.3;
+  }
+
+  /* ── MAIN CONTAINER ── */
+  .main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 40px 120px;
+  }
+
+  /* ── CHAPTER HEADER ── */
+  .chapter {
+    margin-top: 100px;
+  }
+
+  .chapter-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 24px;
+    margin-bottom: 48px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .chapter-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .chapter-meta {
+    flex: 1;
+  }
+
+  .chapter-number {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .15em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .chapter-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(22px, 2.5vw, 34px);
+    font-weight: 600;
+    color: var(--navy);
+    line-height: 1.2;
+    margin-bottom: 10px;
+  }
+
+  .chapter-desc {
+    font-size: 15px;
+    color: var(--text-soft);
+    font-weight: 300;
+    max-width: 600px;
+    line-height: 1.6;
+  }
+
+  /* ── COLORS per chapter ── */
+  .c-navy   { background: var(--navy-light);  }
+  .c-gold   { background: var(--gold-light);  }
+  .c-sage   { background: var(--sage-light);  }
+  .c-rose   { background: var(--rose-light);  }
+  .c-amber  { background: var(--amber-light); }
+
+  .t-navy   { color: var(--navy-mid); }
+  .t-gold   { color: var(--amber);    }
+  .t-sage   { color: var(--sage);     }
+  .t-rose   { color: var(--rose);     }
+  .t-amber  { color: var(--amber);    }
+
+  /* ── STEPS ── */
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .step {
+    display: grid;
+    grid-template-columns: 48px 1fr;
+    gap: 0 24px;
+    position: relative;
+  }
+
+  .step:not(:last-child) .step-line {
+    position: absolute;
+    left: 23px;
+    top: 52px;
+    width: 2px;
+    bottom: 0;
+    background: var(--border);
+  }
+
+  .step-dot {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .step-body {
+    padding-bottom: 40px;
+  }
+
+  .step-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--navy);
+    margin-bottom: 8px;
+    margin-top: 10px;
+  }
+
+  .step-text {
+    font-size: 14px;
+    color: var(--text-mid);
+    line-height: 1.7;
+    margin-bottom: 14px;
+  }
+
+  /* ── CARDS ── */
+  .card-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+    margin: 24px 0;
+  }
+
+  .info-card {
+    padding: 20px;
+    border-radius: 14px;
+    border: 1px solid transparent;
+  }
+
+  .info-card .card-icon {
+    font-size: 24px;
+    margin-bottom: 10px;
+  }
+
+  .info-card h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--navy);
+    margin-bottom: 6px;
+  }
+
+  .info-card p {
+    font-size: 13px;
+    color: var(--text-mid);
+    line-height: 1.5;
+  }
+
+  /* ── FIELD LIST ── */
+  .field-list {
+    background: var(--cream);
+    border-radius: 14px;
+    padding: 20px 24px;
+    margin: 16px 0;
+    border: 1px solid var(--border);
+  }
+
+  .field-list h4 {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--text-soft);
+    margin-bottom: 14px;
+  }
+
+  .field-list ul {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 8px;
+  }
+
+  .field-list li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-mid);
+  }
+
+  .field-list li::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 2px;
+    background: var(--gold);
+    flex-shrink: 0;
+  }
+
+  /* ── SCREENSHOT MOCKUP ── */
+  .mockup {
+    background: var(--warm-white);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+    margin: 24px 0;
+  }
+
+  .mockup-bar {
+    background: #f0f3f7;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .mockup-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
+  .mockup-url {
+    flex: 1;
+    background: #fff;
+    border-radius: 6px;
+    padding: 4px 12px;
+    font-size: 11px;
+    color: var(--text-soft);
+    margin: 0 12px;
+    border: 1px solid var(--border);
+  }
+
+  .mockup-body {
+    padding: 24px;
+  }
+
+  /* ── UI SIMULADO ── */
+  .ui-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .ui-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--navy);
+  }
+
+  .ui-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: default;
+  }
+
+  .ui-btn-primary {
+    background: var(--navy);
+    color: #fff;
+  }
+
+  .ui-btn-ghost {
+    background: #f0f3f7;
+    color: var(--navy);
+    border: 1px solid var(--border);
+  }
+
+  .ui-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .ui-form-full {
+    grid-column: 1 / -1;
+  }
+
+  .ui-field {
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--text-mid);
+  }
+
+  .ui-field-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-soft);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    margin-bottom: 4px;
+  }
+
+  .ui-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+
+  .ui-table th {
+    padding: 8px 12px;
+    text-align: left;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--text-soft);
+    background: var(--cream);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .ui-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-mid);
+  }
+
+  .ui-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .b-green  { background: #e6f6ee; color: #1a7a45; }
+  .b-amber  { background: #fef3e2; color: #b45309; }
+  .b-blue   { background: #e8eef8; color: var(--navy-mid); }
+  .b-gray   { background: #f0f3f7; color: var(--slate); }
+  .b-rose   { background: #faeaec; color: var(--rose); }
+
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .kpi {
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--cream);
+  }
+
+  .kpi-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--text-soft);
+    margin-bottom: 6px;
+  }
+
+  .kpi-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--navy);
+  }
+
+  /* ── TIP BOX ── */
+  .tip {
+    display: flex;
+    gap: 14px;
+    padding: 16px 20px;
+    border-radius: 12px;
+    margin: 16px 0;
+    border-left: 3px solid;
+  }
+
+  .tip-icon { font-size: 18px; flex-shrink: 0; }
+
+  .tip p {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-mid);
+  }
+
+  .tip p strong {
+    color: var(--navy);
+    font-weight: 600;
+  }
+
+  .tip-info    { background: var(--navy-light);  border-color: var(--navy-mid); }
+  .tip-success { background: var(--sage-light);  border-color: var(--sage); }
+  .tip-warning { background: var(--amber-light); border-color: var(--amber); }
+  .tip-star    { background: var(--gold-light);  border-color: var(--gold); }
+
+  /* ── FLOW DIAGRAM ── */
+  .flow {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin: 28px 0;
+    overflow-x: auto;
+    padding: 4px 0;
+  }
+
+  .flow-node {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    text-align: center;
+  }
+
+  .flow-bubble {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .flow-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-mid);
+    max-width: 70px;
+    line-height: 1.3;
+  }
+
+  .flow-arrow {
+    flex-shrink: 0;
+    font-size: 18px;
+    color: var(--text-soft);
+    padding: 0 8px;
+    margin-bottom: 24px;
+  }
+
+  /* ── DIVIDER ── */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 60px 0;
+  }
+
+  /* ── FOOTER ── */
+  .footer {
+    background: var(--navy);
+    color: rgba(255,255,255,.6);
+    padding: 48px 40px;
+    text-align: center;
+  }
+
+  .footer-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    color: #fff;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  .footer p {
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  /* ── SEPARADOR DE SECCIÓN ── */
+  .section-sep {
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 100%);
+    padding: 64px 40px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    margin: 0 -40px;
+  }
+
+  .section-sep::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  .section-sep h2 {
+    position: relative;
+    font-family: 'Playfair Display', serif;
+    font-size: 32px;
+    color: #fff;
+    margin-bottom: 10px;
+  }
+
+  .section-sep p {
+    position: relative;
+    color: rgba(255,255,255,.6);
+    font-size: 15px;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    .main { padding: 0 20px 80px; }
+    .chapter-header { flex-direction: column; gap: 16px; }
+    .ui-form { grid-template-columns: 1fr; }
+    .kpi-row { grid-template-columns: 1fr 1fr; }
+    .flow { flex-wrap: wrap; justify-content: center; }
+    .index-grid { grid-template-columns: 1fr 1fr; }
+    .section-sep { margin: 0 -20px; }
+  }
+
+  @media print {
+    .cover { min-height: auto; padding: 60px; break-after: page; }
+    .chapter { break-inside: avoid; }
+    .mockup { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<a href="ayuda.html" target="_self" style="position:fixed;top:20px;left:20px;z-index:100;background:rgba(255,255,255,.95);border:1px solid #e4e9f0;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:600;color:#1a2e4a;text-decoration:none;display:flex;align-items:center;gap:6px;backdrop-filter:blur(8px);box-shadow:0 2px 8px rgba(26,46,74,.08)">← Centro de Ayuda</a>
+
+<!-- ══════════════ PORTADA ══════════════ -->
+<div class="cover">
+  <div class="cover-grid"></div>
+
+  <div class="cover-badge">
+    <span>📘</span> Manual de Usuario · Versión 2025
+  </div>
+
+  <div class="cover-logo">🏗️</div>
+
+  <h1>
+    PAU <span>Interiorismo</span><br>
+    Gestión de Proyectos
+  </h1>
+
+  <p class="cover-sub">
+    Guía completa del flujo de trabajo — desde la captación del cliente hasta el cierre y cobro del proyecto, con control total de costes, certificaciones y rentabilidad.
+  </p>
+
+  <div class="cover-chips">
+    <div class="chip">👤 Clientes & Proyectos</div>
+    <div class="chip">📐 Presupuestos</div>
+    <div class="chip">🏗️ Certificaciones</div>
+    <div class="chip">🛒 Compras & Costes</div>
+    <div class="chip">📄 Facturas</div>
+    <div class="chip">🛋️ Interiorismo</div>
+    <div class="chip">📊 Gerencia</div>
+    <div class="chip">📁 Expediente</div>
+  </div>
+
+  <div class="cover-scroll">
+    <div class="scroll-line"></div>
+    <span>Comenzar</span>
+  </div>
+</div>
+
+<!-- ══════════════ ÍNDICE ══════════════ -->
+<div class="index-section">
+  <div class="index-inner">
+    <div class="section-eyebrow">Contenidos</div>
+    <h2 class="section-title">Índice del Manual</h2>
+
+    <div class="index-grid">
+      <div class="index-item">
+        <div class="index-num">01</div>
+        <div class="index-label">Alta de Clientes</div>
+      </div>
+      <div class="index-item">
+        <div class="index-num">02</div>
+        <div class="index-label">Crear Proyecto</div>
+      </div>
+      <div class="index-item">
+        <div class="index-num">03</div>
+        <div class="index-label">Presupuesto Constructor</div>
+      </div>
+      <div class="index-item">
+        <div class="index-num">04</div>
+        <div class="index-label">Certificaciones de Obra</div>
+      </div>
+      <div class="index-item">
+        <div class="index-num">05</div>
+        <div class="index-label">Compras</div>
+      </div>
+      <div class="index-item">
+        <div class="index-num">06</div>
+        <div class="index-label">Subcontratas</div>
+      </div>
+      <div class="index-item">
+        <div class="index-num">07</div>
+        <div class="index-label">Horas de Trabajo</div>
+      </div>
+      <div class="index-item">
+        <div class="index-num">08</div>
+        <div class="index-label">Facturas Emitidas</div>
+      </div>
+      <div class="index-item">
+        <div class="index-num">09</div>
+        <div class="index-label">Interiorismo & Catálogos</div>
+      </div>
+      <div class="index-item">
+        <div class="index-num">10</div>
+        <div class="index-label">Expediente de Obra</div>
+      </div>
+      <div class="index-item">
+        <div class="index-num">11</div>
+        <div class="index-label">Panel de Gerencia</div>
+      </div>
+      <div class="index-item">
+        <div class="index-num">12</div>
+        <div class="index-label">Agenda & Recordatorios</div>
+      </div>
+    </div>
+
+    <!-- FLUJO VISUAL -->
+    <div style="margin-top:56px;">
+      <div class="section-eyebrow">Flujo completo del proyecto</div>
+      <h3 style="font-family:'Playfair Display',serif;font-size:22px;color:var(--navy);margin-bottom:28px;">De la consulta al cobro</h3>
+      <div class="flow">
+        <div class="flow-node">
+          <div class="flow-bubble c-navy"><span>👤</span></div>
+          <div class="flow-label">Alta Cliente</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node">
+          <div class="flow-bubble c-gold"><span>📁</span></div>
+          <div class="flow-label">Nuevo Proyecto</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node">
+          <div class="flow-bubble c-sage"><span>📐</span></div>
+          <div class="flow-label">Presupuesto</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node">
+          <div class="flow-bubble c-amber"><span>✅</span></div>
+          <div class="flow-label">Aprobación</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node">
+          <div class="flow-bubble c-rose"><span>🏗️</span></div>
+          <div class="flow-label">Ejecución</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node">
+          <div class="flow-bubble" style="background:var(--sage-light)"><span>📋</span></div>
+          <div class="flow-label">Certificaciones</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node">
+          <div class="flow-bubble" style="background:var(--gold-light)"><span>💶</span></div>
+          <div class="flow-label">Facturación</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node">
+          <div class="flow-bubble" style="background:#e6f6ee"><span>🎯</span></div>
+          <div class="flow-label">Cobro & Cierre</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ CONTENIDO PRINCIPAL ══════════════ -->
+<div class="main">
+
+  <!-- ════════ CAP 01 · CLIENTES ════════ -->
+  <div class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-icon c-navy">👤</div>
+      <div class="chapter-meta">
+        <div class="chapter-number t-navy">Capítulo 01</div>
+        <h2 class="chapter-title">Alta de Clientes</h2>
+        <p class="chapter-desc">El primer paso siempre es registrar al cliente. Toda la información comercial, datos de contacto y proyectos quedan vinculados aquí.</p>
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-line"></div>
+        <div class="step-dot c-navy">➕</div>
+        <div class="step-body">
+          <div class="step-title">Navegar a "Clientes" y pulsar "+ Nuevo cliente"</div>
+          <p class="step-text">En el menú lateral izquierdo, selecciona el módulo <strong>Clientes</strong>. En la parte superior derecha aparece el botón azul <strong>+ Nuevo cliente</strong>.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-line"></div>
+        <div class="step-dot c-navy">📝</div>
+        <div class="step-body">
+          <div class="step-title">Rellenar la ficha del cliente</div>
+          <p class="step-text">Se abre un formulario con todos los datos necesarios para la relación comercial y fiscal.</p>
+
+          <div class="mockup">
+            <div class="mockup-bar">
+              <div class="mockup-dot" style="background:#ff5f57"></div>
+              <div class="mockup-dot" style="background:#febc2e"></div>
+              <div class="mockup-dot" style="background:#28c840"></div>
+              <div class="mockup-url">pau-interiorismo.vercel.app · Clientes</div>
+            </div>
+            <div class="mockup-body">
+              <div class="ui-header">
+                <div class="ui-title">👤 Nuevo cliente</div>
+                <div class="ui-btn ui-btn-primary">💾 Guardar</div>
+              </div>
+              <div class="ui-form">
+                <div>
+                  <div class="ui-field-label">Nombre completo / Empresa</div>
+                  <div class="ui-field">Miguel Zaragozá Garzón</div>
+                </div>
+                <div>
+                  <div class="ui-field-label">CIF / NIF / DNI</div>
+                  <div class="ui-field">48XXXXXXX</div>
+                </div>
+                <div>
+                  <div class="ui-field-label">Teléfono</div>
+                  <div class="ui-field">+34 666 XXX XXX</div>
+                </div>
+                <div>
+                  <div class="ui-field-label">Email</div>
+                  <div class="ui-field">cliente@email.com</div>
+                </div>
+                <div class="ui-form-full">
+                  <div class="ui-field-label">Dirección</div>
+                  <div class="ui-field">C/ Mayor, 12 · Alcàsser · Valencia</div>
+                </div>
+                <div>
+                  <div class="ui-field-label">Tipo</div>
+                  <div class="ui-field">Particular</div>
+                </div>
+                <div>
+                  <div class="ui-field-label">Forma de pago</div>
+                  <div class="ui-field">Transferencia bancaria</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="field-list">
+            <h4>Campos disponibles</h4>
+            <ul>
+              <li>Nombre completo o razón social</li>
+              <li>Tipo de identificación (CIF/NIF/DNI)</li>
+              <li>Número de CIF/NIF</li>
+              <li>Teléfono de contacto</li>
+              <li>Correo electrónico</li>
+              <li>Dirección completa</li>
+              <li>Tipo (Particular / Empresa)</li>
+              <li>Forma de pago preferida</li>
+              <li>Notas internas</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-dot c-navy">🆔</div>
+        <div class="step-body">
+          <div class="step-title">Referencia automática CLI-XXX</div>
+          <p class="step-text">Al guardar, el sistema asigna automáticamente un código único (<strong>CLI-001, CLI-002…</strong>) que servirá para vincular presupuestos, proyectos y facturas a este cliente.</p>
+
+          <div class="tip tip-success">
+            <div class="tip-icon">✅</div>
+            <p><strong>El cliente ya está en el sistema.</strong> Aparecerá en todos los desplegables de selección a lo largo de la aplicación: proyectos, presupuestos, facturas e interiorismo.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ════════ CAP 02 · PROYECTO ════════ -->
+  <div class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-icon c-gold">📁</div>
+      <div class="chapter-meta">
+        <div class="chapter-number t-gold">Capítulo 02</div>
+        <h2 class="chapter-title">Crear un Proyecto</h2>
+        <p class="chapter-desc">El proyecto es el eje central de toda la operativa. Todo — costes, facturas, presupuestos, fotos y certificaciones — queda ligado a un único expediente de obra.</p>
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-line"></div>
+        <div class="step-dot c-gold">📁</div>
+        <div class="step-body">
+          <div class="step-title">Ir a "Proyectos" → "+ Nuevo proyecto"</div>
+          <p class="step-text">Accede al módulo <strong>Proyectos</strong>. Puedes ver la lista en modo tabla o en <strong>Kanban</strong> por estados.</p>
+
+          <div class="mockup">
+            <div class="mockup-bar">
+              <div class="mockup-dot" style="background:#ff5f57"></div>
+              <div class="mockup-dot" style="background:#febc2e"></div>
+              <div class="mockup-dot" style="background:#28c840"></div>
+              <div class="mockup-url">pau-interiorismo.vercel.app · Proyectos</div>
+            </div>
+            <div class="mockup-body">
+              <div class="kpi-row">
+                <div class="kpi">
+                  <div class="kpi-label">Total proyectos</div>
+                  <div class="kpi-value">16</div>
+                </div>
+                <div class="kpi">
+                  <div class="kpi-label">En ejecución</div>
+                  <div class="kpi-value" style="color:var(--sage)">7</div>
+                </div>
+                <div class="kpi">
+                  <div class="kpi-label">Aprobados</div>
+                  <div class="kpi-value" style="color:var(--amber)">4</div>
+                </div>
+                <div class="kpi">
+                  <div class="kpi-label">Nuevos leads</div>
+                  <div class="kpi-value" style="color:var(--rose)">5</div>
+                </div>
+              </div>
+              <table class="ui-table">
+                <thead>
+                  <tr><th>ID</th><th>Nombre</th><th>Cliente</th><th>Tipo</th><th>Estado</th><th>Facturado</th><th>Margen</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style="color:var(--text-soft);font-size:11px">PRY-004</td>
+                    <td><strong>Rehabilitación estudio</strong></td>
+                    <td>Jose Antonio M.</td>
+                    <td><span class="badge b-gray">Reforma parcial</span></td>
+                    <td><span class="badge b-blue">En ejecución</span></td>
+                    <td>2.445€</td>
+                    <td style="color:var(--sage);font-weight:700">56,1%</td>
+                  </tr>
+                  <tr>
+                    <td style="color:var(--text-soft);font-size:11px">PRY-001</td>
+                    <td><strong>Mobiliario de cocina</strong></td>
+                    <td>Miguel Z. Garzón</td>
+                    <td><span class="badge b-gray">Cocina</span></td>
+                    <td><span class="badge b-green">En ejecución</span></td>
+                    <td>—</td>
+                    <td style="color:var(--text-soft)">—</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-line"></div>
+        <div class="step-dot c-gold">📋</div>
+        <div class="step-body">
+          <div class="step-title">Rellenar la ficha del proyecto</div>
+
+          <div class="field-list">
+            <h4>Datos del proyecto</h4>
+            <ul>
+              <li>Nombre del proyecto</li>
+              <li>Cliente asociado (CLI-XXX)</li>
+              <li>Tipo de obra</li>
+              <li>Estado (Nuevo lead / Aprobado…)</li>
+              <li>Responsable (Jose / Pau)</li>
+              <li>Fecha de inicio</li>
+              <li>Dirección de la obra</li>
+              <li>Notas internas</li>
+            </ul>
+          </div>
+
+          <div class="card-row">
+            <div class="info-card c-navy" style="border-color:var(--navy-light)">
+              <div class="card-icon">🏡</div>
+              <h4>Obra nueva</h4>
+              <p>Viviendas unifamiliares construidas desde cero.</p>
+            </div>
+            <div class="info-card c-gold" style="border-color:var(--gold-light)">
+              <div class="card-icon">🔨</div>
+              <h4>Rehabilitación integral</h4>
+              <p>Reforma completa de vivienda existente.</p>
+            </div>
+            <div class="info-card c-sage" style="border-color:var(--sage-light)">
+              <div class="card-icon">🛋️</div>
+              <h4>Interiorismo</h4>
+              <p>Diseño y venta de mobiliario y acabados.</p>
+            </div>
+            <div class="info-card c-rose" style="border-color:var(--rose-light)">
+              <div class="card-icon">🪛</div>
+              <h4>Reforma parcial</h4>
+              <p>Cocina, baño, fachada u otras estancias.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-dot c-gold">📊</div>
+        <div class="step-body">
+          <div class="step-title">El proyecto obtiene su referencia PRY-XXX</div>
+          <p class="step-text">A partir de aquí el proyecto actúa como <strong>expediente central</strong>. Desde el botón <em>📁 Exp.</em> de cada fila accedes a toda la información agrupada: presupuesto, compras, subcontratas, horas, facturas y galería de fotos.</p>
+
+          <div class="tip tip-star">
+            <div class="tip-icon">⭐</div>
+            <p><strong>Columnas de rentabilidad en tiempo real:</strong> La lista de proyectos calcula automáticamente el total facturado y el margen bruto de cada proyecto en función de las facturas emitidas y los costes registrados.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ════════ CAP 03 · PRESUPUESTO ════════ -->
+  <div class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-icon c-sage">📐</div>
+      <div class="chapter-meta">
+        <div class="chapter-number t-sage">Capítulo 03</div>
+        <h2 class="chapter-title">Constructor de Presupuestos</h2>
+        <p class="chapter-desc">El motor económico del proyecto. Construye presupuestos detallados con capítulos, partidas y precios desde tres fuentes: base de datos CYPE, Tarifario propio y catálogos de proveedores.</p>
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-line"></div>
+        <div class="step-dot c-sage">🔍</div>
+        <div class="step-body">
+          <div class="step-title">Seleccionar proyecto y versión</div>
+          <p class="step-text">En el módulo <strong>Presupuesto</strong>, elige el proyecto desde el desplegable. Puedes gestionar múltiples versiones del mismo presupuesto (v1, v2…) para comparar opciones o registrar revisiones.</p>
+
+          <div class="tip tip-info">
+            <div class="tip-icon">ℹ️</div>
+            <p><strong>Versiones de presupuesto:</strong> Puedes tener la v1 como presupuesto aprobado y la v2 como propuesta revisada. Las certificaciones siempre trabajan sobre la v1 por defecto.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-line"></div>
+        <div class="step-dot c-sage">📦</div>
+        <div class="step-body">
+          <div class="step-title">Tres fuentes de precios</div>
+
+          <div class="card-row">
+            <div class="info-card c-navy" style="border-color:var(--navy-light)">
+              <div class="card-icon">🗄️</div>
+              <h4>CYPE 2026</h4>
+              <p>Base de datos oficial con más de 165 partidas de construcción. Búsqueda por texto en tiempo real.</p>
+            </div>
+            <div class="info-card c-gold" style="border-color:var(--gold-light)">
+              <div class="card-icon">📋</div>
+              <h4>Tarifario propio</h4>
+              <p>Catálogo PAU con tres niveles: Categoría → Subcategoría → Producto. Precios y márgenes propios.</p>
+            </div>
+            <div class="info-card c-sage" style="border-color:var(--sage-light)">
+              <div class="card-icon">🪑</div>
+              <h4>Catálogos</h4>
+              <p>Precios directos de Campoaras, Saitra, Daqua (PLADOS, TASCA, BRADANO, ARMANDO VICARIO).</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-line"></div>
+        <div class="step-dot c-sage">➕</div>
+        <div class="step-body">
+          <div class="step-title">Añadir capítulos y partidas</div>
+          <p class="step-text">El presupuesto se organiza en capítulos (Demolición, Estructura, Albañilería…). Dentro de cada capítulo se añaden líneas con descripción, unidad, cantidad y precio.</p>
+
+          <div class="mockup">
+            <div class="mockup-bar">
+              <div class="mockup-dot" style="background:#ff5f57"></div>
+              <div class="mockup-dot" style="background:#febc2e"></div>
+              <div class="mockup-dot" style="background:#28c840"></div>
+              <div class="mockup-url">pau-interiorismo.vercel.app · Presupuesto</div>
+            </div>
+            <div class="mockup-body">
+              <table class="ui-table">
+                <thead>
+                  <tr><th>#</th><th>Descripción</th><th>Ud.</th><th>Cant.</th><th>P.Venta</th><th>CI+GG+BI</th><th>Total</th></tr>
+                </thead>
+                <tbody>
+                  <tr style="background:var(--navy-light)">
+                    <td colspan="7" style="font-weight:700;color:var(--navy);font-size:12px">📦 01 · DEMOLICIÓN Y PREPARACIÓN</td>
+                  </tr>
+                  <tr>
+                    <td>01.01</td>
+                    <td>Demolición tabique ladrillo e=10cm</td>
+                    <td>m²</td><td>24,00</td><td>12,50€</td><td>13%</td>
+                    <td style="font-weight:700">338,70€</td>
+                  </tr>
+                  <tr>
+                    <td>01.02</td>
+                    <td>Retirada de escombros a vertedero</td>
+                    <td>t</td><td>3,50</td><td>45,00€</td><td>13%</td>
+                    <td style="font-weight:700">177,98€</td>
+                  </tr>
+                  <tr style="background:var(--navy-light)">
+                    <td colspan="7" style="font-weight:700;color:var(--navy);font-size:12px">📦 02 · ALBAÑILERÍA</td>
+                  </tr>
+                  <tr>
+                    <td>02.01</td>
+                    <td>Tabique de pladur 10+48+10</td>
+                    <td>m²</td><td>42,00</td><td>38,00€</td><td>13%</td>
+                    <td style="font-weight:700">1.802,76€</td>
+                  </tr>
+                </tbody>
+              </table>
+              <div style="display:flex;justify-content:flex-end;gap:24px;margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">
+                <div style="text-align:right">
+                  <div style="font-size:11px;color:var(--text-soft)">BASE IMPONIBLE</div>
+                  <div style="font-size:18px;font-weight:700;color:var(--navy)">24.380,00€</div>
+                </div>
+                <div style="text-align:right">
+                  <div style="font-size:11px;color:var(--text-soft)">IVA 10%</div>
+                  <div style="font-size:18px;font-weight:700;color:var(--amber)">2.438,00€</div>
+                </div>
+                <div style="text-align:right">
+                  <div style="font-size:11px;color:var(--text-soft)">TOTAL</div>
+                  <div style="font-size:20px;font-weight:800;color:var(--sage)">26.818,00€</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-line"></div>
+        <div class="step-dot c-sage">💰</div>
+        <div class="step-body">
+          <div class="step-title">Control de márgenes CI+GG+BI</div>
+          <p class="step-text">Cada línea permite aplicar el porcentaje de <strong>Costes Indirectos + Gastos Generales + Beneficio Industrial</strong> al precio base, calculando automáticamente el precio de venta final.</p>
+
+          <div class="field-list">
+            <h4>Parámetros de cada línea</h4>
+            <ul>
+              <li>Código de referencia</li>
+              <li>Descripción de la partida</li>
+              <li>Unidad de medida</li>
+              <li>Cantidad</li>
+              <li>Precio base (coste)</li>
+              <li>% CI+GG+BI (margen)</li>
+              <li>Precio venta (calculado)</li>
+              <li>Total de línea</li>
+              <li>Tipo de IVA (10% / 21%)</li>
+              <li>Capítulo / partida</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-dot c-sage">📄</div>
+        <div class="step-body">
+          <div class="step-title">Exportar PDF del presupuesto</div>
+          <p class="step-text">Con el botón <strong>⬇️ PDF</strong> se genera un documento A4 profesional con la cabecera de PAU Interiorismo, datos del cliente, todas las partidas organizadas por capítulos, y el resumen de totales e IVA. El nombre del archivo se genera automáticamente: <em>PRY-004-v1.pdf</em>.</p>
+
+          <div class="tip tip-success">
+            <div class="tip-icon">📤</div>
+            <p><strong>El PDF se imprime directamente desde el navegador</strong> con calidad profesional. Los encabezados se repiten en todas las páginas.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ════════ CAP 04 · CERTIFICACIONES ════════ -->
+  <div class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-icon" style="background:var(--sage-light);">📋</div>
+      <div class="chapter-meta">
+        <div class="chapter-number" style="color:var(--sage)">Capítulo 04</div>
+        <h2 class="chapter-title">Certificaciones de Obra</h2>
+        <p class="chapter-desc">Control del avance de ejecución. Registra cada certificación de obra vinculada al presupuesto aprobado, con seguimiento de lo facturado y lo pendiente.</p>
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-line"></div>
+        <div class="step-dot" style="background:var(--sage-light);">🔍</div>
+        <div class="step-body">
+          <div class="step-title">Seleccionar cliente y proyecto</div>
+          <p class="step-text">En el módulo <strong>Certificaciones</strong>, filtra primero por cliente y después por proyecto. El sistema carga automáticamente el presupuesto base (v1) para calcular los porcentajes.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-line"></div>
+        <div class="step-dot" style="background:var(--sage-light);">➕</div>
+        <div class="step-body">
+          <div class="step-title">Nueva certificación</div>
+          <p class="step-text">Pulsa <strong>"＋ Nueva certificación"</strong>. El modal muestra el presupuesto aprobado, lo ya certificado y lo disponible para certificar.</p>
+
+          <div class="mockup">
+            <div class="mockup-bar">
+              <div class="mockup-dot" style="background:#ff5f57"></div>
+              <div class="mockup-dot" style="background:#febc2e"></div>
+              <div class="mockup-dot" style="background:#28c840"></div>
+              <div class="mockup-url">Certificaciones · PRY-004 · Rehabilitación estudio</div>
+            </div>
+            <div class="mockup-body">
+              <div style="background:var(--navy-light);border-radius:10px;padding:16px;display:flex;justify-content:space-between;margin-bottom:16px">
+                <div>
+                  <div style="font-size:10px;color:var(--text-soft);margin-bottom:4px">PRESUPUESTO APROBADO</div>
+                  <div style="font-size:22px;font-weight:800;color:var(--navy)">24.380,00€</div>
+                </div>
+                <div style="text-align:right">
+                  <div style="font-size:10px;color:var(--text-soft);margin-bottom:4px">YA CERTIFICADO</div>
+                  <div style="font-size:18px;font-weight:700;color:var(--amber)">7.314,00€</div>
+                </div>
+                <div style="text-align:right">
+                  <div style="font-size:10px;color:var(--text-soft);margin-bottom:4px">DISPONIBLE</div>
+                  <div style="font-size:18px;font-weight:700;color:var(--sage)">17.066,00€</div>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+                <div>
+                  <div class="ui-field-label">% de esta certificación</div>
+                  <div class="ui-field">30%</div>
+                </div>
+                <div>
+                  <div class="ui-field-label">Importe base calculado</div>
+                  <div class="ui-field" style="color:var(--navy);font-weight:700">7.314,00€</div>
+                </div>
+              </div>
+              <div style="background:#f8fafd;border-radius:8px;padding:12px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center">
+                <div><div style="font-size:10px;color:var(--text-soft)">BASE</div><div style="font-size:16px;font-weight:800;color:var(--navy)">7.314€</div></div>
+                <div><div style="font-size:10px;color:var(--text-soft)">IVA 10%</div><div style="font-size:16px;font-weight:800;color:var(--text-mid)">731,40€</div></div>
+                <div><div style="font-size:10px;color:var(--text-soft)">TOTAL</div><div style="font-size:16px;font-weight:800;color:var(--sage)">8.045,40€</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-dot" style="background:var(--sage-light);">📊</div>
+        <div class="step-body">
+          <div class="step-title">Panel KPI y barra de progreso</div>
+          <p class="step-text">El sistema muestra automáticamente el avance de certificación mediante una barra de progreso y 5 indicadores clave: presupuesto aprobado, total certificado, pendiente de certificar, % ejecutado y número de certificaciones.</p>
+
+          <div class="field-list">
+            <h4>Estados de certificación</h4>
+            <ul>
+              <li>Borrador</li>
+              <li>Emitida</li>
+              <li>Cobrada</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ════════ CAP 05 · COMPRAS ════════ -->
+  <div class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-icon c-amber">🛒</div>
+      <div class="chapter-meta">
+        <div class="chapter-number t-amber">Capítulo 05</div>
+        <h2 class="chapter-title">Registro de Compras</h2>
+        <p class="chapter-desc">Controla todos los materiales y suministros adquiridos para cada proyecto. Cada compra reduce el margen del expediente y queda vinculada al proveedor correspondiente.</p>
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-line"></div>
+        <div class="step-dot c-amber">➕</div>
+        <div class="step-body">
+          <div class="step-title">Registrar una compra</div>
+          <p class="step-text">En el módulo <strong>Compras</strong>, pulsa <strong>"＋ Nueva compra"</strong>. Puedes filtrar por proyecto para ver solo las compras de ese expediente.</p>
+
+          <div class="field-list">
+            <h4>Datos de la compra</h4>
+            <ul>
+              <li>Fecha de compra</li>
+              <li>Proyecto asociado</li>
+              <li>Proveedor</li>
+              <li>Concepto / descripción</li>
+              <li>Base imponible (€)</li>
+              <li>Tipo de IVA (10% / 21% / 4% / Exento)</li>
+              <li>Estado de pago</li>
+              <li>Fecha de vencimiento</li>
+              <li>Notas internas</li>
+              <li>PDF de la factura adjunto</li>
+            </ul>
+          </div>
+
+          <div class="tip tip-info">
+            <div class="tip-icon">📎</div>
+            <p><strong>Adjuntar factura PDF:</strong> Puedes arrastrar la factura del proveedor directamente sobre la zona de drop, o hacer clic para seleccionarla. Queda almacenada en la nube y se puede visualizar desde la lista.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-dot c-amber">📊</div>
+        <div class="step-body">
+          <div class="step-title">Control de pagos pendientes</div>
+          <p class="step-text">Cada compra tiene un estado de pago (<strong>Pagado / Parcial / Pendiente / Vencido</strong>) y fecha de vencimiento. En el panel de Gerencia se consolida el total de compras pendientes de pago.</p>
+
+          <div class="tip tip-warning">
+            <div class="tip-icon">⏰</div>
+            <p><strong>Estado "Vencido":</strong> Cuando superas la fecha de vencimiento sin marcar como pagada, la compra aparece destacada para recordarte atender el pago al proveedor.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ════════ CAP 06 · SUBCONTRATAS ════════ -->
+  <div class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-icon c-rose">👷</div>
+      <div class="chapter-meta">
+        <div class="chapter-number t-rose">Capítulo 06</div>
+        <h2 class="chapter-title">Subcontratas</h2>
+        <p class="chapter-desc">Registra los trabajos contratados a empresas o autónomos externos. Cada subcontrata reduce el margen del proyecto y queda vinculada al subcontratista correspondiente.</p>
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-line"></div>
+        <div class="step-dot c-rose">👷</div>
+        <div class="step-body">
+          <div class="step-title">Nueva subcontrata</div>
+          <p class="step-text">Accede al módulo <strong>Subcontratas</strong> y pulsa <strong>"＋ Nueva subcontrata"</strong>. Vincula el trabajo a un proyecto y a un subcontratista del directorio de proveedores.</p>
+
+          <div class="field-list">
+            <h4>Datos de la subcontrata</h4>
+            <ul>
+              <li>Fecha del trabajo</li>
+              <li>Proyecto asignado</li>
+              <li>Subcontratista (del directorio)</li>
+              <li>Descripción del trabajo</li>
+              <li>Importe base (€)</li>
+              <li>Tipo de IVA</li>
+              <li>Estado de pago</li>
+              <li>Fecha de vencimiento</li>
+              <li>Factura PDF del subcontratista</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-dot c-rose">📎</div>
+        <div class="step-body">
+          <div class="step-title">Guardar facturas recibidas</div>
+          <p class="step-text">Al igual que en compras, puedes adjuntar la factura que te emite el subcontratista en PDF. Esto facilita la revisión fiscal y la justificación de costes.</p>
+
+          <div class="tip tip-success">
+            <div class="tip-icon">✅</div>
+            <p><strong>Todo documentado:</strong> Los costes de subcontratas aparecen automáticamente en el análisis de rentabilidad del expediente de obra, diferenciados de los materiales.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ════════ CAP 07 · HORAS ════════ -->
+  <div class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-icon c-navy">⏱️</div>
+      <div class="chapter-meta">
+        <div class="chapter-number t-navy">Capítulo 07</div>
+        <h2 class="chapter-title">Control de Horas</h2>
+        <p class="chapter-desc">Registra las horas de trabajo del equipo propio en cada proyecto. Calcula el coste real de mano de obra propia para obtener el margen real del proyecto.</p>
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-line"></div>
+        <div class="step-dot c-navy">⏱️</div>
+        <div class="step-body">
+          <div class="step-title">Registrar horas trabajadas</div>
+          <p class="step-text">En el módulo <strong>Horas</strong>, pulsa <strong>"＋ Registrar horas"</strong>. El total se calcula automáticamente: <code>horas × €/hora = coste</code>.</p>
+
+          <div class="field-list">
+            <h4>Campos del registro</h4>
+            <ul>
+              <li>Fecha</li>
+              <li>Proyecto asignado</li>
+              <li>Trabajador</li>
+              <li>Nº de horas</li>
+              <li>Coste por hora (€)</li>
+              <li>Descripción del trabajo</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-dot c-navy">📅</div>
+        <div class="step-body">
+          <div class="step-title">Control Horario diario</div>
+          <p class="step-text">El módulo <strong>Control Horario</strong> permite ver las horas acumuladas por trabajador y día, controlar la jornada laboral y detectar ausencias o incidencias.</p>
+
+          <div class="tip tip-info">
+            <div class="tip-icon">👥</div>
+            <p><strong>Trabajadores registrados:</strong> Francisco Gascón Gil, Jose Asins Primo, Julio Alemany Fort, María Paz Primo Iborra, Raúl Gascón Gil, Salvador Aguado Simó.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ════════ CAP 08 · FACTURAS ════════ -->
+  <div class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-icon c-gold">💶</div>
+      <div class="chapter-meta">
+        <div class="chapter-number t-gold">Capítulo 08</div>
+        <h2 class="chapter-title">Facturas Emitidas y Recibidas</h2>
+        <p class="chapter-desc">Gestiona toda la facturación de la empresa. Facturas de venta al cliente, facturas de compra de proveedores, y el seguimiento de cobros y pagos.</p>
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-line"></div>
+        <div class="step-dot c-gold">📄</div>
+        <div class="step-body">
+          <div class="step-title">Crear una factura de venta</div>
+          <p class="step-text">En el módulo <strong>Facturas</strong>, pulsa <strong>"＋ Nueva factura"</strong>. Vincula la factura al proyecto correspondiente y al cliente.</p>
+
+          <div class="field-list">
+            <h4>Datos de la factura</h4>
+            <ul>
+              <li>Número de factura</li>
+              <li>Fecha de emisión</li>
+              <li>Cliente destinatario</li>
+              <li>Proyecto asociado</li>
+              <li>Tipo (Venta / Compra / Abono)</li>
+              <li>Base imponible (€)</li>
+              <li>Tipo de IVA</li>
+              <li>Estado (Cobrada / Pendiente / Vencida)</li>
+              <li>Forma de pago</li>
+              <li>Fecha de vencimiento</li>
+              <li>Conceptos detallados</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-line"></div>
+        <div class="step-dot c-gold">📊</div>
+        <div class="step-body">
+          <div class="step-title">Panel resumen de tesorería</div>
+          <p class="step-text">El módulo Facturas incluye un panel superior con los KPIs más importantes:</p>
+
+          <div class="mockup">
+            <div class="mockup-bar">
+              <div class="mockup-dot" style="background:#ff5f57"></div>
+              <div class="mockup-dot" style="background:#febc2e"></div>
+              <div class="mockup-dot" style="background:#28c840"></div>
+              <div class="mockup-url">pau-interiorismo.vercel.app · Facturas</div>
+            </div>
+            <div class="mockup-body">
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+                <div style="border:1px solid var(--border);border-top:3px solid var(--sage);border-radius:10px;padding:14px">
+                  <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--sage);margin-bottom:8px">📤 Facturas de Venta</div>
+                  <div style="font-size:12px;color:var(--text-mid);margin-bottom:4px">Total facturado</div>
+                  <div style="font-size:16px;font-weight:700">48.320,00€</div>
+                  <div style="font-size:12px;color:var(--text-mid);margin-top:4px">Cobrado</div>
+                  <div style="font-size:14px;font-weight:700;color:var(--sage)">32.180,00€</div>
+                </div>
+                <div style="border:1px solid var(--border);border-top:3px solid var(--rose);border-radius:10px;padding:14px">
+                  <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--rose);margin-bottom:8px">📥 Facturas de Compra</div>
+                  <div style="font-size:12px;color:var(--text-mid);margin-bottom:4px">Total recibido</div>
+                  <div style="font-size:16px;font-weight:700">18.640,00€</div>
+                  <div style="font-size:12px;color:var(--text-mid);margin-top:4px">Pagado</div>
+                  <div style="font-size:14px;font-weight:700;color:var(--rose)">12.400,00€</div>
+                </div>
+                <div style="border:1px solid var(--border);border-top:3px solid var(--navy-mid);border-radius:10px;padding:14px">
+                  <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--navy-mid);margin-bottom:8px">💹 IVA estimado</div>
+                  <div style="font-size:12px;color:var(--text-mid);margin-bottom:4px">IVA repercutido</div>
+                  <div style="font-size:16px;font-weight:700">4.832,00€</div>
+                  <div style="font-size:12px;color:var(--text-mid);margin-top:4px">IVA deducible</div>
+                  <div style="font-size:14px;font-weight:700;color:var(--navy-mid)">1.864,00€</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-dot c-gold">🖨️</div>
+        <div class="step-body">
+          <div class="step-title">Generar PDF de factura</div>
+          <p class="step-text">Desde el botón <strong>⬇️ PDF</strong> se genera el documento formal de la factura con todos los datos legales, cabecera de empresa y firma digital, listo para enviar al cliente.</p>
+
+          <div class="tip tip-star">
+            <div class="tip-icon">⭐</div>
+            <p><strong>Albaranes de entrega:</strong> El módulo <strong>Albaranes</strong> permite generar documentos de entrega vinculados a proyectos, como justificante de materiales o trabajos entregados al cliente.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ════════ CAP 09 · INTERIORISMO ════════ -->
+  <div class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-icon" style="background:#f3ecf8;">🛋️</div>
+      <div class="chapter-meta">
+        <div class="chapter-number" style="color:#8b5cf6;">Capítulo 09</div>
+        <h2 class="chapter-title">Interiorismo & Catálogos</h2>
+        <p class="chapter-desc">Gestión completa de proyectos de interiorismo. Elabora presupuestos de mobiliario desde los catálogos de Campoaras, Saitra y Daqua, con calculadora de precios integrada.</p>
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-line"></div>
+        <div class="step-dot" style="background:#f3ecf8;">🛋️</div>
+        <div class="step-body">
+          <div class="step-title">Presupuestador de interiorismo</div>
+          <p class="step-text">En el módulo <strong>Interiorismo</strong>, selecciona el proyecto y añade productos de los catálogos integrados directamente al presupuesto.</p>
+
+          <div class="card-row">
+            <div class="info-card" style="background:#f3ecf8;border:1px solid #e0d4f0;">
+              <div class="card-icon">🏭</div>
+              <h4>Campoaras</h4>
+              <p>Catálogo completo de cocinas con todas las líneas, acabados y accesorios.</p>
+            </div>
+            <div class="info-card" style="background:#f0f8f3;border:1px solid #d4e8da;">
+              <div class="card-icon">🪵</div>
+              <h4>Saitra Cocinas</h4>
+              <p>Mobiliario de cocina con configuración por módulos y precios actualizados.</p>
+            </div>
+            <div class="info-card c-navy" style="border-color:var(--navy-light)">
+              <div class="card-icon">🚿</div>
+              <h4>Daqua · Baños</h4>
+              <p>PLADOS, TASCA, BRADANO y ARMANDO VICARIO. Platos de ducha, grifería y sanitarios.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-dot" style="background:#f3ecf8;">📐</div>
+        <div class="step-body">
+          <div class="step-title">Calculadora de precios y márgenes</div>
+          <p class="step-text">Cada producto del catálogo permite configurar la cantidad, el descuento del proveedor y el margen de venta al cliente. La herramienta calcula en tiempo real el precio de coste, el precio de venta y el beneficio generado.</p>
+
+          <div class="tip tip-info">
+            <div class="tip-icon">💡</div>
+            <p><strong>Comparativa de ofertas:</strong> El módulo <strong>Comparativa</strong> permite comparar hasta 3 proveedores para un mismo trabajo, facilitando la decisión de compra más ventajosa.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ════════ CAP 10 · EXPEDIENTE ════════ -->
+  <div class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-icon c-gold">📁</div>
+      <div class="chapter-meta">
+        <div class="chapter-number t-gold">Capítulo 10</div>
+        <h2 class="chapter-title">Expediente de Obra</h2>
+        <p class="chapter-desc">La vista 360° de cualquier proyecto. Toda la información del expediente en un único lugar: presupuesto, costes, facturas, subcontratas, horas, fotos y análisis de rentabilidad.</p>
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-line"></div>
+        <div class="step-dot c-gold">📁</div>
+        <div class="step-body">
+          <div class="step-title">Acceder al expediente</div>
+          <p class="step-text">Desde la lista de proyectos, pulsa el botón <strong>📁 Exp.</strong> de cualquier fila para abrir el expediente completo de ese proyecto.</p>
+
+          <div class="mockup">
+            <div class="mockup-bar">
+              <div class="mockup-dot" style="background:#ff5f57"></div>
+              <div class="mockup-dot" style="background:#febc2e"></div>
+              <div class="mockup-dot" style="background:#28c840"></div>
+              <div class="mockup-url">Expediente · PRY-004 · Rehabilitación estudio</div>
+            </div>
+            <div class="mockup-body">
+              <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+                <div style="padding:6px 14px;background:var(--navy);color:#fff;border-radius:6px;font-size:12px;font-weight:600">📊 Resumen</div>
+                <div style="padding:6px 14px;background:var(--cream);border:1px solid var(--border);color:var(--text-mid);border-radius:6px;font-size:12px">📐 Presupuesto</div>
+                <div style="padding:6px 14px;background:var(--cream);border:1px solid var(--border);color:var(--text-mid);border-radius:6px;font-size:12px">🛒 Compras</div>
+                <div style="padding:6px 14px;background:var(--cream);border:1px solid var(--border);color:var(--text-mid);border-radius:6px;font-size:12px">👷 Subcontratas</div>
+                <div style="padding:6px 14px;background:var(--cream);border:1px solid var(--border);color:var(--text-mid);border-radius:6px;font-size:12px">⏱ Horas</div>
+                <div style="padding:6px 14px;background:var(--cream);border:1px solid var(--border);color:var(--text-mid);border-radius:6px;font-size:12px">💶 Facturas</div>
+                <div style="padding:6px 14px;background:var(--cream);border:1px solid var(--border);color:var(--text-mid);border-radius:6px;font-size:12px">🖼 Fotos</div>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+                <div style="background:var(--sage-light);border-radius:10px;padding:14px;text-align:center">
+                  <div style="font-size:10px;color:var(--sage);font-weight:700;text-transform:uppercase;margin-bottom:6px">Facturado</div>
+                  <div style="font-size:20px;font-weight:800;color:var(--navy)">2.445€</div>
+                </div>
+                <div style="background:var(--rose-light);border-radius:10px;padding:14px;text-align:center">
+                  <div style="font-size:10px;color:var(--rose);font-weight:700;text-transform:uppercase;margin-bottom:6px">Coste total</div>
+                  <div style="font-size:20px;font-weight:800;color:var(--navy)">1.071€</div>
+                </div>
+                <div style="background:var(--gold-light);border-radius:10px;padding:14px;text-align:center">
+                  <div style="font-size:10px;color:var(--amber);font-weight:700;text-transform:uppercase;margin-bottom:6px">Margen</div>
+                  <div style="font-size:20px;font-weight:800;color:var(--sage)">56,1%</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-line"></div>
+        <div class="step-dot c-gold">🖼️</div>
+        <div class="step-body">
+          <div class="step-title">Galería fotográfica del proyecto</div>
+          <p class="step-text">La pestaña <strong>Fotos</strong> del expediente permite subir imágenes del estado de la obra organizadas por fases (Antes, Durante ejecución, Terminación). Ideal para la documentación y seguimiento visual.</p>
+
+          <div class="field-list">
+            <h4>Fases de la galería</h4>
+            <ul>
+              <li>Estado inicial / Antes</li>
+              <li>Demolición</li>
+              <li>Estructura</li>
+              <li>Instalaciones</li>
+              <li>Acabados</li>
+              <li>Terminación / Entrega</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-dot c-gold">📑</div>
+        <div class="step-body">
+          <div class="step-title">Exportar expediente completo</div>
+          <p class="step-text">Desde el expediente puedes exportar en <strong>Excel</strong> toda la información del proyecto: presupuesto, compras, subcontratas, horas y facturas. También puedes generar un <strong>PDF informe de rentabilidad</strong> del proyecto.</p>
+
+          <div class="tip tip-star">
+            <div class="tip-icon">⭐</div>
+            <p><strong>Análisis de rentabilidad automático:</strong> El expediente calcula en tiempo real el margen bruto del proyecto: ingresos facturados menos compras, subcontratas y horas de mano de obra propia.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ════════ CAP 11 · GERENCIA ════════ -->
+  <div class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-icon" style="background:#e8f0e9;">📊</div>
+      <div class="chapter-meta">
+        <div class="chapter-number" style="color:var(--sage);">Capítulo 11</div>
+        <h2 class="chapter-title">Panel de Gerencia</h2>
+        <p class="chapter-desc">El cuadro de mando ejecutivo de la empresa. Visión global de todos los proyectos, rentabilidad acumulada, tesorería y alertas de gestión en tiempo real.</p>
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-line"></div>
+        <div class="step-dot" style="background:#e8f0e9;">📊</div>
+        <div class="step-body">
+          <div class="step-title">KPIs ejecutivos de empresa</div>
+
+          <div class="card-row">
+            <div class="info-card c-sage" style="border-color:var(--sage-light)">
+              <div class="card-icon">💶</div>
+              <h4>Facturación total</h4>
+              <p>Suma de todas las facturas de venta emitidas en el período seleccionado.</p>
+            </div>
+            <div class="info-card c-amber" style="border-color:var(--amber-light)">
+              <div class="card-icon">💸</div>
+              <h4>Costes totales</h4>
+              <p>Compras + Subcontratas + Mano de obra propia de todos los proyectos.</p>
+            </div>
+            <div class="info-card c-navy" style="border-color:var(--navy-light)">
+              <div class="card-icon">📈</div>
+              <h4>Margen de empresa</h4>
+              <p>Beneficio bruto consolidado y porcentaje de margen medio.</p>
+            </div>
+            <div class="info-card c-rose" style="border-color:var(--rose-light)">
+              <div class="card-icon">⚠️</div>
+              <h4>Alertas de gestión</h4>
+              <p>Facturas vencidas, pagos pendientes y proyectos con margen bajo.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-line"></div>
+        <div class="step-dot" style="background:#e8f0e9;">🗂️</div>
+        <div class="step-body">
+          <div class="step-title">Ranking de proyectos más rentables</div>
+          <p class="step-text">El panel de gerencia muestra un ranking de proyectos ordenados por margen, con desglose de ingresos, costes y beneficio para identificar los trabajos más y menos rentables.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-line"></div>
+        <div class="step-dot" style="background:#e8f0e9;">📅</div>
+        <div class="step-body">
+          <div class="step-title">Filtro por período</div>
+          <p class="step-text">Filtra todos los datos por <strong>año o mes</strong> para obtener el análisis de un período concreto. Permite comparar la evolución de la empresa mes a mes.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-dot" style="background:#e8f0e9;">📤</div>
+        <div class="step-body">
+          <div class="step-title">Exportar datos a Excel</div>
+          <p class="step-text">Desde el panel de gerencia puedes exportar en <strong>Excel</strong> el resumen de rentabilidad de todos los proyectos, el listado completo de compras o subcontratas, y el informe de facturación del período.</p>
+
+          <div class="tip tip-success">
+            <div class="tip-icon">📊</div>
+            <p><strong>Exportación universal:</strong> Todos los módulos principales (Proyectos, Compras, Subcontratas, Horas, Facturas, Certificaciones) tienen botón de <strong>exportar a Excel</strong>.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ════════ CAP 12 · AGENDA ════════ -->
+  <div class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-icon c-rose">📅</div>
+      <div class="chapter-meta">
+        <div class="chapter-number t-rose">Capítulo 12</div>
+        <h2 class="chapter-title">Agenda y Recordatorios</h2>
+        <p class="chapter-desc">Gestiona citas, visitas de obra, reuniones y recordatorios importantes. El sistema de notificaciones te avisa de los eventos próximos directamente en la aplicación.</p>
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-line"></div>
+        <div class="step-dot c-rose">➕</div>
+        <div class="step-body">
+          <div class="step-title">Crear un evento o recordatorio</div>
+
+          <div class="field-list">
+            <h4>Datos del evento</h4>
+            <ul>
+              <li>Título del evento</li>
+              <li>Fecha y hora</li>
+              <li>Proyecto vinculado</li>
+              <li>Tipo de evento</li>
+              <li>Descripción</li>
+              <li>Recordatorio (días de antelación)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-dot c-rose">🔔</div>
+        <div class="step-body">
+          <div class="step-title">Campana de notificaciones global</div>
+          <p class="step-text">El icono 🔔 en la barra superior muestra todas las alertas pendientes: eventos próximos, facturas vencidas, pagos pendientes y recordatorios de la agenda. Siempre visible desde cualquier sección de la app.</p>
+
+          <div class="tip tip-warning">
+            <div class="tip-icon">🔔</div>
+            <p><strong>Las notificaciones se actualizan en tiempo real</strong> cada vez que se carga la aplicación, mostrando siempre los eventos de las próximas 48 horas y los pagos con vencimiento inminente.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ════════ RESUMEN GLOBAL ════════ -->
+  <div style="background:var(--navy);border-radius:24px;padding:48px;margin-top:20px;position:relative;overflow:hidden;">
+    <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:32px 32px;"></div>
+    <div style="position:relative;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;">Resumen completo</div>
+      <h2 style="font-family:'Playfair Display',serif;font-size:32px;color:#fff;margin-bottom:24px;line-height:1.2;">Todo lo que puedes controlar</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;">
+        <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:16px;">
+          <div style="font-size:20px;margin-bottom:8px;">👤</div>
+          <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:4px;">Clientes</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.5);">Directorio completo con historial de proyectos</div>
+        </div>
+        <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:16px;">
+          <div style="font-size:20px;margin-bottom:8px;">📁</div>
+          <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:4px;">Proyectos</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.5);">Pipeline con margen en tiempo real</div>
+        </div>
+        <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:16px;">
+          <div style="font-size:20px;margin-bottom:8px;">📐</div>
+          <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:4px;">Presupuestos</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.5);">CYPE + Tarifario + Catálogos de proveedores</div>
+        </div>
+        <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:16px;">
+          <div style="font-size:20px;margin-bottom:8px;">📋</div>
+          <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:4px;">Certificaciones</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.5);">Avance de obra y control de cobros parciales</div>
+        </div>
+        <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:16px;">
+          <div style="font-size:20px;margin-bottom:8px;">🛒</div>
+          <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:4px;">Compras</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.5);">Materiales por proyecto con facturas adjuntas</div>
+        </div>
+        <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:16px;">
+          <div style="font-size:20px;margin-bottom:8px;">👷</div>
+          <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:4px;">Subcontratas</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.5);">Trabajos externos con facturas recibidas</div>
+        </div>
+        <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:16px;">
+          <div style="font-size:20px;margin-bottom:8px;">⏱️</div>
+          <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:4px;">Horas y RRHH</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.5);">Coste real de mano de obra propia</div>
+        </div>
+        <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:16px;">
+          <div style="font-size:20px;margin-bottom:8px;">💶</div>
+          <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:4px;">Facturas</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.5);">Venta, compra, abonos y seguimiento IVA</div>
+        </div>
+        <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:16px;">
+          <div style="font-size:20px;margin-bottom:8px;">🛋️</div>
+          <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:4px;">Interiorismo</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.5);">Catálogos Campoaras, Saitra y Daqua</div>
+        </div>
+        <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:16px;">
+          <div style="font-size:20px;margin-bottom:8px;">📁</div>
+          <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:4px;">Expediente 360°</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.5);">Todo el proyecto en una sola pantalla</div>
+        </div>
+        <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:16px;">
+          <div style="font-size:20px;margin-bottom:8px;">📊</div>
+          <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:4px;">Gerencia</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.5);">Cuadro de mando ejecutivo de empresa</div>
+        </div>
+        <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:16px;">
+          <div style="font-size:20px;margin-bottom:8px;">📅</div>
+          <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:4px;">Agenda</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.5);">Recordatorios y notificaciones automáticas</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════ FOOTER ══════════════ -->
+<div class="footer">
+  <div class="footer-logo">PAU Interiorismo</div>
+  <p>PAU Interiorismo S.L. · Alcàsser, Valencia · Fundada en 1981</p>
+  <p style="margin-top:8px;font-size:12px;">Manual de uso de la plataforma de gestión · pau-interiorismo.vercel.app</p>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Manual Obra y Costes · PAU Interiorismo</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+  :root{--navy:#1a2e4a;--navy-mid:#2d4a6e;--navy-light:#e8eef6;--cream:#faf8f4;--warm-white:#fff;--gold:#c8a96e;--gold-light:#f5edd8;--sage:#6b8f71;--sage-light:#e8f0e9;--rose:#c97b84;--rose-light:#faeaec;--amber:#d4874a;--amber-light:#fdf0e6;--slate:#7a8a9e;--border:#e4e9f0;--text:#1a2e4a;--text-mid:#4a5568;--text-soft:#8a9ab0;--shadow-sm:0 2px 8px rgba(26,46,74,.08);--shadow-md:0 6px 24px rgba(26,46,74,.12);--acc:#b04a2e;--acc-light:#fdf0ec}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text);line-height:1.6;font-size:15px}
+  .cover{min-height:100vh;background:linear-gradient(135deg,#2e1a0e 0%,#5a3018 60%,#8c4e28 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:60px 40px;text-align:center}
+  .cover::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 20% 80%,rgba(212,135,74,.2) 0%,transparent 60%),radial-gradient(ellipse 60% 80% at 80% 20%,rgba(140,78,40,.3) 0%,transparent 60%)}
+  .cover-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:48px 48px}
+  .cover-badge{position:relative;display:inline-flex;align-items:center;gap:10px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:100px;padding:8px 20px;font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.85);margin-bottom:32px;backdrop-filter:blur(8px)}
+  .cover-logo{position:relative;width:80px;height:80px;background:rgba(255,255,255,.15);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 32px;border:1px solid rgba(255,255,255,.2)}
+  .cover h1{position:relative;font-family:'Playfair Display',serif;font-size:clamp(36px,5vw,60px);font-weight:700;color:#fff;line-height:1.15;margin-bottom:16px;letter-spacing:-.02em}
+  .cover h1 span{color:#f5c87a}
+  .cover-sub{position:relative;font-size:18px;color:rgba(255,255,255,.7);font-weight:300;max-width:560px;margin-bottom:48px;line-height:1.7}
+  .cover-chips{position:relative;display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+  .chip{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:8px 16px;font-size:13px;color:rgba(255,255,255,.8);font-weight:500}
+  .index-section{background:var(--warm-white);padding:80px 40px}
+  .index-inner{max-width:1000px;margin:0 auto}
+  .section-eyebrow{font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--amber);margin-bottom:12px}
+  .section-title{font-family:'Playfair Display',serif;font-size:clamp(28px,3vw,42px);font-weight:600;color:var(--navy);margin-bottom:48px;line-height:1.25}
+  .index-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px}
+  .index-item{display:flex;align-items:center;gap:14px;padding:18px;border-radius:14px;background:var(--cream);border:1px solid var(--border);transition:all .2s}
+  .index-item:hover{border-color:var(--amber);transform:translateY(-2px)}
+  .index-num{width:32px;height:32px;border-radius:8px;background:#5a3018;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .index-label{font-size:13px;font-weight:600;color:var(--text-mid);line-height:1.3}
+  .main{max-width:1100px;margin:0 auto;padding:0 40px 120px}
+  .chapter{margin-top:100px}
+  .chapter-header{display:flex;align-items:flex-start;gap:24px;margin-bottom:48px;padding-bottom:32px;border-bottom:1px solid var(--border)}
+  .chapter-icon{width:64px;height:64px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;box-shadow:var(--shadow-sm)}
+  .chapter-title{font-family:'Playfair Display',serif;font-size:clamp(22px,2.5vw,34px);font-weight:600;color:var(--navy);line-height:1.2;margin-bottom:10px}
+  .chapter-desc{font-size:15px;color:var(--text-soft);font-weight:300;max-width:600px;line-height:1.6}
+  .chapter-num{font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;margin-bottom:6px;color:var(--amber)}
+  .steps{display:flex;flex-direction:column}
+  .step{display:grid;grid-template-columns:48px 1fr;gap:0 24px;position:relative}
+  .step:not(:last-child) .step-line{position:absolute;left:23px;top:52px;width:2px;bottom:0;background:var(--border)}
+  .step-dot{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;position:relative;z-index:1;box-shadow:var(--shadow-sm)}
+  .step-body{padding-bottom:40px}
+  .step-title{font-size:16px;font-weight:600;color:var(--navy);margin-bottom:8px;margin-top:10px}
+  .step-text{font-size:14px;color:var(--text-mid);line-height:1.7;margin-bottom:14px}
+  .card-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin:24px 0}
+  .info-card{padding:20px;border-radius:14px;border:1px solid var(--border)}
+  .info-card .ci{font-size:24px;margin-bottom:10px}
+  .info-card h4{font-size:14px;font-weight:600;color:var(--navy);margin-bottom:6px}
+  .info-card p{font-size:13px;color:var(--text-mid);line-height:1.5}
+  .field-list{background:var(--cream);border-radius:14px;padding:20px 24px;margin:16px 0;border:1px solid var(--border)}
+  .field-list h4{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-soft);margin-bottom:14px}
+  .field-list ul{list-style:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+  .field-list li{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-mid)}
+  .field-list li::before{content:'';width:6px;height:6px;border-radius:2px;background:var(--amber);flex-shrink:0}
+  .mockup{background:var(--warm-white);border-radius:16px;border:1px solid var(--border);overflow:hidden;box-shadow:var(--shadow-md);margin:24px 0}
+  .mockup-bar{background:#f0f3f7;padding:10px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)}
+  .mockup-dot{width:10px;height:10px;border-radius:50%}
+  .mockup-url{flex:1;background:#fff;border-radius:6px;padding:4px 12px;font-size:11px;color:var(--text-soft);margin:0 12px;border:1px solid var(--border)}
+  .mockup-body{padding:24px}
+  .ui-table{width:100%;border-collapse:collapse;font-size:12px}
+  .ui-table th{padding:8px 12px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-soft);background:var(--cream);border-bottom:1px solid var(--border)}
+  .ui-table td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text-mid)}
+  .badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:600}
+  .b-green{background:#e6f6ee;color:#1a7a45}.b-amber{background:#fef3e2;color:#b45309}.b-blue{background:#e8eef8;color:var(--navy-mid)}.b-gray{background:#f0f3f7;color:var(--slate)}.b-rose{background:#faeaec;color:var(--rose)}
+  .tip{display:flex;gap:14px;padding:16px 20px;border-radius:12px;margin:16px 0;border-left:3px solid}
+  .tip p{font-size:13px;line-height:1.6;color:var(--text-mid)}
+  .tip p strong{color:var(--navy);font-weight:600}
+  .tip-icon{font-size:18px;flex-shrink:0}
+  .tip-info{background:var(--navy-light);border-color:var(--navy-mid)}.tip-success{background:var(--sage-light);border-color:var(--sage)}.tip-warning{background:var(--amber-light);border-color:var(--amber)}.tip-star{background:var(--gold-light);border-color:var(--gold)}
+  .divider{height:1px;background:var(--border);margin:60px 0}
+  .footer{background:#2e1a0e;color:rgba(255,255,255,.6);padding:48px 40px;text-align:center}
+  .footer-logo{font-family:'Playfair Display',serif;font-size:24px;color:#fff;font-weight:600;margin-bottom:8px}
+  .footer p{font-size:13px;line-height:1.6}
+  .back-btn{position:fixed;top:20px;left:20px;z-index:100;background:rgba(255,255,255,.95);border:1px solid var(--border);border-radius:10px;padding:10px 16px;font-size:13px;font-weight:600;color:var(--navy);text-decoration:none;display:flex;align-items:center;gap:6px;backdrop-filter:blur(8px);box-shadow:var(--shadow-sm)}
+  .back-btn:hover{box-shadow:var(--shadow-md)}
+  @media(max-width:768px){.main{padding:0 20px 80px}.chapter-header{flex-direction:column;gap:16px}}
+</style>
+</head>
+<body>
+
+<a href="ayuda.html" class="back-btn">← Centro de Ayuda</a>
+
+<div class="cover">
+  <div class="cover-grid"></div>
+  <div class="cover-badge">🏗️ Manual de Usuario · Obra y Costes</div>
+  <div class="cover-logo">🏗️</div>
+  <h1>Ejecución de <span>Obra</span><br>y Control de Costes</h1>
+  <p class="cover-sub">Todo lo que necesitas para registrar y controlar los costes reales de cada obra: compras de material, trabajos subcontratados, mano de obra propia y certificaciones de avance.</p>
+  <div class="cover-chips">
+    <div class="chip">🛒 Compras</div>
+    <div class="chip">👷 Subcontratas</div>
+    <div class="chip">⏱️ Horas de obra</div>
+    <div class="chip">📋 Certificaciones</div>
+    <div class="chip">📊 Margen real</div>
+    <div class="chip">🏦 Proveedores</div>
+  </div>
+</div>
+
+<div class="index-section">
+  <div class="index-inner">
+    <div class="section-eyebrow">Contenidos del manual</div>
+    <h2 class="section-title">Control de Ejecución de Obra</h2>
+    <div class="index-grid">
+      <div class="index-item"><div class="index-num">01</div><div class="index-label">Registro de compras</div></div>
+      <div class="index-item"><div class="index-num">02</div><div class="index-label">Gestión de subcontratas</div></div>
+      <div class="index-item"><div class="index-num">03</div><div class="index-label">Control de horas</div></div>
+      <div class="index-item"><div class="index-num">04</div><div class="index-label">Certificaciones</div></div>
+      <div class="index-item"><div class="index-num">05</div><div class="index-label">Proveedores</div></div>
+      <div class="index-item"><div class="index-num">06</div><div class="index-label">Análisis de rentabilidad</div></div>
+      <div class="index-item"><div class="index-num">07</div><div class="index-label">Control horario RRHH</div></div>
+      <div class="index-item"><div class="index-num">08</div><div class="index-label">Exportar a Excel</div></div>
+    </div>
+
+    <div style="margin-top:56px">
+      <div class="section-eyebrow">Flujo de costes de obra</div>
+      <h3 style="font-family:'Playfair Display',serif;font-size:22px;color:var(--navy);margin-bottom:28px">Cómo fluyen los costes al proyecto</h3>
+      <div style="display:flex;align-items:center;gap:0;overflow-x:auto;padding:4px 0;margin-bottom:8px">
+        <div style="flex-shrink:0;text-align:center"><div style="width:60px;height:60px;border-radius:50%;background:var(--amber-light);display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 8px;box-shadow:var(--shadow-sm)">🛒</div><div style="font-size:11px;font-weight:600;color:var(--text-mid);max-width:70px;line-height:1.3">Compras<br>material</div></div>
+        <div style="font-size:18px;color:var(--text-soft);padding:0 12px;margin-bottom:24px">↘</div>
+        <div style="flex-shrink:0;text-align:center"><div style="width:60px;height:60px;border-radius:50%;background:var(--rose-light);display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 8px;box-shadow:var(--shadow-sm)">👷</div><div style="font-size:11px;font-weight:600;color:var(--text-mid);max-width:70px;line-height:1.3">Subcontratas externas</div></div>
+        <div style="font-size:18px;color:var(--text-soft);padding:0 12px;margin-bottom:24px">↘</div>
+        <div style="flex-shrink:0;text-align:center"><div style="width:60px;height:60px;border-radius:50%;background:var(--navy-light);display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 8px;box-shadow:var(--shadow-sm)">⏱️</div><div style="font-size:11px;font-weight:600;color:var(--text-mid);max-width:70px;line-height:1.3">Horas mano obra</div></div>
+        <div style="font-size:18px;color:var(--text-soft);padding:0 12px;margin-bottom:0">→</div>
+        <div style="flex-shrink:0;text-align:center;background:var(--navy-light);border-radius:14px;padding:12px 16px;border:2px solid var(--navy-mid)"><div style="font-size:22px;margin-bottom:6px">📁</div><div style="font-size:12px;font-weight:700;color:var(--navy)">COSTE TOTAL<br>DEL PROYECTO</div></div>
+        <div style="font-size:18px;color:var(--text-soft);padding:0 12px;margin-bottom:0">→</div>
+        <div style="flex-shrink:0;text-align:center;background:#e6f6ee;border-radius:14px;padding:12px 16px;border:2px solid #2d7a52"><div style="font-size:22px;margin-bottom:6px">📊</div><div style="font-size:12px;font-weight:700;color:#2d7a52">MARGEN<br>REAL</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- CAP 01 · COMPRAS -->
+  <div class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-icon" style="background:var(--amber-light)">🛒</div>
+      <div>
+        <div class="chapter-num">Capítulo 01</div>
+        <div class="chapter-title">Registro de Compras de Material</div>
+        <p class="chapter-desc">Registra cada factura de proveedor de materiales, suministros y equipos vinculada al proyecto correspondiente.</p>
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-line"></div>
+        <div class="step-dot" style="background:var(--amber-light)">➕</div>
+        <div class="step-body">
+          <div class="step-title">Nueva compra</div>
+          <p class="step-text">En el módulo <strong>Compras</strong>, pulsa <strong>"＋ Nueva compra"</strong>. Filtra primero por proyecto para ver solo las compras de ese expediente.</p>
+          <div class="field-list">
+            <h4>Campos a rellenar</h4>
+            <ul>
+              <li>Fecha de compra</li><li>Proyecto asignado</li><li>Proveedor</li>
+              <li>Concepto / descripción</li><li>Base imponible (€)</li>
+              <li>Tipo de IVA</li><li>Estado de pago</li>
+              <li>Fecha de vencimiento</li><li>Notas</li><li>PDF factura adjunto</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-line"></div>
+        <div class="step-dot" style="background:var(--amber-light)">📎</div>
+        <div class="step-body">
+          <div class="step-title">Adjuntar la factura del proveedor</div>
+          <p class="step-text">Arrastra el PDF de la factura sobre la zona indicada o haz clic para seleccionarlo. Queda almacenado en la nube y accesible desde el icono 📄 de la fila.</p>
+          <div class="tip tip-success">
+            <div class="tip-icon">✅</div>
+            <p><strong>Todas las facturas de material archivadas digitalmente.</strong> Desde el expediente del proyecto puedes ver y descargar cualquier factura sin necesidad de buscar en papel.</p>
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-dot" style="background:var(--amber-light)">✏️</div>
+        <div class="step-body">
+          <div class="step-title">Editar o eliminar una compra</div>
+          <p class="step-text">Pulsa el ✏️ de cualquier fila para editar los datos. El icono 🗑 elimina el registro previo confirmación. Puedes editar el estado de pago para marcarlo como <span class="badge b-green">Pagado</span> cuando lo abones.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- CAP 02 · SUBCONTRATAS -->
+  <div class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-icon" style="background:var(--rose-light)">👷</div>
+      <div>
+        <div class="chapter-num" style="color:var(--rose)">Capítulo 02</div>
+        <div class="chapter-title">Gestión de Subcontratas</div>
+        <p class="chapter-desc">Controla los trabajos encomendados a empresas o autónomos externos: electricistas, fontaneros, pintores, carpinteros, etc.</p>
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-line"></div>
+        <div class="step-dot" style="background:var(--rose-light)">➕</div>
+        <div class="step-body">
+          <div class="step-title">Nueva subcontrata</div>
+          <p class="step-text">En el módulo <strong>Subcontratas</strong>, registra cada trabajo externo vinculándolo al proyecto y al subcontratista del directorio de proveedores.</p>
+          <div class="field-list">
+            <h4>Campos de la subcontrata</h4>
+            <ul>
+              <li>Fecha del trabajo</li><li>Proyecto asignado</li><li>Subcontratista</li>
+              <li>Descripción del trabajo</li><li>Importe base (€)</li>
+              <li>Tipo de IVA</li><li>Estado de pago</li>
+              <li>Fecha de vencimiento</li><li>Factura PDF recibida</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-line"></div>
+        <div class="step-dot" style="background:var(--rose-light)">📋</div>
+        <div class="step-body">
+          <div class="step-title">Subcontratistas frecuentes</div>
+          <p class="step-text">Los profesionales que trabajen habitualmente con PAU Interiorismo están dados de alta en el <strong>Directorio de Proveedores</strong> con la categoría "Subcontratista", lo que facilita seleccionarlos rápidamente.</p>
+          <div class="mockup">
+            <div class="mockup-bar">
+              <div class="mockup-dot" style="background:#ff5f57"></div>
+              <div class="mockup-dot" style="background:#febc2e"></div>
+              <div class="mockup-dot" style="background:#28c840"></div>
+              <div class="mockup-url">Subcontratas · PRY-004 · Rehabilitación estudio</div>
+            </div>
+            <div class="mockup-body">
+              <table class="ui-table">
+                <thead><tr><th>Fecha</th><th>Proyecto</th><th>Subcontratista</th><th>Trabajo</th><th>Importe</th><th>Estado</th></tr></thead>
+                <tbody>
+                  <tr><td>12/01/2026</td><td>PRY-004</td><td>Said Pladur</td><td>Trasdosado pladur</td><td style="font-weight:700">1.200€</td><td><span class="badge b-green">Pagado</span></td></tr>
+                  <tr><td>20/01/2026</td><td>PRY-004</td><td>Simo Pintor</td><td>Pintura interior</td><td style="font-weight:700">850€</td><td><span class="badge b-amber">Pendiente</span></td></tr>
+                  <tr><td>02/02/2026</td><td>PRY-004</td><td>Vicentclima SL</td><td>Instalación A/C</td><td style="font-weight:700">1.400€</td><td><span class="badge b-green">Pagado</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-dot" style="background:var(--rose-light)">✏️</div>
+        <div class="step-body">
+          <div class="step-title">Editar y gestionar pagos</div>
+          <p class="step-text">Usa el ✏️ para editar cualquier subcontrata: actualizar el estado de pago, añadir notas o corregir el importe. El sistema recalcula automáticamente el coste total del proyecto.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- CAP 03 · HORAS -->
+  <div class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-icon" style="background:var(--navy-light)">⏱️</div>
+      <div>
+        <div class="chapter-num" style="color:var(--navy-mid)">Capítulo 03</div>
+        <div class="chapter-title">Control de Horas de Trabajo</div>
+        <p class="chapter-desc">Registra las horas del equipo propio en cada proyecto para conocer el coste real de mano de obra y el margen verdadero de cada obra.</p>
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-line"></div>
+        <div class="step-dot" style="background:var(--navy-light)">⏱️</div>
+        <div class="step-body">
+          <div class="step-title">Registrar horas</div>
+          <p class="step-text">Cada día o semana, el encargado registra las horas trabajadas por cada operario en cada proyecto. El sistema multiplica automáticamente: <strong>horas × €/hora = coste</strong>.</p>
+          <div class="field-list">
+            <h4>Campos del registro de horas</h4>
+            <ul>
+              <li>Fecha</li><li>Proyecto</li><li>Trabajador</li>
+              <li>Nº de horas</li><li>Coste hora (€)</li><li>Descripción trabajo</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-line"></div>
+        <div class="step-dot" style="background:var(--navy-light)">👥</div>
+        <div class="step-body">
+          <div class="step-title">Trabajadores del equipo</div>
+          <div class="card-row">
+            <div class="info-card" style="background:var(--navy-light);border-color:#d0dcea"><div class="ci">👷</div><h4>Francisco Gascón Gil</h4><p>Oficial de construcción</p></div>
+            <div class="info-card" style="background:var(--navy-light);border-color:#d0dcea"><div class="ci">👷</div><h4>Jose Asins Primo</h4><p>Director técnico</p></div>
+            <div class="info-card" style="background:var(--navy-light);border-color:#d0dcea"><div class="ci">👷</div><h4>Julio Alemany Fort</h4><p>Oficial de construcción</p></div>
+            <div class="info-card" style="background:var(--navy-light);border-color:#d0dcea"><div class="ci">👩‍💼</div><h4>María Paz Primo Iborra</h4><p>Administración</p></div>
+            <div class="info-card" style="background:var(--navy-light);border-color:#d0dcea"><div class="ci">👷</div><h4>Raúl Gascón Gil</h4><p>Oficial de construcción</p></div>
+            <div class="info-card" style="background:var(--navy-light);border-color:#d0dcea"><div class="ci">👷</div><h4>Salvador Aguado Simó</h4><p>Oficial de construcción</p></div>
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-dot" style="background:var(--navy-light)">📅</div>
+        <div class="step-body">
+          <div class="step-title">Control Horario diario</div>
+          <p class="step-text">El módulo <strong>Control Horario</strong> muestra el cuadro mensual por trabajador: horas diarias, acumulado semanal y mensual. Útil para detectar incidencias, gestionar vacaciones y calcular nóminas.</p>
+          <div class="tip tip-info">
+            <div class="tip-icon">📊</div>
+            <p><strong>Resumen RRHH:</strong> La sección de Recursos Humanos consolida las horas, costes, retenciones IRPF y cuotas de Seguridad Social del equipo en un panel unificado.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- CAP 04 · CERTIFICACIONES -->
+  <div class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-icon" style="background:var(--sage-light)">📋</div>
+      <div>
+        <div class="chapter-num" style="color:var(--sage)">Capítulo 04</div>
+        <div class="chapter-title">Certificaciones de Avance de Obra</div>
+        <p class="chapter-desc">Las certificaciones documentan el porcentaje de obra ejecutado y sirven de base para emitir las facturas parciales al cliente durante el transcurso de la obra.</p>
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-line"></div>
+        <div class="step-dot" style="background:var(--sage-light)">🔍</div>
+        <div class="step-body">
+          <div class="step-title">Seleccionar proyecto</div>
+          <p class="step-text">En el módulo <strong>Certificaciones</strong>, filtra por cliente y luego por proyecto. El sistema carga automáticamente el presupuesto aprobado (v1) para los cálculos.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-line"></div>
+        <div class="step-dot" style="background:var(--sage-light)">➕</div>
+        <div class="step-body">
+          <div class="step-title">Nueva certificación</div>
+          <p class="step-text">Introduce el <strong>% de avance de esta certificación</strong> o directamente el <strong>importe en €</strong>. El sistema muestra lo ya certificado anteriormente y lo disponible.</p>
+          <div class="mockup">
+            <div class="mockup-bar">
+              <div class="mockup-dot" style="background:#ff5f57"></div>
+              <div class="mockup-dot" style="background:#febc2e"></div>
+              <div class="mockup-dot" style="background:#28c840"></div>
+              <div class="mockup-url">Certificaciones · PRY-004</div>
+            </div>
+            <div class="mockup-body">
+              <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px">
+                <div style="background:var(--navy-light);border-radius:10px;padding:12px;text-align:center"><div style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--navy-mid);margin-bottom:4px">Presupuesto</div><div style="font-size:15px;font-weight:800;color:var(--navy)">24.380€</div></div>
+                <div style="background:#e6f6ee;border-radius:10px;padding:12px;text-align:center"><div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#2d7a52;margin-bottom:4px">Certificado</div><div style="font-size:15px;font-weight:800;color:var(--navy)">7.314€</div></div>
+                <div style="background:var(--amber-light);border-radius:10px;padding:12px;text-align:center"><div style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--amber);margin-bottom:4px">Pendiente</div><div style="font-size:15px;font-weight:800;color:var(--navy)">17.066€</div></div>
+                <div style="background:var(--cream);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center"><div style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text-soft);margin-bottom:4px">% Ejec.</div><div style="font-size:15px;font-weight:800;color:var(--navy)">30%</div></div>
+                <div style="background:var(--cream);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center"><div style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text-soft);margin-bottom:4px">Nº Certs.</div><div style="font-size:15px;font-weight:800;color:var(--navy)">1</div></div>
+              </div>
+              <div style="background:#e8edf5;border-radius:8px;padding:10px 14px;margin-bottom:12px">
+                <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-soft);margin-bottom:6px"><span>Progreso de certificación</span><span style="font-weight:700;color:var(--navy)">30,0%</span></div>
+                <div style="height:8px;background:#fff;border-radius:4px;overflow:hidden"><div style="height:100%;width:30%;background:var(--navy);border-radius:4px"></div></div>
+              </div>
+              <table class="ui-table">
+                <thead><tr><th>Nº</th><th>Fecha</th><th>Estado</th><th>% Esta cert.</th><th>% Acumulado</th><th>Base imp.</th><th>Total</th></tr></thead>
+                <tbody>
+                  <tr><td style="font-weight:700">C01</td><td>12/01/2026</td><td><span class="badge b-blue">Emitida</span></td><td>30,0%</td><td>30,0%</td><td>7.314€</td><td style="font-weight:700">8.045€</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-dot" style="background:var(--sage-light)">💶</div>
+        <div class="step-body">
+          <div class="step-title">De certificación a factura</div>
+          <p class="step-text">Una vez guardada la certificación, ve al módulo <strong>Facturas</strong> y emite la factura parcial al cliente por el importe certificado. Referencia el número de certificación en el concepto de la factura.</p>
+          <div class="tip tip-star">
+            <div class="tip-icon">⭐</div>
+            <p><strong>Flujo completo:</strong> Certificación aprobada → Factura emitida → Cliente paga → Marcar factura como <span class="badge b-green" style="font-size:11px">Cobrada</span> → El dashboard se actualiza automáticamente.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- CAP 05 · RENTABILIDAD -->
+  <div class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-icon" style="background:#e6f6ee">📊</div>
+      <div>
+        <div class="chapter-num" style="color:#2d7a52">Capítulo 05</div>
+        <div class="chapter-title">Análisis de Rentabilidad por Proyecto</div>
+        <p class="chapter-desc">Con todos los costes registrados, el expediente muestra en tiempo real el margen real del proyecto, diferenciando entre tipos de coste.</p>
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-line"></div>
+        <div class="step-dot" style="background:#e6f6ee">📁</div>
+        <div class="step-body">
+          <div class="step-title">Ver la rentabilidad en el expediente</div>
+          <p class="step-text">Desde la lista de proyectos, pulsa <strong>📁 Exp.</strong> y ve a la pestaña <strong>Resumen</strong> o <strong>Rentabilidad</strong>. Muestra el desglose completo de costes por categoría.</p>
+
+          <div style="background:var(--cream);border-radius:14px;border:1px solid var(--border);overflow:hidden;margin:16px 0">
+            <div style="padding:16px 20px;border-bottom:1px solid var(--border);font-weight:700;color:var(--navy);font-size:14px">📊 Rentabilidad · PRY-004 · Rehabilitación estudio</div>
+            <div style="padding:16px 20px">
+              <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)"><span style="font-size:13px;color:var(--text-mid)">💶 Total facturado</span><span style="font-weight:700;color:#2d7a52">2.445,06€</span></div>
+              <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)"><span style="font-size:13px;color:var(--text-mid)">🛒 Compras de material</span><span style="font-weight:600;color:var(--rose)">− 520,00€</span></div>
+              <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)"><span style="font-size:13px;color:var(--text-mid)">👷 Subcontratas</span><span style="font-weight:600;color:var(--rose)">− 3.450,00€</span></div>
+              <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)"><span style="font-size:13px;color:var(--text-mid)">⏱️ Mano de obra propia</span><span style="font-weight:600;color:var(--rose)">− 288,00€</span></div>
+              <div style="display:flex;justify-content:space-between;padding:12px 0;background:var(--gold-light);margin:8px -20px -16px;padding-left:20px;padding-right:20px"><span style="font-size:14px;font-weight:700;color:var(--navy)">📈 Margen bruto</span><span style="font-size:18px;font-weight:800;color:#2d7a52">56,1%</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-dot" style="background:#e6f6ee">🚦</div>
+        <div class="step-body">
+          <div class="step-title">Semáforo de márgenes</div>
+          <p class="step-text">En la lista de proyectos, el margen se colorea automáticamente para identificar de un vistazo la salud económica de cada obra:</p>
+          <div class="card-row">
+            <div class="info-card" style="background:#e6f6ee;border-color:#c8e6d4"><div class="ci" style="color:#2d7a52">🟢</div><h4 style="color:#2d7a52">Margen ≥ 20%</h4><p>Proyecto muy rentable. Objetivo ideal para obras de construcción e interiorismo.</p></div>
+            <div class="info-card" style="background:var(--amber-light);border-color:#e8c4a0"><div class="ci" style="color:var(--amber)">🟡</div><h4 style="color:var(--amber)">Margen 10–20%</h4><p>Rentabilidad moderada. Revisar si hay costes inesperados o variaciones de obra.</p></div>
+            <div class="info-card" style="background:var(--rose-light);border-color:#e8c4c8"><div class="ci" style="color:var(--rose)">🔴</div><h4 style="color:var(--rose)">Margen &lt; 10%</h4><p>Proyecto con riesgo. Requiere análisis inmediato de costes y posible revisión de precios.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div style="background:#2e1a0e;border-radius:24px;padding:48px;position:relative;overflow:hidden">
+    <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:32px 32px"></div>
+    <div style="position:relative">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#f5c87a;margin-bottom:12px">Lo que controlas</div>
+      <h2 style="font-family:'Playfair Display',serif;font-size:28px;color:#fff;margin-bottom:24px">Costes de obra bajo control total</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px">
+        <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px"><div style="font-size:18px;margin-bottom:6px">🛒</div><div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:3px">Compras</div><div style="font-size:12px;color:rgba(255,255,255,.5)">Por proyecto y proveedor, con PDFs</div></div>
+        <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px"><div style="font-size:18px;margin-bottom:6px">👷</div><div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:3px">Subcontratas</div><div style="font-size:12px;color:rgba(255,255,255,.5)">Externos con facturas y vencimientos</div></div>
+        <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px"><div style="font-size:18px;margin-bottom:6px">⏱️</div><div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:3px">Horas propias</div><div style="font-size:12px;color:rgba(255,255,255,.5)">Coste real de mano de obra interna</div></div>
+        <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px"><div style="font-size:18px;margin-bottom:6px">📋</div><div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:3px">Certificaciones</div><div style="font-size:12px;color:rgba(255,255,255,.5)">% avance y base para facturar</div></div>
+        <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px"><div style="font-size:18px;margin-bottom:6px">📊</div><div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:3px">Rentabilidad</div><div style="font-size:12px;color:rgba(255,255,255,.5)">Margen en tiempo real por proyecto</div></div>
+        <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px"><div style="font-size:18px;margin-bottom:6px">🏦</div><div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:3px">Proveedores</div><div style="font-size:12px;color:rgba(255,255,255,.5)">Directorio completo con datos fiscales</div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  <div class="footer-logo">PAU Interiorismo</div>
+  <p>Manual de Obra y Control de Costes · pau-interiorismo.vercel.app</p>
+</div>
+
+</body>
+</html>

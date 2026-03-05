@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Manual Facturación y Contabilidad · PAU Interiorismo</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+  :root{--navy:#1a2e4a;--navy-mid:#2d4a6e;--navy-light:#e8eef6;--cream:#faf8f4;--warm-white:#ffffff;--gold:#c8a96e;--gold-light:#f5edd8;--sage:#6b8f71;--sage-light:#e8f0e9;--rose:#c97b84;--rose-light:#faeaec;--amber:#d4874a;--amber-light:#fdf0e6;--teal:#3d7a8a;--teal-light:#e0f0f4;--slate:#7a8a9e;--border:#e4e9f0;--text:#1a2e4a;--text-mid:#4a5568;--text-soft:#8a9ab0;--shadow-sm:0 2px 8px rgba(26,46,74,.08);--shadow-md:0 6px 24px rgba(26,46,74,.12)}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text);line-height:1.6;font-size:15px}
+  .cover{min-height:100vh;background:linear-gradient(135deg,#1a3a2e 0%,#2d5a48 60%,#3d7a65 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:60px 40px;text-align:center}
+  .cover::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 20% 80%,rgba(109,191,148,.15) 0%,transparent 60%),radial-gradient(ellipse 60% 80% at 80% 20%,rgba(61,122,101,.3) 0%,transparent 60%)}
+  .cover-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:48px 48px}
+  .cover-badge{position:relative;display:inline-flex;align-items:center;gap:10px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:100px;padding:8px 20px;font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.85);margin-bottom:32px;backdrop-filter:blur(8px)}
+  .cover-logo{position:relative;width:80px;height:80px;background:rgba(255,255,255,.15);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 32px;border:1px solid rgba(255,255,255,.2);backdrop-filter:blur(12px)}
+  .cover h1{position:relative;font-family:'Playfair Display',serif;font-size:clamp(36px,5vw,60px);font-weight:700;color:#fff;line-height:1.15;margin-bottom:16px;letter-spacing:-.02em}
+  .cover h1 span{color:#7ddfb0}
+  .cover-sub{position:relative;font-size:18px;color:rgba(255,255,255,.7);font-weight:300;max-width:560px;margin-bottom:48px;line-height:1.7}
+  .cover-chips{position:relative;display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+  .chip{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:8px 16px;font-size:13px;color:rgba(255,255,255,.8);font-weight:500}
+  .index-section{background:var(--warm-white);padding:80px 40px}
+  .index-inner{max-width:1000px;margin:0 auto}
+  .section-eyebrow{font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#2d7a52;margin-bottom:12px}
+  .section-title{font-family:'Playfair Display',serif;font-size:clamp(28px,3vw,42px);font-weight:600;color:var(--navy);margin-bottom:48px;line-height:1.25}
+  .index-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px}
+  .index-item{display:flex;align-items:center;gap:14px;padding:18px;border-radius:14px;background:var(--cream);border:1px solid var(--border);transition:all .2s}
+  .index-item:hover{border-color:#2d7a52;box-shadow:0 4px 16px rgba(45,122,82,.12);transform:translateY(-2px)}
+  .index-num{width:32px;height:32px;border-radius:8px;background:#2d5a48;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .index-label{font-size:13px;font-weight:600;color:var(--text-mid);line-height:1.3}
+  .main{max-width:1100px;margin:0 auto;padding:0 40px 120px}
+  .chapter{margin-top:100px}
+  .chapter-header{display:flex;align-items:flex-start;gap:24px;margin-bottom:48px;padding-bottom:32px;border-bottom:1px solid var(--border)}
+  .chapter-icon{width:64px;height:64px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;box-shadow:0 2px 8px rgba(26,46,74,.08)}
+  .chapter-title{font-family:'Playfair Display',serif;font-size:clamp(22px,2.5vw,34px);font-weight:600;color:var(--navy);line-height:1.2;margin-bottom:10px}
+  .chapter-desc{font-size:15px;color:var(--text-soft);font-weight:300;max-width:600px;line-height:1.6}
+  .chapter-num{font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;margin-bottom:6px;color:#2d7a52}
+  .steps{display:flex;flex-direction:column}
+  .step{display:grid;grid-template-columns:48px 1fr;gap:0 24px;position:relative}
+  .step:not(:last-child) .step-line{position:absolute;left:23px;top:52px;width:2px;bottom:0;background:var(--border)}
+  .step-dot{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;position:relative;z-index:1;box-shadow:0 2px 8px rgba(26,46,74,.08)}
+  .step-body{padding-bottom:40px}
+  .step-title{font-size:16px;font-weight:600;color:var(--navy);margin-bottom:8px;margin-top:10px}
+  .step-text{font-size:14px;color:var(--text-mid);line-height:1.7;margin-bottom:14px}
+  .card-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin:24px 0}
+  .info-card{padding:20px;border-radius:14px;border:1px solid var(--border)}
+  .info-card .ci{font-size:24px;margin-bottom:10px}
+  .info-card h4{font-size:14px;font-weight:600;color:var(--navy);margin-bottom:6px}
+  .info-card p{font-size:13px;color:var(--text-mid);line-height:1.5}
+  .field-list{background:var(--cream);border-radius:14px;padding:20px 24px;margin:16px 0;border:1px solid var(--border)}
+  .field-list h4{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-soft);margin-bottom:14px}
+  .field-list ul{list-style:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+  .field-list li{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-mid)}
+  .field-list li::before{content:'';width:6px;height:6px;border-radius:2px;background:#2d7a52;flex-shrink:0}
+  .mockup{background:var(--warm-white);border-radius:16px;border:1px solid var(--border);overflow:hidden;box-shadow:0 6px 24px rgba(26,46,74,.12);margin:24px 0}
+  .mockup-bar{background:#f0f3f7;padding:10px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)}
+  .mockup-dot{width:10px;height:10px;border-radius:50%}
+  .mockup-url{flex:1;background:#fff;border-radius:6px;padding:4px 12px;font-size:11px;color:var(--text-soft);margin:0 12px;border:1px solid var(--border)}
+  .mockup-body{padding:24px}
+  .ui-table{width:100%;border-collapse:collapse;font-size:12px}
+  .ui-table th{padding:8px 12px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-soft);background:var(--cream);border-bottom:1px solid var(--border)}
+  .ui-table td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text-mid)}
+  .ui-table tr:last-child td{border-bottom:none}
+  .badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:600}
+  .b-green{background:#e6f6ee;color:#1a7a45}.b-amber{background:#fef3e2;color:#b45309}.b-blue{background:#e8eef8;color:var(--navy-mid)}.b-gray{background:#f0f3f7;color:var(--slate)}.b-rose{background:#faeaec;color:var(--rose)}.b-red{background:#fdecea;color:#c0392b}
+  .tip{display:flex;gap:14px;padding:16px 20px;border-radius:12px;margin:16px 0;border-left:3px solid}
+  .tip p{font-size:13px;line-height:1.6;color:var(--text-mid)}
+  .tip p strong{color:var(--navy);font-weight:600}
+  .tip-icon{font-size:18px;flex-shrink:0}
+  .tip-info{background:var(--navy-light);border-color:var(--navy-mid)}.tip-success{background:#e6f6ee;border-color:#2d7a52}.tip-warning{background:var(--amber-light);border-color:var(--amber)}.tip-star{background:var(--gold-light);border-color:var(--gold)}
+  .divider{height:1px;background:var(--border);margin:60px 0}
+  .flow{display:flex;align-items:center;overflow-x:auto;padding:4px 0;margin:28px 0}
+  .flow-node{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
+  .flow-bubble{width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 2px 8px rgba(26,46,74,.08)}
+  .flow-label{font-size:11px;font-weight:600;color:var(--text-mid);max-width:70px;line-height:1.3}
+  .flow-arrow{flex-shrink:0;font-size:18px;color:var(--text-soft);padding:0 8px;margin-bottom:24px}
+  .footer{background:#1a3a2e;color:rgba(255,255,255,.6);padding:48px 40px;text-align:center}
+  .footer-logo{font-family:'Playfair Display',serif;font-size:24px;color:#fff;font-weight:600;margin-bottom:8px}
+  .footer p{font-size:13px;line-height:1.6}
+  .back-btn{position:fixed;top:20px;left:20px;z-index:100;background:rgba(255,255,255,.95);border:1px solid var(--border);border-radius:10px;padding:10px 16px;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;box-shadow:0 2px 8px rgba(26,46,74,.08);text-decoration:none;display:flex;align-items:center;gap:6px;backdrop-filter:blur(8px)}
+  .back-btn:hover{box-shadow:0 6px 24px rgba(26,46,74,.12)}
+  @media(max-width:768px){.main{padding:0 20px 80px}.chapter-header{flex-direction:column;gap:16px}.flow{flex-wrap:wrap;justify-content:center}}
+</style>
+</head>
+<body>
+
+<a href="ayuda.html" class="back-btn">← Centro de Ayuda</a>
+
+<div class="cover">
+  <div class="cover-grid"></div>
+  <div class="cover-badge">💶 Manual de Usuario · Facturación</div>
+  <div class="cover-logo">💶</div>
+  <h1>Facturación &<br><span>Contabilidad</span></h1>
+  <p class="cover-sub">Guía completa para gestionar facturas emitidas, facturas recibidas, control de IVA, tesorería y análisis financiero de la empresa.</p>
+  <div class="cover-chips">
+    <div class="chip">📤 Facturas de venta</div>
+    <div class="chip">📥 Facturas de compra</div>
+    <div class="chip">💹 Control de IVA</div>
+    <div class="chip">🏦 Tesorería</div>
+    <div class="chip">📄 Albaranes</div>
+    <div class="chip">📊 Informes</div>
+  </div>
+</div>
+
+<div class="index-section">
+  <div class="index-inner">
+    <div class="section-eyebrow">Contenidos del manual</div>
+    <h2 class="section-title">Módulo de Facturación</h2>
+    <div class="index-grid">
+      <div class="index-item"><div class="index-num">01</div><div class="index-label">Panel resumen</div></div>
+      <div class="index-item"><div class="index-num">02</div><div class="index-label">Factura de venta</div></div>
+      <div class="index-item"><div class="index-num">03</div><div class="index-label">Factura de compra</div></div>
+      <div class="index-item"><div class="index-num">04</div><div class="index-label">Abonos y rectificativas</div></div>
+      <div class="index-item"><div class="index-num">05</div><div class="index-label">PDF profesional</div></div>
+      <div class="index-item"><div class="index-num">06</div><div class="index-label">Control de cobros</div></div>
+      <div class="index-item"><div class="index-num">07</div><div class="index-label">Control de IVA</div></div>
+      <div class="index-item"><div class="index-num">08</div><div class="index-label">Albaranes de entrega</div></div>
+      <div class="index-item"><div class="index-num">09</div><div class="index-label">Exportar a Excel</div></div>
+    </div>
+
+    <div style="margin-top:56px">
+      <div class="section-eyebrow">Flujo de facturación</div>
+      <h3 style="font-family:'Playfair Display',serif;font-size:22px;color:var(--navy);margin-bottom:28px">Del presupuesto al cobro</h3>
+      <div class="flow">
+        <div class="flow-node"><div class="flow-bubble" style="background:#e8f0e9">📐</div><div class="flow-label">Presupuesto aprobado</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node"><div class="flow-bubble" style="background:#e0f0f4">📋</div><div class="flow-label">Certificación de obra</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node"><div class="flow-bubble" style="background:#f5edd8">📄</div><div class="flow-label">Emitir factura</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node"><div class="flow-bubble" style="background:#fdf0e6">📤</div><div class="flow-label">Enviar al cliente</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node"><div class="flow-bubble" style="background:#e6f6ee">✅</div><div class="flow-label">Marcar cobrada</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node"><div class="flow-bubble" style="background:#f5edd8">📊</div><div class="flow-label">Cuadre IVA</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- CAP 01 · PANEL -->
+  <div class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-icon" style="background:#e6f6ee">📊</div>
+      <div class="chapter-title" style="display:block">
+        <div class="chapter-num">Capítulo 01</div>
+        <div class="chapter-title">Panel Resumen de Tesorería</div>
+        <p class="chapter-desc">Al entrar en el módulo Facturas ves el cuadro de mando financiero completo: ventas, compras, IVA y alertas de cobro en tiempo real.</p>
+      </div>
+    </div>
+
+    <div class="mockup">
+      <div class="mockup-bar">
+        <div class="mockup-dot" style="background:#ff5f57"></div>
+        <div class="mockup-dot" style="background:#febc2e"></div>
+        <div class="mockup-dot" style="background:#28c840"></div>
+        <div class="mockup-url">pau-interiorismo.vercel.app · Facturas</div>
+      </div>
+      <div class="mockup-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px">
+          <div style="border:1px solid var(--border);border-top:3px solid #2d7a52;border-radius:10px;padding:16px">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#2d7a52;margin-bottom:10px">📤 Facturas de Venta</div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:12px;color:var(--text-soft)">Total facturado</span><span style="font-weight:700">48.320€</span></div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:12px;color:var(--text-soft)">Cobrado</span><span style="font-weight:700;color:#2d7a52">32.180€</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="font-size:12px;color:var(--text-soft)">Pendiente</span><span style="font-weight:700;color:#b45309">16.140€</span></div>
+          </div>
+          <div style="border:1px solid var(--border);border-top:3px solid var(--rose);border-radius:10px;padding:16px">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--rose);margin-bottom:10px">📥 Facturas de Compra</div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:12px;color:var(--text-soft)">Total recibido</span><span style="font-weight:700">18.640€</span></div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:12px;color:var(--text-soft)">Pagado</span><span style="font-weight:700;color:#2d7a52">12.400€</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="font-size:12px;color:var(--text-soft)">Pendiente</span><span style="font-weight:700;color:#b45309">6.240€</span></div>
+          </div>
+          <div style="border:1px solid var(--border);border-top:3px solid var(--navy-mid);border-radius:10px;padding:16px">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--navy-mid);margin-bottom:10px">💹 IVA trimestral</div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:12px;color:var(--text-soft)">IVA repercutido</span><span style="font-weight:700">4.832€</span></div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:12px;color:var(--text-soft)">IVA deducible</span><span style="font-weight:700;color:#2d7a52">1.864€</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="font-size:12px;color:var(--text-soft)">A ingresar</span><span style="font-weight:700;color:var(--navy)">2.968€</span></div>
+          </div>
+        </div>
+        <div style="background:#fdecea;border-radius:10px;padding:12px 16px;font-size:12px;color:#c0392b;font-weight:600">
+          ⚠️ 2 facturas vencidas sin cobrar · 1 pago a proveedor vencido
+        </div>
+      </div>
+    </div>
+
+    <div class="tip tip-star">
+      <div class="tip-icon">⭐</div>
+      <p><strong>El panel se actualiza en tiempo real.</strong> Cada vez que marcas una factura como cobrada o añades una nueva, los totales y el IVA estimado se recalculan automáticamente.</p>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- CAP 02 · FACTURA DE VENTA -->
+  <div class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-icon" style="background:#e6f6ee">📤</div>
+      <div>
+        <div class="chapter-num">Capítulo 02</div>
+        <div class="chapter-title">Crear Factura de Venta</div>
+        <p class="chapter-desc">Las facturas de venta son las que emites al cliente al terminar una obra, una certificación o entregar un pedido de interiorismo.</p>
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-line"></div>
+        <div class="step-dot" style="background:#e6f6ee">➕</div>
+        <div class="step-body">
+          <div class="step-title">Pulsar "+ Nueva factura"</div>
+          <p class="step-text">En el módulo <strong>Facturas</strong>, pulsa el botón azul. El sistema asigna automáticamente el siguiente número de factura según la serie.</p>
+
+          <div class="field-list">
+            <h4>Campos de la factura de venta</h4>
+            <ul>
+              <li>Número de factura (auto)</li>
+              <li>Fecha de emisión</li>
+              <li>Cliente destinatario</li>
+              <li>Proyecto vinculado</li>
+              <li>Tipo: <strong>Venta</strong></li>
+              <li>Concepto / descripción</li>
+              <li>Base imponible (€)</li>
+              <li>Tipo de IVA (10% / 21%)</li>
+              <li>Estado (Cobrada / Pendiente / Vencida)</li>
+              <li>Forma de pago</li>
+              <li>Fecha de vencimiento</li>
+              <li>Notas internas</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-line"></div>
+        <div class="step-dot" style="background:#e6f6ee">💰</div>
+        <div class="step-body">
+          <div class="step-title">Tipos de IVA disponibles</div>
+
+          <div class="card-row">
+            <div class="info-card" style="background:#e6f6ee;border-color:#c8e6d4">
+              <div class="ci">🏗️</div>
+              <h4>IVA 10% — Obra</h4>
+              <p>Rehabilitación de vivienda habitual. El tipo más habitual en obras de reforma y construcción.</p>
+            </div>
+            <div class="info-card" style="background:var(--amber-light);border-color:#f5d4b8">
+              <div class="ci">🛋️</div>
+              <h4>IVA 21% — General</h4>
+              <p>Mobiliario, interiorismo, materiales y trabajos no considerados obra de rehabilitación.</p>
+            </div>
+            <div class="info-card" style="background:var(--navy-light);border-color:#d0dcea">
+              <div class="ci">✂️</div>
+              <h4>IVA 4% / Exento</h4>
+              <p>Casos especiales: obra nueva vivienda habitual (4%) o servicios profesionales exentos.</p>
+            </div>
+          </div>
+
+          <div class="tip tip-warning">
+            <div class="tip-icon">⚠️</div>
+            <p><strong>Factura con IVA mixto:</strong> Si en un mismo proyecto facturas obra (10%) y mobiliario (21%), crea dos líneas o dos facturas separadas para el cuadre correcto del IVA trimestral.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-dot" style="background:#e6f6ee">📄</div>
+        <div class="step-body">
+          <div class="step-title">Generar PDF de la factura</div>
+          <p class="step-text">Con el botón <strong>⬇️ PDF</strong> se genera el documento oficial con: datos de PAU Interiorismo, datos del cliente, número y fecha, desglose de conceptos, base imponible, IVA y total. Listo para firmar y enviar.</p>
+
+          <div class="tip tip-success">
+            <div class="tip-icon">✅</div>
+            <p><strong>Numeración automática:</strong> El sistema asigna el número correlativo dentro de cada año. Las facturas de venta siguen la serie <em>FAC-001, FAC-002…</em> y las de compra <em>FRA-001…</em></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- CAP 03 · FACTURA DE COMPRA -->
+  <div class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-icon" style="background:var(--rose-light)">📥</div>
+      <div>
+        <div class="chapter-num" style="color:var(--rose)">Capítulo 03</div>
+        <div class="chapter-title">Registrar Factura de Compra</div>
+        <p class="chapter-desc">Las facturas que recibes de proveedores se registran aquí. Esto alimenta el IVA deducible, el control de pagos pendientes y los costes del proyecto.</p>
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-line"></div>
+        <div class="step-dot" style="background:var(--rose-light)">📥</div>
+        <div class="step-body">
+          <div class="step-title">Nueva factura de compra</div>
+          <p class="step-text">Selecciona tipo <strong>Compra</strong> al crear la factura. Vincula siempre al proveedor y al proyecto para que los costes se reflejen en la rentabilidad del expediente.</p>
+
+          <div class="field-list">
+            <h4>Datos adicionales en facturas de compra</h4>
+            <ul>
+              <li>Proveedor emisor</li>
+              <li>Nº factura del proveedor</li>
+              <li>Fecha de recepción</li>
+              <li>Fecha de vencimiento pago</li>
+              <li>Estado: Pagada / Pendiente / Vencida</li>
+              <li>PDF de la factura recibida</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-dot" style="background:var(--rose-light)">⏰</div>
+        <div class="step-body">
+          <div class="step-title">Control de vencimientos y pagos</div>
+          <p class="step-text">Cada factura de compra con fecha de vencimiento aparece en el calendario de pagos. Cuando llega la fecha sin estar pagada, el sistema la marca como <span class="badge b-red">Vencida</span> y aparece en la alerta del panel.</p>
+
+          <div class="mockup">
+            <div class="mockup-bar">
+              <div class="mockup-dot" style="background:#ff5f57"></div>
+              <div class="mockup-dot" style="background:#febc2e"></div>
+              <div class="mockup-dot" style="background:#28c840"></div>
+              <div class="mockup-url">Facturas · Compras pendientes de pago</div>
+            </div>
+            <div class="mockup-body">
+              <table class="ui-table">
+                <thead><tr><th>Fecha</th><th>Proveedor</th><th>Concepto</th><th>Importe</th><th>Vencimiento</th><th>Estado</th></tr></thead>
+                <tbody>
+                  <tr>
+                    <td>24/02/2026</td>
+                    <td>Saitra Cocinas SL</td>
+                    <td>Nº Fra. 26-000424</td>
+                    <td style="font-weight:700">4.614,07€</td>
+                    <td>10/03/2026</td>
+                    <td><span class="badge b-amber">Pendiente</span></td>
+                  </tr>
+                  <tr>
+                    <td>05/03/2026</td>
+                    <td>D Aqua Kitchen SL</td>
+                    <td>Fregadero + cubo</td>
+                    <td style="font-weight:700">559,69€</td>
+                    <td>28/02/2026</td>
+                    <td><span class="badge b-red">Vencida</span></td>
+                  </tr>
+                  <tr>
+                    <td>05/03/2026</td>
+                    <td>Fustes Bonet Llopis</td>
+                    <td>Pavimento vinílico</td>
+                    <td style="font-weight:700">318,96€</td>
+                    <td>19/03/2026</td>
+                    <td><span class="badge b-green">Pagada</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- CAP 04 · ABONOS -->
+  <div class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-icon" style="background:var(--amber-light)">🔄</div>
+      <div>
+        <div class="chapter-num" style="color:var(--amber)">Capítulo 04</div>
+        <div class="chapter-title">Abonos y Facturas Rectificativas</div>
+        <p class="chapter-desc">Cuando necesitas anular total o parcialmente una factura emitida, creas un abono. El sistema lo descuenta del total facturado y ajusta el IVA.</p>
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-dot" style="background:var(--amber-light)">🔄</div>
+        <div class="step-body">
+          <div class="step-title">Crear un abono</div>
+          <p class="step-text">Al crear la factura, selecciona tipo <strong>Abono</strong>. Introduce el importe negativo (o el sistema lo trata automáticamente como descuento). Vincula al mismo proyecto y cliente que la factura original.</p>
+
+          <div class="tip tip-warning">
+            <div class="tip-icon">⚠️</div>
+            <p><strong>Los abonos reducen el total facturado</strong> del proyecto en el panel de gerencia y en el análisis de rentabilidad. Asegúrate de referenciar el número de factura original en el concepto.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- CAP 05 · CONTROL IVA -->
+  <div class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-icon" style="background:var(--navy-light)">💹</div>
+      <div>
+        <div class="chapter-num" style="color:var(--navy-mid)">Capítulo 05</div>
+        <div class="chapter-title">Control de IVA Trimestral</div>
+        <p class="chapter-desc">La app calcula automáticamente el IVA a ingresar a Hacienda en cada trimestre: IVA repercutido (ventas) menos IVA deducible (compras).</p>
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-line"></div>
+        <div class="step-dot" style="background:var(--navy-light)">📊</div>
+        <div class="step-body">
+          <div class="step-title">Cálculo automático del IVA</div>
+
+          <div style="background:var(--cream);border-radius:14px;border:1px solid var(--border);padding:24px;margin:16px 0">
+            <div style="display:grid;grid-template-columns:1fr auto 1fr auto 1fr;align-items:center;gap:12px;text-align:center">
+              <div style="background:#e6f6ee;border-radius:12px;padding:16px">
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#2d7a52;margin-bottom:6px">IVA Repercutido</div>
+                <div style="font-size:24px;font-weight:800;color:var(--navy)">4.832€</div>
+                <div style="font-size:11px;color:var(--text-soft);margin-top:4px">De facturas de venta</div>
+              </div>
+              <div style="font-size:24px;color:var(--text-soft)">−</div>
+              <div style="background:var(--rose-light);border-radius:12px;padding:16px">
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--rose);margin-bottom:6px">IVA Deducible</div>
+                <div style="font-size:24px;font-weight:800;color:var(--navy)">1.864€</div>
+                <div style="font-size:11px;color:var(--text-soft);margin-top:4px">De facturas de compra</div>
+              </div>
+              <div style="font-size:24px;color:var(--text-soft)">=</div>
+              <div style="background:var(--navy-light);border-radius:12px;padding:16px;border:2px solid var(--navy-mid)">
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--navy-mid);margin-bottom:6px">A ingresar</div>
+                <div style="font-size:24px;font-weight:800;color:var(--navy)">2.968€</div>
+                <div style="font-size:11px;color:var(--text-soft);margin-top:4px">Modelo 303</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-dot" style="background:var(--navy-light)">🗓️</div>
+        <div class="step-body">
+          <div class="step-title">Filtrar por trimestre o período</div>
+          <p class="step-text">Usa el filtro de fechas del módulo Facturas para ver solo las facturas de un trimestre concreto (enero-marzo, abril-junio…) y obtener el IVA exacto de ese período para presentar el modelo 303.</p>
+
+          <div class="tip tip-info">
+            <div class="tip-icon">📋</div>
+            <p><strong>Para tu gestor:</strong> Puedes exportar a Excel todas las facturas del trimestre con un clic. El archivo incluye base imponible, tipo de IVA y cuota separados por columnas, listo para el cierre trimestral.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- CAP 06 · ALBARANES -->
+  <div class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-icon" style="background:var(--gold-light)">📦</div>
+      <div>
+        <div class="chapter-num" style="color:var(--amber)">Capítulo 06</div>
+        <div class="chapter-title">Albaranes de Entrega</div>
+        <p class="chapter-desc">Los albaranes documentan la entrega de materiales o trabajos al cliente, antes de emitir la factura formal. Se usan habitualmente en entregas de mobiliario o fases de obra.</p>
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-line"></div>
+        <div class="step-dot" style="background:var(--gold-light)">📦</div>
+        <div class="step-body">
+          <div class="step-title">Crear un albarán</div>
+          <p class="step-text">En el módulo <strong>Albaranes</strong>, crea un nuevo documento vinculado al proyecto. Añade las líneas de entrega con descripción, cantidad y referencia.</p>
+
+          <div class="field-list">
+            <h4>Datos del albarán</h4>
+            <ul>
+              <li>Número de albarán (auto)</li>
+              <li>Fecha de entrega</li>
+              <li>Cliente destinatario</li>
+              <li>Proyecto vinculado</li>
+              <li>Líneas de entrega detalladas</li>
+              <li>Firma del receptor</li>
+              <li>Notas e incidencias</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-dot" style="background:var(--gold-light)">🖨️</div>
+        <div class="step-body">
+          <div class="step-title">PDF del albarán</div>
+          <p class="step-text">Genera el PDF para que el cliente firme en el momento de la entrega. Queda archivado en el sistema como justificante de conformidad.</p>
+
+          <div class="tip tip-success">
+            <div class="tip-icon">✅</div>
+            <p><strong>Albarán → Factura:</strong> Una vez el cliente confirma la entrega mediante el albarán firmado, emites la factura correspondiente. Los albaranes ayudan a documentar el proceso y evitar disputas de cobro.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- CAP 07 · EXPORTAR -->
+  <div class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-icon" style="background:#e8f0e9">📤</div>
+      <div>
+        <div class="chapter-num" style="color:var(--sage)">Capítulo 07</div>
+        <div class="chapter-title">Exportar Datos Contables</div>
+        <p class="chapter-desc">Toda la información contable se puede exportar en Excel para tu gestor, para presentaciones o para análisis propios.</p>
+      </div>
+    </div>
+
+    <div class="card-row">
+      <div class="info-card" style="background:#e8f0e9;border-color:#c8dace">
+        <div class="ci">📊</div>
+        <h4>Excel de facturas</h4>
+        <p>Exporta todas las facturas del período con fecha, cliente, base, IVA, total y estado de cobro.</p>
+      </div>
+      <div class="info-card" style="background:var(--gold-light);border-color:#e8d8b8">
+        <div class="ci">📑</div>
+        <h4>Informe de rentabilidad</h4>
+        <p>Por proyecto: ingresos, costes, margen bruto y porcentaje de beneficio industrial.</p>
+      </div>
+      <div class="info-card" style="background:var(--rose-light);border-color:#e8ccd0">
+        <div class="ci">💸</div>
+        <h4>Pagos pendientes</h4>
+        <p>Listado de facturas de compra sin pagar, ordenadas por fecha de vencimiento.</p>
+      </div>
+      <div class="info-card" style="background:var(--navy-light);border-color:#d0dcea">
+        <div class="ci">💹</div>
+        <h4>Resumen de IVA</h4>
+        <p>Cuadro resumen trimestral de IVA repercutido, deducible y cuota a ingresar.</p>
+      </div>
+    </div>
+
+    <div class="tip tip-star">
+      <div class="tip-icon">⭐</div>
+      <p><strong>Integración con Holded:</strong> Los datos exportados en Excel son compatibles con el formato de importación de Holded, permitiendo sincronizar la facturación operativa de la app con la contabilidad oficial de la empresa.</p>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div style="background:#1a3a2e;border-radius:24px;padding:48px;position:relative;overflow:hidden">
+    <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:32px 32px"></div>
+    <div style="position:relative">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#7ddfb0;margin-bottom:12px">Resumen del módulo</div>
+      <h2 style="font-family:'Playfair Display',serif;font-size:28px;color:#fff;margin-bottom:24px">Facturación bajo control</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px">
+        <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px"><div style="font-size:18px;margin-bottom:6px">📤</div><div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:3px">Facturas de venta</div><div style="font-size:12px;color:rgba(255,255,255,.5)">PDF profesional con numeración automática</div></div>
+        <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px"><div style="font-size:18px;margin-bottom:6px">📥</div><div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:3px">Facturas de compra</div><div style="font-size:12px;color:rgba(255,255,255,.5)">Con adjunto PDF y control de vencimientos</div></div>
+        <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px"><div style="font-size:18px;margin-bottom:6px">💹</div><div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:3px">IVA automático</div><div style="font-size:12px;color:rgba(255,255,255,.5)">Repercutido, deducible y cuota por período</div></div>
+        <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px"><div style="font-size:18px;margin-bottom:6px">📦</div><div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:3px">Albaranes</div><div style="font-size:12px;color:rgba(255,255,255,.5)">Documentación de entrega al cliente</div></div>
+        <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px"><div style="font-size:18px;margin-bottom:6px">📊</div><div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:3px">Exportar Excel</div><div style="font-size:12px;color:rgba(255,255,255,.5)">Compatible con Holded y gestorías</div></div>
+        <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px"><div style="font-size:18px;margin-bottom:6px">⚠️</div><div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:3px">Alertas de cobro</div><div style="font-size:12px;color:rgba(255,255,255,.5)">Facturas vencidas visibles en el panel</div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  <div class="footer-logo">PAU Interiorismo</div>
+  <p>Manual de Facturación y Contabilidad · pau-interiorismo.vercel.app</p>
+</div>
+
+</body>
+</html>

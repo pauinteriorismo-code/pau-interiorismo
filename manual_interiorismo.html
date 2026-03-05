@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Manual Interiorismo · PAU Interiorismo</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--navy:#1a2e4a;--navy-mid:#2d4a6e;--navy-light:#e8eef6;--cream:#faf8f4;--warm-white:#fff;--gold:#c8a96e;--gold-light:#f5edd8;--sage:#6b8f71;--sage-light:#e8f0e9;--rose:#c97b84;--rose-light:#faeaec;--amber:#d4874a;--amber-light:#fdf0e6;--purple:#6b4a8c;--purple-light:#f0ecf8;--border:#e4e9f0;--text:#1a2e4a;--text-mid:#4a5568;--text-soft:#8a9ab0;--shadow-sm:0 2px 8px rgba(26,46,74,.08);--shadow-md:0 6px 24px rgba(26,46,74,.12)}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text);line-height:1.6;font-size:15px}
+  .cover{min-height:100vh;background:linear-gradient(135deg,#2a1a3e 0%,#4a2a6e 60%,#6b4a8c 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:60px 40px;text-align:center}
+  .cover::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 20% 80%,rgba(200,169,110,.18) 0%,transparent 60%),radial-gradient(ellipse 60% 80% at 80% 20%,rgba(107,74,140,.35) 0%,transparent 60%)}
+  .cover-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);background-size:48px 48px}
+  .cover-badge{position:relative;display:inline-flex;align-items:center;gap:10px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:100px;padding:8px 20px;font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.85);margin-bottom:32px;backdrop-filter:blur(8px)}
+  .cover-logo{position:relative;width:80px;height:80px;background:rgba(255,255,255,.15);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 32px;border:1px solid rgba(255,255,255,.2)}
+  .cover h1{position:relative;font-family:'Playfair Display',serif;font-size:clamp(36px,5vw,60px);font-weight:700;color:#fff;line-height:1.15;margin-bottom:16px;letter-spacing:-.02em}
+  .cover h1 span{color:#d4aaff}
+  .cover-sub{position:relative;font-size:18px;color:rgba(255,255,255,.7);font-weight:300;max-width:560px;margin-bottom:48px;line-height:1.7}
+  .cover-chips{position:relative;display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+  .chip{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:8px 16px;font-size:13px;color:rgba(255,255,255,.8);font-weight:500}
+  .index-section{background:var(--warm-white);padding:80px 40px}
+  .index-inner{max-width:1000px;margin:0 auto}
+  .section-eyebrow{font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--purple);margin-bottom:12px}
+  .section-title{font-family:'Playfair Display',serif;font-size:clamp(28px,3vw,42px);font-weight:600;color:var(--navy);margin-bottom:48px;line-height:1.25}
+  .index-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px}
+  .index-item{display:flex;align-items:center;gap:14px;padding:18px;border-radius:14px;background:var(--cream);border:1px solid var(--border);transition:all .2s}
+  .index-item:hover{border-color:var(--purple);transform:translateY(-2px)}
+  .index-num{width:32px;height:32px;border-radius:8px;background:#4a2a6e;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .index-label{font-size:13px;font-weight:600;color:var(--text-mid);line-height:1.3}
+  .main{max-width:1100px;margin:0 auto;padding:0 40px 120px}
+  .chapter{margin-top:100px}
+  .chapter-header{display:flex;align-items:flex-start;gap:24px;margin-bottom:48px;padding-bottom:32px;border-bottom:1px solid var(--border)}
+  .chapter-icon{width:64px;height:64px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;box-shadow:var(--shadow-sm)}
+  .chapter-title{font-family:'Playfair Display',serif;font-size:clamp(22px,2.5vw,34px);font-weight:600;color:var(--navy);line-height:1.2;margin-bottom:10px;display:block}
+  .chapter-desc{font-size:15px;color:var(--text-soft);font-weight:300;max-width:600px;line-height:1.6}
+  .chapter-num{font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;margin-bottom:6px;color:var(--purple)}
+  .steps{display:flex;flex-direction:column}
+  .step{display:grid;grid-template-columns:48px 1fr;gap:0 24px;position:relative}
+  .step:not(:last-child) .step-line{position:absolute;left:23px;top:52px;width:2px;bottom:0;background:var(--border)}
+  .step-dot{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;position:relative;z-index:1;box-shadow:var(--shadow-sm)}
+  .step-body{padding-bottom:40px}
+  .step-title{font-size:16px;font-weight:600;color:var(--navy);margin-bottom:8px;margin-top:10px}
+  .step-text{font-size:14px;color:var(--text-mid);line-height:1.7;margin-bottom:14px}
+  .card-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin:24px 0}
+  .info-card{padding:20px;border-radius:14px;border:1px solid var(--border)}
+  .info-card .ci{font-size:24px;margin-bottom:10px}
+  .info-card h4{font-size:14px;font-weight:600;color:var(--navy);margin-bottom:6px}
+  .info-card p{font-size:13px;color:var(--text-mid);line-height:1.5}
+  .field-list{background:var(--cream);border-radius:14px;padding:20px 24px;margin:16px 0;border:1px solid var(--border)}
+  .field-list h4{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-soft);margin-bottom:14px}
+  .field-list ul{list-style:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+  .field-list li{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-mid)}
+  .field-list li::before{content:'';width:6px;height:6px;border-radius:2px;background:var(--purple);flex-shrink:0}
+  .mockup{background:var(--warm-white);border-radius:16px;border:1px solid var(--border);overflow:hidden;box-shadow:var(--shadow-md);margin:24px 0}
+  .mockup-bar{background:#f0f3f7;padding:10px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)}
+  .mockup-dot{width:10px;height:10px;border-radius:50%}
+  .mockup-url{flex:1;background:#fff;border-radius:6px;padding:4px 12px;font-size:11px;color:var(--text-soft);margin:0 12px;border:1px solid var(--border)}
+  .mockup-body{padding:24px}
+  .ui-table{width:100%;border-collapse:collapse;font-size:12px}
+  .ui-table th{padding:8px 12px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-soft);background:var(--cream);border-bottom:1px solid var(--border)}
+  .ui-table td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text-mid)}
+  .badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:600}
+  .b-green{background:#e6f6ee;color:#1a7a45}.b-amber{background:#fef3e2;color:#b45309}.b-purple{background:#f0ecf8;color:#6b4a8c}.b-gray{background:#f0f3f7;color:var(--slate)}
+  .tip{display:flex;gap:14px;padding:16px 20px;border-radius:12px;margin:16px 0;border-left:3px solid}
+  .tip p{font-size:13px;line-height:1.6;color:var(--text-mid)}
+  .tip p strong{color:var(--navy);font-weight:600}
+  .tip-icon{font-size:18px;flex-shrink:0}
+  .tip-info{background:var(--navy-light);border-color:var(--navy-mid)}.tip-success{background:var(--sage-light);border-color:var(--sage)}.tip-warning{background:var(--amber-light);border-color:var(--amber)}.tip-star{background:var(--gold-light);border-color:var(--gold)}.tip-purple{background:var(--purple-light);border-color:var(--purple)}
+  .divider{height:1px;background:var(--border);margin:60px 0}
+  .footer{background:#2a1a3e;color:rgba(255,255,255,.6);padding:48px 40px;text-align:center}
+  .footer-logo{font-family:'Playfair Display',serif;font-size:24px;color:#fff;font-weight:600;margin-bottom:8px}
+  .footer p{font-size:13px;line-height:1.6}
+  .back-btn{position:fixed;top:20px;left:20px;z-index:100;background:rgba(255,255,255,.95);border:1px solid var(--border);border-radius:10px;padding:10px 16px;font-size:13px;font-weight:600;color:var(--navy);text-decoration:none;display:flex;align-items:center;gap:6px;backdrop-filter:blur(8px);box-shadow:var(--shadow-sm)}
+  .back-btn:hover{box-shadow:var(--shadow-md)}
+  @media(max-width:768px){.main{padding:0 20px 80px}.chapter-header{flex-direction:column;gap:16px}}
+</style>
+</head>
+<body>
+
+<a href="ayuda.html" class="back-btn">← Centro de Ayuda</a>
+
+<div class="cover">
+  <div class="cover-grid"></div>
+  <div class="cover-badge">🛋️ Manual de Usuario · Interiorismo</div>
+  <div class="cover-logo">🛋️</div>
+  <h1>Interiorismo &<br><span>Catálogos</span></h1>
+  <p class="cover-sub">Elabora presupuestos de mobiliario y equipamiento desde los catálogos integrados de Campoaras, Saitra y Daqua. Cocinas, baños y complementos con márgenes calculados al instante.</p>
+  <div class="cover-chips">
+    <div class="chip">🍳 Campoaras cocinas</div>
+    <div class="chip">🪵 Saitra cocinas</div>
+    <div class="chip">🚿 Daqua baños</div>
+    <div class="chip">📐 Presupuestador</div>
+    <div class="chip">🔄 Comparativa</div>
+    <div class="chip">💰 Márgenes</div>
+  </div>
+</div>
+
+<div class="index-section">
+  <div class="index-inner">
+    <div class="section-eyebrow">Contenidos del manual</div>
+    <h2 class="section-title">Módulo de Interiorismo</h2>
+    <div class="index-grid">
+      <div class="index-item"><div class="index-num">01</div><div class="index-label">Catálogo Campoaras</div></div>
+      <div class="index-item"><div class="index-num">02</div><div class="index-label">Catálogo Saitra</div></div>
+      <div class="index-item"><div class="index-num">03</div><div class="index-label">Catálogo Daqua</div></div>
+      <div class="index-item"><div class="index-num">04</div><div class="index-label">Presupuestador</div></div>
+      <div class="index-item"><div class="index-num">05</div><div class="index-label">Cálculo de márgenes</div></div>
+      <div class="index-item"><div class="index-num">06</div><div class="index-label">Comparativa de ofertas</div></div>
+    </div>
+
+    <div style="margin-top:56px">
+      <div class="section-eyebrow">Proceso de venta de interiorismo</div>
+      <h3 style="font-family:'Playfair Display',serif;font-size:22px;color:var(--navy);margin-bottom:28px">Del catálogo al presupuesto</h3>
+      <div style="display:flex;align-items:center;gap:0;overflow-x:auto;padding:4px 0">
+        <div style="flex-shrink:0;text-align:center"><div style="width:60px;height:60px;border-radius:50%;background:var(--purple-light);display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 8px;box-shadow:var(--shadow-sm)">🛋️</div><div style="font-size:11px;font-weight:600;color:var(--text-mid);max-width:70px">Consultar catálogo</div></div>
+        <div style="font-size:18px;color:var(--text-soft);padding:0 12px;margin-bottom:24px">→</div>
+        <div style="flex-shrink:0;text-align:center"><div style="width:60px;height:60px;border-radius:50%;background:var(--gold-light);display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 8px;box-shadow:var(--shadow-sm)">➕</div><div style="font-size:11px;font-weight:600;color:var(--text-mid);max-width:70px">Añadir productos</div></div>
+        <div style="font-size:18px;color:var(--text-soft);padding:0 12px;margin-bottom:24px">→</div>
+        <div style="flex-shrink:0;text-align:center"><div style="width:60px;height:60px;border-radius:50%;background:var(--sage-light);display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 8px;box-shadow:var(--shadow-sm)">💰</div><div style="font-size:11px;font-weight:600;color:var(--text-mid);max-width:70px">Aplicar margen</div></div>
+        <div style="font-size:18px;color:var(--text-soft);padding:0 12px;margin-bottom:24px">→</div>
+        <div style="flex-shrink:0;text-align:center"><div style="width:60px;height:60px;border-radius:50%;background:var(--amber-light);display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 8px;box-shadow:var(--shadow-sm)">📄</div><div style="font-size:11px;font-weight:600;color:var(--text-mid);max-width:70px">Generar propuesta</div></div>
+        <div style="font-size:18px;color:var(--text-soft);padding:0 12px;margin-bottom:24px">→</div>
+        <div style="flex-shrink:0;text-align:center"><div style="width:60px;height:60px;border-radius:50%;background:#e6f6ee;display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 8px;box-shadow:var(--shadow-sm)">✅</div><div style="font-size:11px;font-weight:600;color:var(--text-mid);max-width:70px">Cliente acepta</div></div>
+        <div style="font-size:18px;color:var(--text-soft);padding:0 12px;margin-bottom:24px">→</div>
+        <div style="flex-shrink:0;text-align:center"><div style="width:60px;height:60px;border-radius:50%;background:var(--navy-light);display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 8px;box-shadow:var(--shadow-sm)">📦</div><div style="font-size:11px;font-weight:600;color:var(--text-mid);max-width:70px">Pedido y entrega</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- CAP 01 · CAMPOARAS -->
+  <div class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-icon" style="background:var(--purple-light)">🏭</div>
+      <div>
+        <div class="chapter-num">Capítulo 01</div>
+        <span class="chapter-title">Catálogo Campoaras</span>
+        <p class="chapter-desc">Catálogo completo de cocinas Campoaras con todas las líneas de producto, acabados, módulos y accesorios. Precios de tarifa actualizados.</p>
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-line"></div>
+        <div class="step-dot" style="background:var(--purple-light)">🔍</div>
+        <div class="step-body">
+          <div class="step-title">Navegar por el catálogo</div>
+          <p class="step-text">En el módulo <strong>Catálogos → Campoaras</strong>, selecciona la línea de cocina deseada. El catálogo está organizado por familias de producto.</p>
+          <div class="card-row">
+            <div class="info-card" style="background:var(--purple-light);border-color:#d8ccec"><div class="ci">🪑</div><h4>Módulos de cocina</h4><p>Bajos, altos, columnas y módulos especiales. Configuración completa de la distribución.</p></div>
+            <div class="info-card" style="background:var(--gold-light);border-color:#e8d8b8"><div class="ci">🎨</div><h4>Acabados y puertas</h4><p>Todos los colores, texturas y materiales disponibles en la colección actual.</p></div>
+            <div class="info-card" style="background:var(--sage-light);border-color:#c8dace"><div class="ci">🔧</div><h4>Accesorios</h4><p>Herrajes, cajones, organizadores y complementos con precios individuales.</p></div>
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-line"></div>
+        <div class="step-dot" style="background:var(--purple-light)">➕</div>
+        <div class="step-body">
+          <div class="step-title">Seleccionar productos y cantidades</div>
+          <p class="step-text">Al hacer clic en un producto, introduce la cantidad. El sistema acumula el precio de tarifa y calcula el precio de coste con el descuento de proveedor aplicado.</p>
+          <div class="tip tip-purple">
+            <div class="tip-icon">💡</div>
+            <p><strong>Descuento de proveedor:</strong> El descuento comercial de Campoaras se aplica automáticamente sobre el precio de tarifa para obtener el precio de coste real para PAU Interiorismo.</p>
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-dot" style="background:var(--purple-light)">💰</div>
+        <div class="step-body">
+          <div class="step-title">Configurar margen de venta</div>
+          <p class="step-text">Sobre el precio de coste, introduce el <strong>% de margen</strong> para calcular el precio de venta al cliente. La calculadora muestra: tarifa → coste (con descuento) → venta (con margen) → beneficio.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- CAP 02 · SAITRA -->
+  <div class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-icon" style="background:var(--sage-light)">🪵</div>
+      <div>
+        <div class="chapter-num" style="color:var(--sage)">Capítulo 02</div>
+        <span class="chapter-title">Catálogo Saitra Cocinas</span>
+        <p class="chapter-desc">Mobiliario de cocina Saitra con configuración modular. Selecciona los módulos uno a uno o trabaja con configuraciones tipo predefinidas.</p>
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-line"></div>
+        <div class="step-dot" style="background:var(--sage-light)">🍳</div>
+        <div class="step-body">
+          <div class="step-title">Seleccionar la línea de cocina</div>
+          <p class="step-text">El catálogo Saitra está organizado por líneas de producto. Selecciona la serie y luego los módulos: bajos, altos, columnas y módulos especiales (esquina, fregadero, placa…).</p>
+          <div class="field-list">
+            <h4>Módulos disponibles Saitra</h4>
+            <ul>
+              <li>Módulos bajos estándar</li><li>Módulos altos estándar</li>
+              <li>Columnas despenseras</li><li>Módulo fregadero</li>
+              <li>Módulo bajo placa</li><li>Módulo esquinero</li>
+              <li>Cajones y gavetas</li><li>Módulos vitrina</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-line"></div>
+        <div class="step-dot" style="background:var(--sage-light)">🎨</div>
+        <div class="step-body">
+          <div class="step-title">Configurar acabado y dimensiones</div>
+          <p class="step-text">Para cada módulo, selecciona el <strong>acabado de puerta</strong> (color, material, textura), la <strong>dimensión</strong> (ancho) y los <strong>accesorios interiores</strong> (baldas, cajones internos, etc.).</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-dot" style="background:var(--sage-light)">📊</div>
+        <div class="step-body">
+          <div class="step-title">Resumen y precio de la cocina</div>
+          <p class="step-text">El presupuestador muestra el resumen de todos los módulos seleccionados, el precio total de tarifa, el precio de coste (con descuento Saitra) y el precio de venta recomendado con el margen configurado.</p>
+          <div class="tip tip-star">
+            <div class="tip-icon">⭐</div>
+            <p><strong>Comparar Campoaras vs Saitra:</strong> Con el módulo <strong>Comparativa</strong> puedes presupuestar la misma cocina con los dos proveedores y ver cuál ofrece mejor precio de coste o mayor margen.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- CAP 03 · DAQUA -->
+  <div class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-icon" style="background:var(--navy-light)">🚿</div>
+      <div>
+        <div class="chapter-num" style="color:var(--navy-mid)">Capítulo 03</div>
+        <span class="chapter-title">Catálogo Daqua · Baños</span>
+        <p class="chapter-desc">Equipamiento completo de baño con cuatro marcas especializadas. Platos de ducha, mamparas, grifería, sanitarios y complementos.</p>
+      </div>
+    </div>
+
+    <div class="card-row">
+      <div class="info-card" style="background:var(--navy-light);border-color:#d0dcea">
+        <div class="ci">🪨</div>
+        <h4>PLADOS</h4>
+        <p>Platos de ducha en material sólido. Todas las formas, medidas y acabados del catálogo actual.</p>
+      </div>
+      <div class="info-card" style="background:#e8f4f8;border-color:#c8dce8">
+        <div class="ci">🪟</div>
+        <h4>TASCA</h4>
+        <p>Mamparas de ducha y bañera. Fijas, abatibles, correderas. Con y sin perfilería.</p>
+      </div>
+      <div class="info-card" style="background:var(--cream);border-color:var(--border)">
+        <div class="ci">🚰</div>
+        <h4>BRADANO</h4>
+        <p>Grifería para baño y cocina. Mezcladores, termostáticos, series de diseño y gama básica.</p>
+      </div>
+      <div class="info-card" style="background:var(--gold-light);border-color:#e8d8b8">
+        <div class="ci">🏺</div>
+        <h4>ARMANDO VICARIO</h4>
+        <p>Lavabos y sanitarios de diseño. Gamas premium y exclusivas para proyectos de alto standing.</p>
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-line"></div>
+        <div class="step-dot" style="background:var(--navy-light)">🔍</div>
+        <div class="step-body">
+          <div class="step-title">Seleccionar marca y producto</div>
+          <p class="step-text">En el módulo <strong>Catálogos → Daqua</strong>, selecciona la marca y navega por las familias de producto. Puedes filtrar por dimensión, acabado o rango de precio.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-dot" style="background:var(--navy-light)">📐</div>
+        <div class="step-body">
+          <div class="step-title">Configurar el baño completo</div>
+          <p class="step-text">Para proyectos completos de baño, combina productos de las cuatro marcas: plato PLADOS + mampara TASCA + grifería BRADANO + lavabo ARMANDO VICARIO. El presupuestador suma todos los elementos y calcula el total del baño.</p>
+          <div class="tip tip-info">
+            <div class="tip-icon">💡</div>
+            <p><strong>Proyecto de varios baños:</strong> Duplica la configuración de un baño para crear variantes (baño principal, baño de invitados) con diferentes materiales o calidades, manteniendo la misma estructura.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- CAP 04 · PRESUPUESTADOR -->
+  <div class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-icon" style="background:var(--amber-light)">📐</div>
+      <div>
+        <div class="chapter-num" style="color:var(--amber)">Capítulo 04</div>
+        <span class="chapter-title">Presupuestador de Interiorismo</span>
+        <p class="chapter-desc">La herramienta central para construir presupuestos de mobiliario y equipamiento. Combina productos de todos los catálogos en un único documento para el cliente.</p>
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-line"></div>
+        <div class="step-dot" style="background:var(--amber-light)">📁</div>
+        <div class="step-body">
+          <div class="step-title">Seleccionar el proyecto</div>
+          <p class="step-text">Siempre empieza seleccionando el <strong>cliente y el proyecto</strong> al que vincularás el presupuesto de interiorismo. Así queda ligado al expediente completo.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-line"></div>
+        <div class="step-dot" style="background:var(--amber-light)">➕</div>
+        <div class="step-body">
+          <div class="step-title">Añadir líneas al presupuesto</div>
+          <p class="step-text">Añade productos de los catálogos o escribe líneas de texto libre. Cada línea tiene: referencia, descripción, cantidad, precio de coste, % margen y precio de venta calculado.</p>
+
+          <div class="mockup">
+            <div class="mockup-bar">
+              <div class="mockup-dot" style="background:#ff5f57"></div>
+              <div class="mockup-dot" style="background:#febc2e"></div>
+              <div class="mockup-dot" style="background:#28c840"></div>
+              <div class="mockup-url">Interiorismo · Presupuestador · PRY-001 · Cocina Miguel Z.</div>
+            </div>
+            <div class="mockup-body">
+              <table class="ui-table">
+                <thead><tr><th>Ref.</th><th>Descripción</th><th>Cant.</th><th>P. Coste</th><th>Margen</th><th>P. Venta</th><th>Total</th></tr></thead>
+                <tbody>
+                  <tr style="background:#f5f0fc">
+                    <td colspan="7" style="font-weight:700;color:#4a2a6e;font-size:12px">🍳 COCINA · Campoaras Serie Nórdica</td>
+                  </tr>
+                  <tr>
+                    <td style="color:var(--text-soft);font-size:11px">CAM-B60</td>
+                    <td>Módulo bajo 60cm roble natural</td>
+                    <td>3</td><td>285,00€</td><td style="color:var(--purple);font-weight:600">32%</td>
+                    <td>418,38€</td><td style="font-weight:700">1.255,14€</td>
+                  </tr>
+                  <tr>
+                    <td style="color:var(--text-soft);font-size:11px">CAM-A90</td>
+                    <td>Módulo alto 90cm roble natural</td>
+                    <td>4</td><td>198,00€</td><td style="color:var(--purple);font-weight:600">32%</td>
+                    <td>290,94€</td><td style="font-weight:700">1.163,76€</td>
+                  </tr>
+                  <tr style="background:#e8f4f8">
+                    <td colspan="7" style="font-weight:700;color:#2d4a6e;font-size:12px">🚿 BAÑO · PLADOS + BRADANO</td>
+                  </tr>
+                  <tr>
+                    <td style="color:var(--text-soft);font-size:11px">PL-80X80</td>
+                    <td>Plato ducha PLADOS 80×80 blanco</td>
+                    <td>1</td><td>320,00€</td><td style="color:var(--purple);font-weight:600">28%</td>
+                    <td>444,44€</td><td style="font-weight:700">444,44€</td>
+                  </tr>
+                </tbody>
+              </table>
+              <div style="display:flex;justify-content:flex-end;gap:20px;margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">
+                <div style="text-align:right"><div style="font-size:10px;color:var(--text-soft)">COSTE TOTAL</div><div style="font-size:16px;font-weight:700;color:var(--rose)">2.184,00€</div></div>
+                <div style="text-align:right"><div style="font-size:10px;color:var(--text-soft)">VENTA S/IVA</div><div style="font-size:16px;font-weight:700;color:var(--navy)">2.863,34€</div></div>
+                <div style="text-align:right"><div style="font-size:10px;color:var(--text-soft)">MARGEN</div><div style="font-size:18px;font-weight:800;color:#2d7a52">31,1%</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-dot" style="background:var(--amber-light)">📄</div>
+        <div class="step-body">
+          <div class="step-title">Generar propuesta para el cliente</div>
+          <p class="step-text">El botón <strong>⬇️ PDF</strong> genera la propuesta de interiorismo con el diseño profesional de PAU Interiorismo. El documento muestra el precio de venta al cliente (sin los datos de coste ni margen).</p>
+          <div class="tip tip-success">
+            <div class="tip-icon">✅</div>
+            <p><strong>Datos confidenciales protegidos:</strong> El PDF generado para el cliente solo muestra los precios de venta. Los precios de coste y los márgenes solo son visibles dentro de la aplicación.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- CAP 05 · COMPARATIVA -->
+  <div class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-icon" style="background:var(--sage-light)">🔄</div>
+      <div>
+        <div class="chapter-num" style="color:var(--sage)">Capítulo 05</div>
+        <span class="chapter-title">Comparativa de Ofertas</span>
+        <p class="chapter-desc">Cuando hay que decidir entre varios proveedores o alternativas de producto, la comparativa te ayuda a elegir la opción más ventajosa para el cliente y para el margen de la empresa.</p>
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-line"></div>
+        <div class="step-dot" style="background:var(--sage-light)">🔄</div>
+        <div class="step-body">
+          <div class="step-title">Crear una comparativa</div>
+          <p class="step-text">En el módulo <strong>Comparativa</strong>, selecciona hasta 3 proveedores o alternativas para el mismo trabajo. Introduce los precios de cada uno y el sistema muestra la comparación lado a lado.</p>
+
+          <div style="background:var(--cream);border-radius:14px;border:1px solid var(--border);overflow:hidden;margin:16px 0">
+            <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr;font-size:12px">
+              <div style="padding:12px 16px;background:var(--navy);color:#fff;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.06em">Concepto</div>
+              <div style="padding:12px;background:#4a2a6e;color:#fff;font-weight:700;text-align:center">Campoaras</div>
+              <div style="padding:12px;background:#2a5a3e;color:#fff;font-weight:700;text-align:center">Saitra</div>
+              <div style="padding:12px;background:#3a3a3a;color:#fff;font-weight:700;text-align:center">Oferta 3</div>
+              <div style="padding:10px 16px;border-bottom:1px solid var(--border);color:var(--text-mid)">Precio tarifa</div>
+              <div style="padding:10px;border-bottom:1px solid var(--border);text-align:center">4.280€</div>
+              <div style="padding:10px;border-bottom:1px solid var(--border);text-align:center">3.960€</div>
+              <div style="padding:10px;border-bottom:1px solid var(--border);text-align:center">4.100€</div>
+              <div style="padding:10px 16px;border-bottom:1px solid var(--border);color:var(--text-mid)">Descuento proveedor</div>
+              <div style="padding:10px;border-bottom:1px solid var(--border);text-align:center">42%</div>
+              <div style="padding:10px;border-bottom:1px solid var(--border);text-align:center">38%</div>
+              <div style="padding:10px;border-bottom:1px solid var(--border);text-align:center">35%</div>
+              <div style="padding:10px 16px;border-bottom:1px solid var(--border);font-weight:700">Precio coste</div>
+              <div style="padding:10px;border-bottom:1px solid var(--border);text-align:center;font-weight:700;color:var(--navy)">2.482€</div>
+              <div style="padding:10px;border-bottom:1px solid var(--border);text-align:center;font-weight:700;color:var(--navy)">2.455€</div>
+              <div style="padding:10px;border-bottom:1px solid var(--border);text-align:center;font-weight:700;color:var(--navy)">2.665€</div>
+              <div style="padding:10px 16px;background:#e6f6ee;font-weight:700;color:#2d7a52">✅ Margen al 30%</div>
+              <div style="padding:10px;background:#e6f6ee;text-align:center;font-weight:700;color:#2d7a52">3.546€</div>
+              <div style="padding:10px;background:#e6f6ee;text-align:center;font-weight:700;color:#2d7a52">3.507€</div>
+              <div style="padding:10px;background:#e6f6ee;text-align:center;font-weight:700;color:#2d7a52">3.807€</div>
+            </div>
+          </div>
+
+          <div class="tip tip-star">
+            <div class="tip-icon">⭐</div>
+            <p><strong>Decisión objetiva:</strong> La comparativa revela que <strong>Saitra</strong> tiene menor precio de tarifa pero menor descuento. Con el mismo margen del 30%, la cocina Saitra resulta 39€ más barata para el cliente y con margen similar para PAU.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div style="background:#2a1a3e;border-radius:24px;padding:48px;position:relative;overflow:hidden">
+    <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);background-size:32px 32px"></div>
+    <div style="position:relative">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#d4aaff;margin-bottom:12px">Resumen del módulo</div>
+      <h2 style="font-family:'Playfair Display',serif;font-size:28px;color:#fff;margin-bottom:24px">Interiorismo bajo control</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px">
+        <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px"><div style="font-size:18px;margin-bottom:6px">🏭</div><div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:3px">Campoaras</div><div style="font-size:12px;color:rgba(255,255,255,.5)">Catálogo completo cocinas</div></div>
+        <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px"><div style="font-size:18px;margin-bottom:6px">🪵</div><div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:3px">Saitra</div><div style="font-size:12px;color:rgba(255,255,255,.5)">Mobiliario cocina modular</div></div>
+        <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px"><div style="font-size:18px;margin-bottom:6px">🚿</div><div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:3px">Daqua Baños</div><div style="font-size:12px;color:rgba(255,255,255,.5)">PLADOS · TASCA · BRADANO · VICARIO</div></div>
+        <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px"><div style="font-size:18px;margin-bottom:6px">💰</div><div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:3px">Márgenes</div><div style="font-size:12px;color:rgba(255,255,255,.5)">Cálculo automático tarifa→coste→venta</div></div>
+        <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px"><div style="font-size:18px;margin-bottom:6px">🔄</div><div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:3px">Comparativa</div><div style="font-size:12px;color:rgba(255,255,255,.5)">Hasta 3 ofertas lado a lado</div></div>
+        <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px"><div style="font-size:18px;margin-bottom:6px">📄</div><div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:3px">Propuesta PDF</div><div style="font-size:12px;color:rgba(255,255,255,.5)">Para cliente sin costes visibles</div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  <div class="footer-logo">PAU Interiorismo</div>
+  <p>Manual de Interiorismo y Catálogos · pau-interiorismo.vercel.app</p>
+</div>
+
+</body>
+</html>
