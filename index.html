@@ -18578,7 +18578,20 @@ async function loadCertificaciones() {
   _certPresBase = presBase;
 
   // ── Cargar certificaciones ──────────────────────────────────
-  const certs = await sbGet('certificaciones', `?proyecto_id=eq.${proy}&order=fecha.asc`);
+  let certs = [];
+  try {
+    certs = await sbGet('certificaciones', `?proyecto_id=eq.${proy}&order=fecha.asc`);
+  } catch(e) {
+    console.warn('certificaciones table:', e.message);
+    document.getElementById('cert-tbody').innerHTML =
+      '<tr><td colspan="10"><div class="empty"><div class="empty-icon">⚠️</div>' +
+      '<div class="empty-text">La tabla "certificaciones" no existe en Supabase todavía.<br>' +
+      '<small>Ejecuta el SQL de creación en el panel de Supabase.</small></div></div></td></tr>';
+    document.getElementById('cert-kpis').style.display = 'none';
+    document.getElementById('cert-progress-wrap').style.display = 'none';
+    document.getElementById('cert-btn-nueva').disabled = false;
+    return;
+  }
   const totalCert  = certs.reduce((s,c) => s+(c.base_imponible||0), 0);
   const pdte       = presBase - totalCert;
   const pct        = presBase > 0 ? (totalCert / presBase * 100) : 0;
@@ -18692,7 +18705,10 @@ async function nuevaCertificacion() {
   document.getElementById('cert-btn-pdf').disabled = true;
 
   // Calcular importes ya certificados
-  const prevCerts = await sbGet('certificaciones', `?proyecto_id=eq.${_certProyId}&order=fecha.asc`);
+  let prevCerts = [];
+  try {
+    prevCerts = await sbGet('certificaciones', `?proyecto_id=eq.${_certProyId}&order=fecha.asc`);
+  } catch(e) { prevCerts = []; }
   const acumPrev  = prevCerts.reduce((s,c) => s+(c.base_imponible||0), 0);
   const dispBase  = _certPresBase - acumPrev;
 
@@ -18729,8 +18745,9 @@ async function editarCertificacion(certId) {
   document.getElementById('cert-importe').value = base > 0 ? base.toFixed(2) : '';
 
   // Previas (excluyendo esta)
-  const prevCerts = await sbGet('certificaciones', `?proyecto_id=eq.${_certProyId}&order=fecha.asc`);
-  const acumPrev  = prevCerts.filter(pc => pc.id !== certId).reduce((s,c) => s+(c.base_imponible||0), 0);
+  let prevCerts2 = [];
+  try { prevCerts2 = await sbGet('certificaciones', `?proyecto_id=eq.${_certProyId}&order=fecha.asc`); } catch(e) { prevCerts2 = []; }
+  const acumPrev  = prevCerts2.filter(pc => pc.id !== certId).reduce((s,c) => s+(c.base_imponible||0), 0);
   const dispBase  = _certPresBase - acumPrev;
   certActualizarInfoBase(acumPrev, dispBase);
   certActualizarResumen(base);
@@ -18798,8 +18815,8 @@ async function guardarCertificacion() {
       await sbPatch('certificaciones', _certEditing, payload);
       toast('Certificación actualizada ✅');
     } else {
-      const prev    = await sbGet('certificaciones',
-        `?proyecto_id=eq.${_certProyId}&order=created_at.asc`);
+      let prev = [];
+      try { prev = await sbGet('certificaciones', `?proyecto_id=eq.${_certProyId}&order=created_at.asc`); } catch(e) { prev = []; }
       const lastNum = prev.length
         ? (parseInt(prev[prev.length-1].num_cert?.replace(/\D/g,'')) || 0)
         : 0;
@@ -19870,6 +19887,6 @@ function vpGuardarPDF(){
     <div class="form-group">
       <label class="form-label">&#128228; Desde (cuenta remitente)</label>
       <select class="form-input" id="email-desde">
-        <option value="presupuestos@pauinteriorismo.es"><template class="__cf_email__" data-cfemail="94e4e6f1e7e1e4e1f1e7e0fbe7d4e4f5e1fdfae0f1e6fdfbe6fde7f9fbbaf1e7">[email&#160;protected]</template></option>
-        <option value="info@pauinteriorismo.es"><template class="__cf_email__" data-cfemail="87eee9e1e8c7f7e6f2eee9f3e2f5eee8f5eef4eae8a9e2f4">[email&#160;protected]</template></option>
-        <option value="administracion@pauinteriorismo.es"><template class="__cf_email__" data-cfemail="abcacfc6c2c5c2d8dfd9cac8c2c4c5
+        <option value="presupuestos@pauinteriorismo.es"><template class="__cf_email__" data-cfemail="25555740565055504056514a56655544504c4b5140574c4a574c56484a0b4056">[email&#160;protected]</template></option>
+        <option value="info@pauinteriorismo.es"><template class="__cf_email__" data-cfemail="4c25222a230c3c2d39252238293e25233e253f212362293f">[email&#160;protected]</template></option>
+        <option value="administracion@pauinteriorismo.es"><template class="__cf_email__" data-cfemail="fc9d98919592958f888e9d9f959392
