@@ -17586,8 +17586,12 @@ async function calcExpKPIs(proyId){
   const horProy = (HC||[]).filter(h=>h.proyecto_id===proyId);
   const costeHoras = horProy.reduce((s,h)=>s+(h.total||0), 0);
 
-  // Coste total = compras + mano de obra
-  const costeTotal = compTotal + costeHoras;
+  // Subcontratas del proyecto
+  const scProy = (ScC||[]).filter(s=>s.proyecto_id===proyId);
+  const costeSubc = scProy.reduce((s,c)=>s+(c.importe||0)*(1+ivaPct(c.iva_pct)/100), 0);
+
+  // Coste total = compras + subcontratas + mano de obra
+  const costeTotal = compTotal + costeSubc + costeHoras;
 
   const margen = factTotal>0 ? ((factTotal-costeTotal)/factTotal)*100 : 0;
 
@@ -17595,7 +17599,7 @@ async function calcExpKPIs(proyId){
   setEl('exp-k-pres', presTot>0 ? fmt(presTot) : '—');
   setEl('exp-k-costes', fmt(costeTotal));
   setEl('exp-k-fact', fmt(factTotal));
-  setEl('exp-k-margen', margen>0 ? fmtP(margen) : '—', {color: margen>=20?'var(--green)':margen>0?'var(--amber)':'var(--red)'});
+  setEl('exp-k-margen', factTotal>0 ? fmtP(margen) : '—', {color: margen>=20?'var(--green)':margen>=0?'var(--amber)':'var(--red)'});
 }
 
 function expTab(tab){
