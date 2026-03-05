@@ -4289,9 +4289,11 @@ async function loadPresupuestoFinal(){
       const pv=l.precio_venta||0,ci=l.ci_gg_bi_pct||0,sub=(l.cantidad||0)*pv*(ci>0?(1+ci/100):1);
       totalBase+=sub;
       const tipoIva=l.iva_pct||'10%';
-      const pctIva=parseFloat(tipoIva)||10;
-      if(!ivaDesglose[tipoIva]) ivaDesglose[tipoIva]={pct:pctIva, base:0};
-      ivaDesglose[tipoIva].base += sub;
+      const pctIva=(tipoIva==='Exento'||tipoIva===0||tipoIva==='0')?0:(parseFloat(tipoIva)||10);
+      if(pctIva>0){
+        if(!ivaDesglose[tipoIva]) ivaDesglose[tipoIva]={pct:pctIva, base:0};
+        ivaDesglose[tipoIva].base += sub;
+      }
       const bg=i%2===0?'white':'#f9f9f9';
       return`<tr style="background:${bg};border-bottom:1px solid #eee"><td style="padding:7px 8px">${l.descripcion}</td><td style="padding:7px 8px;text-align:center">${l.unidad||''}</td><td style="padding:7px 8px;text-align:right">${l.cantidad||0}</td><td style="padding:7px 8px;text-align:right">${(pv*(ci>0?1+ci/100:1)).toFixed(2)}€</td><td style="padding:7px 8px;text-align:right;font-weight:600">${sub.toFixed(2)}€</td></tr>`;
     }).join('');
