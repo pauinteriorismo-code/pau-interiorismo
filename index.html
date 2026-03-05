@@ -528,6 +528,7 @@ th.sortable:not(.sort-asc):not(.sort-desc) .sort-arrow::after{content:'⇅'}
               <th style="padding:8px;text-align:center;width:40px;color:#4a3728;border-bottom:1px solid #e8e0d4;font-size:10px;text-transform:uppercase">Ud.</th>
               <th style="padding:8px;text-align:right;width:60px;color:#4a3728;border-bottom:1px solid #e8e0d4;font-size:10px;text-transform:uppercase">Cant.</th>
               <th style="padding:8px;text-align:right;width:90px;color:#4a3728;border-bottom:1px solid #e8e0d4;font-size:10px;text-transform:uppercase">P.Unitario</th>
+              <th style="padding:8px;text-align:center;width:60px;color:#4a3728;border-bottom:1px solid #e8e0d4;font-size:10px;text-transform:uppercase">IVA</th>
               <th style="padding:8px;text-align:right;width:90px;color:#4a3728;border-bottom:1px solid #e8e0d4;font-size:10px;text-transform:uppercase">Subtotal</th>
             </tr>
           </thead>
@@ -4285,7 +4286,7 @@ async function loadPresupuestoFinal(){
     let ivaDesglose={};
     const tbody=document.getElementById('pf-lineas');
     tbody.innerHTML=lineas.map((l,i)=>{
-      if(l.es_capitulo)return`<tr><td colspan="5" style="padding:10px 8px;font-weight:700;background:#f7f4ef;color:#4a3728;font-size:12px;border-bottom:1px solid #b87333">${l.descripcion}</td></tr>`;
+      if(l.es_capitulo)return`<tr><td colspan="6" style="padding:10px 8px;font-weight:700;background:#f7f4ef;color:#4a3728;font-size:12px;border-bottom:1px solid #b87333">${l.descripcion}</td></tr>`;
       const pv=l.precio_venta||0,ci=l.ci_gg_bi_pct||0,sub=(l.cantidad||0)*pv*(ci>0?(1+ci/100):1);
       totalBase+=sub;
       const tipoIva=l.iva_pct||'10%';
@@ -4295,7 +4296,8 @@ async function loadPresupuestoFinal(){
         ivaDesglose[tipoIva].base += sub;
       }
       const bg=i%2===0?'white':'#f9f9f9';
-      return`<tr style="background:${bg};border-bottom:1px solid #eee"><td style="padding:7px 8px">${l.descripcion}</td><td style="padding:7px 8px;text-align:center">${l.unidad||''}</td><td style="padding:7px 8px;text-align:right">${l.cantidad||0}</td><td style="padding:7px 8px;text-align:right">${(pv*(ci>0?1+ci/100:1)).toFixed(2)}€</td><td style="padding:7px 8px;text-align:right;font-weight:600">${sub.toFixed(2)}€</td></tr>`;
+      const ivaLabel = (tipoIva==='Exento'||tipoIva===0||tipoIva==='0') ? '<span style="font-size:9px;background:#f0f8f0;color:#2d7a52;border-radius:3px;padding:1px 4px;font-weight:600">Exento</span>' : '<span style="font-size:9px;color:#666">'+tipoIva+'</span>';
+      return`<tr style="background:${bg};border-bottom:1px solid #eee"><td style="padding:7px 8px">${l.descripcion}</td><td style="padding:7px 8px;text-align:center">${l.unidad||''}</td><td style="padding:7px 8px;text-align:right">${l.cantidad||0}</td><td style="padding:7px 8px;text-align:right">${(pv*(ci>0?1+ci/100:1)).toFixed(2)}€</td><td style="padding:7px 8px;text-align:center">${ivaLabel}</td><td style="padding:7px 8px;text-align:right;font-weight:600">${sub.toFixed(2)}€</td></tr>`;
     }).join('');
     const totalIva = Object.values(ivaDesglose).reduce((s,v)=>s+v.base*v.pct/100, 0);
     const total=totalBase+totalIva;
