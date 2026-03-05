@@ -528,6 +528,7 @@ th.sortable:not(.sort-asc):not(.sort-desc) .sort-arrow::after{content:'⇅'}
               <th style="padding:8px;text-align:center;width:40px;color:#4a3728;border-bottom:1px solid #e8e0d4;font-size:10px;text-transform:uppercase">Ud.</th>
               <th style="padding:8px;text-align:right;width:60px;color:#4a3728;border-bottom:1px solid #e8e0d4;font-size:10px;text-transform:uppercase">Cant.</th>
               <th style="padding:8px;text-align:right;width:90px;color:#4a3728;border-bottom:1px solid #e8e0d4;font-size:10px;text-transform:uppercase">P.Unitario</th>
+              <th style="padding:8px;text-align:center;width:55px;color:#c62828;border-bottom:1px solid #e8e0d4;font-size:10px;text-transform:uppercase">Dto.%</th>
               <th style="padding:8px;text-align:center;width:60px;color:#4a3728;border-bottom:1px solid #e8e0d4;font-size:10px;text-transform:uppercase">IVA</th>
               <th style="padding:8px;text-align:right;width:90px;color:#4a3728;border-bottom:1px solid #e8e0d4;font-size:10px;text-transform:uppercase">Subtotal</th>
             </tr>
@@ -1132,7 +1133,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         </div>
       </div>
       <div class="card">
-        <div class="table-wrap"><table><thead><tr style="background:#f7f4ef"><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4;width:22px;cursor:grab" title="Arrastra para reordenar">☰</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">#</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Descripción</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Ud.</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Cant.</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Precio Base</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Margen %</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">CI+GG+BI</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">P.Venta</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Subtotal s/IVA</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4;text-align:center;width:50px">IVA%</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Total c/IVA</th><th></th></tr></thead>
+        <div class="table-wrap"><table><thead><tr style="background:#f7f4ef"><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4;width:22px;cursor:grab" title="Arrastra para reordenar">☰</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">#</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Descripción</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Ud.</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Cant.</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Precio Base</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Margen %</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">CI+GG+BI</th><th style="background:#f7f4ef;color:#c62828;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Dto.%</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">P.Venta</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Subtotal s/IVA</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4;text-align:center;width:50px">IVA%</th><th style="background:#f7f4ef;color:#4a3728;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4">Total c/IVA</th><th></th></tr></thead>
         <tbody id="pres-tbody"><tr><td colspan="11"><div class="empty"><div class="empty-icon">💰</div><div class="empty-text">Selecciona un proyecto</div></div></td></tr></tbody></table></div>
       </div>
     </div>
@@ -3466,6 +3467,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="form-group"><label class="form-label">Precio Base (coste)</label><input class="form-input" id="pl-precio" type="number" step="0.01" oninput="calcLineaPres()"></div>
       <div class="form-group"><label class="form-label">Margen %</label><input class="form-input" id="pl-margen" type="number" step="0.1" value="0" oninput="calcLineaPres()"></div>
       <div class="form-group"><label class="form-label">CI+GG+BI %</label><input class="form-input" id="pl-ci" type="number" step="0.1" value="0" oninput="calcLineaPres()"></div>
+      <div class="form-group"><label class="form-label" style="color:#c62828">Descuento %</label><input class="form-input" id="pl-dto" type="number" step="0.1" value="0" min="0" max="100" style="border-color:#e57373;color:#c62828" oninput="calcLineaPres()"></div>
       <div class="form-group"><label class="form-label">Precio Venta</label><input class="form-input calc" id="pl-pventa" readonly=""></div>
       <div class="form-group"><label class="form-label">Subtotal</label><input class="form-input calc" id="pl-subtotal" readonly=""></div>
       <div class="form-group"><label class="form-label">IVA</label><select class="form-input" id="pl-iva"><option>10%</option><option>21%</option><option>4%</option><option>Exento</option></select></div>
@@ -4073,6 +4075,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
               <th style="padding:6px 8px;text-align:center;width:60px">Ud.</th>
               <th style="padding:6px 8px;text-align:right;width:70px">Cant.</th>
               <th style="padding:6px 8px;text-align:right;width:90px">P.Unit. €</th>
+              <th style="padding:6px 8px;text-align:center;width:60px;background:#c62828">Dto.%</th>
               <th style="padding:6px 8px;text-align:center;width:70px">IVA</th>
               <th style="padding:6px 8px;text-align:right;width:90px">Subtotal</th>
               <th style="padding:6px 4px;width:28px"></th>
@@ -4082,7 +4085,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <tfoot>
             <tr style="background:var(--bg);border-top:2px solid var(--border)">
               <td colspan="3" style="padding:7px 8px;font-size:11px;color:var(--text-soft)">Los totales se calculan automáticamente</td>
-              <td colspan="2" style="padding:7px 8px;text-align:right;font-size:11px;font-weight:600">Base imp. / Total c/IVA</td>
+              <td colspan="3" style="padding:7px 8px;text-align:right;font-size:11px;font-weight:600">Base imp. / Total c/IVA</td>
               <td style="padding:7px 8px;text-align:right;font-weight:700;color:var(--navy)" id="f-lineas-total">0,00 € / 0,00 €</td>
               <td></td>
             </tr>
@@ -4288,8 +4291,12 @@ async function loadPresupuestoFinal(){
     let ivaDesglose={};
     const tbody=document.getElementById('pf-lineas');
     tbody.innerHTML=lineas.map((l,i)=>{
-      if(l.es_capitulo)return`<tr><td colspan="6" style="padding:10px 8px;font-weight:700;background:#f7f4ef;color:#4a3728;font-size:12px;border-bottom:1px solid #b87333">${l.descripcion}</td></tr>`;
-      const pv=l.precio_venta||0,ci=l.ci_gg_bi_pct||0,sub=(l.cantidad||0)*pv*(ci>0?(1+ci/100):1);
+      if(l.es_capitulo)return`<tr><td colspan="7" style="padding:10px 8px;font-weight:700;background:#f7f4ef;color:#4a3728;font-size:12px;border-bottom:1px solid #b87333">${l.descripcion}</td></tr>`;
+      const pv=l.precio_venta||0,ci=l.ci_gg_bi_pct||0,pvConCI=pv*(ci>0?(1+ci/100):1);
+      const _pb=parseFloat(l.precio_base)||0,_mg=parseFloat(l.margen_pct)||0;
+      let _pvSinDto=_mg>0?_pb*(1+_mg/100):_pb;if(ci>0)_pvSinDto=_pvSinDto*(1+ci/100);
+      const _dto=(_pvSinDto>0.001&&pv<(_pvSinDto-0.001))?Math.round((1-pv/_pvSinDto)*1000)/10:0;
+      const sub=(l.cantidad||0)*pvConCI;
       totalBase+=sub;
       const tipoIva=l.iva_pct||'10%';
       const pctIva=(tipoIva==='Exento'||tipoIva===0||tipoIva==='0')?0:(parseFloat(tipoIva)||10);
@@ -4298,8 +4305,10 @@ async function loadPresupuestoFinal(){
         ivaDesglose[tipoIva].base += sub;
       }
       const bg=i%2===0?'white':'#f9f9f9';
-      const ivaLabel = (tipoIva==='Exento'||tipoIva===0||tipoIva==='0') ? '<span style="font-size:9px;background:#f0f8f0;color:#2d7a52;border-radius:3px;padding:1px 4px;font-weight:600">Exento</span>' : '<span style="font-size:9px;color:#666">'+tipoIva+'</span>';
-      return`<tr style="background:${bg};border-bottom:1px solid #eee"><td style="padding:7px 8px">${l.descripcion}</td><td style="padding:7px 8px;text-align:center">${l.unidad||''}</td><td style="padding:7px 8px;text-align:right">${l.cantidad||0}</td><td style="padding:7px 8px;text-align:right">${(pv*(ci>0?1+ci/100:1)).toFixed(2)}€</td><td style="padding:7px 8px;text-align:center">${ivaLabel}</td><td style="padding:7px 8px;text-align:right;font-weight:600">${sub.toFixed(2)}€</td></tr>`;
+      const ivaLabel=(tipoIva==='Exento'||tipoIva===0||tipoIva==='0')?'<span style="font-size:9px;background:#f0f8f0;color:#2d7a52;border-radius:3px;padding:1px 4px;font-weight:600">Exento</span>':'<span style="font-size:9px;color:#666">'+tipoIva+'</span>';
+      const pvCell=_dto>0?`<span style="text-decoration:line-through;color:#aaa;font-size:10px">${_pvSinDto.toFixed(2)}€</span><br><span style="color:#c62828;font-weight:700">${pvConCI.toFixed(2)}€</span>`:pvConCI.toFixed(2)+'€';
+      const dtoCell=_dto>0?`<span style="color:#c62828;font-weight:700">-${_dto.toFixed(1)}%</span>`:'—';
+      return`<tr style="background:${bg};border-bottom:1px solid #eee"><td style="padding:7px 8px">${l.descripcion}</td><td style="padding:7px 8px;text-align:center">${l.unidad||''}</td><td style="padding:7px 8px;text-align:right">${l.cantidad||0}</td><td style="padding:7px 8px;text-align:right;line-height:1.4">${pvCell}</td><td style="padding:7px 8px;text-align:center">${dtoCell}</td><td style="padding:7px 8px;text-align:center">${ivaLabel}</td><td style="padding:7px 8px;text-align:right;font-weight:600">${sub.toFixed(2)}€</td></tr>`;
     }).join('');
     const totalIva = Object.values(ivaDesglose).reduce((s,v)=>s+v.base*v.pct/100, 0);
     const total=totalBase+totalIva;
@@ -6188,7 +6197,11 @@ function renderPresupuesto(){
     const pv=l.precio_venta||0,ci=l.ci_gg_bi_pct||0,sub=(l.cantidad||0)*pv,subCI=ci>0?sub*(1+ci/100):sub;
     const ivaPctNum=parseFloat(l.iva_pct)||10,ivaImporte=subCI*ivaPctNum/100;
     totBase+=(l.cantidad||0)*(l.precio_base||0);totCI+=subCI-sub;totVenta+=subCI;
-    return`<tr data-search="${(l.descripcion||'').toLowerCase()}"><td style="color:var(--text-soft);font-size:11px">${i+1}</td><td><strong>${l.descripcion||'—'}</strong>${l.ref_cype?`<br><span style="font-size:9px;color:var(--text-soft)">${l.ref_cype}</span>`:''}</td><td style="text-align:center">${l.unidad||'—'}</td><td class="td-mono">${l.cantidad||0}</td><td class="td-mono">${fmt(l.precio_base)}</td><td class="td-mono" style="color:var(--green)">${l.margen_pct>0?fmtP(l.margen_pct):'—'}</td><td class="td-mono" style="color:var(--amber)">${ci>0?fmtP(ci):'—'}</td><td class="td-mono" style="font-weight:700">${fmt(pv)}</td><td class="td-mono" style="font-weight:700;color:var(--navy)">${fmt(subCI)}</td><td style="text-align:center;vertical-align:middle"><span class="badge b-gray">${l.iva_pct||'10%'}</span></td><td class="td-mono" style="font-weight:700;color:var(--copper)">${fmt(subCI+ivaImporte)}</td><td><div class="td-actions"><button class="btn btn-ghost btn-icon btn-sm" onclick="editLineaPresupuesto('${l.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('presupuesto_lineas','${l.id}','${(l.descripcion||'').replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`;
+    const _pb=parseFloat(l.precio_base)||0,_mg=parseFloat(l.margen_pct)||0,_ciR=parseFloat(l.ci_gg_bi_pct)||0;
+    let _pvSinDto=_mg>0?_pb*(1+_mg/100):_pb;if(_ciR>0)_pvSinDto=_pvSinDto*(1+_ciR/100);
+    const _dto=(_pvSinDto>0.001&&pv<_pvSinDto-0.001)?Math.round((1-pv/_pvSinDto)*1000)/10:0;
+    const dtoCell=_dto>0?`<span style="color:#c62828;font-weight:700">-${_dto.toFixed(1)}%</span>`:'—';
+    return`<tr data-search="${(l.descripcion||'').toLowerCase()}"><td style="color:var(--text-soft);font-size:11px">${i+1}</td><td><strong>${l.descripcion||'—'}</strong>${l.ref_cype?`<br><span style="font-size:9px;color:var(--text-soft)">${l.ref_cype}</span>`:''}</td><td style="text-align:center">${l.unidad||'—'}</td><td class="td-mono">${l.cantidad||0}</td><td class="td-mono">${fmt(l.precio_base)}</td><td class="td-mono" style="color:var(--green)">${l.margen_pct>0?fmtP(l.margen_pct):'—'}</td><td class="td-mono" style="color:var(--amber)">${ci>0?fmtP(ci):'—'}</td><td class="td-mono" style="color:#c62828;font-weight:700;text-align:center">${dtoCell}</td><td class="td-mono" style="font-weight:700">${fmt(pv)}</td><td class="td-mono" style="font-weight:700;color:var(--navy)">${fmt(subCI)}</td><td style="text-align:center;vertical-align:middle"><span class="badge b-gray">${l.iva_pct||'10%'}</span></td><td class="td-mono" style="font-weight:700;color:var(--copper)">${fmt(subCI+ivaImporte)}</td><td><div class="td-actions"><button class="btn btn-ghost btn-icon btn-sm" onclick="editLineaPresupuesto('${l.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('presupuesto_lineas','${l.id}','${(l.descripcion||'').replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`;
   }).join('');
   // Calcular IVA por tramos según el iva_pct de cada línea
   let ivaDesglose={};
@@ -6211,17 +6224,19 @@ function renderPresupuesto(){
   document.getElementById('pres-total-lbl').textContent=`TOTAL c/IVA: ${fmt(totalConIva)}`;
   document.getElementById('pres-resumen').style.display='block';
 }
-function calcLineaPres(){const precio=parseFloat(document.getElementById('pl-precio').value)||0,margen=parseFloat(document.getElementById('pl-margen').value)||0,ci=parseFloat(document.getElementById('pl-ci').value)||0,cant=parseFloat(document.getElementById('pl-cant').value)||0;let pv=margen>0?precio*(1+margen/100):precio;if(ci>0)pv=pv*(1+ci/100);const sub=cant*pv;document.getElementById('pl-pventa').value=pv>0?pv.toFixed(2)+' €':'—';document.getElementById('pl-subtotal').value=sub>0?sub.toFixed(2)+' €':'—';}
+function calcLineaPres(){const precio=parseFloat(document.getElementById('pl-precio').value)||0,margen=parseFloat(document.getElementById('pl-margen').value)||0,ci=parseFloat(document.getElementById('pl-ci').value)||0,cant=parseFloat(document.getElementById('pl-cant').value)||0,dto=parseFloat(document.getElementById('pl-dto')?.value)||0;let pv=margen>0?precio*(1+margen/100):precio;if(ci>0)pv=pv*(1+ci/100);if(dto>0)pv=pv*(1-dto/100);const sub=cant*pv;document.getElementById('pl-pventa').value=pv>0?pv.toFixed(2)+' €':'—';document.getElementById('pl-subtotal').value=sub>0?sub.toFixed(2)+' €':'—';}
 function searchCypeLinea(){const q=document.getElementById('pl-cype-search').value.toLowerCase(),res=document.getElementById('pl-cype-results');if(q.length<2){res.style.display='none';return;}const matches=CyCache.filter(c=>c.codigo.toLowerCase().includes(q)||c.descripcion.toLowerCase().includes(q)).slice(0,8);if(!matches.length){res.style.display='none';return;}res.style.display='block';res.innerHTML=matches.map(c=>`<div onclick="selectCype('${c.id}')" style="padding:7px 11px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--border)" onmouseover="this.style.background='var(--blue-light)'" onmouseout="this.style.background=''"><strong style="color:var(--navy-mid)">${c.codigo}</strong> · ${c.descripcion} <span style="float:right;color:var(--green);font-weight:700">${fmt(c.precio)}/${c.unidad}</span></div>`).join('');}
 function selectCype(id){const c=CyCache.find(x=>x.id===id);if(!c)return;document.getElementById('pl-desc').value=c.descripcion;document.getElementById('pl-precio').value=c.precio;document.getElementById('pl-ud').value=c.unidad||'m²';document.getElementById('pl-cype-search').value=`${c.codigo} · ${c.descripcion}`;document.getElementById('pl-cype-search').dataset.cypeRef=c.codigo;document.getElementById('pl-cype-results').style.display='none';calcLineaPres();}
 function loadTarifLinea(){const id=document.getElementById('pl-tarif-sel').value;if(!id)return;const t=TC.find(x=>x.id===id);if(!t)return;document.getElementById('pl-desc').value=t.descripcion;document.getElementById('pl-precio').value=t.precio_coste||0;document.getElementById('pl-margen').value=t.margen_pct||0;document.getElementById('pl-ud').value=t.unidad||'Ud';calcLineaPres();}
-function addLineaPresupuesto(){const proy=document.getElementById('pres-proyecto-sel').value;if(!proy){toast('Selecciona un proyecto primero','error');return;}document.getElementById('m-pres-title').textContent='Nueva línea';['pl-id','pl-desc','pl-precio','pl-pventa','pl-subtotal','pl-partida'].forEach(id=>document.getElementById(id).value='');document.getElementById('pl-margen').value='0';document.getElementById('pl-ci').value='0';document.getElementById('pl-cant').value='1';document.getElementById('pl-cype-search').value='';document.getElementById('pl-cype-search').dataset.cypeRef='';document.getElementById('pl-cype-results').style.display='none';document.getElementById('pl-tarif-sel').value='';document.getElementById('pl-tarif-cat').value='';document.getElementById('pl-tarif-fam').innerHTML='<option value="">— Subcategoría —</option>';openModal('m-pres-linea');}
-function editLineaPresupuesto(id){const l=PresC.find(x=>x.id===id);if(!l)return;document.getElementById('m-pres-title').textContent='Editar línea';document.getElementById('pl-id').value=l.id;document.getElementById('pl-desc').value=l.descripcion||'';document.getElementById('pl-precio').value=l.precio_base||0;document.getElementById('pl-margen').value=l.margen_pct||0;document.getElementById('pl-ci').value=l.ci_gg_bi_pct||0;document.getElementById('pl-cant').value=l.cantidad||1;document.getElementById('pl-ud').value=l.unidad||'m²';document.getElementById('pl-iva').value=l.iva_pct||'10%';document.getElementById('pl-partida').value=l.partida||'';document.getElementById('pl-cype-search').value=l.ref_cype||'';document.getElementById('pl-cype-search').dataset.cypeRef=l.ref_cype||'';document.getElementById('pl-cype-results').style.display='none';calcLineaPres();openModal('m-pres-linea');}
+function addLineaPresupuesto(){const proy=document.getElementById('pres-proyecto-sel').value;if(!proy){toast('Selecciona un proyecto primero','error');return;}document.getElementById('m-pres-title').textContent='Nueva línea';['pl-id','pl-desc','pl-precio','pl-pventa','pl-subtotal','pl-partida'].forEach(id=>document.getElementById(id).value='');document.getElementById('pl-margen').value='0';document.getElementById('pl-ci').value='0';document.getElementById('pl-dto').value='0';document.getElementById('pl-cant').value='1';document.getElementById('pl-cype-search').value='';document.getElementById('pl-cype-search').dataset.cypeRef='';document.getElementById('pl-cype-results').style.display='none';document.getElementById('pl-tarif-sel').value='';document.getElementById('pl-tarif-cat').value='';document.getElementById('pl-tarif-fam').innerHTML='<option value="">— Subcategoría —</option>';openModal('m-pres-linea');}
+function editLineaPresupuesto(id){const l=PresC.find(x=>x.id===id);if(!l)return;document.getElementById('m-pres-title').textContent='Editar línea';document.getElementById('pl-id').value=l.id;document.getElementById('pl-desc').value=l.descripcion||'';document.getElementById('pl-precio').value=l.precio_base||0;document.getElementById('pl-margen').value=l.margen_pct||0;document.getElementById('pl-ci').value=l.ci_gg_bi_pct||0;document.getElementById('pl-cant').value=l.cantidad||1;document.getElementById('pl-ud').value=l.unidad||'m²';document.getElementById('pl-iva').value=l.iva_pct||'10%';document.getElementById('pl-partida').value=l.partida||'';document.getElementById('pl-cype-search').value=l.ref_cype||'';document.getElementById('pl-cype-search').dataset.cypeRef=l.ref_cype||'';document.getElementById('pl-cype-results').style.display='none';
+const _precio=parseFloat(l.precio_base)||0,_margen=parseFloat(l.margen_pct)||0,_ci=parseFloat(l.ci_gg_bi_pct)||0,_pv=parseFloat(l.precio_venta)||0;let _pvSinDto=_margen>0?_precio*(1+_margen/100):_precio;if(_ci>0)_pvSinDto=_pvSinDto*(1+_ci/100);const _dto=(_pvSinDto>0.001&&_pv<_pvSinDto-0.001)?Math.round((1-_pv/_pvSinDto)*1000)/10:0;document.getElementById('pl-dto').value=_dto>0?_dto:0;
+calcLineaPres();openModal('m-pres-linea');}
 async function saveLineaPresupuesto(){
   const desc=document.getElementById('pl-desc').value.trim();if(!desc){toast('La descripción es obligatoria','error');return;}
   const proy=document.getElementById('pres-proyecto-sel').value,ver=document.getElementById('pres-version-sel').value;
-  const precio=parseFloat(document.getElementById('pl-precio').value)||0,margen=parseFloat(document.getElementById('pl-margen').value)||0,ci=parseFloat(document.getElementById('pl-ci').value)||0,cant=parseFloat(document.getElementById('pl-cant').value)||0;
-  let pv=margen>0?precio*(1+margen/100):precio;if(ci>0)pv=pv*(1+ci/100);
+  const precio=parseFloat(document.getElementById('pl-precio').value)||0,margen=parseFloat(document.getElementById('pl-margen').value)||0,ci=parseFloat(document.getElementById('pl-ci').value)||0,cant=parseFloat(document.getElementById('pl-cant').value)||0,dto=parseFloat(document.getElementById('pl-dto')?.value)||0;
+  let pv=margen>0?precio*(1+margen/100):precio;if(ci>0)pv=pv*(1+ci/100);if(dto>0)pv=pv*(1-dto/100);
   const id=document.getElementById('pl-id').value;
   const d={proyecto_id:proy,version:ver,descripcion:desc,ref_cype:document.getElementById('pl-cype-search').dataset.cypeRef||null,unidad:document.getElementById('pl-ud').value,cantidad:cant,precio_base:precio,margen_pct:margen,ci_gg_bi_pct:ci,precio_venta:parseFloat(pv.toFixed(4)),subtotal:parseFloat((cant*pv).toFixed(4)),iva_pct:document.getElementById('pl-iva').value,partida:document.getElementById('pl-partida').value,es_capitulo:false,orden:id?(PresC.find(l=>l.id===id)?.orden??PresC.length+1):PresC.length+1};
   try{if(id){await sbPatch('presupuesto_lineas',id,d);toast('Línea actualizada ✅');}else{await sbPost('presupuesto_lineas',d);toast('Línea añadida ✅');}closeModal('m-pres-linea');const _presScroll=document.querySelector('.content')?.scrollTop||0;await loadPresupuesto();requestAnimationFrame(()=>{const c=document.querySelector('.content');if(c)c.scrollTop=_presScroll;});}catch(e){toast('Error: '+e.message,'error');}
@@ -10076,8 +10091,10 @@ function renderFacLineas(forceRender=false){
   _facLineas.forEach((l,i)=>{
     const cant=parseFloat(l.cantidad)||0;
     const prec=parseFloat(l.precio)||0;
-    totalBase   += cant*prec;
-    totalConIva += cant*prec*(1+ivaPct(l.iva||'21%')/100);
+    const dto=parseFloat(l.dto)||0;
+    const precConDto=prec*(1-dto/100);
+    totalBase   += cant*precConDto;
+    totalConIva += cant*precConDto*(1+ivaPct(l.iva||'21%')/100);
   });
 
   if(inTable){
@@ -10085,8 +10102,9 @@ function renderFacLineas(forceRender=false){
     _facLineas.forEach((l,i)=>{
       const cant=parseFloat(l.cantidad)||0;
       const prec=parseFloat(l.precio)||0;
-      const sub=cant*prec;
-      const cell=tbody.querySelector(`tr:nth-child(${i+1}) td:nth-child(6)`);
+      const dto=parseFloat(l.dto)||0;
+      const sub=cant*prec*(1-dto/100);
+      const cell=tbody.querySelector(`tr:nth-child(${i+1}) td:nth-child(7)`);
       if(cell) cell.textContent=sub!==0?Number(sub).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€':'0,00€';
     });
   } else {
@@ -10117,6 +10135,11 @@ function renderFacLineas(forceRender=false){
           +' oninput="_facLineas['+i+'].precio=parseFloat(this.value)||0;renderFacLineas()">'
         +'</td>'
         +'<td style="padding:4px 6px">'
+          +'<input class="form-input" style="font-size:11px;padding:3px 6px;width:60px;text-align:center;border-color:#e57373;color:#c62828"'
+          +' type="number" step="0.1" min="0" max="100" value="'+(dto||0)+'"'
+          +' oninput="_facLineas['+i+'].dto=parseFloat(this.value)||0;renderFacLineas()" placeholder="0">'
+        +'</td>'
+        +'<td style="padding:4px 6px">'
           +'<select class="form-input" style="font-size:11px;padding:3px 4px;width:64px"'
           +' onchange="_facLineas['+i+'].iva=this.value;renderFacLineas()">'+ivaOpts+'</select>'
         +'</td>'
@@ -10139,7 +10162,7 @@ function renderFacLineas(forceRender=false){
 function recalcFacLineas(){ renderFacLineas(); }
 
 function addFacLinea(){
-  _facLineas.push({desc:'',ud:'Ud',cantidad:1,precio:0,iva:'21%'});
+  _facLineas.push({desc:'',ud:'Ud',cantidad:1,precio:0,dto:0,iva:'21%'});
   const tbody = document.getElementById('f-lineas-tbody');
   if(tbody && tbody.contains(document.activeElement)){
     document.activeElement.blur();
@@ -10162,6 +10185,7 @@ function addFacEntrega(){
     ud: 'Ud',
     cantidad: -1,
     precio: 0,
+    dto: 0,
     iva: '21%'
   });
   // Forzar que activeElement salga de cualquier input de la tabla
@@ -10223,18 +10247,22 @@ function _buildFacturaPDF(){
     filasLineas=_facLineas.map(l=>{
       const cant=parseFloat(l.cantidad)||0;
       const prec=parseFloat(l.precio)||0;
-      const sub=cant*prec;
+      const dto=parseFloat(l.dto)||0;
+      const precConDto=prec*(1-dto/100);
+      const sub=cant*precConDto;
+      const dtoCell=dto>0?`<td style="padding:8px;text-align:center;color:#c62828;font-weight:700">-${dto.toFixed(1)}%</td>`:'<td style="padding:8px;text-align:center;color:#aaa">—</td>';
       return '<tr style="border-bottom:1px solid #eee">'
         +'<td style="padding:8px">'+escH(l.desc||'—')+'</td>'
         +'<td style="padding:8px;text-align:center">'+escH(l.ud||'Ud')+'</td>'
         +'<td style="padding:8px;text-align:right">'+cant+'</td>'
-        +'<td style="padding:8px;text-align:right">'+Number(prec).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€</td>'
+        +'<td style="padding:8px;text-align:right">'+Number(precConDto).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€</td>'
+        +dtoCell
         +'<td style="padding:8px;text-align:center">'+(l.iva||'21%')+'</td>'
         +'<td style="padding:8px;text-align:right;font-weight:700">'+Number(sub).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€</td>'
       +'</tr>';
     }).join('');
   } else {
-    filasLineas=concepto?'<tr><td colspan="6" style="padding:14px;text-align:center;color:#555">'+escH(concepto)+'</td></tr>':'';
+    filasLineas=concepto?'<tr><td colspan="7" style="padding:14px;text-align:center;color:#555">'+escH(concepto)+'</td></tr>':'';
   }
 
   const ivaImporte=base*ivaN/100;
@@ -10325,6 +10353,7 @@ function previsualizarFactura(){
     +'<th style="background:#f7f4ef;color:#b87333;font-size:10px;font-weight:700;text-transform:uppercase;padding:9px 8px;border-bottom:1px solid #e8e0d4;text-align:center;width:7%">Ud.</th>'
     +'<th style="background:#f7f4ef;color:#b87333;font-size:10px;font-weight:700;text-transform:uppercase;padding:9px 8px;border-bottom:1px solid #e8e0d4;text-align:right;width:8%">Cant.</th>'
     +'<th style="background:#f7f4ef;color:#b87333;font-size:10px;font-weight:700;text-transform:uppercase;padding:9px 8px;border-bottom:1px solid #e8e0d4;text-align:right;width:14%">P. Unit.</th>'
+    +'<th style="background:#f7f4ef;color:#c62828;font-size:10px;font-weight:700;text-transform:uppercase;padding:9px 8px;border-bottom:1px solid #e8e0d4;text-align:center;width:7%">Dto.%</th>'
     +'<th style="background:#f7f4ef;color:#b87333;font-size:10px;font-weight:700;text-transform:uppercase;padding:9px 8px;border-bottom:1px solid #e8e0d4;text-align:center;width:7%">IVA</th>'
     +'<th style="background:#f7f4ef;color:#b87333;font-size:10px;font-weight:700;text-transform:uppercase;padding:9px 8px;border-bottom:1px solid #e8e0d4;text-align:right;width:14%">Subtotal</th>'
     +'</tr></thead>'
@@ -10403,6 +10432,7 @@ async function importarLineasPresupuesto(){
       ud:   l.unidad||'Ud',
       cantidad: l.cantidad||1,
       precio:   l.precio_venta||l.precio_base||0,
+      dto:      0,
       iva:      l.iva_pct||'21%'
     }));
     renderFacLineas();
@@ -11127,10 +11157,11 @@ async function enviarFacturaEmail(id){
             <th style="padding:8px;text-align:center;font-size:10px;color:#4a3728;border-bottom:1px solid #e8e0d4">Ud.</th>
             <th style="padding:8px;text-align:right;font-size:10px;color:#4a3728;border-bottom:1px solid #e8e0d4">Cant.</th>
             <th style="padding:8px;text-align:right;font-size:10px;color:#4a3728;border-bottom:1px solid #e8e0d4">P. Unit.</th>
+            <th style="padding:8px;text-align:center;font-size:10px;color:#c62828;border-bottom:1px solid #e8e0d4">Dto.%</th>
             <th style="padding:8px;text-align:center;font-size:10px;color:#4a3728;border-bottom:1px solid #e8e0d4">IVA</th>
             <th style="padding:8px;text-align:right;font-size:10px;color:#4a3728;border-bottom:1px solid #e8e0d4">Subtotal</th>
           </tr></thead>
-          <tbody>${d.filasLineas||(f.concepto?`<tr><td colspan="6" style="padding:12px;text-align:center;color:#555">${escH(f.concepto)}</td></tr>`:'')}</tbody>
+          <tbody>${d.filasLineas||(f.concepto?`<tr><td colspan="7" style="padding:12px;text-align:center;color:#555">${escH(f.concepto)}</td></tr>`:'')}</tbody>
         </table>
       </div>
       <div style="background:#f7f4ef;border-top:2px solid #b87333;padding:14px 16px">
