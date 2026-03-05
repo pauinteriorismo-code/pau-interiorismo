@@ -10155,10 +10155,13 @@ function renderFacLineas(){
 function recalcFacLineas(){ renderFacLineas(); }
 
 function addFacLinea(){
+  if(document.activeElement) document.activeElement.blur();
   _facLineas.push({desc:'',ud:'Ud',cantidad:1,precio:0,iva:'21%'});
-  renderFacLineas();
+  setTimeout(()=>{ renderFacLineas(); }, 30);
 
 function addFacEntrega(){
+  // Forzar blur para salir del modo inTable antes de re-renderizar
+  if(document.activeElement) document.activeElement.blur();
   const hoy = new Date().toLocaleDateString('es-ES');
   _facLineas.push({
     desc: 'Entrega a cuenta ' + hoy,
@@ -10167,10 +10170,18 @@ function addFacEntrega(){
     precio: 0,
     iva: '21%'
   });
-  renderFacLineas();
-  // Scroll to the new line
+  // Forzar re-render completo igual que eliminarFacLinea
   const tbody = document.getElementById('f-lineas-tbody');
-  if(tbody) setTimeout(()=>{ const inputs=tbody.querySelectorAll('input'); if(inputs.length) inputs[inputs.length-4].focus(); }, 60);
+  const totEl = document.getElementById('f-lineas-total');
+  if(tbody){
+    // Temporalmente vaciar activeElement context y re-renderizar
+    setTimeout(()=>{
+      renderFacLineas();
+      // Foco en el campo precio de la nueva línea
+      const inputs = tbody.querySelectorAll('input[type="number"]');
+      if(inputs.length) inputs[inputs.length-1].focus();
+    }, 30);
+  }
 }
   setTimeout(()=>{
     const rows=document.querySelectorAll('#f-lineas-tbody tr');
