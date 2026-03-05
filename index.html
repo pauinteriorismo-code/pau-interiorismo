@@ -9001,10 +9001,11 @@ function editCompra(id) {
   document.getElementById('co-proyecto').value  = c.proyecto_id || '';
   document.getElementById('co-prov').value      = c.proveedor_id || '';
   document.getElementById('co-concepto').value  = c.concepto || '';
-  document.getElementById('co-importe').value   = c.base_imponible || 0;
+  document.getElementById('co-base').value      = c.base_imponible || 0;
   document.getElementById('co-iva').value       = c.iva_pct || '21%';
   document.getElementById('co-estado').value    = c.estado_pago || 'Pendiente';
   document.getElementById('co-vto').value       = c.fecha_vencimiento || '';
+  document.getElementById('co-notas').value     = c.notas || '';
   // PDF adjunto
   if (c.adjunto_pdf) {
     window._coPDFActual = c.adjunto_pdf;
