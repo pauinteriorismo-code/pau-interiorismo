@@ -8955,11 +8955,88 @@ async function loadSubcontratas(){
     ScC=await sbGet('subcontratas','?order=fecha.desc');
     document.getElementById('subcontratas-count').textContent=ScC.length+' registros';
     if(!ScC.length){tb.innerHTML=`<tr><td colspan="9"><div class="empty"><div class="empty-icon">👷</div><div class="empty-text">Sin subcontratas</div><button class="btn btn-primary" onclick="openModal('m-subcontrata')">＋ Nueva</button></div></td></tr>`;return;}
-    tb.innerHTML=ScC.map(s=>{const tot=s.importe*(1+ivaPct(s.iva_pct)/100);return`<tr data-search="${(s.proyecto_id+s.proveedor_id+s.trabajo).toLowerCase()}"><td>${fmtD(s.fecha)}</td><td class="td-mono">${s.proyecto_id?`<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:1px 5px;color:var(--navy);font-weight:700" title="Ver expediente" onclick="abrirExpediente('${s.proyecto_id}')">${s.proyecto_id}</button>`:"<span style='color:var(--text-soft)'>—</span>"}</td><td>${s.proveedor_id||'—'}</td><td>${s.trabajo||'—'}</td><td class="td-mono">${fmt(s.importe)}</td><td class="td-mono">${s.iva_pct}</td><td class="td-mono" style="font-weight:700">${fmt(tot)}</td><td>${bE(s.estado_pago)}</td><td style="display:flex;gap:4px">${s.adjunto_pdf?`<button class="btn btn-ghost btn-icon btn-sm" onclick="scVerPDFById('${s.id}')" style="font-size:11px;color:var(--navy)" title="Ver PDF">&#128196;</button>`:''}<button class="btn btn-ghost btn-icon btn-sm" onclick="editSubcontrata('${s.id}')" style="font-size:11px">Editar</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('subcontratas','${s.id}','${(s.trabajo||'subcontrata').replace(/'/g,"\\'")}')">🗑</button></td></tr>`;}).join('');
+    tb.innerHTML=ScC.map(s=>{const tot=s.importe*(1+ivaPct(s.iva_pct)/100);return`<tr data-search="${(s.proyecto_id+s.proveedor_id+s.trabajo).toLowerCase()}"><td>${fmtD(s.fecha)}</td><td class="td-mono">${s.proyecto_id?`<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:1px 5px;color:var(--navy);font-weight:700" title="Ver expediente" onclick="abrirExpediente('${s.proyecto_id}')">${s.proyecto_id}</button>`:"<span style='color:var(--text-soft)'>—</span>"}</td><td>${s.proveedor_id||'—'}</td><td>${s.trabajo||'—'}</td><td class="td-mono">${fmt(s.importe)}</td><td class="td-mono">${s.iva_pct}</td><td class="td-mono" style="font-weight:700">${fmt(tot)}</td><td>${bE(s.estado_pago)}</td><td style="display:flex;gap:4px">${s.adjunto_pdf?`<button class="btn btn-ghost btn-icon btn-sm" onclick="scVerPDFById('${s.id}')" style="font-size:11px;color:var(--navy)" title="Ver PDF">&#128196;</button>`:''}<button class="btn btn-ghost btn-icon btn-sm" onclick="editSubcontrata('${s.id}')" title="Editar">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('subcontratas','${s.id}','${(s.trabajo||'subcontrata').replace(/'/g,"\\'")}')">🗑</button></td></tr>`;}).join('');
   }catch(e){tb.innerHTML=`<tr><td colspan="9" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
   // Re-apply project filter after load
   filtrarModuloPorProyecto('subcontratas');
 }
+
+// ═══════════════════════════════════════════
+// EDIT HELPERS - Subcontratas / Compras / Horas
+// ═══════════════════════════════════════════
+function editSubcontrata(id) {
+  const s = ScC.find(x => String(x.id) === String(id));
+  if (!s) { toast('Registro no encontrado', 'error'); return; }
+  document.querySelector('#m-subcontrata .modal-title').textContent = '✏️ Editar subcontrata';
+  document.getElementById('sc-id').value        = s.id;
+  document.getElementById('sc-fecha').value     = s.fecha || '';
+  document.getElementById('sc-proyecto').value  = s.proyecto_id || '';
+  document.getElementById('sc-prov').value      = s.proveedor_id || '';
+  document.getElementById('sc-trabajo').value   = s.trabajo || '';
+  document.getElementById('sc-importe').value   = s.importe || 0;
+  document.getElementById('sc-iva').value       = s.iva_pct || '21%';
+  document.getElementById('sc-estado').value    = s.estado_pago || 'Pendiente';
+  document.getElementById('sc-vto').value       = s.fecha_vencimiento || '';
+  // PDF adjunto
+  if (s.adjunto_pdf) {
+    window._scPDFActual = s.adjunto_pdf;
+    document.getElementById('sc-pdf-b64').value  = s.adjunto_pdf;
+    document.getElementById('sc-pdf-nombre').value = s.adjunto_nombre || 'factura_subcontrata.pdf';
+    document.getElementById('sc-pdf-label').textContent = '📎 ' + (s.adjunto_nombre || 'PDF adjunto');
+    document.getElementById('sc-pdf-preview').style.display = 'flex';
+    document.getElementById('sc-pdf-btn-ver').style.display = 'block';
+  } else {
+    scResetPDF();
+  }
+  window._scPDFChanged = false;
+  openModal('m-subcontrata');
+}
+
+function editCompra(id) {
+  const c = CoC.find(x => String(x.id) === String(id));
+  if (!c) { toast('Registro no encontrado', 'error'); return; }
+  document.querySelector('#m-compra .modal-title').textContent = '✏️ Editar compra';
+  document.getElementById('co-id').value        = c.id;
+  document.getElementById('co-fecha').value     = c.fecha || '';
+  document.getElementById('co-proyecto').value  = c.proyecto_id || '';
+  document.getElementById('co-prov').value      = c.proveedor_id || '';
+  document.getElementById('co-concepto').value  = c.concepto || '';
+  document.getElementById('co-importe').value   = c.base_imponible || 0;
+  document.getElementById('co-iva').value       = c.iva_pct || '21%';
+  document.getElementById('co-estado').value    = c.estado_pago || 'Pendiente';
+  document.getElementById('co-vto').value       = c.fecha_vencimiento || '';
+  // PDF adjunto
+  if (c.adjunto_pdf) {
+    window._coPDFActual = c.adjunto_pdf;
+    document.getElementById('co-pdf-b64').value  = c.adjunto_pdf;
+    document.getElementById('co-pdf-nombre').value = c.adjunto_nombre || 'factura_compra.pdf';
+    const lbl = document.getElementById('co-pdf-label');
+    if (lbl) lbl.textContent = '📎 ' + (c.adjunto_nombre || 'PDF adjunto');
+    const prev = document.getElementById('co-pdf-preview');
+    if (prev) prev.style.display = 'flex';
+    const btnVer = document.getElementById('co-pdf-btn-ver');
+    if (btnVer) btnVer.style.display = 'block';
+  } else {
+    if (typeof coResetPDF === 'function') coResetPDF();
+  }
+  window._coPDFChanged = false;
+  openModal('m-compra');
+}
+
+function editHora(id) {
+  const h = HC.find(x => String(x.id) === String(id));
+  if (!h) { toast('Registro no encontrado', 'error'); return; }
+  document.querySelector('#m-hora .modal-title').textContent = '✏️ Editar horas';
+  document.getElementById('h-id').value       = h.id;
+  document.getElementById('h-fecha').value    = h.fecha || '';
+  document.getElementById('h-proyecto').value = h.proyecto_id || '';
+  document.getElementById('h-trab').value     = h.trabajador || '';
+  document.getElementById('h-horas').value    = h.horas || '';
+  document.getElementById('h-coste').value    = h.coste_hora || 18;
+  document.getElementById('h-desc').value     = h.descripcion || '';
+  openModal('m-hora');
+}
+
 async function saveSubcontrata(){
   const id=document.getElementById('sc-id')?.value;
   const pdfB64=document.getElementById('sc-pdf-b64')?.value||null;
@@ -8989,7 +9066,7 @@ async function loadHoras(){
     HC=await sbGet('horas','?order=fecha.desc');
     document.getElementById('horas-count').textContent=HC.length+' registros';
     if(!HC.length){tb.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="empty-icon">⏱</div><div class="empty-text">Sin horas registradas</div><button class="btn btn-primary" onclick="openModal('m-hora')">＋ Registrar</button></div></td></tr>`;return;}
-    tb.innerHTML=HC.map(h=>`<tr data-search="${(h.proyecto_id+h.trabajador+h.descripcion).toLowerCase()}"><td>${fmtD(h.fecha)}</td><td class="td-mono">${h.proyecto_id?`<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:1px 5px;color:var(--navy);font-weight:700" title="Ver expediente" onclick="abrirExpediente('${h.proyecto_id}')">${h.proyecto_id}</button>`:"<span style='color:var(--text-soft)'>—</span>"}</td><td><strong>${h.trabajador||'—'}</strong></td><td class="td-mono">${h.horas}h</td><td class="td-mono">${fmt(h.coste_hora)}</td><td class="td-mono" style="font-weight:700">${fmt(h.total)}</td><td style="color:var(--text-soft)">${h.descripcion||'—'}</td><td><button class="btn btn-ghost btn-sm" style="margin-right:4px;font-size:11px" onclick="editHora('${h.id}')">Editar</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('horas','${h.id}','horas ${h.trabajador}')">🗑</button></td></tr>`).join('');
+    tb.innerHTML=HC.map(h=>`<tr data-search="${(h.proyecto_id+h.trabajador+h.descripcion).toLowerCase()}"><td>${fmtD(h.fecha)}</td><td class="td-mono">${h.proyecto_id?`<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:1px 5px;color:var(--navy);font-weight:700" title="Ver expediente" onclick="abrirExpediente('${h.proyecto_id}')">${h.proyecto_id}</button>`:"<span style='color:var(--text-soft)'>—</span>"}</td><td><strong>${h.trabajador||'—'}</strong></td><td class="td-mono">${h.horas}h</td><td class="td-mono">${fmt(h.coste_hora)}</td><td class="td-mono" style="font-weight:700">${fmt(h.total)}</td><td style="color:var(--text-soft)">${h.descripcion||'—'}</td><td><button class="btn btn-ghost btn-icon btn-sm" onclick="editHora('${h.id}')" title="Editar">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('horas','${h.id}','horas ${h.trabajador}')">🗑</button></td></tr>`).join('');
   }catch(e){tb.innerHTML=`<tr><td colspan="8" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
   // Re-apply project filter after load
   filtrarModuloPorProyecto('horas');
@@ -16680,7 +16757,7 @@ function sortAndRenderCompras(col, dir) {
       <td class="td-mono" style="font-weight:700">${fmt(tot)}</td>
       <td>${bE(c.estado_pago)}</td>
       <td style="display:flex;gap:4px">
-        <button class="btn btn-ghost btn-icon btn-sm" onclick="editCompra('${c.id}')" style="font-size:11px">Editar</button>
+        <button class="btn btn-ghost btn-icon btn-sm" onclick="editCompra('${c.id}')" title="Editar">✏️</button>
         <button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('compras','${c.id}','${(c.concepto||'compra').replace(/'/g,"\\'")}')">🗑</button>
       </td>
     </tr>`;
@@ -18706,9 +18783,7 @@ async function nuevaCertificacion() {
 
   // Calcular importes ya certificados
   let prevCerts = [];
-  try {
-    prevCerts = await sbGet('certificaciones', `?proyecto_id=eq.${_certProyId}&order=fecha.asc`);
-  } catch(e) { prevCerts = []; }
+  try { prevCerts = await sbGet('certificaciones', `?proyecto_id=eq.${_certProyId}&order=fecha.asc`); } catch(e) { prevCerts = []; }
   const acumPrev  = prevCerts.reduce((s,c) => s+(c.base_imponible||0), 0);
   const dispBase  = _certPresBase - acumPrev;
 
@@ -19887,6 +19962,6 @@ function vpGuardarPDF(){
     <div class="form-group">
       <label class="form-label">&#128228; Desde (cuenta remitente)</label>
       <select class="form-input" id="email-desde">
-        <option value="presupuestos@pauinteriorismo.es"><template class="__cf_email__" data-cfemail="25555740565055504056514a56655544504c4b5140574c4a574c56484a0b4056">[email&#160;protected]</template></option>
-        <option value="info@pauinteriorismo.es"><template class="__cf_email__" data-cfemail="4c25222a230c3c2d39252238293e25233e253f212362293f">[email&#160;protected]</template></option>
-        <option value="administracion@pauinteriorismo.es"><template class="__cf_email__" data-cfemail="fc9d98919592958f888e9d9f959392
+        <option value="presupuestos@pauinteriorismo.es"><template class="__cf_email__" data-cfemail="eb9b998e989e9b9e8e989f8498ab9b8a9e82859f8e9982849982988684c58e98">[email&#160;protected]</template></option>
+        <option value="info@pauinteriorismo.es"><template class="__cf_email__" data-cfemail="6e070008012e1e0f1b07001a0b1c07011c071d0301400b1d">[email&#160;protected]</template></option>
+        <option value="administracion@pauinteriorismo.es"><template class="__cf_email__" data-cfemail="3c5d58515552554f484e5d5f555352
