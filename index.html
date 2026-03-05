@@ -1127,7 +1127,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <button class="btn btn-ghost btn-sm no-print" onclick="abrirModalPlantillas()" title="Cargar plantilla de capítulos" style="font-size:11px">📋 Plantillas</button>
           <button class="btn btn-ghost btn-sm no-print" onclick="guardarPlantilla()" title="Guardar presupuesto actual como plantilla" style="font-size:11px">💾 Guardar plantilla</button>
         </div>
-        <button class="btn btn-ghost no-print" onclick="exportarPresupuestoPDF()">⬇️ PDF</button>
+        <button class="btn btn-ghost no-print" onclick="convertirPresupuestoAFactura()" style="background:#e8f5ee;color:var(--green);border-color:#b8dfc8;font-weight:600" title="Crear factura de venta a partir de este presupuesto">🧾 Crear factura</button><button class="btn btn-ghost no-print" onclick="exportarPresupuestoPDF()">⬇️ PDF</button>
         <button class="btn btn-ghost no-print" onclick="window.print()">🖨️ Imprimir</button>
         <div id="pres-total-lbl" style="margin-left:auto;font-size:13px;font-weight:700;color:var(--navy)"></div>
         <div class="ci-toggle" id="ci-toggle-btn" onclick="toggleCI()" title="Activar/desactivar CI+GG+BI en partidas nuevas">
@@ -9918,6 +9918,91 @@ function abrirNuevaFactura(tipo){
   openModal('m-factura');
 }
 
+
+
+// ══════════════════════════════════════════════════════════════════════
+// CONVERTIR PRESUPUESTO A FACTURA
+// ══════════════════════════════════════════════════════════════════════
+async function convertirPresupuestoAFactura(){
+  const proyId = document.getElementById('pres-proyecto-sel')?.value;
+  const ver    = document.getElementById('pres-version-sel')?.value || 'v1';
+  if(!proyId){ toast('Selecciona un proyecto primero','error'); return; }
+
+  // Cargar líneas del presupuesto activo
+  let lineas = [];
+  try {
+    lineas = await sbGet('presupuesto_lineas', `?proyecto_id=eq.${proyId}&version=eq.${ver}&es_capitulo=eq.false&order=orden.asc`);
+  } catch(e) {
+    toast('Error cargando presupuesto: '+e.message, 'error'); return;
+  }
+  const activas = lineas.filter(l => (l.cantidad||0) > 0);
+  if(!activas.length){ toast('El presupuesto no tiene líneas con cantidad > 0','error'); return; }
+
+  // Obtener datos del proyecto
+  const proy = PC.find(p => p.proyecto_id === proyId);
+  const clienteId = proy?.cliente_id || '';
+
+  // Agrupar líneas por IVA para crear _facLineas
+  const grupos = {};
+  activas.forEach(l => {
+    const ci = l.ci_gg_bi_pct || 0;
+    const pv = l.precio_venta || 0;
+    const sub = (l.cantidad || 0) * pv * (ci > 0 ? (1 + ci/100) : 1);
+    const tipoIva = String(l.iva_pct || '21%');
+    if(!grupos[tipoIva]) grupos[tipoIva] = { iva: tipoIva, base: 0, lineas: [] };
+    grupos[tipoIva].base += sub;
+    grupos[tipoIva].lineas.push(l.descripcion);
+  });
+
+  // Construir _facLineas — una línea por tipo de IVA
+  const nuevasLineas = Object.values(grupos).map(g => {
+    const desc = g.lineas.length === 1
+      ? g.lineas[0]
+      : `Trabajos según presupuesto ${proyId}-${ver} (${g.iva === 'Exento' || g.iva === '0' ? 'Exento' : g.iva + ' IVA'})`;
+    return {
+      desc: desc,
+      ud: 'Ud',
+      cantidad: 1,
+      precio: Math.round(g.base * 100) / 100,
+      iva: g.iva
+    };
+  });
+
+  // Calcular base total y abrir modal factura
+  const totalBase = nuevasLineas.reduce((s,l) => s + (l.cantidad * l.precio), 0);
+
+  // Abrir modal de factura limpio
+  abrirNuevaFactura('Venta');
+
+  // Esperar un tick para que el modal esté listo
+  await new Promise(r => setTimeout(r, 80));
+
+  // Pre-rellenar cliente y proyecto
+  const fCliente = document.getElementById('f-cliente');
+  if(fCliente && clienteId){
+    fCliente.value = clienteId;
+    // Disparar onchange para cargar proyectos del cliente
+    fCliente.dispatchEvent(new Event('change'));
+    await new Promise(r => setTimeout(r, 120));
+  }
+  const fProy = document.getElementById('f-proyecto');
+  if(fProy) fProy.value = proyId;
+
+  // Concepto
+  const fConcepto = document.getElementById('f-concepto');
+  if(fConcepto) fConcepto.value = `Trabajos según presupuesto ${proyId}-${ver}`;
+
+  // Inyectar líneas
+  _facLineas = nuevasLineas;
+  renderFacLineas();
+
+  // Mostrar resumen en toast
+  const grupos_txt = Object.values(grupos).map(g => {
+    const pct = (g.iva === 'Exento' || g.iva === '0') ? 'Exento' : g.iva;
+    return `${pct}: ${Number(g.base).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})}€`;
+  }).join(' · ');
+  toast(`✅ Presupuesto importado — ${grupos_txt}`, 'ok');
+}
 
 function calcTotalFac(){
   const base=parseFloat(document.getElementById('f-base')?.value)||0;
