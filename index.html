@@ -20688,19 +20688,26 @@ function vpGuardarPDF(){
         <div id="bonus-pagos-lista"></div>
       </div>
 
-      <!-- Preview nómina -->
+      <!-- Preview nómina — IDs deben coincidir con calcNomina() -->
       <div style="background:var(--navy);color:#fff;border-radius:8px;padding:14px 16px;margin-bottom:16px">
         <div style="font-size:11px;font-weight:700;letter-spacing:.5px;margin-bottom:10px;opacity:.7">RESUMEN NÓMINA MENSUAL</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;font-size:12px">
-          <div style="opacity:.7">Salario bruto</div><div id="nom-bruto" style="text-align:right;font-weight:600">—</div>
-          <div style="opacity:.7">– IRPF retenido</div><div id="nom-irpf" style="text-align:right;color:#f8baba">—</div>
-          <div style="opacity:.7">– SS trabajador</div><div id="nom-ss-trab" style="text-align:right;color:#f8baba">—</div>
-          <div style="border-top:1px solid rgba(255,255,255,.2);opacity:.7;padding-top:6px">Neto a pagar</div>
-          <div id="nom-neto" style="text-align:right;font-weight:800;font-size:16px;color:#7fffb0;border-top:1px solid rgba(255,255,255,.2);padding-top:6px">—</div>
-          <div style="opacity:.7;margin-top:6px">SS empresa (~30%)</div><div id="nom-ss-emp" style="text-align:right;color:#ffd580;margin-top:6px">—</div>
-          <div style="border-top:1px solid rgba(255,255,255,.2);font-weight:700;padding-top:6px">Coste total empresa/mes</div>
-          <div id="nom-total" style="text-align:right;font-weight:800;font-size:16px;color:#ffd580;border-top:1px solid rgba(255,255,255,.2);padding-top:6px">—</div>
-          <div style="opacity:.7">Coste total empresa/año</div><div id="nom-anual" style="text-align:right;font-weight:700">—</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 24px;font-size:12px">
+          <div style="opacity:.7">Salario bruto</div>
+          <div id="trab-calc-bruto" style="text-align:right;font-weight:600">—</div>
+          <div style="opacity:.7">– SS trabajador</div>
+          <div id="trab-calc-ss-emp" style="text-align:right;color:#f8baba">—</div>
+          <div style="border-top:1px solid rgba(255,255,255,.2);opacity:.7;padding-top:6px;font-weight:700">= Neto a pagar</div>
+          <div id="trab-calc-neto" style="text-align:right;font-weight:800;font-size:15px;color:#7fffb0;border-top:1px solid rgba(255,255,255,.2);padding-top:6px">—</div>
+          <div style="opacity:.7;margin-top:4px">SS empresa (~30%)</div>
+          <div id="trab-calc-total" style="text-align:right;color:#ffd580;margin-top:4px">—</div>
+          <div style="border-top:1px solid rgba(255,255,255,.2);font-weight:700;padding-top:6px">Coste empresa / mes</div>
+          <div id="trab-calc-anual-nom" style="text-align:right;font-weight:800;font-size:15px;color:#ffd580;border-top:1px solid rgba(255,255,255,.2);padding-top:6px">—</div>
+          <div style="opacity:.7">Pagas extra / año</div>
+          <div id="trab-calc-paga-neto" style="text-align:right">—</div>
+          <div style="opacity:.7">Bonus / año</div>
+          <div id="trab-calc-anual-bonus" style="text-align:right">—</div>
+          <div style="border-top:1px solid rgba(255,255,255,.2);font-weight:700;padding-top:6px">COSTE TOTAL EMPRESA / AÑO</div>
+          <div id="trab-calc-anual-total" style="text-align:right;font-weight:800;font-size:15px;color:#ffd580;border-top:1px solid rgba(255,255,255,.2);padding-top:6px">—</div>
         </div>
       </div>
 
