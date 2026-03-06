@@ -12545,19 +12545,52 @@ async function ejecutarImportProveedores(){
 // RR.HH. · NÓMINAS
 // ════════════════════════════════════════════════════════════════
 let TrabC = [];
+let bonusPagos = [];
+let bonusModo = 'recurrente';
 
 async function loadRRHH(){
   const tbody = document.getElementById('rrhh-tbody');
   if(!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="12" class="loading">Cargando…</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:20px;color:#999">Cargando…</td></tr>';
   try{
-    TrabC = await sbGet('trabajadores_rrhh','?order=nombre.asc');
-    // Sincronizar lista activos con TRABAJADORES global
+    const data = await sbGet('trabajadores_rrhh','?order=nombre.asc');
+    TrabC = (data||[]).map(t=>({
+      id: t.id,
+      nombre: t.nombre||'',
+      dni: t.dni||'',
+      telefono: t.telefono||'',
+      email: t.email||'',
+      direccion: t.direccion||'',
+      num_ss: t.num_ss||'',
+      iban: t.iban||'',
+      categoria: t.categoria||'Oficial 1ª',
+      tipo_contrato: t.tipo_contrato||'Indefinido',
+      fecha_alta: t.fecha_alta||'',
+      estado: t.estado||'Activo',
+      salario_bruto: parseFloat(t.salario_bruto)||0,
+      irpf_pct: parseFloat(t.irpf_pct)||0,
+      ss_trab_pct: parseFloat(t.ss_trab_pct)||6.35,
+      ss_emp_pct: parseFloat(t.ss_emp_pct)||30,
+      paga_extra: parseFloat(t.paga_extra)||0,
+      num_pagas_extra: parseInt(t.num_pagas_extra)||2,
+      paga_extra_irpf: parseFloat(t.paga_extra_irpf)||15,
+      bonus: parseFloat(t.bonus)||0,
+      bonus_periodo: t.bonus_periodo||'mensual',
+      bonus_iva_pct: parseFloat(t.bonus_iva_pct)||0,
+      bonus_modo: t.bonus_modo||'recurrente',
+      bonus_pagos_json: t.bonus_pagos_json||null,
+      notas: t.notas||''
+    }));
     const activos = TrabC.filter(t=>t.estado==='Activo').map(t=>t.nombre).filter(Boolean);
     if(activos.length){ TRABAJADORES = activos; populateTrabajadores(); }
     renderRRHH();
   }catch(e){
-    tbody.innerHTML=`<tr><td colspan="12" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}<br><small>Ejecuta el SQL de creación de tabla primero</small></td></tr>`;
+    TrabC = [];
+    tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;padding:30px">
+      <div style="color:var(--red);font-weight:600;margin-bottom:8px">⚠️ Error: ${e.message}</div>
+      <div style="font-size:12px;color:#666;margin-bottom:16px">La tabla <strong>trabajadores_rrhh</strong> puede no existir en Supabase.</div>
+      <button class="btn btn-primary btn-sm" onclick="mostrarSQLRRHH()">📋 Ver SQL para crear la tabla</button>
+    </td></tr>`;
   }
 }
 
@@ -12567,77 +12600,69 @@ function renderRRHH(){
   const q = (document.getElementById('search-rrhh')?.value||'').toLowerCase();
   const items = q ? TrabC.filter(t=>(t.nombre||'').toLowerCase().includes(q)) : TrabC;
 
-  // KPIs y resumen
   const activos = TrabC.filter(t=>t.estado==='Activo');
   let sumBruto=0, sumIrpf=0, sumSsTrab=0, sumNeto=0, sumSsEmp=0, sumPagasAnual=0, sumBonusAnual=0;
   activos.forEach(t=>{
-    const bruto=t.salario_bruto||0;
-    const irpfAmt=bruto*(t.irpf_pct||0)/100;
-    const ssTrabAmt=bruto*(t.ss_trab_pct||6.35)/100;
-    const neto=bruto-irpfAmt-ssTrabAmt;
-    const ssEmpAmt=bruto*(t.ss_emp_pct||30)/100;
-    sumBruto+=bruto; sumIrpf+=irpfAmt; sumSsTrab+=ssTrabAmt;
-    sumNeto+=neto; sumSsEmp+=ssEmpAmt;
-    // Pagas extra: coste bruto × num pagas
+    const b=t.salario_bruto||0;
+    sumBruto+=b;
+    sumIrpf+=b*(t.irpf_pct||0)/100;
+    sumSsTrab+=b*(t.ss_trab_pct||6.35)/100;
+    sumNeto+=(b - b*(t.irpf_pct||0)/100 - b*(t.ss_trab_pct||6.35)/100);
+    sumSsEmp+=b*(t.ss_emp_pct||30)/100;
     sumPagasAnual+=(t.paga_extra||0)*(t.num_pagas_extra||0);
-    // Bonus anual
-    let bonusTrab=0;
-    if(t.bonus_modo==='puntual' || (!t.bonus_modo && t.bonus_pagos_json)){
-      // Pagos puntuales: sumar todos
-      const pagos=Array.isArray(t.bonus_pagos_json)?t.bonus_pagos_json:(t.bonus_pagos_json?JSON.parse(t.bonus_pagos_json):[]);
-      bonusTrab=pagos.reduce((s,p)=>s+(p.importe||0)*(1+(p.iva||0)/100),0);
-    } else {
-      // Recurrente
-      const periodoMult={mensual:12,trimestral:4,anual:1};
-      const mult=periodoMult[t.bonus_periodo||'mensual']||12;
-      bonusTrab=(t.bonus||0)*(1+(t.bonus_iva_pct||0)/100)*mult;
-    }
-    sumBonusAnual+=bonusTrab;
+    const mult={mensual:12,trimestral:4,anual:1};
+    sumBonusAnual+=(t.bonus||0)*(1+(t.bonus_iva_pct||0)/100)*(mult[t.bonus_periodo||'mensual']||12);
   });
   const sumTotal=sumBruto+sumSsEmp;
-  const sumAnualTotal=sumTotal*12+sumPagasAnual+sumBonusAnual;
-  document.getElementById('rrhh-kpi-total').textContent=activos.length;
-  document.getElementById('rrhh-kpi-coste').textContent=fmt(sumTotal);
-  document.getElementById('rrhh-kpi-ss').textContent=fmt(sumSsEmp);
-  document.getElementById('rrhh-kpi-anual').textContent=fmt(sumAnualTotal);
-  document.getElementById('rrhh-sum-bruto').textContent=fmt(sumBruto);
-  document.getElementById('rrhh-sum-irpf').textContent=fmt(sumIrpf);
-  document.getElementById('rrhh-sum-ss-trab').textContent=fmt(sumSsTrab);
-  document.getElementById('rrhh-sum-neto').textContent=fmt(sumNeto);
-  document.getElementById('rrhh-sum-ss-emp').textContent=fmt(sumSsEmp);
-  document.getElementById('rrhh-sum-total').textContent=fmt(sumTotal);
-  document.getElementById('rrhh-sum-pagas')?.textContent && (document.getElementById('rrhh-sum-pagas').textContent=sumPagasAnual>0?fmt(sumPagasAnual):'—');
-  document.getElementById('rrhh-sum-bonus')?.textContent && (document.getElementById('rrhh-sum-bonus').textContent=sumBonusAnual>0?fmt(sumBonusAnual):'—');
-  document.getElementById('rrhh-sum-anual').textContent=fmt(sumAnualTotal);
-  document.getElementById('rrhh-count').textContent=TrabC.length+' trabajadores';
+  const sumAnual=sumTotal*12+sumPagasAnual+sumBonusAnual;
+
+  const si = id => { const el=document.getElementById(id); if(el) el.textContent=fmt(arguments[1]||0); };
+  document.getElementById('rrhh-kpi-total').textContent = activos.length;
+  document.getElementById('rrhh-kpi-coste').textContent = fmt(sumTotal);
+  document.getElementById('rrhh-kpi-ss').textContent    = fmt(sumSsEmp);
+  document.getElementById('rrhh-kpi-anual').textContent = fmt(sumAnual);
+  document.getElementById('rrhh-sum-bruto').textContent  = fmt(sumBruto);
+  document.getElementById('rrhh-sum-irpf').textContent   = fmt(sumIrpf);
+  document.getElementById('rrhh-sum-ss-trab').textContent= fmt(sumSsTrab);
+  document.getElementById('rrhh-sum-neto').textContent   = fmt(sumNeto);
+  document.getElementById('rrhh-sum-ss-emp').textContent = fmt(sumSsEmp);
+  document.getElementById('rrhh-sum-total').textContent  = fmt(sumTotal);
+  document.getElementById('rrhh-sum-anual').textContent  = fmt(sumAnual);
+  const rc = document.getElementById('rrhh-count');
+  if(rc) rc.textContent = TrabC.length+' trabajadores';
+  const rpEl = document.getElementById('rrhh-sum-pagas');
+  if(rpEl) rpEl.textContent = sumPagasAnual>0 ? fmt(sumPagasAnual) : '—';
+  const rbEl = document.getElementById('rrhh-sum-bonus');
+  if(rbEl) rbEl.textContent = sumBonusAnual>0 ? fmt(sumBonusAnual) : '—';
 
   if(!items.length){
     tbody.innerHTML='<tr><td colspan="12"><div class="empty"><div class="empty-icon">👤</div><div class="empty-text">Sin trabajadores registrados</div><button class="btn btn-primary btn-sm" onclick="abrirModalTrabajador()">＋ Añadir</button></div></td></tr>';
     return;
   }
   tbody.innerHTML = items.map(t=>{
-    const bruto=t.salario_bruto||0;
-    const irpfAmt=bruto*(t.irpf_pct||0)/100;
-    const ssTrabAmt=bruto*(t.ss_trab_pct||6.35)/100;
-    const neto=bruto-irpfAmt-ssTrabAmt;
-    const ssEmpAmt=bruto*(t.ss_emp_pct||30)/100;
-    const total=bruto+ssEmpAmt;
-    const estadoColor=t.estado==='Activo'?'b-green':t.estado==='Baja temporal'?'b-amber':'b-gray';
-    return `<tr data-search="${(t.nombre||'').toLowerCase()}">
+    const b=t.salario_bruto||0;
+    const irpfAmt=b*(t.irpf_pct||0)/100;
+    const ssTrabAmt=b*(t.ss_trab_pct||6.35)/100;
+    const neto=b-irpfAmt-ssTrabAmt;
+    const ssEmpAmt=b*(t.ss_emp_pct||30)/100;
+    const total=b+ssEmpAmt;
+    const badge=t.estado==='Activo'?'b-green':t.estado==='Baja'?'b-red':'b-amber';
+    const nombre_safe=(t.nombre||'').replace(/'/g,"\\'");
+    return `<tr>
       <td><strong>${t.nombre||'—'}</strong>${t.categoria?`<div style="font-size:11px;color:var(--text-soft)">${t.categoria}</div>`:''}</td>
       <td class="td-mono" style="color:var(--text-soft)">${t.dni||'—'}</td>
       <td style="font-size:11px">${t.categoria||'—'}</td>
       <td class="td-mono" style="font-size:11px">${fmtD(t.fecha_alta)}</td>
-      <td class="td-mono" style="font-weight:700">${fmt(bruto)}</td>
+      <td class="td-mono" style="font-weight:700">${fmt(b)}</td>
       <td class="td-mono">${t.irpf_pct||0}%</td>
       <td class="td-mono" style="color:var(--amber)">${fmt(ssTrabAmt)}</td>
       <td class="td-mono" style="color:var(--green);font-weight:700">${fmt(neto)}</td>
       <td class="td-mono" style="color:var(--amber)">${fmt(ssEmpAmt)}</td>
       <td class="td-mono" style="color:var(--red);font-weight:700">${fmt(total)}</td>
-      <td><span class="badge ${estadoColor}">${t.estado||'—'}</span></td>
+      <td><span class="badge ${badge}">${t.estado||'—'}</span></td>
       <td><div class="td-actions">
-        <button class="btn btn-ghost btn-icon btn-sm" onclick="editTrabajador('${t.id}')">✏️</button>
-        <button class="btn btn-danger btn-icon btn-sm" onclick="confirmDelete('trabajadores_rrhh','${t.id}','${(t.nombre||'').replace(/'/g,'')}')">🗑</button>
+        <button class="btn btn-ghost btn-icon btn-sm" onclick="editTrabajador(${t.id})">✏️</button>
+        <button class="btn btn-danger btn-icon btn-sm" onclick="confirmDelete('trabajadores_rrhh',${t.id},'${nombre_safe}')">🗑</button>
       </div></td>
     </tr>`;
   }).join('');
@@ -12645,226 +12670,230 @@ function renderRRHH(){
 
 function filtrarRRHH(){ renderRRHH(); }
 
-let bonusPagos = []; // array de pagos puntuales en memoria del modal
-let bonusModo = 'recurrente'; // 'recurrente' | 'puntual'
+function calcNomina(){
+  try{
+    const b=parseFloat(document.getElementById('trab-bruto')?.value)||0;
+    const irpf=parseFloat(document.getElementById('trab-irpf')?.value)||0;
+    const ssTrab=parseFloat(document.getElementById('trab-ss-trab')?.value)||6.35;
+    const ssEmp=parseFloat(document.getElementById('trab-ss-emp')?.value)||30;
+    const irpfAmt=b*irpf/100;
+    const ssTrabAmt=b*ssTrab/100;
+    const neto=b-irpfAmt-ssTrabAmt;
+    const ssEmpAmt=b*ssEmp/100;
+    const totalMes=b+ssEmpAmt;
+    const pagaExtra=parseFloat(document.getElementById('trab-paga-extra')?.value)||0;
+    const numPagas=parseInt(document.getElementById('trab-num-pagas')?.value)||0;
+    const pagaAnual=pagaExtra*numPagas;
+    let bonusAnual=0;
+    if(bonusModo==='recurrente'){
+      const bonus=parseFloat(document.getElementById('trab-bonus')?.value)||0;
+      const bonusIva=parseFloat(document.getElementById('trab-bonus-iva')?.value)||0;
+      const mult={mensual:12,trimestral:4,anual:1};
+      bonusAnual=bonus*(1+bonusIva/100)*(mult[document.getElementById('trab-bonus-periodo')?.value||'mensual']||12);
+    } else {
+      bonusAnual=bonusPagos.reduce((s,p)=>s+(p.importe||0)*(1+(p.iva||0)/100),0);
+    }
+    const anualTotal=totalMes*12+pagaAnual+bonusAnual;
+    const s=(id,v)=>{ const el=document.getElementById(id); if(el) el.textContent=v; };
+    s('trab-calc-bruto', b>0?fmt(b):'—');
+    s('trab-calc-irpf', b>0?fmt(irpfAmt):'—');
+    s('trab-calc-ss-trab', b>0?fmt(ssTrabAmt):'—');
+    s('trab-calc-neto', b>0?fmt(neto):'—');
+    s('trab-calc-ss-emp', b>0?fmt(ssEmpAmt):'—');
+    s('trab-calc-total-mes', b>0?fmt(totalMes):'—');
+    s('trab-calc-paga', (pagaExtra>0&&numPagas>0)?fmt(pagaAnual):'—');
+    s('trab-calc-bonus', bonusAnual>0?fmt(bonusAnual):'—');
+    s('trab-calc-anual', b>0?fmt(anualTotal):'—');
+  }catch(err){ /* silencioso */ }
+}
 
 function setModoBonus(modo){
-  bonusModo = modo;
-  document.getElementById('bonus-modo-recurrente').style.display = modo==='recurrente' ? '' : 'none';
-  document.getElementById('bonus-modo-puntual').style.display = modo==='puntual' ? '' : 'none';
-  document.getElementById('btn-modo-recurrente').className = 'btn btn-sm ' + (modo==='recurrente'?'btn-primary':'btn-ghost');
-  document.getElementById('btn-modo-puntual').className = 'btn btn-sm ' + (modo==='puntual'?'btn-primary':'btn-ghost');
+  bonusModo=modo;
+  const r=document.getElementById('bonus-recurrente-sec');
+  const p=document.getElementById('bonus-puntual-sec');
+  if(r) r.style.display=modo==='recurrente'?'grid':'none';
+  if(p) p.style.display=modo==='puntual'?'block':'none';
+  document.querySelectorAll('input[name="bonus-modo"]').forEach(rb=>{ rb.checked=(rb.value===modo); });
   calcNomina();
 }
 
 function addBonusPago(){
-  const concepto = document.getElementById('bp-concepto').value.trim();
-  const fecha = document.getElementById('bp-fecha').value;
-  const importe = parseFloat(document.getElementById('bp-importe').value)||0;
-  const iva = parseFloat(document.getElementById('bp-iva').value)||0;
-  if(!concepto){ toast('Escribe un concepto','error'); return; }
-  if(importe<=0){ toast('Importe no válido','error'); return; }
-  bonusPagos.push({ concepto, fecha, importe, iva });
-  document.getElementById('bp-concepto').value='';
-  document.getElementById('bp-fecha').value='';
-  document.getElementById('bp-importe').value='';
-  document.getElementById('bp-iva').value='0';
+  const concepto=document.getElementById('bp-concepto')?.value||'';
+  const fecha=document.getElementById('bp-fecha')?.value||'';
+  const importe=parseFloat(document.getElementById('bp-importe')?.value)||0;
+  const iva=parseFloat(document.getElementById('bp-iva')?.value)||0;
+  if(!importe){ toast('Introduce un importe','error'); return; }
+  bonusPagos.push({concepto,fecha,importe,iva});
+  if(document.getElementById('bp-concepto')) document.getElementById('bp-concepto').value='';
+  if(document.getElementById('bp-importe')) document.getElementById('bp-importe').value='';
   renderBonusPagos();
   calcNomina();
 }
 
-function removeBonusPago(idx){
+function delBonusPago(idx){
   bonusPagos.splice(idx,1);
   renderBonusPagos();
   calcNomina();
 }
 
 function renderBonusPagos(){
-  const lista = document.getElementById('bp-lista');
+  const lista=document.getElementById('bonus-pagos-lista');
   if(!lista) return;
-  if(!bonusPagos.length){
-    lista.innerHTML='<div style="text-align:center;color:var(--text-soft);padding:8px;font-size:11px">Sin pagos registrados — añade con el botón ＋</div>';
-    return;
-  }
-  lista.innerHTML = bonusPagos.map((p,i)=>{
-    const total = p.importe*(1+p.iva/100);
-    return `<div style="display:grid;grid-template-columns:2fr 1.2fr 1fr 1fr auto;gap:6px;align-items:center;padding:5px 0;border-bottom:1px solid var(--border)">
-      <span style="font-weight:600">${p.concepto}</span>
-      <span style="color:var(--text-soft)">${p.fecha?fmtD(p.fecha):'Sin fecha'}</span>
-      <span class="td-mono">${fmt(p.importe)}</span>
-      <span class="td-mono" style="color:var(--copper)">${p.iva>0?fmt(total)+' ('+p.iva+'% IVA)':'Exento'}</span>
-      <button class="btn btn-danger btn-icon btn-sm" onclick="removeBonusPago(${i})" style="padding:2px 6px;font-size:11px">🗑</button>
-    </div>`;
-  }).join('');
-}
-
-function calcNomina(){
-  const bruto=parseFloat(document.getElementById('trab-bruto')?.value)||0;
-  const irpf=parseFloat(document.getElementById('trab-irpf')?.value)||0;
-  const ssTrab=parseFloat(document.getElementById('trab-ss-trab')?.value)||6.35;
-  const ssEmp=parseFloat(document.getElementById('trab-ss-emp')?.value)||30;
-  const irpfAmt=bruto*irpf/100;
-  const ssTrabAmt=bruto*ssTrab/100;
-  const neto=bruto-irpfAmt-ssTrabAmt;
-  const ssEmpAmt=bruto*ssEmp/100;
-  const total=bruto+ssEmpAmt;
-
-  // Paga extra
-  const pagaExtra=parseFloat(document.getElementById('trab-paga-extra')?.value)||0;
-  const numPagas=parseInt(document.getElementById('trab-num-pagas')?.value)||0;
-  const pagaIrpf=parseFloat(document.getElementById('trab-paga-irpf')?.value)||0;
-  const pagaNetoUnit=pagaExtra - pagaExtra*pagaIrpf/100;
-  const pagaAnual=pagaExtra*numPagas; // coste bruto empresa
-
-  // Bonus / compensación
-  let bonusAnual=0;
-  if(bonusModo==='recurrente'){
-    const bonus=parseFloat(document.getElementById('trab-bonus')?.value)||0;
-    const bonusIvaPct=parseFloat(document.getElementById('trab-bonus-iva')?.value)||0;
-    const bonusConIva=bonus*(1+bonusIvaPct/100);
-    const periodoMult={mensual:12,trimestral:4,anual:1};
-    const mult=periodoMult[document.getElementById('trab-bonus-periodo')?.value||'mensual']||12;
-    bonusAnual=bonusConIva*mult;
-    const calcBonusEl=document.getElementById('trab-calc-bonus');
-    if(calcBonusEl) calcBonusEl.textContent=bonus>0?fmt(bonusAnual)+'/año'+(bonusIvaPct>0?` (${bonusIvaPct}% IVA)`:'  exento'):'—';
-  } else {
-    // Pagos puntuales: suma de todos con IVA
-    bonusAnual=bonusPagos.reduce((s,p)=>s+p.importe*(1+p.iva/100),0);
-    const el=document.getElementById('trab-calc-bonus-puntual');
-    if(el) el.textContent=bonusAnual>0?fmt(bonusAnual):'—';
-  }
-
-  // Coste anual total
-  const costoMensualEmp=total;
-  const costoAnualNom=costoMensualEmp*12;
-  const costoAnualTotal=costoAnualNom+pagaAnual+bonusAnual;
-
-  // Actualizar UI
-  document.getElementById('trab-calc-bruto').textContent=bruto>0?fmt(bruto):'—';
-  document.getElementById('trab-calc-neto').textContent=bruto>0?fmt(neto):'—';
-  document.getElementById('trab-calc-ss-emp').textContent=bruto>0?fmt(ssEmpAmt):'—';
-  document.getElementById('trab-calc-total').textContent=bruto>0?fmt(total):'—';
-  const pagaEl=document.getElementById('trab-calc-paga-neto');
-  if(pagaEl) pagaEl.textContent=(pagaExtra>0&&numPagas>0)?fmt(pagaNetoUnit)+' × '+numPagas:'—';
-  document.getElementById('trab-calc-anual-nom').textContent=bruto>0?fmt(costoAnualNom):'—';
-  document.getElementById('trab-calc-anual-pagas').textContent=(pagaExtra>0&&numPagas>0)?fmt(pagaAnual):'—';
-  const anualBonusEl=document.getElementById('trab-calc-anual-bonus');
-  if(anualBonusEl) anualBonusEl.textContent=bonusAnual>0?fmt(bonusAnual):'—';
-  document.getElementById('trab-calc-anual-total').textContent=bruto>0?fmt(costoAnualTotal):'—';
+  if(!bonusPagos.length){ lista.innerHTML='<div style="font-size:12px;color:#999;padding:4px 0">Sin pagos puntuales</div>'; return; }
+  lista.innerHTML=bonusPagos.map((p,i)=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12px;border-bottom:1px solid #f0f0f0">
+      <span style="flex:1">${p.concepto||'Pago'}</span>
+      <span style="color:#666">${p.fecha||''}</span>
+      <span style="font-weight:600">${fmt(p.importe*(1+p.iva/100))}</span>
+      <button class="btn btn-ghost btn-icon btn-sm" onclick="delBonusPago(${i})" style="color:var(--red);padding:2px 6px">×</button>
+    </div>`).join('');
 }
 
 function abrirModalTrabajador(){
-  document.getElementById('trab-id').value='';
-  document.getElementById('m-trab-title').textContent='👤 Nuevo trabajador';
-  ['trab-nombre','trab-dni','trab-tel','trab-email','trab-dir','trab-nss','trab-iban','trab-notas','trab-bruto','trab-paga-extra','trab-bonus'].forEach(id=>{
-    const el=document.getElementById(id); if(el) el.value='';
-  });
-  document.getElementById('trab-irpf').value='15';
-  document.getElementById('trab-ss-trab').value='6.35';
-  document.getElementById('trab-ss-emp').value='30';
-  document.getElementById('trab-paga-irpf').value='15';
-  document.getElementById('trab-num-pagas').value='2';
-  document.getElementById('trab-bonus-iva').value='0';
-  document.getElementById('trab-bonus-periodo').value='mensual';
-  document.getElementById('trab-alta').value=new Date().toISOString().split('T')[0];
-  document.getElementById('trab-estado').value='Activo';
-  bonusPagos=[]; bonusModo='recurrente';
-  setModoBonus('recurrente');
-  renderBonusPagos();
-  calcNomina();
-  openModal('m-trabajador');
+  try{
+    bonusPagos=[]; bonusModo='recurrente';
+    const campos=['trab-id','trab-nombre','trab-dni','trab-tel','trab-email',
+                  'trab-dir','trab-nss','trab-iban','trab-notas','trab-bruto',
+                  'trab-paga-extra','trab-bonus'];
+    campos.forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+    const sets={
+      'trab-irpf':'15','trab-ss-trab':'6.35','trab-ss-emp':'30',
+      'trab-paga-irpf':'15','trab-num-pagas':'2','trab-bonus-iva':'0',
+      'trab-bonus-periodo':'mensual','trab-estado':'Activo',
+      'trab-categoria':'Oficial 1ª','trab-contrato':'Indefinido'
+    };
+    Object.entries(sets).forEach(([id,v])=>{ const el=document.getElementById(id); if(el) el.value=v; });
+    const altaEl=document.getElementById('trab-alta');
+    if(altaEl) altaEl.value=new Date().toISOString().split('T')[0];
+    const titleEl=document.getElementById('m-trab-title');
+    if(titleEl) titleEl.textContent='👤 Nuevo trabajador';
+    setModoBonus('recurrente');
+    renderBonusPagos();
+    calcNomina();
+    openModal('m-trabajador');
+  }catch(err){
+    toast('Error abriendo modal: '+err.message,'error');
+    console.error('abrirModalTrabajador error:', err);
+  }
 }
 
 function editTrabajador(id){
-  const t=TrabC.find(x=>x.id==id); if(!t) return;
-  document.getElementById('trab-id').value=t.id;
-  document.getElementById('m-trab-title').textContent='✏️ Editar trabajador';
-  document.getElementById('trab-nombre').value=t.nombre||'';
-  document.getElementById('trab-dni').value=t.dni||'';
-  document.getElementById('trab-tel').value=t.telefono||'';
-  document.getElementById('trab-email').value=t.email||'';
-  document.getElementById('trab-dir').value=t.direccion||'';
-  document.getElementById('trab-nss').value=t.num_ss||'';
-  document.getElementById('trab-iban').value=t.iban||'';
-  document.getElementById('trab-categoria').value=t.categoria||'Oficial 1ª';
-  document.getElementById('trab-contrato').value=t.tipo_contrato||'Indefinido';
-  document.getElementById('trab-alta').value=t.fecha_alta||'';
-  document.getElementById('trab-estado').value=t.estado||'Activo';
-  document.getElementById('trab-bruto').value=t.salario_bruto||'';
-  document.getElementById('trab-irpf').value=t.irpf_pct||15;
-  document.getElementById('trab-ss-trab').value=t.ss_trab_pct||6.35;
-  document.getElementById('trab-ss-emp').value=t.ss_emp_pct||30;
-  document.getElementById('trab-paga-extra').value=t.paga_extra||'';
-  document.getElementById('trab-num-pagas').value=t.num_pagas_extra??2;
-  document.getElementById('trab-paga-irpf').value=t.paga_extra_irpf||15;
-  document.getElementById('trab-bonus').value=t.bonus||'';
-  document.getElementById('trab-bonus-periodo').value=t.bonus_periodo||'mensual';
-  document.getElementById('trab-bonus-iva').value=t.bonus_iva_pct??0;
-  // Cargar modo bonus y pagos puntuales
-  bonusPagos = Array.isArray(t.bonus_pagos_json) ? t.bonus_pagos_json : (t.bonus_pagos_json ? JSON.parse(t.bonus_pagos_json) : []);
-  const modoGuardado = t.bonus_modo || (bonusPagos.length>0 ? 'puntual' : 'recurrente');
-  bonusModo = modoGuardado;
-  setModoBonus(modoGuardado);
-  renderBonusPagos();
-  document.getElementById('trab-notas').value=t.notas||'';
-  calcNomina();
-  openModal('m-trabajador');
+  try{
+    const t=TrabC.find(x=>x.id==id);
+    if(!t){ toast('Trabajador no encontrado','error'); return; }
+    bonusPagos=Array.isArray(t.bonus_pagos_json)?t.bonus_pagos_json:(t.bonus_pagos_json?JSON.parse(t.bonus_pagos_json):[]);
+    bonusModo=t.bonus_modo||(bonusPagos.length>0?'puntual':'recurrente');
+    const set=(el_id,val)=>{ const el=document.getElementById(el_id); if(el) el.value=(val??''); };
+    set('trab-id',t.id);
+    set('trab-nombre',t.nombre);
+    set('trab-dni',t.dni);
+    set('trab-tel',t.telefono);
+    set('trab-email',t.email);
+    set('trab-dir',t.direccion);
+    set('trab-nss',t.num_ss);
+    set('trab-iban',t.iban);
+    set('trab-categoria',t.categoria||'Oficial 1ª');
+    set('trab-contrato',t.tipo_contrato||'Indefinido');
+    set('trab-alta',t.fecha_alta);
+    set('trab-estado',t.estado||'Activo');
+    set('trab-bruto',t.salario_bruto||'');
+    set('trab-irpf',t.irpf_pct??15);
+    set('trab-ss-trab',t.ss_trab_pct??6.35);
+    set('trab-ss-emp',t.ss_emp_pct??30);
+    set('trab-paga-extra',t.paga_extra||'');
+    set('trab-num-pagas',t.num_pagas_extra??2);
+    set('trab-paga-irpf',t.paga_extra_irpf??15);
+    set('trab-bonus',t.bonus||'');
+    set('trab-bonus-periodo',t.bonus_periodo||'mensual');
+    set('trab-bonus-iva',t.bonus_iva_pct??0);
+    set('trab-notas',t.notas);
+    const titleEl=document.getElementById('m-trab-title');
+    if(titleEl) titleEl.textContent='✏️ Editar trabajador';
+    setModoBonus(bonusModo);
+    renderBonusPagos();
+    calcNomina();
+    openModal('m-trabajador');
+  }catch(err){
+    toast('Error editando trabajador: '+err.message,'error');
+    console.error('editTrabajador error:', err);
+  }
 }
 
 async function saveTrabajador(){
-  const nombre=document.getElementById('trab-nombre').value.trim();
-  if(!nombre){ toast('El nombre es obligatorio','error'); return; }
-  const id=document.getElementById('trab-id').value;
-  const d={
-    nombre,
-    dni:       document.getElementById('trab-dni').value||null,
-    telefono:  document.getElementById('trab-tel').value||null,
-    email:     document.getElementById('trab-email').value||null,
-    direccion: document.getElementById('trab-dir').value||null,
-    num_ss:    document.getElementById('trab-nss').value||null,
-    iban:      document.getElementById('trab-iban').value||null,
-    categoria: document.getElementById('trab-categoria').value,
-    tipo_contrato: document.getElementById('trab-contrato').value,
-    fecha_alta: document.getElementById('trab-alta').value||null,
-    estado:    document.getElementById('trab-estado').value,
-    salario_bruto: parseFloat(document.getElementById('trab-bruto').value)||null,
-    irpf_pct:  parseFloat(document.getElementById('trab-irpf').value)||15,
-    ss_trab_pct: parseFloat(document.getElementById('trab-ss-trab').value)||6.35,
-    ss_emp_pct: parseFloat(document.getElementById('trab-ss-emp').value)||30,
-    paga_extra: parseFloat(document.getElementById('trab-paga-extra').value)||null,
-    num_pagas_extra: parseInt(document.getElementById('trab-num-pagas').value)||0,
-    paga_extra_irpf: parseFloat(document.getElementById('trab-paga-irpf').value)||15,
-    bonus: bonusModo==='recurrente' ? (parseFloat(document.getElementById('trab-bonus').value)||null) : null,
-    bonus_periodo: bonusModo==='recurrente' ? document.getElementById('trab-bonus-periodo').value : null,
-    bonus_iva_pct: bonusModo==='recurrente' ? (parseFloat(document.getElementById('trab-bonus-iva').value)||0) : 0,
-    bonus_modo: bonusModo,
-    bonus_pagos_json: bonusModo==='puntual' ? JSON.stringify(bonusPagos) : null,
-    notas:     document.getElementById('trab-notas').value||null,
-  };
   try{
+    const nombre=(document.getElementById('trab-nombre')?.value||'').trim();
+    if(!nombre){ toast('El nombre es obligatorio','error'); return; }
+    const id=document.getElementById('trab-id')?.value||'';
+    const d={
+      nombre,
+      dni:            document.getElementById('trab-dni')?.value||null,
+      telefono:       document.getElementById('trab-tel')?.value||null,
+      email:          document.getElementById('trab-email')?.value||null,
+      direccion:      document.getElementById('trab-dir')?.value||null,
+      num_ss:         document.getElementById('trab-nss')?.value||null,
+      iban:           document.getElementById('trab-iban')?.value||null,
+      categoria:      document.getElementById('trab-categoria')?.value||'Oficial 1ª',
+      tipo_contrato:  document.getElementById('trab-contrato')?.value||'Indefinido',
+      fecha_alta:     document.getElementById('trab-alta')?.value||null,
+      estado:         document.getElementById('trab-estado')?.value||'Activo',
+      salario_bruto:  parseFloat(document.getElementById('trab-bruto')?.value)||null,
+      irpf_pct:       parseFloat(document.getElementById('trab-irpf')?.value)||15,
+      ss_trab_pct:    parseFloat(document.getElementById('trab-ss-trab')?.value)||6.35,
+      ss_emp_pct:     parseFloat(document.getElementById('trab-ss-emp')?.value)||30,
+      paga_extra:     parseFloat(document.getElementById('trab-paga-extra')?.value)||null,
+      num_pagas_extra:parseInt(document.getElementById('trab-num-pagas')?.value)||2,
+      paga_extra_irpf:parseFloat(document.getElementById('trab-paga-irpf')?.value)||15,
+      bonus:          bonusModo==='recurrente'?(parseFloat(document.getElementById('trab-bonus')?.value)||null):null,
+      bonus_periodo:  bonusModo==='recurrente'?(document.getElementById('trab-bonus-periodo')?.value||'mensual'):null,
+      bonus_iva_pct:  bonusModo==='recurrente'?(parseFloat(document.getElementById('trab-bonus-iva')?.value)||0):0,
+      bonus_modo:     bonusModo,
+      bonus_pagos_json: bonusModo==='puntual'?bonusPagos:null,
+      notas:          document.getElementById('trab-notas')?.value||null,
+    };
     if(id){ await sb('trabajadores_rrhh','PATCH',d,null,`?id=eq.${id}`); toast('Trabajador actualizado ✅'); }
-    else  { await sbPost('trabajadores_rrhh',d); toast('Trabajador guardado ✅'); }
-
-    // ── Sincronizar nombre con lista global TRABAJADORES ──
-    try{
-      const todosRRHH = await sbGet('trabajadores_rrhh','?estado=eq.Activo&order=nombre.asc');
-      const nombresActivos = todosRRHH.map(t=>t.nombre).filter(Boolean);
-      TRABAJADORES = nombresActivos;
-      // Guardar como lista separada por comas (mismo formato que usa la página Listas)
-      await upsertConfig('trabajadores', nombresActivos.join(','));
-      populateTrabajadores();
-    }catch(syncErr){
-      // Si falla la sincronización no bloqueamos — el trabajador ya se guardó
-      console.warn('Sincronización lista trabajadores:', syncErr.message);
-      // Actualizar solo en memoria
-      if(!TRABAJADORES.includes(nombre)) TRABAJADORES.push(nombre);
-      populateTrabajadores();
-    }
-
+    else   { await sbPost('trabajadores_rrhh',d); toast('Trabajador guardado ✅'); }
     closeModal('m-trabajador');
     await loadRRHH();
-  }catch(e){ toast('Error: '+e.message,'error'); }
+  }catch(err){
+    toast('Error al guardar: '+err.message,'error');
+    console.error('saveTrabajador error:', err);
+  }
 }
+
+function mostrarSQLRRHH(){
+  const sql=`CREATE TABLE IF NOT EXISTS trabajadores_rrhh (
+  id BIGSERIAL PRIMARY KEY,
+  nombre TEXT NOT NULL,
+  dni TEXT, telefono TEXT, email TEXT,
+  direccion TEXT, num_ss TEXT, iban TEXT,
+  categoria TEXT DEFAULT 'Oficial 1a',
+  tipo_contrato TEXT DEFAULT 'Indefinido',
+  fecha_alta DATE, estado TEXT DEFAULT 'Activo',
+  salario_bruto NUMERIC(10,2), irpf_pct NUMERIC(5,2) DEFAULT 15,
+  ss_trab_pct NUMERIC(5,2) DEFAULT 6.35, ss_emp_pct NUMERIC(5,2) DEFAULT 30,
+  paga_extra NUMERIC(10,2), num_pagas_extra INTEGER DEFAULT 2,
+  paga_extra_irpf NUMERIC(5,2) DEFAULT 15,
+  bonus NUMERIC(10,2), bonus_periodo TEXT DEFAULT 'mensual',
+  bonus_iva_pct NUMERIC(5,2) DEFAULT 0,
+  bonus_modo TEXT DEFAULT 'recurrente', bonus_pagos_json JSONB,
+  notas TEXT, created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE trabajadores_rrhh ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "allow_all" ON trabajadores_rrhh FOR ALL USING (true) WITH CHECK (true);`;
+  const ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center';
+  ov.innerHTML=`<div style="background:#fff;border-radius:10px;padding:24px;width:640px;max-width:95vw">
+    <div style="font-weight:700;font-size:15px;margin-bottom:8px">📋 SQL — Crear tabla trabajadores_rrhh</div>
+    <p style="font-size:12px;color:#666;margin-bottom:10px">Copia y ejecuta en <b>Supabase → SQL Editor</b>:</p>
+    <textarea style="width:100%;height:260px;font-family:monospace;font-size:11px;border:1px solid #ddd;border-radius:6px;padding:10px;resize:none" readonly>${sql}</textarea>
+    <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
+      <button class="btn btn-primary" onclick="navigator.clipboard.writeText(this.closest('div').previousElementSibling.value).then(()=>toast('SQL copiado ✅'))">📋 Copiar</button>
+      <button class="btn btn-ghost" onclick="this.closest('[style*=fixed]').remove()">Cerrar</button>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+}
+
 
 // ════════════════════════════════════════════════════════════════
 // AGENDA · AVISOS Y NOTIFICACIONES
@@ -20585,7 +20614,7 @@ function vpGuardarPDF(){
 
 <!-- ═══ MODAL TRABAJADOR RR.HH. ═══ -->
 <div class="overlay" id="m-trabajador" onclick="if(event.target===this)closeModal('m-trabajador')">
-  <div class="modal" style="width:700px;max-width:97vw;max-height:92vh;overflow-y:auto">
+  <div class="modal" style="width:680px;max-width:97vw;max-height:92vh;overflow-y:auto">
     <div class="modal-head">
       <div class="modal-title" id="m-trab-title">👤 Nuevo trabajador</div>
       <button class="modal-close" onclick="closeModal('m-trabajador')">×</button>
@@ -20593,126 +20622,93 @@ function vpGuardarPDF(){
     <div class="modal-body" style="padding:20px">
       <input type="hidden" id="trab-id">
 
-      <!-- Sección: Datos personales -->
-      <div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;padding-bottom:4px;border-bottom:1px solid var(--border)">Datos personales</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
-        <div class="form-group" style="margin:0"><label class="form-label">Nombre completo *</label><input class="form-input" id="trab-nombre" placeholder="Nombre y apellidos"></div>
-        <div class="form-group" style="margin:0"><label class="form-label">DNI / NIE</label><input class="form-input" id="trab-dni" placeholder="12345678A"></div>
-        <div class="form-group" style="margin:0"><label class="form-label">Teléfono</label><input class="form-input" id="trab-tel" placeholder="600 000 000"></div>
-        <div class="form-group" style="margin:0"><label class="form-label">Email</label><input class="form-input" id="trab-email" type="email" placeholder="correo@ejemplo.com"></div>
-        <div class="form-group" style="margin:0;grid-column:1/-1"><label class="form-label">Dirección</label><input class="form-input" id="trab-dir" placeholder="Calle, número, municipio"></div>
-        <div class="form-group" style="margin:0"><label class="form-label">Nº Seguridad Social</label><input class="form-input" id="trab-nss" placeholder="280000000000"></div>
-        <div class="form-group" style="margin:0"><label class="form-label">IBAN</label><input class="form-input" id="trab-iban" placeholder="ES00 0000 0000 0000 0000 0000"></div>
+      <div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:4px">Datos personales</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+        <div><label class="form-label">Nombre *</label><input class="form-input" id="trab-nombre" placeholder="Nombre y apellidos"></div>
+        <div><label class="form-label">DNI / NIE</label><input class="form-input" id="trab-dni" placeholder="12345678A"></div>
+        <div><label class="form-label">Teléfono</label><input class="form-input" id="trab-tel" placeholder="600 000 000"></div>
+        <div><label class="form-label">Email</label><input class="form-input" id="trab-email" type="email"></div>
+        <div style="grid-column:1/-1"><label class="form-label">Dirección</label><input class="form-input" id="trab-dir" placeholder="Calle, número, municipio"></div>
+        <div><label class="form-label">Nº SS</label><input class="form-input" id="trab-nss"></div>
+        <div><label class="form-label">IBAN</label><input class="form-input" id="trab-iban" placeholder="ES00..."></div>
       </div>
 
-      <!-- Sección: Contrato -->
-      <div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;padding-bottom:4px;border-bottom:1px solid var(--border)">Contrato y categoría</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:16px">
-        <div class="form-group" style="margin:0"><label class="form-label">Categoría</label>
+      <div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:4px">Contrato</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:16px">
+        <div><label class="form-label">Categoría</label>
           <select class="form-input" id="trab-categoria">
-            <option value="Oficial 1ª">Oficial 1ª</option>
-            <option value="Oficial 2ª">Oficial 2ª</option>
-            <option value="Oficial 3ª">Oficial 3ª</option>
-            <option value="Peón">Peón</option>
-            <option value="Administrativo">Administrativo</option>
-            <option value="Técnico">Técnico</option>
-            <option value="Otro">Otro</option>
-          </select>
-        </div>
-        <div class="form-group" style="margin:0"><label class="form-label">Tipo contrato</label>
+            <option>Oficial 1ª</option><option>Oficial 2ª</option><option>Oficial 3ª</option>
+            <option>Peón</option><option>Administrativo</option><option>Técnico</option><option>Otro</option>
+          </select></div>
+        <div><label class="form-label">Contrato</label>
           <select class="form-input" id="trab-contrato">
-            <option value="Indefinido">Indefinido</option>
-            <option value="Temporal">Temporal</option>
-            <option value="Obra y servicio">Obra y servicio</option>
-            <option value="Formación">Formación</option>
-            <option value="Autónomo">Autónomo</option>
-          </select>
-        </div>
-        <div class="form-group" style="margin:0"><label class="form-label">Fecha alta</label><input class="form-input" id="trab-alta" type="date"></div>
-        <div class="form-group" style="margin:0"><label class="form-label">Estado</label>
+            <option>Indefinido</option><option>Temporal</option><option>Obra y servicio</option><option>Autónomo</option>
+          </select></div>
+        <div><label class="form-label">Fecha alta</label><input class="form-input" id="trab-alta" type="date"></div>
+        <div><label class="form-label">Estado</label>
           <select class="form-input" id="trab-estado">
-            <option value="Activo">Activo</option>
-            <option value="Baja">Baja</option>
-            <option value="Excedencia">Excedencia</option>
-          </select>
-        </div>
+            <option>Activo</option><option>Baja</option><option>Excedencia</option>
+          </select></div>
       </div>
 
-      <!-- Sección: Retribución -->
-      <div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;padding-bottom:4px;border-bottom:1px solid var(--border)">Retribución mensual</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px">
-        <div class="form-group" style="margin:0"><label class="form-label">Salario bruto / mes (€)</label><input class="form-input" id="trab-bruto" type="number" min="0" step="0.01" placeholder="2000.00" oninput="calcNomina()"></div>
-        <div class="form-group" style="margin:0"><label class="form-label">IRPF % retención</label><input class="form-input" id="trab-irpf" type="number" min="0" max="50" step="0.01" value="15" oninput="calcNomina()"></div>
-        <div class="form-group" style="margin:0"><label class="form-label">SS trabajador % (6,35%)</label><input class="form-input" id="trab-ss-trab" type="number" min="0" step="0.01" value="6.35" oninput="calcNomina()"></div>
-        <div class="form-group" style="margin:0"><label class="form-label">SS empresa % (~30%)</label><input class="form-input" id="trab-ss-emp" type="number" min="0" step="0.01" value="30" oninput="calcNomina()"></div>
-        <div class="form-group" style="margin:0"><label class="form-label">Paga extra (€)</label><input class="form-input" id="trab-paga-extra" type="number" min="0" step="0.01" placeholder="0.00" oninput="calcNomina()"></div>
-        <div class="form-group" style="margin:0"><label class="form-label">Nº pagas extra / año</label>
+      <div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:4px">Retribución</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px">
+        <div><label class="form-label">Bruto / mes (€)</label><input class="form-input" id="trab-bruto" type="number" min="0" step="0.01" oninput="calcNomina()"></div>
+        <div><label class="form-label">IRPF %</label><input class="form-input" id="trab-irpf" type="number" value="15" min="0" max="50" step="0.01" oninput="calcNomina()"></div>
+        <div><label class="form-label">SS trabajador %</label><input class="form-input" id="trab-ss-trab" type="number" value="6.35" step="0.01" oninput="calcNomina()"></div>
+        <div><label class="form-label">SS empresa %</label><input class="form-input" id="trab-ss-emp" type="number" value="30" step="0.01" oninput="calcNomina()"></div>
+        <div><label class="form-label">Paga extra (€)</label><input class="form-input" id="trab-paga-extra" type="number" min="0" step="0.01" oninput="calcNomina()"></div>
+        <div><label class="form-label">Nº pagas extra</label>
           <select class="form-input" id="trab-num-pagas" onchange="calcNomina()">
-            <option value="0">0 pagas</option><option value="1">1 paga</option>
-            <option value="2" selected>2 pagas</option><option value="3">3 pagas</option>
-          </select>
-        </div>
-        <div class="form-group" style="margin:0"><label class="form-label">IRPF paga extra %</label><input class="form-input" id="trab-paga-irpf" type="number" min="0" max="50" step="0.01" value="15" oninput="calcNomina()"></div>
+            <option value="0">0</option><option value="1">1</option>
+            <option value="2" selected>2</option><option value="3">3</option>
+          </select></div>
+        <div><label class="form-label">IRPF paga extra %</label><input class="form-input" id="trab-paga-irpf" type="number" value="15" step="0.01" oninput="calcNomina()"></div>
       </div>
 
-      <!-- Sección: Bonus / complementos -->
-      <div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;padding-bottom:4px;border-bottom:1px solid var(--border)">
-        Bonus / complementos
-        <span style="margin-left:12px">
-          <label style="font-weight:400;font-size:11px;cursor:pointer"><input type="radio" name="bonus-modo" value="recurrente" checked onchange="setModoBonus('recurrente')"> Recurrente</label>
-          <label style="font-weight:400;font-size:11px;cursor:pointer;margin-left:8px"><input type="radio" name="bonus-modo" value="puntual" onchange="setModoBonus('puntual')"> Pagos puntuales</label>
+      <div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:4px">
+        Bonus
+        <span style="margin-left:12px;font-weight:400">
+          <label style="cursor:pointer"><input type="radio" name="bonus-modo" value="recurrente" checked onchange="setModoBonus('recurrente')"> Recurrente</label>
+          <label style="cursor:pointer;margin-left:10px"><input type="radio" name="bonus-modo" value="puntual" onchange="setModoBonus('puntual')"> Pagos puntuales</label>
         </span>
       </div>
-
-      <!-- Bonus recurrente -->
-      <div id="bonus-recurrente-sec" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px">
-        <div class="form-group" style="margin:0"><label class="form-label">Importe bonus / período (€)</label><input class="form-input" id="trab-bonus" type="number" min="0" step="0.01" placeholder="0.00" oninput="calcNomina()"></div>
-        <div class="form-group" style="margin:0"><label class="form-label">Período</label>
+      <div id="bonus-recurrente-sec" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px">
+        <div><label class="form-label">Importe bonus (€)</label><input class="form-input" id="trab-bonus" type="number" min="0" step="0.01" oninput="calcNomina()"></div>
+        <div><label class="form-label">Período</label>
           <select class="form-input" id="trab-bonus-periodo" onchange="calcNomina()">
-            <option value="mensual">Mensual</option><option value="trimestral">Trimestral</option>
-            <option value="anual">Anual</option>
-          </select>
-        </div>
-        <div class="form-group" style="margin:0"><label class="form-label">IVA bonus %</label><input class="form-input" id="trab-bonus-iva" type="number" min="0" max="21" step="1" value="0" oninput="calcNomina()"></div>
+            <option value="mensual">Mensual</option><option value="trimestral">Trimestral</option><option value="anual">Anual</option>
+          </select></div>
+        <div><label class="form-label">IVA %</label><input class="form-input" id="trab-bonus-iva" type="number" value="0" min="0" max="21" oninput="calcNomina()"></div>
       </div>
-
-      <!-- Bonus puntual -->
       <div id="bonus-puntual-sec" style="display:none;margin-bottom:16px">
         <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:8px;margin-bottom:8px;align-items:end">
-          <div class="form-group" style="margin:0"><label class="form-label">Concepto</label><input class="form-input" id="bp-concepto" placeholder="Descripción del pago"></div>
-          <div class="form-group" style="margin:0"><label class="form-label">Fecha</label><input class="form-input" id="bp-fecha" type="date"></div>
-          <div class="form-group" style="margin:0"><label class="form-label">Importe (€)</label><input class="form-input" id="bp-importe" type="number" min="0" step="0.01" placeholder="0.00"></div>
-          <div class="form-group" style="margin:0"><label class="form-label">IVA %</label><input class="form-input" id="bp-iva" type="number" min="0" max="21" value="0"></div>
-          <button class="btn btn-primary btn-sm" style="height:38px;margin-top:auto" onclick="addBonusPago()">＋</button>
+          <div><label class="form-label">Concepto</label><input class="form-input" id="bp-concepto" placeholder="Descripción"></div>
+          <div><label class="form-label">Fecha</label><input class="form-input" id="bp-fecha" type="date"></div>
+          <div><label class="form-label">Importe</label><input class="form-input" id="bp-importe" type="number" min="0" step="0.01"></div>
+          <div><label class="form-label">IVA %</label><input class="form-input" id="bp-iva" type="number" value="0"></div>
+          <button class="btn btn-primary" style="height:38px;margin-top:auto" onclick="addBonusPago()">＋</button>
         </div>
         <div id="bonus-pagos-lista"></div>
       </div>
 
-      <!-- Preview nómina — IDs deben coincidir con calcNomina() -->
+      <!-- Resumen nómina -->
       <div style="background:var(--navy);color:#fff;border-radius:8px;padding:14px 16px;margin-bottom:16px">
-        <div style="font-size:11px;font-weight:700;letter-spacing:.5px;margin-bottom:10px;opacity:.7">RESUMEN NÓMINA MENSUAL</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 24px;font-size:12px">
-          <div style="opacity:.7">Salario bruto</div>
-          <div id="trab-calc-bruto" style="text-align:right;font-weight:600">—</div>
-          <div style="opacity:.7">– SS trabajador</div>
-          <div id="trab-calc-ss-emp" style="text-align:right;color:#f8baba">—</div>
-          <div style="border-top:1px solid rgba(255,255,255,.2);opacity:.7;padding-top:6px;font-weight:700">= Neto a pagar</div>
-          <div id="trab-calc-neto" style="text-align:right;font-weight:800;font-size:15px;color:#7fffb0;border-top:1px solid rgba(255,255,255,.2);padding-top:6px">—</div>
-          <div style="opacity:.7;margin-top:4px">SS empresa (~30%)</div>
-          <div id="trab-calc-total" style="text-align:right;color:#ffd580;margin-top:4px">—</div>
-          <div style="border-top:1px solid rgba(255,255,255,.2);font-weight:700;padding-top:6px">Coste empresa / mes</div>
-          <div id="trab-calc-anual-nom" style="text-align:right;font-weight:800;font-size:15px;color:#ffd580;border-top:1px solid rgba(255,255,255,.2);padding-top:6px">—</div>
-          <div style="opacity:.7">Pagas extra / año</div>
-          <div id="trab-calc-paga-neto" style="text-align:right">—</div>
-          <div style="opacity:.7">Bonus / año</div>
-          <div id="trab-calc-anual-bonus" style="text-align:right">—</div>
-          <div style="border-top:1px solid rgba(255,255,255,.2);font-weight:700;padding-top:6px">COSTE TOTAL EMPRESA / AÑO</div>
-          <div id="trab-calc-anual-total" style="text-align:right;font-weight:800;font-size:15px;color:#ffd580;border-top:1px solid rgba(255,255,255,.2);padding-top:6px">—</div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:.5px;margin-bottom:10px;opacity:.7">RESUMEN NÓMINA</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px 20px;font-size:12px">
+          <span style="opacity:.7">Bruto/mes</span><span id="trab-calc-bruto" style="text-align:right;font-weight:600">—</span>
+          <span style="opacity:.7">– IRPF</span><span id="trab-calc-irpf" style="text-align:right;color:#f8baba">—</span>
+          <span style="opacity:.7">– SS trabajador</span><span id="trab-calc-ss-trab" style="text-align:right;color:#f8baba">—</span>
+          <span style="opacity:.7;font-weight:700">= Neto a cobrar</span><span id="trab-calc-neto" style="text-align:right;font-weight:800;color:#7fffb0;font-size:14px">—</span>
+          <span style="opacity:.7">SS empresa</span><span id="trab-calc-ss-emp" style="text-align:right;color:#ffd580">—</span>
+          <span style="opacity:.7;font-weight:700">Coste empresa/mes</span><span id="trab-calc-total-mes" style="text-align:right;font-weight:800;color:#ffd580;font-size:14px">—</span>
+          <span style="opacity:.7">Pagas extra/año</span><span id="trab-calc-paga" style="text-align:right">—</span>
+          <span style="opacity:.7">Bonus/año</span><span id="trab-calc-bonus" style="text-align:right">—</span>
+          <span style="font-weight:700">COSTE TOTAL / AÑO</span><span id="trab-calc-anual" style="text-align:right;font-weight:800;font-size:14px;color:#ffd580">—</span>
         </div>
       </div>
 
-      <!-- Notas -->
-      <div class="form-group" style="margin:0"><label class="form-label">Notas internas</label><textarea class="form-input" id="trab-notas" rows="2" placeholder="Observaciones, acuerdos especiales…"></textarea></div>
+      <div><label class="form-label">Notas</label><textarea class="form-input" id="trab-notas" rows="2" placeholder="Observaciones…"></textarea></div>
     </div>
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="closeModal('m-trabajador')">Cancelar</button>
