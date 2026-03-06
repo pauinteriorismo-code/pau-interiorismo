@@ -18340,7 +18340,9 @@ function renderExpResumen(body){
   const scProy   = (ScC||[]).filter(s=>s.proyecto_id===pid);
   const horProy  = (HC||[]).filter(h=>h.proyecto_id===pid);
 
-  const compPend = compProy.filter(c=>c.estado_pago==='Pendiente').reduce((s,c)=>s+(c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100),0);
+  const compMatPend = compProy.filter(c=>c.estado_pago==='Pendiente').reduce((s,c)=>s+(c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100),0);
+  const compScPend  = scProy.filter(s=>['Pendiente','Parcial','Vencido'].includes(s.estado_pago)).reduce((s,c)=>s+(c.importe||0)*(1+ivaPct(c.iva_pct)/100),0);
+  const compPend = compMatPend + compScPend;
   const factPend = factProy.filter(f=>f.estado!=='Cobrada').reduce((s,f)=>s+(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100),0);
   const totalHoras = horProy.reduce((s,h)=>s+(h.horas||0),0);
   const costeHoras = horProy.reduce((s,h)=>s+(h.total||0),0);
@@ -18798,7 +18800,11 @@ function abrirFichaObra(proyId){
   const factTot = factProy.reduce((s,f)=>s+(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100),0);
   const hTot = horProy.reduce((s,h)=>s+(h.horas||0),0);
 
-  const compPend = compProy.filter(c=>c.estado_pago==='Pendiente');
+  const scProy2  = (ScC||[]).filter(s=>s.proyecto_id===proyId);
+  const compPend = [
+    ...compProy.filter(c=>c.estado_pago==='Pendiente').map(c=>({tipo:'mat', label:c.proveedor_id||c.concepto||'—', importe:(c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100)})),
+    ...scProy2.filter(s=>['Pendiente','Parcial','Vencido'].includes(s.estado_pago)).map(s=>({tipo:'sc', label:s.proveedor_id||s.trabajo||'—', importe:(s.importe||0)*(1+ivaPct(s.iva_pct)/100)}))
+  ];
   const factPend = factProy.filter(f=>f.estado!=='Cobrada');
 
   document.getElementById('ficha-body').innerHTML = `
@@ -18825,8 +18831,8 @@ function abrirFichaObra(proyId){
     <div style="background:#fff;border:1px solid var(--border);border-radius:10px;margin-bottom:14px">
       <div style="padding:10px 14px;font-size:12px;font-weight:700;border-bottom:1px solid var(--border);color:var(--navy)">⚠️ Pendientes</div>
       ${compPend.slice(0,3).map(c=>`<div style="display:flex;justify-content:space-between;padding:9px 14px;border-bottom:1px solid #f5f5f5;font-size:12px">
-        <span>🛒 ${c.proveedor_id||c.concepto||'—'}</span>
-        <span style="color:var(--red);font-weight:700">${fmt((c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100))}</span>
+        <span>${c.tipo==='sc'?'👷':'🛒'} ${c.label}</span>
+        <span style="color:var(--red);font-weight:700">${fmt(c.importe)}</span>
       </div>`).join('')}
       ${factPend.slice(0,2).map(f=>`<div style="display:flex;justify-content:space-between;padding:9px 14px;border-bottom:1px solid #f5f5f5;font-size:12px">
         <span>🧾 Fra. ${f.num_factura||'—'}</span>
