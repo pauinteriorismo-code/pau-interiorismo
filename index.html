@@ -9846,11 +9846,18 @@ async function loadRentabilidad(){
     const totalFact=facturas.reduce((s,f)=>s+(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100),0);
     document.getElementById('rk-fact-total').textContent=fmt(totalFact);
     document.getElementById('rk-fact-list').innerHTML=facturas.length?facturas.map(f=>{const tot=(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100);return`<tr><td style="padding:7px 10px;font-weight:700">${f.num_factura||'—'}</td><td style="padding:7px 10px">${fmtD(f.fecha_emision)}</td><td style="padding:7px 10px">${fmt(f.base_imponible)}</td><td style="padding:7px 10px;font-weight:700">${fmt(tot)}</td><td style="padding:7px 10px">${bE(f.estado)}</td></tr>`;}).join(''):'<tr><td colspan="5" style="text-align:center;padding:12px;color:var(--text-soft)">Sin facturas</td></tr>';
-    // Detectar qué versiones tienen datos y ajustar checkboxes
+    // Mostrar siempre los 3 checkboxes; desactivar los que no tienen datos en este proyecto
     const verConDatos = [...new Set(lineas.map(l=>l.version).filter(Boolean))];
     ['v1','v2','v3'].forEach(v=>{
-      const lbl = document.getElementById('rent-chk-'+v)?.parentElement;
-      if(lbl) lbl.style.display = verConDatos.includes(v) || v==='v1' ? '' : 'none';
+      const chk = document.getElementById('rent-chk-'+v);
+      const lbl = chk?.parentElement;
+      if(!lbl) return;
+      lbl.style.display = '';
+      const tieneDatos = verConDatos.includes(v);
+      chk.disabled = !tieneDatos;
+      lbl.style.opacity = tieneDatos ? '1' : '0.35';
+      lbl.title = tieneDatos ? '' : `Sin datos en ${v} para este proyecto`;
+      if(!tieneDatos) chk.checked = false;
     });
     document.getElementById('rent-kpis').style.display='block';
   }catch(e){toast('Error: '+e.message,'error');}
