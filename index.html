@@ -6293,13 +6293,14 @@ function renderPresupuesto(){
   tbody.innerHTML=PresC.map((l,i)=>{
     if(l.es_capitulo)return`<tr style="background:#f7f4ef"><td colspan="10" style="padding:9px 10px;font-weight:700;font-size:12px;color:#4a3728;border-bottom:2px solid #b87333">${l.descripcion}</td><td></td><td style="white-space:nowrap"><button class="btn btn-icon btn-sm" style="background:#e8f0e8;border:none;color:#2d6a2d;margin-right:4px" onclick="editCapitulo('${l.id}','${l.descripcion.replace(/'/g,"\\'")}')">✏️</button><button class="btn btn-icon btn-sm" style="background:#e8e0d4;border:none;color:#4a3728" onclick="confirmDelete('presupuesto_lineas','${l.id}','${l.descripcion.replace(/'/g,"\\'")}')">🗑</button></td></tr>`;
     const pv=l.precio_venta||0,ci=l.ci_gg_bi_pct||0,sub=(l.cantidad||0)*pv,subCI=ci>0?sub*(1+ci/100):sub;
-    const ivaPctNum=parseFloat(l.iva_pct)||10,ivaImporte=subCI*ivaPctNum/100;
+    const ivaPctNum=ivaPct(l.iva_pct),ivaImporte=subCI*ivaPctNum/100;
+    const esExento=(l.iva_pct==='Exento');
     totBase+=(l.cantidad||0)*(l.precio_base||0);totCI+=subCI-sub;totVenta+=subCI;
     const _pb=parseFloat(l.precio_base)||0,_mg=parseFloat(l.margen_pct)||0,_ciR=parseFloat(l.ci_gg_bi_pct)||0;
     let _pvSinDto=_mg>0?_pb*(1+_mg/100):_pb;if(_ciR>0)_pvSinDto=_pvSinDto*(1+_ciR/100);
     const _dto=(_pvSinDto>0.001&&pv<_pvSinDto-0.001)?Math.round((1-pv/_pvSinDto)*1000)/10:0;
     const dtoCell=_dto>0?`<span style="color:#c62828;font-weight:700">-${_dto.toFixed(1)}%</span>`:'—';
-    return`<tr data-search="${(l.descripcion||'').toLowerCase()}"><td style="color:var(--text-soft);font-size:11px">${i+1}</td><td><strong>${l.descripcion||'—'}</strong>${l.ref_cype?`<br><span style="font-size:9px;color:var(--text-soft)">${l.ref_cype}</span>`:''}</td><td style="text-align:center">${l.unidad||'—'}</td><td class="td-mono">${l.cantidad||0}</td><td class="td-mono">${fmt(l.precio_base)}</td><td class="td-mono" style="color:var(--green)">${l.margen_pct>0?fmtP(l.margen_pct):'—'}</td><td class="td-mono" style="color:var(--amber)">${ci>0?fmtP(ci):'—'}</td><td class="td-mono" style="color:#c62828;font-weight:700;text-align:center">${dtoCell}</td><td class="td-mono" style="font-weight:700">${fmt(pv)}</td><td class="td-mono" style="font-weight:700;color:var(--navy)">${fmt(subCI)}</td><td style="text-align:center;vertical-align:middle"><span class="badge b-gray">${l.iva_pct||'10%'}</span></td><td class="td-mono" style="font-weight:700;color:var(--copper)">${fmt(subCI+ivaImporte)}</td><td><div class="td-actions"><button class="btn btn-ghost btn-icon btn-sm" onclick="editLineaPresupuesto('${l.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('presupuesto_lineas','${l.id}','${(l.descripcion||'').replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`;
+    return`<tr data-search="${(l.descripcion||'').toLowerCase()}"><td style="color:var(--text-soft);font-size:11px">${i+1}</td><td><strong>${l.descripcion||'—'}</strong>${l.ref_cype?`<br><span style="font-size:9px;color:var(--text-soft)">${l.ref_cype}</span>`:''}</td><td style="text-align:center">${l.unidad||'—'}</td><td class="td-mono">${l.cantidad||0}</td><td class="td-mono">${fmt(l.precio_base)}</td><td class="td-mono" style="color:var(--green)">${l.margen_pct>0?fmtP(l.margen_pct):'—'}</td><td class="td-mono" style="color:var(--amber)">${ci>0?fmtP(ci):'—'}</td><td class="td-mono" style="color:#c62828;font-weight:700;text-align:center">${dtoCell}</td><td class="td-mono" style="font-weight:700">${fmt(pv)}</td><td class="td-mono" style="font-weight:700;color:var(--navy)">${fmt(subCI)}</td><td style="text-align:center;vertical-align:middle"><span class="badge b-gray">${l.iva_pct||'10%'}</span></td><td class="td-mono" style="font-weight:700;color:var(--copper)">${esExento?'<span style="color:var(--text-soft);font-size:10px">Exento</span>':fmt(subCI+ivaImporte)}</td><td><div class="td-actions"><button class="btn btn-ghost btn-icon btn-sm" onclick="editLineaPresupuesto('${l.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('presupuesto_lineas','${l.id}','${(l.descripcion||'').replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`;
   }).join('');
   // Calcular IVA por tramos según el iva_pct de cada línea
   let ivaDesglose={};
@@ -6308,18 +6309,32 @@ function renderPresupuesto(){
     const pv=l.precio_venta||0, ci=l.ci_gg_bi_pct||0;
     const sub=(l.cantidad||0)*pv, subCI=ci>0?sub*(1+ci/100):sub;
     const tipoIva=l.iva_pct||'10%';
-    const pctIva=parseFloat(tipoIva)||10;
+    const pctIva=ivaPct(tipoIva);
     if(!ivaDesglose[tipoIva]) ivaDesglose[tipoIva]={pct:pctIva, base:0, iva:0};
     ivaDesglose[tipoIva].base += subCI;
     ivaDesglose[tipoIva].iva  += subCI * pctIva/100;
   });
   const totalIva = Object.values(ivaDesglose).reduce((s,v)=>s+v.iva, 0);
   const totalConIva = totVenta + totalIva;
+  const todoExento = totalIva === 0 && totVenta > 0 && PresC.filter(l=>!l.es_capitulo).every(l=>l.iva_pct==='Exento');
   document.getElementById('pres-k-base').textContent=fmt(totBase);
   document.getElementById('pres-k-ci').textContent=fmt(totCI);
   document.getElementById('pres-k-total').textContent=fmt(totVenta);
-  document.getElementById('pres-k-iva').textContent=fmt(totalConIva);
-  document.getElementById('pres-total-lbl').textContent=`TOTAL c/IVA: ${fmt(totalConIva)}`;
+  // KPI "Total c/IVA": si todo es exento, ocultar o mostrar como "Exento"
+  const kpiIvaEl = document.getElementById('pres-k-iva');
+  const kpiIvaLabel = kpiIvaEl?.previousElementSibling;
+  const kpiIvaCard = kpiIvaEl?.closest('.kpi');
+  if(todoExento){
+    if(kpiIvaEl) kpiIvaEl.textContent = fmt(totVenta);
+    if(kpiIvaLabel) kpiIvaLabel.textContent = 'Total (Exento IVA)';
+    if(kpiIvaCard){ kpiIvaCard.style.opacity='0.5'; }
+    document.getElementById('pres-total-lbl').textContent=`TOTAL (Exento IVA): ${fmt(totVenta)}`;
+  } else {
+    if(kpiIvaEl) kpiIvaEl.textContent = fmt(totalConIva);
+    if(kpiIvaLabel) kpiIvaLabel.textContent = 'Total c/IVA';
+    if(kpiIvaCard){ kpiIvaCard.style.opacity=''; }
+    document.getElementById('pres-total-lbl').textContent=`TOTAL c/IVA: ${fmt(totalConIva)}`;
+  }
   document.getElementById('pres-resumen').style.display='block';
 }
 function calcLineaPres(){const precio=parseFloat(document.getElementById('pl-precio').value)||0,margen=parseFloat(document.getElementById('pl-margen').value)||0,ci=parseFloat(document.getElementById('pl-ci').value)||0,cant=parseFloat(document.getElementById('pl-cant').value)||0,dto=parseFloat(document.getElementById('pl-dto')?.value)||0;let pv=margen>0?precio*(1+margen/100):precio;if(ci>0)pv=pv*(1+ci/100);if(dto>0)pv=pv*(1-dto/100);const sub=cant*pv;document.getElementById('pl-pventa').value=pv>0?pv.toFixed(2)+' €':'—';document.getElementById('pl-subtotal').value=sub>0?sub.toFixed(2)+' €':'—';}
@@ -17834,8 +17849,9 @@ renderPresupuesto=function(){
   tbody.innerHTML=PresC.map((l,i)=>{
     if(l.es_capitulo) return `<tr draggable="true" data-id="${l.id}" data-orden="${l.orden}" style="background:#f7f4ef"><td style="padding:4px 3px;cursor:grab;color:#bbb;text-align:center;font-size:14px;user-select:none" title="Arrastrar">⠿</td><td colspan="${ciActivo?10:9}" style="padding:9px 10px;font-weight:700;font-size:12px;color:#4a3728;border-bottom:2px solid #b87333">${l.descripcion}</td><td></td><td><div style="display:flex;gap:3px"><button class="btn btn-icon btn-sm" style="background:#e8f0e8;border:none;color:#2d6a2d;font-size:13px;padding:3px 8px" title="Editar capítulo" onclick="editCapitulo('${l.id}')" >✏️</button><button class="btn btn-icon btn-sm" style="background:#e8e0d4;border:none;color:#4a3728;font-size:10px;padding:3px 7px;white-space:nowrap" title="Duplicar capítulo completo" onclick="duplicarCapituloCompleto('${l.id}')">📋 Dup.</button><button class="btn btn-icon btn-sm" style="background:#fde8e8;border:none;color:#c62828" onclick="confirmDelete('presupuesto_lineas','${l.id}','${(l.descripcion||'').replace(/'/g,'')}')">🗑</button></div></td></tr>`;
     const pv=l.precio_venta||0,ci=l.ci_gg_bi_pct||0,sub=(l.cantidad||0)*pv,subCI=ci>0?sub*(1+ci/100):sub;
-    const ivaPctNum=parseFloat(l.iva_pct)||10,ivaImporte=subCI*ivaPctNum/100;
-    return `<tr draggable="true" data-id="${l.id}" data-orden="${l.orden}" data-search="${(l.descripcion||'').toLowerCase()}"><td style="padding:4px 3px;cursor:grab;color:#bbb;text-align:center;font-size:14px;user-select:none" title="Arrastrar para reordenar">⠿</td><td style="color:var(--text-soft);font-size:11px">${i+1}</td><td><strong>${l.descripcion||'—'}</strong>${l.ref_cype?`<br><span style="font-size:9px;color:var(--text-soft)">${l.ref_cype}</span>`:''}</td><td style="text-align:center">${l.unidad||'—'}</td><td class="td-mono">${l.cantidad||0}</td><td class="td-mono">${fmt(l.precio_base)}</td><td class="td-mono" style="color:var(--green)">${l.margen_pct>0?fmtP(l.margen_pct):'—'}</td><td class="td-mono" style="color:var(--amber)">${ci>0?fmtP(ci):'—'}</td><td class="td-mono" style="font-weight:700">${fmt(pv)}</td><td class="td-mono" style="font-weight:700;color:var(--navy)">${fmt(subCI)}</td><td style="text-align:center;vertical-align:middle"><span class="badge b-gray">${l.iva_pct||'10%'}</span></td><td class="td-mono" style="font-weight:700;color:var(--copper)">${fmt(subCI+ivaImporte)}</td><td><div class="td-actions"><button class="btn btn-ghost btn-icon btn-sm" title="Duplicar" onclick="duplicarLineaPresupuesto('${l.id}')">⧉</button><button class="btn btn-ghost btn-icon btn-sm" onclick="editLineaPresupuesto('${l.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('presupuesto_lineas','${l.id}','${(l.descripcion||'').replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`;
+    const ivaPctNum=ivaPct(l.iva_pct),ivaImporte=subCI*ivaPctNum/100;
+    const esExento=(l.iva_pct==='Exento');
+    return `<tr draggable="true" data-id="${l.id}" data-orden="${l.orden}" data-search="${(l.descripcion||'').toLowerCase()}"><td style="padding:4px 3px;cursor:grab;color:#bbb;text-align:center;font-size:14px;user-select:none" title="Arrastrar para reordenar">⠿</td><td style="color:var(--text-soft);font-size:11px">${i+1}</td><td><strong>${l.descripcion||'—'}</strong>${l.ref_cype?`<br><span style="font-size:9px;color:var(--text-soft)">${l.ref_cype}</span>`:''}</td><td style="text-align:center">${l.unidad||'—'}</td><td class="td-mono">${l.cantidad||0}</td><td class="td-mono">${fmt(l.precio_base)}</td><td class="td-mono" style="color:var(--green)">${l.margen_pct>0?fmtP(l.margen_pct):'—'}</td><td class="td-mono" style="color:var(--amber)">${ci>0?fmtP(ci):'—'}</td><td class="td-mono" style="font-weight:700">${fmt(pv)}</td><td class="td-mono" style="font-weight:700;color:var(--navy)">${fmt(subCI)}</td><td style="text-align:center;vertical-align:middle"><span class="badge b-gray">${l.iva_pct||'10%'}</span></td><td class="td-mono" style="font-weight:700;color:var(--copper)">${esExento?'<span style="color:var(--text-soft);font-size:10px">Exento</span>':fmt(subCI+ivaImporte)}</td><td><div class="td-actions"><button class="btn btn-ghost btn-icon btn-sm" title="Duplicar" onclick="duplicarLineaPresupuesto('${l.id}')">⧉</button><button class="btn btn-ghost btn-icon btn-sm" onclick="editLineaPresupuesto('${l.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('presupuesto_lineas','${l.id}','${(l.descripcion||'').replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`;
   }).join('');
   // Reaplica CI+GG+BI hide a los TDs nuevos
   tbody.querySelectorAll('td:nth-child(7)').forEach(td=>{ td.style.display = ciActivo ? '' : 'none'; });
