@@ -9817,9 +9817,35 @@ async function loadRentabilidad(){
   document.getElementById('rent-empty').style.display=(!clienteId||!proy)?'block':'none';
   if(!clienteId||!proy) return;
   try{
-    const verFilter = versiones.length===1
-      ? `version=eq.${versiones[0]}`
-      : `version=in.(${versiones.join(',')})`;
+    // PASO 1: detectar todas las versiones disponibles para este proyecto
+    const todasLineas = await sbGet('presupuesto_lineas',`?proyecto_id=eq.${proy}&select=version`);
+    const verConDatos = [...new Set(todasLineas.map(l=>l.version).filter(Boolean))];
+    // Actualizar checkboxes: mostrar siempre los 3, activar/desactivar según datos
+    ['v1','v2','v3'].forEach(v=>{
+      const chk = document.getElementById('rent-chk-'+v);
+      const lbl = chk?.parentElement;
+      if(!lbl) return;
+      lbl.style.display = '';
+      const tieneDatos = verConDatos.includes(v);
+      chk.disabled = !tieneDatos;
+      lbl.style.opacity = tieneDatos ? '1' : '0.35';
+      lbl.title = tieneDatos ? '' : `Sin datos en ${v} para este proyecto`;
+      if(!tieneDatos) chk.checked = false;
+      // Si esta versión tiene datos y ninguna está marcada aún, marcarla
+    });
+    // Asegurar que al menos la primera versión con datos esté marcada
+    const algunaMarcada = versiones.some(v=>verConDatos.includes(v));
+    if(!algunaMarcada && verConDatos.length){
+      const primera = verConDatos[0];
+      const chk = document.getElementById('rent-chk-'+primera);
+      if(chk){ chk.checked=true; if(!versiones.includes(primera)) versiones.push(primera); }
+    }
+
+    // PASO 2: calcular solo con las versiones marcadas que tienen datos
+    const verActivas = versiones.filter(v=>verConDatos.includes(v));
+    const verFilter = verActivas.length===1
+      ? `version=eq.${verActivas[0]}`
+      : `version=in.(${verActivas.join(',')})`;
     const[lineas,compras,subcs,horas,facturas]=await Promise.all([sbGet('presupuesto_lineas',`?proyecto_id=eq.${proy}&${verFilter}`),sbGet('compras',`?proyecto_id=eq.${proy}`),sbGet('subcontratas',`?proyecto_id=eq.${proy}`),sbGet('horas',`?proyecto_id=eq.${proy}`),sbGet('facturas',`?proyecto_id=eq.${proy}`)]);
     const totalPres=lineas.filter(l=>!l.es_capitulo).reduce((s,l)=>s+(l.subtotal||0),0);
     const totalCompras=compras.reduce((s,c)=>s+(c.base_imponible||0),0);
@@ -9830,7 +9856,7 @@ async function loadRentabilidad(){
     const pct=totalPres>0?Math.min((totalCoste/totalPres)*100,150):0;
     // Actualizar etiqueta KPI con versiones activas
     const kpiPresLabel = document.querySelector('#rent-kpis .kpi.blue .kpi-label');
-    if(kpiPresLabel) kpiPresLabel.textContent = `Presupuesto (${versiones.join('+')} · s/IVA)`;
+    if(kpiPresLabel) kpiPresLabel.textContent = `Presupuesto (${verActivas.join('+')} · s/IVA)`;
     document.getElementById('rk-pres').textContent=fmt(totalPres);document.getElementById('rk-coste').textContent=fmt(totalCoste);
     document.getElementById('rk-benef').textContent=fmt(beneficio);document.getElementById('rk-benef').style.color=beneficio>=0?'var(--green)':'var(--red)';
     document.getElementById('rk-margen').textContent=fmtP(margen);document.getElementById('rk-margen').style.color=margen>=15?'var(--green)':margen>=0?'var(--amber)':'var(--red)';
@@ -9846,19 +9872,6 @@ async function loadRentabilidad(){
     const totalFact=facturas.reduce((s,f)=>s+(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100),0);
     document.getElementById('rk-fact-total').textContent=fmt(totalFact);
     document.getElementById('rk-fact-list').innerHTML=facturas.length?facturas.map(f=>{const tot=(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100);return`<tr><td style="padding:7px 10px;font-weight:700">${f.num_factura||'—'}</td><td style="padding:7px 10px">${fmtD(f.fecha_emision)}</td><td style="padding:7px 10px">${fmt(f.base_imponible)}</td><td style="padding:7px 10px;font-weight:700">${fmt(tot)}</td><td style="padding:7px 10px">${bE(f.estado)}</td></tr>`;}).join(''):'<tr><td colspan="5" style="text-align:center;padding:12px;color:var(--text-soft)">Sin facturas</td></tr>';
-    // Mostrar siempre los 3 checkboxes; desactivar los que no tienen datos en este proyecto
-    const verConDatos = [...new Set(lineas.map(l=>l.version).filter(Boolean))];
-    ['v1','v2','v3'].forEach(v=>{
-      const chk = document.getElementById('rent-chk-'+v);
-      const lbl = chk?.parentElement;
-      if(!lbl) return;
-      lbl.style.display = '';
-      const tieneDatos = verConDatos.includes(v);
-      chk.disabled = !tieneDatos;
-      lbl.style.opacity = tieneDatos ? '1' : '0.35';
-      lbl.title = tieneDatos ? '' : `Sin datos en ${v} para este proyecto`;
-      if(!tieneDatos) chk.checked = false;
-    });
     document.getElementById('rent-kpis').style.display='block';
   }catch(e){toast('Error: '+e.message,'error');}
 }
