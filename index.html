@@ -2812,7 +2812,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <div class="kpi blue"><div class="kpi-label">Presupuesto (s/IVA)</div><div class="kpi-value" id="rk-pres">—</div></div>
           <div class="kpi red"><div class="kpi-label">Coste real total</div><div class="kpi-value" id="rk-coste">—</div></div>
           <div class="kpi green"><div class="kpi-label">Beneficio bruto</div><div class="kpi-value" id="rk-benef">—</div></div>
-          <div class="kpi amber"><div class="kpi-label">Margen real %</div><div class="kpi-value" id="rk-margen">—</div></div>
+          <div class="kpi amber"><div class="kpi-label">Margen real %</div><div class="kpi-value" id="rk-margen">—</div><div class="kpi-sub" style="font-size:10px;color:var(--text-soft)">Sobre coste</div></div>
         </div>
         <div class="card">
           <div class="card-header"><div class="card-title">📊 Coste vs Presupuesto</div></div>
@@ -9852,7 +9852,7 @@ async function loadRentabilidad(){
     const totalSubcs=subcs.reduce((s,c)=>s+(c.importe||0),0);
     const totalHoras=horas.reduce((s,h)=>s+(h.total||0),0);
     const totalCoste=totalCompras+totalSubcs+totalHoras;
-    const beneficio=totalPres-totalCoste,margen=totalPres>0?(beneficio/totalPres)*100:0;
+    const beneficio=totalPres-totalCoste,margen=totalCoste>0?(beneficio/totalCoste)*100:0;
     const pct=totalPres>0?Math.min((totalCoste/totalPres)*100,150):0;
     // Actualizar etiqueta KPI con versiones activas
     const kpiPresLabel = document.querySelector('#rent-kpis .kpi.blue .kpi-label');
