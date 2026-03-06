@@ -3302,6 +3302,19 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           </div>
         </div>
         <div class="card">
+          <div class="card-header"><div class="card-title">🤖 Integración IA (Anthropic)</div><button class="btn btn-ghost btn-sm" onclick="saveApiKey()">💾 Guardar</button></div>
+          <div class="card-body">
+            <div class="info-box" style="background:#e8f0f8;border-color:#aac8e8;color:#1a5276">Necesaria para las funciones de IA: importar PDF de presupuestos, envío de emails, etc. Obtén tu clave en <strong>console.anthropic.com</strong></div>
+            <div class="form-grid">
+              <div class="form-group fg-full">
+                <label class="form-label">API Key de Anthropic</label>
+                <input class="form-input" id="cfg-apikey" type="password" placeholder="sk-ant-api03-..." autocomplete="off">
+                <small style="color:var(--text-soft);font-size:11px">Se guarda cifrada en tu base de datos Supabase</small>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
           <div class="card-header"><div class="card-title">📊 Parámetros CI+GG+BI</div><button class="btn btn-ghost btn-sm" onclick="saveConfig()">💾 Guardar</button></div>
           <div class="card-body">
             <div class="info-box">Estos porcentajes se aplican automáticamente en el presupuesto cuando activas CI+GG+BI en cada línea.</div>
@@ -10770,6 +10783,8 @@ async function loadConfiguracion(){
     document.getElementById('cfg-gg').value=map.gg_pct||13;
     document.getElementById('cfg-bi').value=map.bi_pct||6;
     document.getElementById('cfg-hora').value=map.coste_hora_defecto||18;
+    document.getElementById('cfg-apikey').value=map.anthropic_api_key||'';
+    if(map.anthropic_api_key) window._ANTHROPIC_KEY = map.anthropic_api_key;
     const total=(parseFloat(map.ci_pct)||3)+(parseFloat(map.gg_pct)||13)+(parseFloat(map.bi_pct)||6);
     document.getElementById('cfg-total-ci').value=total.toFixed(1)+'%';
     ['cfg-ci','cfg-gg','cfg-bi'].forEach(id=>{document.getElementById(id).addEventListener('input',()=>{const ci=parseFloat(document.getElementById('cfg-ci').value)||0,gg=parseFloat(document.getElementById('cfg-gg').value)||0,bi=parseFloat(document.getElementById('cfg-bi').value)||0;document.getElementById('cfg-total-ci').value=(ci+gg+bi).toFixed(1)+'%';});});
@@ -10786,6 +10801,28 @@ async function loadConfiguracion(){
   }catch(e){toast('Configura la tabla configuracion ejecutando el SQL de nuevas tablas','error');}
   await loadDiasPago();
 }
+async function saveApiKey(){
+  const key = document.getElementById('cfg-apikey')?.value?.trim();
+  if(!key){ toast('Introduce la API Key','error'); return; }
+  if(!key.startsWith('sk-ant')){ toast('La clave debe empezar por sk-ant-...','error'); return; }
+  try{
+    await upsertConfig('anthropic_api_key', key);
+    window._ANTHROPIC_KEY = key;
+    toast('API Key guardada ✅');
+  }catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+function getAnthropicHeaders(){
+  const key = window._ANTHROPIC_KEY || '';
+  if(!key) throw new Error('Configura la API Key de Anthropic en ⚙️ Configuración → Integración IA');
+  return {
+    'Content-Type': 'application/json',
+    'x-api-key': key,
+    'anthropic-version': '2023-06-01',
+    'anthropic-dangerous-direct-browser-access': 'true'
+  };
+}
+
 async function saveConfig(){
   const updates=[
     ['razon_social', document.getElementById('cfg-razon')?.value],
@@ -11239,7 +11276,7 @@ async function enviarFacturaEmail(id){
   try{
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method:'POST',
-      headers:{'Content-Type':'application/json'},
+      headers: getAnthropicHeaders(),
       body: JSON.stringify({
         model:'claude-sonnet-4-20250514',
         max_tokens:1000,
@@ -15138,7 +15175,7 @@ async function impAnalizarPDF(){
     // Llamar a Claude API
     const resp = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAnthropicHeaders(),
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 4000,
