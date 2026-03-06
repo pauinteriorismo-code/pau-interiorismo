@@ -18134,16 +18134,34 @@ async function calcExpKPIs(proyId){
   const scProy = (ScC||[]).filter(s=>s.proyecto_id===proyId);
   const costeSubc = scProy.reduce((s,c)=>s+(c.importe||0)*(1+ivaPct(c.iva_pct)/100), 0);
 
-  // Coste total = compras + subcontratas + mano de obra
-  const costeTotal = compTotal + costeSubc + costeHoras;
+  // Coste total sin IVA (para comparar con presupuesto que también es sin IVA)
+  const compTotalBI = compProy.reduce((s,c)=>s+(c.base_imponible||0), 0);
+  const costeSubcBI = scProy.reduce((s,c)=>s+(c.importe||0), 0);
+  const costeTotal  = compTotalBI + costeSubcBI + costeHoras;
 
-  const margen = factTotal>0 ? ((factTotal-costeTotal)/factTotal)*100 : 0;
+  // Base de ingresos: facturas (sin IVA) si existen, sino presupuesto
+  const factTotalBI  = factProy.reduce((s,f)=>s+(f.base_imponible||0), 0);
+  const baseIngresos = factTotalBI > 0 ? factTotalBI : presTot;
+  const esFact       = factTotalBI > 0;
+
+  // Margen = (Ingresos - Costes) / Ingresos
+  const beneficio = baseIngresos - costeTotal;
+  const margen    = baseIngresos > 0 ? (beneficio / baseIngresos) * 100 : 0;
 
   const setEl = (id,val,style) => { const el=document.getElementById(id); if(el){el.textContent=val; if(style) Object.assign(el.style,style);} };
-  setEl('exp-k-pres', presTot>0 ? fmt(presTot) : '—');
+  setEl('exp-k-pres',   presTot>0 ? fmt(presTot) : '—');
   setEl('exp-k-costes', fmt(costeTotal));
-  setEl('exp-k-fact', fmt(factTotal));
-  setEl('exp-k-margen', factTotal>0 ? fmtP(margen) : '—', {color: margen>=20?'var(--green)':margen>=0?'var(--amber)':'var(--red)'});
+  setEl('exp-k-fact',   esFact ? fmt(factTotalBI) : '—');
+  setEl('exp-k-margen', baseIngresos>0 ? fmtP(margen)+(esFact?'':' *') : '—',
+    {color: margen>=20?'var(--green)':margen>=0?'var(--amber)':'var(--red)'});
+
+  // Nota aclaratoria bajo el KPI margen
+  const kpiMg = document.getElementById('exp-k-margen');
+  if(kpiMg){
+    let sub = kpiMg.parentNode.querySelector('.kpi-margen-sub');
+    if(!sub){ sub=document.createElement("div"); sub.className="kpi-margen-sub"; sub.style.cssText="font-size:10px;color:var(--text-soft);margin-top:1px"; kpiMg.parentNode.appendChild(sub); }
+    sub.textContent = esFact ? 'Sobre facturado' : '* Sobre presupuesto';
+  }
 }
 
 function expTab(tab){
