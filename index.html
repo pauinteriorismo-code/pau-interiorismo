@@ -18136,7 +18136,9 @@ function recalcPresKPI(){
     if(lbl) lbl.style.display = (_presDesglobeGlobal[v]||0) > 0 ? '' : 'none';
   });
   // Actualizar margen con nuevo presupuesto
-  const costes = parseFloat(document.getElementById('exp-k-costes')?.textContent?.replace(/[^0-9,.]/g,'').replace(',','.'))||0;
+  // Leer costes del DOM (ya actualizado antes de llamar a recalcPresKPI)
+  const costesRaw = document.getElementById('exp-k-costes')?.textContent||'';
+  const costes = parseFloat(costesRaw.replace(/\./g,'').replace(',','.'))||0;
   if(costes > 0 && tot > 0){
     const margen = ((tot - costes) / costes) * 100;
     const el2 = document.getElementById('exp-k-margen');
@@ -18184,10 +18186,10 @@ async function calcExpKPIs(proyId){
   const scProy = (ScC||[]).filter(s=>s.proyecto_id===proyId);
   const costeSubc = scProy.reduce((s,c)=>s+(c.importe||0)*(1+ivaPct(c.iva_pct)/100), 0);
 
-  // Coste total sin IVA (para comparar con presupuesto que también es sin IVA)
+  // Coste total sin IVA = compras BI + subcontratas BI + mano de obra
   const compTotalBI = compProy.reduce((s,c)=>s+(c.base_imponible||0), 0);
   const costeSubcBI = scProy.reduce((s,c)=>s+(c.importe||0), 0);
-  const costeTotal  = compTotalBI + costeSubcBI + costeHoras;
+  const costeTotal  = compTotalBI + costeSubcBI + costeHoras; // 3 componentes
 
   // Facturas emitidas (solo informativo, NO afecta al margen)
   const factTotalBI = factProy.reduce((s,f)=>s+(f.base_imponible||0), 0);
@@ -18197,8 +18199,8 @@ async function calcExpKPIs(proyId){
   const margen    = costeTotal > 0 ? (beneficio / costeTotal) * 100 : 0;
 
   const setEl = (id,val,style) => { const el=document.getElementById(id); if(el){el.textContent=val; if(style) Object.assign(el.style,style);} };
-  recalcPresKPI(); // Renderiza el KPI presupuesto con las versiones marcadas
   setEl('exp-k-costes', fmt(costeTotal));
+  recalcPresKPI(); // Renderiza presupuesto y margen (necesita exp-k-costes ya actualizado)
   const nFact = factProy.length;
   setEl('exp-k-fact', factTotalBI>0 ? fmt(factTotalBI) : '—');
   // Label con nº facturas
@@ -18263,10 +18265,10 @@ function renderExpResumen(body){
   const costeHoras = horProy.reduce((s,h)=>s+(h.total||0),0);
   const costeSubcRes = scProy.reduce((s,c)=>s+(c.importe||0),0); // subcontratas sin IVA
 
-  // Progress: compras vs presupuesto
-  const compTotal = compProy.reduce((s,c)=>s+(c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100),0);
-  const factTotal = factProy.reduce((s,f)=>s+(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100),0);
-  const costeTotalRes = compTotal + costeHoras + costeSubcRes; // compras + mano de obra + subcontratas
+  // Todo sin IVA para ser consistente con el presupuesto y el KPI
+  const compTotalBI2 = compProy.reduce((s,c)=>s+(c.base_imponible||0), 0);
+  const factTotal    = factProy.reduce((s,f)=>s+(f.base_imponible||0), 0);
+  const costeTotalRes = compTotalBI2 + costeSubcRes + costeHoras; // materiales + subcontratas + MO
 
   body.innerHTML = `
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
@@ -18290,11 +18292,11 @@ function renderExpResumen(body){
       <div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Financiero</div>
       ${[
         ['Compras / costes acumulados', fmt(costeTotalRes), costeTotalRes>0?'var(--amber)':''],
-        ['  · Compras materiales', fmt(compTotal), ''],
-        ['  · Subcontratas', costeSubcRes>0?fmt(costeSubcRes):'—', ''],
-        ['  · Mano de obra', fmt(costeHoras)+' ('+totalHoras.toFixed(1)+'h)', ''],
+        ['  · Materiales / compras', fmt(compTotalBI2), compTotalBI2>0?'var(--text-mid)':''],
+        ['  · Subcontratas', costeSubcRes>0?fmt(costeSubcRes):'—', costeSubcRes>0?'var(--text-mid)':''],
+        ['  · Mano de obra', fmt(costeHoras)+' ('+totalHoras.toFixed(1)+'h)', costeHoras>0?'var(--text-mid)':''],
         ['Compras pendientes pago', fmt(compPend), compPend>0?'var(--red)':''],
-        ['Facturas emitidas', fmt(factTotal), 'var(--green)'],
+        ['Facturas emitidas', fmt(factTotal), factTotal>0?'var(--green)':''],
         ['Pendiente cobrar', fmt(factPend), factPend>0?'var(--amber)':''],
       ].map(([k,v,c])=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:12px"><span style="color:var(--text-soft)">${k}</span><span style="font-weight:600${c?';color:'+c:''}">${v}</span></div>`).join('')}
     </div>
