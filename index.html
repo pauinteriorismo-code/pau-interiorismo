@@ -2226,6 +2226,9 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
               <button class="imex-tab" id="ix-tab-campoaras" onclick="ixSetTab('campoaras')">🛁 Campoaras <span id="ix-cnt-campoaras"></span></button>
               <button class="imex-tab" id="ix-tab-fregaderos" onclick="ixSetTab('fregaderos')">🚿 Plados/D'Aqua <span id="ix-cnt-fregaderos"></span></button>
               <button class="imex-tab" id="ix-tab-lavabos" onclick="ixSetTab('lavabos')">🪠 Lavabos <span id="ix-cnt-lavabos"></span></button>
+              <button class="imex-tab" id="ix-tab-genexia" onclick="ixSetTab('genexia')">🪞 Genexia <span id="ix-cnt-genexia"></span></button>
+              <button class="imex-tab" id="ix-tab-mamparas" onclick="ixSetTab('mamparas')">🚿 Mámparas <span id="ix-cnt-mamparas"></span></button>
+              <button class="imex-tab" id="ix-tab-roca" onclick="ixSetTab('roca')">🔵 Roca <span id="ix-cnt-roca"></span></button>
             </div>
             <!-- Chips de serie -->
             <div class="ix-series-bar" id="ix-series-bar" style="margin-top:6px"></div>
@@ -14128,6 +14131,9 @@ function ixSetTab(t){
   document.getElementById('ix-tab-campoaras')?.classList.toggle('active', t==='campoaras');
   document.getElementById('ix-tab-fregaderos')?.classList.toggle('active', t==='fregaderos');
   document.getElementById('ix-tab-lavabos')?.classList.toggle('active', t==='lavabos');
+  document.getElementById('ix-tab-genexia')?.classList.toggle('active', t==='genexia');
+  document.getElementById('ix-tab-mamparas')?.classList.toggle('active', t==='mamparas');
+  document.getElementById('ix-tab-roca')?.classList.toggle('active', t==='roca');
   // Mostrar/ocultar filtro serie (Campoaras usa serie para mostrar modelo+acabado)
   const serieWrap = document.getElementById('ix-serie')?.parentElement;
   const s = document.getElementById('ix-search');
@@ -14960,9 +14966,37 @@ let catActual = null;
 
 function catAbrir(fab){
   catActual = fab;
+  // Ocultar selector y cerrar todos los paneles antes de abrir
+  document.getElementById('cat-selector').style.display = 'none';
+  document.querySelectorAll('.cat-panel').forEach(p => p.classList.remove('open'));
+  document.querySelectorAll('.cat-card[data-cat]').forEach(c => c.classList.remove('active'));
+  const activeCard = document.querySelector(`.cat-card[data-cat="${fab}"]`);
+  if(activeCard) activeCard.classList.add('active');
+
   if(fab === 'saitra'){
     document.getElementById('cat-panel-saitra').classList.add('open');
     if(typeof initSaitraLinea === 'function') initSaitraLinea();
+  } else if(fab === 'imex'){
+    document.getElementById('cat-panel-imex').classList.add('open');
+    ixFillSeries(); ixRender();
+  } else if(fab === 'fregaderos'){
+    document.getElementById('cat-panel-imex').classList.add('open');
+    ixSetTab('fregaderos');
+  } else if(fab === 'campoaras'){
+    document.getElementById('cat-panel-imex').classList.add('open');
+    ixSetTab('campoaras');
+  } else if(fab === 'lavabos'){
+    document.getElementById('cat-panel-imex').classList.add('open');
+    ixSetTab('lavabos');
+  } else if(fab === 'genexia'){
+    document.getElementById('cat-panel-imex').classList.add('open');
+    ixSetTab('genexia');
+  } else if(fab === 'mamparas'){
+    document.getElementById('cat-panel-imex').classList.add('open');
+    ixSetTab('mamparas');
+  } else if(fab === 'roca'){
+    document.getElementById('cat-panel-imex').classList.add('open');
+    ixSetTab('roca');
   } else if(fab === 'electrodom'){
     document.getElementById('cat-panel-electrodom').classList.add('open');
     edRenderCatalogo();
