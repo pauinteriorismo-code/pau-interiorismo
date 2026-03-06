@@ -18139,28 +18139,40 @@ async function calcExpKPIs(proyId){
   const costeSubcBI = scProy.reduce((s,c)=>s+(c.importe||0), 0);
   const costeTotal  = compTotalBI + costeSubcBI + costeHoras;
 
-  // Base de ingresos: facturas (sin IVA) si existen, sino presupuesto
-  const factTotalBI  = factProy.reduce((s,f)=>s+(f.base_imponible||0), 0);
-  const baseIngresos = factTotalBI > 0 ? factTotalBI : presTot;
-  const esFact       = factTotalBI > 0;
+  // Facturas emitidas (solo informativo, NO afecta al margen)
+  const factTotalBI = factProy.reduce((s,f)=>s+(f.base_imponible||0), 0);
 
-  // Margen = (Ingresos - Costes) / Ingresos
-  const beneficio = baseIngresos - costeTotal;
-  const margen    = baseIngresos > 0 ? (beneficio / baseIngresos) * 100 : 0;
+  // Margen SIEMPRE sobre presupuesto: (Presupuesto - Costes) / Presupuesto
+  const beneficio = presTot - costeTotal;
+  const margen    = presTot > 0 ? (beneficio / presTot) * 100 : 0;
 
   const setEl = (id,val,style) => { const el=document.getElementById(id); if(el){el.textContent=val; if(style) Object.assign(el.style,style);} };
   setEl('exp-k-pres',   presTot>0 ? fmt(presTot) : '—');
   setEl('exp-k-costes', fmt(costeTotal));
-  setEl('exp-k-fact',   esFact ? fmt(factTotalBI) : '—');
-  setEl('exp-k-margen', baseIngresos>0 ? fmtP(margen)+(esFact?'':' *') : '—',
+  setEl('exp-k-fact', factTotalBI>0 ? fmt(factTotalBI) : '—');
+  // Sub bajo Facturado: pendiente de facturar
+  const kpiFact = document.getElementById('exp-k-fact');
+  if(kpiFact && presTot>0){
+    let subF = kpiFact.parentNode.querySelector('.kpi-fact-sub');
+    if(!subF){ subF=document.createElement('div'); subF.className='kpi-fact-sub'; subF.style.cssText='font-size:10px;margin-top:1px'; kpiFact.parentNode.appendChild(subF); }
+    const pendFact = presTot - factTotalBI;
+    if(pendFact > 0.01){
+      subF.style.color = 'var(--amber)';
+      subF.textContent = 'Pdte: ' + fmt(pendFact);
+    } else if(pendFact <= 0) {
+      subF.style.color = 'var(--green)';
+      subF.textContent = 'Completamente facturado';
+    } else { subF.textContent = ''; }
+  }
+  setEl('exp-k-margen', presTot>0 ? fmtP(margen) : '—',
     {color: margen>=20?'var(--green)':margen>=0?'var(--amber)':'var(--red)'});
 
-  // Nota aclaratoria bajo el KPI margen
+  // Nota fija bajo el KPI margen
   const kpiMg = document.getElementById('exp-k-margen');
   if(kpiMg){
     let sub = kpiMg.parentNode.querySelector('.kpi-margen-sub');
     if(!sub){ sub=document.createElement("div"); sub.className="kpi-margen-sub"; sub.style.cssText="font-size:10px;color:var(--text-soft);margin-top:1px"; kpiMg.parentNode.appendChild(sub); }
-    sub.textContent = esFact ? 'Sobre facturado' : '* Sobre presupuesto';
+    sub.textContent = 'Sobre presupuesto';
   }
 }
 
