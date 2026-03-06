@@ -2751,11 +2751,30 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     <!-- ═══ CONTROL HORARIO ═══ -->
     <div class="view" id="view-control_horario">
       <div class="search-bar">
-        <select class="form-input" style="width:160px" id="ch-trab-sel" onchange="loadControlHorario()"><option value="">Seleccionar trabajador…</option><option value="Francisco Gascón Gil">Francisco Gascón Gil</option><option value="Jose Asins Primo">Jose Asins Primo</option><option value="Julio Alemany Fort">Julio Alemany Fort</option><option value="María Paz Primo Iborra">María Paz Primo Iborra</option><option value="Raúl Gascón Gil">Raúl Gascón Gil</option><option value="Salvador Aguado Simó">Salvador Aguado Simó</option></select>
+        <select class="form-input" style="width:180px" id="ch-trab-sel" onchange="loadControlHorario()"><option value="">Seleccionar trabajador…</option></select>
         <select class="form-input" style="width:100px" id="ch-year-sel" onchange="loadControlHorario()">
-          <option value="2025">2025</option><option value="2026" selected="">2026</option><option value="2027">2027</option>
+          <option value="2024">2024</option><option value="2025">2025</option><option value="2026" selected="">2026</option><option value="2027">2027</option>
         </select>
         <div id="ch-resumen" style="margin-left:auto;font-size:12px;color:var(--text-soft)"></div>
+      </div>
+      <!-- KPIs anuales -->
+      <div id="ch-kpis" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;display:none">
+        <div style="background:#fff;border-radius:8px;padding:12px 14px;border:1px solid var(--border)">
+          <div style="font-size:10px;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px">Días trabajados</div>
+          <div id="ch-kpi-dias" style="font-size:20px;font-weight:800;color:var(--navy)">—</div>
+        </div>
+        <div style="background:#fff;border-radius:8px;padding:12px 14px;border:1px solid var(--border)">
+          <div style="font-size:10px;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px">Horas totales año</div>
+          <div id="ch-kpi-horas" style="font-size:20px;font-weight:800;color:var(--green)">—</div>
+        </div>
+        <div style="background:#fff;border-radius:8px;padding:12px 14px;border:1px solid var(--border)">
+          <div style="font-size:10px;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px">Media horas/día</div>
+          <div id="ch-kpi-media" style="font-size:20px;font-weight:800;color:var(--amber)">—</div>
+        </div>
+        <div style="background:#fff;border-radius:8px;padding:12px 14px;border:1px solid var(--border)">
+          <div style="font-size:10px;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px">Vacaciones / Bajas</div>
+          <div id="ch-kpi-ausencias" style="font-size:20px;font-weight:800;color:var(--red)">—</div>
+        </div>
       </div>
       <div id="ch-meses-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:14px"></div>
     </div>
@@ -9531,9 +9550,36 @@ async function loadControlHorario(){
           ${hLabel}${tipLabel}
         </div>`;
       }
-      html+='</div></div></div>';
+      html+='</div>';
+      // Resumen mensual
+      let horasMes=0, diasMes2=0;
+      for(let d=1;d<=diasMes;d++){
+        const f=`${year}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const r=horasByFecha[f];
+        if(r&&r.tipo==='Trabajo'&&r.horas>0){horasMes+=r.horas;diasMes2++;}
+      }
+      if(horasMes>0){
+        html+=`<div style="display:flex;gap:16px;padding:8px 10px;background:#f8fafd;border-top:1px solid var(--border);font-size:11px;color:var(--text-soft)">
+          <span>🕐 <strong style="color:var(--navy)">${horasMes}h</strong> trabajadas</span>
+          <span>📅 <strong style="color:var(--navy)">${diasMes2}</strong> días</span>
+          <span style="color:var(--text-soft)">Media: ${(horasMes/diasMes2).toFixed(1)}h/día</span>
+        </div>`;
+      }
+      html+='</div></div>';
       grid.innerHTML+=html;
     }
+    // KPIs anuales
+    let ausencias=0;
+    Object.values(horasByFecha).forEach(r=>{
+      if(['Vacaciones','Enfermedad','Baja médica','Fallecimiento familiar'].includes(r.tipo)) ausencias++;
+    });
+    const media = diasTrab>0 ? (totalHoras/diasTrab).toFixed(1) : 0;
+    const kpisEl = document.getElementById('ch-kpis');
+    if(kpisEl){ kpisEl.style.display='grid'; }
+    document.getElementById('ch-kpi-dias').textContent = diasTrab+' días';
+    document.getElementById('ch-kpi-horas').textContent = totalHoras+'h';
+    document.getElementById('ch-kpi-media').textContent = media+'h';
+    document.getElementById('ch-kpi-ausencias').textContent = ausencias+' días';
     document.getElementById('ch-resumen').textContent=`${diasTrab} días · ${totalHoras}h totales`;
   }catch(e){grid.innerHTML=`<div style="color:var(--red);padding:20px;grid-column:1/-1">Error: ${e.message}. Asegúrate de haber ejecutado el SQL de nuevas tablas.</div>`;}
 }
@@ -20611,6 +20657,65 @@ function vpGuardarPDF(){
 
 </script>
 
+
+<!-- ═══ MODAL CONTROL HORARIO - REGISTRAR DÍA ═══ -->
+<div class="overlay" id="m-horario-dia" onclick="if(event.target===this)closeModal('m-horario-dia')">
+  <div class="modal" style="width:400px;max-width:97vw">
+    <div class="modal-head">
+      <div class="modal-title">📅 Registrar día — <span id="ch-modal-fecha" style="color:var(--amber)"></span></div>
+      <button class="modal-close" onclick="closeModal('m-horario-dia')">×</button>
+    </div>
+    <div class="modal-body" style="padding:20px">
+      <input type="hidden" id="ch-modal-fecha-hidden">
+      <input type="hidden" id="ch-modal-trab">
+      <input type="hidden" id="ch-modal-year">
+      <input type="hidden" id="ch-modal-id">
+
+      <div class="form-group">
+        <label class="form-label">Tipo de día</label>
+        <select class="form-input" id="ch-modal-tipo" onchange="chModalTipoChange()">
+          <option value="Trabajo">✅ Trabajo</option>
+          <option value="Teletrabajo">💻 Teletrabajo</option>
+          <option value="Vacaciones">🏖 Vacaciones</option>
+          <option value="Festivo nacional">🎉 Festivo nacional</option>
+          <option value="Festivo local">🎊 Festivo local</option>
+          <option value="Asuntos personales">🙋 Asuntos personales</option>
+          <option value="Enfermedad">🤒 Enfermedad</option>
+          <option value="Baja médica">🏥 Baja médica</option>
+          <option value="Permiso">📋 Permiso retribuido</option>
+          <option value="Formación">📚 Formación</option>
+          <option value="Fallecimiento familiar">🖤 Fallecimiento familiar</option>
+          <option value="Otros">❓ Otros</option>
+        </select>
+      </div>
+
+      <div class="form-group" id="ch-modal-horas-wrap">
+        <label class="form-label">Horas trabajadas</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input class="form-input" id="ch-modal-horas" type="number" min="0" max="24" step="0.5" value="8" style="width:100px">
+          <div style="display:flex;gap:4px">
+            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('ch-modal-horas').value=6;chModalTipoChange()">6h</button>
+            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('ch-modal-horas').value=7;chModalTipoChange()">7h</button>
+            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('ch-modal-horas').value=8;chModalTipoChange()">8h</button>
+            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('ch-modal-horas').value=9;chModalTipoChange()">9h</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Notas (opcional)</label>
+        <input class="form-input" id="ch-modal-notas" placeholder="Observaciones...">
+      </div>
+    </div>
+    <div class="modal-foot" style="justify-content:space-between">
+      <button class="btn btn-danger btn-sm" id="ch-modal-btn-borrar" onclick="borrarHorarioDia()" style="display:none">🗑 Borrar</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" onclick="closeModal('m-horario-dia')">Cancelar</button>
+        <button class="btn btn-primary" onclick="guardarHorarioDia()">💾 Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ═══ MODAL TRABAJADOR RR.HH. ═══ -->
 <div class="overlay" id="m-trabajador" onclick="if(event.target===this)closeModal('m-trabajador')">
