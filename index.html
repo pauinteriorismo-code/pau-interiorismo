@@ -10242,7 +10242,8 @@ function renderFacLineas(forceRender=false){
     tbody.innerHTML = _facLineas.map((l,i)=>{
       const cant=parseFloat(l.cantidad)||0;
       const prec=parseFloat(l.precio)||0;
-      const sub=cant*prec;
+      const dto=parseFloat(l.dto)||0;
+      const sub=cant*prec*(1-dto/100);
       const ivaOpts=['21%','10%','4%','Exento'].map(v=>'<option'+(((l.iva||'21%')===v)?' selected':'')+'>'+v+'</option>').join('');
       return '<tr style="border-bottom:1px solid var(--border)">'
         +'<td style="padding:4px 6px">'
