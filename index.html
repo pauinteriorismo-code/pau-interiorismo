@@ -18261,11 +18261,12 @@ function renderExpResumen(body){
   const factPend = factProy.filter(f=>f.estado!=='Cobrada').reduce((s,f)=>s+(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100),0);
   const totalHoras = horProy.reduce((s,h)=>s+(h.horas||0),0);
   const costeHoras = horProy.reduce((s,h)=>s+(h.total||0),0);
+  const costeSubcRes = scProy.reduce((s,c)=>s+(c.importe||0),0); // subcontratas sin IVA
 
   // Progress: compras vs presupuesto
   const compTotal = compProy.reduce((s,c)=>s+(c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100),0);
   const factTotal = factProy.reduce((s,f)=>s+(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100),0);
-  const costeTotalRes = compTotal + costeHoras; // compras + mano de obra
+  const costeTotalRes = compTotal + costeHoras + costeSubcRes; // compras + mano de obra + subcontratas
 
   body.innerHTML = `
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
@@ -18289,11 +18290,12 @@ function renderExpResumen(body){
       <div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Financiero</div>
       ${[
         ['Compras / costes acumulados', fmt(costeTotalRes), costeTotalRes>0?'var(--amber)':''],
+        ['  · Compras materiales', fmt(compTotal), ''],
+        ['  · Subcontratas', costeSubcRes>0?fmt(costeSubcRes):'—', ''],
+        ['  · Mano de obra', fmt(costeHoras)+' ('+totalHoras.toFixed(1)+'h)', ''],
         ['Compras pendientes pago', fmt(compPend), compPend>0?'var(--red)':''],
         ['Facturas emitidas', fmt(factTotal), 'var(--green)'],
         ['Pendiente cobrar', fmt(factPend), factPend>0?'var(--amber)':''],
-        ['Horas registradas', totalHoras.toFixed(1)+'h', ''],
-        ['Coste mano de obra', fmt(costeHoras), ''],
       ].map(([k,v,c])=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:12px"><span style="color:var(--text-soft)">${k}</span><span style="font-weight:600${c?';color:'+c:''}">${v}</span></div>`).join('')}
     </div>
   </div>
