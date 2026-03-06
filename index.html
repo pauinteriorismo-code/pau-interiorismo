@@ -3516,6 +3516,44 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
   <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal(&#39;m-pres-linea&#39;)">Cancelar</button><button class="btn btn-primary" onclick="saveLineaPresupuesto()">💾 Guardar</button></div>
 </div></div>
 
+<!-- ENTREGA A CUENTA -->
+<div class="overlay" id="m-entrega-cuenta">
+  <div class="modal" style="width:420px">
+    <div class="modal-head">
+      <div class="modal-title">💵 Entrega a cuenta</div>
+      <button class="modal-close" onclick="closeModal('m-entrega-cuenta')">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="ea-id">
+      <input type="hidden" id="ea-proyecto">
+      <div class="form-group">
+        <label class="form-label">Fecha</label>
+        <input class="form-input" id="ea-fecha" type="date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Importe (€ sin IVA)</label>
+        <input class="form-input" id="ea-importe" type="number" step="0.01" placeholder="0,00" style="font-size:18px;font-weight:700;color:#7b3fa0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Concepto</label>
+        <input class="form-input" id="ea-concepto" placeholder="Ej: 1ª entrega a cuenta obra · efectivo">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notas</label>
+        <textarea class="form-input" id="ea-notas" rows="2" placeholder="Observaciones…" style="resize:vertical"></textarea>
+      </div>
+      <div style="background:#f5eeff;border:1px solid #c9a0e0;border-radius:6px;padding:8px 12px;font-size:11px;color:#7b3fa0;margin-top:4px">
+        💡 Las entregas a cuenta se descuentan directamente de la base del presupuesto, sin IVA. No generan factura.
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button id="ea-btn-borrar" class="btn btn-ghost" style="color:var(--red);display:none" onclick="borrarEntrega()">🗑 Eliminar</button>
+      <button class="btn btn-ghost" onclick="closeModal('m-entrega-cuenta')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveEntrega()">💾 Guardar</button>
+    </div>
+  </div>
+</div>
+
 <!-- PRESUPUESTO CAPÍTULO -->
 <div class="overlay" id="m-pres-cap"><div class="modal" style="width:400px">
   <div class="modal-head"><div class="modal-title">📂 Nuevo capítulo</div><button class="modal-close" onclick="closeModal(&#39;m-pres-cap&#39;)">×</button></div>
@@ -3940,6 +3978,13 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div style="background:#fff;border-radius:8px;padding:10px 14px;border:1px solid var(--border)">
         <div style="font-size:10px;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px" id="exp-k-fact-label">Facturado</div>
         <div id="exp-k-fact" style="font-size:18px;font-weight:800;color:var(--green)">—</div>
+      </div>
+      <div style="background:#fff;border-radius:8px;padding:10px 14px;border:1px solid var(--border);position:relative">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
+          <div style="font-size:10px;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px">Entregas a cuenta</div>
+          <button onclick="abrirModalEntrega()" style="background:var(--navy);color:#fff;border:none;border-radius:50%;width:16px;height:16px;font-size:11px;cursor:pointer;line-height:16px;padding:0;text-align:center" title="Registrar entrega a cuenta">＋</button>
+        </div>
+        <div id="exp-k-entrega" style="font-size:18px;font-weight:800;color:#7b3fa0">—</div>
       </div>
       <div style="background:#fff;border-radius:8px;padding:10px 14px;border:1px solid var(--border)">
         <div style="font-size:10px;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px">Margen real</div>
@@ -18210,6 +18255,7 @@ async function abrirExpediente(proyId){
   document.getElementById('exp-estado-badge').innerHTML = `<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:10px;background:var(--navy);color:#fff">${p.estado||''}</span>`;
 
   // KPIs — calcular desde datos ya cargados + refrescar si hace falta
+  await loadEntregas();
   await calcExpKPIs(proyId);
 
   // Abrir en tab resumen
@@ -18241,6 +18287,82 @@ function recalcPresKPI(){
     const el2 = document.getElementById('exp-k-margen');
     if(el2){ el2.textContent = fmtP(margen); el2.style.color = margen>=20?'var(--green)':margen>=0?'var(--amber)':'var(--red)'; }
   }
+}
+
+// ═══════════════════════════════════════════
+// ENTREGAS A CUENTA
+// ═══════════════════════════════════════════
+async function loadEntregas(){
+  try{ EAC = await sbGet('entregas_cuenta','?order=fecha.desc'); }
+  catch(e){ EAC=[]; console.warn('Tabla entregas_cuenta no existe:',e.message); }
+}
+
+function abrirModalEntrega(id){
+  document.getElementById('ea-id').value = id||'';
+  document.getElementById('ea-proyecto').value = _expProyId||'';
+  document.getElementById('ea-fecha').value = new Date().toISOString().split('T')[0];
+  document.getElementById('ea-importe').value = '';
+  document.getElementById('ea-concepto').value = '';
+  document.getElementById('ea-notas').value = '';
+  const btnBorrar = document.getElementById('ea-btn-borrar');
+  if(id){
+    const ea = EAC.find(x=>String(x.id)===String(id));
+    if(ea){
+      document.getElementById('ea-fecha').value = ea.fecha||'';
+      document.getElementById('ea-importe').value = ea.importe||'';
+      document.getElementById('ea-concepto').value = ea.concepto||'';
+      document.getElementById('ea-notas').value = ea.notas||'';
+    }
+    document.querySelector('#m-entrega-cuenta .modal-title').textContent = '✏️ Editar entrega a cuenta';
+    if(btnBorrar) btnBorrar.style.display='';
+  } else {
+    document.querySelector('#m-entrega-cuenta .modal-title').textContent = '💵 Entrega a cuenta';
+    if(btnBorrar) btnBorrar.style.display='none';
+  }
+  openModal('m-entrega-cuenta');
+}
+
+async function saveEntrega(){
+  const id = document.getElementById('ea-id').value;
+  const proyId = document.getElementById('ea-proyecto').value || _expProyId;
+  const importe = parseFloat(document.getElementById('ea-importe').value)||0;
+  if(!importe){ toast('Introduce el importe','error'); return; }
+  const d = {
+    proyecto_id: proyId,
+    fecha: document.getElementById('ea-fecha').value || new Date().toISOString().split('T')[0],
+    importe: importe,
+    concepto: document.getElementById('ea-concepto').value||'Entrega a cuenta',
+    notas: document.getElementById('ea-notas').value||''
+  };
+  try{
+    if(id){ await sb('entregas_cuenta','PATCH',d,null,`?id=eq.${id}`); toast('Entrega actualizada ✅'); }
+    else  { await sbPost('entregas_cuenta',d); toast('Entrega registrada ✅'); }
+    closeModal('m-entrega-cuenta');
+    await loadEntregas();
+    await calcExpKPIs(proyId);
+    expTab('resumen');
+  }catch(e){
+    if(e.message&&e.message.includes('does not exist')){
+      toast('⚠️ Tabla no existe — ejecuta el SQL en Configuración','error');
+    } else {
+      toast('Error: '+e.message,'error');
+    }
+  }
+}
+
+async function borrarEntrega(){
+  const id = document.getElementById('ea-id').value;
+  if(!id) return;
+  if(!confirm('¿Eliminar esta entrega a cuenta?')) return;
+  try{
+    await sbDelete('entregas_cuenta', id);
+    toast('Entrega eliminada ✅');
+    closeModal('m-entrega-cuenta');
+    const proyId = _expProyId;
+    await loadEntregas();
+    await calcExpKPIs(proyId);
+    expTab('resumen');
+  }catch(e){ toast('Error: '+e.message,'error'); }
 }
 
 async function calcExpKPIs(proyId){
@@ -18291,6 +18413,10 @@ async function calcExpKPIs(proyId){
   // Facturas emitidas (solo informativo, NO afecta al margen)
   const factTotalBI = factProy.reduce((s,f)=>s+(f.base_imponible||0), 0);
 
+  // Entregas a cuenta del proyecto
+  const eaProy = (EAC||[]).filter(e=>e.proyecto_id===proyId);
+  const eaTotal = eaProy.reduce((s,e)=>s+(parseFloat(e.importe)||0), 0);
+
   // Margen SIEMPRE sobre coste: (Venta - Coste) / Coste × 100
   const beneficio = presTot - costeTotal;
   const margen    = costeTotal > 0 ? (beneficio / costeTotal) * 100 : 0;
@@ -18303,15 +18429,25 @@ async function calcExpKPIs(proyId){
   // Label con nº facturas
   const lblFact = document.getElementById('exp-k-fact-label');
   if(lblFact) lblFact.textContent = nFact > 1 ? `Facturado (${nFact})` : 'Facturado';
-  // Sub: pendiente de facturar
+  // Sub: pendiente de facturar (descontando también entregas a cuenta)
   const kpiFact = document.getElementById('exp-k-fact');
   if(kpiFact && presTot>0){
     let subF = kpiFact.parentNode.querySelector('.kpi-fact-sub');
     if(!subF){ subF=document.createElement('div'); subF.className='kpi-fact-sub'; subF.style.cssText='font-size:10px;margin-top:1px'; kpiFact.parentNode.appendChild(subF); }
-    const pendFact = presTot - factTotalBI;
+    const cobradoTotal = factTotalBI + eaTotal;
+    const pendFact = presTot - cobradoTotal;
     if(pendFact > 0.01){ subF.style.color='var(--amber)'; subF.textContent='Pdte: '+fmt(pendFact); }
-    else if(pendFact <= 0){ subF.style.color='var(--green)'; subF.textContent='✓ Todo facturado'; }
+    else if(pendFact <= 0){ subF.style.color='var(--green)'; subF.textContent='✓ Todo cobrado'; }
     else { subF.textContent=''; }
+  }
+  // KPI entregas a cuenta
+  const kpiEA = document.getElementById('exp-k-entrega');
+  if(kpiEA){
+    kpiEA.textContent = eaTotal > 0 ? fmt(eaTotal) : '—';
+    let subEA = kpiEA.parentNode.querySelector('.kpi-ea-sub');
+    if(!subEA){ subEA=document.createElement('div'); subEA.className='kpi-ea-sub'; subEA.style.cssText='font-size:10px;margin-top:1px'; kpiEA.parentNode.appendChild(subEA); }
+    if(eaProy.length > 0){ subEA.style.color='#7b3fa0'; subEA.textContent=eaProy.length+' entrega'+(eaProy.length>1?'s':''); }
+    else { subEA.textContent='Sin registros'; subEA.style.color='var(--text-soft)'; }
   }
   setEl('exp-k-margen', presTot>0 ? fmtP(margen) : '—',
     {color: margen>=20?'var(--green)':margen>=0?'var(--amber)':'var(--red)'});
@@ -18359,6 +18495,8 @@ function renderExpResumen(body){
   const compMatPend = compProy.filter(c=>c.estado_pago==='Pendiente').reduce((s,c)=>s+(c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100),0);
   const compScPend  = scProy.filter(s=>['Pendiente','Parcial','Vencido'].includes(s.estado_pago)).reduce((s,c)=>s+(c.importe||0)*(1+ivaPct(c.iva_pct)/100),0);
   const compPend = compMatPend + compScPend;
+  const eaResProy = (EAC||[]).filter(e=>e.proyecto_id===pid);
+  const eaResTotal = eaResProy.reduce((s,e)=>s+(parseFloat(e.importe)||0), 0);
   const factPend = factProy.filter(f=>f.estado!=='Cobrada').reduce((s,f)=>s+(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100),0);
   const totalHoras = horProy.reduce((s,h)=>s+(h.horas||0),0);
   const costeHoras = horProy.reduce((s,h)=>s+(h.total||0),0);
@@ -18396,7 +18534,8 @@ function renderExpResumen(body){
         ['  · Mano de obra', fmt(costeHoras)+' ('+totalHoras.toFixed(1)+'h)', costeHoras>0?'var(--text-mid)':''],
         ['Compras pendientes pago', fmt(compPend), compPend>0?'var(--red)':''],
         ['Facturas emitidas', fmt(factTotal), factTotal>0?'var(--green)':''],
-        ['Pendiente cobrar', fmt(factPend), factPend>0?'var(--amber)':''],
+        ['💵 Entregas a cuenta', eaResTotal>0?fmt(eaResTotal):'—', eaResTotal>0?'#7b3fa0':''],
+        ['Pendiente cobrar', fmt(factPend - eaResTotal), (factPend-eaResTotal)>0?'var(--amber)':'var(--green)'],
       ].map(([k,v,c])=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:12px"><span style="color:var(--text-soft)">${k}</span><span style="font-weight:600${c?';color:'+c:''}">${v}</span></div>`).join('')}
     </div>
   </div>
@@ -18409,7 +18548,23 @@ function renderExpResumen(body){
       <span style="color:var(--amber);font-weight:600">${fmt((c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100))} ${bE(c.estado_pago)}</span>
     </div>`).join('')}
     ${compProy.length>5?`<div style="font-size:11px;color:var(--text-soft);padding:4px 0">+${compProy.length-5} más — ver pestaña Compras</div>`:''}
-  </div>`:''}`;
+  </div>`:''}
+  ${eaResProy.length ? `
+  <div style="margin-top:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px">💵 Entregas a cuenta del cliente</div>
+      <button class="btn btn-sm" style="background:#7b3fa0;color:#fff;border:none;font-size:11px;padding:3px 10px;border-radius:6px;cursor:pointer" onclick="abrirModalEntrega()">＋ Nueva</button>
+    </div>
+    ${eaResProy.map(e=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #f5f5f5;font-size:12px">
+      <span style="color:var(--text-soft)">${fmtD(e.fecha)}</span>
+      <span style="flex:1;margin:0 10px">${e.concepto||'Entrega a cuenta'}</span>
+      <span style="font-weight:700;color:#7b3fa0">${fmt(e.importe)}</span>
+      <button onclick="abrirModalEntrega('${e.id}')" style="background:none;border:none;cursor:pointer;color:var(--text-soft);font-size:13px;margin-left:6px">✏️</button>
+    </div>`).join('')}
+    <div style="display:flex;justify-content:flex-end;padding:8px 0;font-size:13px;font-weight:700;color:#7b3fa0;border-top:2px solid #e8d8f5">Total: ${fmt(eaResTotal)}</div>
+  </div>
+  ` : `<div style="margin-top:14px;display:flex;align-items:center;justify-content:space-between"><span style="font-size:11px;color:var(--text-soft)">Sin entregas a cuenta registradas</span><button class="btn btn-sm" style="background:#7b3fa0;color:#fff;border:none;font-size:11px;padding:3px 10px;border-radius:6px;cursor:pointer" onclick="abrirModalEntrega()">💵 Registrar entrega</button></div>`}
+  `;
 }
 
 function renderExpCompras(body){
