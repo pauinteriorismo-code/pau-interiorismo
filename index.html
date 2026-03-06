@@ -3904,7 +3904,14 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     <!-- KPIs rápidos del proyecto -->
     <div id="exp-kpis" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:10px 18px;background:#f8fafd;border-bottom:1px solid var(--border);flex-shrink:0">
       <div style="background:#fff;border-radius:8px;padding:10px 14px;border:1px solid var(--border)">
-        <div style="font-size:10px;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px">Presupuesto</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+          <div style="font-size:10px;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px">Presupuesto</div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <label style="font-size:10px;color:var(--text-soft);display:flex;align-items:center;gap:2px;cursor:pointer"><input type="checkbox" id="chk-v1" checked onchange="recalcPresKPI()"> V1</label>
+            <label style="font-size:10px;color:var(--text-soft);display:flex;align-items:center;gap:2px;cursor:pointer"><input type="checkbox" id="chk-v2" onchange="recalcPresKPI()"> V2</label>
+            <label style="font-size:10px;color:var(--text-soft);display:flex;align-items:center;gap:2px;cursor:pointer"><input type="checkbox" id="chk-v3" onchange="recalcPresKPI()"> V3</label>
+          </div>
+        </div>
         <div id="exp-k-pres" style="font-size:18px;font-weight:800;color:var(--navy)">—</div>
       </div>
       <div style="background:#fff;border-radius:8px;padding:10px 14px;border:1px solid var(--border)">
@@ -18113,20 +18120,53 @@ async function abrirExpediente(proyId){
   openModal('m-expediente');
 }
 
+// Desglose global por versión (se rellena en calcExpKPIs y se usa en recalcPresKPI)
+let _presDesglobeGlobal = {};
+
+function recalcPresKPI(){
+  const v1 = document.getElementById('chk-v1')?.checked ? (_presDesglobeGlobal['v1']||0) : 0;
+  const v2 = document.getElementById('chk-v2')?.checked ? (_presDesglobeGlobal['v2']||0) : 0;
+  const v3 = document.getElementById('chk-v3')?.checked ? (_presDesglobeGlobal['v3']||0) : 0;
+  const tot = v1 + v2 + v3;
+  const el = document.getElementById('exp-k-pres');
+  if(el) el.textContent = tot > 0 ? fmt(tot) : '—';
+  // Ocultar checkboxes de versiones sin datos
+  ['v1','v2','v3'].forEach(v=>{
+    const lbl = document.getElementById('chk-'+v)?.parentElement;
+    if(lbl) lbl.style.display = (_presDesglobeGlobal[v]||0) > 0 ? '' : 'none';
+  });
+  // Actualizar margen con nuevo presupuesto
+  const costes = parseFloat(document.getElementById('exp-k-costes')?.textContent?.replace(/[^0-9,.]/g,'').replace(',','.'))||0;
+  if(costes > 0 && tot > 0){
+    const margen = ((tot - costes) / costes) * 100;
+    const el2 = document.getElementById('exp-k-margen');
+    if(el2){ el2.textContent = fmtP(margen); el2.style.color = margen>=20?'var(--green)':margen>=0?'var(--amber)':'var(--red)'; }
+  }
+}
+
 async function calcExpKPIs(proyId){
-  // Presupuesto: suma V1 + V2 + V3 (todas las versiones con líneas)
-  let presTot = 0;
-  let presDesglose = {}; // {v1: x, v2: y, v3: z}
+  // Presupuesto: calcula desglose por versión, solo suma las marcadas
+  _presDesglobeGlobal = {};
   try{
     const lineas = await sbGet('presupuesto_lineas', `?proyecto_id=eq.${proyId}&es_capitulo=eq.false`);
     lineas.forEach(l=>{
       const pv=l.precio_venta||0, ci=l.ci_gg_bi_pct||0, sub=(l.cantidad||0)*pv;
       const importe = ci>0 ? sub*(1+ci/100) : sub;
-      presTot += importe;
       const ver = l.version||'v1';
-      presDesglose[ver] = (presDesglose[ver]||0) + importe;
+      _presDesglobeGlobal[ver] = (_presDesglobeGlobal[ver]||0) + importe;
     });
   }catch(e){}
+  // Por defecto solo V1 marcada, ocultar las que no tienen datos
+  ['v1','v2','v3'].forEach(v=>{
+    const chk = document.getElementById('chk-'+v);
+    if(chk){
+      const tieneData = (_presDesglobeGlobal[v]||0) > 0;
+      chk.parentElement.style.display = tieneData ? '' : 'none';
+      if(v!=='v1') chk.checked = false; // v2 y v3 siempre desmarcadas por defecto
+    }
+  });
+  // presTot = solo v1 por defecto
+  let presTot = _presDesglobeGlobal['v1'] || 0;
 
   // Facturas de venta del proyecto
   const factProy = (FC||[]).filter(f=>f.proyecto_id===proyId&&(f.tipo_factura||'Venta')==='Venta');
@@ -18157,15 +18197,7 @@ async function calcExpKPIs(proyId){
   const margen    = costeTotal > 0 ? (beneficio / costeTotal) * 100 : 0;
 
   const setEl = (id,val,style) => { const el=document.getElementById(id); if(el){el.textContent=val; if(style) Object.assign(el.style,style);} };
-  setEl('exp-k-pres', presTot>0 ? fmt(presTot) : '—');
-  // Sub con desglose de versiones
-  const kpiPres = document.getElementById('exp-k-pres');
-  if(kpiPres){
-    let subP = kpiPres.parentNode.querySelector('.kpi-pres-sub');
-    if(!subP){ subP=document.createElement('div'); subP.className='kpi-pres-sub'; subP.style.cssText='font-size:10px;color:var(--text-soft);margin-top:1px'; kpiPres.parentNode.appendChild(subP); }
-    const vers = Object.entries(presDesglose).filter(([,v])=>v>0).map(([k,v])=>`${k.toUpperCase()}: ${fmt(v)}`).join(' · ');
-    subP.textContent = vers || '';
-  }
+  recalcPresKPI(); // Renderiza el KPI presupuesto con las versiones marcadas
   setEl('exp-k-costes', fmt(costeTotal));
   const nFact = factProy.length;
   setEl('exp-k-fact', factTotalBI>0 ? fmt(factTotalBI) : '—');
