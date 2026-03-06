@@ -3517,7 +3517,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 </div></div>
 
 <!-- ENTREGA A CUENTA -->
-<div class="overlay" id="m-entrega-cuenta">
+<div class="overlay" id="m-entrega-cuenta" style="z-index:500">
   <div class="modal" style="width:420px">
     <div class="modal-head">
       <div class="modal-title">💵 Entrega a cuenta</div>
@@ -18298,6 +18298,8 @@ async function loadEntregas(){
 }
 
 function abrirModalEntrega(id){
+  // Cerrar cualquier select/dropdown abierto antes de abrir el modal
+  document.activeElement?.blur();
   document.getElementById('ea-id').value = id||'';
   document.getElementById('ea-proyecto').value = _expProyId||'';
   document.getElementById('ea-fecha').value = new Date().toISOString().split('T')[0];
