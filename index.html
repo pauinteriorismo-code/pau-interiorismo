@@ -1118,6 +1118,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         </div>
         <button class="btn btn-ghost no-print" onclick="convertirPresupuestoAFactura()" style="background:#e8f5ee;color:var(--green);border-color:#b8dfc8;font-weight:600" title="Crear factura de venta a partir de este presupuesto">🧾 Crear factura</button><button class="btn btn-ghost no-print" onclick="exportarPresupuestoPDF()">⬇️ PDF</button>
         <button class="btn btn-ghost no-print" onclick="window.print()">🖨️ Imprimir</button>
+        <button class="btn btn-ghost no-print" onclick="abrirImportarPDF()" style="background:#e8f0f8;color:#1a5276;border-color:#aac8e8;font-weight:600" title="Importar presupuesto desde PDF">📥 Importar PDF</button>
         <div id="pres-total-lbl" style="margin-left:auto;font-size:13px;font-weight:700;color:var(--navy)"></div>
         <div class="ci-toggle" id="ci-toggle-btn" onclick="toggleCI()" title="Activar/desactivar CI+GG+BI en partidas nuevas">
           <div class="ci-dot"></div>
@@ -3485,6 +3486,58 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
   <div class="modal-head"><div class="modal-title">📂 Nuevo capítulo</div><button class="modal-close" onclick="closeModal(&#39;m-pres-cap&#39;)">×</button></div>
   <div class="modal-body"><div class="form-group"><label class="form-label">Nombre del capítulo</label><input type="hidden" id="cap-id"><input class="form-input" id="cap-nombre" placeholder="01. Demoliciones y trabajos previos"></div></div>
   <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal(&#39;m-pres-cap&#39;)">Cancelar</button><button class="btn btn-primary" onclick="saveCapitulo()">💾 Guardar</button></div>
+</div></div>
+
+<!-- MODAL IMPORTAR PDF PRESUPUESTO -->
+<div class="overlay" id="m-importar-pdf"><div class="modal" style="width:680px;max-width:96vw">
+  <div class="modal-head"><div class="modal-title">📥 Importar presupuesto desde PDF</div><button class="modal-close" onclick="closeModal('m-importar-pdf')">×</button></div>
+  <div class="modal-body">
+    <!-- Paso 1: Subir PDF -->
+    <div id="imp-step1">
+      <div style="background:#e8f0f8;border:1px solid #aac8e8;border-radius:8px;padding:14px 16px;margin-bottom:16px;font-size:13px;color:#1a5276">
+        <strong>¿Cómo funciona?</strong> Sube el PDF del presupuesto. La IA extrae los capítulos y líneas automáticamente y los inserta en el proyecto seleccionado.
+      </div>
+      <div class="form-group">
+        <label class="form-label">Proyecto destino</label>
+        <select class="form-input" id="imp-proyecto-sel">
+          <option value="">— Selecciona proyecto —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Versión</label>
+        <select class="form-input" id="imp-version-sel" style="width:100px">
+          <option value="v1">v1</option>
+          <option value="v2">v2</option>
+          <option value="v3">v3</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">PDF del presupuesto</label>
+        <input type="file" id="imp-pdf-file" accept=".pdf" class="form-input" onchange="impOnFileChange(this)">
+      </div>
+      <div id="imp-file-info" style="display:none;font-size:12px;color:var(--text-soft);margin-top:4px"></div>
+    </div>
+    <!-- Paso 2: Procesando -->
+    <div id="imp-step2" style="display:none;text-align:center;padding:32px 0">
+      <div style="font-size:36px;margin-bottom:12px">🤖</div>
+      <div style="font-weight:700;font-size:15px;color:var(--navy);margin-bottom:6px">Analizando el presupuesto...</div>
+      <div style="font-size:13px;color:var(--text-soft)">La IA está extrayendo capítulos y líneas del PDF</div>
+      <div style="margin-top:16px"><div class="spinner" style="margin:0 auto"></div></div>
+    </div>
+    <!-- Paso 3: Preview -->
+    <div id="imp-step3" style="display:none">
+      <div style="font-size:13px;font-weight:600;color:var(--navy);margin-bottom:10px">Vista previa — revisa antes de importar:</div>
+      <div id="imp-preview" style="max-height:340px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;padding:10px;font-size:12px;background:#fafaf8"></div>
+      <div id="imp-stats" style="margin-top:10px;font-size:12px;color:var(--text-soft)"></div>
+    </div>
+    <!-- Error -->
+    <div id="imp-error" style="display:none;background:#fce8e8;border:1px solid #e8aaaa;border-radius:8px;padding:12px 14px;font-size:13px;color:#c62828;margin-top:8px"></div>
+  </div>
+  <div class="modal-foot">
+    <button class="btn btn-ghost" onclick="closeModal('m-importar-pdf')">Cancelar</button>
+    <button class="btn btn-primary" id="imp-btn-analizar" onclick="impAnalizarPDF()" disabled>🔍 Analizar PDF</button>
+    <button class="btn btn-primary" id="imp-btn-importar" style="display:none;background:var(--green)" onclick="impConfirmarImport()">✅ Importar líneas</button>
+  </div>
 </div></div>
 
 <!-- COMPARATIVA OFERTAS -->
@@ -15014,6 +15067,250 @@ function catAbrir(fab){
   // Sincronizar proyecto activo del presupuesto a los selectores del catálogo
   syncPresContext();
 }
+
+
+// ═══════════════════════════════════════════════════════════════
+// IMPORTAR PRESUPUESTO DESDE PDF  (IA)
+// ═══════════════════════════════════════════════════════════════
+let _impLineas = null; // datos extraídos pendientes de confirmar
+
+function abrirImportarPDF(){
+  // Rellenar selector de proyectos
+  const sel = document.getElementById('imp-proyecto-sel');
+  const presProySel = document.getElementById('pres-proyecto-sel');
+  const presVer = document.getElementById('pres-version-sel');
+  // Copiar opciones del selector principal
+  sel.innerHTML = '<option value="">— Selecciona proyecto —</option>';
+  [...presProySel.options].forEach(o => {
+    if(o.value) sel.appendChild(o.cloneNode(true));
+  });
+  // Pre-seleccionar el proyecto activo si hay uno
+  if(presProySel.value) sel.value = presProySel.value;
+  if(presVer) document.getElementById('imp-version-sel').value = presVer.value || 'v1';
+  // Reset UI
+  _impLineas = null;
+  document.getElementById('imp-step1').style.display = '';
+  document.getElementById('imp-step2').style.display = 'none';
+  document.getElementById('imp-step3').style.display = 'none';
+  document.getElementById('imp-error').style.display = 'none';
+  document.getElementById('imp-btn-analizar').style.display = '';
+  document.getElementById('imp-btn-importar').style.display = 'none';
+  document.getElementById('imp-btn-analizar').disabled = true;
+  document.getElementById('imp-file-info').style.display = 'none';
+  document.getElementById('imp-pdf-file').value = '';
+  openModal('m-importar-pdf');
+}
+
+function impOnFileChange(input){
+  const f = input.files[0];
+  const info = document.getElementById('imp-file-info');
+  if(f){
+    info.style.display = '';
+    info.textContent = `📄 ${f.name} · ${(f.size/1024).toFixed(0)} KB`;
+    document.getElementById('imp-btn-analizar').disabled = false;
+  } else {
+    info.style.display = 'none';
+    document.getElementById('imp-btn-analizar').disabled = true;
+  }
+}
+
+async function impAnalizarPDF(){
+  const file = document.getElementById('imp-pdf-file').files[0];
+  const proy = document.getElementById('imp-proyecto-sel').value;
+  if(!file){ toast('Selecciona un PDF','error'); return; }
+  if(!proy){ toast('Selecciona un proyecto destino','error'); return; }
+
+  // Mostrar paso 2 (procesando)
+  document.getElementById('imp-step1').style.display = 'none';
+  document.getElementById('imp-step2').style.display = '';
+  document.getElementById('imp-error').style.display = 'none';
+  document.getElementById('imp-btn-analizar').style.display = 'none';
+
+  try {
+    // Leer PDF como base64
+    const base64 = await new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res(r.result.split(',')[1]);
+      r.onerror = () => rej(new Error('Error leyendo el archivo'));
+      r.readAsDataURL(file);
+    });
+
+    // Llamar a Claude API
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 4000,
+        messages: [{
+          role: 'user',
+          content: [
+            {
+              type: 'document',
+              source: { type: 'base64', media_type: 'application/pdf', data: base64 }
+            },
+            {
+              type: 'text',
+              text: `Analiza este presupuesto PDF de construcción/interiorismo y extrae TODAS las partidas en formato JSON.
+
+Devuelve SOLO un JSON válido con esta estructura exacta, sin texto adicional ni markdown:
+{
+  "capitulos": [
+    {
+      "nombre": "Nombre del capítulo o agrupación (si existe)",
+      "lineas": [
+        {
+          "descripcion": "Descripción completa de la partida",
+          "unidad": "Ud/m2/ml/etc o vacío",
+          "cantidad": 1,
+          "precio_venta": 0.00,
+          "iva_pct": "10%"
+        }
+      ]
+    }
+  ]
+}
+
+Reglas:
+- Si no hay capítulos explícitos, crea uno con nombre vacío y mete todas las líneas ahí
+- Omite filas con cantidad 0 y precio 0 (títulos/encabezados sin precio)
+- precio_venta = precio unitario de la línea (no el subtotal)
+- iva_pct: usa "10%" para obra/instalación, "21%" para otros, o el que indique el PDF
+- Descripción: texto completo incluyendo especificaciones técnicas
+- Si hay notas de pago al final, ignorarlas`
+            }
+          ]
+        }]
+      })
+    });
+
+    if(!resp.ok) throw new Error(`API error ${resp.status}`);
+    const data = await resp.json();
+    const raw = data.content.filter(b => b.type === 'text').map(b => b.text).join('');
+    
+    // Parsear JSON
+    let parsed;
+    try {
+      const clean = raw.replace(/```json|```/g,'').trim();
+      parsed = JSON.parse(clean);
+    } catch(e) {
+      throw new Error('No se pudo parsear la respuesta de la IA. Inténtalo de nuevo.');
+    }
+
+    _impLineas = parsed;
+    impMostrarPreview(parsed);
+
+  } catch(err) {
+    document.getElementById('imp-step2').style.display = 'none';
+    document.getElementById('imp-step1').style.display = '';
+    document.getElementById('imp-btn-analizar').style.display = '';
+    document.getElementById('imp-btn-analizar').disabled = false;
+    const errEl = document.getElementById('imp-error');
+    errEl.style.display = '';
+    errEl.textContent = '❌ ' + err.message;
+  }
+}
+
+function impMostrarPreview(parsed){
+  document.getElementById('imp-step2').style.display = 'none';
+  document.getElementById('imp-step3').style.display = '';
+  document.getElementById('imp-btn-importar').style.display = '';
+
+  let html = '';
+  let totalLineas = 0;
+  let totalCaps = 0;
+
+  (parsed.capitulos || []).forEach(cap => {
+    if(cap.nombre){
+      totalCaps++;
+      html += `<div style="background:#f0ece4;padding:7px 10px;border-radius:4px;font-weight:700;color:#4a3728;margin-bottom:4px;margin-top:8px">📂 ${escH(cap.nombre)}</div>`;
+    }
+    (cap.lineas || []).forEach(l => {
+      totalLineas++;
+      const sub = (l.cantidad||1) * (l.precio_venta||0);
+      html += `<div style="display:flex;gap:8px;padding:5px 8px;border-bottom:1px solid #eee;align-items:flex-start">
+        <div style="flex:1;color:#333">${escH(l.descripcion)}</div>
+        <div style="white-space:nowrap;color:#888;font-size:11px">${l.cantidad||1} ${l.unidad||'Ud'}</div>
+        <div style="white-space:nowrap;font-weight:600;color:var(--navy);min-width:70px;text-align:right">${fmtE(l.precio_venta||0)}</div>
+        <div style="white-space:nowrap;color:var(--text-soft);font-size:11px;min-width:35px;text-align:right">${l.iva_pct||'10%'}</div>
+      </div>`;
+    });
+  });
+
+  document.getElementById('imp-preview').innerHTML = html || '<div style="color:#888;padding:12px">No se encontraron líneas</div>';
+  document.getElementById('imp-stats').innerHTML = `✅ <strong>${totalLineas}</strong> líneas${totalCaps > 0 ? ` en <strong>${totalCaps}</strong> capítulos` : ''} listas para importar`;
+}
+
+async function impConfirmarImport(){
+  if(!_impLineas) return;
+  const proy = document.getElementById('imp-proyecto-sel').value;
+  const ver  = document.getElementById('imp-version-sel').value;
+  if(!proy){ toast('Selecciona un proyecto','error'); return; }
+
+  const btn = document.getElementById('imp-btn-importar');
+  btn.disabled = true;
+  btn.textContent = 'Importando...';
+
+  try {
+    // Obtener orden máximo actual
+    const existentes = await sbGet('presupuesto_lineas', `?proyecto_id=eq.${proy}&version=eq.${ver}&order=orden.desc&limit=1`);
+    let orden = existentes.length > 0 ? (existentes[0].orden || 0) + 1 : 1;
+
+    let insertadas = 0;
+
+    for(const cap of (_impLineas.capitulos || [])){
+      // Insertar capítulo si tiene nombre
+      if(cap.nombre && cap.nombre.trim()){
+        await sbPost('presupuesto_lineas', {
+          proyecto_id: proy, version: ver,
+          descripcion: cap.nombre.trim(),
+          es_capitulo: true, orden: orden++,
+          cantidad: 0, precio_base: 0, precio_venta: 0, subtotal: 0
+        });
+      }
+      // Insertar líneas
+      for(const l of (cap.lineas || [])){
+        const pv = parseFloat(l.precio_venta) || 0;
+        const cant = parseFloat(l.cantidad) || 1;
+        await sbPost('presupuesto_lineas', {
+          proyecto_id: proy, version: ver,
+          descripcion: (l.descripcion||'').trim(),
+          unidad: l.unidad || 'Ud',
+          cantidad: cant,
+          precio_base: pv,
+          margen_pct: 0,
+          ci_gg_bi_pct: 0,
+          precio_venta: pv,
+          subtotal: parseFloat((cant * pv).toFixed(4)),
+          iva_pct: l.iva_pct || '10%',
+          es_capitulo: false,
+          orden: orden++
+        });
+        insertadas++;
+      }
+    }
+
+    closeModal('m-importar-pdf');
+    toast(`✅ ${insertadas} líneas importadas correctamente`, 'success');
+
+    // Sincronizar la vista: si el proyecto activo coincide, recargar
+    if(document.getElementById('pres-proyecto-sel').value === proy &&
+       document.getElementById('pres-version-sel').value === ver){
+      await loadPresupuesto();
+    } else {
+      // Cambiar selector al proyecto importado
+      document.getElementById('pres-proyecto-sel').value = proy;
+      document.getElementById('pres-version-sel').value = ver;
+      await loadPresupuesto();
+    }
+
+  } catch(err){
+    toast('Error importando: ' + err.message, 'error');
+    btn.disabled = false;
+    btn.textContent = '✅ Importar líneas';
+  }
+}
+// ═══════════════════════════════════════════════════════════════
 
 function catVolver(){
   catActual = null;
