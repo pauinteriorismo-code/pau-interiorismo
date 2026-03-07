@@ -1023,7 +1023,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <div class="table-wrap"><table><thead><tr>
           <th class="sortable" onclick="sortTable('clientes','cliente_id',this)">ID<span class="sort-arrow"></span></th>
           <th class="sortable" onclick="sortTable('clientes','nombre',this)">Nombre<span class="sort-arrow"></span></th>
-          <th>CIF</th><th>Teléfono</th><th>Email</th>
+          <th>CIF</th><th>Teléfono</th><th>Email</th><th>Población</th>
           <th class="sortable" onclick="sortTable('clientes','tipo',this)">Tipo<span class="sort-arrow"></span></th>
           <th></th>
         </tr></thead>
@@ -3458,7 +3458,10 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="c-email" type="email"></div>
       <div class="form-group"><label class="form-label">Tipo</label><select class="form-input" id="c-tipo" onchange="if(this.value==='Particular'){document.getElementById('c-cif-tipo').value='DNI';}else if(this.value==='Empresa'||this.value==='Promotora'){document.getElementById('c-cif-tipo').value='CIF';}"><option value="">Seleccionar…</option><option value="Administración">Administración</option><option value="Empresa">Empresa</option><option value="Otros">Otros</option><option value="Particular">Particular</option><option value="Promotora">Promotora</option><option value="Proveedor">Proveedor</option></select></div>
       <div class="form-group"><label class="form-label">Forma de pago</label><select class="form-input" id="c-pago"><option value="">Seleccionar…</option><option value="Confirming">Confirming</option><option value="Domiciliación">Domiciliación</option><option value="Efectivo">Efectivo</option><option value="Giro">Giro</option><option value="Pagaré">Pagaré</option><option value="Transferencia">Transferencia</option></select></div>
-      <div class="form-group fg-full"><label class="form-label">Dirección</label><input class="form-input" id="c-dir"></div>
+      <div class="form-group fg-full"><label class="form-label">Dirección</label><input class="form-input" id="c-dir" placeholder="C/ Nombre, Nº"></div>
+      <div class="form-group"><label class="form-label">C.P.</label><input class="form-input" id="c-cp" placeholder="46290" maxlength="5"></div>
+      <div class="form-group"><label class="form-label">Población</label><input class="form-input" id="c-poblacion" placeholder="Escribe para buscar..." autocomplete="off" onfocus="initPoblacionAC('c-poblacion')"></div>
+      <div class="form-group"><label class="form-label">Provincia</label><input class="form-input" id="c-provincia" value="Valencia"></div>
       <div class="form-group fg-full"><label class="form-label">Notas</label><textarea class="form-input" id="c-notas" rows="2"></textarea></div>
     </div>
   </div>
@@ -4168,6 +4171,10 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="form-group"><label class="form-label">Especialidad</label><input class="form-input" id="pv-esp"></div>
       <div class="form-group"><label class="form-label">Forma de pago</label><select class="form-input" id="pv-pago"><option value="">Seleccionar…</option><option value="Confirming">Confirming</option><option value="Domiciliación">Domiciliación</option><option value="Efectivo">Efectivo</option><option value="Giro">Giro</option><option value="Pagaré">Pagaré</option><option value="Transferencia">Transferencia</option></select></div>
       <div class="form-group"><label class="form-label">IBAN</label><input class="form-input" id="pv-iban"></div>
+      <div class="form-group fg-full"><label class="form-label">Dirección</label><input class="form-input" id="pv-dir" placeholder="C/ Nombre, Nº"></div>
+      <div class="form-group"><label class="form-label">C.P.</label><input class="form-input" id="pv-cp" placeholder="46290" maxlength="5"></div>
+      <div class="form-group"><label class="form-label">Población</label><input class="form-input" id="pv-poblacion" placeholder="Escribe para buscar..." autocomplete="off" onfocus="initPoblacionAC('pv-poblacion')"></div>
+      <div class="form-group"><label class="form-label">Provincia</label><input class="form-input" id="pv-provincia" value="Valencia"></div>
       <div class="form-group fg-full"><label class="form-label">Notas</label><textarea class="form-input" id="pv-notas" rows="2"></textarea></div>
     </div>
   </div>
@@ -4965,6 +4972,71 @@ const bColors={'Nuevo lead':'b-gray','Presupuesto enviado':'b-amber','Aprobado':
 function bE(v){return`<span class="badge ${bColors[v]||'b-gray'}">${v||'—'}</span>`}
 function fmt(n){if(n===null||n===undefined||n==='')return'—';return fmtES(Number(n))+'€'}
 function fmtES(n){var s=Math.abs(n).toFixed(2);var parts=s.split('.');var intPart=parts[0];var decPart=parts[1];var result='';for(var i=intPart.length-1,c=0;i>=0;i--,c++){if(c>0&&c%3===0)result='.'+result;result=intPart[i]+result;}return (n<0?'-':'')+result+','+decPart;}
+// Poblaciones de la provincia de Valencia para autocompletado
+const _POBLACIONES_VLC=[
+'Ador','Agullent','Aielo de Malferit','Aielo de Rugat','Alaquas','Albaida','Albal','Albalat de la Ribera','Albalat dels Sorells','Albalat dels Tarongers',
+'Alberic','Alborache','Alboraia','Albuixech','Alcacer','Alcasser','Alcantera de Xuquer','Alcudia de Crespins','Alcudia','Aldaia',
+'Alfafar','Alfara de la Baronia','Alfara del Patriarca','Alfarp','Alfarrasi','Algemesi','Algimia de Alfara','Alginet','Almassera','Almusafes',
+'Alpuente','Alzira','Anna','Antella','Aras de los Olmos','Atzeneta de Albaida','Ayora','Barxeta','Belen','Bellreguard',
+'Bellus','Benageber','Benaparrell','Beneixida','Benetusser','Beniarjo','Benicull de Xuquer','Benifaio','Benifla','Beniganim',
+'Benimodo','Benirredra','Benisano','Benissoda','Benisuera','Betera','Bicorp','Bocairent','Bolbaite','Bonrepos i Mirambell',
+'Bufali','Bugarra','Bunol','Burjassot','Canals','Carcaixent','Carcer','Carlet','Casinos','Castellonet de la Conquesta',
+'Castielfabib','Catadau','Catarroja','Caudete de las Fuentes','Cerdà','Chella','Chelva','Chera','Cheste','Chirivella',
+'Chiva','Cofrentes','Corbera','Cortes de Pallas','Cotes','Cullera','Daimus','Denia','Dos Aguas','El Palomar',
+'El Puig de Santa Maria','Emperador','Enguera','Estivella','Estubeny','Faura','Favara','Fontanars dels Alforins','Fortaleny','Foios',
+'Fuenterrobles','Gandia','Gata de Gorgos','Gavarrda','Genoves','Gestalgar','Gilet','Godella','Godelleta','Guadasequies',
+'Guadasuar','Guardamar de la Safor','Higueruelas','Jalance','Jarafuel','La Eliana','La Font de la Figuera','La Font den Carros','La Granja de la Costera','La Llosa de Ranes',
+'La Pobla de Farnals','La Pobla de Vallbona','La Pobla del Duc','La Pobla Llarga','La Yesa','Llanera de Ranes','Llaurí','Lliria','Lloc Nou de la Corona','Lloc Nou de Sant Jeroni',
+'Llombai','Llosa de Ranes','Llutxent','Loriguilla','Losa del Obispo','Macastre','Manises','Manuel','Marines','Massalavés',
+'Massalfassar','Massamagrell','Massanassa','Meliana','Millares','Miramar','Mislata','Mogente','Moncada','Montaverner',
+'Montesa','Montichelvo','Montroy','Montserrat','Moixent','Museros','Navarres','Novelda del Guadiana','Navarrés','Oliva',
+'Olocau','Ontinyent','Otos','Paiporta','Palma de Gandia','Palmera','Paterna','Pedralba','Petrés','Picanya',
+'Picassent','Piles','Pinet','Polinyà de Xuquer','Potries','Puçol','Puebla de San Miguel','Quart de les Valls','Quart de Poblet','Quartell',
+'Quatretonda','Rafelbunyol','Rafelcofer','Rafelguaraf','Real de Gandia','Real de Montroi','Requena','Ribarroja del Turia','Rocafort','Rotglà i Corberà',
+'Rugat','Sagunto','Salem','San Antonio de Benageber','San Juan de Enova','Sedavi','Segart','Sellent','Sempere','Senyera',
+'Serra','Siete Aguas','Silla','Simat de la Valldigna','Sinarcas','Sollana','Sot de Chera','Sueca','Sumacàrcer','Tavernes Blanques',
+'Tavernes de la Valldigna','Teresa de Cofrentes','Terrateig','Titaguas','Todolella','Torrebaja','Torrella','Torrent','Torres Torres','Tous',
+'Tuéjar','Turís','Utiel','Valencia','Vallada','Vallanca','Vallés','Venta del Moro','Vilamarxant','Villalonga',
+'Villar del Arzobispo','Villanueva de Castellon','Vinalesa','Xàtiva','Xeraco','Xeresa','Xirivella','Yátova','Zarra'
+];
+
+// Autocompletado de poblaciones
+function initPoblacionAC(inputId){
+  const inp = document.getElementById(inputId);
+  if(!inp || inp._acInit) return;
+  inp._acInit = true;
+  let dd = document.getElementById(inputId+'-dd');
+  if(!dd){
+    dd = document.createElement('div');
+    dd.id = inputId+'-dd';
+    dd.style.cssText = 'position:absolute;z-index:9999;background:#fff;border:1px solid var(--border);border-radius:6px;max-height:160px;overflow-y:auto;display:none;box-shadow:0 4px 12px rgba(0,0,0,.12);width:100%';
+    inp.parentElement.style.position = 'relative';
+    inp.parentElement.appendChild(dd);
+  }
+  inp.addEventListener('input', function(){
+    const q = this.value.toLowerCase().trim();
+    if(q.length < 2){ dd.style.display='none'; return; }
+    const matches = _POBLACIONES_VLC.filter(p => p.toLowerCase().includes(q)).slice(0,8);
+    if(!matches.length){ dd.style.display='none'; return; }
+    dd.innerHTML = matches.map(p => 
+      '<div style="padding:6px 10px;cursor:pointer;font-size:12px;border-bottom:1px solid #f0f0f0" '+
+      'onmousedown="event.preventDefault()" '+
+      'onclick="document.getElementById(\''+inputId+'\').value=\''+p.replace(/'/g,"\\'")+
+      '\';document.getElementById(\''+inputId+'-dd\').style.display=\'none\';'+
+      'autoProvincia(\''+inputId+'\')">'+p+'</div>'
+    ).join('');
+    dd.style.display = 'block';
+  });
+  inp.addEventListener('blur', function(){ setTimeout(()=>{ dd.style.display='none'; }, 250); });
+}
+
+function autoProvincia(inputId){
+  // Auto-fill provincia = Valencia when selecting from the list
+  const provField = inputId.replace('poblacion','provincia').replace('pob','prov');
+  const el = document.getElementById(provField);
+  if(el && !el.value) el.value = 'Valencia';
+}
+
 function findProvName(id){if(!id)return'';return ProvC.find(p=>String(p.id)===String(id))?.nombre || ScC.find(s=>String(s.proveedor_id)===String(id))?.proveedor_id || ProvC.find(p=>p.nombre===id)?.nombre || id;}
 function fmtN(n){if(!n&&n!==0)return'—';return fmtES(Number(n))+'€'}
 function fmtP(n){return n!=null?Number(n).toFixed(1)+'%':'—'}
@@ -6278,16 +6350,16 @@ async function loadClientes(){
   try{
     CC=await sbGet('clientes','?order=created_at.desc');
     document.getElementById('clientes-count').textContent=CC.length+' clientes';
-    if(!CC.length){tb.innerHTML=`<tr><td colspan="7"><div class="empty"><div class="empty-icon">🤝</div><div class="empty-text">Sin clientes</div><button class="btn btn-primary" onclick="openModal('m-cliente')">＋ Nuevo</button></div></td></tr>`;return;}
-    tb.innerHTML=CC.map(c=>`<tr data-search="${(c.nombre+c.cif+c.email+c.tipo).toLowerCase()}"><td class="td-mono" style="color:var(--text-soft)">${c.cliente_id||'—'}</td><td><strong>${c.nombre}</strong></td><td class="td-mono">${c.cif||'—'}</td><td>${c.telefono||'—'}</td><td style="color:var(--navy-mid)">${c.email||'—'}</td><td>${bE(c.tipo)}</td><td><div class="td-actions"><button class="btn btn-ghost btn-icon btn-sm" onclick="editCliente('${c.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('clientes','${c.id}','${c.nombre.replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`).join('');
+    if(!CC.length){tb.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="empty-icon">🤝</div><div class="empty-text">Sin clientes</div><button class="btn btn-primary" onclick="openModal('m-cliente')">＋ Nuevo</button></div></td></tr>`;return;}
+    tb.innerHTML=CC.map(c=>`<tr data-search="${(c.nombre+c.cif+c.email+c.tipo).toLowerCase()}"><td class="td-mono" style="color:var(--text-soft)">${c.cliente_id||'—'}</td><td><strong>${c.nombre}</strong></td><td class="td-mono">${c.cif||'—'}</td><td>${c.telefono||'—'}</td><td style="color:var(--navy-mid)">${c.email||'—'}</td><td style="font-size:11px">${c.poblacion||'—'}</td><td>${bE(c.tipo)}</td><td><div class="td-actions"><button class="btn btn-ghost btn-icon btn-sm" onclick="editCliente('${c.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('clientes','${c.id}','${c.nombre.replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`).join('');
     populateSelects();
   }catch(e){tb.innerHTML=`<tr><td colspan="7" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
 }
-function editCliente(id){const c=CC.find(x=>x.id===id);if(!c)return;document.getElementById('m-cliente-title').textContent='Editar cliente';['c-id','c-nombre','c-tel','c-email','c-dir','c-notas'].forEach((f,i)=>{document.getElementById(f).value=[c.id,c.nombre,c.telefono,c.email,c.direccion,c.notas][i]||'';});const cifRaw=c.cif||'';const cifM=cifRaw.match(/^(CIF|NIF|DNI):\s*(.+)$/);if(cifM){document.getElementById('c-cif-tipo').value=cifM[1];document.getElementById('c-cif').value=cifM[2].trim();}else{document.getElementById('c-cif-tipo').value='CIF';document.getElementById('c-cif').value=cifRaw;}document.getElementById('c-tipo').value=c.tipo||'Particular';document.getElementById('c-pago').value=c.forma_pago||'Transferencia';openModal('m-cliente');}
+function editCliente(id){const c=CC.find(x=>x.id===id);if(!c)return;document.getElementById('m-cliente-title').textContent='Editar cliente';['c-id','c-nombre','c-tel','c-email','c-dir','c-notas'].forEach((f,i)=>{document.getElementById(f).value=[c.id,c.nombre,c.telefono,c.email,c.direccion,c.notas][i]||'';});const cifRaw=c.cif||'';const cifM=cifRaw.match(/^(CIF|NIF|DNI):\s*(.+)$/);if(cifM){document.getElementById('c-cif-tipo').value=cifM[1];document.getElementById('c-cif').value=cifM[2].trim();}else{document.getElementById('c-cif-tipo').value='CIF';document.getElementById('c-cif').value=cifRaw;}document.getElementById('c-tipo').value=c.tipo||'Particular';document.getElementById('c-pago').value=c.forma_pago||'Transferencia';document.getElementById('c-cp').value=c.cp||'';document.getElementById('c-poblacion').value=c.poblacion||'';document.getElementById('c-provincia').value=c.provincia||'Valencia';initPoblacionAC('c-poblacion');openModal('m-cliente');}
 async function saveCliente(){
   const nombre=document.getElementById('c-nombre').value.trim();if(!nombre){toast('El nombre es obligatorio','error');return;}
   const id=document.getElementById('c-id').value;
-  const d={nombre,cif:(document.getElementById('c-cif-tipo').value && document.getElementById('c-cif').value.trim() ? document.getElementById('c-cif-tipo').value+': '+document.getElementById('c-cif').value.trim() : document.getElementById('c-cif').value.trim()),telefono:document.getElementById('c-tel').value,email:document.getElementById('c-email').value,direccion:document.getElementById('c-dir').value,tipo:document.getElementById('c-tipo').value,forma_pago:document.getElementById('c-pago').value,notas:document.getElementById('c-notas').value};
+  const d={nombre,cif:(document.getElementById('c-cif-tipo').value && document.getElementById('c-cif').value.trim() ? document.getElementById('c-cif-tipo').value+': '+document.getElementById('c-cif').value.trim() : document.getElementById('c-cif').value.trim()),telefono:document.getElementById('c-tel').value,email:document.getElementById('c-email').value,direccion:document.getElementById('c-dir').value,tipo:document.getElementById('c-tipo').value,forma_pago:document.getElementById('c-pago').value,notas:document.getElementById('c-notas').value,cp:document.getElementById('c-cp').value.trim()||null,poblacion:document.getElementById('c-poblacion').value.trim()||null,provincia:document.getElementById('c-provincia').value.trim()||null};
   try{if(id){await sbPatch('clientes',id,d);toast('Cliente actualizado ✅');}else{d.cliente_id=genId('CLI',CC,'cliente_id');await sbPost('clientes',d);toast('Cliente guardado ✅');}closeModal('m-cliente');document.getElementById('c-id').value='';loadClientes();}catch(e){toast('Error: '+e.message,'error');}
 }
 
@@ -9776,8 +9848,8 @@ function abrirNuevoProveedor(){
   openModal('m-proveedor');
 }
 
-function editProveedor(id){const p=ProvC.find(x=>x.id===id);if(!p)return;document.getElementById('m-proveedor').querySelector('.modal-title').textContent='✏️ Editar proveedor';document.getElementById('pv-id').value=p.id;document.getElementById('pv-nombre').value=p.nombre||'';document.getElementById('pv-cif').value=p.cif||'';document.getElementById('pv-tipo').value=p.tipo||'Proveedor';document.getElementById('pv-tel').value=p.telefono||'';document.getElementById('pv-email').value=p.email||'';document.getElementById('pv-esp').value=p.especialidad||'';document.getElementById('pv-pago').value=p.forma_pago||'Transferencia';document.getElementById('pv-iban').value=p.iban||'';document.getElementById('pv-notas').value=p.notas||'';openModal('m-proveedor');}
-async function saveProveedor(){const nombre=document.getElementById('pv-nombre').value.trim();if(!nombre){toast('El nombre es obligatorio','error');return;}const id=document.getElementById('pv-id').value;const d={nombre,cif:document.getElementById('pv-cif').value,tipo:document.getElementById('pv-tipo').value,telefono:document.getElementById('pv-tel').value,email:document.getElementById('pv-email').value,especialidad:document.getElementById('pv-esp').value,forma_pago:document.getElementById('pv-pago').value,iban:document.getElementById('pv-iban').value,notas:document.getElementById('pv-notas').value};try{if(id){await sbPatch('proveedores',id,d);toast('Proveedor actualizado ✅');}else{d.proveedor_id=genId('PRV',ProvC,'proveedor_id');await sbPost('proveedores',d);toast('Proveedor guardado ✅');}closeModal('m-proveedor');document.getElementById('pv-id').value='';loadProveedores();populateSelects();}catch(e){toast('Error: '+e.message,'error');}
+function editProveedor(id){const p=ProvC.find(x=>x.id===id);if(!p)return;document.getElementById('m-proveedor').querySelector('.modal-title').textContent='✏️ Editar proveedor';document.getElementById('pv-id').value=p.id;document.getElementById('pv-nombre').value=p.nombre||'';document.getElementById('pv-cif').value=p.cif||'';document.getElementById('pv-tipo').value=p.tipo||'Proveedor';document.getElementById('pv-tel').value=p.telefono||'';document.getElementById('pv-email').value=p.email||'';document.getElementById('pv-esp').value=p.especialidad||'';document.getElementById('pv-pago').value=p.forma_pago||'Transferencia';document.getElementById('pv-iban').value=p.iban||'';document.getElementById('pv-notas').value=p.notas||'';document.getElementById('pv-dir').value=p.direccion||'';document.getElementById('pv-cp').value=p.cp||'';document.getElementById('pv-poblacion').value=p.poblacion||'';document.getElementById('pv-provincia').value=p.provincia||'Valencia';initPoblacionAC('pv-poblacion');openModal('m-proveedor');}
+async function saveProveedor(){const nombre=document.getElementById('pv-nombre').value.trim();if(!nombre){toast('El nombre es obligatorio','error');return;}const id=document.getElementById('pv-id').value;const d={nombre,cif:document.getElementById('pv-cif').value,tipo:document.getElementById('pv-tipo').value,telefono:document.getElementById('pv-tel').value,email:document.getElementById('pv-email').value,especialidad:document.getElementById('pv-esp').value,forma_pago:document.getElementById('pv-pago').value,iban:document.getElementById('pv-iban').value,notas:document.getElementById('pv-notas').value,direccion:document.getElementById('pv-dir').value.trim()||null,cp:document.getElementById('pv-cp').value.trim()||null,poblacion:document.getElementById('pv-poblacion').value.trim()||null,provincia:document.getElementById('pv-provincia').value.trim()||null};try{if(id){await sbPatch('proveedores',id,d);toast('Proveedor actualizado ✅');}else{d.proveedor_id=genId('PRV',ProvC,'proveedor_id');await sbPost('proveedores',d);toast('Proveedor guardado ✅');}closeModal('m-proveedor');document.getElementById('pv-id').value='';loadProveedores();populateSelects();}catch(e){toast('Error: '+e.message,'error');}
 }
 
 // ═══════════════════════════════════════════
