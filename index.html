@@ -11837,7 +11837,7 @@ async function generarInformeMensual(){
 // CASCADA CLIENTE → PROYECTO EN MODAL FACTURA
 // ════════════════════════════════════════════════════════════════
 
-function cascadaClienteFactura(){
+async function cascadaClienteFactura(){
   const clienteId = document.getElementById('f-cliente')?.value;
   const proyEl    = document.getElementById('f-proyecto');
   if(!proyEl) return;
@@ -11845,14 +11845,28 @@ function cascadaClienteFactura(){
     proyEl.innerHTML='<option value="">— Selecciona cliente primero —</option>';
     return;
   }
-  const filtrados = PC.filter(p=>p.cliente_id===clienteId);
-  if(!filtrados.length){
+  // Projects where client is the main client
+  const directos = PC.filter(p=>p.cliente_id===clienteId);
+  // Projects where client is a unit owner
+  let indirectos = [];
+  try {
+    const unidades = await sbGet('proyecto_unidades','?cliente_id=eq.'+encodeURIComponent(clienteId)+'&select=proyecto_id');
+    const proyIds = [...new Set(unidades.map(u=>u.proyecto_id))].filter(pid => !directos.find(p=>p.proyecto_id===pid));
+    indirectos = proyIds.map(pid => PC.find(p=>p.proyecto_id===pid)).filter(Boolean);
+  } catch(e){}
+
+  const todos = [...directos, ...indirectos];
+  if(!todos.length){
     proyEl.innerHTML='<option value="">— Sin proyectos para este cliente —</option>';
   } else {
-    proyEl.innerHTML='<option value="">— Sin proyecto —</option>'
-      +filtrados.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
-    // Si solo hay uno, seleccionarlo automáticamente
-    if(filtrados.length===1) proyEl.value=filtrados[0].proyecto_id;
+    let html = '<option value="">— Sin proyecto —</option>';
+    if(directos.length) html += directos.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
+    if(indirectos.length){
+      html += '<option disabled>── Como propietario de unidad ──</option>';
+      html += indirectos.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
+    }
+    proyEl.innerHTML = html;
+    if(todos.length===1) proyEl.value=todos[0].proyecto_id;
   }
 }
 
