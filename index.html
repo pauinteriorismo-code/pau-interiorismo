@@ -20281,13 +20281,48 @@ async function renderExpUnidades(body){
   const total = _unidades.length;
   const aprobados = _unidades.filter(u=>u.estado==='Aprobado'||u.estado==='Entregado').length;
   const enCurso = _unidades.filter(u=>u.estado==='En curso'||u.estado==='En ejecución').length;
-  const importeTotal = _unidades.reduce((s,u)=>s+(u.importe_presupuesto||0),0);
+
+  // Calculate real KPIs from data
+  const kpis = {presBase:0, presUnidades:0, facturado:0, costes:0, margen:0};
+  try {
+    // All presupuesto lines for this project
+    const allPres = await sbGet('presupuesto_lineas','?proyecto_id=eq.'+encodeURIComponent(pid)+'&es_capitulo=eq.false&select=version,cantidad,precio_venta,ci_gg_bi_pct');
+    allPres.forEach(l => {
+      const pv = l.precio_venta||0, ci = l.ci_gg_bi_pct||0;
+      const sub = (l.cantidad||0) * pv * (ci>0?(1+ci/100):1);
+      const ver = l.version||'v1';
+      if(ver.match(/^v\d+$/)) kpis.presBase += sub;
+      else kpis.presUnidades += sub;
+    });
+    // Facturado (ventas)
+    const facturas = (FC||[]).filter(f=>f.proyecto_id===pid&&(f.tipo_factura||'Venta')==='Venta');
+    kpis.facturado = facturas.reduce((s,f)=>s+(f.base_imponible||0),0);
+    // Costes = compras + subcontratas
+    const compras = (CoC||[]).filter(c=>c.proyecto_id===pid);
+    const subcs = (ScC||[]).filter(s=>s.proyecto_id===pid);
+    kpis.costes = compras.reduce((s,c)=>s+(c.base_imponible||0),0) + subcs.reduce((s,c)=>s+(c.importe||0),0);
+    // Margen
+    kpis.margen = kpis.facturado - kpis.costes;
+  } catch(e){ console.log('KPIs error:',e); }
 
   let listHtml = '';
   if(_unidades.length > 0){
+    // Pre-calculate per-unit budgets from presupuesto data
+    const _unitBudgets = {};
+    try {
+      const allPres = await sbGet('presupuesto_lineas','?proyecto_id=eq.'+encodeURIComponent(pid)+'&es_capitulo=eq.false&select=version,cantidad,precio_venta,ci_gg_bi_pct');
+      allPres.forEach(l => {
+        const ver = l.version||'v1';
+        if(!_unitBudgets[ver]) _unitBudgets[ver] = 0;
+        const pv = l.precio_venta||0, ci = l.ci_gg_bi_pct||0;
+        _unitBudgets[ver] += (l.cantidad||0) * pv * (ci>0?(1+ci/100):1);
+      });
+    } catch(e){}
+
     listHtml = _unidades.map(u => {
       const hasDrive = u.carpeta_drive && u.carpeta_drive.startsWith('http');
       const hasVersion = u.presupuesto_version;
+      const unitBudget = _unitBudgets[u.ref_unidad] || 0;
       return `
       <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:#fff;border-radius:10px;border:1px solid var(--border);transition:box-shadow .2s" onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow=''">
         <div style="width:50px;height:50px;background:linear-gradient(135deg,#f7f4ef,#fff);border:2px solid #b87333;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;color:#b87333;flex-shrink:0">${u.ref_unidad||'?'}</div>
@@ -20299,7 +20334,7 @@ async function renderExpUnidades(body){
           <div style="font-size:11px;color:var(--text-soft)">
             ${u.cliente_telefono?'📱 '+u.cliente_telefono+' · ':''}${u.cliente_email||''}
           </div>
-          ${u.importe_presupuesto>0?'<div style="font-size:12px;font-weight:700;color:var(--green);margin-top:2px">'+fmtES(u.importe_presupuesto)+'€</div>':''}
+          ${unitBudget>0?'<div style="font-size:12px;font-weight:700;color:var(--green);margin-top:2px">'+fmtES(unitBudget)+'€</div>':''}
           ${u.notas?'<div style="font-size:10px;color:var(--text-soft);margin-top:2px">'+u.notas+'</div>':''}
         </div>
         <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
@@ -20316,24 +20351,43 @@ async function renderExpUnidades(body){
 
   body.innerHTML = `
     <div style="max-width:720px;margin:0 auto">
-      <!-- KPIs -->
+      <!-- KPIs económicos -->
       ${total > 0 ? `
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px">
         <div style="background:#f8fafd;border-radius:8px;padding:10px;text-align:center;border:1px solid var(--border)">
-          <div style="font-size:20px;font-weight:800;color:var(--navy)">${total}</div>
+          <div style="font-size:18px;font-weight:800;color:var(--navy)">${total}</div>
           <div style="font-size:10px;color:var(--text-soft)">Unidades</div>
+          <div style="font-size:9px;color:var(--text-soft)">${aprobados} aprobados · ${enCurso} en curso</div>
         </div>
         <div style="background:#f8fafd;border-radius:8px;padding:10px;text-align:center;border:1px solid var(--border)">
-          <div style="font-size:20px;font-weight:800;color:var(--green)">${aprobados}</div>
-          <div style="font-size:10px;color:var(--text-soft)">Aprobados</div>
+          <div style="font-size:16px;font-weight:800;color:var(--navy)">${kpis.presBase>0?fmtES(kpis.presBase)+'€':'—'}</div>
+          <div style="font-size:10px;color:var(--text-soft)">Ppto. principal (v1)</div>
+          <div style="font-size:9px;color:var(--text-soft)">Constructora</div>
         </div>
         <div style="background:#f8fafd;border-radius:8px;padding:10px;text-align:center;border:1px solid var(--border)">
-          <div style="font-size:20px;font-weight:800;color:#1565c0">${enCurso}</div>
-          <div style="font-size:10px;color:var(--text-soft)">En curso</div>
+          <div style="font-size:16px;font-weight:800;color:var(--copper)">${kpis.presUnidades>0?fmtES(kpis.presUnidades)+'€':'—'}</div>
+          <div style="font-size:10px;color:var(--text-soft)">Extras (unidades)</div>
+          <div style="font-size:9px;color:var(--text-soft)">${total} clientes</div>
         </div>
         <div style="background:#f8fafd;border-radius:8px;padding:10px;text-align:center;border:1px solid var(--border)">
-          <div style="font-size:20px;font-weight:800;color:var(--copper)">${importeTotal>0?fmtES(importeTotal)+'€':'—'}</div>
-          <div style="font-size:10px;color:var(--text-soft)">Importe total</div>
+          <div style="font-size:16px;font-weight:800;color:var(--green)">${(kpis.presBase+kpis.presUnidades)>0?fmtES(kpis.presBase+kpis.presUnidades)+'€':'—'}</div>
+          <div style="font-size:10px;color:var(--text-soft)">Total proyecto</div>
+          <div style="font-size:9px;color:var(--text-soft)">Base + extras</div>
+        </div>
+      </div>
+      <!-- KPIs facturación/costes -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px">
+        <div style="background:#fff;border-radius:8px;padding:8px;text-align:center;border:1px solid var(--border)">
+          <div style="font-size:14px;font-weight:700;color:var(--green)">${kpis.facturado>0?fmtES(kpis.facturado)+'€':'0,00€'}</div>
+          <div style="font-size:10px;color:var(--text-soft)">Facturado</div>
+        </div>
+        <div style="background:#fff;border-radius:8px;padding:8px;text-align:center;border:1px solid var(--border)">
+          <div style="font-size:14px;font-weight:700;color:var(--amber)">${kpis.costes>0?fmtES(kpis.costes)+'€':'0,00€'}</div>
+          <div style="font-size:10px;color:var(--text-soft)">Compras + Subcontratas</div>
+        </div>
+        <div style="background:#fff;border-radius:8px;padding:8px;text-align:center;border:1px solid var(--border)">
+          <div style="font-size:14px;font-weight:700;${kpis.margen>=0?'color:var(--green)':'color:var(--red)'}">${kpis.facturado>0?fmtES(kpis.margen)+'€ ('+((kpis.facturado>0?((kpis.margen/kpis.facturado)*100):0).toFixed(1))+'%)':'—'}</div>
+          <div style="font-size:10px;color:var(--text-soft)">Margen</div>
         </div>
       </div>` : ''}
 
@@ -20346,8 +20400,8 @@ async function renderExpUnidades(body){
         </div>
       </div>
 
-      <!-- Lista -->
-      <div style="display:flex;flex-direction:column;gap:8px">
+      <!-- Lista con scroll -->
+      <div style="display:flex;flex-direction:column;gap:8px;max-height:400px;overflow-y:auto;padding-right:4px">
         ${listHtml}
       </div>
     </div>
