@@ -3042,9 +3042,13 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
               <span style="font-size:11px;color:var(--text-soft)">Pendiente cobro</span>
               <span style="font-size:12px;font-weight:700;color:var(--amber)" id="fk-v-pendiente">—</span>
             </div>
-            <div style="display:flex;justify-content:space-between">
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px">
               <span style="font-size:11px;color:var(--text-soft)">Vencidas</span>
               <span style="font-size:12px;font-weight:700;color:var(--red)" id="fk-v-vencidas">—</span>
+            </div>
+            <div style="display:flex;justify-content:space-between">
+              <span style="font-size:11px;color:var(--text-soft)">IVA repercutido</span>
+              <span style="font-size:12px;font-weight:700;color:var(--copper)" id="fk-v-iva">—</span>
             </div>
           </div>
         </div>
@@ -10117,19 +10121,21 @@ async function loadFacturas(){
       if(cur)fProv.value=cur;
     }
     // KPIs
-    let vTotal=0,vCob=0,vPdte=0,vVenc=0;
+    let vTotal=0,vCob=0,vPdte=0,vVenc=0,vIva=0;
     let cTotal=0,cPag=0,cPdte=0,cIva=0;
     FC.forEach(f=>{
       const base=f.base_imponible||0;
-      const tot=base*(1+ivaPct(f.iva_pct)/100);
+      const iva=base*ivaPct(f.iva_pct)/100;
+      const tot=base+iva;
       const pag=f.importe_cobrado||0;
       const pdte=tot-pag;
       const tipo=f.tipo_factura||'Venta';
       if(tipo==='Compra'){
         cTotal+=tot; cPag+=pag; cPdte+=pdte;
-        cIva+=base*ivaPct(f.iva_pct)/100;
+        cIva+=iva;
       } else {
         vTotal+=tot; vCob+=pag; vPdte+=pdte;
+        vIva+=iva;
         if(f.estado==='Vencida') vVenc+=pdte;
       }
     });
@@ -10137,6 +10143,7 @@ async function loadFacturas(){
     const sv=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
     sv('fk-v-total',fmt(vTotal)); sv('fk-v-cobrado',fmt(vCob));
     sv('fk-v-pendiente',fmt(vPdte)); sv('fk-v-vencidas',fmt(vVenc));
+    sv('fk-v-iva',fmt(vIva));
     // Set compra KPIs
     sv('fk-c-total',fmt(cTotal)); sv('fk-c-pagado',fmt(cPag));
     sv('fk-c-pendiente',fmt(cPdte)); sv('fk-c-iva',fmt(cIva));
@@ -10260,25 +10267,28 @@ function filtrarFacturas(){
 
   // Recalcular KPIs con las facturas visibles
   const lista = hayFiltro ? FC.filter(f=>visibleIds.includes(String(f.id))) : FC;
-  let vTotal=0,vCob=0,vPdte=0,vVenc=0;
+  let vTotal=0,vCob=0,vPdte=0,vVenc=0,vIva=0;
   let cTotal=0,cPag=0,cPdte=0,cIva=0;
   lista.forEach(f=>{
     const base=f.base_imponible||0;
-    const tot=base*(1+ivaPct(f.iva_pct)/100);
+    const iva=base*ivaPct(f.iva_pct)/100;
+    const tot=base+iva;
     const pag=f.importe_cobrado||0;
     const pdte=tot-pag;
     const t=f.tipo_factura||'Venta';
     if(t==='Compra'){
       cTotal+=tot; cPag+=pag; cPdte+=pdte;
-      cIva+=base*ivaPct(f.iva_pct)/100;
+      cIva+=iva;
     } else {
       vTotal+=tot; vCob+=pag; vPdte+=pdte;
+      vIva+=iva;
       if(f.estado==='Vencida') vVenc+=pdte;
     }
   });
   const sv=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
   sv('fk-v-total',fmt(vTotal)); sv('fk-v-cobrado',fmt(vCob));
   sv('fk-v-pendiente',fmt(vPdte)); sv('fk-v-vencidas',fmt(vVenc));
+  sv('fk-v-iva',fmt(vIva));
   sv('fk-c-total',fmt(cTotal)); sv('fk-c-pagado',fmt(cPag));
   sv('fk-c-pendiente',fmt(cPdte)); sv('fk-c-iva',fmt(cIva));
   const beneficio=vTotal-cTotal;
