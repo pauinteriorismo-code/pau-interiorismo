@@ -20024,14 +20024,13 @@ function generarCertPDFContenido({ proy, p, cli, cfg, fecha, notas, base, iva, i
 // ══════════════════════════════════════════════════════════════════════
 // 📂 DOCUMENTACIÓN — Google Drive links por proyecto
 // ══════════════════════════════════════════════════════════════════════
-let _docEnlaces = []; // Cache local de enlaces del proyecto
+let _docEnlaces = [];
 
 async function renderExpDocs(body){
   const pid = _expProyId;
   const p = PC.find(x=>x.proyecto_id===pid);
   if(!p){ body.innerHTML='<p>No encontrado</p>'; return; }
 
-  // Cargar enlaces de este proyecto usando la API REST
   try {
     _docEnlaces = await sbGet('proyecto_enlaces','&proyecto_id=eq.'+encodeURIComponent(pid)+'&order=orden');
   } catch(e){ _docEnlaces = []; }
@@ -20039,147 +20038,137 @@ async function renderExpDocs(body){
   const driveUrl = p.carpeta_drive || '';
   const hasDrive = driveUrl.startsWith('http');
 
-  // Subcarpetas predefinidas sugeridas
-  const sugeridas = [
-    {emoji:'📐', label:'Mediciones', suffix:'01_Mediciones'},
-    {emoji:'📋', label:'Planos Arquitecta', suffix:'02_Planos_Arquitecta'},
-    {emoji:'🏗️', label:'SketchUp / 3D', suffix:'03_SketchUp_3D'},
-    {emoji:'💰', label:'Presupuestos', suffix:'04_Presupuestos'},
-    {emoji:'📄', label:'Contratos', suffix:'05_Contratos'},
-    {emoji:'👷', label:'Subcontratas', suffix:'06_Subcontratas'},
-    {emoji:'📷', label:'Fotos de Obra', suffix:'07_Fotos_Obra'},
-    {emoji:'🧾', label:'Facturas', suffix:'08_Facturas'}
-  ];
+  let linksHtml = '';
+  if(_docEnlaces.length > 0){
+    linksHtml = _docEnlaces.map(e => `
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#f8fafd;border-radius:8px;border:1px solid var(--border)">
+        <span style="font-size:18px">${e.emoji||'📁'}</span>
+        <a href="${e.url||'#'}" target="_blank" rel="noopener" style="flex:1;font-weight:600;font-size:12px;color:var(--navy);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.label||'Enlace'}</a>
+        <button class="btn btn-ghost btn-icon btn-sm" onclick="docEditEnlace('${e.id}')" style="font-size:10px;padding:2px" title="Editar">✏️</button>
+        <button class="btn btn-ghost btn-icon btn-sm" onclick="docBorrarEnlace('${e.id}')" style="font-size:10px;padding:2px" title="Eliminar">🗑</button>
+      </div>`).join('');
+  } else {
+    linksHtml = '<div style="text-align:center;padding:16px;color:var(--text-soft);font-size:12px">Sin enlaces adicionales</div>';
+  }
 
   body.innerHTML = `
-    <div style="max-width:700px;margin:0 auto">
-      <!-- ENLACE PRINCIPAL -->
+    <div style="max-width:680px;margin:0 auto">
+
+      <!-- ENLACE PRINCIPAL GOOGLE DRIVE -->
       <div style="background:linear-gradient(135deg,#f7f4ef 0%,#fff 100%);border:2px solid #b87333;border-radius:12px;padding:20px;margin-bottom:20px">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
           <span style="font-size:28px">📂</span>
           <div>
-            <div style="font-weight:700;font-size:14px;color:#4a3728">Carpeta principal del proyecto</div>
-            <div style="font-size:11px;color:var(--text-soft)">Google Drive — ${p.proyecto_id} ${p.nombre||''}</div>
+            <div style="font-weight:700;font-size:14px;color:#4a3728">Carpeta del proyecto en Google Drive</div>
+            <div style="font-size:11px;color:var(--text-soft)">${p.proyecto_id} · ${p.nombre||''}</div>
           </div>
         </div>
         ${hasDrive
-          ? `<a href="${driveUrl}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;background:#4285f4;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;font-size:13px;margin-bottom:8px">
-              <svg width="20" height="20" viewBox="0 0 87.3 78" fill="#fff"><path d="M6.6 66.85L29.7 78l14.3-24.65L20.7 30.5z"/><path d="M43.65 0L20.4 0 .1 35.15 23.35 35.15z" opacity=".5"/><path d="M87.3 35.15L64 0 40.7 0 64 35.15z"/><path d="M29.65 78L53 78 76.35 35.15 53 35.15z" opacity=".7"/><path d="M43.65 53.35L20.7 30.5 6.6 66.85l37.05 0z" opacity=".5"/><path d="M64 35.15L87.3 35.15 73.15 66.85 49.85 66.85z" opacity=".7"/></svg>
-              Abrir en Google Drive
-            </a>
-            <div style="font-size:10px;color:var(--text-soft);margin-top:4px;word-break:break-all">${driveUrl}</div>`
-          : `<div style="color:var(--text-soft);font-size:12px;margin-bottom:8px">No hay carpeta configurada aún. Edita el proyecto para añadir el enlace.</div>
-            <button class="btn btn-ghost btn-sm" onclick="closeModal('m-expediente');editProyecto('${p.id}')" style="font-size:11px">✏️ Editar proyecto</button>`
+          ? '<a href="'+driveUrl+'" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;background:#4285f4;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;font-size:13px"><svg width="18" height="18" viewBox="0 0 87.3 78" fill="#fff"><path d="M6.6 66.85L29.7 78l14.3-24.65L20.7 30.5z"/><path d="M43.65 0L20.4 0 .1 35.15 23.35 35.15z" opacity=".5"/><path d="M87.3 35.15L64 0 40.7 0 64 35.15z"/><path d="M29.65 78L53 78 76.35 35.15 53 35.15z" opacity=".7"/><path d="M43.65 53.35L20.7 30.5 6.6 66.85l37.05 0z" opacity=".5"/><path d="M64 35.15L87.3 35.15 73.15 66.85 49.85 66.85z" opacity=".7"/></svg> Abrir en Google Drive</a><div style="font-size:10px;color:var(--text-soft);margin-top:6px;word-break:break-all">'+driveUrl+'</div>'
+          : '<div style="color:var(--text-soft);font-size:12px;margin-bottom:8px">No hay carpeta configurada. Edita el proyecto para añadir el enlace de Google Drive.</div><button class="btn btn-ghost btn-sm" onclick="closeModal(\'m-expediente\');editProyecto(\''+p.id+'\')">✏️ Editar proyecto</button>'
         }
       </div>
 
-      <!-- ENLACES RÁPIDOS A SUBCARPETAS -->
+      <!-- ENLACES ADICIONALES (opcional) -->
       <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-          <div style="font-weight:700;font-size:13px;color:#4a3728">⚡ Accesos directos</div>
-          <button class="btn btn-ghost btn-sm" onclick="addEnlaceProyecto()" style="font-size:11px;color:var(--navy)">＋ Añadir enlace</button>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-weight:700;font-size:13px;color:#4a3728">🔗 Enlaces adicionales</div>
+          <button class="btn btn-ghost btn-sm" onclick="docMostrarForm()" style="font-size:11px;color:var(--navy)">＋ Añadir</button>
         </div>
-        <div id="docs-enlaces-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
-          ${_docEnlaces.length > 0 
-            ? _docEnlaces.map(e => `
-              <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:#f8fafd;border-radius:8px;border:1px solid var(--border)">
-                <span style="font-size:18px">${e.emoji||'📁'}</span>
-                <div style="flex:1;min-width:0">
-                  <a href="${e.url}" target="_blank" rel="noopener" style="font-weight:600;font-size:12px;color:var(--navy);text-decoration:none;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.label}</a>
-                </div>
-                <button class="btn btn-ghost btn-icon btn-sm" onclick="editEnlaceProyecto('${e.id}')" style="font-size:10px;padding:2px">✏️</button>
-                <button class="btn btn-ghost btn-icon btn-sm" onclick="deleteEnlaceProyecto('${e.id}','${(e.label||'').replace(/'/g,'')}')" style="font-size:10px;padding:2px">🗑</button>
-              </div>`).join('')
-            : `<div style="grid-column:1/3;text-align:center;padding:20px;color:var(--text-soft);font-size:12px">
-                No hay enlaces configurados.<br>
-                <span style="font-size:11px">Pulsa "＋ Añadir enlace" o usa las sugerencias de abajo.</span>
-              </div>`
-          }
+
+        <!-- Formulario inline (oculto por defecto) -->
+        <div id="doc-form-box" style="display:none;background:#f8fafd;border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px">
+          <input type="hidden" id="doc-edit-id">
+          <div style="display:grid;grid-template-columns:50px 1fr;gap:8px;margin-bottom:8px">
+            <div>
+              <label style="font-size:10px;color:var(--text-soft)">Icono</label>
+              <input class="form-input" id="doc-emoji" value="📁" style="text-align:center;font-size:16px;padding:4px">
+            </div>
+            <div>
+              <label style="font-size:10px;color:var(--text-soft)">Nombre</label>
+              <input class="form-input" id="doc-label" placeholder="Ej: Mediciones, Planos, Fotos obra...">
+            </div>
+          </div>
+          <div style="margin-bottom:8px">
+            <label style="font-size:10px;color:var(--text-soft)">URL (Google Drive, Dropbox, web...)</label>
+            <input class="form-input" id="doc-url" placeholder="https://drive.google.com/drive/folders/...">
+          </div>
+          <div style="display:flex;gap:6px;justify-content:flex-end">
+            <button class="btn btn-ghost btn-sm" onclick="docOcultarForm()" style="font-size:11px">Cancelar</button>
+            <button class="btn btn-primary btn-sm" onclick="docGuardarEnlace()" style="font-size:11px">💾 Guardar</button>
+          </div>
+        </div>
+
+        <div id="doc-links-list" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
+          ${linksHtml}
         </div>
       </div>
 
-      <!-- SUGERENCIAS DE SUBCARPETAS -->
-      ${_docEnlaces.length < 4 ? `
-      <div style="background:#f8f8f6;border:1px dashed #ccc;border-radius:10px;padding:14px;margin-bottom:16px">
-        <div style="font-size:11px;color:var(--text-soft);margin-bottom:10px;font-weight:600">💡 Sugerencias — Pulsa para añadir</div>
-        <div style="display:flex;flex-wrap:wrap;gap:6px">
-          ${sugeridas.filter(s => !_docEnlaces.find(e => e.label===s.label)).map(s => `
-            <button class="btn btn-ghost btn-sm" onclick="addEnlaceSugerido('${s.emoji}','${s.label}')" 
-              style="font-size:11px;border:1px solid #ddd;border-radius:6px;padding:4px 10px">
-              ${s.emoji} ${s.label}
-            </button>`).join('')}
-        </div>
-      </div>` : ''}
-
-      <!-- INFO -->
-      <div style="font-size:10px;color:var(--text-soft);text-align:center;padding:8px">
-        💡 Organiza tus carpetas en Google Drive con la estructura: <strong>${p.proyecto_id} ${p.nombre||''}</strong> → subcarpetas por tipo
+      <div style="font-size:10px;color:var(--text-soft);text-align:center;padding:6px">
+        💡 Usa "＋ Añadir" para guardar accesos directos a subcarpetas, webs de proveedores u otros recursos del proyecto.
       </div>
     </div>
   `;
 }
 
-// Añadir enlace manualmente
-async function addEnlaceProyecto(){
-  const label = prompt('Nombre del enlace (ej: Mediciones, Planos, Fotos...)');
-  if(!label) return;
-  const url = prompt('URL del enlace (Google Drive, etc.)');
-  if(!url) return;
-  const emoji = prompt('Emoji (opcional, ej: 📐 📷 📋)', '📁') || '📁';
+function docMostrarForm(id){
+  document.getElementById('doc-form-box').style.display='block';
+  document.getElementById('doc-edit-id').value = id || '';
+  if(id){
+    const e = _docEnlaces.find(x=>x.id===id);
+    if(e){
+      document.getElementById('doc-emoji').value = e.emoji || '📁';
+      document.getElementById('doc-label').value = e.label || '';
+      document.getElementById('doc-url').value = e.url || '';
+    }
+  } else {
+    document.getElementById('doc-emoji').value = '📁';
+    document.getElementById('doc-label').value = '';
+    document.getElementById('doc-url').value = '';
+  }
+  document.getElementById('doc-label').focus();
+}
+
+function docOcultarForm(){
+  document.getElementById('doc-form-box').style.display='none';
+}
+
+async function docGuardarEnlace(){
+  const id = document.getElementById('doc-edit-id').value;
+  const emoji = document.getElementById('doc-emoji').value.trim() || '📁';
+  const label = document.getElementById('doc-label').value.trim();
+  const url = document.getElementById('doc-url').value.trim();
+  if(!label){ toast('Escribe un nombre','error'); return; }
+  if(!url){ toast('Pega la URL','error'); return; }
+
   try {
-    await sbPost('proyecto_enlaces',{
-      proyecto_id: _expProyId,
-      label: label.trim(),
-      url: url.trim(),
-      emoji: emoji.trim(),
-      orden: (_docEnlaces.length + 1) * 10
-    });
-    toast('Enlace añadido ✅');
+    if(id){
+      await sbPatch('proyecto_enlaces', id, {label, url, emoji});
+      toast('Enlace actualizado ✅');
+    } else {
+      await sbPost('proyecto_enlaces', {
+        proyecto_id: _expProyId,
+        label, url, emoji,
+        orden: (_docEnlaces.length + 1) * 10
+      });
+      toast('Enlace guardado ✅');
+    }
     renderExpDocs(document.getElementById('exp-body'));
   } catch(e){ toast('Error: '+e.message,'error'); }
 }
 
-// Añadir enlace sugerido (pide solo la URL)
-async function addEnlaceSugerido(emoji, label){
-  const url = prompt('Pega la URL de la carpeta "'+label+'" en Google Drive:');
-  if(!url) return;
-  try {
-    await sbPost('proyecto_enlaces',{
-      proyecto_id: _expProyId,
-      label,
-      url: url.trim(),
-      emoji,
-      orden: (_docEnlaces.length + 1) * 10
-    });
-    toast(emoji+' '+label+' añadido ✅');
-    renderExpDocs(document.getElementById('exp-body'));
-  } catch(e){ toast('Error: '+e.message,'error'); }
+function docEditEnlace(id){
+  docMostrarForm(id);
 }
 
-// Editar enlace
-async function editEnlaceProyecto(id){
+async function docBorrarEnlace(id){
   const e = _docEnlaces.find(x=>x.id===id);
-  if(!e) return;
-  const label = prompt('Nombre:', e.label);
-  if(label===null) return;
-  const url = prompt('URL:', e.url);
-  if(url===null) return;
-  const emoji = prompt('Emoji:', e.emoji||'📁') || '📁';
+  if(!confirm('¿Eliminar enlace "'+(e?.label||'')+'"?')) return;
   try {
-    await sbPatch('proyecto_enlaces', id, {label:label.trim(), url:url.trim(), emoji:emoji.trim()});
-    toast('Enlace actualizado ✅');
-    renderExpDocs(document.getElementById('exp-body'));
-  } catch(e2){ toast('Error: '+e2.message,'error'); }
-}
-
-// Eliminar enlace
-async function deleteEnlaceProyecto(id, label){
-  if(!confirm('¿Eliminar enlace "'+label+'"?')) return;
-  try {
-    await sbDelete('proyecto_enlaces',id);
+    await sbDelete('proyecto_enlaces', id);
     toast('Enlace eliminado');
     renderExpDocs(document.getElementById('exp-body'));
-  } catch(e){ toast('Error: '+e.message,'error'); }
+  } catch(e2){ toast('Error: '+e2.message,'error'); }
 }
 
 async function renderExpFotos(body) {
