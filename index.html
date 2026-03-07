@@ -3477,6 +3477,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="form-group"><label class="form-label">Responsable</label><select class="form-input" id="p-resp"><option value="">Seleccionar…</option><option value="Francisco Gascón Gil">Francisco Gascón Gil</option><option value="Jose Asins Primo">Jose Asins Primo</option><option value="Julio Alemany Fort">Julio Alemany Fort</option><option value="María Paz Primo Iborra">María Paz Primo Iborra</option><option value="Raúl Gascón Gil">Raúl Gascón Gil</option><option value="Salvador Aguado Simó">Salvador Aguado Simó</option></select></div>
       <div class="form-group"><label class="form-label">Fecha inicio</label><input class="form-input" id="p-fecha" type="date"></div>
       <div class="form-group fg-full"><label class="form-label">Dirección de obra</label><input class="form-input" id="p-dir"></div>
+      <div class="form-group fg-full"><label class="form-label">📂 Carpeta Google Drive</label><input class="form-input" id="p-drive" placeholder="https://drive.google.com/drive/folders/..."></div>
       <div class="form-group fg-full"><label class="form-label">Notas</label><textarea class="form-input" id="p-notas" rows="2"></textarea></div>
     </div>
   </div>
@@ -4007,6 +4008,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <button class="exp-tab" onclick="expTab('subcontratas')" data-tab="subcontratas" style="padding:10px 16px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-mid);border-bottom:2px solid transparent">👷 Subcontratas</button>
       <button class="exp-tab" onclick="expTab('horas')" data-tab="horas" style="padding:10px 16px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-mid);border-bottom:2px solid transparent">⏱ Horas</button>
       <button class="exp-tab" onclick="expTab('notas')" data-tab="notas" style="padding:10px 16px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-mid);border-bottom:2px solid transparent">📝 Notas</button><button class="exp-tab" onclick="expTab('fotos')" data-tab="fotos" style="padding:10px 16px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-mid);border-bottom:2px solid transparent">📷 Fotos</button>
+      <button class="exp-tab" onclick="expTab('docs')" data-tab="docs" style="padding:10px 16px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-mid);border-bottom:2px solid transparent">📂 Docs</button>
     </div>
 
     <!-- Tab content -->
@@ -6285,11 +6287,11 @@ async function loadProyectos(){
     filtrarProyectosPorCliente();
   }catch(e){tb.innerHTML=`<tr><td colspan="8" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
 }
-function editProyecto(id){const p=PC.find(x=>x.id===id);if(!p)return;document.getElementById('m-proyecto-title').textContent='Editar proyecto';document.getElementById('p-id').value=p.id;document.getElementById('p-nombre').value=p.nombre||'';document.getElementById('p-cliente').value=p.cliente_id||'';document.getElementById('p-tipo').value=p.tipo||'Obra nueva';document.getElementById('p-estado').value=p.estado||'Nuevo lead';document.getElementById('p-resp').value=p.responsable||'Jose Asins';document.getElementById('p-fecha').value=p.fecha_inicio||'';document.getElementById('p-dir').value=p.direccion_obra||'';document.getElementById('p-notas').value=p.notas||'';openModal('m-proyecto');}
+function editProyecto(id){const p=PC.find(x=>x.id===id);if(!p)return;document.getElementById('m-proyecto-title').textContent='Editar proyecto';document.getElementById('p-id').value=p.id;document.getElementById('p-nombre').value=p.nombre||'';document.getElementById('p-cliente').value=p.cliente_id||'';document.getElementById('p-tipo').value=p.tipo||'Obra nueva';document.getElementById('p-estado').value=p.estado||'Nuevo lead';document.getElementById('p-resp').value=p.responsable||'Jose Asins';document.getElementById('p-fecha').value=p.fecha_inicio||'';document.getElementById('p-dir').value=p.direccion_obra||'';document.getElementById('p-notas').value=p.notas||'';document.getElementById('p-drive').value=p.carpeta_drive||'';openModal('m-proyecto');}
 async function saveProyecto(){
   const nombre=document.getElementById('p-nombre').value.trim();if(!nombre){toast('El nombre es obligatorio','error');return;}
   const id=document.getElementById('p-id').value;
-  const d={cliente_id:document.getElementById('p-cliente').value||null,nombre,tipo:document.getElementById('p-tipo').value,estado:document.getElementById('p-estado').value,responsable:document.getElementById('p-resp').value,fecha_inicio:document.getElementById('p-fecha').value||null,direccion_obra:document.getElementById('p-dir').value,notas:document.getElementById('p-notas').value};
+  const d={cliente_id:document.getElementById('p-cliente').value||null,nombre,tipo:document.getElementById('p-tipo').value,estado:document.getElementById('p-estado').value,responsable:document.getElementById('p-resp').value,fecha_inicio:document.getElementById('p-fecha').value||null,direccion_obra:document.getElementById('p-dir').value,notas:document.getElementById('p-notas').value,carpeta_drive:document.getElementById('p-drive').value||null};
   try{if(id){await sbPatch('proyectos',id,d);toast('Proyecto actualizado ✅');}else{d.proyecto_id=genId('PRY',PC,'proyecto_id');await sbPost('proyectos',d);toast('Proyecto creado ✅');}closeModal('m-proyecto');document.getElementById('p-id').value='';loadProyectos();populateSelects();}catch(e){toast('Error: '+e.message,'error');}
 }
 
@@ -18544,6 +18546,8 @@ function expTab(tab){
     case 'subcontratas': renderExpSubcontratas(body); break;
     case 'horas':        renderExpHoras(body); break;
     case 'notas':        renderExpNotas(body); break;
+    case 'fotos':       renderExpFotos(body); break;
+    case 'docs':        renderExpDocs(body); break;
   }
 }
 
@@ -20016,6 +20020,169 @@ function generarCertPDFContenido({ proy, p, cli, cfg, fecha, notas, base, iva, i
 // ═══════════════════════════════════════════════════
 //  MÓDULO 2: GALERÍA DE FOTOS EN EXPEDIENTE
 // ═══════════════════════════════════════════════════
+
+// ══════════════════════════════════════════════════════════════════════
+// 📂 DOCUMENTACIÓN — Google Drive links por proyecto
+// ══════════════════════════════════════════════════════════════════════
+let _docEnlaces = []; // Cache local de enlaces del proyecto
+
+async function renderExpDocs(body){
+  const pid = _expProyId;
+  const p = PC.find(x=>x.proyecto_id===pid);
+  if(!p){ body.innerHTML='<p>No encontrado</p>'; return; }
+
+  // Cargar enlaces de este proyecto
+  try {
+    const {data} = await SB.from('proyecto_enlaces').select('*').eq('proyecto_id',pid).order('orden');
+    _docEnlaces = data || [];
+  } catch(e){ _docEnlaces = []; }
+
+  const driveUrl = p.carpeta_drive || '';
+  const hasDrive = driveUrl.startsWith('http');
+
+  // Subcarpetas predefinidas sugeridas
+  const sugeridas = [
+    {emoji:'📐', label:'Mediciones', suffix:'01_Mediciones'},
+    {emoji:'📋', label:'Planos Arquitecta', suffix:'02_Planos_Arquitecta'},
+    {emoji:'🏗️', label:'SketchUp / 3D', suffix:'03_SketchUp_3D'},
+    {emoji:'💰', label:'Presupuestos', suffix:'04_Presupuestos'},
+    {emoji:'📄', label:'Contratos', suffix:'05_Contratos'},
+    {emoji:'👷', label:'Subcontratas', suffix:'06_Subcontratas'},
+    {emoji:'📷', label:'Fotos de Obra', suffix:'07_Fotos_Obra'},
+    {emoji:'🧾', label:'Facturas', suffix:'08_Facturas'}
+  ];
+
+  body.innerHTML = `
+    <div style="max-width:700px;margin:0 auto">
+      <!-- ENLACE PRINCIPAL -->
+      <div style="background:linear-gradient(135deg,#f7f4ef 0%,#fff 100%);border:2px solid #b87333;border-radius:12px;padding:20px;margin-bottom:20px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+          <span style="font-size:28px">📂</span>
+          <div>
+            <div style="font-weight:700;font-size:14px;color:#4a3728">Carpeta principal del proyecto</div>
+            <div style="font-size:11px;color:var(--text-soft)">Google Drive — ${p.proyecto_id} ${p.nombre||''}</div>
+          </div>
+        </div>
+        ${hasDrive
+          ? `<a href="${driveUrl}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;background:#4285f4;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;font-size:13px;margin-bottom:8px">
+              <svg width="20" height="20" viewBox="0 0 87.3 78" fill="#fff"><path d="M6.6 66.85L29.7 78l14.3-24.65L20.7 30.5z"/><path d="M43.65 0L20.4 0 .1 35.15 23.35 35.15z" opacity=".5"/><path d="M87.3 35.15L64 0 40.7 0 64 35.15z"/><path d="M29.65 78L53 78 76.35 35.15 53 35.15z" opacity=".7"/><path d="M43.65 53.35L20.7 30.5 6.6 66.85l37.05 0z" opacity=".5"/><path d="M64 35.15L87.3 35.15 73.15 66.85 49.85 66.85z" opacity=".7"/></svg>
+              Abrir en Google Drive
+            </a>
+            <div style="font-size:10px;color:var(--text-soft);margin-top:4px;word-break:break-all">${driveUrl}</div>`
+          : `<div style="color:var(--text-soft);font-size:12px;margin-bottom:8px">No hay carpeta configurada aún. Edita el proyecto para añadir el enlace.</div>
+            <button class="btn btn-ghost btn-sm" onclick="closeModal('m-expediente');editProyecto('${p.id}')" style="font-size:11px">✏️ Editar proyecto</button>`
+        }
+      </div>
+
+      <!-- ENLACES RÁPIDOS A SUBCARPETAS -->
+      <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div style="font-weight:700;font-size:13px;color:#4a3728">⚡ Accesos directos</div>
+          <button class="btn btn-ghost btn-sm" onclick="addEnlaceProyecto()" style="font-size:11px;color:var(--navy)">＋ Añadir enlace</button>
+        </div>
+        <div id="docs-enlaces-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
+          ${_docEnlaces.length > 0 
+            ? _docEnlaces.map(e => `
+              <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:#f8fafd;border-radius:8px;border:1px solid var(--border)">
+                <span style="font-size:18px">${e.emoji||'📁'}</span>
+                <div style="flex:1;min-width:0">
+                  <a href="${e.url}" target="_blank" rel="noopener" style="font-weight:600;font-size:12px;color:var(--navy);text-decoration:none;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.label}</a>
+                </div>
+                <button class="btn btn-ghost btn-icon btn-sm" onclick="editEnlaceProyecto('${e.id}')" style="font-size:10px;padding:2px">✏️</button>
+                <button class="btn btn-ghost btn-icon btn-sm" onclick="deleteEnlaceProyecto('${e.id}','${(e.label||'').replace(/'/g,'')}')" style="font-size:10px;padding:2px">🗑</button>
+              </div>`).join('')
+            : `<div style="grid-column:1/3;text-align:center;padding:20px;color:var(--text-soft);font-size:12px">
+                No hay enlaces configurados.<br>
+                <span style="font-size:11px">Pulsa "＋ Añadir enlace" o usa las sugerencias de abajo.</span>
+              </div>`
+          }
+        </div>
+      </div>
+
+      <!-- SUGERENCIAS DE SUBCARPETAS -->
+      ${_docEnlaces.length < 4 ? `
+      <div style="background:#f8f8f6;border:1px dashed #ccc;border-radius:10px;padding:14px;margin-bottom:16px">
+        <div style="font-size:11px;color:var(--text-soft);margin-bottom:10px;font-weight:600">💡 Sugerencias — Pulsa para añadir</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          ${sugeridas.filter(s => !_docEnlaces.find(e => e.label===s.label)).map(s => `
+            <button class="btn btn-ghost btn-sm" onclick="addEnlaceSugerido('${s.emoji}','${s.label}')" 
+              style="font-size:11px;border:1px solid #ddd;border-radius:6px;padding:4px 10px">
+              ${s.emoji} ${s.label}
+            </button>`).join('')}
+        </div>
+      </div>` : ''}
+
+      <!-- INFO -->
+      <div style="font-size:10px;color:var(--text-soft);text-align:center;padding:8px">
+        💡 Organiza tus carpetas en Google Drive con la estructura: <strong>${p.proyecto_id} ${p.nombre||''}</strong> → subcarpetas por tipo
+      </div>
+    </div>
+  `;
+}
+
+// Añadir enlace manualmente
+async function addEnlaceProyecto(){
+  const label = prompt('Nombre del enlace (ej: Mediciones, Planos, Fotos...)');
+  if(!label) return;
+  const url = prompt('URL del enlace (Google Drive, etc.)');
+  if(!url) return;
+  const emoji = prompt('Emoji (opcional, ej: 📐 📷 📋)', '📁') || '📁';
+  try {
+    await SB.from('proyecto_enlaces').insert({
+      proyecto_id: _expProyId,
+      label: label.trim(),
+      url: url.trim(),
+      emoji: emoji.trim(),
+      orden: (_docEnlaces.length + 1) * 10
+    });
+    toast('Enlace añadido ✅');
+    renderExpDocs(document.getElementById('exp-body'));
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+// Añadir enlace sugerido (pide solo la URL)
+async function addEnlaceSugerido(emoji, label){
+  const url = prompt('Pega la URL de la carpeta "'+label+'" en Google Drive:');
+  if(!url) return;
+  try {
+    await SB.from('proyecto_enlaces').insert({
+      proyecto_id: _expProyId,
+      label,
+      url: url.trim(),
+      emoji,
+      orden: (_docEnlaces.length + 1) * 10
+    });
+    toast(emoji+' '+label+' añadido ✅');
+    renderExpDocs(document.getElementById('exp-body'));
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+// Editar enlace
+async function editEnlaceProyecto(id){
+  const e = _docEnlaces.find(x=>x.id===id);
+  if(!e) return;
+  const label = prompt('Nombre:', e.label);
+  if(label===null) return;
+  const url = prompt('URL:', e.url);
+  if(url===null) return;
+  const emoji = prompt('Emoji:', e.emoji||'📁') || '📁';
+  try {
+    await sbPatch('proyecto_enlaces', id, {label:label.trim(), url:url.trim(), emoji:emoji.trim()});
+    toast('Enlace actualizado ✅');
+    renderExpDocs(document.getElementById('exp-body'));
+  } catch(e2){ toast('Error: '+e2.message,'error'); }
+}
+
+// Eliminar enlace
+async function deleteEnlaceProyecto(id, label){
+  if(!confirm('¿Eliminar enlace "'+label+'"?')) return;
+  try {
+    await SB.from('proyecto_enlaces').delete().eq('id',id);
+    toast('Enlace eliminado');
+    renderExpDocs(document.getElementById('exp-body'));
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+
 async function renderExpFotos(body) {
   const pid = _expProyId;
   body.innerHTML = `
