@@ -4455,13 +4455,13 @@ async function loadPresupuestoFinal(){
       }
       const bg=i%2===0?'white':'#f9f9f9';
       const ivaLabel=(tipoIva==='Exento'||tipoIva===0||tipoIva==='0')?'<span style="font-size:9px;background:#f0f8f0;color:#2d7a52;border-radius:3px;padding:1px 4px;font-weight:600">Exento</span>':'<span style="font-size:9px;color:#666">'+tipoIva+'</span>';
-      const pvCell=_dto>0?`<span style="text-decoration:line-through;color:#aaa;font-size:10px">${_pvSinDto.toFixed(2)}€</span><br><span style="color:#c62828;font-weight:700">${pvConCI.toFixed(2)}€</span>`:pvConCI.toFixed(2)+'€';
+      const pvCell=_dto>0?`<span style="text-decoration:line-through;color:#aaa;font-size:10px">${fmtES(_pvSinDto)}€</span><br><span style="color:#c62828;font-weight:700">${fmtES(pvConCI)}€</span>`:fmtES(pvConCI)+'€';
       const dtoCell=_dto>0?`<span style="color:#c62828;font-weight:700">-${_dto.toFixed(1)}%</span>`:'—';
-      return`<tr style="background:${bg};border-bottom:1px solid #eee"><td style="padding:7px 8px">${l.descripcion}</td><td style="padding:7px 8px;text-align:center">${l.unidad||''}</td><td style="padding:7px 8px;text-align:right">${l.cantidad||0}</td><td style="padding:7px 8px;text-align:right;line-height:1.4">${pvCell}</td><td style="padding:7px 8px;text-align:center">${dtoCell}</td><td style="padding:7px 8px;text-align:center">${ivaLabel}</td><td style="padding:7px 8px;text-align:right;font-weight:600">${sub.toFixed(2)}€</td></tr>`;
+      return`<tr style="background:${bg};border-bottom:1px solid #eee"><td style="padding:7px 8px">${l.descripcion}</td><td style="padding:7px 8px;text-align:center">${l.unidad||''}</td><td style="padding:7px 8px;text-align:right">${l.cantidad||0}</td><td style="padding:7px 8px;text-align:right;line-height:1.4">${pvCell}</td><td style="padding:7px 8px;text-align:center">${dtoCell}</td><td style="padding:7px 8px;text-align:center">${ivaLabel}</td><td style="padding:7px 8px;text-align:right;font-weight:600">${fmtES(sub)}€</td></tr>`;
     }).join('');
     const totalIva = Object.values(ivaDesglose).reduce((s,v)=>s+v.base*v.pct/100, 0);
     const total=totalBase+totalIva;
-    document.getElementById('pf-base').textContent=totalBase.toFixed(2)+'€';
+    document.getElementById('pf-base').textContent=fmtES(totalBase)+'€';
     // Mostrar IVA desglosado por tipo
     const ivaKeys = Object.keys(ivaDesglose).sort();
     const pfIvaRows = document.getElementById('pf-iva-rows');
@@ -4470,10 +4470,10 @@ async function loadPresupuestoFinal(){
       pfIvaRows.innerHTML = ivaKeys.map(k=>{
         const d = ivaDesglose[k];
         const ivaImporte = d.base * d.pct / 100;
-        return '<div style="'+rowStyle+'"><span>IVA '+k+'</span><span style="color:#4a3728;font-weight:600">'+ivaImporte.toFixed(2)+'€</span></div>';
+        return '<div style="'+rowStyle+'"><span>IVA '+k+'</span><span style="color:#4a3728;font-weight:600">'+fmtES(ivaImporte)+'€</span></div>';
       }).join('');
     }
-    document.getElementById('pf-total').textContent=total.toFixed(2)+'€';
+    document.getElementById('pf-total').textContent=fmtES(total)+'€';
   }catch(e){toast('Error: '+e.message,'error');}
 }
 
@@ -4616,10 +4616,10 @@ async function loadContrato(){
     document.getElementById('ct-proyecto-nombre').textContent=p.nombre||'[PROYECTO]';
     document.getElementById('ct-proyecto-dir').textContent=p.direccion_obra||'[DIRECCIÓN OBRA]';
     document.getElementById('ct-pres-id').textContent=`${proyId}-V1`;
-    document.getElementById('ct-importe').textContent=totalIVA.toFixed(2)+'€ (IVA incluido)';
+    document.getElementById('ct-importe').textContent=fmtES(totalIVA)+'€ (IVA incluido)';
     document.getElementById('ct-firma-cliente').textContent=cliente.nombre||'[CLIENTE]';
     // Populate presupuesto selector
-    document.getElementById('ct-pres-sel').innerHTML=`<option value="v1">${proyId}-v1 · ${totalIVA.toFixed(2)}€ c/IVA</option>`;
+    document.getElementById('ct-pres-sel').innerHTML=`<option value="v1">${proyId}-v1 · ${fmtES(totalIVA)}€ c/IVA</option>`;
   }catch(e){toast('Error: '+e.message,'error');}
 }
 
@@ -6389,7 +6389,7 @@ function renderPresupuesto(){
   }
   document.getElementById('pres-resumen').style.display='block';
 }
-function calcLineaPres(){const precio=parseFloat(document.getElementById('pl-precio').value)||0,margen=parseFloat(document.getElementById('pl-margen').value)||0,ci=parseFloat(document.getElementById('pl-ci').value)||0,cant=parseFloat(document.getElementById('pl-cant').value)||0,dto=parseFloat(document.getElementById('pl-dto')?.value)||0;let pv=margen>0?precio*(1+margen/100):precio;if(ci>0)pv=pv*(1+ci/100);if(dto>0)pv=pv*(1-dto/100);const sub=cant*pv;document.getElementById('pl-pventa').value=pv>0?pv.toFixed(2)+' €':'—';document.getElementById('pl-subtotal').value=sub>0?sub.toFixed(2)+' €':'—';}
+function calcLineaPres(){const precio=parseFloat(document.getElementById('pl-precio').value)||0,margen=parseFloat(document.getElementById('pl-margen').value)||0,ci=parseFloat(document.getElementById('pl-ci').value)||0,cant=parseFloat(document.getElementById('pl-cant').value)||0,dto=parseFloat(document.getElementById('pl-dto')?.value)||0;let pv=margen>0?precio*(1+margen/100):precio;if(ci>0)pv=pv*(1+ci/100);if(dto>0)pv=pv*(1-dto/100);const sub=cant*pv;document.getElementById('pl-pventa').value=pv>0?fmtES(pv)+' €':'—';document.getElementById('pl-subtotal').value=sub>0?fmtES(sub)+' €':'—';}
 function searchCypeLinea(){const q=document.getElementById('pl-cype-search').value.toLowerCase(),res=document.getElementById('pl-cype-results');if(q.length<2){res.style.display='none';return;}const matches=CyCache.filter(c=>c.codigo.toLowerCase().includes(q)||c.descripcion.toLowerCase().includes(q)).slice(0,8);if(!matches.length){res.style.display='none';return;}res.style.display='block';res.innerHTML=matches.map(c=>`<div onclick="selectCype('${c.id}')" style="padding:7px 11px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--border)" onmouseover="this.style.background='var(--blue-light)'" onmouseout="this.style.background=''"><strong style="color:var(--navy-mid)">${c.codigo}</strong> · ${c.descripcion} <span style="float:right;color:var(--green);font-weight:700">${fmt(c.precio)}/${c.unidad}</span></div>`).join('');}
 function selectCype(id){const c=CyCache.find(x=>x.id===id);if(!c)return;document.getElementById('pl-desc').value=c.descripcion;document.getElementById('pl-precio').value=c.precio;document.getElementById('pl-ud').value=c.unidad||'m²';document.getElementById('pl-cype-search').value=`${c.codigo} · ${c.descripcion}`;document.getElementById('pl-cype-search').dataset.cypeRef=c.codigo;document.getElementById('pl-cype-results').style.display='none';calcLineaPres();}
 function loadTarifLinea(){const id=document.getElementById('pl-tarif-sel').value;if(!id)return;const t=TC.find(x=>x.id===id);if(!t)return;document.getElementById('pl-desc').value=t.descripcion;document.getElementById('pl-precio').value=t.precio_coste||0;document.getElementById('pl-margen').value=t.margen_pct||0;document.getElementById('pl-ud').value=t.unidad||'Ud';calcLineaPres();}
@@ -8342,8 +8342,8 @@ function saitraLineaPreview(){
   if(prev){
     prev.style.display='block';
     prev.innerHTML =
-      `<span style="color:var(--text-soft)">${pts} pts × 0,99€ =</span> <strong style="color:var(--navy)">${coste.toFixed(2)}€ coste</strong><br>` +
-      `<span style="color:var(--text-soft)">+ ${margen}% margen =</span> <strong style="color:#2e7d32;font-size:13px">${pvp.toFixed(2)}€ PVP cliente</strong>`;
+      `<span style="color:var(--text-soft)">${pts} pts × 0,99€ =</span> <strong style="color:var(--navy)">${fmtES(coste)}€ coste</strong><br>` +
+      `<span style="color:var(--text-soft)">+ ${margen}% margen =</span> <strong style="color:#2e7d32;font-size:13px">${fmtES(pvp)}€ PVP cliente</strong>`;
   }
 }
 
@@ -8372,7 +8372,7 @@ function saitraLineaAdd(){
   if(document.getElementById('sl-cant')) document.getElementById('sl-cant').value='1';
   saitraRenderTabla();
   saitraRecalc();
-  toast(`✅ ${desc} ×${cant} · PVP: ${(pvpU*cant).toFixed(2)}€`);
+  toast(`✅ ${desc} ×${cant} · PVP: ${fmtES((pvpU*cant))}€`);
 }
 
 let saitraLineas = [];
@@ -8465,8 +8465,8 @@ function saitraPuntosPreview(){
   const pvp   = saitraCalcPvp(coste, margen);
   prev.style.display='block';
   prev.innerHTML =
-    `<span style="color:var(--text-soft)">${pts} pts × 0,99€ =</span> <strong style="color:var(--navy)">${coste.toFixed(2)}€ coste</strong><br>` +
-    `<span style="color:var(--text-soft)">+ ${margen}% margen =</span> <strong style="color:#2e7d32;font-size:13px">${pvp.toFixed(2)}€ PVP cliente</strong>`;
+    `<span style="color:var(--text-soft)">${pts} pts × 0,99€ =</span> <strong style="color:var(--navy)">${fmtES(coste)}€ coste</strong><br>` +
+    `<span style="color:var(--text-soft)">+ ${margen}% margen =</span> <strong style="color:#2e7d32;font-size:13px">${fmtES(pvp)}€ PVP cliente</strong>`;
 }
 
 function saitraAccTipoChange(){
@@ -8479,8 +8479,8 @@ function saitraAccTipoChange(){
   const coste = saitraCalcPvpAccesorio(acc.pvp, dto);
   const pvp   = saitraCalcPvp(coste, margen);
   if(prev) prev.innerHTML =
-    `<span style="color:var(--text-soft)">PVP tarifa ${acc.pvp.toFixed(2)}€ × (1-${dto}%) =</span> <strong style="color:var(--navy)">${coste.toFixed(2)}€ coste</strong><br>` +
-    `<span style="color:var(--text-soft)">+ ${margen}% margen =</span> <strong style="color:#2e7d32;font-size:13px">${pvp.toFixed(2)}€ PVP cliente</strong>`;
+    `<span style="color:var(--text-soft)">PVP tarifa ${fmtES(acc.pvp)}€ × (1-${dto}%) =</span> <strong style="color:var(--navy)">${fmtES(coste)}€ coste</strong><br>` +
+    `<span style="color:var(--text-soft)">+ ${margen}% margen =</span> <strong style="color:#2e7d32;font-size:13px">${fmtES(pvp)}€ PVP cliente</strong>`;
 }
 
 function saitraZocChange(){
@@ -8494,8 +8494,8 @@ function saitraZocChange(){
   const coste = saitraCalcCoste(pts, PUNTO_PP);
   const pvp   = saitraCalcPvp(coste, margen);
   if(prev) prev.innerHTML =
-    `<span style="color:var(--text-soft)">${pts} pts × 0,99€ =</span> <strong style="color:var(--navy)">${coste.toFixed(2)}€ coste</strong><br>` +
-    `<span style="color:var(--text-soft)">+ ${margen}% margen =</span> <strong style="color:#2e7d32;font-size:13px">${pvp.toFixed(2)}€ PVP cliente</strong>`;
+    `<span style="color:var(--text-soft)">${pts} pts × 0,99€ =</span> <strong style="color:var(--navy)">${fmtES(coste)}€ coste</strong><br>` +
+    `<span style="color:var(--text-soft)">+ ${margen}% margen =</span> <strong style="color:#2e7d32;font-size:13px">${fmtES(pvp)}€ PVP cliente</strong>`;
 }
 
 function saitraAddModulo(){
@@ -8543,7 +8543,7 @@ function saitraAddModulo(){
   // NO limpiamos los acabados — lo normal es añadir varios módulos con el mismo acabado
   saitraRenderTabla();
   saitraRecalc();
-  toast(`✅ ${ref} ${anchoLabel}cm · Coste: ${costeU.toFixed(2)}€ · PVP: ${pvpU.toFixed(2)}€`);
+  toast(`✅ ${ref} ${anchoLabel}cm · Coste: ${fmtES(costeU)}€ · PVP: ${fmtES(pvpU)}€`);
 }
 
 function saitraAddAccesorio(){
@@ -8566,7 +8566,7 @@ function saitraAddAccesorio(){
   document.getElementById('s-cant-acc').value='1';
   saitraRenderTabla();
   saitraRecalc();
-  toast(`✅ ${acc.label} · Coste: ${costeU.toFixed(2)}€ · PVP: ${pvpU.toFixed(2)}€`);
+  toast(`✅ ${acc.label} · Coste: ${fmtES(costeU)}€ · PVP: ${fmtES(pvpU)}€`);
 }
 
 function saitraAddZocalo(){
@@ -8588,7 +8588,7 @@ function saitraAddZocalo(){
   document.getElementById('s-notas-zoc').value='';
   saitraRenderTabla();
   saitraRecalc();
-  toast(`✅ ${z.label} · Coste: ${costeU.toFixed(2)}€ · PVP: ${pvpU.toFixed(2)}€`);
+  toast(`✅ ${z.label} · Coste: ${fmtES(costeU)}€ · PVP: ${fmtES(pvpU)}€`);
 }
 
 function saitraGolaChange(){
@@ -8605,10 +8605,10 @@ function saitraGolaChange(){
   const pvpU  = saitraCalcPvp(coste, margen);
   const pvpT  = pvpU * qty;
   prev.innerHTML =
-    `<span style="color:var(--text-soft)">${pts} pts × ${PUNTO_PP.toFixed(2)}€ =</span> <strong style="color:var(--navy)">${coste.toFixed(2)}€ coste/ud</strong>` +
-    (qty > 1 ? ` <span style="color:var(--text-soft)">× ${qty} =</span> <strong style="color:var(--navy)">${costeT.toFixed(2)}€ total</strong>` : '') + '<br>' +
-    `<span style="color:var(--text-soft)">+ ${margen}% margen =</span> <strong style="color:#2e7d32;font-size:13px">${pvpU.toFixed(2)}€ PVP/ud` +
-    (qty > 1 ? ` · <strong style="color:#2e7d32">${pvpT.toFixed(2)}€ PVP total</strong>` : '') + `</strong>`;
+    `<span style="color:var(--text-soft)">${pts} pts × ${fmtES(PUNTO_PP)}€ =</span> <strong style="color:var(--navy)">${fmtES(coste)}€ coste/ud</strong>` +
+    (qty > 1 ? ` <span style="color:var(--text-soft)">× ${qty} =</span> <strong style="color:var(--navy)">${fmtES(costeT)}€ total</strong>` : '') + '<br>' +
+    `<span style="color:var(--text-soft)">+ ${margen}% margen =</span> <strong style="color:#2e7d32;font-size:13px">${fmtES(pvpU)}€ PVP/ud` +
+    (qty > 1 ? ` · <strong style="color:#2e7d32">${fmtES(pvpT)}€ PVP total</strong>` : '') + `</strong>`;
 }
 
 function saitraAddGola(){
@@ -8630,7 +8630,7 @@ function saitraAddGola(){
   document.getElementById('s-gola-qty').value='1';
   saitraRenderTabla();
   saitraRecalc();
-  toast(`✅ ${g.label} ×${qty} · Coste: ${(costeU*qty).toFixed(2)}€ · PVP: ${(pvpU*qty).toFixed(2)}€`);
+  toast(`✅ ${g.label} ×${qty} · Coste: ${fmtES((costeU*qty))}€ · PVP: ${fmtES((pvpU*qty))}€`);
 }
 
 function saitraEliminarLinea(id){
@@ -8656,8 +8656,8 @@ function saitraRenderTabla(){
       <td style="padding:7px 10px;font-weight:700;color:var(--navy);font-size:11px">${iconos[l.tipo]||''} ${l.ref}</td>
       <td style="padding:7px 10px;font-size:12px">${escH(l.desc)}${l.notas?`<br><span style="font-size:10px;color:var(--text-soft);font-style:italic">📝 ${escH(l.notas)}</span>`:''}</td>
       <td style="padding:7px 6px;text-align:center;font-size:12px">${l.cant}</td>
-      <td style="padding:7px 6px;text-align:right;font-size:11px;color:var(--text-soft)">${l.costeTotal.toFixed(2)}€</td>
-      <td style="padding:7px 6px;text-align:right;font-weight:700;color:#2e7d32;font-size:12px">${l.pvpTotal.toFixed(2)}€</td>
+      <td style="padding:7px 6px;text-align:right;font-size:11px;color:var(--text-soft)">${fmtES(l.costeTotal)}€</td>
+      <td style="padding:7px 6px;text-align:right;font-weight:700;color:#2e7d32;font-size:12px">${fmtES(l.pvpTotal)}€</td>
       <td style="padding:7px 6px;text-align:center"><button class="btn btn-ghost btn-icon btn-sm" onclick="saitraEliminarLinea(${l.id})" style="color:var(--danger)">🗑</button></td>
     </tr>`;
   }).join('');
@@ -8710,7 +8710,7 @@ async function saitraExportarPresupuesto(){
   if(!confirm(
     `Se añadirán al presupuesto del proyecto "${proy}" v${ver}:\n\n` +
     `📄 Capítulo "Mobiliario de Cocina"\n` +
-    `📄 ${saitraLineas.length} líneas · Total PVP: ${totalPvp.toFixed(2)}€\n\n¿Confirmar?`
+    `📄 ${saitraLineas.length} líneas · Total PVP: ${fmtES(totalPvp)}€\n\n¿Confirmar?`
   )) return;
 
   try{
@@ -9072,7 +9072,7 @@ async function loadInteriorismo(){
   }catch(e){tb.innerHTML=`<tr><td colspan="10" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
 }
 function loadTarifarioItem(){const ref=document.getElementById('i-ref').value;if(!ref)return;const item=TC.find(t=>t.id===ref);if(!item)return;document.getElementById('i-desc').value=item.descripcion||'';document.getElementById('i-marca').value=item.marca||'';document.getElementById('i-pvp').value=item.precio_venta||0;document.getElementById('i-coste').value=item.precio_coste||0;calcIntPvp();}
-function calcIntPvp(){const cant=parseFloat(document.getElementById('i-cant').value)||1,pvp=parseFloat(document.getElementById('i-pvp').value)||0,dto=parseFloat(document.getElementById('i-dto').value)||0;const neto=cant*pvp*(1-dto/100);document.getElementById('i-neto').value=neto>0?neto.toFixed(2)+' €':'—';}
+function calcIntPvp(){const cant=parseFloat(document.getElementById('i-cant').value)||1,pvp=parseFloat(document.getElementById('i-pvp').value)||0,dto=parseFloat(document.getElementById('i-dto').value)||0;const neto=cant*pvp*(1-dto/100);document.getElementById('i-neto').value=neto>0?fmtES(neto)+' €':'—';}
 async function saveInteriorismo(){
   const proy=document.getElementById('i-proyecto').value;if(!proy){toast('Selecciona un proyecto','error');return;}
   const d={proyecto_id:proy,estancia:document.getElementById('i-estancia').value,ref_catalogo:document.getElementById('i-ref').value||null,descripcion:document.getElementById('i-desc').value,marca:document.getElementById('i-marca').value,acabado:document.getElementById('i-acabado').value,unidad:'Ud',cantidad:parseFloat(document.getElementById('i-cant').value)||1,pvp_catalogo:parseFloat(document.getElementById('i-pvp').value)||0,dto_cliente_pct:parseFloat(document.getElementById('i-dto').value)||0,coste_neto:parseFloat(document.getElementById('i-coste').value)||0,iva_pct:document.getElementById('i-iva').value,estado_propuesta:document.getElementById('i-eprop').value,estado_cobro:'Pendiente',estado_pedido:document.getElementById('i-eped').value,fecha_entrega:document.getElementById('i-fentrega').value||null,notas:document.getElementById('i-notas').value};
@@ -14640,7 +14640,7 @@ async function ixExportarPresupuesto(){
   if(!confirm(
     `Se añadirán al presupuesto del proyecto "${proyFinal}" ${ver}:\n\n`+
     `📄 Capítulo "${capNombre}"\n`+
-    `📄 ${ixLineas.length} líneas · Total PVP: ${totalPvp.toFixed(2)}€\n\n¿Confirmar?`
+    `📄 ${ixLineas.length} líneas · Total PVP: ${fmtES(totalPvp)}€\n\n¿Confirmar?`
   )) return;
 
   try{
@@ -15762,7 +15762,7 @@ function vkUpdatePrecio(mi){
   const coste = (pvp * 0.60).toFixed(2);
   const pvpCli = (pvp * (1 + margen/100)).toFixed(2);
   const margenTxt = margen > 0 ? ' · <b>+'+margen+'% = '+pvpCli+'€ PVP cliente</b>' : '';
-  div.innerHTML = '<span style="font-size:11px;color:var(--text-soft)">PVP tarifa: '+pvp.toFixed(2)+'€ · Coste: '+coste+'€</span>'
+  div.innerHTML = '<span style="font-size:11px;color:var(--text-soft)">PVP tarifa: '+fmtES(pvp)+'€ · Coste: '+coste+'€</span>'
     + '<br><span style="font-weight:700;font-size:14px;color:var(--copper)">PVP cliente: '+pvpCli+'€</span>'
     + (margen > 0 ? '<span style="font-size:10px;color:#2e7d32"> (+'+margen+'%)</span>' : '');
 }
@@ -16398,9 +16398,9 @@ function campRenderAcabados(){
     };
     html += `<div class="camp-result-row" style="display:grid;grid-template-columns:1fr 80px 90px 90px 32px;gap:6px;align-items:center" id="camp-row-${iid}">
       <span class="camp-ac-name">${ac}</span>
-      <span class="camp-ac-pvp" style="text-align:right">${pvp.toFixed(2)} €</span>
-      <span class="camp-ac-coste" style="text-align:right">${coste.toFixed(2)} €</span>
-      <span class="camp-ac-venta" style="text-align:right;color:var(--copper)">${pvpCliente.toFixed(2)} €</span>
+      <span class="camp-ac-pvp" style="text-align:right">${fmtES(pvp)} €</span>
+      <span class="camp-ac-coste" style="text-align:right">${fmtES(coste)} €</span>
+      <span class="camp-ac-venta" style="text-align:right;color:var(--copper)">${fmtES(pvpCliente)} €</span>
       <button class="camp-ac-btn" onclick="campAnadir(${iid})" title="Añadir">+</button>
     </div>`;
   });
@@ -16781,8 +16781,8 @@ function lavResultCard({ref,pvp,label,modelo,data,nota,accList}){
   h += '</div>';
   h += `<div style="font-family:monospace;font-size:15px;font-weight:800;background:rgba(255,255,255,.15);padding:4px 12px;border-radius:4px;display:inline-block;margin-bottom:10px">${ref}</div>`;
   h += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">`;
-  h += `<div><div style="font-size:9px;opacity:.5;text-transform:uppercase">PVP</div><div style="font-size:18px;font-weight:800;color:#86efac">${pvp.toFixed(2)}€</div></div>`;
-  h += `<div><div style="font-size:9px;opacity:.5;text-transform:uppercase">Coste PAU (−${Math.round(LAV_DTO*100)}%)</div><div style="font-size:16px;font-weight:700;color:#7dd3fc">${coste.toFixed(2)}€</div></div>`;
+  h += `<div><div style="font-size:9px;opacity:.5;text-transform:uppercase">PVP</div><div style="font-size:18px;font-weight:800;color:#86efac">${fmtES(pvp)}€</div></div>`;
+  h += `<div><div style="font-size:9px;opacity:.5;text-transform:uppercase">Coste PAU (−${Math.round(LAV_DTO*100)}%)</div><div style="font-size:16px;font-weight:700;color:#7dd3fc">${fmtES(coste)}€</div></div>`;
   h += '</div></div>';
   if(nota){
     h += `<div style="display:flex;align-items:center;gap:8px;background:#fffbf0;border:1px dashed #d4a040;border-radius:6px;padding:7px 10px;margin-bottom:10px">`;
@@ -17250,8 +17250,8 @@ function ixRender(){
       <td class="ix-serie"><span>${p.serie||''}</span></td>
       <td class="ix-ref">${p.ref}</td>
       <td>${p.desc}</td>
-      <td class="ix-pvp">${pvpA.toFixed(2)} €</td>
-      <td class="ix-cst">${cst.toFixed(2)} €</td>
+      <td class="ix-pvp">${fmtES(pvpA)} €</td>
+      <td class="ix-cst">${fmtES(cst)} €</td>
       <td class="ix-btn-td"><button class="ix-btn${isAdded?' on':''}" onclick="event.stopPropagation();ixAnadir('${p.ref}')" title="Añadir">+</button></td>
     </tr>`;
   }).join('');
@@ -19212,7 +19212,7 @@ function edRenderCatalogo(){
         +'<div style="display:none;width:100%;height:160px;align-items:center;justify-content:center;background:#f0f2f5;border-radius:8px 8px 0 0;font-size:48px;color:#ccc">📦</div>'
       : '<div style="width:100%;height:100px;display:flex;align-items:center;justify-content:center;background:#f0f2f5;border-radius:8px 8px 0 0;font-size:48px;color:#ccc">'+(p.marca==='Cata'?'🌀':'📦')+'</div>';
     const acabTxt = p.acabados && p.acabados.length ? '<div style="font-size:10px;color:var(--text-soft);margin-top:2px">También: '+p.acabados.map(a=>a.split('|')[1]).join(', ')+'</div>' : '';
-    const pvpTxt = '<span style="font-size:11px;color:var(--text-soft)">P.Ref: '+p.pvpIva+'€ IVA incl. · Coste: '+precio.coste.toFixed(2)+'€</span><br><span style="font-weight:700;color:var(--copper)">PVP: '+precio.pvpIva.toFixed(2)+'€</span>';
+    const pvpTxt = '<span style="font-size:11px;color:var(--text-soft)">P.Ref: '+p.pvpIva+'€ IVA incl. · Coste: '+fmtES(precio.coste)+'€</span><br><span style="font-weight:700;color:var(--copper)">PVP: '+fmtES(precio.pvpIva)+'€</span>';
     h += '<div style="background:var(--white);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:all .2s" onmouseenter="this.style.boxShadow=\'var(--shadow)\'" onmouseleave="this.style.boxShadow=\'none\'">';
     h += imgHtml;
     h += '<div style="padding:10px 12px">';
@@ -19258,9 +19258,9 @@ function edRenderValoracion(){
     h+='<tr style="border-bottom:1px solid var(--border)">';
     h+='<td style="padding:6px 8px;font-weight:700">'+p.ref+'</td>';
     h+='<td>'+p.nombre+(p.color?' · '+p.color:'')+'</td>';
-    h+='<td style="text-align:right">'+pr.coste.toFixed(2)+'€</td>';
-    h+='<td style="text-align:right;color:var(--copper);font-weight:600">'+pr.pvpSinIva.toFixed(2)+'€</td>';
-    h+='<td style="text-align:right;font-weight:600">'+pr.pvpIva.toFixed(2)+'€</td>';
+    h+='<td style="text-align:right">'+fmtES(pr.coste)+'€</td>';
+    h+='<td style="text-align:right;color:var(--copper);font-weight:600">'+fmtES(pr.pvpSinIva)+'€</td>';
+    h+='<td style="text-align:right;font-weight:600">'+fmtES(pr.pvpIva)+'€</td>';
     h+='<td style="text-align:right">'+(p.instIncluida?'<span style="color:var(--success)">Incluida</span>':p.instalacion+'€')+'</td>';
     h+='<td style="text-align:center"><button class="btn btn-ghost btn-sm" onclick="edQuitar('+i+')" style="color:var(--danger);padding:2px 6px">✕</button></td>';
     h+='</tr>';
