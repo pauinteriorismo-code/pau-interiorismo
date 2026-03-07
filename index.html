@@ -18593,7 +18593,12 @@ function recalcPresKPI(){
   const v1 = document.getElementById('chk-v1')?.checked ? (_presDesglobeGlobal['v1']||0) : 0;
   const v2 = document.getElementById('chk-v2')?.checked ? (_presDesglobeGlobal['v2']||0) : 0;
   const v3 = document.getElementById('chk-v3')?.checked ? (_presDesglobeGlobal['v3']||0) : 0;
-  const tot = v1 + v2 + v3;
+  // Sum all unit versions (any key that is not v1/v2/v3)
+  let unitsTotal = 0;
+  Object.keys(_presDesglobeGlobal).forEach(k => {
+    if(!k.match(/^v\d+$/)) unitsTotal += _presDesglobeGlobal[k];
+  });
+  const tot = v1 + v2 + v3 + unitsTotal;
   const el = document.getElementById('exp-k-pres');
   if(el) el.textContent = tot > 0 ? fmt(tot) : '—';
   // Ocultar checkboxes de versiones sin datos
@@ -18602,7 +18607,6 @@ function recalcPresKPI(){
     if(lbl) lbl.style.display = (_presDesglobeGlobal[v]||0) > 0 ? '' : 'none';
   });
   // Actualizar margen con nuevo presupuesto
-  // Leer costes del DOM (ya actualizado antes de llamar a recalcPresKPI)
   const costesRaw = document.getElementById('exp-k-costes')?.textContent||'';
   const costes = parseFloat(costesRaw.replace(/\./g,'').replace(',','.'))||0;
   if(costes > 0 && tot > 0){
@@ -18711,8 +18715,9 @@ async function calcExpKPIs(proyId){
       if(v!=='v1') chk.checked = false; // v2 y v3 siempre desmarcadas por defecto
     }
   });
-  // presTot = solo v1 por defecto
+  // presTot = v1 + all unit versions
   let presTot = _presDesglobeGlobal['v1'] || 0;
+  Object.keys(_presDesglobeGlobal).forEach(k => { if(!k.match(/^v\d+$/)) presTot += _presDesglobeGlobal[k]; });
 
   // Facturas de venta del proyecto
   const factProy = (FC||[]).filter(f=>f.proyecto_id===proyId&&(f.tipo_factura||'Venta')==='Venta');
@@ -20404,9 +20409,9 @@ async function renderExpUnidades(body){
       <!-- KPIs facturación/costes -->
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px">
         <div style="background:#fff;border-radius:8px;padding:8px;text-align:center;border:1px solid var(--border)">
-          <div style="font-size:14px;font-weight:700;color:var(--green)">${kpis.facturadoIva>0?fmtES(kpis.facturadoIva)+'€':'0,00€'}</div>
-          <div style="font-size:10px;color:var(--text-soft)">Facturado (con IVA)</div>
-          <div style="font-size:9px;color:var(--text-soft)">Base: ${fmtES(kpis.facturado)}€</div>
+          <div style="font-size:14px;font-weight:700;color:var(--green)">${kpis.facturado>0?fmtES(kpis.facturado)+'€':'0,00€'}</div>
+          <div style="font-size:10px;color:var(--text-soft)">Facturado</div>
+          <div style="font-size:9px;color:#bbb">IVA: ${fmtES(kpis.facturadoIva-kpis.facturado)}€ · Total: ${fmtES(kpis.facturadoIva)}€</div>
         </div>
         <div style="background:#fff;border-radius:8px;padding:8px;text-align:center;border:1px solid var(--border)">
           <div style="font-size:14px;font-weight:700;color:#1565c0">${kpis.cobrado>0?fmtES(kpis.cobrado)+'€':'0,00€'}</div>
