@@ -4475,13 +4475,23 @@ async function loadPresupuestoFinal(){
       sbGet('proyectos',`?proyecto_id=eq.${proy}`)
     ]);
     const p=proyecto[0]||{};
-    const cliente=CC.find(c=>c.cliente_id===p.cliente_id)||{};
+    let cliente=CC.find(c=>c.cliente_id===p.cliente_id)||{};
+    // If version is a unit (not v1/v2/v3), use the unit's client instead
+    if(ver && !ver.match(/^v\d+$/)){
+      try {
+        const unidades = await sbGet('proyecto_unidades','?proyecto_id=eq.'+encodeURIComponent(proy)+'&ref_unidad=eq.'+encodeURIComponent(ver));
+        if(unidades && unidades[0] && unidades[0].cliente_id){
+          const unitCliente = CC.find(c=>c.cliente_id===unidades[0].cliente_id || c.id===unidades[0].cliente_id);
+          if(unitCliente) cliente = unitCliente;
+        }
+      } catch(e){}
+    }
     // Header
     document.getElementById('pf-num').textContent=`Presupuesto Nº: ${proy}-${ver.toUpperCase()}`;
     document.getElementById('pf-fecha').textContent=new Date().toLocaleDateString('es-ES');
     document.getElementById('pf-cliente-nombre').textContent=cliente.nombre||'—';
     document.getElementById('pf-cliente-cif').textContent=cliente.cif?`${cliente.cif}`:'';
-    document.getElementById('pf-cliente-dir').textContent=cliente.direccion||'';
+    document.getElementById('pf-cliente-dir').textContent=[cliente.direccion, [cliente.cp, cliente.poblacion].filter(Boolean).join(' ')].filter(Boolean).join(', ');
     document.getElementById('pf-proyecto-nombre').textContent=p.nombre||'—';
     document.getElementById('pf-proyecto-dir').textContent=p.direccion_obra||'';
     // Datos bancarios en pie de presupuesto
