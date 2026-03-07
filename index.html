@@ -20032,7 +20032,7 @@ async function renderExpDocs(body){
   if(!p){ body.innerHTML='<p>No encontrado</p>'; return; }
 
   try {
-    _docEnlaces = await sbGet('proyecto_enlaces','&proyecto_id=eq.'+encodeURIComponent(pid)+'&order=orden');
+    _docEnlaces = await sbGet('proyecto_enlaces','?proyecto_id=eq.'+encodeURIComponent(pid)+'&order=orden');
   } catch(e){ _docEnlaces = []; }
 
   const driveUrl = p.carpeta_drive || '';
