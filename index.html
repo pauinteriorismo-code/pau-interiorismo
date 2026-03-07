@@ -3489,6 +3489,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="form-group"><label class="form-label">Fecha inicio</label><input class="form-input" id="p-fecha" type="date"></div>
       <div class="form-group fg-full"><label class="form-label">Dirección de obra</label><input class="form-input" id="p-dir"></div>
       <div class="form-group fg-full"><label class="form-label">📂 Carpeta Google Drive</label><input class="form-input" id="p-drive" placeholder="https://drive.google.com/drive/folders/..."></div>
+      <div class="form-group"><label class="form-label">🏷 Tipo de unidades</label><input class="form-input" id="p-tipo-unidades" placeholder="Viviendas, Trabajos, Locales..."></div>
       <div class="form-group fg-full"><label class="form-label">Notas</label><textarea class="form-input" id="p-notas" rows="2"></textarea></div>
     </div>
   </div>
@@ -4455,28 +4456,10 @@ async function initPresFinal(){
   sel.innerHTML='<option value="">Seleccionar proyecto…</option>'+[...PC].sort((a,b)=>a.proyecto_id.localeCompare(b.proyecto_id,'es',{numeric:true})).map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
 }
 async function pfProyChanged(){
-  const proyId = document.getElementById('pf-proyecto-sel').value;
-  const verSel = document.getElementById('pf-version-sel');
-  const curVer = verSel.value;
-  verSel.innerHTML = '<option value="v1">v1</option><option value="v2">v2</option><option value="v3">v3</option>';
-  if(proyId){
-    try {
-      const units = await sbGet('proyecto_unidades','?proyecto_id=eq.'+encodeURIComponent(proyId)+'&order=orden,ref_unidad');
-      if(units && units.length > 0){
-        const sep = document.createElement('option');
-        sep.disabled = true;
-        sep.textContent = '── Viviendas ──';
-        verSel.appendChild(sep);
-        units.forEach(u => {
-          const opt = document.createElement('option');
-          opt.value = u.ref_unidad;
-          opt.textContent = u.ref_unidad + (u.cliente_nombre ? ' · ' + u.cliente_nombre : '');
-          verSel.appendChild(opt);
-        });
-      }
-    } catch(e){}
-    for(let o of verSel.options){ if(o.value === curVer){ verSel.value = curVer; break; } }
-  }
+  await _loadUnitsIntoSelector(
+    document.getElementById('pf-proyecto-sel').value,
+    document.getElementById('pf-version-sel')
+  );
   loadPresupuestoFinal();
 }
 
@@ -6475,11 +6458,11 @@ async function loadProyectos(){
     filtrarProyectosPorCliente();
   }catch(e){tb.innerHTML=`<tr><td colspan="8" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
 }
-function editProyecto(id){const p=PC.find(x=>x.id===id);if(!p)return;document.getElementById('m-proyecto-title').textContent='Editar proyecto';document.getElementById('p-id').value=p.id;document.getElementById('p-nombre').value=p.nombre||'';document.getElementById('p-cliente').value=p.cliente_id||'';document.getElementById('p-tipo').value=p.tipo||'Obra nueva';document.getElementById('p-estado').value=p.estado||'Nuevo lead';document.getElementById('p-resp').value=p.responsable||'Jose Asins';document.getElementById('p-fecha').value=p.fecha_inicio||'';document.getElementById('p-dir').value=p.direccion_obra||'';document.getElementById('p-notas').value=p.notas||'';document.getElementById('p-drive').value=p.carpeta_drive||'';openModal('m-proyecto');}
+function editProyecto(id){const p=PC.find(x=>x.id===id);if(!p)return;document.getElementById('m-proyecto-title').textContent='Editar proyecto';document.getElementById('p-id').value=p.id;document.getElementById('p-nombre').value=p.nombre||'';document.getElementById('p-cliente').value=p.cliente_id||'';document.getElementById('p-tipo').value=p.tipo||'Obra nueva';document.getElementById('p-estado').value=p.estado||'Nuevo lead';document.getElementById('p-resp').value=p.responsable||'Jose Asins';document.getElementById('p-fecha').value=p.fecha_inicio||'';document.getElementById('p-dir').value=p.direccion_obra||'';document.getElementById('p-notas').value=p.notas||'';document.getElementById('p-drive').value=p.carpeta_drive||'';document.getElementById('p-tipo-unidades').value=p.tipo_unidades||'';openModal('m-proyecto');}
 async function saveProyecto(){
   const nombre=document.getElementById('p-nombre').value.trim();if(!nombre){toast('El nombre es obligatorio','error');return;}
   const id=document.getElementById('p-id').value;
-  const d={cliente_id:document.getElementById('p-cliente').value||null,nombre,tipo:document.getElementById('p-tipo').value,estado:document.getElementById('p-estado').value,responsable:document.getElementById('p-resp').value,fecha_inicio:document.getElementById('p-fecha').value||null,direccion_obra:document.getElementById('p-dir').value,notas:document.getElementById('p-notas').value,carpeta_drive:document.getElementById('p-drive').value||null};
+  const d={cliente_id:document.getElementById('p-cliente').value||null,nombre,tipo:document.getElementById('p-tipo').value,estado:document.getElementById('p-estado').value,responsable:document.getElementById('p-resp').value,fecha_inicio:document.getElementById('p-fecha').value||null,direccion_obra:document.getElementById('p-dir').value,notas:document.getElementById('p-notas').value,carpeta_drive:document.getElementById('p-drive').value||null,tipo_unidades:document.getElementById('p-tipo-unidades').value.trim()||null};
   try{if(id){await sbPatch('proyectos',id,d);toast('Proyecto actualizado ✅');}else{d.proyecto_id=genId('PRY',PC,'proyecto_id');await sbPost('proyectos',d);toast('Proyecto creado ✅');}closeModal('m-proyecto');document.getElementById('p-id').value='';loadProyectos();populateSelects();}catch(e){toast('Error: '+e.message,'error');}
 }
 
@@ -6506,37 +6489,46 @@ async function initPresupuesto(){
   const pSel=document.getElementById('pres-proyecto-sel');
   if(lp&&pSel&&PC.some(p=>p.proyecto_id===lp)){
     pSel.value=lp;
+    // Load units first, then restore version and load
+    await presProyChanged();
     const vSel=document.getElementById('pres-version-sel');
-    if(lv&&vSel) vSel.value=lv;
-    loadPresupuesto();
+    if(lv&&vSel){
+      for(let o of vSel.options){ if(o.value===lv){ vSel.value=lv; break; } }
+      loadPresupuesto();
+    }
   }
 }
 // When project changes, reload units into version selector
-async function presProyChanged(){
-  const proyId = document.getElementById('pres-proyecto-sel').value;
-  const verSel = document.getElementById('pres-version-sel');
+// Shared: load units into any version selector
+async function _loadUnitsIntoSelector(proyId, verSel){
   const curVer = verSel.value;
-  // Reset to standard versions
   verSel.innerHTML = '<option value="v1">v1</option><option value="v2">v2</option><option value="v3">v3</option>';
-  if(proyId){
-    try {
-      const units = await sbGet('proyecto_unidades','?proyecto_id=eq.'+encodeURIComponent(proyId)+'&order=orden,ref_unidad');
-      if(units && units.length > 0){
-        const sep = document.createElement('option');
-        sep.disabled = true;
-        sep.textContent = '── Viviendas ──';
-        verSel.appendChild(sep);
-        units.forEach(u => {
-          const opt = document.createElement('option');
-          opt.value = u.ref_unidad;
-          opt.textContent = u.ref_unidad + (u.cliente_nombre ? ' · ' + u.cliente_nombre : '');
-          verSel.appendChild(opt);
-        });
-      }
-    } catch(e){}
-    // Restore previous version if it exists
-    for(let o of verSel.options){ if(o.value === curVer){ verSel.value = curVer; break; } }
-  }
+  if(!proyId) return;
+  try {
+    const units = await sbGet('proyecto_unidades','?proyecto_id=eq.'+encodeURIComponent(proyId)+'&order=orden,ref_unidad');
+    if(units && units.length > 0){
+      const p = PC.find(x=>x.proyecto_id===proyId);
+      const label = (p && p.tipo_unidades) ? p.tipo_unidades : 'Unidades / Trabajos';
+      const sep = document.createElement('option');
+      sep.disabled = true;
+      sep.textContent = '── '+label+' ──';
+      verSel.appendChild(sep);
+      units.forEach(u => {
+        const opt = document.createElement('option');
+        opt.value = u.ref_unidad;
+        opt.textContent = u.ref_unidad + (u.cliente_nombre ? ' · ' + u.cliente_nombre : '');
+        verSel.appendChild(opt);
+      });
+    }
+  } catch(e){}
+  for(let o of verSel.options){ if(o.value === curVer){ verSel.value = curVer; break; } }
+}
+
+async function presProyChanged(){
+  await _loadUnitsIntoSelector(
+    document.getElementById('pres-proyecto-sel').value,
+    document.getElementById('pres-version-sel')
+  );
   loadPresupuesto();
 }
 
@@ -11316,7 +11308,7 @@ function _getPieHtml(esC=false){
 
 const loaders={
   gerencia:loadGerencia,agenda:loadAgenda,clientes:loadClientes,proyectos:loadProyectos,
-  presupuesto:()=>{initPresupuesto();if(document.getElementById('pres-proyecto-sel').value)presProyChanged();},
+  presupuesto:()=>{initPresupuesto();},
   comparativa:()=>{initComparativa();if(document.getElementById('comp-proyecto-sel').value)loadComparativa();},
   tarifario:loadTarifario,cype:loadCype,interiorismo:loadInteriorismo,
   saitra:()=>{ initSaitra(); },
@@ -15566,29 +15558,10 @@ function abrirImportarPDF(){
 
 // When project changes in import modal, load units as version options
 async function impProyectoChange(){
-  const proyId = document.getElementById('imp-proyecto-sel').value;
-  const verSel = document.getElementById('imp-version-sel');
-  // Reset to standard versions
-  verSel.innerHTML = '<option value="v1">v1</option><option value="v2">v2</option><option value="v3">v3</option>';
-  if(!proyId) return;
-  // Check if project has units
-  try {
-    const units = await sbGet('proyecto_unidades','?proyecto_id=eq.'+encodeURIComponent(proyId)+'&order=orden,ref_unidad');
-    if(units && units.length > 0){
-      // Add separator
-      const sep = document.createElement('option');
-      sep.disabled = true;
-      sep.textContent = '── Viviendas / Unidades ──';
-      verSel.appendChild(sep);
-      // Add each unit as version option
-      units.forEach(u => {
-        const opt = document.createElement('option');
-        opt.value = u.ref_unidad;
-        opt.textContent = u.ref_unidad + (u.cliente_nombre ? ' · ' + u.cliente_nombre : '');
-        verSel.appendChild(opt);
-      });
-    }
-  } catch(e){ /* silently ignore if table doesn't exist yet */ }
+  await _loadUnitsIntoSelector(
+    document.getElementById('imp-proyecto-sel').value,
+    document.getElementById('imp-version-sel')
+  );
 }
 
 function impOnFileChange(input){
@@ -20356,7 +20329,7 @@ async function renderExpUnidades(body){
 
       <!-- Header + botones -->
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-        <div style="font-weight:700;font-size:14px;color:#4a3728">🏠 Unidades / Viviendas</div>
+        <div style="font-weight:700;font-size:14px;color:#4a3728">🏠 ${(p.tipo_unidades||'Unidades / Trabajos')}</div>
         <div style="display:flex;gap:6px">
           ${total > 0 ? '<button class="btn btn-ghost btn-sm" onclick="generarUnidadesLote()" style="font-size:11px">📋 Crear lote</button>' : ''}
           <button class="btn btn-primary btn-sm" onclick="nuevaUnidad()" style="font-size:11px">＋ Nueva unidad</button>
