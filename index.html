@@ -6376,12 +6376,25 @@ async function saveCliente(){
   const id=document.getElementById('c-id').value;
   const d={nombre,cif:(document.getElementById('c-cif-tipo').value && document.getElementById('c-cif').value.trim() ? document.getElementById('c-cif-tipo').value+': '+document.getElementById('c-cif').value.trim() : document.getElementById('c-cif').value.trim()),telefono:document.getElementById('c-tel').value,email:document.getElementById('c-email').value,direccion:document.getElementById('c-dir').value,tipo:document.getElementById('c-tipo').value,forma_pago:document.getElementById('c-pago').value,notas:document.getElementById('c-notas').value,cp:document.getElementById('c-cp').value.trim()||null,poblacion:document.getElementById('c-poblacion').value.trim()||null,provincia:document.getElementById('c-provincia').value.trim()||null};
   try{if(id){await sbPatch('clientes',id,d);toast('Cliente actualizado ✅');}else{d.cliente_id=genId('CLI',CC,'cliente_id');await sbPost('clientes',d);toast('Cliente guardado ✅');}closeModal('m-cliente');document.getElementById('c-id').value='';
-    // If creating client from unit form, auto-select it
+    // If creating client from unit form, auto-select and reopen unit modal
     if(_unitCreatingClient){
       _unitCreatingClient = false;
       await loadClientes();
       const newC = CC.find(c=>c.nombre===nombre);
-      if(newC) selClienteUnidad(newC.cliente_id, newC.id, newC.nombre);
+      setTimeout(()=>{
+        // Restore unit form
+        if(_unitFormState){
+          document.getElementById('u-id').value = _unitFormState.id || '';
+          document.getElementById('u-ref').value = _unitFormState.ref || '';
+          document.getElementById('u-estado').value = _unitFormState.estado || 'Pendiente';
+          document.getElementById('u-drive').value = _unitFormState.drive || '';
+          document.getElementById('u-notas').value = _unitFormState.notas || '';
+          _unitFormState = null;
+        }
+        // Select new client
+        if(newC) selClienteUnidad(newC.cliente_id, newC.id, newC.nombre);
+        openModal('m-unidad');
+      }, 150);
     } else { loadClientes(); }}catch(e){toast('Error: '+e.message,'error');}
 }
 
@@ -20414,23 +20427,38 @@ function limpiarClienteUnidad(){
 
 // Crear cliente nuevo desde el formulario de unidad
 let _unitCreatingClient = false;
+let _unitFormState = null;
+
 function crearClienteDesdeUnidad(){
   _unitCreatingClient = true;
-  document.getElementById('m-cliente-title').textContent = 'Nuevo cliente (propietario)';
-  document.getElementById('c-id').value = '';
-  document.getElementById('c-nombre').value = '';
-  document.getElementById('c-tel').value = '';
-  document.getElementById('c-email').value = '';
-  document.getElementById('c-dir').value = '';
-  document.getElementById('c-notas').value = '';
-  document.getElementById('c-cp').value = '';
-  document.getElementById('c-poblacion').value = '';
-  document.getElementById('c-provincia').value = 'Valencia';
-  document.getElementById('c-cif-tipo').value = 'DNI';
-  document.getElementById('c-cif').value = '';
-  document.getElementById('c-tipo').value = 'Particular';
-  document.getElementById('c-pago').value = 'Transferencia';
-  openModal('m-cliente');
+  // Save unit form state
+  _unitFormState = {
+    id: document.getElementById('u-id').value,
+    ref: document.getElementById('u-ref').value,
+    estado: document.getElementById('u-estado').value,
+    drive: document.getElementById('u-drive').value,
+    notas: document.getElementById('u-notas').value
+  };
+  // Close unit modal first
+  closeModal('m-unidad');
+  // Open client modal after a small delay
+  setTimeout(()=>{
+    document.getElementById('m-cliente-title').textContent = 'Nuevo cliente (propietario)';
+    document.getElementById('c-id').value = '';
+    document.getElementById('c-nombre').value = '';
+    document.getElementById('c-tel').value = '';
+    document.getElementById('c-email').value = '';
+    document.getElementById('c-dir').value = '';
+    document.getElementById('c-notas').value = '';
+    document.getElementById('c-cp').value = '';
+    document.getElementById('c-poblacion').value = '';
+    document.getElementById('c-provincia').value = 'Valencia';
+    document.getElementById('c-cif-tipo').value = 'DNI';
+    document.getElementById('c-cif').value = '';
+    document.getElementById('c-tipo').value = 'Particular';
+    document.getElementById('c-pago').value = 'Transferencia';
+    openModal('m-cliente');
+  }, 150);
 }
 
 // ══════════════════════════════════════════════════════════════════════
