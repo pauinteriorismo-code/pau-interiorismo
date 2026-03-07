@@ -4029,12 +4029,27 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
   <div class="modal-head"><div class="modal-title">🏠 <span id="m-unidad-title">Nueva unidad</span></div><button class="modal-close" onclick="closeModal('m-unidad')">×</button></div>
   <div class="modal-body">
     <input type="hidden" id="u-id">
+    <input type="hidden" id="u-cliente-id">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
       <div class="form-group"><label class="form-label">Referencia *</label><input class="form-input" id="u-ref" placeholder="VIV-01, LOCAL-A..."></div>
       <div class="form-group"><label class="form-label">Estado</label><select class="form-input" id="u-estado"><option>Pendiente</option><option>En curso</option><option>Presupuestado</option><option>Aprobado</option><option>En ejecución</option><option>Entregado</option></select></div>
-      <div class="form-group"><label class="form-label">Cliente / Propietario</label><input class="form-input" id="u-cliente" placeholder="Nombre completo"></div>
-      <div class="form-group"><label class="form-label">Teléfono</label><input class="form-input" id="u-tel" placeholder="600 000 000"></div>
-      <div class="form-group fg-full"><label class="form-label">Email</label><input class="form-input" id="u-email" placeholder="cliente@email.com"></div>
+
+      <!-- Cliente con buscador -->
+      <div class="form-group fg-full">
+        <label class="form-label">Cliente / Propietario (para facturación de extras)</label>
+        <div style="display:flex;gap:6px;align-items:flex-start">
+          <div style="flex:1;position:relative">
+            <input class="form-input" id="u-cliente-search" placeholder="Buscar cliente existente..." autocomplete="off" oninput="buscarClienteUnidad()" onfocus="buscarClienteUnidad()" onblur="setTimeout(()=>{document.getElementById('u-cliente-dd').style.display='none'},250)">
+            <div id="u-cliente-dd" style="position:absolute;z-index:9999;background:#fff;border:1px solid var(--border);border-radius:6px;max-height:160px;overflow-y:auto;display:none;box-shadow:0 4px 12px rgba(0,0,0,.12);width:100%;top:100%;left:0"></div>
+            <div id="u-cliente-sel" style="display:none;margin-top:4px;padding:6px 10px;background:#e8f5e9;border-radius:6px;font-size:12px">
+              <span id="u-cliente-sel-text" style="font-weight:600;color:#2e7d32"></span>
+              <button onclick="limpiarClienteUnidad()" style="float:right;background:none;border:none;cursor:pointer;color:#888;font-size:11px">✕ Cambiar</button>
+            </div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="crearClienteDesdeUnidad()" style="font-size:11px;white-space:nowrap;padding:8px 10px;border:1px solid var(--border)">＋ Nuevo</button>
+        </div>
+      </div>
+
       <div class="form-group fg-full"><label class="form-label">📂 Carpeta Google Drive</label><input class="form-input" id="u-drive" placeholder="https://drive.google.com/drive/folders/..."></div>
       <div class="form-group fg-full"><label class="form-label">Notas</label><textarea class="form-input" id="u-notas" rows="2"></textarea></div>
     </div>
@@ -6360,7 +6375,14 @@ async function saveCliente(){
   const nombre=document.getElementById('c-nombre').value.trim();if(!nombre){toast('El nombre es obligatorio','error');return;}
   const id=document.getElementById('c-id').value;
   const d={nombre,cif:(document.getElementById('c-cif-tipo').value && document.getElementById('c-cif').value.trim() ? document.getElementById('c-cif-tipo').value+': '+document.getElementById('c-cif').value.trim() : document.getElementById('c-cif').value.trim()),telefono:document.getElementById('c-tel').value,email:document.getElementById('c-email').value,direccion:document.getElementById('c-dir').value,tipo:document.getElementById('c-tipo').value,forma_pago:document.getElementById('c-pago').value,notas:document.getElementById('c-notas').value,cp:document.getElementById('c-cp').value.trim()||null,poblacion:document.getElementById('c-poblacion').value.trim()||null,provincia:document.getElementById('c-provincia').value.trim()||null};
-  try{if(id){await sbPatch('clientes',id,d);toast('Cliente actualizado ✅');}else{d.cliente_id=genId('CLI',CC,'cliente_id');await sbPost('clientes',d);toast('Cliente guardado ✅');}closeModal('m-cliente');document.getElementById('c-id').value='';loadClientes();}catch(e){toast('Error: '+e.message,'error');}
+  try{if(id){await sbPatch('clientes',id,d);toast('Cliente actualizado ✅');}else{d.cliente_id=genId('CLI',CC,'cliente_id');await sbPost('clientes',d);toast('Cliente guardado ✅');}closeModal('m-cliente');document.getElementById('c-id').value='';
+    // If creating client from unit form, auto-select it
+    if(_unitCreatingClient){
+      _unitCreatingClient = false;
+      await loadClientes();
+      const newC = CC.find(c=>c.nombre===nombre);
+      if(newC) selClienteUnidad(newC.cliente_id, newC.id, newC.nombre);
+    } else { loadClientes(); }}catch(e){toast('Error: '+e.message,'error');}
 }
 
 // ═══════════════════════════════════════════
@@ -20217,9 +20239,10 @@ function nuevaUnidad(){
   document.getElementById('u-id').value = '';
   document.getElementById('u-ref').value = '';
   document.getElementById('u-estado').value = 'Pendiente';
-  document.getElementById('u-cliente').value = '';
-  document.getElementById('u-tel').value = '';
-  document.getElementById('u-email').value = '';
+  document.getElementById('u-cliente-id').value = '';
+  document.getElementById('u-cliente-search').value = '';
+  document.getElementById('u-cliente-sel').style.display = 'none';
+  document.getElementById('u-cliente-search').style.display = '';
   document.getElementById('u-drive').value = '';
   document.getElementById('u-notas').value = '';
   // Auto-suggest next ref
@@ -20241,9 +20264,18 @@ function editUnidad(id){
   document.getElementById('u-id').value = u.id;
   document.getElementById('u-ref').value = u.ref_unidad || '';
   document.getElementById('u-estado').value = u.estado || 'Pendiente';
-  document.getElementById('u-cliente').value = u.cliente_nombre || '';
-  document.getElementById('u-tel').value = u.cliente_telefono || '';
-  document.getElementById('u-email').value = u.cliente_email || '';
+  // Client
+  if(u.cliente_id){
+    document.getElementById('u-cliente-id').value = u.cliente_id;
+    document.getElementById('u-cliente-search').style.display = 'none';
+    document.getElementById('u-cliente-sel').style.display = 'block';
+    document.getElementById('u-cliente-sel-text').textContent = u.cliente_nombre || u.cliente_id;
+  } else {
+    document.getElementById('u-cliente-id').value = '';
+    document.getElementById('u-cliente-search').value = '';
+    document.getElementById('u-cliente-search').style.display = '';
+    document.getElementById('u-cliente-sel').style.display = 'none';
+  }
   document.getElementById('u-drive').value = u.carpeta_drive || '';
   document.getElementById('u-notas').value = u.notas || '';
   openModal('m-unidad');
@@ -20254,12 +20286,15 @@ async function saveUnidad(){
   const ref = document.getElementById('u-ref').value.trim();
   if(!ref){ toast('La referencia es obligatoria','error'); return; }
   const id = document.getElementById('u-id').value;
+  const clienteId = document.getElementById('u-cliente-id').value || null;
+  const clienteObj = clienteId ? CC.find(c=>c.cliente_id===clienteId || c.id===clienteId) : null;
   const d = {
     proyecto_id: _expProyId,
     ref_unidad: ref,
-    cliente_nombre: document.getElementById('u-cliente').value.trim() || null,
-    cliente_telefono: document.getElementById('u-tel').value.trim() || null,
-    cliente_email: document.getElementById('u-email').value.trim() || null,
+    cliente_id: clienteId,
+    cliente_nombre: clienteObj ? clienteObj.nombre : null,
+    cliente_telefono: clienteObj ? clienteObj.telefono : null,
+    cliente_email: clienteObj ? clienteObj.email : null,
     estado: document.getElementById('u-estado').value,
     carpeta_drive: document.getElementById('u-drive').value.trim() || null,
     presupuesto_version: ref,
@@ -20345,6 +20380,58 @@ function irPresupuestoUnidad(proyId, version){
   }, 200);
 }
 
+
+
+// Buscar cliente para unidad (dropdown)
+function buscarClienteUnidad(){
+  const inp = document.getElementById('u-cliente-search');
+  const dd = document.getElementById('u-cliente-dd');
+  const q = inp.value.toLowerCase().trim();
+  if(q.length < 2){ dd.style.display='none'; return; }
+  const matches = CC.filter(c => (c.nombre||'').toLowerCase().includes(q) || (c.cif||'').toLowerCase().includes(q) || (c.telefono||'').includes(q)).slice(0,8);
+  if(!matches.length){ dd.innerHTML='<div style="padding:8px 10px;font-size:11px;color:var(--text-soft)">Sin resultados. Usa "+ Nuevo" para crear.</div>'; dd.style.display='block'; return; }
+  dd.innerHTML = matches.map(c =>
+    '<div style="padding:7px 10px;cursor:pointer;font-size:12px;border-bottom:1px solid #f0f0f0" onmousedown="event.preventDefault()" onclick="selClienteUnidad(\''+c.cliente_id+'\',\''+c.id+'\',\''+((c.nombre||'').replace(/'/g,''))+'\')"><strong>'+c.nombre+'</strong> <span style="color:var(--text-soft);font-size:10px">'+( c.cif||'')+'</span><br><span style="font-size:10px;color:var(--text-soft)">'+(c.telefono||'')+' · '+(c.email||'')+'</span></div>'
+  ).join('');
+  dd.style.display = 'block';
+}
+
+function selClienteUnidad(clienteId, id, nombre){
+  document.getElementById('u-cliente-id').value = clienteId || id;
+  document.getElementById('u-cliente-search').style.display = 'none';
+  document.getElementById('u-cliente-dd').style.display = 'none';
+  document.getElementById('u-cliente-sel').style.display = 'block';
+  document.getElementById('u-cliente-sel-text').textContent = nombre;
+}
+
+function limpiarClienteUnidad(){
+  document.getElementById('u-cliente-id').value = '';
+  document.getElementById('u-cliente-search').value = '';
+  document.getElementById('u-cliente-search').style.display = '';
+  document.getElementById('u-cliente-sel').style.display = 'none';
+  document.getElementById('u-cliente-search').focus();
+}
+
+// Crear cliente nuevo desde el formulario de unidad
+let _unitCreatingClient = false;
+function crearClienteDesdeUnidad(){
+  _unitCreatingClient = true;
+  document.getElementById('m-cliente-title').textContent = 'Nuevo cliente (propietario)';
+  document.getElementById('c-id').value = '';
+  document.getElementById('c-nombre').value = '';
+  document.getElementById('c-tel').value = '';
+  document.getElementById('c-email').value = '';
+  document.getElementById('c-dir').value = '';
+  document.getElementById('c-notas').value = '';
+  document.getElementById('c-cp').value = '';
+  document.getElementById('c-poblacion').value = '';
+  document.getElementById('c-provincia').value = 'Valencia';
+  document.getElementById('c-cif-tipo').value = 'DNI';
+  document.getElementById('c-cif').value = '';
+  document.getElementById('c-tipo').value = 'Particular';
+  document.getElementById('c-pago').value = 'Transferencia';
+  openModal('m-cliente');
+}
 
 // ══════════════════════════════════════════════════════════════════════
 // 📂 DOCUMENTACIÓN — Google Drive link por proyecto
