@@ -20031,10 +20031,9 @@ async function renderExpDocs(body){
   const p = PC.find(x=>x.proyecto_id===pid);
   if(!p){ body.innerHTML='<p>No encontrado</p>'; return; }
 
-  // Cargar enlaces de este proyecto
+  // Cargar enlaces de este proyecto usando la API REST
   try {
-    const {data} = await SB.from('proyecto_enlaces').select('*').eq('proyecto_id',pid).order('orden');
-    _docEnlaces = data || [];
+    _docEnlaces = await sbGet('proyecto_enlaces','&proyecto_id=eq.'+encodeURIComponent(pid)+'&order=orden');
   } catch(e){ _docEnlaces = []; }
 
   const driveUrl = p.carpeta_drive || '';
@@ -20128,7 +20127,7 @@ async function addEnlaceProyecto(){
   if(!url) return;
   const emoji = prompt('Emoji (opcional, ej: 📐 📷 📋)', '📁') || '📁';
   try {
-    await SB.from('proyecto_enlaces').insert({
+    await sbPost('proyecto_enlaces',{
       proyecto_id: _expProyId,
       label: label.trim(),
       url: url.trim(),
@@ -20145,7 +20144,7 @@ async function addEnlaceSugerido(emoji, label){
   const url = prompt('Pega la URL de la carpeta "'+label+'" en Google Drive:');
   if(!url) return;
   try {
-    await SB.from('proyecto_enlaces').insert({
+    await sbPost('proyecto_enlaces',{
       proyecto_id: _expProyId,
       label,
       url: url.trim(),
@@ -20177,7 +20176,7 @@ async function editEnlaceProyecto(id){
 async function deleteEnlaceProyecto(id, label){
   if(!confirm('¿Eliminar enlace "'+label+'"?')) return;
   try {
-    await SB.from('proyecto_enlaces').delete().eq('id',id);
+    await sbDelete('proyecto_enlaces',id);
     toast('Enlace eliminado');
     renderExpDocs(document.getElementById('exp-body'));
   } catch(e){ toast('Error: '+e.message,'error'); }
