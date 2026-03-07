@@ -4009,6 +4009,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <button class="exp-tab" onclick="expTab('horas')" data-tab="horas" style="padding:10px 16px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-mid);border-bottom:2px solid transparent">⏱ Horas</button>
       <button class="exp-tab" onclick="expTab('notas')" data-tab="notas" style="padding:10px 16px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-mid);border-bottom:2px solid transparent">📝 Notas</button><button class="exp-tab" onclick="expTab('fotos')" data-tab="fotos" style="padding:10px 16px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-mid);border-bottom:2px solid transparent">📷 Fotos</button>
       <button class="exp-tab" onclick="expTab('docs')" data-tab="docs" style="padding:10px 16px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-mid);border-bottom:2px solid transparent">📂 Docs</button>
+      <button class="exp-tab" onclick="expTab('unidades')" data-tab="unidades" style="padding:10px 16px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-mid);border-bottom:2px solid transparent">🏠 Unidades</button>
     </div>
 
     <!-- Tab content -->
@@ -4020,6 +4021,24 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     </div>
   </div>
 </div>
+<!-- MODAL UNIDAD/VIVIENDA -->
+<div class="overlay" id="m-unidad"><div class="modal" style="width:min(560px,95vw)">
+  <div class="modal-head"><div class="modal-title">🏠 <span id="m-unidad-title">Nueva unidad</span></div><button class="modal-close" onclick="closeModal('m-unidad')">×</button></div>
+  <div class="modal-body">
+    <input type="hidden" id="u-id">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group"><label class="form-label">Referencia *</label><input class="form-input" id="u-ref" placeholder="VIV-01, LOCAL-A..."></div>
+      <div class="form-group"><label class="form-label">Estado</label><select class="form-input" id="u-estado"><option>Pendiente</option><option>En curso</option><option>Presupuestado</option><option>Aprobado</option><option>En ejecución</option><option>Entregado</option></select></div>
+      <div class="form-group"><label class="form-label">Cliente / Propietario</label><input class="form-input" id="u-cliente" placeholder="Nombre completo"></div>
+      <div class="form-group"><label class="form-label">Teléfono</label><input class="form-input" id="u-tel" placeholder="600 000 000"></div>
+      <div class="form-group fg-full"><label class="form-label">Email</label><input class="form-input" id="u-email" placeholder="cliente@email.com"></div>
+      <div class="form-group fg-full"><label class="form-label">📂 Carpeta Google Drive</label><input class="form-input" id="u-drive" placeholder="https://drive.google.com/drive/folders/..."></div>
+      <div class="form-group fg-full"><label class="form-label">Notas</label><textarea class="form-input" id="u-notas" rows="2"></textarea></div>
+    </div>
+  </div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('m-unidad')">Cancelar</button><button class="btn btn-primary" onclick="saveUnidad()">💾 Guardar</button></div>
+</div></div>
+
 
 <!-- ═══ MODAL CAMBIAR ESTADO PROYECTO ═══ -->
 <div class="overlay" id="m-estado-proy">
@@ -18548,6 +18567,7 @@ function expTab(tab){
     case 'notas':        renderExpNotas(body); break;
     case 'fotos':       renderExpFotos(body); break;
     case 'docs':        renderExpDocs(body); break;
+    case 'unidades':    renderExpUnidades(body); break;
   }
 }
 
@@ -20020,6 +20040,239 @@ function generarCertPDFContenido({ proy, p, cli, cfg, fecha, notas, base, iva, i
 // ═══════════════════════════════════════════════════
 //  MÓDULO 2: GALERÍA DE FOTOS EN EXPEDIENTE
 // ═══════════════════════════════════════════════════
+
+// ══════════════════════════════════════════════════════════════════════
+// 🏠 UNIDADES / VIVIENDAS — Gestión multi-cliente por proyecto
+// ══════════════════════════════════════════════════════════════════════
+let _unidades = [];
+
+async function renderExpUnidades(body){
+  const pid = _expProyId;
+  const p = PC.find(x=>x.proyecto_id===pid);
+  if(!p){ body.innerHTML='<p>No encontrado</p>'; return; }
+
+  try {
+    _unidades = await sbGet('proyecto_unidades','?proyecto_id=eq.'+encodeURIComponent(pid)+'&order=orden,ref_unidad');
+  } catch(e){ _unidades = []; }
+
+  const estadoColor = s => {
+    if(s==='Aprobado'||s==='Entregado') return 'background:#e8f5e9;color:#2e7d32';
+    if(s==='En curso'||s==='En ejecución') return 'background:#e3f2fd;color:#1565c0';
+    if(s==='Presupuestado') return 'background:#fff8e1;color:#f57f17';
+    return 'background:#f5f5f5;color:#666';
+  };
+
+  // Stats
+  const total = _unidades.length;
+  const aprobados = _unidades.filter(u=>u.estado==='Aprobado'||u.estado==='Entregado').length;
+  const enCurso = _unidades.filter(u=>u.estado==='En curso'||u.estado==='En ejecución').length;
+  const importeTotal = _unidades.reduce((s,u)=>s+(u.importe_presupuesto||0),0);
+
+  let listHtml = '';
+  if(_unidades.length > 0){
+    listHtml = _unidades.map(u => {
+      const hasDrive = u.carpeta_drive && u.carpeta_drive.startsWith('http');
+      const hasVersion = u.presupuesto_version;
+      return `
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:#fff;border-radius:10px;border:1px solid var(--border);transition:box-shadow .2s" onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow=''">
+        <div style="width:50px;height:50px;background:linear-gradient(135deg,#f7f4ef,#fff);border:2px solid #b87333;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;color:#b87333;flex-shrink:0">${u.ref_unidad||'?'}</div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
+            <strong style="font-size:13px;color:var(--navy)">${u.cliente_nombre||'Sin cliente asignado'}</strong>
+            <span style="font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;${estadoColor(u.estado)}">${u.estado||'Pendiente'}</span>
+          </div>
+          <div style="font-size:11px;color:var(--text-soft)">
+            ${u.cliente_telefono?'📱 '+u.cliente_telefono+' · ':''}${u.cliente_email||''}
+          </div>
+          ${u.importe_presupuesto>0?'<div style="font-size:12px;font-weight:700;color:var(--green);margin-top:2px">'+fmtES(u.importe_presupuesto)+'€</div>':''}
+          ${u.notas?'<div style="font-size:10px;color:var(--text-soft);margin-top:2px">'+u.notas+'</div>':''}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
+          ${hasDrive?'<a href="'+u.carpeta_drive+'" target="_blank" rel="noopener" class="btn btn-ghost btn-sm" style="font-size:10px;padding:3px 8px" title="Abrir carpeta Drive">📂</a>':''}
+          ${hasVersion?'<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:3px 8px;color:var(--navy)" onclick="irPresupuestoUnidad(\''+pid+'\',\''+u.presupuesto_version+'\')">💰 Ppto</button>':''}
+          <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:3px 8px" onclick="editUnidad('${u.id}')">✏️</button>
+          <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:3px 8px;color:var(--red)" onclick="deleteUnidad('${u.id}','${(u.ref_unidad||'').replace(/'/g,'')}')">🗑</button>
+        </div>
+      </div>`;
+    }).join('');
+  } else {
+    listHtml = '<div style="text-align:center;padding:40px;color:var(--text-soft)"><div style="font-size:36px;margin-bottom:8px">🏠</div><div style="font-size:13px">No hay unidades/viviendas configuradas</div><div style="font-size:11px;margin-top:4px">Pulsa "+ Nueva unidad" para empezar</div></div>';
+  }
+
+  body.innerHTML = `
+    <div style="max-width:720px;margin:0 auto">
+      <!-- KPIs -->
+      ${total > 0 ? `
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px">
+        <div style="background:#f8fafd;border-radius:8px;padding:10px;text-align:center;border:1px solid var(--border)">
+          <div style="font-size:20px;font-weight:800;color:var(--navy)">${total}</div>
+          <div style="font-size:10px;color:var(--text-soft)">Unidades</div>
+        </div>
+        <div style="background:#f8fafd;border-radius:8px;padding:10px;text-align:center;border:1px solid var(--border)">
+          <div style="font-size:20px;font-weight:800;color:var(--green)">${aprobados}</div>
+          <div style="font-size:10px;color:var(--text-soft)">Aprobados</div>
+        </div>
+        <div style="background:#f8fafd;border-radius:8px;padding:10px;text-align:center;border:1px solid var(--border)">
+          <div style="font-size:20px;font-weight:800;color:#1565c0">${enCurso}</div>
+          <div style="font-size:10px;color:var(--text-soft)">En curso</div>
+        </div>
+        <div style="background:#f8fafd;border-radius:8px;padding:10px;text-align:center;border:1px solid var(--border)">
+          <div style="font-size:20px;font-weight:800;color:var(--copper)">${importeTotal>0?fmtES(importeTotal)+'€':'—'}</div>
+          <div style="font-size:10px;color:var(--text-soft)">Importe total</div>
+        </div>
+      </div>` : ''}
+
+      <!-- Header + botones -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div style="font-weight:700;font-size:14px;color:#4a3728">🏠 Unidades / Viviendas</div>
+        <div style="display:flex;gap:6px">
+          ${total > 0 ? '<button class="btn btn-ghost btn-sm" onclick="generarUnidadesLote()" style="font-size:11px">📋 Crear lote</button>' : ''}
+          <button class="btn btn-primary btn-sm" onclick="nuevaUnidad()" style="font-size:11px">＋ Nueva unidad</button>
+        </div>
+      </div>
+
+      <!-- Lista -->
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${listHtml}
+      </div>
+    </div>
+  `;
+}
+
+// Nueva unidad
+function nuevaUnidad(){
+  document.getElementById('m-unidad-title').textContent = 'Nueva unidad';
+  document.getElementById('u-id').value = '';
+  document.getElementById('u-ref').value = '';
+  document.getElementById('u-estado').value = 'Pendiente';
+  document.getElementById('u-cliente').value = '';
+  document.getElementById('u-tel').value = '';
+  document.getElementById('u-email').value = '';
+  document.getElementById('u-drive').value = '';
+  document.getElementById('u-notas').value = '';
+  // Auto-suggest next ref
+  if(_unidades.length > 0){
+    const nums = _unidades.map(u => {const m = u.ref_unidad?.match(/(\d+)/); return m ? parseInt(m[1]) : 0;});
+    const next = Math.max(...nums) + 1;
+    document.getElementById('u-ref').value = 'VIV-' + String(next).padStart(2,'0');
+  } else {
+    document.getElementById('u-ref').value = 'VIV-01';
+  }
+  openModal('m-unidad');
+}
+
+// Editar unidad
+function editUnidad(id){
+  const u = _unidades.find(x=>x.id===id);
+  if(!u) return;
+  document.getElementById('m-unidad-title').textContent = 'Editar ' + (u.ref_unidad||'unidad');
+  document.getElementById('u-id').value = u.id;
+  document.getElementById('u-ref').value = u.ref_unidad || '';
+  document.getElementById('u-estado').value = u.estado || 'Pendiente';
+  document.getElementById('u-cliente').value = u.cliente_nombre || '';
+  document.getElementById('u-tel').value = u.cliente_telefono || '';
+  document.getElementById('u-email').value = u.cliente_email || '';
+  document.getElementById('u-drive').value = u.carpeta_drive || '';
+  document.getElementById('u-notas').value = u.notas || '';
+  openModal('m-unidad');
+}
+
+// Guardar unidad
+async function saveUnidad(){
+  const ref = document.getElementById('u-ref').value.trim();
+  if(!ref){ toast('La referencia es obligatoria','error'); return; }
+  const id = document.getElementById('u-id').value;
+  const d = {
+    proyecto_id: _expProyId,
+    ref_unidad: ref,
+    cliente_nombre: document.getElementById('u-cliente').value.trim() || null,
+    cliente_telefono: document.getElementById('u-tel').value.trim() || null,
+    cliente_email: document.getElementById('u-email').value.trim() || null,
+    estado: document.getElementById('u-estado').value,
+    carpeta_drive: document.getElementById('u-drive').value.trim() || null,
+    presupuesto_version: ref,
+    notas: document.getElementById('u-notas').value.trim() || null,
+    orden: _unidades.length * 10 + 10
+  };
+  try {
+    if(id){
+      await sbPatch('proyecto_unidades', id, d);
+      toast('Unidad actualizada ✅');
+    } else {
+      await sbPost('proyecto_unidades', d);
+      toast('Unidad creada ✅');
+    }
+    closeModal('m-unidad');
+    renderExpUnidades(document.getElementById('exp-body'));
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+// Eliminar unidad
+async function deleteUnidad(id, ref){
+  if(!confirm('¿Eliminar la unidad '+ref+'? Esto NO borra el presupuesto asociado.')) return;
+  try {
+    await sbDelete('proyecto_unidades', id);
+    toast('Unidad eliminada');
+    renderExpUnidades(document.getElementById('exp-body'));
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+// Crear unidades en lote
+async function generarUnidadesLote(){
+  const cant = prompt('¿Cuántas unidades quieres crear? (ej: 24)');
+  if(!cant) return;
+  const n = parseInt(cant);
+  if(isNaN(n) || n < 1 || n > 100){ toast('Número no válido (1-100)','error'); return; }
+  const prefijo = prompt('Prefijo de las referencias (ej: VIV, LOCAL, PISO):', 'VIV');
+  if(!prefijo) return;
+
+  // Find current max
+  const nums = _unidades.map(u => {const m = u.ref_unidad?.match(/(\d+)/); return m ? parseInt(m[1]) : 0;});
+  let start = nums.length > 0 ? Math.max(...nums) + 1 : 1;
+
+  try {
+    for(let i = 0; i < n; i++){
+      const ref = prefijo.trim() + '-' + String(start + i).padStart(2,'0');
+      await sbPost('proyecto_unidades', {
+        proyecto_id: _expProyId,
+        ref_unidad: ref,
+        estado: 'Pendiente',
+        presupuesto_version: ref,
+        orden: (_unidades.length + i + 1) * 10
+      });
+    }
+    toast(n + ' unidades creadas ✅');
+    renderExpUnidades(document.getElementById('exp-body'));
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+// Ir al presupuesto de una unidad
+function irPresupuestoUnidad(proyId, version){
+  closeModal('m-expediente');
+  // Set project and version selectors, then navigate
+  setTimeout(()=>{
+    navTo('presupuesto');
+    setTimeout(()=>{
+      const selProy = document.getElementById('pres-proy');
+      const selVer = document.getElementById('pres-ver');
+      if(selProy) selProy.value = proyId;
+      if(selVer){
+        // Check if version option exists, if not add it
+        let found = false;
+        for(let o of selVer.options){ if(o.value === version){ found = true; break; } }
+        if(!found){
+          const opt = document.createElement('option');
+          opt.value = version;
+          opt.textContent = version;
+          selVer.appendChild(opt);
+        }
+        selVer.value = version;
+      }
+      loadPresupuesto();
+    }, 200);
+  }, 200);
+}
+
 
 // ══════════════════════════════════════════════════════════════════════
 // 📂 DOCUMENTACIÓN — Google Drive link por proyecto
