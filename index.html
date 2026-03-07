@@ -546,6 +546,14 @@ th.sortable:not(.sort-asc):not(.sort-desc) .sort-arrow::after{content:'⇅'}
             <div style="display:flex;justify-content:space-between;padding:9px 0;font-size:14px;font-weight:700;color:#4a3728"><span>TOTAL</span><span id="pf-total">—</span></div>
           </div>
         </div>
+        <!-- Observaciones -->
+        <div id="pf-obs-wrap" style="margin-top:14px;padding-top:10px;border-top:1px solid #ddd">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <strong style="color:#333;font-size:10px">Observaciones:</strong>
+            <button class="btn btn-ghost btn-sm no-print" onclick="savePfObs()" style="font-size:10px;padding:2px 8px">💾</button>
+          </div>
+          <textarea id="pf-obs" rows="2" style="width:100%;font-size:10px;color:#555;border:1px dashed #ccc;border-radius:4px;padding:6px;resize:vertical;font-family:inherit" placeholder="Observaciones opcionales del presupuesto (se imprimen en el documento)..."></textarea>
+        </div>
         <!-- Condiciones -->
         <div style="margin-top:14px;padding-top:10px;border-top:1px solid #ddd;color:#888;font-size:10px">
           <strong style="color:#333">Condiciones:</strong> Presupuesto válido por 30 días desde su emisión. Cualquier producto o trabajo que no esté reflejado en este documento se valorará a parte. En caso de aceptación, sírvase firmar y devolver una copia.
@@ -4289,6 +4297,9 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="form-group fg-full"><label class="form-label">Concepto general <span style="font-size:10px;color:var(--text-soft);font-weight:400">(resumen para cabecera de factura)</span></label>
         <input class="form-input" id="f-concepto" placeholder="Ej: Mobiliario comedor según presupuesto PRE-001…">
       </div>
+      <div class="form-group fg-full"><label class="form-label">Observaciones <span style="font-size:10px;color:var(--text-soft);font-weight:400">(se imprimen al pie de la factura)</span></label>
+        <textarea class="form-input" id="f-observaciones" rows="2" placeholder="Ej: La instalación de cualquier electrodoméstico no suministrado se cobrará 100€ por unidad."></textarea>
+      </div>
       <div class="form-group"><label class="form-label">Base imponible € <span style="font-size:10px;color:var(--amber);font-weight:400">↑ auto desde líneas</span></label>
         <input class="form-input" id="f-base" type="number" step="0.01" oninput="calcTotalFac()">
       </div>
@@ -4517,7 +4528,32 @@ async function loadPresupuestoFinal(){
       }).join('');
     }
     document.getElementById('pf-total').textContent=fmtES(total)+'€';
+    loadPfObs();
   }catch(e){toast('Error: '+e.message,'error');}
+}
+
+
+// Observaciones presupuesto — save/load using configuracion table
+async function savePfObs(){
+  const proy = document.getElementById('pf-proyecto-sel')?.value;
+  const ver = document.getElementById('pf-version-sel')?.value || 'v1';
+  const obs = document.getElementById('pf-obs')?.value || '';
+  if(!proy) return;
+  const key = 'obs_pres_'+proy+'_'+ver;
+  try { await upsertConfig(key, obs); toast('Observaciones guardadas ✅'); }
+  catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+async function loadPfObs(){
+  const proy = document.getElementById('pf-proyecto-sel')?.value;
+  const ver = document.getElementById('pf-version-sel')?.value || 'v1';
+  const el = document.getElementById('pf-obs');
+  if(!el || !proy) return;
+  const key = 'obs_pres_'+proy+'_'+ver;
+  try {
+    const rows = await sbGet('configuracion','?clave=eq.'+encodeURIComponent(key));
+    el.value = (rows && rows[0]) ? rows[0].valor : '';
+  } catch(e){ el.value = ''; }
 }
 
 function pfVistaPrevia(){ abrirVistaPrevia('pf-doc','Presupuesto'); }
@@ -10279,6 +10315,7 @@ function abrirNuevaFactura(tipo){
   document.getElementById('f-num').value = prefijo + String(siguiente).padStart(3,'0');
   // Clear otros campos
   document.getElementById('f-concepto').value='';
+  document.getElementById('f-observaciones').value='';
   document.getElementById('f-base').value='';
   document.getElementById('f-cobrado').value='0';
   // Limpiar pagos a cuenta
@@ -10626,6 +10663,7 @@ function _buildFacturaPDF(){
   const pdte = total - cobrado;
   const estado= document.getElementById('f-estado').value;
   const concepto=document.getElementById('f-concepto').value||'';
+  const observaciones=document.getElementById('f-observaciones')?.value||'';
   const fpago = document.getElementById('f-pago').value;
 
   let contra='—', contraDir='', contraCIF='', contraTel='', contraEmail='';
@@ -10668,7 +10706,7 @@ function _buildFacturaPDF(){
   const hoy=new Date().toLocaleDateString('es-ES');
 
   return {num,fecha,vto,base,ivaSel,ivaN,total,cobrado,pdte,estado,concepto,fpago,
-          contra,contraDir,contraCIF,contraTel,contraEmail,filasLineas,ivaImporte,estColor,tipoLabel,hoy,esC};
+          contra,contraDir,contraCIF,contraTel,contraEmail,filasLineas,ivaImporte,estColor,tipoLabel,hoy,esC,observaciones};
 }
 
 function escH(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -10765,6 +10803,7 @@ function previsualizarFactura(){
     +'</div>'
     +'</div>'
     +'<div style="padding:12px 32px 0">'+_getPieHtml(d.esC)+'</div>'
+    +(d.observaciones?'<div style="margin-top:12px;padding:8px 10px;border-top:1px solid #ddd;font-size:10px;color:#555"><strong style="color:#333">Observaciones:</strong> '+escH(d.observaciones)+'</div>':'')
     +'<div class="foot">PAU INTERIORISMO S.L. · CIF B-56909641 · C/ Tomás y Valiente Nº 6 Bajo · 46290 Alcàsser (Valencia) · Tel: 961 20 01 87</div>'
   +'</div>'
   +'</body></html>';
@@ -10870,6 +10909,7 @@ function editFactura(id){
   document.getElementById('f-num').value     = f.num_factura||'';
   document.getElementById('f-fecha').value   = f.fecha_emision||'';
   document.getElementById('f-concepto').value= f.concepto||'';
+  document.getElementById('f-observaciones').value= f.observaciones||'';
   document.getElementById('f-base').value    = f.base_imponible||'';
   document.getElementById('f-iva').value     = f.iva_pct||'21%';
   document.getElementById('f-pago').value    = f.forma_pago||'Transferencia';
@@ -10979,6 +11019,7 @@ async function saveFactura(){
     estado:          document.getElementById('f-estado').value||'Pendiente',
     importe_cobrado: parseFloat(document.getElementById('f-cobrado').value)||0,
     concepto:        document.getElementById('f-concepto').value,
+    observaciones:   document.getElementById('f-observaciones')?.value||null,
     // Pagos a cuenta (hasta 3 pagos parciales)
     pago1_fecha:   document.getElementById('f-pago1-fecha')?.value||null,
     pago1_importe: parseFloat(document.getElementById('f-pago1-importe')?.value)||0,
