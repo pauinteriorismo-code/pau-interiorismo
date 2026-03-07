@@ -20307,7 +20307,7 @@ async function renderExpUnidades(body){
   const enCurso = _unidades.filter(u=>u.estado==='En curso'||u.estado==='En ejecución').length;
 
   // Calculate real KPIs from data
-  const kpis = {presBase:0, presUnidades:0, facturado:0, costes:0, margen:0};
+  const kpis = {presBase:0, presUnidades:0, facturado:0, facturadoIva:0, cobrado:0, costes:0, margen:0};
   try {
     // All presupuesto lines for this project
     const allPres = await sbGet('presupuesto_lineas','?proyecto_id=eq.'+encodeURIComponent(pid)+'&es_capitulo=eq.false&select=version,cantidad,precio_venta,ci_gg_bi_pct');
@@ -20321,6 +20321,8 @@ async function renderExpUnidades(body){
     // Facturado (ventas)
     const facturas = (FC||[]).filter(f=>f.proyecto_id===pid&&(f.tipo_factura||'Venta')==='Venta');
     kpis.facturado = facturas.reduce((s,f)=>s+(f.base_imponible||0),0);
+    kpis.facturadoIva = facturas.reduce((s,f)=>{const b=f.base_imponible||0;return s+b+b*ivaPct(f.iva_pct)/100;},0);
+    kpis.cobrado = facturas.reduce((s,f)=>s+(f.importe_cobrado||0),0);
     // Costes = compras + subcontratas
     const compras = (CoC||[]).filter(c=>c.proyecto_id===pid);
     const subcs = (ScC||[]).filter(s=>s.proyecto_id===pid);
@@ -20400,10 +20402,16 @@ async function renderExpUnidades(body){
         </div>
       </div>
       <!-- KPIs facturación/costes -->
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px">
         <div style="background:#fff;border-radius:8px;padding:8px;text-align:center;border:1px solid var(--border)">
-          <div style="font-size:14px;font-weight:700;color:var(--green)">${kpis.facturado>0?fmtES(kpis.facturado)+'€':'0,00€'}</div>
-          <div style="font-size:10px;color:var(--text-soft)">Facturado</div>
+          <div style="font-size:14px;font-weight:700;color:var(--green)">${kpis.facturadoIva>0?fmtES(kpis.facturadoIva)+'€':'0,00€'}</div>
+          <div style="font-size:10px;color:var(--text-soft)">Facturado (con IVA)</div>
+          <div style="font-size:9px;color:var(--text-soft)">Base: ${fmtES(kpis.facturado)}€</div>
+        </div>
+        <div style="background:#fff;border-radius:8px;padding:8px;text-align:center;border:1px solid var(--border)">
+          <div style="font-size:14px;font-weight:700;color:#1565c0">${kpis.cobrado>0?fmtES(kpis.cobrado)+'€':'0,00€'}</div>
+          <div style="font-size:10px;color:var(--text-soft)">Cobrado (en banco)</div>
+          <div style="font-size:9px;color:${kpis.facturadoIva-kpis.cobrado>0.01?'var(--amber)':'var(--green)'}">${kpis.facturadoIva-kpis.cobrado>0.01?'Pdte: '+fmtES(kpis.facturadoIva-kpis.cobrado)+'€':'Todo cobrado'}</div>
         </div>
         <div style="background:#fff;border-radius:8px;padding:8px;text-align:center;border:1px solid var(--border)">
           <div style="font-size:14px;font-weight:700;color:var(--amber)">${kpis.costes>0?fmtES(kpis.costes)+'€':'0,00€'}</div>
