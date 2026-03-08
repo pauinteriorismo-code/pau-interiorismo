@@ -4657,13 +4657,6 @@ function abrirVistaPrevia(docId, titulo, autoPrint=false, filename=null){
       if(autoPrint){ setTimeout(function(){ window.print(); }, 600); }
     });
   \u003c/script>\n  
-<script>
-// Build email dynamically to prevent Cloudflare obfuscation
-document.addEventListener('DOMContentLoaded',function(){
-  var e='presupuesto'+'s@pau'+'interiorismo'+'.es';
-  document.querySelectorAll('.pau-email').forEach(function(el){el.textContent=e;});
-});
-</script>
 </body></html>`);
   w.document.close();
 }
@@ -6220,13 +6213,6 @@ function exportarInformeFacturas(){
   <div class="footer">PAU INTERIORISMO S.L. · CIF B-56909641 · presupuestos@pauinteriorismo.es · Tel: 961 20 01 87</div>
 </div>
   
-<script>
-// Build email dynamically to prevent Cloudflare obfuscation
-document.addEventListener('DOMContentLoaded',function(){
-  var e='presupuesto'+'s@pau'+'interiorismo'+'.es';
-  document.querySelectorAll('.pau-email').forEach(function(el){el.textContent=e;});
-});
-</script>
 </body></html>`;
 
   // Generar PDF directamente en la página (igual que Contrato)
@@ -9076,13 +9062,6 @@ function saitraImprimir(){
     </div>
     <div class="nota">* Precios sin IVA. IVA aplicable según normativa vigente. Presupuesto válido 30 días desde su emisión.</div>
   </div>
-<script>
-// Build email dynamically to prevent Cloudflare obfuscation
-document.addEventListener('DOMContentLoaded',function(){
-  var e='presupuesto'+'s@pau'+'interiorismo'+'.es';
-  document.querySelectorAll('.pau-email').forEach(function(el){el.textContent=e;});
-});
-</script>
 </body></html>`;
 
   const w = window.open('','_blank','width=900,height=750');
@@ -10869,13 +10848,6 @@ function previsualizarFactura(){
     +'<div class="foot">PAU INTERIORISMO S.L. · CIF B-56909641 · C/ Tomás y Valiente Nº 6 Bajo · 46290 Alcàsser (Valencia) · Tel: 961 20 01 87</div>'
   +'</div>'
   +'
-<script>
-// Build email dynamically to prevent Cloudflare obfuscation
-document.addEventListener('DOMContentLoaded',function(){
-  var e='presupuesto'+'s@pau'+'interiorismo'+'.es';
-  document.querySelectorAll('.pau-email').forEach(function(el){el.textContent=e;});
-});
-</script>
 </body></html>';
 
   const win=window.open('','_blank','width=870,height=900');
