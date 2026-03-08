@@ -4971,9 +4971,13 @@ if(document.readyState==='loading'){
 // ═══════════════════════════════════════════
 async function sb(table,method='GET',body=null,id=null,extra=''){
   const url=`${SB_URL}/rest/v1/${table}${id?`?id=eq.${id}`:''}${extra}`;
-  const opts={method,headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json','Prefer':method==='POST'?'return=representation':''}};
-  // iOS Safari fix: no incluir body en GET/DELETE
-  if(body && method!=='GET' && method!=='DELETE') opts.body=JSON.stringify(body);
+  // iOS Safari fix: Content-Type solo en peticiones con body (POST/PATCH)
+  const needsBody = body && (method==='POST'||method==='PATCH'||method==='PUT');
+  const headers={'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Accept':'application/json'};
+  if(needsBody) headers['Content-Type']='application/json';
+  if(method==='POST') headers['Prefer']='return=representation';
+  const opts={method,headers};
+  if(needsBody) opts.body=JSON.stringify(body);
   const r=await fetch(url,opts);
   if(!r.ok)throw new Error(await r.text());
   const t=await r.text();return t?JSON.parse(t):[];
