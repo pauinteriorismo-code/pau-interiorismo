@@ -2376,10 +2376,10 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
             </div>
             <div style="margin-top:8px;display:flex;align-items:center;gap:6px">
               <span style="font-size:10px;font-weight:700;color:var(--text-soft);flex-shrink:0">Exportar a:</span>
-              <select id="ix-export-proy" class="form-input" style="flex:1;min-width:0;font-size:11px;padding:3px 5px;height:26px">
+              <select id="ix-export-proy" class="form-input" style="flex:1;min-width:0;font-size:11px;padding:3px 5px;height:26px" onchange="_loadUnitsIntoSelector(this.value,document.getElementById('ix-export-ver'))">
                 <option value="">📁 Proyecto…</option>
               </select>
-              <select id="ix-export-ver" class="form-input" style="width:58px;font-size:11px;padding:3px 5px;height:26px">
+              <select id="ix-export-ver" class="form-input" style="width:auto;min-width:58px;font-size:11px;padding:3px 5px;height:26px">
                 <option value="v1">v1</option>
                 <option value="v2">v2</option>
                 <option value="v3">v3</option>
@@ -2516,10 +2516,10 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
             </div>
             <div style="margin-top:8px;display:flex;align-items:center;gap:6px">
               <span style="font-size:10px;font-weight:700;color:var(--text-soft);flex-shrink:0">Exportar a:</span>
-              <select id="vk-export-proy" class="form-input" style="flex:1;min-width:0;font-size:11px;padding:3px 5px;height:26px">
+              <select id="vk-export-proy" class="form-input" style="flex:1;min-width:0;font-size:11px;padding:3px 5px;height:26px" onchange="_loadUnitsIntoSelector(this.value,document.getElementById('vk-export-ver'))">
                 <option value="">📁 Proyecto…</option>
               </select>
-              <select id="vk-export-ver" class="form-input" style="width:58px;font-size:11px;padding:3px 5px;height:26px">
+              <select id="vk-export-ver" class="form-input" style="width:auto;min-width:58px;font-size:11px;padding:3px 5px;height:26px">
                 <option value="v1">v1</option>
                 <option value="v2">v2</option>
                 <option value="v3">v3</option>
@@ -17316,6 +17316,7 @@ function openFregImport(){
 // POBLAR SELECTOR DE PROYECTO EN PANEL VALORACIÓN
 // ══════════════════════════════════════════════════════════════
 function ixPopulateProyectoSel(){
+  const verMap = {'ix-export-proy':'ix-export-ver', 'vk-export-proy':'vk-export-ver'};
   ['ix-export-proy','vk-export-proy'].forEach(selId=>{
     const sel = document.getElementById(selId);
     if(!sel) return;
@@ -17328,7 +17329,11 @@ function ixPopulateProyectoSel(){
         o.textContent = p.proyecto_id + ' · ' + p.nombre;
         sel.appendChild(o);
       });
-      if(cur) sel.value = cur;
+      if(cur){
+        sel.value = cur;
+        const verId = verMap[selId];
+        if(verId) _loadUnitsIntoSelector(cur, document.getElementById(verId));
+      }
     }
   });
 }
