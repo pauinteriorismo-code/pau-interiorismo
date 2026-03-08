@@ -4971,16 +4971,26 @@ if(document.readyState==='loading'){
 // ═══════════════════════════════════════════
 async function sb(table,method='GET',body=null,id=null,extra=''){
   const url=`${SB_URL}/rest/v1/${table}${id?`?id=eq.${id}`:''}${extra}`;
-  // iOS Safari fix: Content-Type solo en peticiones con body (POST/PATCH)
   const needsBody = body && (method==='POST'||method==='PATCH'||method==='PUT');
-  const headers={'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Accept':'application/json'};
+  // iOS Safari CORS fix: headers mínimos, mode cors explícito, credentials omit
+  const headers={'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`};
   if(needsBody) headers['Content-Type']='application/json';
   if(method==='POST') headers['Prefer']='return=representation';
-  const opts={method,headers};
+  const opts={method,headers,mode:'cors',credentials:'omit'};
   if(needsBody) opts.body=JSON.stringify(body);
-  const r=await fetch(url,opts);
-  if(!r.ok)throw new Error(await r.text());
-  const t=await r.text();return t?JSON.parse(t):[];
+  const ctrl=new AbortController();
+  const tid=setTimeout(()=>ctrl.abort(),20000);
+  opts.signal=ctrl.signal;
+  try{
+    const r=await fetch(url,opts);
+    clearTimeout(tid);
+    if(!r.ok)throw new Error(await r.text());
+    const t=await r.text();return t?JSON.parse(t):[];
+  }catch(err){
+    clearTimeout(tid);
+    if(err.name==='AbortError') throw new Error('Timeout (20s): '+table);
+    throw err;
+  }
 }
 const sbGet=(t,e='')=>sb(t,'GET',null,null,e);
 const sbPost=(t,d)=>sb(t,'POST',d);
@@ -6280,11 +6290,15 @@ function exportarInformeFacturas(){
 
 async function loadGerencia(){
   try{
-    const [cl,pr,ta,cy,comp,subc,hor,fac]=await Promise.all([
-      sbGet('clientes'),sbGet('proyectos'),sbGet('tarifario'),
-      sbGet('precios_cype','?select=id'),
-      sbGet('compras'),sbGet('subcontratas'),sbGet('horas'),sbGet('facturas')
-    ]);
+    // Carga secuencial para evitar problemas de conexiones simultáneas en iOS Safari
+    const cl   = await sbGet('clientes');
+    const pr   = await sbGet('proyectos');
+    const ta   = await sbGet('tarifario');
+    const cy   = await sbGet('precios_cype','?select=id');
+    const comp = await sbGet('compras');
+    const subc = await sbGet('subcontratas');
+    const hor  = await sbGet('horas');
+    const fac  = await sbGet('facturas');
     CC=cl;PC=pr;TC=ta;CoC=comp;ScC=subc;HC=hor;FC=fac;
     // Diagnóstico: detectar facturas sin tipo definido
     const sinTipo=fac.filter(f=>!f.tipo_factura);
