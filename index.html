@@ -4192,6 +4192,38 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
   <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal(&#39;m-pedido&#39;)">Cancelar</button><button class="btn btn-primary" onclick="savePedido()">💾 Guardar</button></div>
 </div></div>
 
+<!-- AGENDA -->
+<div class="overlay" id="m-agenda" onclick="if(event.target===this)closeModal('m-agenda')"><div class="modal" style="width:min(520px,96vw)">
+  <div class="modal-head"><div class="modal-title">🔔 Aviso / Cita</div><button class="modal-close" onclick="closeModal('m-agenda')">×</button></div>
+  <div class="modal-body">
+    <input type="hidden" id="ag-id">
+    <div class="form-grid">
+      <div class="form-group fg-full"><label class="form-label">Descripción *</label><input class="form-input" id="ag-desc" placeholder="Descripción del aviso…"></div>
+      <div class="form-group"><label class="form-label">Fecha *</label><input class="form-input" type="date" id="ag-fecha"></div>
+      <div class="form-group"><label class="form-label">Hora</label><input class="form-input" type="time" id="ag-hora"></div>
+      <div class="form-group"><label class="form-label">Tipo</label>
+        <select class="form-input" id="ag-tipo">
+          <option>Reunión</option><option>Llamada</option><option>Visita obra</option><option>Entrega</option><option>Pago</option><option>Otro</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Prioridad</label>
+        <select class="form-input" id="ag-prioridad">
+          <option value="baja">Baja</option><option value="normal" selected>Normal</option><option value="alta">Alta</option><option value="urgente">Urgente</option>
+        </select>
+      </div>
+      <div class="form-group fg-full"><label class="form-label">Proyecto</label>
+        <select class="form-input" id="ag-proyecto"><option value="">Sin proyecto</option></select>
+      </div>
+      <div class="form-group fg-full"><label class="form-label">Notas</label><textarea class="form-input" id="ag-notas" rows="3" style="resize:vertical"></textarea></div>
+      <div class="form-group fg-full" style="display:flex;align-items:center;gap:10px">
+        <input type="checkbox" id="ag-notif" checked style="width:18px;height:18px;cursor:pointer">
+        <label for="ag-notif" style="cursor:pointer;margin:0">Activar notificación</label>
+      </div>
+    </div>
+  </div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('m-agenda')">Cancelar</button><button class="btn btn-primary" onclick="saveAgenda()">💾 Guardar</button></div>
+</div></div>
+
 <!-- PROVEEDOR -->
 <div class="overlay" id="m-proveedor"><div class="modal">
   <div class="modal-head"><div class="modal-title">🏭 Nuevo proveedor</div><button class="modal-close" onclick="closeModal(&#39;m-proveedor&#39;)">×</button></div>
@@ -13480,6 +13512,8 @@ function openAgendaModal(){
   document.getElementById('ag-prioridad').value='normal';
   document.getElementById('ag-notas').value='';
   document.getElementById('ag-notif').checked=true;
+  const sel=document.getElementById('ag-proyecto');
+  if(sel&&typeof PC!=='undefined')sel.innerHTML='<option value="">Sin proyecto</option>'+[...PC].sort((a,b)=>a.proyecto_id.localeCompare(b.proyecto_id,'es',{numeric:true})).map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
   openModal('m-agenda');
 }
 
