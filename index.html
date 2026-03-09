@@ -20747,6 +20747,16 @@ async function renderExpUnidades(body){
     kpis.margen = kpis.facturado - kpis.costes;
   } catch(e){ console.log('KPIs error:',e); }
 
+  // Build resumen table
+  const ESTADOS_UNIDAD = ['Pendiente','Presupuestado','En curso','Aprobado','En ejecución','Entregado','Cancelado'];
+  const estadoColorInline = s => {
+    if(s==='Aprobado'||s==='Entregado') return 'background:#e8f5e9;color:#2e7d32';
+    if(s==='En curso'||s==='En ejecución') return 'background:#e3f2fd;color:#1565c0';
+    if(s==='Presupuestado') return 'background:#fff8e1;color:#f57f17';
+    if(s==='Cancelado') return 'background:#fde8e8;color:#c62828';
+    return 'background:#f5f5f5;color:#666';
+  };
+
   let listHtml = '';
   if(_unidades.length > 0){
     // Pre-calculate per-unit budgets from presupuesto data
@@ -20771,7 +20781,12 @@ async function renderExpUnidades(body){
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
             <strong style="font-size:13px;color:var(--navy)">${u.cliente_nombre||'Sin cliente asignado'}</strong>
-            <span style="font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;${estadoColor(u.estado)}">${u.estado||'Pendiente'}</span>
+            <select onchange="quickSaveEstadoUnidad('${u.id}',this.value,this)" onclick="event.stopPropagation()"
+              style="font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;border:1px solid rgba(0,0,0,.1);cursor:pointer;outline:none;${estadoColor(u.estado)}">
+              ${['Pendiente','Presupuestado','En curso','Aprobado','En ejecución','Entregado','Cancelado'].map(s=>
+                '<option value="'+s+'" '+(s===(u.estado||'Pendiente')?'selected':'')+'>'+ s +'</option>'
+              ).join('')}
+            </select>
           </div>
           <div style="font-size:11px;color:var(--text-soft)">
             ${u.cliente_telefono?'📱 '+u.cliente_telefono+' · ':''}${u.cliente_email||''}
@@ -20790,6 +20805,61 @@ async function renderExpUnidades(body){
   } else {
     listHtml = '<div style="text-align:center;padding:40px;color:var(--text-soft)"><div style="font-size:36px;margin-bottom:8px">🏠</div><div style="font-size:13px">No hay unidades/viviendas configuradas</div><div style="font-size:11px;margin-top:4px">Pulsa "+ Nueva unidad" para empezar</div></div>';
   }
+
+  // Build resumen table HTML
+  const ESTADOS_UNIDAD = ['Pendiente','Presupuestado','En curso','Aprobado','En ejecución','Entregado','Cancelado'];
+  const ecInline = s => {
+    if(s==='Aprobado'||s==='Entregado') return 'background:#e8f5e9;color:#2e7d32';
+    if(s==='En curso'||s==='En ejecución') return 'background:#e3f2fd;color:#1565c0';
+    if(s==='Presupuestado') return 'background:#fff8e1;color:#f57f17';
+    if(s==='Cancelado') return 'background:#fde8e8;color:#c62828';
+    return 'background:#f5f5f5;color:#666';
+  };
+  const resAprobados = _unidades.filter(u=>u.estado==='Aprobado'||u.estado==='Entregado').length;
+  const resPresup = _unidades.filter(u=>u.estado==='Presupuestado').length;
+  const resPend = _unidades.filter(u=>!u.estado||u.estado==='Pendiente').length;
+  const resTot = _unidades.length;
+  const pctApro = resTot>0?Math.round((resAprobados/resTot)*100):0;
+  const resRows = _unidades.map((u,i)=>`
+    <tr style="border-bottom:1px solid #f0f0f0;${i%2===0?'background:#fafafa;':''}">
+      <td style="padding:8px 10px;font-weight:700;font-size:12px;color:var(--navy);white-space:nowrap">${u.ref_unidad||'—'}</td>
+      <td style="padding:8px 10px;font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${u.cliente_nombre||'<span style=color:#bbb>Sin cliente</span>'}</td>
+      <td style="padding:6px 8px">
+        <select onchange="quickSaveEstadoUnidad('${u.id}',this.value,this)" onclick="event.stopPropagation()"
+          style="font-size:11px;padding:3px 8px;border-radius:8px;font-weight:600;border:1px solid rgba(0,0,0,.1);cursor:pointer;outline:none;${ecInline(u.estado||'Pendiente')}">
+          ${ESTADOS_UNIDAD.map(s=>'<option value="'+s+'" '+(s===(u.estado||'Pendiente')?'selected':'')+'>'+s+'</option>').join('')}
+        </select>
+      </td>
+      <td style="padding:8px 10px;font-size:11px;color:var(--text-soft);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${u.notas||''}</td>
+      <td style="padding:8px 6px;text-align:right"><button class="btn btn-ghost btn-sm" onclick="editUnidad('${u.id}')" style="font-size:11px;padding:3px 8px">✏️</button></td>
+    </tr>`).join('');
+  const resumenHtml = resTot>0?`
+    <div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-soft);margin-bottom:5px">
+        <span>Progreso aprobaciones</span>
+        <span style="font-weight:700;color:${pctApro>=80?'var(--green)':pctApro>=40?'var(--amber)':'var(--navy)'}">${pctApro}% aprobadas</span>
+      </div>
+      <div style="height:8px;background:#eee;border-radius:4px;overflow:hidden">
+        <div style="height:100%;background:var(--green);border-radius:4px;width:${pctApro}%;transition:width .4s"></div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:6px;font-size:10px;color:var(--text-soft)">
+        <span>✅ Aprobadas: <strong style="color:var(--green)">${resAprobados}</strong></span>
+        <span>📋 Presupuestadas: <strong style="color:#f57f17">${resPresup}</strong></span>
+        <span>⏳ Pendientes: <strong>${resPend}</strong></span>
+        <span>Total: <strong>${resTot}</strong></span>
+      </div>
+    </div>
+    <div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead><tr style="background:var(--navy);color:#fff">
+        <th style="padding:8px 10px;text-align:left;font-size:11px;font-weight:600">Ref.</th>
+        <th style="padding:8px 10px;text-align:left;font-size:11px;font-weight:600">Cliente</th>
+        <th style="padding:8px 10px;text-align:left;font-size:11px;font-weight:600">Estado</th>
+        <th style="padding:8px 10px;text-align:left;font-size:11px;font-weight:600">Notas</th>
+        <th style="padding:8px 10px"></th>
+      </tr></thead>
+      <tbody>${resRows}</tbody>
+    </table></div>`:'';
 
   body.innerHTML = `
     <div style="max-width:720px;margin:0 auto">
@@ -20841,16 +20911,27 @@ async function renderExpUnidades(body){
 
       <!-- Header + botones -->
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-        <div style="font-weight:700;font-size:14px;color:#4a3728">🏠 ${(p.tipo_unidades||'Unidades / Trabajos')}</div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="font-weight:700;font-size:14px;color:#4a3728">🏠 ${(p.tipo_unidades||'Unidades / Trabajos')}</div>
+          ${total > 0 ? `<div style="display:flex;background:#f0f0f0;border-radius:8px;padding:2px;gap:2px">
+            <button id="btn-view-cards" onclick="setUnidadesView('cards')" style="font-size:10px;padding:3px 10px;border:none;border-radius:6px;cursor:pointer;background:var(--navy);color:#fff;font-weight:600">Tarjetas</button>
+            <button id="btn-view-tabla" onclick="setUnidadesView('tabla')" style="font-size:10px;padding:3px 10px;border:none;border-radius:6px;cursor:pointer;background:transparent;color:var(--text-mid);font-weight:600">Resumen</button>
+          </div>` : ''}
+        </div>
         <div style="display:flex;gap:6px">
           ${total > 0 ? '<button class="btn btn-ghost btn-sm" onclick="generarUnidadesLote()" style="font-size:11px">📋 Crear lote</button>' : ''}
           <button class="btn btn-primary btn-sm" onclick="nuevaUnidad()" style="font-size:11px">＋ Nueva unidad</button>
         </div>
       </div>
 
-      <!-- Lista con scroll -->
-      <div style="display:flex;flex-direction:column;gap:8px;max-height:400px;overflow-y:auto;padding-right:4px">
+      <!-- Vista Tarjetas -->
+      <div id="unidades-view-cards" style="display:flex;flex-direction:column;gap:8px;max-height:400px;overflow-y:auto;padding-right:4px">
         ${listHtml}
+      </div>
+
+      <!-- Vista Resumen (tabla de estados) -->
+      <div id="unidades-view-tabla" style="display:none;overflow-x:auto">
+        ${resumenHtml}
       </div>
     </div>
   `;
@@ -20905,6 +20986,50 @@ function editUnidad(id){
 }
 
 // Guardar unidad
+// ── Cambio rápido de estado desde tarjeta/tabla ──
+async function quickSaveEstadoUnidad(id, nuevoEstado, selectEl){
+  const ESTADO_COLORS = {
+    'Aprobado':     'background:#e8f5e9;color:#2e7d32',
+    'Entregado':    'background:#e8f5e9;color:#2e7d32',
+    'En curso':     'background:#e3f2fd;color:#1565c0',
+    'En ejecución': 'background:#e3f2fd;color:#1565c0',
+    'Presupuestado':'background:#fff8e1;color:#f57f17',
+    'Cancelado':    'background:#fde8e8;color:#c62828',
+  };
+  try {
+    await sbPatch('proyecto_unidades', id, {estado: nuevoEstado});
+    // Update local cache
+    const u = _unidades.find(x=>x.id===id);
+    if(u) u.estado = nuevoEstado;
+    // Re-style the select itself
+    if(selectEl){
+      const style = ESTADO_COLORS[nuevoEstado] || 'background:#f5f5f5;color:#666';
+      selectEl.style.cssText = selectEl.style.cssText.replace(/background:[^;]+;color:[^;]+/,style) || style;
+    }
+    toast('Estado actualizado ✅','success');
+  } catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+// ── Toggle entre vista tarjetas y resumen ──
+function setUnidadesView(vista){
+  const cards = document.getElementById('unidades-view-cards');
+  const tabla = document.getElementById('unidades-view-tabla');
+  const btnCards = document.getElementById('btn-view-cards');
+  const btnTabla = document.getElementById('btn-view-tabla');
+  if(!cards||!tabla) return;
+  if(vista==='cards'){
+    cards.style.display='flex';
+    tabla.style.display='none';
+    if(btnCards){btnCards.style.background='var(--navy)';btnCards.style.color='#fff';}
+    if(btnTabla){btnTabla.style.background='transparent';btnTabla.style.color='var(--text-mid)';}
+  } else {
+    cards.style.display='none';
+    tabla.style.display='block';
+    if(btnTabla){btnTabla.style.background='var(--navy)';btnTabla.style.color='#fff';}
+    if(btnCards){btnCards.style.background='transparent';btnCards.style.color='var(--text-mid)';}
+  }
+}
+
 async function saveUnidad(){
   const ref = document.getElementById('u-ref').value.trim();
   if(!ref){ toast('La referencia es obligatoria','error'); return; }
