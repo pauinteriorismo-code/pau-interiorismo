@@ -13496,6 +13496,7 @@ function renderAgenda(){
       <td>${estadoBadge}</td>
       <td><div class="td-actions">
         ${a.estado!=='Completado'?`<button class="btn btn-green btn-icon btn-sm" title="Completar" onclick="completarAgenda('${a.id}')">✅</button>`:''}
+        <button class="btn btn-ghost btn-icon btn-sm" title="Añadir al Calendario" onclick="abrirModalICS({desc:'${(a.descripcion||'').replace(/'/g,'\\\'').replace(/"/g,'&quot;')}',fecha:'${a.fecha||''}',hora:'${a.hora||''}',tipo:'${a.tipo||''}',prioridad:'${a.prioridad||'normal'}',proyecto_id:'${a.proyecto_id||''}',notas:'${(a.notas||'').replace(/'/g,'\\\'').replace(/"/g,'&quot;')}'})" style="color:#4285f4">📅</button>
         <button class="btn btn-ghost btn-icon btn-sm" title="Editar" onclick="editAgenda('${a.id}')">✏️</button>
         <button class="btn btn-danger btn-icon btn-sm" title="Eliminar" onclick="confirmDelete('agenda','${a.id}','${(a.descripcion||'').replace(/'/g,'')}')">🗑</button>
       </div></td>
@@ -13629,49 +13630,70 @@ function descargarICS(evento){
   setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 1000);
 }
 
+function generarUrlGoogleCalendar({desc, fecha, hora, tipo, prioridad, proyecto_id, notas}){
+  const titulo = encodeURIComponent('[PAU] ' + (tipo||'Aviso') + ': ' + desc + (proyecto_id?' - '+proyecto_id:''));
+  const detalle = encodeURIComponent(['Tipo: '+(tipo||'-'),'Prioridad: '+(prioridad||'-'),proyecto_id?'Proyecto: '+proyecto_id:'',notas?'Notas: '+notas:'','— PAU INTERIORISMO S.L.'].filter(Boolean).join('\n'));
+  let dates;
+  if(hora){
+    // Evento con hora — formato YYYYMMDDTHHmmss/YYYYMMDDTHHmmss
+    const start = new Date(fecha + 'T' + hora + ':00');
+    const end   = new Date(start.getTime() + 60*60*1000);
+    const fmt = d => d.getFullYear()+''+String(d.getMonth()+1).padStart(2,'0')+''+String(d.getDate()).padStart(2,'0')+'T'+String(d.getHours()).padStart(2,'0')+''+String(d.getMinutes()).padStart(2,'0')+'00';
+    dates = fmt(start) + '/' + fmt(end);
+  } else {
+    // Todo el día
+    const d = fecha.replace(/-/g,'');
+    const nd = new Date(fecha); nd.setDate(nd.getDate()+1);
+    const nd2 = nd.toISOString().split('T')[0].replace(/-/g,'');
+    dates = d + '/' + nd2;
+  }
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${titulo}&dates=${dates}&details=${detalle}&sf=true&output=xml`;
+}
+
 function abrirModalICS(evento){
-  // Eliminar overlay anterior si existe
   const prev = document.getElementById('ics-overlay');
   if(prev) prev.remove();
 
+  const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
   const overlay = document.createElement('div');
   overlay.id = 'ics-overlay';
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px';
 
   const box = document.createElement('div');
-  box.style.cssText = 'background:white;border-radius:16px;padding:24px 20px;max-width:360px;width:100%;text-align:center;box-shadow:0 16px 48px rgba(0,0,0,.35)';
+  box.style.cssText = 'background:white;border-radius:16px;padding:24px 20px;max-width:380px;width:100%;text-align:center;box-shadow:0 16px 48px rgba(0,0,0,.35)';
 
-  box.innerHTML = ''
-    + '<div style="font-size:40px;margin-bottom:6px">&#128197;</div>'
-    + '<div style="font-size:16px;font-weight:800;color:#1a2a3a;margin-bottom:4px">A&ntilde;adir al Calendario del iPhone</div>'
-    + '<div style="font-size:12px;color:#888;margin-bottom:16px">El aviso se activa solo &mdash; sin pasos extra</div>'
+  box.innerHTML = '<div style="font-size:38px;margin-bottom:6px">📅</div>'
+    + '<div style="font-size:16px;font-weight:800;color:#1a2a3a;margin-bottom:4px">Añadir al Calendario</div>'
+    + '<div style="font-size:12px;color:#888;margin-bottom:18px">El móvil te avisará automáticamente</div>';
 
-    + '<div style="background:#e8f4ff;border-radius:10px;padding:12px 14px;text-align:left;margin-bottom:10px">'
-    + '<div style="font-weight:800;font-size:12px;color:#1a73e8;margin-bottom:6px">&#128242; C&oacute;mo funciona</div>'
-    + '<div style="font-size:11px;color:#333;line-height:1.8">'
-    + '<b>1.</b> Pulsa el bot&oacute;n verde<br>'
-    + '<b>2.</b> iOS abre el archivo en <b>Calendario</b><br>'
-    + '<b>3.</b> Pulsa <b>"A&ntilde;adir"</b> o <b>"Aceptar"</b><br>'
-    + '<b>4.</b> Listo &mdash; recibir&aacute;s la notificaci&oacute;n autom&aacute;ticamente &#9989;'
-    + '</div>'
-    + '</div>'
+  // Botón Google Calendar
+  const btnGoogle = document.createElement('button');
+  btnGoogle.innerHTML = '<span style="font-size:18px;vertical-align:middle;margin-right:8px">📅</span> Añadir a Google Calendar';
+  btnGoogle.style.cssText = 'display:block;width:100%;background:#4285f4;color:white;padding:13px 20px;border-radius:9px;border:none;font-weight:700;font-size:14px;margin-bottom:10px;cursor:pointer;box-shadow:0 2px 8px rgba(66,133,244,.4)';
+  btnGoogle.onclick = () => {
+    const url = generarUrlGoogleCalendar(evento);
+    window.open(url, '_blank');
+    overlay.remove();
+    toast('✅ Abierto Google Calendar — pulsa "Guardar" en la web','success');
+  };
+  box.appendChild(btnGoogle);
 
-    + '<div style="background:#fff8e1;border-radius:10px;padding:10px 14px;text-align:left;margin-bottom:16px">'
-    + '<div style="font-size:11px;color:#7a5c00;line-height:1.6">'
-    + '&#9888;&#65039; <b>Descarga desde el iPhone o iPad</b> para que iOS lo abra en Calendario.<br>'
-    + 'En PC se guarda el archivo pero no avisa en m&oacute;vil.'
-    + '</div>'
-    + '</div>';
-
-  // Botón descargar ICS
+  // Botón Apple Calendario (ICS) — destacado en iOS
   const btnICS = document.createElement('button');
-  btnICS.innerHTML = '&#128229; Descargar evento (.ics)';
-  btnICS.style.cssText = 'display:block;width:100%;background:#0fa860;color:white;padding:13px 20px;border-radius:9px;border:none;font-weight:800;font-size:15px;margin-bottom:10px;cursor:pointer;box-shadow:0 2px 8px rgba(15,168,96,.4)';
+  btnICS.innerHTML = (isIOS ? '<span style="font-size:18px;vertical-align:middle;margin-right:8px">🍎</span> Añadir a Calendario Apple' : '<span style="font-size:18px;vertical-align:middle;margin-right:8px">📥</span> Descargar evento (.ics)');
+  btnICS.style.cssText = 'display:block;width:100%;background:' + (isIOS ? '#1a2a3a' : '#555') + ';color:white;padding:13px 20px;border-radius:9px;border:none;font-weight:700;font-size:14px;margin-bottom:10px;cursor:pointer';
   btnICS.onclick = () => { descargarICS(evento); overlay.remove(); };
   box.appendChild(btnICS);
 
+  if(isIOS){
+    const tip = document.createElement('div');
+    tip.style.cssText = 'background:#f0faf4;border-radius:8px;padding:10px 12px;text-align:left;margin-bottom:12px;font-size:11px;color:#2a6a3a;line-height:1.7';
+    tip.innerHTML = '✅ <b>iOS:</b> Pulsa "Añadir a Calendario Apple", el sistema abrirá la app Calendario y te preguntará si añadir el evento — acepta y recibirás la notificación nativa.';
+    box.appendChild(tip);
+  }
+
   const btnClose = document.createElement('button');
-  btnClose.textContent = 'Cancelar';
+  btnClose.textContent = 'Ahora no';
   btnClose.style.cssText = 'background:none;border:1px solid #ddd;padding:9px 20px;border-radius:7px;cursor:pointer;font-size:13px;color:#888;width:100%';
   btnClose.onclick = () => overlay.remove();
   box.appendChild(btnClose);
@@ -13680,7 +13702,6 @@ function abrirModalICS(evento){
   overlay.addEventListener('click', e => { if(e.target === overlay) overlay.remove(); });
   document.body.appendChild(overlay);
 }
-
 
 async function crearEventoGoogleCalendar({desc, fecha, hora, tipo, prioridad, proyecto_id, notas}){
   abrirModalICS({desc, fecha, hora, tipo, prioridad, proyecto_id, notas});
