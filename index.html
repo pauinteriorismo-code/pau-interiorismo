@@ -20939,13 +20939,19 @@ function nuevaUnidad(){
   document.getElementById('u-cliente-search').style.display = '';
   document.getElementById('u-drive').value = '';
   document.getElementById('u-notas').value = '';
-  // Auto-suggest next ref
+  // Auto-suggest next ref usando iniciales del tipo_unidades del proyecto
+  const _proy = PC.find(x=>x.proyecto_id===_expProyId);
+  const _tipoUnidades = (_proy && _proy.tipo_unidades) ? _proy.tipo_unidades.trim() : '';
+  // Generar prefijo: primeras 3 letras en mayúscula, sin espacios ni caracteres especiales
+  const _prefijo = _tipoUnidades
+    ? _tipoUnidades.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]/g,'').substring(0,3).toUpperCase()
+    : 'UNI';
   if(_unidades.length > 0){
     const nums = _unidades.map(u => {const m = u.ref_unidad?.match(/(\d+)/); return m ? parseInt(m[1]) : 0;});
     const next = Math.max(...nums) + 1;
-    document.getElementById('u-ref').value = 'VIV-' + String(next).padStart(2,'0');
+    document.getElementById('u-ref').value = _prefijo + '-' + String(next).padStart(2,'0');
   } else {
-    document.getElementById('u-ref').value = 'VIV-01';
+    document.getElementById('u-ref').value = _prefijo + '-01';
   }
   openModal('m-unidad');
 }
