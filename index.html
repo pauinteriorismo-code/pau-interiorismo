@@ -4,7 +4,13 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="PAU">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <meta name="theme-color" content="#1a2a3a">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#1a2a3a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -4657,6 +4663,25 @@ function abrirVistaPrevia(docId, titulo, autoPrint=false, filename=null){
       if(autoPrint){ setTimeout(function(){ window.print(); }, 600); }
     });
   \u003c/script>\n  
+
+<script>
+// ── PWA: Registrar Service Worker ──
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => {
+        console.log('SW registrado:', reg.scope);
+        // Escuchar mensajes del SW (ej: navegar a agenda al pulsar notificación)
+        navigator.serviceWorker.addEventListener('message', e => {
+          if(e.data && e.data.action === 'navAgenda'){
+            if(typeof navTo === 'function') navTo('agenda');
+          }
+        });
+      })
+      .catch(err => console.warn('SW error:', err));
+  });
+}
+</script>
 </body></html>`);
   w.document.close();
 }
@@ -21745,3 +21770,16 @@ function vpGuardarPDF(){
           <div><label class="form-label">Importe</label><input class="form-input" id="bp-importe" type="number" min="0" step="0.01"></div>
           <div><label class="form-label">IVA %</label><input class="form-input" id="bp-iva" type="number" value="0"></div>
           <button clas
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('/sw.js').then(function(reg){
+      console.log('SW OK');
+      navigator.serviceWorker.addEventListener('message',function(e){
+        if(e.data&&e.data.action==='navAgenda'&&typeof navTo==='function') navTo('agenda');
+      });
+    }).catch(function(e){ console.warn('SW error:',e); });
+  });
+}
+</script>
+</body></html>
