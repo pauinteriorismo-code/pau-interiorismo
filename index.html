@@ -20747,16 +20747,6 @@ async function renderExpUnidades(body){
     kpis.margen = kpis.facturado - kpis.costes;
   } catch(e){ console.log('KPIs error:',e); }
 
-  // Build resumen table
-  const ESTADOS_UNIDAD = ['Pendiente','Presupuestado','En curso','Aprobado','En ejecución','Entregado','Cancelado'];
-  const estadoColorInline = s => {
-    if(s==='Aprobado'||s==='Entregado') return 'background:#e8f5e9;color:#2e7d32';
-    if(s==='En curso'||s==='En ejecución') return 'background:#e3f2fd;color:#1565c0';
-    if(s==='Presupuestado') return 'background:#fff8e1;color:#f57f17';
-    if(s==='Cancelado') return 'background:#fde8e8;color:#c62828';
-    return 'background:#f5f5f5;color:#666';
-  };
-
   let listHtml = '';
   if(_unidades.length > 0){
     // Pre-calculate per-unit budgets from presupuesto data
