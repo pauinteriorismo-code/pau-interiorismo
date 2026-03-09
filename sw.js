@@ -1,38 +1,70 @@
-// PAU INTERIORISMO — Service Worker ELIMINADOR
-// Este archivo se desinstala a sí mismo permanentemente
-// para liberar todas las peticiones de red que estaban bloqueadas
+// PAU Interiorismo — Service Worker v1
+const CACHE = 'pau-v1';
 
-self.addEventListener(‘install’, function(e) {
-console.log(’[SW] Instalando versión limpia…’);
-self.skipWaiting(); // Activar inmediatamente
+// Al instalar: cachear el HTML principal
+self.addEventListener('install', e => {
+  e.waitUntil(
+    caches.open(CACHE).then(c => c.addAll(['/']))
+  );
+  self.skipWaiting();
 });
 
-self.addEventListener(‘activate’, function(e) {
-console.log(’[SW] Activando — eliminando service worker permanentemente…’);
-e.waitUntil(
-caches.keys().then(function(keys) {
-return Promise.all(keys.map(function(k) {
-console.log(’[SW] Eliminando caché:’, k);
-return caches.delete(k);
-}));
-}).then(function() {
-return self.clients.matchAll({ includeUncontrolled: true });
-}).then(function(clients) {
-// Desregistrar este service worker
-return self.registration.unregister();
-}).then(function() {
-// Recargar todas las páginas para que carguen sin SW
-return self.clients.matchAll({ includeUncontrolled: true });
-}).then(function(clients) {
-clients.forEach(function(client) {
-console.log(’[SW] Recargando cliente:’, client.url);
-client.navigate(client.url);
-});
-})
-);
+// Al activar: limpiar cachés viejas
+self.addEventListener('activate', e => {
+  e.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+    )
+  );
+  self.clients.claim();
 });
 
-// NO interceptar fetch — dejar pasar todo
-self.addEventListener(‘fetch’, function(e) {
-return; // Sin respondWith = el navegador hace la petición normal
+// Fetch: primero red, si falla cachée (app disponible offline)
+self.addEventListener('fetch', e => {
+  if (e.request.method !== 'GET') return;
+  // No cachear peticiones a Supabase
+  if (e.request.url.includes('supabase.co')) return;
+  e.respondWith(
+    fetch(e.request)
+      .then(res => {
+        const clone = res.clone();
+        caches.open(CACHE).then(c => c.put(e.request, clone));
+        return res;
+      })
+      .catch(() => caches.match(e.request))
+  );
+});
+
+// Notificaciones push (cuando llegue una desde el servidor)
+self.addEventListener('push', e => {
+  const data = e.data ? e.data.json() : {};
+  const title = data.title || '🔔 PAU Interiorismo';
+  const options = {
+    body: data.body || 'Tienes un aviso pendiente',
+    icon: '/icon-192.png',
+    badge: '/icon-192.png',
+    tag: data.tag || 'pau-aviso',
+    requireInteraction: true,
+    data: { url: data.url || '/' }
+  };
+  e.waitUntil(self.registration.showNotification(title, options));
+});
+
+// Al pulsar la notificación: abrir la app en la sección de agenda
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+      // Si ya hay una ventana abierta, enfocarla
+      for (const client of list) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          client.focus();
+          client.postMessage({ action: 'navAgenda' });
+          return;
+        }
+      }
+      // Si no, abrir una nueva
+      if (clients.openWindow) return clients.openWindow('/');
+    })
+  );
 });
