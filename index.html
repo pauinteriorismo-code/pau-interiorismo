@@ -4443,7 +4443,8 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     </div>
     <div class="form-grid">
       <div class="form-group"><label class="form-label">Fecha</label><input class="form-input" id="h-fecha" type="date"></div>
-      <div class="form-group"><label class="form-label">Partida / Unidad</label><select class="form-input" id="h-partida"><option value="">— General (sin partida) —</option></select></div>
+      <div class="form-group"><label class="form-label">Partida / Unidad</label><select class="form-input" id="h-partida" onchange="onChangeHPartida()"><option value="">— General (sin partida) —</option></select></div>
+      <div class="form-group" id="h-capitulo-group" style="display:none"><label class="form-label">Capítulo</label><select class="form-input" id="h-capitulo"><option value="">— Todo el presupuesto —</option></select></div>
       <div class="form-group"><label class="form-label">Trabajador</label><select class="form-input" id="h-trab"><option value="">Seleccionar…</option><option value="Francisco Gascón Gil">Francisco Gascón Gil</option><option value="Jose Asins Primo">Jose Asins Primo</option><option value="Julio Alemany Fort">Julio Alemany Fort</option><option value="María Paz Primo Iborra">María Paz Primo Iborra</option><option value="Raúl Gascón Gil">Raúl Gascón Gil</option><option value="Salvador Aguado Simó">Salvador Aguado Simó</option></select></div>
       <div class="form-group"><label class="form-label">Horas</label><input class="form-input" id="h-horas" type="number" step="0.5" placeholder="8"></div>
       <div class="form-group"><label class="form-label">€/hora</label><input class="form-input" id="h-coste" type="number" value="18"></div>
@@ -10130,21 +10131,21 @@ async function cargarPartidasHora(proyId, valorActual){
   const pid = proyId || document.getElementById('h-proyecto')?.value;
   if(!pid){
     sel.innerHTML = '<option value="">— General (sin partida) —</option>';
+    _ocultarCapituloGroup();
     return;
   }
   sel.innerHTML = '<option value="">Cargando…</option>';
   try {
-    // Obtener versiones activas (con al menos 1 línea)
-    const lineas = await sbGet('presupuesto_lineas', `?proyecto_id=eq.${encodeURIComponent(pid)}&select=version&es_capitulo=eq.false`);
+    const [lineas, unidades] = await Promise.all([
+      sbGet('presupuesto_lineas', `?proyecto_id=eq.${encodeURIComponent(pid)}&select=version&es_capitulo=eq.false`),
+      sbGet('proyecto_unidades', `?proyecto_id=eq.${encodeURIComponent(pid)}&order=orden,ref_unidad&select=ref_unidad,cliente_nombre`)
+    ]);
     const versiones = [...new Set((lineas||[]).map(l=>l.version).filter(Boolean))].sort();
-    // Obtener unidades del proyecto
-    const unidades = await sbGet('proyecto_unidades', `?proyecto_id=eq.${encodeURIComponent(pid)}&order=orden,ref_unidad&select=ref_unidad,cliente_nombre`);
-    // Construir opciones
     let opts = '<option value="">— General (sin partida) —</option>';
     if(versiones.length){
       opts += '<optgroup label="📋 Presupuesto / Versiones">';
       versiones.forEach(v => {
-        const label = v.match(/^v\d+$/) ? `Presupuesto ${v.toUpperCase()}` : v;
+        const label = v.match(/^v(\d+)$/) ? `Presupuesto V${v.slice(1)}` : v;
         opts += `<option value="${v}">${label}</option>`;
       });
       opts += '</optgroup>';
@@ -10160,17 +10161,82 @@ async function cargarPartidasHora(proyId, valorActual){
       opts += '</optgroup>';
     }
     sel.innerHTML = opts;
-    if(valorActual !== undefined) sel.value = valorActual || '';
+    // Si el valor actual es un capítulo (cap:uuid), seleccionar la versión y cargar capítulos
+    if(valorActual && valorActual.startsWith('cap:')){
+      // Averiguar a qué versión pertenece el capítulo
+      const capId = valorActual.slice(4);
+      try {
+        const capData = await sbGet('presupuesto_lineas', `?id=eq.${capId}&select=version`);
+        const capVersion = capData && capData[0] ? capData[0].version : null;
+        if(capVersion && versiones.includes(capVersion)){
+          sel.value = capVersion;
+          await cargarCapitulosHora(pid, capVersion, valorActual);
+        } else {
+          _ocultarCapituloGroup();
+        }
+      } catch(e){ _ocultarCapituloGroup(); }
+    } else {
+      sel.value = valorActual || '';
+      // Si el valor es una versión, cargar capítulos
+      if(valorActual && versiones.includes(valorActual)){
+        await cargarCapitulosHora(pid, valorActual, null);
+      } else {
+        _ocultarCapituloGroup();
+      }
+    }
   } catch(e){
     sel.innerHTML = '<option value="">— General (sin partida) —</option>';
+    _ocultarCapituloGroup();
     console.warn('cargarPartidasHora error:', e);
+  }
+}
+
+function _ocultarCapituloGroup(){
+  const g = document.getElementById('h-capitulo-group');
+  if(g) g.style.display = 'none';
+  const c = document.getElementById('h-capitulo');
+  if(c) c.value = '';
+}
+
+async function cargarCapitulosHora(proyId, version, valorActual){
+  const g = document.getElementById('h-capitulo-group');
+  const c = document.getElementById('h-capitulo');
+  if(!g || !c) return;
+  c.innerHTML = '<option value="">Cargando…</option>';
+  g.style.display = 'block';
+  try {
+    const caps = await sbGet('presupuesto_lineas',
+      `?proyecto_id=eq.${encodeURIComponent(proyId)}&version=eq.${version}&es_capitulo=eq.true&order=orden.asc&select=id,descripcion`);
+    let opts = '<option value="">— Todo el presupuesto —</option>';
+    (caps||[]).forEach(cap => {
+      opts += `<option value="cap:${cap.id}">📁 ${cap.descripcion||'Sin nombre'}</option>`;
+    });
+    c.innerHTML = opts;
+    if(valorActual) c.value = valorActual;
+  } catch(e){
+    c.innerHTML = '<option value="">— Todo el presupuesto —</option>';
+    console.warn('cargarCapitulosHora error:', e);
+  }
+}
+
+async function onChangeHPartida(){
+  const sel = document.getElementById('h-partida');
+  const val = sel?.value || '';
+  const pid = document.getElementById('h-proyecto')?.value;
+  _ocultarCapituloGroup();
+  if(val && val.match(/^v\d+$/) && pid){
+    await cargarCapitulosHora(pid, val, null);
   }
 }
 
 async function saveHora(){
   const id=document.getElementById('h-id')?.value;
   const _hPartida = document.getElementById('h-partida')?.value||null;
-  const d={fecha:document.getElementById('h-fecha').value||new Date().toISOString().split('T')[0],proyecto_id:document.getElementById('h-proyecto').value||null,partida:_hPartida||null,trabajador:document.getElementById('h-trab').value,horas:parseFloat(document.getElementById('h-horas').value)||0,coste_hora:parseFloat(document.getElementById('h-coste').value)||18,descripcion:document.getElementById('h-desc').value};
+  const _hCapitulo = document.getElementById('h-capitulo')?.value||null;
+  const _hCapGrp = document.getElementById('h-capitulo-group');
+  // Si hay capítulo seleccionado (y el grupo está visible), guardar cap:uuid; si no, guardar la versión o la unidad
+  const partidaFinal = (_hCapGrp && _hCapGrp.style.display!=='none' && _hCapitulo) ? _hCapitulo : _hPartida;
+  const d={fecha:document.getElementById('h-fecha').value||new Date().toISOString().split('T')[0],proyecto_id:document.getElementById('h-proyecto').value||null,partida:partidaFinal||null,trabajador:document.getElementById('h-trab').value,horas:parseFloat(document.getElementById('h-horas').value)||0,coste_hora:parseFloat(document.getElementById('h-coste').value)||18,descripcion:document.getElementById('h-desc').value};
   try{
     if(id){await sb('horas','PATCH',d,null,`?id=eq.${id}`);toast('Horas actualizadas ✅');}
     else{await sbPost('horas',d);toast('Horas registradas ✅');}
