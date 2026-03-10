@@ -4884,7 +4884,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 
 <div class="toast error" id="toast">Error al cargar datos: </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script>
@@ -19717,6 +19717,7 @@ async function eaGuardarTodas(){
   btn.disabled = true; btn.textContent = 'Guardando...';
 
   try {
+    let _eaIvaPctMissing = false;
     const filas = document.querySelectorAll('#ea-tabla-body tr');
     for(const tr of filas){
       const id      = tr.dataset.id;
@@ -19731,11 +19732,28 @@ async function eaGuardarTodas(){
       } else if(!borrar){
         if(!importe) continue; // fila vacía, ignorar
         const d = { proyecto_id: pid, fecha, concepto: concepto||'Entrega a cuenta', importe, iva_pct: ivaPct, notas: '' };
-        if(id){ await sb('entregas_cuenta','PATCH',d,null,`?id=eq.${id}`); }
-        else   { await sbPost('entregas_cuenta', d); }
+        try {
+          if(id){ await sb('entregas_cuenta','PATCH',d,null,`?id=eq.${id}`); }
+          else   { await sbPost('entregas_cuenta', d); }
+        } catch(e2) {
+          // Si iva_pct no existe aún en Supabase, guardar sin ella
+          if(e2.message && (e2.message.includes('iva_pct') || e2.message.includes('PGRST204'))){
+            const d2 = { proyecto_id: pid, fecha, concepto: concepto||'Entrega a cuenta', importe, notas: '' };
+            if(id){ await sb('entregas_cuenta','PATCH',d2,null,`?id=eq.${id}`); }
+            else   { await sbPost('entregas_cuenta', d2); }
+            _eaIvaPctMissing = true;
+          } else { throw e2; }
+        }
       }
     }
     toast('✅ Entregas guardadas correctamente');
+    if(_eaIvaPctMissing){
+      // Show a persistent modal-style alert with the SQL to run
+      const sqlMsg = 'ALTER TABLE entregas_cuenta ADD COLUMN IF NOT EXISTS iva_pct numeric DEFAULT 0;';
+      if(confirm('⚠️ La columna iva_pct no existe en Supabase.\n\nEjecuta este SQL en Supabase → SQL Editor:\n\n' + sqlMsg + '\n\n¿Copiar al portapapeles?')){
+        navigator.clipboard?.writeText(sqlMsg).then(()=>toast('✅ SQL copiado al portapapeles','success')).catch(()=>{});
+      }
+    }
     closeModal('m-entregas-panel');
     await loadEntregas();
     await calcExpKPIs(pid);
@@ -22944,12 +22962,4 @@ function vpGuardarPDF(){
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:16px">
         <div><label class="form-label">Categoría</label>
           <select class="form-input" id="trab-categoria">
-            <option>Oficial 1ª</option><option>Oficial 2ª</option><option>Oficial 3ª</option>
-            <option>Peón</option><option>Administrativo</option><option>Técnico</option><option>Otro</option>
-          </select></div>
-        <div><label class="form-label">Contrato</label>
-          <select class="form-input" id="trab-contrato">
-            <option>Indefinido</option><option>Temporal</option><option>Obra y servicio</option><option>Autónomo</option>
-          </select></div>
-        <div><label class="form-label">Fecha alta</label><input class="form-input" id="trab-alta" type="date"></div>
-        <div><label class="form-label"
+      
