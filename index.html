@@ -4266,38 +4266,6 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="form-group fg-full"><label class="form-label">Concepto</label><input class="form-input" id="co-concepto"></div>
       <div class="form-group"><label class="form-label">Base imponible €</label><input class="form-input" id="co-base" type="number" step="0.01"></div>
       <div class="form-group"><label class="form-label">Estado pago</label><select class="form-input" id="co-estado"><option>Pagado</option><option>Parcial</option><option>Pendiente</option><option>Vencido</option></select></div>
-      <div class="form-group fg-full">
-        <label class="form-label">Vencimientos</label>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;align-items:end">
-          <div>
-            <div style="font-size:10px;color:var(--text-soft);margin-bottom:2px">Vto. 1 — Fecha</div>
-            <input class="form-input" id="co-vto" type="date">
-          </div>
-          <div>
-            <div style="font-size:10px;color:var(--text-soft);margin-bottom:2px">Importe €</div>
-            <input class="form-input" id="co-importe-vto1" type="number" step="0.01" placeholder="—">
-          </div>
-          <div></div>
-          <div>
-            <div style="font-size:10px;color:var(--text-soft);margin-bottom:2px">Vto. 2 — Fecha</div>
-            <input class="form-input" id="co-vto2" type="date">
-          </div>
-          <div>
-            <div style="font-size:10px;color:var(--text-soft);margin-bottom:2px">Importe €</div>
-            <input class="form-input" id="co-importe-vto2" type="number" step="0.01" placeholder="—">
-          </div>
-          <div></div>
-          <div>
-            <div style="font-size:10px;color:var(--text-soft);margin-bottom:2px">Vto. 3 — Fecha</div>
-            <input class="form-input" id="co-vto3" type="date">
-          </div>
-          <div>
-            <div style="font-size:10px;color:var(--text-soft);margin-bottom:2px">Importe €</div>
-            <input class="form-input" id="co-importe-vto3" type="number" step="0.01" placeholder="—">
-          </div>
-          <div></div>
-        </div>
-      </div>
       <div class="form-group fg-full"><label class="form-label">Notas</label><input class="form-input" id="co-notas"></div>
       <!-- PDF ADJUNTO -->
       <div class="form-group fg-full">
@@ -4486,39 +4454,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="form-group" id="sc-capitulo-group" style="display:none"><label class="form-label">Capítulo</label><select class="form-input" id="sc-capitulo"><option value="">— Todo el presupuesto —</option></select></div>
       <div class="form-group fg-full"><label class="form-label">Trabajo</label><input class="form-input" id="sc-trabajo"></div>
       <div class="form-group"><label class="form-label">Importe base €</label><input class="form-input" id="sc-importe" type="number" step="0.01"></div>
-      <div class="form-group"><label class="form-label">Estado pago</label><select class="form-input" id="sc-estado"><option>Pagado</option><option>Parcial</option><option>Pendiente</option><option>Vencido</option></select></div>
-      <div class="form-group fg-full">
-        <label class="form-label">Vencimientos</label>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;align-items:end">
-          <div>
-            <div style="font-size:10px;color:var(--text-soft);margin-bottom:2px">Vto. 1 — Fecha</div>
-            <input class="form-input" id="sc-vto" type="date">
-          </div>
-          <div>
-            <div style="font-size:10px;color:var(--text-soft);margin-bottom:2px">Importe €</div>
-            <input class="form-input" id="sc-importe-vto1" type="number" step="0.01" placeholder="—">
-          </div>
-          <div></div>
-          <div>
-            <div style="font-size:10px;color:var(--text-soft);margin-bottom:2px">Vto. 2 — Fecha</div>
-            <input class="form-input" id="sc-vto2" type="date">
-          </div>
-          <div>
-            <div style="font-size:10px;color:var(--text-soft);margin-bottom:2px">Importe €</div>
-            <input class="form-input" id="sc-importe-vto2" type="number" step="0.01" placeholder="—">
-          </div>
-          <div></div>
-          <div>
-            <div style="font-size:10px;color:var(--text-soft);margin-bottom:2px">Vto. 3 — Fecha</div>
-            <input class="form-input" id="sc-vto3" type="date">
-          </div>
-          <div>
-            <div style="font-size:10px;color:var(--text-soft);margin-bottom:2px">Importe €</div>
-            <input class="form-input" id="sc-importe-vto3" type="number" step="0.01" placeholder="—">
-          </div>
-          <div></div>
-        </div>
-      </div>
+      <div class="form-group"><label class="form-label">Estado pago</label><select class="form-input" id="sc-estado"><option>Pagado</option><option>Pago acta</option><option>Parcial</option><option>Pendiente</option><option>Vencido</option></select></div>
       <div class="form-group fg-full"><label class="form-label">&#128206; Factura PDF del subcontratista</label><div id="sc-pdf-zone" style="border:2px dashed var(--border);border-radius:8px;padding:14px;text-align:center;cursor:pointer;background:var(--bg-card)" onclick="document.getElementById('sc-pdf-input').click()" ondragover="event.preventDefault();this.style.borderColor='var(--navy)'" ondragleave="this.style.borderColor='var(--border)'" ondrop="scHandleDrop(event)"><div id="sc-pdf-label" style="color:var(--text-soft);font-size:12px">&#128196; Arrastra el PDF aqui o <u style="color:var(--navy)">haz clic para seleccionar</u></div></div><div id="sc-pdf-preview" style="display:none;margin-top:8px;align-items:center;gap:8px;padding:10px 12px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px"></div><input type="file" id="sc-pdf-input" accept=".pdf,application/pdf" style="display:none" onchange="scHandleFile(this.files[0])"><input type="hidden" id="sc-pdf-b64"><input type="hidden" id="sc-pdf-nombre"></div>
     </div>
   </div>
@@ -5520,7 +5456,7 @@ async function navTo(v){
 // ═══════════════════════════════════════════
 // HELPERS
 // ═══════════════════════════════════════════
-const bColors={'Nuevo lead':'b-gray','Presupuesto enviado':'b-amber','Aprobado':'b-blue','En ejecución':'b-blue','Finalizado':'b-green','Facturado':'b-green','Cobrado':'b-navy','Cancelado':'b-red','Pendiente':'b-amber','Pagado':'b-green','Cobrada':'b-green','Parcial':'b-copper','Vencido':'b-red','Vencida':'b-red','Borrador':'b-gray','Enviada':'b-amber','Aprobada':'b-green','Rechazada':'b-red','En pedido':'b-blue','Entregada':'b-navy','Solicitado':'b-amber','Confirmado':'b-blue','En tránsito':'b-blue','Recibido':'b-copper','Proveedor':'b-blue','Subcontrata':'b-green','Obra nueva':'b-navy','Rehabilitación integral':'b-green','Interiorismo':'b-copper','Particular':'b-blue','Empresa':'b-green','Promotora':'b-copper'};
+const bColors={'Nuevo lead':'b-gray','Presupuesto enviado':'b-amber','Aprobado':'b-blue','En ejecución':'b-blue','Finalizado':'b-green','Facturado':'b-green','Cobrado':'b-navy','Cancelado':'b-red','Pendiente':'b-amber','Pagado':'b-green','Cobrada':'b-green','Parcial':'b-copper','Vencido':'b-red','Vencida':'b-red','Pago acta':'b-navy','Borrador':'b-gray','Enviada':'b-amber','Aprobada':'b-green','Rechazada':'b-red','En pedido':'b-blue','Entregada':'b-navy','Solicitado':'b-amber','Confirmado':'b-blue','En tránsito':'b-blue','Recibido':'b-copper','Proveedor':'b-blue','Subcontrata':'b-green','Obra nueva':'b-navy','Rehabilitación integral':'b-green','Interiorismo':'b-copper','Particular':'b-blue','Empresa':'b-green','Promotora':'b-copper'};
 function bE(v){return`<span class="badge ${bColors[v]||'b-gray'}">${v||'—'}</span>`}
 function fmt(n){if(n===null||n===undefined||n==='')return'—';return fmtES(Number(n))+'€'}
 function fmtES(n){var s=Math.abs(n).toFixed(2);var parts=s.split('.');var intPart=parts[0];var decPart=parts[1];var result='';for(var i=intPart.length-1,c=0;i>=0;i--,c++){if(c>0&&c%3===0)result='.'+result;result=intPart[i]+result;}return (n<0?'-':'')+result+','+decPart;}
@@ -5620,12 +5556,10 @@ function openModal(id){
     const coId = document.getElementById('co-id')?.value;
     if(!coId){ // Solo en nuevo registro (no edición, que ya carga por editCompra)
       const proyActual = document.getElementById('co-proyecto')?.value || '';
+      // Limpiar partida
       _ocultarCapituloGroupPfx('co');
       const ps = document.getElementById('co-partida');
       if(ps) ps.innerHTML = '<option value="">— General (sin partida) —</option>';
-      // Limpiar vencimientos
-      ['co-vto','co-vto2','co-vto3'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-      ['co-importe-vto1','co-importe-vto2','co-importe-vto3'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
       if(proyActual) cargarPartidasGenerico(proyActual, 'co', null);
     }
   }
@@ -5641,8 +5575,6 @@ function openModal(id){
       _ocultarCapituloGroupPfx('sc');
       const ps = document.getElementById('sc-partida');
       if(ps) ps.innerHTML = '<option value="">— General (sin partida) —</option>';
-      ['sc-vto','sc-vto2','sc-vto3'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-      ['sc-importe-vto1','sc-importe-vto2','sc-importe-vto3'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
       if(proyActual) cargarPartidasGenerico(proyActual, 'sc', null);
     }
   }
@@ -9896,7 +9828,7 @@ async function saveCompra(){
   const id=document.getElementById('co-id')?.value;
   const pdfB64=document.getElementById('co-pdf-b64')?.value||null;
   // Datos base SIN PDF para evitar error de columna en schema cache
-  const d={fecha:document.getElementById('co-fecha').value||new Date().toISOString().split('T')[0],proyecto_id:document.getElementById('co-proyecto').value||null,proveedor_id:document.getElementById('co-prov').value||null,concepto:document.getElementById('co-concepto').value,base_imponible:parseFloat(document.getElementById('co-base').value)||0,iva_pct:document.getElementById('co-iva').value,estado_pago:document.getElementById('co-estado').value,fecha_vencimiento:document.getElementById('co-vto').value||null,importe_vto1:parseFloat(document.getElementById('co-importe-vto1')?.value)||null,fecha_vto2:document.getElementById('co-vto2')?.value||null,importe_vto2:parseFloat(document.getElementById('co-importe-vto2')?.value)||null,fecha_vto3:document.getElementById('co-vto3')?.value||null,importe_vto3:parseFloat(document.getElementById('co-importe-vto3')?.value)||null,notas:document.getElementById('co-notas').value,partida:getPartidaFinalPfx('co')||null};
+  const d={fecha:document.getElementById('co-fecha').value||new Date().toISOString().split('T')[0],proyecto_id:document.getElementById('co-proyecto').value||null,proveedor_id:document.getElementById('co-prov').value||null,concepto:document.getElementById('co-concepto').value,base_imponible:parseFloat(document.getElementById('co-base').value)||0,iva_pct:document.getElementById('co-iva').value,estado_pago:document.getElementById('co-estado').value,notas:document.getElementById('co-notas').value,partida:getPartidaFinalPfx('co')||null};
   try{
     let savedId = id;
     if(id){
@@ -9956,12 +9888,6 @@ function editSubcontrata(id) {
   document.getElementById('sc-importe').value   = s.importe || 0;
   document.getElementById('sc-iva').value       = s.iva_pct || '21%';
   document.getElementById('sc-estado').value    = s.estado_pago || 'Pendiente';
-  document.getElementById('sc-vto').value       = s.fecha_vencimiento || '';
-  document.getElementById('sc-importe-vto1').value = s.importe_vto1 || '';
-  document.getElementById('sc-vto2').value      = s.fecha_vto2 || '';
-  document.getElementById('sc-importe-vto2').value = s.importe_vto2 || '';
-  document.getElementById('sc-vto3').value      = s.fecha_vto3 || '';
-  document.getElementById('sc-importe-vto3').value = s.importe_vto3 || '';
   // Restaurar partida
   if(s.proyecto_id) {
     cargarPartidasGenerico(s.proyecto_id, 'sc', s.partida || null);
@@ -9997,12 +9923,6 @@ function editCompra(id) {
   document.getElementById('co-base').value      = c.base_imponible || 0;
   document.getElementById('co-iva').value       = c.iva_pct || '21%';
   document.getElementById('co-estado').value    = c.estado_pago || 'Pendiente';
-  document.getElementById('co-vto').value       = c.fecha_vencimiento || '';
-  document.getElementById('co-importe-vto1').value = c.importe_vto1 || '';
-  document.getElementById('co-vto2').value      = c.fecha_vto2 || '';
-  document.getElementById('co-importe-vto2').value = c.importe_vto2 || '';
-  document.getElementById('co-vto3').value      = c.fecha_vto3 || '';
-  document.getElementById('co-importe-vto3').value = c.importe_vto3 || '';
   document.getElementById('co-notas').value     = c.notas || '';
   // Restaurar partida
   if(c.proyecto_id) {
@@ -10083,7 +10003,7 @@ function _setHoraProyecto(proyId, partidaVal) {
 async function saveSubcontrata(){
   const id=document.getElementById('sc-id')?.value;
   const pdfB64=document.getElementById('sc-pdf-b64')?.value||null;
-  const d={fecha:document.getElementById('sc-fecha').value||new Date().toISOString().split('T')[0],proyecto_id:document.getElementById('sc-proyecto').value||null,proveedor_id:document.getElementById('sc-prov').value||null,trabajo:document.getElementById('sc-trabajo').value,importe:parseFloat(document.getElementById('sc-importe').value)||0,iva_pct:document.getElementById('sc-iva').value,estado_pago:document.getElementById('sc-estado').value,fecha_vencimiento:document.getElementById('sc-vto').value||null,importe_vto1:parseFloat(document.getElementById('sc-importe-vto1')?.value)||null,fecha_vto2:document.getElementById('sc-vto2')?.value||null,importe_vto2:parseFloat(document.getElementById('sc-importe-vto2')?.value)||null,fecha_vto3:document.getElementById('sc-vto3')?.value||null,importe_vto3:parseFloat(document.getElementById('sc-importe-vto3')?.value)||null,partida:getPartidaFinalPfx('sc')||null};
+  const d={fecha:document.getElementById('sc-fecha').value||new Date().toISOString().split('T')[0],proyecto_id:document.getElementById('sc-proyecto').value||null,proveedor_id:document.getElementById('sc-prov').value||null,trabajo:document.getElementById('sc-trabajo').value,importe:parseFloat(document.getElementById('sc-importe').value)||0,iva_pct:document.getElementById('sc-iva').value,estado_pago:document.getElementById('sc-estado').value,partida:getPartidaFinalPfx('sc')||null};
   try{
     let savedId=id;
     if(id){ await sb('subcontratas','PATCH',d,null,`?id=eq.${id}`); }
