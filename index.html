@@ -647,7 +647,7 @@ th.sortable:not(.sort-asc):not(.sort-desc) .sort-arrow::after{content:'⇅'}
     <div class="nav-item" data-view="presupuesto" onclick="navTo('presupuesto')"><span class="ni">💰</span><span>Presupuesto</span></div>
     <div class="nav-item" data-view="comparativa" onclick="navTo('comparativa')"><span class="ni">⚖️</span><span>Comparativa ofertas</span></div>
     <div class="nav-item" data-view="tarifario" onclick="navTo('tarifario')"><span class="ni">📋</span><span>Tarifario</span></div>
-    <div class="nav-item" data-view="cype" onclick="navTo('cype')"><span class="ni">📐</span><span>CYPE 2026</span><span class="nav-badge" id="cype-badge" style="display:none">0</span></div>
+    <div class="nav-item" data-view="cype" onclick="navTo('cype')"><span class="ni">📐</span><span>CYPE 2026</span></div>
     <div class="nav-item" data-view="catalogos" onclick="navTo('catalogos')"><span class="ni">📚</span><span>Catálogos</span></div>
   </div>
   <div class="nav-section">
@@ -6892,7 +6892,7 @@ async function loadGerencia(){
     // Diagnóstico: detectar facturas sin tipo definido
     const sinTipo=fac.filter(f=>!f.tipo_factura);
     if(sinTipo.length){console.warn('⚠️ Facturas sin tipo_factura (se cuentan como Venta por defecto):',sinTipo.map(f=>f.num_factura||f.id));}
-    const _cb=document.getElementById('cype-badge');if(_cb){_cb.textContent=cy.length;_cb.style.display=cy.length>0?'':'none';}
+    // badge CYPE eliminada
 
     // KPIs superiores y resumen: con filtro de período
     const _gTipo=document.getElementById('g-filtro-tipo')?.value||'anio';
