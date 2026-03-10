@@ -4884,7 +4884,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 
 <div class="toast error" id="toast">Error al cargar datos: </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script>
@@ -6892,7 +6892,7 @@ async function loadGerencia(){
     // Diagnóstico: detectar facturas sin tipo definido
     const sinTipo=fac.filter(f=>!f.tipo_factura);
     if(sinTipo.length){console.warn('⚠️ Facturas sin tipo_factura (se cuentan como Venta por defecto):',sinTipo.map(f=>f.num_factura||f.id));}
-    const _cb=document.getElementById('cype-badge');if(_cb){_cb.textContent=cy.length;_cb.style.display=cy.length>0?'':' none';}
+    const _cb=document.getElementById('cype-badge');if(_cb){_cb.textContent=cy.length;_cb.style.display=cy.length>0?'':'none';}
 
     // KPIs superiores y resumen: con filtro de período
     const _gTipo=document.getElementById('g-filtro-tipo')?.value||'anio';
@@ -22961,9 +22961,4 @@ function vpGuardarPDF(){
 
       <div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:4px">Datos personales</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
-        <div><label class="form-label">Nombre *</label><input class="form-input" id="trab-nombre" placeholder="Nombre y apellidos"></div>
-        <div><label class="form-label">DNI / NIE</label><input class="form-input" id="trab-dni" placeholder="12345678A"></div>
-        <div><label class="form-label">Teléfono</label><input class="form-input" id="trab-tel" placeholder="600 000 000"></div>
-        <div><label class="form-label">Email</label><input class="form-input" id="trab-email" type="email"></div>
-        <div style="grid-column:1/-1"><label class="form-label">Dirección</label><input class="form-input" id="trab-dir" placeholder="Calle, número, municipio"></div>
-        <div><label
+        <div><label class="form-label">Nombre *</l
