@@ -798,7 +798,7 @@ if(window.MutationObserver){
       <div class="search-bar" style="gap:8px;flex-wrap:wrap;align-items:center">
         <select class="form-input" style="width:195px;flex-shrink:0" id="filter-cliente-pres_final" onchange="cascadaModulo(&#39;pres_final&#39;,&#39;pf-proyecto-sel&#39;,pfProyChanged)"><option value="">👤 Cliente…</option><option value="CLI-H015">4F Fernando</option><option value="CLI-H014">4G daniel Dominguez</option><option value="CLI-H018">Amparo Forner Pastor</option><option value="CLI-H026">Ana María Palau Sastre</option><option value="CLI-H031">Belinda</option><option value="CLI-H004">CARMELO RODRIGUEZ VILA</option><option value="CLI-H032">Daniel palma gallardo</option><option value="CLI-H003">DESIRE NAVARRO MARI</option><option value="CLI-033">Estudi Encis SL</option><option value="CLI-H009">FERNANDO JOSE SAN GERMAN IBORRA</option><option value="CLI-H029">Francisco Navarro Garcia</option><option value="CLI-H019">Jose Antonio Martos Ortiz</option><option value="CLI-H013">Jose Manuel Garcia Seller Nº 7 Pta 4</option><option value="CLI-H030">Jose Manuel Pinzón Valbuena</option><option value="CLI-H007">Juanmi</option><option value="CLI-H012">Júlia Fabregat Mestre</option><option value="CLI-H028">Lara Blasco - Lara Blasco Iborra</option><option value="CLI-H027">Laura Doria Gomez</option><option value="CLI-H021">MERCEDES HIGUERAS GOMEZ</option><option value="CLI-H024">MICHELL BENITO</option><option value="CLI-H022">Miguel cocina</option><option value="CLI-001">Miguel Zaragozá Garzón</option><option value="CLI-H023">Miguel Zaragozá Garzón</option><option value="CLI-H002">Mª PAU BRAVO JOSE</option><option value="CLI-H005">PATRI</option><option value="CLI-H020">Rafael Francés Llàcer</option><option value="CLI-H010">REME IBORRA GIL</option><option value="CLI-H001">ROSA CHANZA SOLER</option><option value="CLI-H016">Sara Muñoz Abella</option><option value="CLI-H011">TONI TATAY DAVID</option><option value="CLI-H025">URKO Y FRANCESC</option><option value="CLI-H008">VICENT MARI SERRA</option><option value="CLI-034">Vicenta Baixauli Hernandez</option><option value="CLI-002">Vicenta Folch Gil</option><option value="CLI-H006">Vicenta Folch Gil</option><option value="CLI-H017">Yasmina Cabezuelo Alaminos</option></select>
         <select class="form-input" style="width:220px" id="pf-proyecto-sel" onchange="pfProyChanged()"><option value="">📁 Proyecto…</option></select>
-        <select class="form-input" style="width:auto;min-width:75px" id="pf-version-sel" onchange="loadPresupuestoFinal()"><option value="v1">v1</option><option value="v2">v2</option><option value="v3">v3</option></select>
+        <select class="form-input" style="width:auto;min-width:75px" id="pf-version-sel" onchange="loadPresupuestoFinal()"><option value="v1">v1</option><option value="v2">v2</option><option value="v3">v3</option><option value="v4">v4</option><option value="v5">v5</option><option value="v6">v6</option><option value="v7">v7</option><option value="v8">v8</option></select>
         <button class="btn btn-primary no-print" onclick="pfVistaPrevia()">👁 Vista previa</button>
         <button class="btn btn-ghost no-print" onclick="abrirEnviarEmail('presupuesto')">📧 Enviar</button>
         <button class="btn btn-ghost no-print" onclick="pfExportarPDF()">⬇️ PDF</button>
@@ -1426,7 +1426,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="pres-topbar">
         <select class="form-input" style="width:190px;flex-shrink:0" id="filter-cliente-presupuesto" onchange="cascadaClienteProyecto(&#39;presupuesto&#39;)"><option value="">👤 Cliente…</option><option value="CLI-H015">4F Fernando</option><option value="CLI-H014">4G daniel Dominguez</option><option value="CLI-H018">Amparo Forner Pastor</option><option value="CLI-H026">Ana María Palau Sastre</option><option value="CLI-H031">Belinda</option><option value="CLI-H004">CARMELO RODRIGUEZ VILA</option><option value="CLI-H032">Daniel palma gallardo</option><option value="CLI-H003">DESIRE NAVARRO MARI</option><option value="CLI-033">Estudi Encis SL</option><option value="CLI-H009">FERNANDO JOSE SAN GERMAN IBORRA</option><option value="CLI-H029">Francisco Navarro Garcia</option><option value="CLI-H019">Jose Antonio Martos Ortiz</option><option value="CLI-H013">Jose Manuel Garcia Seller Nº 7 Pta 4</option><option value="CLI-H030">Jose Manuel Pinzón Valbuena</option><option value="CLI-H007">Juanmi</option><option value="CLI-H012">Júlia Fabregat Mestre</option><option value="CLI-H028">Lara Blasco - Lara Blasco Iborra</option><option value="CLI-H027">Laura Doria Gomez</option><option value="CLI-H021">MERCEDES HIGUERAS GOMEZ</option><option value="CLI-H024">MICHELL BENITO</option><option value="CLI-H022">Miguel cocina</option><option value="CLI-001">Miguel Zaragozá Garzón</option><option value="CLI-H023">Miguel Zaragozá Garzón</option><option value="CLI-H002">Mª PAU BRAVO JOSE</option><option value="CLI-H005">PATRI</option><option value="CLI-H020">Rafael Francés Llàcer</option><option value="CLI-H010">REME IBORRA GIL</option><option value="CLI-H001">ROSA CHANZA SOLER</option><option value="CLI-H016">Sara Muñoz Abella</option><option value="CLI-H011">TONI TATAY DAVID</option><option value="CLI-H025">URKO Y FRANCESC</option><option value="CLI-H008">VICENT MARI SERRA</option><option value="CLI-034">Vicenta Baixauli Hernandez</option><option value="CLI-002">Vicenta Folch Gil</option><option value="CLI-H006">Vicenta Folch Gil</option><option value="CLI-H017">Yasmina Cabezuelo Alaminos</option></select>
         <select class="form-input" style="width:220px" id="pres-proyecto-sel" onchange="presProyChanged()"><option value="">📁 Proyecto…</option><option value="PRY-001">PRY-001 · Mobiliario de cocina</option><option value="PRY-002">PRY-002 · Rehabilitación lateral fachada</option><option value="PRY-003">PRY-003 · Pavimento/revestimiento vivienda.</option><option value="PRY-004">PRY-004 · Rehabilitación estudio</option><option value="PRY-005">PRY-005 · Trabajos en terraza</option></select>
-        <select class="form-input" style="width:auto;min-width:75px" id="pres-version-sel" onchange="loadPresupuesto()"><option value="v1">v1</option><option value="v2">v2</option><option value="v3">v3</option></select>
+        <select class="form-input" style="width:auto;min-width:75px" id="pres-version-sel" onchange="loadPresupuesto()"><option value="v1">v1</option><option value="v2">v2</option><option value="v3">v3</option><option value="v4">v4</option><option value="v5">v5</option><option value="v6">v6</option><option value="v7">v7</option><option value="v8">v8</option></select>
         <button class="btn btn-primary" onclick="addLineaPresupuesto()">＋ Línea</button>
         <button class="btn btn-ghost" onclick="addCapituloPresupuesto()">＋ Capítulo</button>
         <button class="btn btn-ghost" id="btn-comparativa" style="display:none" onclick="abrirComparativa()">⚖️ Comparar</button>
@@ -2691,6 +2691,11 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
                 <option value="v1">v1</option>
                 <option value="v2">v2</option>
                 <option value="v3">v3</option>
+              <option value="v4">v4</option>
+              <option value="v5">v5</option>
+              <option value="v6">v6</option>
+              <option value="v7">v7</option>
+              <option value="v8">v8</option>
               </select>
             </div>
           </div>
@@ -2831,6 +2836,11 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
                 <option value="v1">v1</option>
                 <option value="v2">v2</option>
                 <option value="v3">v3</option>
+              <option value="v4">v4</option>
+              <option value="v5">v5</option>
+              <option value="v6">v6</option>
+              <option value="v7">v7</option>
+              <option value="v8">v8</option>
               </select>
             </div>
           </div>
@@ -3125,6 +3135,11 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <label style="display:flex;align-items:center;gap:3px;cursor:pointer;font-weight:600"><input type="checkbox" id="rent-chk-v1" checked onchange="loadRentabilidad()"> v1</label>
           <label style="display:flex;align-items:center;gap:3px;cursor:pointer;font-weight:600"><input type="checkbox" id="rent-chk-v2" onchange="loadRentabilidad()"> v2</label>
           <label style="display:flex;align-items:center;gap:3px;cursor:pointer;font-weight:600"><input type="checkbox" id="rent-chk-v3" onchange="loadRentabilidad()"> v3</label>
+          <label style="display:flex;align-items:center;gap:3px;cursor:pointer;font-weight:600"><input type="checkbox" id="rent-chk-v4" onchange="loadRentabilidad()"> v4</label>
+          <label style="display:flex;align-items:center;gap:3px;cursor:pointer;font-weight:600"><input type="checkbox" id="rent-chk-v5" onchange="loadRentabilidad()"> v5</label>
+          <label style="display:flex;align-items:center;gap:3px;cursor:pointer;font-weight:600"><input type="checkbox" id="rent-chk-v6" onchange="loadRentabilidad()"> v6</label>
+          <label style="display:flex;align-items:center;gap:3px;cursor:pointer;font-weight:600"><input type="checkbox" id="rent-chk-v7" onchange="loadRentabilidad()"> v7</label>
+          <label style="display:flex;align-items:center;gap:3px;cursor:pointer;font-weight:600"><input type="checkbox" id="rent-chk-v8" onchange="loadRentabilidad()"> v8</label>
         </div>
       </div>
       <div id="rent-kpis" style="display:none">
@@ -3916,6 +3931,11 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <option value="v1">v1</option>
           <option value="v2">v2</option>
           <option value="v3">v3</option>
+          <option value="v4">v4</option>
+          <option value="v5">v5</option>
+          <option value="v6">v6</option>
+          <option value="v7">v7</option>
+          <option value="v8">v8</option>
         </select>
       </div>
       <div class="form-group">
@@ -4303,6 +4323,11 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
             <label style="font-size:10px;color:var(--text-soft);display:flex;align-items:center;gap:2px;cursor:pointer"><input type="checkbox" id="chk-v1" checked onchange="recalcPresKPI()"> V1</label>
             <label style="font-size:10px;color:var(--text-soft);display:flex;align-items:center;gap:2px;cursor:pointer"><input type="checkbox" id="chk-v2" onchange="recalcPresKPI()"> V2</label>
             <label style="font-size:10px;color:var(--text-soft);display:flex;align-items:center;gap:2px;cursor:pointer"><input type="checkbox" id="chk-v3" onchange="recalcPresKPI()"> V3</label>
+            <label style="font-size:10px;color:var(--text-soft);display:flex;align-items:center;gap:2px;cursor:pointer"><input type="checkbox" id="chk-v4" onchange="recalcPresKPI()"> V4</label>
+            <label style="font-size:10px;color:var(--text-soft);display:flex;align-items:center;gap:2px;cursor:pointer"><input type="checkbox" id="chk-v5" onchange="recalcPresKPI()"> V5</label>
+            <label style="font-size:10px;color:var(--text-soft);display:flex;align-items:center;gap:2px;cursor:pointer"><input type="checkbox" id="chk-v6" onchange="recalcPresKPI()"> V6</label>
+            <label style="font-size:10px;color:var(--text-soft);display:flex;align-items:center;gap:2px;cursor:pointer"><input type="checkbox" id="chk-v7" onchange="recalcPresKPI()"> V7</label>
+            <label style="font-size:10px;color:var(--text-soft);display:flex;align-items:center;gap:2px;cursor:pointer"><input type="checkbox" id="chk-v8" onchange="recalcPresKPI()"> V8</label>
           </div>
         </div>
         <div id="exp-k-pres" style="font-size:18px;font-weight:800;color:var(--navy)">—</div>
@@ -5521,6 +5546,37 @@ function openModal(id){
       const filtrados=clienteId?PC.filter(p=>p.cliente_id===clienteId):PC;
       proySel.innerHTML='<option value="">Seleccionar…</option>'
         +filtrados.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
+    }
+  }
+  if(id==='m-compra'){
+    // Poblar proyecto con el filtro activo y cargar partidas
+    const pid = document.getElementById('filter-proyecto-compras')?.value || '';
+    const coProySel = document.getElementById('co-proyecto');
+    if(coProySel && pid && coProySel.value !== pid){
+      coProySel.value = pid;
+    }
+    const coId = document.getElementById('co-id')?.value;
+    if(!coId){ // Solo en nuevo registro (no edición, que ya carga por editCompra)
+      const proyActual = document.getElementById('co-proyecto')?.value || '';
+      _ocultarCapituloGroupPfx('co');
+      const ps = document.getElementById('co-partida');
+      if(ps) ps.innerHTML = '<option value="">— General (sin partida) —</option>';
+      if(proyActual) cargarPartidasGenerico(proyActual, 'co', null);
+    }
+  }
+  if(id==='m-subcontrata'){
+    const pid = document.getElementById('filter-proyecto-subcontratas')?.value || '';
+    const scProySel = document.getElementById('sc-proyecto');
+    if(scProySel && pid && scProySel.value !== pid){
+      scProySel.value = pid;
+    }
+    const scId = document.getElementById('sc-id')?.value;
+    if(!scId){
+      const proyActual = document.getElementById('sc-proyecto')?.value || '';
+      _ocultarCapituloGroupPfx('sc');
+      const ps = document.getElementById('sc-partida');
+      if(ps) ps.innerHTML = '<option value="">— General (sin partida) —</option>';
+      if(proyActual) cargarPartidasGenerico(proyActual, 'sc', null);
     }
   }
   document.getElementById(id)?.classList.add('open');
@@ -6951,7 +7007,7 @@ async function initPresupuesto(){
 // Shared: load units into any version selector
 async function _loadUnitsIntoSelector(proyId, verSel){
   const curVer = verSel.value;
-  verSel.innerHTML = '<option value="v1">v1</option><option value="v2">v2</option><option value="v3">v3</option>';
+  verSel.innerHTML = '<option value="v1">v1</option><option value="v2">v2</option><option value="v3">v3</option><option value="v4">v4</option><option value="v5">v5</option><option value="v6">v6</option><option value="v7">v7</option><option value="v8">v8</option>';
   if(!proyId) return;
   try {
     const units = await sbGet('proyecto_unidades','?proyecto_id=eq.'+encodeURIComponent(proyId)+'&order=orden,ref_unidad');
@@ -10694,6 +10750,11 @@ async function loadRentabilidad(){
   if(document.getElementById('rent-chk-v1')?.checked) versiones.push('v1');
   if(document.getElementById('rent-chk-v2')?.checked) versiones.push('v2');
   if(document.getElementById('rent-chk-v3')?.checked) versiones.push('v3');
+  if(document.getElementById('rent-chk-v4')?.checked) versiones.push('v4');
+  if(document.getElementById('rent-chk-v5')?.checked) versiones.push('v5');
+  if(document.getElementById('rent-chk-v6')?.checked) versiones.push('v6');
+  if(document.getElementById('rent-chk-v7')?.checked) versiones.push('v7');
+  if(document.getElementById('rent-chk-v8')?.checked) versiones.push('v8');
   // Si no hay ninguna marcada, marcar v1 por defecto
   if(!versiones.length){
     const chk=document.getElementById('rent-chk-v1');
@@ -19280,16 +19341,21 @@ function recalcPresKPI(){
   const v1 = document.getElementById('chk-v1')?.checked ? (_presDesglobeGlobal['v1']||0) : 0;
   const v2 = document.getElementById('chk-v2')?.checked ? (_presDesglobeGlobal['v2']||0) : 0;
   const v3 = document.getElementById('chk-v3')?.checked ? (_presDesglobeGlobal['v3']||0) : 0;
-  // Sum all unit versions (any key that is not v1/v2/v3)
+  const v4 = document.getElementById('chk-v4')?.checked ? (_presDesglobeGlobal['v4']||0) : 0;
+  const v5 = document.getElementById('chk-v5')?.checked ? (_presDesglobeGlobal['v5']||0) : 0;
+  const v6 = document.getElementById('chk-v6')?.checked ? (_presDesglobeGlobal['v6']||0) : 0;
+  const v7 = document.getElementById('chk-v7')?.checked ? (_presDesglobeGlobal['v7']||0) : 0;
+  const v8 = document.getElementById('chk-v8')?.checked ? (_presDesglobeGlobal['v8']||0) : 0;
+  // Sum all unit versions (any key that is not v1-v8)
   let unitsTotal = 0;
   Object.keys(_presDesglobeGlobal).forEach(k => {
     if(!k.match(/^v\d+$/)) unitsTotal += _presDesglobeGlobal[k];
   });
-  const tot = v1 + v2 + v3 + unitsTotal;
+  const tot = v1 + v2 + v3 + v4 + v5 + v6 + v7 + v8 + unitsTotal;
   const el = document.getElementById('exp-k-pres');
   if(el) el.textContent = tot > 0 ? fmt(tot) : '—';
   // Ocultar checkboxes de versiones sin datos
-  ['v1','v2','v3'].forEach(v=>{
+  ['v1','v2','v3','v4','v5','v6','v7','v8'].forEach(v=>{
     const lbl = document.getElementById('chk-'+v)?.parentElement;
     if(lbl) lbl.style.display = (_presDesglobeGlobal[v]||0) > 0 ? '' : 'none';
   });
@@ -19593,19 +19659,24 @@ function renderExpCompras(body){
   if(!items.length){ body.innerHTML='<div style="text-align:center;padding:32px;color:var(--text-soft)">Sin compras registradas en este proyecto</div>'; return; }
   const total = items.reduce((s,c)=>s+(c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100),0);
   body.innerHTML = `
-    <div style="margin-bottom:10px;font-size:12px;color:var(--text-soft)">Total: <strong style="color:var(--amber)">${fmt(total)}</strong> · ${items.length} registro${items.length!==1?'s':''}</div>
+    <div style="margin-bottom:10px;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:12px;color:var(--text-soft)">${items.length} registro${items.length!==1?'s':''}</span>
+      <strong style="color:var(--amber);font-size:13px">Total: ${fmt(total)}</strong>
+    </div>
+    <div style="overflow-y:auto;max-height:calc(94vh - 320px);border:1px solid var(--border);border-radius:8px">
     <table style="width:100%;font-size:12px;border-collapse:collapse">
-      <thead><tr style="background:var(--navy);color:#fff">${['Fecha','Proveedor','Concepto','Base','IVA','Total','Estado'].map(h=>`<th style="padding:7px 10px;text-align:left;font-weight:600">${h}</th>`).join('')}<th></th></tr></thead>
-      <tbody>${items.map((c,i)=>{const tot=(c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100);return`<tr style="background:${i%2?'#fafafa':'#fff'}">
-        <td style="padding:6px 10px">${fmtD(c.fecha)}</td><td style="padding:6px 10px">${c.proveedor_id||'—'}</td>
+      <thead style="position:sticky;top:0;z-index:1"><tr style="background:var(--navy);color:#fff">${['Fecha','Partida','Proveedor','Concepto','Base','IVA','Total','Estado'].map(h=>`<th style="padding:7px 10px;text-align:left;font-weight:600">${h}</th>`).join('')}<th></th></tr></thead>
+      <tbody>${items.map((c,i)=>{const tot=(c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100);const pLbl=c.partida?`<span style="font-size:10px;color:var(--copper)">${c.partida.startsWith('cap:')?'📁 ?':c.partida.match(/^v\d+$/)?'📋 V'+c.partida.slice(1):'🏠 '+c.partida}</span>`:'—';return`<tr style="background:${i%2?'#fafafa':'#fff'}">
+        <td style="padding:6px 10px;white-space:nowrap">${fmtD(c.fecha)}</td><td style="padding:6px 10px">${pLbl}</td><td style="padding:6px 10px">${c.proveedor_id||'—'}</td>
         <td style="padding:6px 10px">${c.concepto||'—'}${c.adjunto_pdf?' 📎':''}</td>
         <td style="padding:6px 10px;font-family:monospace">${fmt(c.base_imponible)}</td>
         <td style="padding:6px 10px">${c.iva_pct}</td>
         <td style="padding:6px 10px;font-weight:700;font-family:monospace;color:var(--amber)">${fmt(tot)}</td>
         <td style="padding:6px 10px">${bE(c.estado_pago)}</td>
-        <td style="padding:6px 10px">${c.adjunto_pdf?`<button class="btn btn-ghost btn-sm" style="font-size:10px" onclick="coVerPDFById('${c.id}')">📄 PDF</button>`:''}</td>
+        <td style="padding:6px 10px">${c.adjunto_pdf?`<button class="btn btn-ghost btn-sm" style="font-size:10px" onclick="coVerPDFById('${c.id}')">📄</button>`:''}<button class="btn btn-ghost btn-icon btn-sm" onclick="editCompra('${c.id}');closeModal('m-expediente')" title="Editar">✏️</button></td>
       </tr>`}).join('')}</tbody>
-    </table>`;
+    </table></div>
+    <div style="margin-top:8px;text-align:right"><button class="btn btn-primary btn-sm" onclick="closeModal('m-expediente');setTimeout(()=>{openModal('m-compra')},200)">＋ Nueva compra</button></div>`;
 }
 
 function renderExpFacturas(body){
@@ -19632,17 +19703,24 @@ function renderExpSubcontratas(body){
   if(!items.length){ body.innerHTML='<div style="text-align:center;padding:32px;color:var(--text-soft)">Sin subcontratas en este proyecto</div>'; return; }
   const total = items.reduce((s,c)=>s+(c.importe||0)*(1+ivaPct(c.iva_pct)/100),0);
   body.innerHTML = `
-    <div style="margin-bottom:10px;font-size:12px;color:var(--text-soft)">Total: <strong>${fmt(total)}</strong></div>
+    <div style="margin-bottom:10px;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:12px;color:var(--text-soft)">${items.length} registro${items.length!==1?'s':''}</span>
+      <strong style="font-size:13px">Total: ${fmt(total)}</strong>
+    </div>
+    <div style="overflow-y:auto;max-height:calc(94vh - 320px);border:1px solid var(--border);border-radius:8px">
     <table style="width:100%;font-size:12px;border-collapse:collapse">
-      <thead><tr style="background:var(--navy);color:#fff">${['Fecha','Empresa','Trabajo','Importe','Estado'].map(h=>`<th style="padding:7px 10px;text-align:left">${h}</th>`).join('')}</tr></thead>
-      <tbody>${items.map((s,i)=>`<tr style="background:${i%2?'#fafafa':'#fff'}">
-        <td style="padding:6px 10px">${fmtD(s.fecha)}</td>
+      <thead style="position:sticky;top:0;z-index:1"><tr style="background:var(--navy);color:#fff">${['Fecha','Partida','Empresa','Trabajo','Importe','Estado'].map(h=>`<th style="padding:7px 10px;text-align:left">${h}</th>`).join('')}<th></th></tr></thead>
+      <tbody>${items.map((s,i)=>{const pLbl=s.partida?`<span style="font-size:10px;color:var(--copper)">${s.partida.startsWith('cap:')?'📁 ?':s.partida.match(/^v\d+$/)?'📋 V'+s.partida.slice(1):'🏠 '+s.partida}</span>`:'—';return`<tr style="background:${i%2?'#fafafa':'#fff'}">
+        <td style="padding:6px 10px;white-space:nowrap">${fmtD(s.fecha)}</td>
+        <td style="padding:6px 10px">${pLbl}</td>
         <td style="padding:6px 10px">${s.proveedor_id||'—'}</td>
         <td style="padding:6px 10px">${s.trabajo||'—'}</td>
         <td style="padding:6px 10px;font-weight:700;font-family:monospace">${fmt((s.importe||0)*(1+ivaPct(s.iva_pct)/100))}</td>
         <td style="padding:6px 10px">${bE(s.estado_pago)}</td>
-      </tr>`).join('')}</tbody>
-    </table>`;
+        <td style="padding:6px 10px">${s.adjunto_pdf?`<button class="btn btn-ghost btn-icon btn-sm" onclick="scVerPDFById('${s.id}')" style="font-size:11px;color:var(--navy)" title="Ver PDF">📄</button>`:''}<button class="btn btn-ghost btn-icon btn-sm" onclick="editSubcontrata('${s.id}');closeModal('m-expediente')" title="Editar">✏️</button></td>
+      </tr>`}).join('')}</tbody>
+    </table></div>
+    <div style="margin-top:8px;text-align:right"><button class="btn btn-primary btn-sm" onclick="closeModal('m-expediente');setTimeout(()=>{openModal('m-subcontrata')},200)">＋ Nueva subcontrata</button></div>`;
 }
 
 async function renderExpHoras(body){
@@ -19742,7 +19820,7 @@ async function renderExpHoras(body){
   // Botón añadir
   html += `<div style="margin-top:6px"><button class="btn btn-primary btn-sm" onclick="abrirModalHora('${pid}')">＋ Registrar horas en este proyecto</button></div>`;
 
-  body.innerHTML = html;
+  body.innerHTML = `<div style="overflow-y:auto;max-height:calc(94vh - 280px)">${html}</div>`;
 }
 
 function renderExpNotas(body){
