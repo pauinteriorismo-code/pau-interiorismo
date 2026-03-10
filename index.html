@@ -1129,6 +1129,8 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     <div class="view active" id="view-gerencia">
       <div class="kpi-grid">
         <div class="kpi blue"><div class="kpi-label">Total Ventas (Base Imp.)</div><div class="kpi-value" id="g-ventas">—</div><div class="kpi-sub">Facturas emitidas</div></div>
+        <div class="kpi" style="background:#e6f0ff;border-left:4px solid #1a5fa8"><div class="kpi-label" style="color:#1a5fa8">📐 S1 · Obra</div><div class="kpi-value" id="g-ventas-s1" style="font-size:20px">—</div><div class="kpi-sub">Ventas serie 1</div></div>
+        <div class="kpi" style="background:#f0e6ff;border-left:4px solid #7b2fa8"><div class="kpi-label" style="color:#7b2fa8">🛋️ S2 · Interiorismo</div><div class="kpi-value" id="g-ventas-s2" style="font-size:20px">—</div><div class="kpi-sub">Ventas serie 2</div></div>
         <div class="kpi red"><div class="kpi-label">Total Costes (Base Imp.)</div><div class="kpi-value" id="g-costes">—</div><div class="kpi-sub">Facturas recibidas</div></div>
         <div class="kpi green"><div class="kpi-label">Beneficio Neto</div><div class="kpi-value" id="g-benef">—</div><div class="kpi-sub">Ventas − Costes (base imp.)</div></div>
         <div class="kpi amber"><div class="kpi-label">Margen Neto %</div><div class="kpi-value" id="g-margen">—</div><div class="kpi-sub">Sobre base imponible</div></div>
@@ -1154,6 +1156,8 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <div class="card-body" style="padding:0">
             <div class="cuenta-row header"><span>Concepto</span><span>Importe €</span><span>%</span></div>
             <div class="cuenta-row"><span>Total Ventas (Base Imp.)</span><span id="ge-ventas">—</span><span>100%</span></div>
+            <div class="cuenta-row" style="background:#f5f8ff"><span style="padding-left:12px;color:#1a5fa8">↳ S1 · Obra</span><span id="ge-ventas-s1" style="color:#1a5fa8">—</span><span id="ge-ventas-s1-pct" style="color:#1a5fa8">—</span></div>
+            <div class="cuenta-row" style="background:#f8f5ff"><span style="padding-left:12px;color:#7b2fa8">↳ S2 · Interiorismo</span><span id="ge-ventas-s2" style="color:#7b2fa8">—</span><span id="ge-ventas-s2-pct" style="color:#7b2fa8">—</span></div>
             <div class="cuenta-row"><span>IVA Repercutido</span><span id="ge-iva-rep">—</span><span></span></div>
             <div class="cuenta-row"><span style="color:var(--text-soft)">— Compras (fact. recibidas)</span><span id="ge-compras">—</span><span id="ge-compras-pct">—</span></div>
             <div class="cuenta-row" style="display:none"><span></span><span id="ge-subcs">—</span><span id="ge-subcs-pct"></span></div>
@@ -3435,6 +3439,11 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <option value="">— Cliente / Proveedor —</option>
         </select>
         <input class="form-input" type="date" style="width:150px" id="filt-fac-vto" onchange="filtrarFacturas()" title="Vencimiento hasta esta fecha">
+        <select class="form-input" style="width:150px" id="filt-fac-serie" onchange="filtrarFacturas()">
+          <option value="">— Serie —</option>
+          <option value="1">Serie 1 · Obra</option>
+          <option value="2">Serie 2 · Interiorismo</option>
+        </select>
         <select class="form-input" style="width:120px" id="filt-fac-estado" onchange="filtrarFacturas()">
           <option value="">— Estado —</option>
           <option>Pendiente</option><option>Cobrada</option><option>Pagada</option>
@@ -3455,6 +3464,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <div class="table-wrap"><table>
           <thead><tr>
             <th>Tipo</th>
+            <th>Serie</th>
             <th class="sortable" onclick="sortTable('facturas','num_factura',this)">Nº Factura<span class="sort-arrow"></span></th>
             <th class="sortable" onclick="sortTable('facturas','fecha_emision',this)">Fecha<span class="sort-arrow"></span></th>
             <th class="sortable" onclick="sortTable('facturas','fecha_vencimiento',this)">Vto.<span class="sort-arrow"></span></th>
@@ -4630,8 +4640,14 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     <input type="hidden" id="f-id">
     <input type="hidden" id="f-tipo" value="Venta">
     <div class="form-grid">
-      <div class="form-group"><label class="form-label">Nº Factura *</label><input class="form-input" id="f-num" placeholder="FAC-2026-001"></div>
+      <div class="form-group"><label class="form-label">Nº Factura *</label><input class="form-input" id="f-num" placeholder="1-001/2026"></div>
       <div class="form-group"><label class="form-label">Fecha emisión</label><input class="form-input" id="f-fecha" type="date"></div>
+      <div class="form-group" id="f-grp-serie"><label class="form-label">Serie</label>
+        <select class="form-input" id="f-serie" onchange="autoNumFactura()">
+          <option value="1">Serie 1 · Obra</option>
+          <option value="2">Serie 2 · Interiorismo</option>
+        </select>
+      </div>
       <!-- Venta → Cliente | Compra → Proveedor -->
       <div class="form-group" id="f-grp-cliente"><label class="form-label">Cliente</label>
         <select class="form-input" id="f-cliente" onchange="cascadaClienteFactura()"><option value="">Seleccionar…</option><option value="CLI-H015">4F Fernando</option><option value="CLI-H014">4G daniel Dominguez</option><option value="CLI-H018">Amparo Forner Pastor</option><option value="CLI-H026">Ana María Palau Sastre</option><option value="CLI-H031">Belinda</option><option value="CLI-H004">CARMELO RODRIGUEZ VILA</option><option value="CLI-H032">Daniel palma gallardo</option><option value="CLI-H003">DESIRE NAVARRO MARI</option><option value="CLI-033">Estudi Encis SL</option><option value="CLI-H009">FERNANDO JOSE SAN GERMAN IBORRA</option><option value="CLI-H029">Francisco Navarro Garcia</option><option value="CLI-H019">Jose Antonio Martos Ortiz</option><option value="CLI-H013">Jose Manuel Garcia Seller Nº 7 Pta 4</option><option value="CLI-H030">Jose Manuel Pinzón Valbuena</option><option value="CLI-H007">Juanmi</option><option value="CLI-H012">Júlia Fabregat Mestre</option><option value="CLI-H028">Lara Blasco - Lara Blasco Iborra</option><option value="CLI-H027">Laura Doria Gomez</option><option value="CLI-H021">MERCEDES HIGUERAS GOMEZ</option><option value="CLI-H024">MICHELL BENITO</option><option value="CLI-H022">Miguel cocina</option><option value="CLI-001">Miguel Zaragozá Garzón</option><option value="CLI-H023">Miguel Zaragozá Garzón</option><option value="CLI-H002">Mª PAU BRAVO JOSE</option><option value="CLI-H005">PATRI</option><option value="CLI-H020">Rafael Francés Llàcer</option><option value="CLI-H010">REME IBORRA GIL</option><option value="CLI-H001">ROSA CHANZA SOLER</option><option value="CLI-H016">Sara Muñoz Abella</option><option value="CLI-H011">TONI TATAY DAVID</option><option value="CLI-H025">URKO Y FRANCESC</option><option value="CLI-H008">VICENT MARI SERRA</option><option value="CLI-034">Vicenta Baixauli Hernandez</option><option value="CLI-002">Vicenta Folch Gil</option><option value="CLI-H006">Vicenta Folch Gil</option><option value="CLI-H017">Yasmina Cabezuelo Alaminos</option></select>
@@ -6648,6 +6664,7 @@ function exportarInformeFacturas(){
     const estColor = f.estado==='Cobrada'||f.estado==='Pagada'?'#27ae60':f.estado==='Vencida'?'#e74c3c':'#e67e22';
     return `<tr style="border-bottom:1px solid #f0f0f0;font-size:11px">
       <td style="padding:5px 6px">${badge}</td>
+       <td style="padding:5px 6px;text-align:center">${esC?'':('<span style="background:'+(f.serie===2?'#f0e6ff':'#e6f0ff')+(';color:')+(f.serie===2?'#7b2fa8':'#1a5fa8')+';padding:1px 7px;border-radius:10px;font-size:10px;font-weight:700">S'+(f.serie||1)+'</span>')}</td>
       <td style="padding:5px 6px;font-weight:700;font-family:monospace">${f.num_factura||'—'}</td>
       <td style="padding:5px 6px">${fmtD(f.fecha_emision)}</td>
       <td style="padding:5px 6px;color:#888">${fmtD(f.fecha_vencimiento)}</td>
@@ -6710,7 +6727,7 @@ function exportarInformeFacturas(){
   </div>
   <table>
     <thead><tr>
-      <th>Tipo</th><th>Nº Factura</th><th>Fecha</th><th>Vto.</th>
+      <th>Tipo</th><th>Serie</th><th>Nº Factura</th><th>Fecha</th><th>Vto.</th>
       <th>Cliente / Proveedor</th><th>Proyecto</th>
       <th style="text-align:right">Base imp.</th>
       <th style="text-align:right">IVA%</th>
@@ -6825,6 +6842,8 @@ async function loadGerencia(){
     const facVenta  = fac.filter(f=>(f.tipo_factura||'Venta')==='Venta').filter(_pF);
     const facCompra = fac.filter(f=>(f.tipo_factura||'Venta')==='Compra').filter(_pF);
     const kpiVentas = facVenta.reduce((s,f)=>s+(f.base_imponible||0),0);
+    const kpiVentasS1 = facVenta.filter(f=>(f.serie||1)===1).reduce((s,f)=>s+(f.base_imponible||0),0);
+    const kpiVentasS2 = facVenta.filter(f=>(f.serie||1)===2).reduce((s,f)=>s+(f.base_imponible||0),0);
     const kpiCostes = facCompra.reduce((s,f)=>s+(f.base_imponible||0),0);
     const kpiBenef  = kpiVentas - kpiCostes;
     const kpiMargen = kpiVentas>0?(kpiBenef/kpiVentas)*100:0;
@@ -6833,6 +6852,8 @@ async function loadGerencia(){
 
     // KPIs top — solo facturas, base imponible
     document.getElementById('g-ventas').textContent=fmt(kpiVentas);
+    const _sv1=document.getElementById('g-ventas-s1'); if(_sv1) _sv1.textContent=fmt(kpiVentasS1);
+    const _sv2=document.getElementById('g-ventas-s2'); if(_sv2) _sv2.textContent=fmt(kpiVentasS2);
     document.getElementById('g-costes').textContent=fmt(kpiCostes);
     document.getElementById('g-benef').textContent=fmt(kpiBenef);
     document.getElementById('g-benef').style.color=kpiBenef>=0?'var(--green)':'var(--red)';
@@ -6847,6 +6868,10 @@ async function loadGerencia(){
     // Resumen económico — solo facturas, base imponible
     const pv=kpiVentas>0;
     document.getElementById('ge-ventas').textContent=fmt(kpiVentas);
+    const _geS1=document.getElementById('ge-ventas-s1'); if(_geS1) _geS1.textContent=fmt(kpiVentasS1);
+    const _geS2=document.getElementById('ge-ventas-s2'); if(_geS2) _geS2.textContent=fmt(kpiVentasS2);
+    const _geS1p=document.getElementById('ge-ventas-s1-pct'); if(_geS1p) _geS1p.textContent=kpiVentas>0?fmtP(kpiVentasS1/kpiVentas*100):'—';
+    const _geS2p=document.getElementById('ge-ventas-s2-pct'); if(_geS2p) _geS2p.textContent=kpiVentas>0?fmtP(kpiVentasS2/kpiVentas*100):'—';
     document.getElementById('ge-iva-rep').textContent=fmt(totalIvaRep);
     document.getElementById('ge-compras').textContent=fmt(kpiCostes);
     document.getElementById('ge-compras-pct').textContent=pv?fmtP(kpiCostes/kpiVentas*100):'—';
@@ -10961,8 +10986,9 @@ async function loadFacturas(){
         :(CC.find(c=>String(c.id)===String(f.cliente_id)||c.cliente_id===f.cliente_id)?.nombre || f.cliente_id || '—');
       const yaCobrada = f.estado==='Cobrada'||f.estado==='Pagada';
       const srch=(tipo+' '+(f.num_factura||'')+' '+contra+' '+(f.proyecto_id||'')+' '+(f.concepto||'')).toLowerCase();
-      return `<tr data-fid="${f.id}" data-tipo="${tipo}" data-contra="${contra.toLowerCase()}" data-vto="${f.fecha_vencimiento||''}" data-estado="${f.estado||''}" data-search="${srch}">
+      return `<tr data-fid="${f.id}" data-tipo="${tipo}" data-serie="${f.serie||1}" data-contra="${contra.toLowerCase()}" data-vto="${f.fecha_vencimiento||''}" data-estado="${f.estado||''}" data-search="${srch}">
         <td>${badge}</td>
+        <td style="text-align:center">${esC?'':(`<span style="background:${(f.serie||1)===2?'#f0e6ff':'#e6f0ff'};color:${(f.serie||1)===2?'#7b2fa8':'#1a5fa8'};padding:1px 7px;border-radius:10px;font-size:10px;font-weight:700">S${f.serie||1}</span>`)}</td>
         <td class="td-mono" style="font-weight:700">${f.num_factura||'—'}</td>
         <td>${fmtD(f.fecha_emision)}</td>
         <td>${fmtD(f.fecha_vencimiento)}</td>
@@ -11008,9 +11034,10 @@ function filtrarFacturas(){
   const contra=(document.getElementById('filt-fac-contra')?.value||'').toLowerCase();
   const vtoHasta=document.getElementById('filt-fac-vto')?.value||'';
   const estado=document.getElementById('filt-fac-estado')?.value||'';
+  const serie=document.getElementById('filt-fac-serie')?.value||'';
   const tipo=(window._facTabActivo||'todas');
   const hoy=new Date().toISOString().split('T')[0];
-  const hayFiltro = q || contra || vtoHasta || estado || tipo!=='todas';
+  const hayFiltro = q || contra || vtoHasta || estado || serie || tipo!=='todas';
 
   let visible=0;
   const visibleIds=[];
@@ -11020,7 +11047,8 @@ function filtrarFacturas(){
     const matchContra = !contra || (tr.dataset.contra||'').includes(contra);
     const matchVto = !vtoHasta || (tr.dataset.vto && tr.dataset.vto>=hoy && tr.dataset.vto<=vtoHasta);
     const matchEstado = !estado || tr.dataset.estado===estado;
-    const show = matchTipo && matchQ && matchContra && matchVto && matchEstado;
+    const matchSerie = !serie || String(tr.dataset.serie||'1')===serie;
+    const show = matchTipo && matchQ && matchContra && matchVto && matchEstado && matchSerie;
     tr.style.display = show ? '' : 'none';
     if(show){ visible++; if(tr.dataset.fid) visibleIds.push(tr.dataset.fid); }
   });
@@ -11103,15 +11131,8 @@ function abrirNuevaFactura(tipo){
   document.getElementById('f-estado').innerHTML=esC
     ?'<option>Pendiente</option><option>Pagada</option><option>Parcial</option><option>Vencida</option><option>Anulada</option>'
     :'<option>Pendiente</option><option>Cobrada</option><option>Parcial</option><option>Vencida</option><option>Anulada</option>';
-  // Auto-generar número de factura único (formato FAC-001 / FRA-001)
-  const prefijo = esC ? 'FRA-' : 'FAC-';
-  // Buscar el mayor número existente para este prefijo
-  const nums = FC
-    .map(f=>(f.num_factura||''))
-    .filter(n=>n.startsWith(prefijo))
-    .map(n=>parseInt(n.replace(prefijo,''))||0);
-  const siguiente = (nums.length ? Math.max(...nums) : 0) + 1;
-  document.getElementById('f-num').value = prefijo + String(siguiente).padStart(3,'0');
+  // Auto-generar número de factura por serie (formato 1-001/2026 o FRA-001/2026)
+  autoNumFactura(esC);
   // Clear otros campos
   document.getElementById('f-concepto').value='';
   document.getElementById('f-observaciones').value='';
@@ -11717,6 +11738,8 @@ function editFactura(id){
   document.getElementById('f-id').value      = f.id;
   document.getElementById('f-num').value     = f.num_factura||'';
   document.getElementById('f-fecha').value   = f.fecha_emision||'';
+  const _serieEl=document.getElementById('f-serie'); if(_serieEl) _serieEl.value=String(f.serie||1);
+  const _grpSerie=document.getElementById('f-grp-serie'); if(_grpSerie) _grpSerie.style.display=esC?'none':'';
   document.getElementById('f-concepto').value= f.concepto||'';
   document.getElementById('f-observaciones').value= f.observaciones||'';
   document.getElementById('f-base').value    = f.base_imponible||'';
@@ -11800,6 +11823,31 @@ function editFactura(id){
   }catch(e){ toast('Error al abrir factura: '+e.message,'error'); console.error('editFactura error:',e); }
 }
 
+function autoNumFactura(esC){
+  const serieEl = document.getElementById('f-serie');
+  const grpSerie = document.getElementById('f-grp-serie');
+  // Ocultar serie en facturas de Compra (solo Venta tiene series)
+  if(esC===true){ if(grpSerie) grpSerie.style.display='none'; }
+  else if(esC===false){ if(grpSerie) grpSerie.style.display=''; }
+
+  const year = new Date().getFullYear();
+  const tipo = document.getElementById('f-tipo')?.value||'Venta';
+  const isCompra = tipo==='Compra';
+  if(isCompra){
+    // Compras: formato FRA-001/2026
+    const nums = (FC||[]).map(f=>(f.num_factura||'')).filter(n=>n.startsWith('FRA-')).map(n=>parseInt((n.replace('FRA-','').split('/')[0]))||0);
+    const sig = (nums.length?Math.max(...nums):0)+1;
+    document.getElementById('f-num').value='FRA-'+String(sig).padStart(3,'0')+'/'+year;
+    return;
+  }
+  // Ventas: serie 1 o 2
+  const serie = serieEl ? parseInt(serieEl.value)||1 : 1;
+  const prefix = serie+'-';
+  const nums = (FC||[]).filter(f=>(f.tipo_factura||'Venta')==='Venta'&&(f.serie||1)===serie).map(f=>(f.num_factura||'')).map(n=>{const m=n.match(/^\d+-?(\d+)\//);return m?parseInt(m[1]):0;});
+  const sig = (nums.length?Math.max(...nums):0)+1;
+  document.getElementById('f-num').value=prefix+String(sig).padStart(3,'0')+'/'+year;
+}
+
 async function saveFactura(){
   const tipo=document.getElementById('f-tipo').value||'Venta';
   const id=document.getElementById('f-id').value;
@@ -11827,6 +11875,7 @@ async function saveFactura(){
       : (document.getElementById('f-vto-venta')?.value||null),
     estado:          document.getElementById('f-estado').value||'Pendiente',
     importe_cobrado: parseFloat(document.getElementById('f-cobrado').value)||0,
+    serie:           parseInt(document.getElementById('f-serie')?.value)||1,
     concepto:        document.getElementById('f-concepto').value,
     observaciones:   document.getElementById('f-observaciones')?.value||null,
     // Pagos a cuenta (hasta 3 pagos parciales)
