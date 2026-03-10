@@ -638,7 +638,7 @@ th.sortable:not(.sort-asc):not(.sort-desc) .sort-arrow::after{content:'⇅'}
   <div class="nav-section">
     <div class="nav-label">Principal</div>
     <div class="nav-item active" data-view="gerencia" onclick="navTo('gerencia')"><span class="ni">🏠</span><span>Gerencia</span></div>
-    <div class="nav-item" data-view="agenda" onclick="navTo('agenda')"><span class="ni">🔔</span><span>Agenda</span><span class="nav-badge" id="agenda-badge" style="">1</span></div>
+    <div class="nav-item" data-view="agenda" onclick="navTo('agenda')"><span class="ni">🔔</span><span>Agenda</span><span class="nav-badge" id="agenda-badge" style="display:none">0</span></div>
     <div class="nav-item" data-view="clientes" onclick="navTo('clientes')"><span class="ni">🤝</span><span>Clientes</span></div>
     <div class="nav-item" data-view="proyectos" onclick="navTo('proyectos')"><span class="ni">📁</span><span>Proyectos</span></div>
   </div>
@@ -647,7 +647,7 @@ th.sortable:not(.sort-asc):not(.sort-desc) .sort-arrow::after{content:'⇅'}
     <div class="nav-item" data-view="presupuesto" onclick="navTo('presupuesto')"><span class="ni">💰</span><span>Presupuesto</span></div>
     <div class="nav-item" data-view="comparativa" onclick="navTo('comparativa')"><span class="ni">⚖️</span><span>Comparativa ofertas</span></div>
     <div class="nav-item" data-view="tarifario" onclick="navTo('tarifario')"><span class="ni">📋</span><span>Tarifario</span></div>
-    <div class="nav-item" data-view="cype" onclick="navTo('cype')"><span class="ni">📐</span><span>CYPE 2026</span><span class="nav-badge" id="cype-badge">524</span></div>
+    <div class="nav-item" data-view="cype" onclick="navTo('cype')"><span class="ni">📐</span><span>CYPE 2026</span><span class="nav-badge" id="cype-badge" style="display:none">0</span></div>
     <div class="nav-item" data-view="catalogos" onclick="navTo('catalogos')"><span class="ni">📚</span><span>Catálogos</span></div>
   </div>
   <div class="nav-section">
@@ -3916,7 +3916,9 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <tr style="background:var(--navy);color:#fff">
             <th style="padding:9px 10px;text-align:left;font-weight:600;width:120px">Fecha</th>
             <th style="padding:9px 10px;text-align:left;font-weight:600">Concepto</th>
-            <th style="padding:9px 10px;text-align:right;font-weight:600;width:130px">Importe (s/IVA)</th>
+            <th style="padding:9px 10px;text-align:right;font-weight:600;width:120px">Base s/IVA</th>
+            <th style="padding:9px 10px;text-align:center;font-weight:600;width:70px">IVA</th>
+            <th style="padding:9px 10px;text-align:right;font-weight:600;width:110px">Total c/IVA</th>
             <th style="padding:9px 10px;text-align:center;font-weight:600;width:50px"></th>
           </tr>
         </thead>
@@ -3924,6 +3926,8 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <tfoot>
           <tr style="background:#f5eeff;border-top:2px solid #c9a0e0">
             <td colspan="2" style="padding:10px;font-weight:700;color:#7b3fa0;font-size:13px">TOTAL ENTREGAS</td>
+            <td style="padding:10px;text-align:right;font-size:12px;color:#7b3fa0" id="ea-base-footer">0,00 €</td>
+            <td style="padding:10px;text-align:center;font-size:11px;color:var(--text-soft)" id="ea-iva-footer">—</td>
             <td style="padding:10px;text-align:right;font-weight:700;color:#7b3fa0;font-size:14px" id="ea-total-footer">0,00 €</td>
             <td></td>
           </tr>
@@ -4880,7 +4884,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 
 <div class="toast error" id="toast">Error al cargar datos: </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script>
@@ -6888,7 +6892,7 @@ async function loadGerencia(){
     // Diagnóstico: detectar facturas sin tipo definido
     const sinTipo=fac.filter(f=>!f.tipo_factura);
     if(sinTipo.length){console.warn('⚠️ Facturas sin tipo_factura (se cuentan como Venta por defecto):',sinTipo.map(f=>f.num_factura||f.id));}
-    document.getElementById('cype-badge').textContent=cy.length;
+    const _cb=document.getElementById('cype-badge');if(_cb){_cb.textContent=cy.length;_cb.style.display=cy.length>0?'':' none';}
 
     // KPIs superiores y resumen: con filtro de período
     const _gTipo=document.getElementById('g-filtro-tipo')?.value||'anio';
@@ -19647,7 +19651,13 @@ function _eaRenderFila(e, isNew){
   tr.innerHTML = `
     <td style="padding:6px 8px"><input type="date" value="${e.fecha||new Date().toISOString().split('T')[0]}" style="border:1px solid #ddd;border-radius:4px;padding:4px 6px;font-size:12px;width:115px" class="ea-f-fecha"></td>
     <td style="padding:6px 8px"><input type="text" value="${(e.concepto||'').replace(/"/g,'&quot;')}" placeholder="Ej: 1ª entrega · Transferencia" style="border:1px solid #ddd;border-radius:4px;padding:4px 8px;font-size:12px;width:100%" class="ea-f-concepto"></td>
-    <td style="padding:6px 8px"><input type="number" step="0.01" value="${e.importe||''}" placeholder="0,00" style="border:1px solid #ddd;border-radius:4px;padding:4px 8px;font-size:13px;font-weight:700;color:#7b3fa0;text-align:right;width:120px" class="ea-f-importe" oninput="_eaActualizarTotal()"></td>
+    <td style="padding:6px 8px"><input type="number" step="0.01" value="${e.importe||''}" placeholder="0,00" style="border:1px solid #ddd;border-radius:4px;padding:4px 8px;font-size:13px;font-weight:700;color:#7b3fa0;text-align:right;width:110px" class="ea-f-importe" oninput="_eaActualizarTotal()"></td>
+    <td style="padding:6px 8px"><select class="ea-f-iva" onchange="_eaActualizarTotal()" style="border:1px solid #ddd;border-radius:4px;padding:4px 5px;font-size:12px;width:68px">
+      <option value="0" ${(e.iva_pct||0)==0?'selected':''}>Exento</option>
+      <option value="10" ${(e.iva_pct||0)==10?'selected':''}>10%</option>
+      <option value="21" ${(e.iva_pct||0)==21?'selected':''}>21%</option>
+    </select></td>
+    <td style="padding:6px 8px;text-align:right;font-size:12px;font-weight:600;color:#7b3fa0;white-space:nowrap" class="ea-f-total">—</td>
     <td style="padding:6px 8px;text-align:center"><button onclick="_eaBorrarFila(this)" style="background:none;border:none;cursor:pointer;color:#c0392b;font-size:16px;line-height:1" title="Eliminar">🗑</button></td>
   `;
   tbody.appendChild(tr);
@@ -19682,11 +19692,23 @@ function _eaBorrarFila(btn){
 }
 
 function _eaActualizarTotal(){
-  let total = 0;
-  document.querySelectorAll('#ea-tabla-body tr:not([data-borrar="1"]) .ea-f-importe').forEach(inp => {
-    total += parseFloat(inp.value)||0;
+  let totalBase = 0, totalConIva = 0;
+  document.querySelectorAll('#ea-tabla-body tr:not([data-borrar="1"])').forEach(tr => {
+    const base = parseFloat(tr.querySelector('.ea-f-importe')?.value)||0;
+    const ivaPct = parseFloat(tr.querySelector('.ea-f-iva')?.value)||0;
+    const conIva = parseFloat((base * (1 + ivaPct/100)).toFixed(2));
+    totalBase += base;
+    totalConIva += conIva;
+    // Update row total cell
+    const totalCell = tr.querySelector('.ea-f-total');
+    if(totalCell) totalCell.textContent = base > 0 ? fmtES(conIva)+' €' : '—';
   });
-  document.getElementById('ea-total-footer').textContent = fmtES(total) + ' €';
+  const baseEl = document.getElementById('ea-base-footer');
+  const ivaEl  = document.getElementById('ea-iva-footer');
+  const totEl  = document.getElementById('ea-total-footer');
+  if(baseEl) baseEl.textContent = fmtES(totalBase) + ' €';
+  if(ivaEl)  ivaEl.textContent  = totalConIva > totalBase ? '+ IVA: ' + fmtES(totalConIva-totalBase) + ' €' : '—';
+  if(totEl)  totEl.textContent  = fmtES(totalConIva) + ' €';
 }
 
 async function eaGuardarTodas(){
@@ -19702,12 +19724,13 @@ async function eaGuardarTodas(){
       const fecha   = tr.querySelector('.ea-f-fecha')?.value || new Date().toISOString().split('T')[0];
       const concepto= tr.querySelector('.ea-f-concepto')?.value || 'Entrega a cuenta';
       const importe = parseFloat(tr.querySelector('.ea-f-importe')?.value)||0;
+      const ivaPct  = parseFloat(tr.querySelector('.ea-f-iva')?.value)||0;
 
       if(borrar && id){
         await sbDelete('entregas_cuenta', id);
       } else if(!borrar){
         if(!importe) continue; // fila vacía, ignorar
-        const d = { proyecto_id: pid, fecha, concepto: concepto||'Entrega a cuenta', importe, notas: '' };
+        const d = { proyecto_id: pid, fecha, concepto: concepto||'Entrega a cuenta', importe, iva_pct: ivaPct, notas: '' };
         if(id){ await sb('entregas_cuenta','PATCH',d,null,`?id=eq.${id}`); }
         else   { await sbPost('entregas_cuenta', d); }
       }
@@ -19776,6 +19799,7 @@ async function calcExpKPIs(proyId){
   // Entregas a cuenta del proyecto
   const eaProy = (EAC||[]).filter(e=>e.proyecto_id===proyId);
   const eaTotal = eaProy.reduce((s,e)=>s+(parseFloat(e.importe)||0), 0);
+  const eaTotalConIva = eaProy.reduce((s,e)=>{const b=parseFloat(e.importe)||0;const iv=(e.iva_pct||0)/100;return s+parseFloat((b*(1+iv)).toFixed(2));}, 0);
 
   // Margen SIEMPRE sobre coste: (Venta - Coste) / Coste × 100
   const beneficio = presTot - costeTotal;
@@ -19860,6 +19884,8 @@ function renderExpResumen(body){
   const compPend = compMatPend + compScPend;
   const eaResProy = (EAC||[]).filter(e=>e.proyecto_id===pid);
   const eaResTotal = eaResProy.reduce((s,e)=>s+(parseFloat(e.importe)||0), 0);
+  const eaResTotalConIva = eaResProy.reduce((s,e)=>{const b=parseFloat(e.importe)||0;const iv=(e.iva_pct||0)/100;return s+parseFloat((b*(1+iv)).toFixed(2));}, 0);
+  const eaIvaTotal = parseFloat((eaResTotalConIva - eaResTotal).toFixed(2));
   const factPend = factProy.filter(f=>f.estado!=='Cobrada').reduce((s,f)=>s+(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100),0);
   const totalHoras = horProy.reduce((s,h)=>s+(h.horas||0),0);
   const costeHoras = horProy.reduce((s,h)=>s+(h.total||0),0);
@@ -19897,7 +19923,9 @@ function renderExpResumen(body){
         ['  · Mano de obra', fmt(costeHoras)+' ('+totalHoras.toFixed(1)+'h)', costeHoras>0?'var(--text-mid)':''],
         ['Compras pendientes pago', fmt(compPend), compPend>0?'var(--red)':''],
         ['Facturas emitidas', fmt(factTotal), factTotal>0?'var(--green)':''],
-        ['💵 Entregas a cuenta', eaResTotal>0?fmt(eaResTotal):'—', eaResTotal>0?'#7b3fa0':''],
+        ['💵 Entregas s/IVA', eaResTotal>0?fmt(eaResTotal):'—', eaResTotal>0?'#7b3fa0':''],
+        ['  · IVA repercutido', eaIvaTotal>0?fmt(eaIvaTotal):'—', eaIvaTotal>0?'#9b59b6':''],
+        ['  · Total c/IVA cobrado', eaResTotalConIva>0?`<strong>${fmt(eaResTotalConIva)}</strong>`:'—', eaResTotalConIva>0?'#7b3fa0':''],
         ['Pendiente cobrar', fmt(factPend - eaResTotal), (factPend-eaResTotal)>0?'var(--amber)':'var(--green)'],
       ].map(([k,v,c])=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:12px"><span style="color:var(--text-soft)">${k}</span><span style="font-weight:600${c?';color:'+c:''}">${v}</span></div>`).join('')}
     </div>
@@ -19922,6 +19950,7 @@ function renderExpResumen(body){
       <span style="color:var(--text-soft)">${fmtD(e.fecha)}</span>
       <span style="flex:1;margin:0 10px">${e.concepto||'Entrega a cuenta'}</span>
       <span style="font-weight:700;color:#7b3fa0">${fmt(e.importe)}</span>
+      ${(e.iva_pct||0)>0?`<span style="font-size:10px;color:#9b59b6;margin-left:4px">(+${e.iva_pct}% IVA → ${fmt(parseFloat((e.importe*(1+(e.iva_pct||0)/100)).toFixed(2)))})</span>`:''}
       <button onclick="abrirModalEntrega('${e.id}')" style="background:none;border:none;cursor:pointer;color:var(--text-soft);font-size:13px;margin-left:6px">✏️</button>
     </div>`).join('')}
     <div style="display:flex;justify-content:flex-end;padding:8px 0;font-size:13px;font-weight:700;color:#7b3fa0;border-top:2px solid #e8d8f5">Total: ${fmt(eaResTotal)}</div>
@@ -22923,12 +22952,4 @@ function vpGuardarPDF(){
             <option>Indefinido</option><option>Temporal</option><option>Obra y servicio</option><option>Autónomo</option>
           </select></div>
         <div><label class="form-label">Fecha alta</label><input class="form-input" id="trab-alta" type="date"></div>
-        <div><label class="form-label">Estado</label>
-          <select class="form-input" id="trab-estado">
-            <option>Activo</option><option>Baja</option><option>Excedencia</option>
-          </select></div>
-      </div>
-
-      <div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:4px">Retribución</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px">
-        <div><label class="form-label">Bruto / mes (€)</label><input class="form-input" id="trab-bruto" type="number" min="0" step="0.01" oni
+        <div><label class="form-label"
