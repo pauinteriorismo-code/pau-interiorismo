@@ -4837,7 +4837,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 
 <div class="toast error" id="toast">Error al cargar datos: </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script>
@@ -16470,7 +16470,7 @@ async function impAnalizarPDF(){
       headers: getAnthropicHeaders(),
       body: JSON.stringify({
         model: 'claude-sonnet-4-5',
-        max_tokens: 4000,
+        max_tokens: 8000,
         messages: [{
           role: 'user',
           content: [
@@ -16480,33 +16480,7 @@ async function impAnalizarPDF(){
             },
             {
               type: 'text',
-              text: `Analiza este presupuesto PDF de construcción/interiorismo y extrae TODAS las partidas en formato JSON.
-
-Devuelve SOLO un JSON válido con esta estructura exacta, sin texto adicional ni markdown:
-{
-  "capitulos": [
-    {
-      "nombre": "Nombre del capítulo o agrupación (si existe)",
-      "lineas": [
-        {
-          "descripcion": "Descripción completa de la partida",
-          "unidad": "Ud/m2/ml/etc o vacío",
-          "cantidad": 1,
-          "precio_venta": 0.00,
-          "iva_pct": "10%"
-        }
-      ]
-    }
-  ]
-}
-
-Reglas:
-- Si no hay capítulos explícitos, crea uno con nombre vacío y mete todas las líneas ahí
-- Omite filas con cantidad 0 y precio 0 (títulos/encabezados sin precio)
-- precio_venta = precio unitario de la línea (no el subtotal)
-- iva_pct: usa "10%" para obra/instalación, "21%" para otros, o el que indique el PDF
-- Descripción: texto completo incluyendo especificaciones técnicas
-- Si hay notas de pago al final, ignorarlas`
+              text: `Analiza este presupuesto PDF de construcción/interiorismo y extrae TODAS las partidas en JSON.\nDevuelve SOLO JSON válido sin texto ni markdown:\n{"capitulos":[{"nombre":"Nombre capítulo","lineas":[{"descripcion":"texto","unidad":"Ud","cantidad":1,"precio_venta":0.00,"iva_pct":"10%"}]}]}\n\nReglas:\n- Descripción: máximo 150 caracteres\n- Omite líneas con cantidad=0 Y precio=0\n- precio_venta = precio unitario (no el subtotal)\n- iva_pct: "10%" para obra/albañilería/instalaciones, "21%" para mobiliario/electrodomésticos\n- Ignora transferencias y entregas a cuenta al final del documento`
             }
           ]
         }]
@@ -16524,8 +16498,42 @@ Reglas:
     // Parsear JSON
     let parsed;
     try {
-      const clean = raw.replace(/```json|```/g,'').trim();
-      parsed = JSON.parse(clean);
+      let clean = raw.replace(/```json|```/g,'').trim();
+      // Intentar parsear directamente
+      try {
+        parsed = JSON.parse(clean);
+      } catch(e1) {
+        // Si el JSON está truncado, intentar cerrar las llaves que faltan
+        const openBraces = (clean.match(/\{/g)||[]).length;
+        const closeBraces = (clean.match(/\}/g)||[]).length;
+        const openBrackets = (clean.match(/\[/g)||[]).length;
+        const closeBrackets = (clean.match(/\]/g)||[]).length;
+        // Cerrar último objeto/array incompleto limpiamente
+        // Quitar trailing comma o línea incompleta
+        clean = clean.replace(/,\s*$/, '').replace(/,\s*\n\s*$/, '');
+        // Añadir cierres que faltan
+        for(let i=0; i<openBrackets-closeBrackets; i++) clean += ']';
+        for(let i=0; i<openBraces-closeBraces; i++) clean += '}';
+        try {
+          parsed = JSON.parse(clean);
+        } catch(e2) {
+          // Último recurso: extraer el JSON con regex
+          const match = clean.match(/\{[\s\S]*"capitulos"[\s\S]*/);
+          if(match) {
+            let attempt = match[0];
+            const ob2 = (attempt.match(/\{/g)||[]).length;
+            const cb2 = (attempt.match(/\}/g)||[]).length;
+            const ob3 = (attempt.match(/\[/g)||[]).length;
+            const cb3 = (attempt.match(/\]/g)||[]).length;
+            attempt = attempt.replace(/,\s*$/, '').replace(/,\s*\n\s*$/, '');
+            for(let i=0; i<ob3-cb3; i++) attempt += ']';
+            for(let i=0; i<ob2-cb2; i++) attempt += '}';
+            parsed = JSON.parse(attempt);
+          } else {
+            throw new Error('No se pudo parsear la respuesta de la IA. Inténtalo de nuevo.');
+          }
+        }
+      }
     } catch(e) {
       throw new Error('No se pudo parsear la respuesta de la IA. Inténtalo de nuevo.');
     }
@@ -22775,13 +22783,4 @@ function vpGuardarPDF(){
         <div><label class="form-label">IRPF %</label><input class="form-input" id="trab-irpf" type="number" value="15" min="0" max="50" step="0.01" oninput="calcNomina()"></div>
         <div><label class="form-label">SS trabajador %</label><input class="form-input" id="trab-ss-trab" type="number" value="6.35" step="0.01" oninput="calcNomina()"></div>
         <div><label class="form-label">SS empresa %</label><input class="form-input" id="trab-ss-emp" type="number" value="30" step="0.01" oninput="calcNomina()"></div>
-        <div><label class="form-label">Paga extra (€)</label><input class="form-input" id="trab-paga-extra" type="number" min="0" step="0.01" oninput="calcNomina()"></div>
-        <div><label class="form-label">Nº pagas extra</label>
-          <select class="form-input" id="trab-num-pagas" onchange="calcNomina()">
-            <option value="0">0</option><option value="1">1</option>
-            <option value="2" selected>2</option><option value="3">3</option>
-          </select></div>
-        <div><label class="form-label">IRPF paga extra %</label><input class="form-input" id="trab-paga-irpf" type="number" value="15" step="0.01" oninput="calcNomina()"></div>
-      </div>
-
-      <div style="font-size:11px;font-weight:700;color:var(-
+        <div><label class="form-label">Paga extra (€)</label><input class="form-input" id="trab
