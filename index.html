@@ -19652,11 +19652,15 @@ function renderExpResumen(body){
   `;
 }
 
-function renderExpCompras(body){
+async function renderExpCompras(body){
   const pid = _expProyId;
   const items = (CoC||[]).filter(c=>c.proyecto_id===pid).sort((a,b)=>b.fecha>a.fecha?1:-1);
   if(!items.length){ body.innerHTML='<div style="text-align:center;padding:32px;color:var(--text-soft)">Sin compras registradas en este proyecto</div>'; return; }
   const total = items.reduce((s,c)=>s+(c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100),0);
+  // Resolver nombres de capítulos
+  const capIds=[...new Set(items.map(c=>c.partida).filter(p=>p&&p.startsWith('cap:')).map(p=>p.slice(4)))];
+  const capNames={};
+  if(capIds.length){try{const caps=await sbGet('presupuesto_lineas',`?id=in.(${capIds.join(',')})&select=id,descripcion`);(caps||[]).forEach(c=>{capNames[c.id]=c.descripcion;});}catch(e){}}
   body.innerHTML = `
     <div style="margin-bottom:10px;display:flex;justify-content:space-between;align-items:center">
       <span style="font-size:12px;color:var(--text-soft)">${items.length} registro${items.length!==1?'s':''}</span>
@@ -19665,7 +19669,7 @@ function renderExpCompras(body){
     <div style="overflow-y:auto;max-height:calc(94vh - 320px);border:1px solid var(--border);border-radius:8px">
     <table style="width:100%;font-size:12px;border-collapse:collapse">
       <thead style="position:sticky;top:0;z-index:1"><tr style="background:var(--navy);color:#fff">${['Fecha','Partida','Proveedor','Concepto','Base','IVA','Total','Estado'].map(h=>`<th style="padding:7px 10px;text-align:left;font-weight:600">${h}</th>`).join('')}<th></th></tr></thead>
-      <tbody>${items.map((c,i)=>{const tot=(c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100);const pLbl=c.partida?`<span style="font-size:10px;color:var(--copper)">${c.partida.startsWith('cap:')?'📁 ?':c.partida.match(/^v\d+$/)?'📋 V'+c.partida.slice(1):'🏠 '+c.partida}</span>`:'—';return`<tr style="background:${i%2?'#fafafa':'#fff'}">
+      <tbody>${items.map((c,i)=>{const tot=(c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100);const pLbl=c.partida?partidaLabelConNombres(c.partida,capNames):'—';return`<tr style="background:${i%2?'#fafafa':'#fff'}">
         <td style="padding:6px 10px;white-space:nowrap">${fmtD(c.fecha)}</td><td style="padding:6px 10px">${pLbl}</td><td style="padding:6px 10px">${c.proveedor_id||'—'}</td>
         <td style="padding:6px 10px">${c.concepto||'—'}${c.adjunto_pdf?' 📎':''}</td>
         <td style="padding:6px 10px;font-family:monospace">${fmt(c.base_imponible)}</td>
@@ -19696,11 +19700,15 @@ function renderExpFacturas(body){
   </table>`;
 }
 
-function renderExpSubcontratas(body){
+async function renderExpSubcontratas(body){
   const pid = _expProyId;
   const items = (ScC||[]).filter(s=>s.proyecto_id===pid);
   if(!items.length){ body.innerHTML='<div style="text-align:center;padding:32px;color:var(--text-soft)">Sin subcontratas en este proyecto</div>'; return; }
   const total = items.reduce((s,c)=>s+(c.importe||0)*(1+ivaPct(c.iva_pct)/100),0);
+  // Resolver nombres de capítulos
+  const capIds=[...new Set(items.map(s=>s.partida).filter(p=>p&&p.startsWith('cap:')).map(p=>p.slice(4)))];
+  const capNames={};
+  if(capIds.length){try{const caps=await sbGet('presupuesto_lineas',`?id=in.(${capIds.join(',')})&select=id,descripcion`);(caps||[]).forEach(c=>{capNames[c.id]=c.descripcion;});}catch(e){}}
   body.innerHTML = `
     <div style="margin-bottom:10px;display:flex;justify-content:space-between;align-items:center">
       <span style="font-size:12px;color:var(--text-soft)">${items.length} registro${items.length!==1?'s':''}</span>
@@ -19709,7 +19717,7 @@ function renderExpSubcontratas(body){
     <div style="overflow-y:auto;max-height:calc(94vh - 320px);border:1px solid var(--border);border-radius:8px">
     <table style="width:100%;font-size:12px;border-collapse:collapse">
       <thead style="position:sticky;top:0;z-index:1"><tr style="background:var(--navy);color:#fff">${['Fecha','Partida','Empresa','Trabajo','Importe','Estado'].map(h=>`<th style="padding:7px 10px;text-align:left">${h}</th>`).join('')}<th></th></tr></thead>
-      <tbody>${items.map((s,i)=>{const pLbl=s.partida?`<span style="font-size:10px;color:var(--copper)">${s.partida.startsWith('cap:')?'📁 ?':s.partida.match(/^v\d+$/)?'📋 V'+s.partida.slice(1):'🏠 '+s.partida}</span>`:'—';return`<tr style="background:${i%2?'#fafafa':'#fff'}">
+      <tbody>${items.map((s,i)=>{const pLbl=s.partida?partidaLabelConNombres(s.partida,capNames):'—';return`<tr style="background:${i%2?'#fafafa':'#fff'}">
         <td style="padding:6px 10px;white-space:nowrap">${fmtD(s.fecha)}</td>
         <td style="padding:6px 10px">${pLbl}</td>
         <td style="padding:6px 10px">${s.proveedor_id||'—'}</td>
