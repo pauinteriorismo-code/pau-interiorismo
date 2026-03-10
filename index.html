@@ -4884,7 +4884,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 
 <div class="toast error" id="toast">Error al cargar datos: </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script>
@@ -19909,10 +19909,18 @@ function renderExpResumen(body){
   const costeHoras = horProy.reduce((s,h)=>s+(h.total||0),0);
   const costeSubcRes = scProy.reduce((s,c)=>s+(c.importe||0),0); // subcontratas sin IVA
 
+  // Presupuesto total (versión marcada, sin IVA)
+  let presTotRes = _presDesglobeGlobal['v1'] || 0;
+  Object.keys(_presDesglobeGlobal).forEach(k => { if(!k.match(/^v\d+$/)) presTotRes += _presDesglobeGlobal[k]; });
+
   // Todo sin IVA para ser consistente con el presupuesto y el KPI
   const compTotalBI2 = compProy.reduce((s,c)=>s+(c.base_imponible||0), 0);
   const factTotal    = factProy.reduce((s,f)=>s+(f.base_imponible||0), 0);
   const costeTotalRes = compTotalBI2 + costeSubcRes + costeHoras; // materiales + subcontratas + MO
+
+  // Cobrado total del presupuesto (entregas + facturas emitidas, base s/IVA)
+  const cobradoTotal = eaResTotal + factTotal;
+  const pendientePresupuesto = presTotRes - cobradoTotal;
 
   body.innerHTML = `
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
@@ -19940,11 +19948,15 @@ function renderExpResumen(body){
         ['  · Subcontratas', costeSubcRes>0?fmt(costeSubcRes):'—', costeSubcRes>0?'var(--text-mid)':''],
         ['  · Mano de obra', fmt(costeHoras)+' ('+totalHoras.toFixed(1)+'h)', costeHoras>0?'var(--text-mid)':''],
         ['Compras pendientes pago', fmt(compPend), compPend>0?'var(--red)':''],
-        ['Facturas emitidas', fmt(factTotal), factTotal>0?'var(--green)':''],
+        ['Facturas emitidas', factTotal>0?fmt(factTotal):'—', factTotal>0?'var(--green)':''],
         ['💵 Entregas s/IVA', eaResTotal>0?fmt(eaResTotal):'—', eaResTotal>0?'#7b3fa0':''],
         ['  · IVA repercutido', eaIvaTotal>0?fmt(eaIvaTotal):'—', eaIvaTotal>0?'#9b59b6':''],
         ['  · Total c/IVA cobrado', eaResTotalConIva>0?`<strong>${fmt(eaResTotalConIva)}</strong>`:'—', eaResTotalConIva>0?'#7b3fa0':''],
-        ['Pendiente cobrar', fmt(factPend - eaResTotal), (factPend-eaResTotal)>0?'var(--amber)':'var(--green)'],
+        ['─────────────────', '', ''],
+        ['Cobrado del presupuesto', cobradoTotal>0?fmt(cobradoTotal):'—', cobradoTotal>0?'var(--green)':''],
+        [pendientePresupuesto>0.01?'⏳ Pendiente del presupuesto':'✅ Presupuesto cubierto',
+          presTotRes>0 ? `<strong>${fmt(pendientePresupuesto)}</strong>` : '—',
+          pendientePresupuesto>0.01?'var(--amber)':'var(--green)'],
       ].map(([k,v,c])=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:12px"><span style="color:var(--text-soft)">${k}</span><span style="font-weight:600${c?';color:'+c:''}">${v}</span></div>`).join('')}
     </div>
   </div>
@@ -22954,12 +22966,4 @@ function vpGuardarPDF(){
         <div><label class="form-label">Teléfono</label><input class="form-input" id="trab-tel" placeholder="600 000 000"></div>
         <div><label class="form-label">Email</label><input class="form-input" id="trab-email" type="email"></div>
         <div style="grid-column:1/-1"><label class="form-label">Dirección</label><input class="form-input" id="trab-dir" placeholder="Calle, número, municipio"></div>
-        <div><label class="form-label">Nº SS</label><input class="form-input" id="trab-nss"></div>
-        <div><label class="form-label">IBAN</label><input class="form-input" id="trab-iban" placeholder="ES00..."></div>
-      </div>
-
-      <div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:4px">Contrato</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:16px">
-        <div><label class="form-label">Categoría</label>
-          <select class="form-input" id="trab-categoria">
-      
+        <div><label
