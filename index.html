@@ -4453,8 +4453,43 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="form-group"><label class="form-label">Partida / Capítulo</label><select class="form-input" id="sc-partida" onchange="onChangePartidaGenerico('sc')"><option value="">— General (sin partida) —</option></select></div>
       <div class="form-group" id="sc-capitulo-group" style="display:none"><label class="form-label">Capítulo</label><select class="form-input" id="sc-capitulo"><option value="">— Todo el presupuesto —</option></select></div>
       <div class="form-group fg-full"><label class="form-label">Trabajo</label><input class="form-input" id="sc-trabajo"></div>
-      <div class="form-group"><label class="form-label">Importe base €</label><input class="form-input" id="sc-importe" type="number" step="0.01"></div>
+      <div class="form-group"><label class="form-label">Importe base €</label><input class="form-input" id="sc-importe" type="number" step="0.01" oninput="scRecalcActas()"></div>
       <div class="form-group"><label class="form-label">Estado pago</label><select class="form-input" id="sc-estado"><option>Pagado</option><option>Pago acta</option><option>Parcial</option><option>Pendiente</option><option>Vencido</option></select></div>
+      <!-- PAGOS POR ACTA -->
+      <div class="form-group fg-full" style="margin-top:4px">
+        <label class="form-label" style="margin-bottom:6px">📋 Pagos por acta</label>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:8px">
+          <!-- Acta 1 -->
+          <div style="display:grid;grid-template-columns:auto 1fr 1fr;gap:8px;align-items:center">
+            <span style="font-size:11px;font-weight:700;color:var(--navy);min-width:48px">Acta 1</span>
+            <div><div style="font-size:10px;color:var(--text-soft);margin-bottom:2px">Fecha</div><input class="form-input" id="sc-fecha-acta1" type="date" oninput="scRecalcActas()"></div>
+            <div><div style="font-size:10px;color:var(--text-soft);margin-bottom:2px">Importe €</div><input class="form-input" id="sc-importe-acta1" type="number" step="0.01" placeholder="0,00" oninput="scRecalcActas()"></div>
+          </div>
+          <!-- Acta 2 -->
+          <div style="display:grid;grid-template-columns:auto 1fr 1fr;gap:8px;align-items:center">
+            <span style="font-size:11px;font-weight:700;color:var(--navy);min-width:48px">Acta 2</span>
+            <div><div style="font-size:10px;color:var(--text-soft);margin-bottom:2px">Fecha</div><input class="form-input" id="sc-fecha-acta2" type="date" oninput="scRecalcActas()"></div>
+            <div><div style="font-size:10px;color:var(--text-soft);margin-bottom:2px">Importe €</div><input class="form-input" id="sc-importe-acta2" type="number" step="0.01" placeholder="0,00" oninput="scRecalcActas()"></div>
+          </div>
+          <!-- Acta 3 -->
+          <div style="display:grid;grid-template-columns:auto 1fr 1fr;gap:8px;align-items:center">
+            <span style="font-size:11px;font-weight:700;color:var(--navy);min-width:48px">Acta 3</span>
+            <div><div style="font-size:10px;color:var(--text-soft);margin-bottom:2px">Fecha</div><input class="form-input" id="sc-fecha-acta3" type="date" oninput="scRecalcActas()"></div>
+            <div><div style="font-size:10px;color:var(--text-soft);margin-bottom:2px">Importe €</div><input class="form-input" id="sc-importe-acta3" type="number" step="0.01" placeholder="0,00" oninput="scRecalcActas()"></div>
+          </div>
+          <!-- Resumen -->
+          <div id="sc-actas-resumen" style="margin-top:4px;padding:8px 10px;background:#f0f4ff;border-radius:6px;font-size:12px;display:none">
+            <div style="display:flex;justify-content:space-between">
+              <span style="color:var(--text-soft)">Total pagado por actas:</span>
+              <strong id="sc-actas-pagado" style="color:var(--navy)">0,00 €</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-top:4px">
+              <span style="color:var(--text-soft)">Pendiente:</span>
+              <strong id="sc-actas-pendiente" style="color:var(--red)">0,00 €</strong>
+            </div>
+          </div>
+        </div>
+      </div>
       <div class="form-group fg-full"><label class="form-label">&#128206; Factura PDF del subcontratista</label><div id="sc-pdf-zone" style="border:2px dashed var(--border);border-radius:8px;padding:14px;text-align:center;cursor:pointer;background:var(--bg-card)" onclick="document.getElementById('sc-pdf-input').click()" ondragover="event.preventDefault();this.style.borderColor='var(--navy)'" ondragleave="this.style.borderColor='var(--border)'" ondrop="scHandleDrop(event)"><div id="sc-pdf-label" style="color:var(--text-soft);font-size:12px">&#128196; Arrastra el PDF aqui o <u style="color:var(--navy)">haz clic para seleccionar</u></div></div><div id="sc-pdf-preview" style="display:none;margin-top:8px;align-items:center;gap:8px;padding:10px 12px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px"></div><input type="file" id="sc-pdf-input" accept=".pdf,application/pdf" style="display:none" onchange="scHandleFile(this.files[0])"><input type="hidden" id="sc-pdf-b64"><input type="hidden" id="sc-pdf-nombre"></div>
     </div>
   </div>
@@ -5575,6 +5610,9 @@ function openModal(id){
       _ocultarCapituloGroupPfx('sc');
       const ps = document.getElementById('sc-partida');
       if(ps) ps.innerHTML = '<option value="">— General (sin partida) —</option>';
+      ['sc-fecha-acta1','sc-fecha-acta2','sc-fecha-acta3'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+      ['sc-importe-acta1','sc-importe-acta2','sc-importe-acta3'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+      const res=document.getElementById('sc-actas-resumen');if(res)res.style.display='none';
       if(proyActual) cargarPartidasGenerico(proyActual, 'sc', null);
     }
   }
@@ -9888,6 +9926,14 @@ function editSubcontrata(id) {
   document.getElementById('sc-importe').value   = s.importe || 0;
   document.getElementById('sc-iva').value       = s.iva_pct || '21%';
   document.getElementById('sc-estado').value    = s.estado_pago || 'Pendiente';
+  // Actas
+  document.getElementById('sc-fecha-acta1').value   = s.fecha_acta1 || '';
+  document.getElementById('sc-importe-acta1').value = s.importe_acta1 || '';
+  document.getElementById('sc-fecha-acta2').value   = s.fecha_acta2 || '';
+  document.getElementById('sc-importe-acta2').value = s.importe_acta2 || '';
+  document.getElementById('sc-fecha-acta3').value   = s.fecha_acta3 || '';
+  document.getElementById('sc-importe-acta3').value = s.importe_acta3 || '';
+  setTimeout(scRecalcActas, 50);
   // Restaurar partida
   if(s.proyecto_id) {
     cargarPartidasGenerico(s.proyecto_id, 'sc', s.partida || null);
@@ -10003,7 +10049,7 @@ function _setHoraProyecto(proyId, partidaVal) {
 async function saveSubcontrata(){
   const id=document.getElementById('sc-id')?.value;
   const pdfB64=document.getElementById('sc-pdf-b64')?.value||null;
-  const d={fecha:document.getElementById('sc-fecha').value||new Date().toISOString().split('T')[0],proyecto_id:document.getElementById('sc-proyecto').value||null,proveedor_id:document.getElementById('sc-prov').value||null,trabajo:document.getElementById('sc-trabajo').value,importe:parseFloat(document.getElementById('sc-importe').value)||0,iva_pct:document.getElementById('sc-iva').value,estado_pago:document.getElementById('sc-estado').value,partida:getPartidaFinalPfx('sc')||null};
+  const d={fecha:document.getElementById('sc-fecha').value||new Date().toISOString().split('T')[0],proyecto_id:document.getElementById('sc-proyecto').value||null,proveedor_id:document.getElementById('sc-prov').value||null,trabajo:document.getElementById('sc-trabajo').value,importe:parseFloat(document.getElementById('sc-importe').value)||0,iva_pct:document.getElementById('sc-iva').value,estado_pago:document.getElementById('sc-estado').value,fecha_acta1:document.getElementById('sc-fecha-acta1')?.value||null,importe_acta1:parseFloat(document.getElementById('sc-importe-acta1')?.value)||null,fecha_acta2:document.getElementById('sc-fecha-acta2')?.value||null,importe_acta2:parseFloat(document.getElementById('sc-importe-acta2')?.value)||null,fecha_acta3:document.getElementById('sc-fecha-acta3')?.value||null,importe_acta3:parseFloat(document.getElementById('sc-importe-acta3')?.value)||null,partida:getPartidaFinalPfx('sc')||null};
   try{
     let savedId=id;
     if(id){ await sb('subcontratas','PATCH',d,null,`?id=eq.${id}`); }
@@ -18697,6 +18743,34 @@ function coVerPDFById(id){
 }
 
 // ── PDF adjunto para SUBCONTRATAS ──
+function scRecalcActas(){
+  const base = parseFloat(document.getElementById('sc-importe')?.value)||0;
+  const a1 = parseFloat(document.getElementById('sc-importe-acta1')?.value)||0;
+  const a2 = parseFloat(document.getElementById('sc-importe-acta2')?.value)||0;
+  const a3 = parseFloat(document.getElementById('sc-importe-acta3')?.value)||0;
+  const pagado = a1+a2+a3;
+  const pendiente = Math.max(0, base-pagado);
+  const resumen = document.getElementById('sc-actas-resumen');
+  if(resumen){
+    if(pagado>0||base>0){
+      resumen.style.display='block';
+      document.getElementById('sc-actas-pagado').textContent = fmt(pagado);
+      const pEl = document.getElementById('sc-actas-pendiente');
+      pEl.textContent = fmt(pendiente);
+      pEl.style.color = pendiente<=0 ? 'var(--green)' : 'var(--red)';
+    } else {
+      resumen.style.display='none';
+    }
+  }
+  // Auto-actualizar estado
+  const est = document.getElementById('sc-estado');
+  if(est){
+    if(pagado>0 && pendiente<=0){ est.value='Pagado'; }
+    else if(pagado>0 && pagado<base){ est.value='Pago acta'; }
+    else if(pagado===0 && base>0){ /* no cambiar estado automáticamente */ }
+  }
+}
+
 function scHandleFile(file){
   window._scPDFChanged=true;
   if(!file) return;
@@ -19722,7 +19796,7 @@ async function renderExpSubcontratas(body){
         <td style="padding:6px 10px">${pLbl}</td>
         <td style="padding:6px 10px">${s.proveedor_id||'—'}</td>
         <td style="padding:6px 10px">${s.trabajo||'—'}</td>
-        <td style="padding:6px 10px;font-weight:700;font-family:monospace">${fmt((s.importe||0)*(1+ivaPct(s.iva_pct)/100))}</td>
+        <td style="padding:6px 10px;font-weight:700;font-family:monospace">${fmt((s.importe||0)*(1+ivaPct(s.iva_pct)/100))}${(()=>{const pagActas=(s.importe_acta1||0)+(s.importe_acta2||0)+(s.importe_acta3||0);if(!pagActas)return'';const pend=Math.max(0,(s.importe||0)-pagActas);return`<div style="font-size:10px;color:var(--text-soft);font-weight:400;font-family:sans-serif">Actas: ${fmt(pagActas)} · Pdte: <span style="color:${pend>0?'var(--red)':'var(--green)'}">${fmt(pend)}</span></div>`})()}</td>
         <td style="padding:6px 10px">${bE(s.estado_pago)}</td>
         <td style="padding:6px 10px">${s.adjunto_pdf?`<button class="btn btn-ghost btn-icon btn-sm" onclick="scVerPDFById('${s.id}')" style="font-size:11px;color:var(--navy)" title="Ver PDF">📄</button>`:''}<button class="btn btn-ghost btn-icon btn-sm" onclick="editSubcontrata('${s.id}');closeModal('m-expediente')" title="Editar">✏️</button></td>
       </tr>`}).join('')}</tbody>
