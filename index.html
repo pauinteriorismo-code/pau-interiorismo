@@ -2931,7 +2931,8 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     <div class="view" id="view-compras">
       <div class="search-bar" style="gap:8px;flex-wrap:wrap;align-items:center">
         <select class="form-input" style="width:200px;flex-shrink:0" id="filter-cliente-compras" onchange="cascadaClienteProyecto(&#39;compras&#39;)"><option value="">👤 Cliente…</option><option value="CLI-H015">4F Fernando</option><option value="CLI-H014">4G daniel Dominguez</option><option value="CLI-H018">Amparo Forner Pastor</option><option value="CLI-H026">Ana María Palau Sastre</option><option value="CLI-H031">Belinda</option><option value="CLI-H004">CARMELO RODRIGUEZ VILA</option><option value="CLI-H032">Daniel palma gallardo</option><option value="CLI-H003">DESIRE NAVARRO MARI</option><option value="CLI-033">Estudi Encis SL</option><option value="CLI-H009">FERNANDO JOSE SAN GERMAN IBORRA</option><option value="CLI-H029">Francisco Navarro Garcia</option><option value="CLI-H019">Jose Antonio Martos Ortiz</option><option value="CLI-H013">Jose Manuel Garcia Seller Nº 7 Pta 4</option><option value="CLI-H030">Jose Manuel Pinzón Valbuena</option><option value="CLI-H007">Juanmi</option><option value="CLI-H012">Júlia Fabregat Mestre</option><option value="CLI-H028">Lara Blasco - Lara Blasco Iborra</option><option value="CLI-H027">Laura Doria Gomez</option><option value="CLI-H021">MERCEDES HIGUERAS GOMEZ</option><option value="CLI-H024">MICHELL BENITO</option><option value="CLI-H022">Miguel cocina</option><option value="CLI-001">Miguel Zaragozá Garzón</option><option value="CLI-H023">Miguel Zaragozá Garzón</option><option value="CLI-H002">Mª PAU BRAVO JOSE</option><option value="CLI-H005">PATRI</option><option value="CLI-H020">Rafael Francés Llàcer</option><option value="CLI-H010">REME IBORRA GIL</option><option value="CLI-H001">ROSA CHANZA SOLER</option><option value="CLI-H016">Sara Muñoz Abella</option><option value="CLI-H011">TONI TATAY DAVID</option><option value="CLI-H025">URKO Y FRANCESC</option><option value="CLI-H008">VICENT MARI SERRA</option><option value="CLI-034">Vicenta Baixauli Hernandez</option><option value="CLI-002">Vicenta Folch Gil</option><option value="CLI-H006">Vicenta Folch Gil</option><option value="CLI-H017">Yasmina Cabezuelo Alaminos</option></select>
-        <select class="form-input" style="width:220px;flex-shrink:0" id="filter-proyecto-compras" onchange="filtrarModuloPorProyecto(&#39;compras&#39;)"><option value="">📁 Proyecto…</option><option value="PRY-001">PRY-001 · Mobiliario de cocina</option><option value="PRY-002">PRY-002 · Rehabilitación lateral fachada</option><option value="PRY-003">PRY-003 · Pavimento/revestimiento vivienda.</option><option value="PRY-004">PRY-004 · Rehabilitación estudio</option><option value="PRY-005">PRY-005 · Trabajos en terraza</option></select>
+        <select class="form-input" style="width:220px;flex-shrink:0" id="filter-proyecto-compras" onchange="filtrarModuloPorProyecto('compras');cargarFiltroPartidaModulo('compras')"><option value="">📁 Proyecto…</option><option value="PRY-001">PRY-001 · Mobiliario de cocina</option><option value="PRY-002">PRY-002 · Rehabilitación lateral fachada</option><option value="PRY-003">PRY-003 · Pavimento/revestimiento vivienda.</option><option value="PRY-004">PRY-004 · Rehabilitación estudio</option><option value="PRY-005">PRY-005 · Trabajos en terraza</option></select>
+        <select class="form-input" style="width:200px;flex-shrink:0" id="filter-partida-compras" onchange="aplicarFiltroPartida('compras')"><option value="">📂 Partida…</option></select>
         <div class="search-wrap" style="flex:1;min-width:160px"><span class="search-icon">🔍</span><input class="form-input" id="search-compras" placeholder="Buscar…" oninput="filterTable(&#39;compras-tbody&#39;,&#39;search-compras&#39;)"></div>
         <button class="btn btn-ghost btn-sm" onclick="exportarExcel('compras')" style="font-size:11px">📊 Excel</button>
 <button class="btn btn-primary" onclick="openModal(&#39;m-compra&#39;)">＋ Nueva compra</button> <a href="manual_obra.html" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;padding:5px 8px" title="Manual">❓</a>
@@ -2941,6 +2942,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <div class="table-wrap"><table><thead><tr>
           <th class="sortable" onclick="sortTable('compras','fecha',this)">Fecha<span class="sort-arrow"></span></th>
           <th>Proyecto</th>
+          <th>Partida</th>
           <th class="sortable" onclick="sortTable('compras','proveedor_id',this)">Proveedor<span class="sort-arrow"></span></th>
           <th>Concepto</th>
           <th class="sortable" onclick="sortTable('compras','base_imponible',this)">Base Imp.<span class="sort-arrow"></span></th>
@@ -2957,15 +2959,16 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     <div class="view" id="view-subcontratas">
       <div class="search-bar" style="gap:8px;flex-wrap:wrap;align-items:center">
         <select class="form-input" style="width:200px;flex-shrink:0" id="filter-cliente-subcontratas" onchange="cascadaClienteProyecto(&#39;subcontratas&#39;)"><option value="">👤 Cliente…</option><option value="CLI-H015">4F Fernando</option><option value="CLI-H014">4G daniel Dominguez</option><option value="CLI-H018">Amparo Forner Pastor</option><option value="CLI-H026">Ana María Palau Sastre</option><option value="CLI-H031">Belinda</option><option value="CLI-H004">CARMELO RODRIGUEZ VILA</option><option value="CLI-H032">Daniel palma gallardo</option><option value="CLI-H003">DESIRE NAVARRO MARI</option><option value="CLI-033">Estudi Encis SL</option><option value="CLI-H009">FERNANDO JOSE SAN GERMAN IBORRA</option><option value="CLI-H029">Francisco Navarro Garcia</option><option value="CLI-H019">Jose Antonio Martos Ortiz</option><option value="CLI-H013">Jose Manuel Garcia Seller Nº 7 Pta 4</option><option value="CLI-H030">Jose Manuel Pinzón Valbuena</option><option value="CLI-H007">Juanmi</option><option value="CLI-H012">Júlia Fabregat Mestre</option><option value="CLI-H028">Lara Blasco - Lara Blasco Iborra</option><option value="CLI-H027">Laura Doria Gomez</option><option value="CLI-H021">MERCEDES HIGUERAS GOMEZ</option><option value="CLI-H024">MICHELL BENITO</option><option value="CLI-H022">Miguel cocina</option><option value="CLI-001">Miguel Zaragozá Garzón</option><option value="CLI-H023">Miguel Zaragozá Garzón</option><option value="CLI-H002">Mª PAU BRAVO JOSE</option><option value="CLI-H005">PATRI</option><option value="CLI-H020">Rafael Francés Llàcer</option><option value="CLI-H010">REME IBORRA GIL</option><option value="CLI-H001">ROSA CHANZA SOLER</option><option value="CLI-H016">Sara Muñoz Abella</option><option value="CLI-H011">TONI TATAY DAVID</option><option value="CLI-H025">URKO Y FRANCESC</option><option value="CLI-H008">VICENT MARI SERRA</option><option value="CLI-034">Vicenta Baixauli Hernandez</option><option value="CLI-002">Vicenta Folch Gil</option><option value="CLI-H006">Vicenta Folch Gil</option><option value="CLI-H017">Yasmina Cabezuelo Alaminos</option></select>
-        <select class="form-input" style="width:220px;flex-shrink:0" id="filter-proyecto-subcontratas" onchange="filtrarModuloPorProyecto(&#39;subcontratas&#39;)"><option value="">📁 Proyecto…</option><option value="PRY-001">PRY-001 · Mobiliario de cocina</option><option value="PRY-002">PRY-002 · Rehabilitación lateral fachada</option><option value="PRY-003">PRY-003 · Pavimento/revestimiento vivienda.</option><option value="PRY-004">PRY-004 · Rehabilitación estudio</option><option value="PRY-005">PRY-005 · Trabajos en terraza</option></select>
+        <select class="form-input" style="width:220px;flex-shrink:0" id="filter-proyecto-subcontratas" onchange="filtrarModuloPorProyecto('subcontratas');cargarFiltroPartidaModulo('subcontratas')"><option value="">📁 Proyecto…</option><option value="PRY-001">PRY-001 · Mobiliario de cocina</option><option value="PRY-002">PRY-002 · Rehabilitación lateral fachada</option><option value="PRY-003">PRY-003 · Pavimento/revestimiento vivienda.</option><option value="PRY-004">PRY-004 · Rehabilitación estudio</option><option value="PRY-005">PRY-005 · Trabajos en terraza</option></select>
+        <select class="form-input" style="width:200px;flex-shrink:0" id="filter-partida-subcontratas" onchange="aplicarFiltroPartida('subcontratas')"><option value="">📂 Partida…</option></select>
         <div class="search-wrap" style="flex:1;min-width:160px"><span class="search-icon">🔍</span><input class="form-input" id="search-subcontratas" placeholder="Buscar…" oninput="filterTable(&#39;subcontratas-tbody&#39;,&#39;search-subcontratas&#39;)"></div>
         <button class="btn btn-ghost btn-sm" onclick="exportarExcel('subcontratas')" style="font-size:11px">📊 Excel</button>
 <button class="btn btn-primary" onclick="openModal(&#39;m-subcontrata&#39;)">＋ Nueva subcontrata</button> <a href="manual_obra.html" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;padding:5px 8px" title="Manual">❓</a>
       </div>
       <div class="card">
         <div class="card-header"><div class="card-title">👷 Subcontratas<span id="subcontratas-count" style="font-size:11px;font-weight:400;color:var(--text-soft);margin-left:6px"></span></div></div>
-        <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Proyecto</th><th>Subcontratista</th><th>Trabajo</th><th>Importe</th><th>IVA</th><th>Total</th><th>Estado</th><th></th></tr></thead>
-        <tbody id="subcontratas-tbody"><tr><td colspan="9" class="loading">Cargando…</td></tr></tbody></table></div>
+        <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Proyecto</th><th>Partida</th><th>Subcontratista</th><th>Trabajo</th><th>Importe</th><th>IVA</th><th>Total</th><th>Estado</th><th></th></tr></thead>
+        <tbody id="subcontratas-tbody"><tr><td colspan="10" class="loading">Cargando…</td></tr></tbody></table></div>
       </div>
     </div>
 
@@ -4235,9 +4238,11 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
   <div class="modal-body"><input type="hidden" id="co-id">
     <div class="form-grid">
       <div class="form-group"><label class="form-label">Fecha</label><input class="form-input" id="co-fecha" type="date"></div>
-      <div class="form-group"><label class="form-label">Proyecto</label><select class="form-input" id="co-proyecto"><option value="">Seleccionar…</option><option value="PRY-001">PRY-001 · Mobiliario de cocina</option><option value="PRY-002">PRY-002 · Rehabilitación lateral fachada</option><option value="PRY-003">PRY-003 · Pavimento/revestimiento vivienda.</option><option value="PRY-004">PRY-004 · Rehabilitación estudio</option><option value="PRY-005">PRY-005 · Trabajos en terraza</option></select></div>
+      <div class="form-group"><label class="form-label">Proyecto</label><select class="form-input" id="co-proyecto" onchange="onChangeProyectoGenerico('co')"><option value="">Seleccionar…</option><option value="PRY-001">PRY-001 · Mobiliario de cocina</option><option value="PRY-002">PRY-002 · Rehabilitación lateral fachada</option><option value="PRY-003">PRY-003 · Pavimento/revestimiento vivienda.</option><option value="PRY-004">PRY-004 · Rehabilitación estudio</option><option value="PRY-005">PRY-005 · Trabajos en terraza</option></select></div>
       <div class="form-group"><label class="form-label">Proveedor</label><select class="form-input" id="co-prov"><option value="">Seleccionar proveedor…</option><option value="ABDELHAK BOUZIZOUA SAID">ABDELHAK BOUZIZOUA SAID · Proveedor</option><option value="Aguas de Valencia - Aguas de Valencia SA">Aguas de Valencia - Aguas de Valencia SA · Proveedor</option><option value="Aquaservice - Viva Aqua Service Spain SA">Aquaservice - Viva Aqua Service Spain SA · Proveedor</option><option value="AROMAS DEL CAMPO - AROMAS DEL CAMPO LIGHTING S.L.U.">AROMAS DEL CAMPO - AROMAS DEL CAMPO LIGHTING S.L.U. · Proveedor</option><option value="Asesoría Jose Carmelo Palau - Jose Carmelo Palau S.L">Asesoría Jose Carmelo Palau - Jose Carmelo Palau S.L · Proveedor</option><option value="BATEIG PIEDRA NATURALBateig">BATEIG PIEDRA NATURALBateig · Proveedor</option><option value="BRICOLAJE BRICOMAN SLU">BRICOLAJE BRICOMAN SLU · Proveedor</option><option value="C.DOMA - SERVICIOS DE RECOGIDA ECOLOGICOS SLL">C.DOMA - SERVICIOS DE RECOGIDA ECOLOGICOS SLL · Proveedor</option><option value="Cafrán Norte SLU">Cafrán Norte SLU · Proveedor</option><option value="CAMENGO ESPAÑA SL">CAMENGO ESPAÑA SL · Proveedor</option><option value="CANALONES MEDITERRANEA">CANALONES MEDITERRANEA · Proveedor</option><option value="COMERCIAL Y DERIVADOS ELECTRICOS SL">COMERCIAL Y DERIVADOS ELECTRICOS SL · Proveedor</option><option value="Comercial y derivados eléctricos SL">Comercial y derivados eléctricos SL · Proveedor</option><option value="D Aqua Kitchen &amp; Living SL">D Aqua Kitchen &amp; Living SL · Proveedor</option><option value="DESARROLLO Y TECNICAS DEL BAÑOS.L.U">DESARROLLO Y TECNICAS DEL BAÑOS.L.U · Proveedor</option><option value="Desarrollo y Técnicas del Baño SLU">Desarrollo y Técnicas del Baño SLU · Proveedor</option><option value="Disclima SL">Disclima SL · Proveedor</option><option value="DISCLIMA">DISCLIMA · Proveedor</option><option value="Efecto Led - PRISMICA SLU">Efecto Led - PRISMICA SLU · Proveedor</option><option value="Emilio Montador - Emilio J. Monterde Sanchez">Emilio Montador - Emilio J. Monterde Sanchez · Proveedor</option><option value="F Franco e Hijos SL">F Franco e Hijos SL · Proveedor</option><option value="FERRETERIA TEN Y MONREAL S.L.">FERRETERIA TEN Y MONREAL S.L. · Proveedor</option><option value="Ferretería Ten y Monreal SL">Ferretería Ten y Monreal SL · Proveedor</option><option value="Fiora bath collections  SL">Fiora bath collections  SL · Proveedor</option><option value="FIORA BATH COLLECTIONS SOCIEDAD LIMITADA.">FIORA BATH COLLECTIONS SOCIEDAD LIMITADA. · Proveedor</option><option value="FNMT-RCM">FNMT-RCM · Proveedor</option><option value="Franca Grupo Inmobiliario">Franca Grupo Inmobiliario · Proveedor</option><option value="Franco Furniture - F Franco e Hijos SL">Franco Furniture - F Franco e Hijos SL · Proveedor</option><option value="Fustes Bonet Llopis SL">Fustes Bonet Llopis SL · Proveedor</option><option value="Garcia Zacares SL">Garcia Zacares SL · Proveedor</option><option value="Glicerio Chaves Hornero SL">Glicerio Chaves Hornero SL · Proveedor</option><option value="Grupo Mundobaño Electrokitchen SL">Grupo Mundobaño Electrokitchen SL · Proveedor</option><option value="Holded">Holded · Proveedor</option><option value="Iberdrola - Iberdrola clientes SAU">Iberdrola - Iberdrola clientes SAU · Proveedor</option><option value="Iván Millán Garcia">Iván Millán Garcia · Subcontratista</option><option value="IXIA REGAL SA">IXIA REGAL SA · Proveedor</option><option value="Jose Asins Primo">Jose Asins Primo · Proveedor</option><option value="Jose Ignacio Chilet Crespo">Jose Ignacio Chilet Crespo · Subcontratista</option><option value="Marmoles Santa Maria - MARMOLES SANTAMARIA SL">Marmoles Santa Maria - MARMOLES SANTAMARIA SL · Proveedor</option><option value="Materiales Calabuig SL">Materiales Calabuig SL · Proveedor</option><option value="MERCEDES BENZ - MERCEDES BENZ ESPAÑA SOCIEDAD ANONIMA">MERCEDES BENZ - MERCEDES BENZ ESPAÑA SOCIEDAD ANONIMA · Proveedor</option><option value="Mercedes Benz - Mercedes Benz Financial services España EFC SA">Mercedes Benz - Mercedes Benz Financial services España EFC SA · Proveedor</option><option value="Moeve - Moeve Card Services, S.A.U.">Moeve - Moeve Card Services, S.A.U. · Proveedor</option><option value="Moeve - Moeve pro services SAU">Moeve - Moeve pro services SAU · Proveedor</option><option value="Mohammed Ghanouch">Mohammed Ghanouch · Subcontratista</option><option value="Movistar - Telefónica móviles España SAU">Movistar - Telefónica móviles España SAU · Proveedor</option><option value="Mármoles Santa maría SL">Mármoles Santa maría SL · Proveedor</option><option value="NAVARRO RUBIO SILLERIA S. L.">NAVARRO RUBIO SILLERIA S. L. · Proveedor</option><option value="Navarro Rubio Silleria SL">Navarro Rubio Silleria SL · Proveedor</option><option value="NESTLE NESPRESSO SA OFICINA DE REPRESENTACION EN BARCELONA">NESTLE NESPRESSO SA OFICINA DE REPRESENTACION EN BARCELONA · Proveedor</option><option value="O.T.P. OFICINA TECNICA DE PREVENCION, S.A. - OTP-OFICINA TECNICA DE PREVENCION SL">O.T.P. OFICINA TECNICA DE PREVENCION, S.A. - OTP-OFICINA TECNICA DE PREVENCION SL · Proveedor</option><option value="Optica Alcasser - DOSMIRADAS2020,SL">Optica Alcasser - DOSMIRADAS2020,SL · Proveedor</option><option value="Otp-Oficina Técnica de Prevención SL">Otp-Oficina Técnica de Prevención SL · Proveedor</option><option value="Pinturas Gopidecor SL">Pinturas Gopidecor SL · Proveedor</option><option value="PINTURAS GOPIDECOR SOCIEDAD LIMITADA.">PINTURAS GOPIDECOR SOCIEDAD LIMITADA. · Proveedor</option><option value="Poalgi SL">Poalgi SL · Proveedor</option><option value="Prismica SLU">Prismica SLU · Proveedor</option><option value="PUERTAS SEVILLANO SL">PUERTAS SEVILLANO SL · Proveedor</option><option value="Pulidor - Jose Vicente Figueres Peris">Pulidor - Jose Vicente Figueres Peris · Proveedor</option><option value="Rafael Albert SL">Rafael Albert SL · Proveedor</option><option value="RAFAEL ALBERT, S.L.">RAFAEL ALBERT, S.L. · Proveedor</option><option value="Raúl Martín - Engenios Sanchez">Raúl Martín - Engenios Sanchez · Subcontratista</option><option value="Said Pladur - SAID LOUDYI">Said Pladur - SAID LOUDYI · Proveedor</option><option value="Saitra Cocinas SL">Saitra Cocinas SL · Proveedor</option><option value="Saniceramic Import And Export Sl">Saniceramic Import And Export Sl · Proveedor</option><option value="SIMO PINTOR - MOHAMMED GHANOUCH">SIMO PINTOR - MOHAMMED GHANOUCH · Proveedor</option><option value="Stanila Adrián Ioan">Stanila Adrián Ioan · Subcontrata</option><option value="Tancat Cerramientos - Raul Martín-Engenios Sänchez">Tancat Cerramientos - Raul Martín-Engenios Sänchez · Proveedor</option><option value="Techos Calabuig - MATERIALES CALABUIG SOCIEDAD LIMITADA.">Techos Calabuig - MATERIALES CALABUIG SOCIEDAD LIMITADA. · Proveedor</option><option value="TEXTILES INDUCAM">TEXTILES INDUCAM · Proveedor</option><option value="Tobisa Fabrica de Muebles SL">Tobisa Fabrica de Muebles SL · Proveedor</option><option value="TOBISA MUEBLES - TOBISA FABRICA DE MUEBLES SL">TOBISA MUEBLES - TOBISA FABRICA DE MUEBLES SL · Proveedor</option><option value="VENTANAS CORTIZO - VICMAN GLASS S.L.U.">VENTANAS CORTIZO - VICMAN GLASS S.L.U. · Proveedor</option><option value="Vicentclima SL">Vicentclima SL · Subcontratista</option><option value="Vicman Glass SLU">Vicman Glass SLU · Proveedor</option><option value="Vives Azulejos y Gres SA">Vives Azulejos y Gres SA · Proveedor</option><option value="VIVES AZULEJOS Y GRES, S.A. - VIVES AZULEJOS Y GRES SA">VIVES AZULEJOS Y GRES, S.A. - VIVES AZULEJOS Y GRES SA · Proveedor</option><option value="Vodafone España SAU">Vodafone España SAU · Proveedor</option></select></div>
       <div class="form-group"><label class="form-label">IVA</label><select class="form-input" id="co-iva"><option>10%</option><option>21%</option><option>4%</option><option>Exento</option></select></div>
+      <div class="form-group"><label class="form-label">Partida / Capítulo</label><select class="form-input" id="co-partida" onchange="onChangePartidaGenerico('co')"><option value="">— General (sin partida) —</option></select></div>
+      <div class="form-group" id="co-capitulo-group" style="display:none"><label class="form-label">Capítulo</label><select class="form-input" id="co-capitulo"><option value="">— Todo el presupuesto —</option></select></div>
       <div class="form-group fg-full"><label class="form-label">Concepto</label><input class="form-input" id="co-concepto"></div>
       <div class="form-group"><label class="form-label">Base imponible €</label><input class="form-input" id="co-base" type="number" step="0.01"></div>
       <div class="form-group"><label class="form-label">Estado pago</label><select class="form-input" id="co-estado"><option>Pagado</option><option>Parcial</option><option>Pendiente</option><option>Vencido</option></select></div>
@@ -4418,9 +4423,11 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
   <div class="modal-body"><input type="hidden" id="sc-id">
     <div class="form-grid">
       <div class="form-group"><label class="form-label">Fecha</label><input class="form-input" id="sc-fecha" type="date"></div>
-      <div class="form-group"><label class="form-label">Proyecto</label><select class="form-input" id="sc-proyecto"><option value="">Seleccionar…</option><option value="PRY-001">PRY-001 · Mobiliario de cocina</option><option value="PRY-002">PRY-002 · Rehabilitación lateral fachada</option><option value="PRY-003">PRY-003 · Pavimento/revestimiento vivienda.</option><option value="PRY-004">PRY-004 · Rehabilitación estudio</option><option value="PRY-005">PRY-005 · Trabajos en terraza</option></select></div>
+      <div class="form-group"><label class="form-label">Proyecto</label><select class="form-input" id="sc-proyecto" onchange="onChangeProyectoGenerico('sc')"><option value="">Seleccionar…</option><option value="PRY-001">PRY-001 · Mobiliario de cocina</option><option value="PRY-002">PRY-002 · Rehabilitación lateral fachada</option><option value="PRY-003">PRY-003 · Pavimento/revestimiento vivienda.</option><option value="PRY-004">PRY-004 · Rehabilitación estudio</option><option value="PRY-005">PRY-005 · Trabajos en terraza</option></select></div>
       <div class="form-group"><label class="form-label">Subcontratista</label><select class="form-input" id="sc-prov"><option value="">Seleccionar proveedor…</option><option value="ABDELHAK BOUZIZOUA SAID">ABDELHAK BOUZIZOUA SAID · Proveedor</option><option value="Aguas de Valencia - Aguas de Valencia SA">Aguas de Valencia - Aguas de Valencia SA · Proveedor</option><option value="Aquaservice - Viva Aqua Service Spain SA">Aquaservice - Viva Aqua Service Spain SA · Proveedor</option><option value="AROMAS DEL CAMPO - AROMAS DEL CAMPO LIGHTING S.L.U.">AROMAS DEL CAMPO - AROMAS DEL CAMPO LIGHTING S.L.U. · Proveedor</option><option value="Asesoría Jose Carmelo Palau - Jose Carmelo Palau S.L">Asesoría Jose Carmelo Palau - Jose Carmelo Palau S.L · Proveedor</option><option value="BATEIG PIEDRA NATURALBateig">BATEIG PIEDRA NATURALBateig · Proveedor</option><option value="BRICOLAJE BRICOMAN SLU">BRICOLAJE BRICOMAN SLU · Proveedor</option><option value="C.DOMA - SERVICIOS DE RECOGIDA ECOLOGICOS SLL">C.DOMA - SERVICIOS DE RECOGIDA ECOLOGICOS SLL · Proveedor</option><option value="Cafrán Norte SLU">Cafrán Norte SLU · Proveedor</option><option value="CAMENGO ESPAÑA SL">CAMENGO ESPAÑA SL · Proveedor</option><option value="CANALONES MEDITERRANEA">CANALONES MEDITERRANEA · Proveedor</option><option value="COMERCIAL Y DERIVADOS ELECTRICOS SL">COMERCIAL Y DERIVADOS ELECTRICOS SL · Proveedor</option><option value="Comercial y derivados eléctricos SL">Comercial y derivados eléctricos SL · Proveedor</option><option value="D Aqua Kitchen &amp; Living SL">D Aqua Kitchen &amp; Living SL · Proveedor</option><option value="DESARROLLO Y TECNICAS DEL BAÑOS.L.U">DESARROLLO Y TECNICAS DEL BAÑOS.L.U · Proveedor</option><option value="Desarrollo y Técnicas del Baño SLU">Desarrollo y Técnicas del Baño SLU · Proveedor</option><option value="Disclima SL">Disclima SL · Proveedor</option><option value="DISCLIMA">DISCLIMA · Proveedor</option><option value="Efecto Led - PRISMICA SLU">Efecto Led - PRISMICA SLU · Proveedor</option><option value="Emilio Montador - Emilio J. Monterde Sanchez">Emilio Montador - Emilio J. Monterde Sanchez · Proveedor</option><option value="F Franco e Hijos SL">F Franco e Hijos SL · Proveedor</option><option value="FERRETERIA TEN Y MONREAL S.L.">FERRETERIA TEN Y MONREAL S.L. · Proveedor</option><option value="Ferretería Ten y Monreal SL">Ferretería Ten y Monreal SL · Proveedor</option><option value="Fiora bath collections  SL">Fiora bath collections  SL · Proveedor</option><option value="FIORA BATH COLLECTIONS SOCIEDAD LIMITADA.">FIORA BATH COLLECTIONS SOCIEDAD LIMITADA. · Proveedor</option><option value="FNMT-RCM">FNMT-RCM · Proveedor</option><option value="Franca Grupo Inmobiliario">Franca Grupo Inmobiliario · Proveedor</option><option value="Franco Furniture - F Franco e Hijos SL">Franco Furniture - F Franco e Hijos SL · Proveedor</option><option value="Fustes Bonet Llopis SL">Fustes Bonet Llopis SL · Proveedor</option><option value="Garcia Zacares SL">Garcia Zacares SL · Proveedor</option><option value="Glicerio Chaves Hornero SL">Glicerio Chaves Hornero SL · Proveedor</option><option value="Grupo Mundobaño Electrokitchen SL">Grupo Mundobaño Electrokitchen SL · Proveedor</option><option value="Holded">Holded · Proveedor</option><option value="Iberdrola - Iberdrola clientes SAU">Iberdrola - Iberdrola clientes SAU · Proveedor</option><option value="Iván Millán Garcia">Iván Millán Garcia · Subcontratista</option><option value="IXIA REGAL SA">IXIA REGAL SA · Proveedor</option><option value="Jose Asins Primo">Jose Asins Primo · Proveedor</option><option value="Jose Ignacio Chilet Crespo">Jose Ignacio Chilet Crespo · Subcontratista</option><option value="Marmoles Santa Maria - MARMOLES SANTAMARIA SL">Marmoles Santa Maria - MARMOLES SANTAMARIA SL · Proveedor</option><option value="Materiales Calabuig SL">Materiales Calabuig SL · Proveedor</option><option value="MERCEDES BENZ - MERCEDES BENZ ESPAÑA SOCIEDAD ANONIMA">MERCEDES BENZ - MERCEDES BENZ ESPAÑA SOCIEDAD ANONIMA · Proveedor</option><option value="Mercedes Benz - Mercedes Benz Financial services España EFC SA">Mercedes Benz - Mercedes Benz Financial services España EFC SA · Proveedor</option><option value="Moeve - Moeve Card Services, S.A.U.">Moeve - Moeve Card Services, S.A.U. · Proveedor</option><option value="Moeve - Moeve pro services SAU">Moeve - Moeve pro services SAU · Proveedor</option><option value="Mohammed Ghanouch">Mohammed Ghanouch · Subcontratista</option><option value="Movistar - Telefónica móviles España SAU">Movistar - Telefónica móviles España SAU · Proveedor</option><option value="Mármoles Santa maría SL">Mármoles Santa maría SL · Proveedor</option><option value="NAVARRO RUBIO SILLERIA S. L.">NAVARRO RUBIO SILLERIA S. L. · Proveedor</option><option value="Navarro Rubio Silleria SL">Navarro Rubio Silleria SL · Proveedor</option><option value="NESTLE NESPRESSO SA OFICINA DE REPRESENTACION EN BARCELONA">NESTLE NESPRESSO SA OFICINA DE REPRESENTACION EN BARCELONA · Proveedor</option><option value="O.T.P. OFICINA TECNICA DE PREVENCION, S.A. - OTP-OFICINA TECNICA DE PREVENCION SL">O.T.P. OFICINA TECNICA DE PREVENCION, S.A. - OTP-OFICINA TECNICA DE PREVENCION SL · Proveedor</option><option value="Optica Alcasser - DOSMIRADAS2020,SL">Optica Alcasser - DOSMIRADAS2020,SL · Proveedor</option><option value="Otp-Oficina Técnica de Prevención SL">Otp-Oficina Técnica de Prevención SL · Proveedor</option><option value="Pinturas Gopidecor SL">Pinturas Gopidecor SL · Proveedor</option><option value="PINTURAS GOPIDECOR SOCIEDAD LIMITADA.">PINTURAS GOPIDECOR SOCIEDAD LIMITADA. · Proveedor</option><option value="Poalgi SL">Poalgi SL · Proveedor</option><option value="Prismica SLU">Prismica SLU · Proveedor</option><option value="PUERTAS SEVILLANO SL">PUERTAS SEVILLANO SL · Proveedor</option><option value="Pulidor - Jose Vicente Figueres Peris">Pulidor - Jose Vicente Figueres Peris · Proveedor</option><option value="Rafael Albert SL">Rafael Albert SL · Proveedor</option><option value="RAFAEL ALBERT, S.L.">RAFAEL ALBERT, S.L. · Proveedor</option><option value="Raúl Martín - Engenios Sanchez">Raúl Martín - Engenios Sanchez · Subcontratista</option><option value="Said Pladur - SAID LOUDYI">Said Pladur - SAID LOUDYI · Proveedor</option><option value="Saitra Cocinas SL">Saitra Cocinas SL · Proveedor</option><option value="Saniceramic Import And Export Sl">Saniceramic Import And Export Sl · Proveedor</option><option value="SIMO PINTOR - MOHAMMED GHANOUCH">SIMO PINTOR - MOHAMMED GHANOUCH · Proveedor</option><option value="Stanila Adrián Ioan">Stanila Adrián Ioan · Subcontrata</option><option value="Tancat Cerramientos - Raul Martín-Engenios Sänchez">Tancat Cerramientos - Raul Martín-Engenios Sänchez · Proveedor</option><option value="Techos Calabuig - MATERIALES CALABUIG SOCIEDAD LIMITADA.">Techos Calabuig - MATERIALES CALABUIG SOCIEDAD LIMITADA. · Proveedor</option><option value="TEXTILES INDUCAM">TEXTILES INDUCAM · Proveedor</option><option value="Tobisa Fabrica de Muebles SL">Tobisa Fabrica de Muebles SL · Proveedor</option><option value="TOBISA MUEBLES - TOBISA FABRICA DE MUEBLES SL">TOBISA MUEBLES - TOBISA FABRICA DE MUEBLES SL · Proveedor</option><option value="VENTANAS CORTIZO - VICMAN GLASS S.L.U.">VENTANAS CORTIZO - VICMAN GLASS S.L.U. · Proveedor</option><option value="Vicentclima SL">Vicentclima SL · Subcontratista</option><option value="Vicman Glass SLU">Vicman Glass SLU · Proveedor</option><option value="Vives Azulejos y Gres SA">Vives Azulejos y Gres SA · Proveedor</option><option value="VIVES AZULEJOS Y GRES, S.A. - VIVES AZULEJOS Y GRES SA">VIVES AZULEJOS Y GRES, S.A. - VIVES AZULEJOS Y GRES SA · Proveedor</option><option value="Vodafone España SAU">Vodafone España SAU · Proveedor</option></select></div>
       <div class="form-group"><label class="form-label">IVA</label><select class="form-input" id="sc-iva"><option>10%</option><option>21%</option><option>4%</option><option>Exento</option></select></div>
+      <div class="form-group"><label class="form-label">Partida / Capítulo</label><select class="form-input" id="sc-partida" onchange="onChangePartidaGenerico('sc')"><option value="">— General (sin partida) —</option></select></div>
+      <div class="form-group" id="sc-capitulo-group" style="display:none"><label class="form-label">Capítulo</label><select class="form-input" id="sc-capitulo"><option value="">— Todo el presupuesto —</option></select></div>
       <div class="form-group fg-full"><label class="form-label">Trabajo</label><input class="form-input" id="sc-trabajo"></div>
       <div class="form-group"><label class="form-label">Importe base €</label><input class="form-input" id="sc-importe" type="number" step="0.01"></div>
       <div class="form-group"><label class="form-label">Estado pago</label><select class="form-input" id="sc-estado"><option>Pagado</option><option>Parcial</option><option>Pendiente</option><option>Vencido</option></select></div>
@@ -6212,6 +6219,45 @@ function poblarFiltrosProyecto(){
       +[...proyFiltrados].sort((a,b)=>a.proyecto_id.localeCompare(b.proyecto_id,'es',{numeric:true})).map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
     if(cur)presSel.value=cur;
   }
+}
+
+// Carga el filtro de partidas para un módulo según el proyecto seleccionado
+async function cargarFiltroPartidaModulo(mod) {
+  const filtSel = document.getElementById(`filter-partida-${mod}`);
+  if(!filtSel) return;
+  const proyId = document.getElementById(`filter-proyecto-${mod}`)?.value;
+  filtSel.innerHTML = '<option value="">📂 Partida…</option>';
+  if(!proyId) return;
+  try {
+    // Recoger las partidas usadas en los registros cargados en memoria
+    const cache = mod === 'compras' ? CoC : (mod === 'subcontratas' ? ScC : HC);
+    const partidas = [...new Set((cache||[]).filter(r=>r.proyecto_id===proyId && r.partida).map(r=>r.partida))].sort();
+    if(!partidas.length) return;
+    const capIds = partidas.filter(p=>p.startsWith('cap:')).map(p=>p.slice(4));
+    let capNames = {};
+    if(capIds.length) {
+      const rows = await sbGet('presupuesto_lineas', `?id=in.(${capIds.map(id=>encodeURIComponent(id)).join(',')})&select=id,descripcion`);
+      (rows||[]).forEach(r=>{ capNames[r.id] = r.descripcion; });
+    }
+    partidas.forEach(p => {
+      const lbl = partidaLabelConNombres(p, capNames);
+      filtSel.innerHTML += `<option value="${p}">${lbl}</option>`;
+    });
+  } catch(e) { /* silencioso */ }
+}
+
+// Filtra las filas de la tabla por el data-partida attribute
+function aplicarFiltroPartida(mod) {
+  const filtSel = document.getElementById(`filter-partida-${mod}`);
+  if(!filtSel) return;
+  const val = filtSel.value;
+  const tbody = document.getElementById(`${mod}-tbody`);
+  if(!tbody) return;
+  tbody.querySelectorAll('tr[data-partida]').forEach(tr => {
+    if(!val) { tr.style.display = ''; return; }
+    const dp = tr.dataset.partida || '';
+    tr.style.display = (dp === val) ? '' : 'none';
+  });
 }
 
 function filtrarModuloPorProyecto(mod){
@@ -9714,17 +9760,18 @@ async function loadCompras(){
   try{
     CoC=await sbGet('compras','?order=fecha.desc');
     document.getElementById('compras-count').textContent=CoC.length+' registros';
-    if(!CoC.length){tb.innerHTML=`<tr><td colspan="9"><div class="empty"><div class="empty-icon">🛒</div><div class="empty-text">Sin compras</div><button class="btn btn-primary" onclick="openModal('m-compra')">＋ Nueva</button></div></td></tr>`;return;}
-    tb.innerHTML=CoC.map(c=>{const tot=c.base_imponible*(1+ivaPct(c.iva_pct)/100);const hasPDF=!!(c.adjunto_pdf);return`<tr data-search="${(c.proyecto_id+c.proveedor_id+c.concepto).toLowerCase()}"><td>${fmtD(c.fecha)}</td><td class="td-mono">${c.proyecto_id?`<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:1px 5px;color:var(--navy);font-weight:700" title="Ver expediente" onclick="abrirExpediente('${c.proyecto_id}')">${c.proyecto_id}</button>`:"<span style='color:var(--text-soft)'>—</span>"}</td><td>${c.proveedor_id||'—'}</td><td>${c.concepto||'—'}${hasPDF?' 📎':''}</td><td class="td-mono">${fmt(c.base_imponible)}</td><td class="td-mono">${c.iva_pct}</td><td class="td-mono" style="font-weight:700">${fmt(tot)}</td><td>${bE(c.estado_pago)}</td><td style="display:flex;gap:4px">${hasPDF?`<button class="btn btn-ghost btn-icon btn-sm" onclick="coVerPDFById('${c.id}')" style="font-size:11px;color:var(--navy)" title="Ver PDF">📄</button>`:''}<button class="btn btn-ghost btn-icon btn-sm" onclick="editCompra('${c.id}')" style="font-size:11px">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('compras','${c.id}','${(c.concepto||'compra').replace(/'/g,"\\'")}')">🗑</button></td></tr>`;}).join('');
-  }catch(e){tb.innerHTML=`<tr><td colspan="9" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
-  // Re-apply project filter after load
+    if(!CoC.length){tb.innerHTML=`<tr><td colspan="10"><div class="empty"><div class="empty-icon">🛒</div><div class="empty-text">Sin compras</div><button class="btn btn-primary" onclick="openModal('m-compra')">＋ Nueva</button></div></td></tr>`;return;}
+    const capNames = await resolverNombresCapitulos(CoC.map(c=>c.partida));
+    tb.innerHTML=CoC.map(c=>{const tot=c.base_imponible*(1+ivaPct(c.iva_pct)/100);const hasPDF=!!(c.adjunto_pdf);const partLbl=c.partida?`<span style="font-size:11px;color:var(--copper)">${partidaLabelConNombres(c.partida,capNames)}</span>`:'<span style="color:var(--text-soft)">—</span>';return`<tr data-search="${(c.proyecto_id+c.proveedor_id+c.concepto+(c.partida||'')).toLowerCase()}" data-partida="${c.partida||''}"><td>${fmtD(c.fecha)}</td><td class="td-mono">${c.proyecto_id?`<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:1px 5px;color:var(--navy);font-weight:700" title="Ver expediente" onclick="abrirExpediente('${c.proyecto_id}')">${c.proyecto_id}</button>`:"<span style='color:var(--text-soft)'>—</span>"}</td><td>${partLbl}</td><td>${c.proveedor_id||'—'}</td><td>${c.concepto||'—'}${hasPDF?' 📎':''}</td><td class="td-mono">${fmt(c.base_imponible)}</td><td class="td-mono">${c.iva_pct}</td><td class="td-mono" style="font-weight:700">${fmt(tot)}</td><td>${bE(c.estado_pago)}</td><td style="display:flex;gap:4px">${hasPDF?`<button class="btn btn-ghost btn-icon btn-sm" onclick="coVerPDFById('${c.id}')" style="font-size:11px;color:var(--navy)" title="Ver PDF">📄</button>`:''}<button class="btn btn-ghost btn-icon btn-sm" onclick="editCompra('${c.id}')" style="font-size:11px">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('compras','${c.id}','${(c.concepto||'compra').replace(/'/g,"\\'")}')">🗑</button></td></tr>`;}).join('');
+  }catch(e){tb.innerHTML=`<tr><td colspan="10" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
   filtrarModuloPorProyecto('compras');
+  aplicarFiltroPartida('compras');
 }
 async function saveCompra(){
   const id=document.getElementById('co-id')?.value;
   const pdfB64=document.getElementById('co-pdf-b64')?.value||null;
   // Datos base SIN PDF para evitar error de columna en schema cache
-  const d={fecha:document.getElementById('co-fecha').value||new Date().toISOString().split('T')[0],proyecto_id:document.getElementById('co-proyecto').value||null,proveedor_id:document.getElementById('co-prov').value||null,concepto:document.getElementById('co-concepto').value,base_imponible:parseFloat(document.getElementById('co-base').value)||0,iva_pct:document.getElementById('co-iva').value,estado_pago:document.getElementById('co-estado').value,fecha_vencimiento:document.getElementById('co-vto').value||null,notas:document.getElementById('co-notas').value};
+  const d={fecha:document.getElementById('co-fecha').value||new Date().toISOString().split('T')[0],proyecto_id:document.getElementById('co-proyecto').value||null,proveedor_id:document.getElementById('co-prov').value||null,concepto:document.getElementById('co-concepto').value,base_imponible:parseFloat(document.getElementById('co-base').value)||0,iva_pct:document.getElementById('co-iva').value,estado_pago:document.getElementById('co-estado').value,fecha_vencimiento:document.getElementById('co-vto').value||null,notas:document.getElementById('co-notas').value,partida:getPartidaFinalPfx('co')||null};
   try{
     let savedId = id;
     if(id){
@@ -9761,11 +9808,12 @@ async function loadSubcontratas(){
   try{
     ScC=await sbGet('subcontratas','?order=fecha.desc');
     document.getElementById('subcontratas-count').textContent=ScC.length+' registros';
-    if(!ScC.length){tb.innerHTML=`<tr><td colspan="9"><div class="empty"><div class="empty-icon">👷</div><div class="empty-text">Sin subcontratas</div><button class="btn btn-primary" onclick="openModal('m-subcontrata')">＋ Nueva</button></div></td></tr>`;return;}
-    tb.innerHTML=ScC.map(s=>{const tot=s.importe*(1+ivaPct(s.iva_pct)/100);return`<tr data-search="${(s.proyecto_id+s.proveedor_id+s.trabajo).toLowerCase()}"><td>${fmtD(s.fecha)}</td><td class="td-mono">${s.proyecto_id?`<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:1px 5px;color:var(--navy);font-weight:700" title="Ver expediente" onclick="abrirExpediente('${s.proyecto_id}')">${s.proyecto_id}</button>`:"<span style='color:var(--text-soft)'>—</span>"}</td><td>${s.proveedor_id||'—'}</td><td>${s.trabajo||'—'}</td><td class="td-mono">${fmt(s.importe)}</td><td class="td-mono">${s.iva_pct}</td><td class="td-mono" style="font-weight:700">${fmt(tot)}</td><td>${bE(s.estado_pago)}</td><td style="display:flex;gap:4px">${s.adjunto_pdf?`<button class="btn btn-ghost btn-icon btn-sm" onclick="scVerPDFById('${s.id}')" style="font-size:11px;color:var(--navy)" title="Ver PDF">&#128196;</button>`:''}<button class="btn btn-ghost btn-icon btn-sm" onclick="editSubcontrata('${s.id}')" title="Editar">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('subcontratas','${s.id}','${(s.trabajo||'subcontrata').replace(/'/g,"\\'")}')">🗑</button></td></tr>`;}).join('');
-  }catch(e){tb.innerHTML=`<tr><td colspan="9" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
-  // Re-apply project filter after load
+    if(!ScC.length){tb.innerHTML=`<tr><td colspan="10"><div class="empty"><div class="empty-icon">👷</div><div class="empty-text">Sin subcontratas</div><button class="btn btn-primary" onclick="openModal('m-subcontrata')">＋ Nueva</button></div></td></tr>`;return;}
+    const capNames = await resolverNombresCapitulos(ScC.map(s=>s.partida));
+    tb.innerHTML=ScC.map(s=>{const tot=s.importe*(1+ivaPct(s.iva_pct)/100);const partLbl=s.partida?`<span style="font-size:11px;color:var(--copper)">${partidaLabelConNombres(s.partida,capNames)}</span>`:'<span style="color:var(--text-soft)">—</span>';return`<tr data-search="${(s.proyecto_id+s.proveedor_id+s.trabajo+(s.partida||'')).toLowerCase()}" data-partida="${s.partida||''}"><td>${fmtD(s.fecha)}</td><td class="td-mono">${s.proyecto_id?`<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:1px 5px;color:var(--navy);font-weight:700" title="Ver expediente" onclick="abrirExpediente('${s.proyecto_id}')">${s.proyecto_id}</button>`:"<span style='color:var(--text-soft)'>—</span>"}</td><td>${partLbl}</td><td>${s.proveedor_id||'—'}</td><td>${s.trabajo||'—'}</td><td class="td-mono">${fmt(s.importe)}</td><td class="td-mono">${s.iva_pct}</td><td class="td-mono" style="font-weight:700">${fmt(tot)}</td><td>${bE(s.estado_pago)}</td><td style="display:flex;gap:4px">${s.adjunto_pdf?`<button class="btn btn-ghost btn-icon btn-sm" onclick="scVerPDFById('${s.id}')" style="font-size:11px;color:var(--navy)" title="Ver PDF">📄</button>`:''}<button class="btn btn-ghost btn-icon btn-sm" onclick="editSubcontrata('${s.id}')" title="Editar">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('subcontratas','${s.id}','${(s.trabajo||'subcontrata').replace(/'/g,"\\'")}')">🗑</button></td></tr>`;}).join('');
+  }catch(e){tb.innerHTML=`<tr><td colspan="10" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
   filtrarModuloPorProyecto('subcontratas');
+  aplicarFiltroPartida('subcontratas');
 }
 
 // ═══════════════════════════════════════════
@@ -9784,6 +9832,14 @@ function editSubcontrata(id) {
   document.getElementById('sc-iva').value       = s.iva_pct || '21%';
   document.getElementById('sc-estado').value    = s.estado_pago || 'Pendiente';
   document.getElementById('sc-vto').value       = s.fecha_vencimiento || '';
+  // Restaurar partida
+  if(s.proyecto_id) {
+    cargarPartidasGenerico(s.proyecto_id, 'sc', s.partida || null);
+  } else {
+    _ocultarCapituloGroupPfx('sc');
+    const ps = document.getElementById('sc-partida');
+    if(ps) ps.innerHTML = '<option value="">— General (sin partida) —</option>';
+  }
   // PDF adjunto
   if (s.adjunto_pdf) {
     window._scPDFActual = s.adjunto_pdf;
@@ -9813,6 +9869,14 @@ function editCompra(id) {
   document.getElementById('co-estado').value    = c.estado_pago || 'Pendiente';
   document.getElementById('co-vto').value       = c.fecha_vencimiento || '';
   document.getElementById('co-notas').value     = c.notas || '';
+  // Restaurar partida
+  if(c.proyecto_id) {
+    cargarPartidasGenerico(c.proyecto_id, 'co', c.partida || null);
+  } else {
+    _ocultarCapituloGroupPfx('co');
+    const ps = document.getElementById('co-partida');
+    if(ps) ps.innerHTML = '<option value="">— General (sin partida) —</option>';
+  }
   // PDF adjunto
   if (c.adjunto_pdf) {
     window._coPDFActual = c.adjunto_pdf;
@@ -9884,7 +9948,7 @@ function _setHoraProyecto(proyId, partidaVal) {
 async function saveSubcontrata(){
   const id=document.getElementById('sc-id')?.value;
   const pdfB64=document.getElementById('sc-pdf-b64')?.value||null;
-  const d={fecha:document.getElementById('sc-fecha').value||new Date().toISOString().split('T')[0],proyecto_id:document.getElementById('sc-proyecto').value||null,proveedor_id:document.getElementById('sc-prov').value||null,trabajo:document.getElementById('sc-trabajo').value,importe:parseFloat(document.getElementById('sc-importe').value)||0,iva_pct:document.getElementById('sc-iva').value,estado_pago:document.getElementById('sc-estado').value,fecha_vencimiento:document.getElementById('sc-vto').value||null};
+  const d={fecha:document.getElementById('sc-fecha').value||new Date().toISOString().split('T')[0],proyecto_id:document.getElementById('sc-proyecto').value||null,proveedor_id:document.getElementById('sc-prov').value||null,trabajo:document.getElementById('sc-trabajo').value,importe:parseFloat(document.getElementById('sc-importe').value)||0,iva_pct:document.getElementById('sc-iva').value,estado_pago:document.getElementById('sc-estado').value,fecha_vencimiento:document.getElementById('sc-vto').value||null,partida:getPartidaFinalPfx('sc')||null};
   try{
     let savedId=id;
     if(id){ await sb('subcontratas','PATCH',d,null,`?id=eq.${id}`); }
@@ -9910,7 +9974,9 @@ async function loadHoras(){
     HC=await sbGet('horas','?order=fecha.desc');
     document.getElementById('horas-count').textContent=HC.length+' registros';
     if(!HC.length){tb.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="empty-icon">⏱</div><div class="empty-text">Sin horas registradas</div><button class="btn btn-primary" onclick="abrirModalHora()">＋ Registrar</button></div></td></tr>`;return;}
-    tb.innerHTML=HC.map(h=>`<tr data-search="${(h.proyecto_id+(h.partida||'')+h.trabajador+(h.descripcion||'')).toLowerCase()}"><td>${fmtD(h.fecha)}</td><td class="td-mono">${h.proyecto_id?`<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:1px 5px;color:var(--navy);font-weight:700" title="Ver expediente" onclick="abrirExpediente('${h.proyecto_id}')">${h.proyecto_id}</button>`:"<span style='color:var(--text-soft)'>—</span>"}</td><td class="td-mono" style="color:var(--copper);font-weight:600">${h.partida||'<span style=color:var(--text-soft)>—</span>'}</td><td><strong>${h.trabajador||'—'}</strong></td><td class="td-mono">${h.horas}h</td><td class="td-mono">${fmt(h.coste_hora)}</td><td class="td-mono" style="font-weight:700">${fmt(h.total)}</td><td style="color:var(--text-soft)">${h.descripcion||'—'}</td><td><button class="btn btn-ghost btn-icon btn-sm" onclick="editHora('${h.id}')" title="Editar">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('horas','${h.id}','horas ${h.trabajador}')">🗑</button></td></tr>`).join('');
+    // Resolver nombres de capítulos
+    const capNames = await resolverNombresCapitulos(HC.map(h=>h.partida));
+    tb.innerHTML=HC.map(h=>`<tr data-search="${(h.proyecto_id+(h.partida||'')+h.trabajador+(h.descripcion||'')).toLowerCase()}"><td>${fmtD(h.fecha)}</td><td class="td-mono">${h.proyecto_id?`<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:1px 5px;color:var(--navy);font-weight:700" title="Ver expediente" onclick="abrirExpediente('${h.proyecto_id}')">${h.proyecto_id}</button>`:"<span style='color:var(--text-soft)'>—</span>"}</td><td class="td-mono" style="color:var(--copper);font-weight:600">${h.partida ? partidaLabelConNombres(h.partida, capNames) : '<span style=color:var(--text-soft)>—</span>'}</td><td><strong>${h.trabajador||'—'}</strong></td><td class="td-mono">${h.horas}h</td><td class="td-mono">${fmt(h.coste_hora)}</td><td class="td-mono" style="font-weight:700">${fmt(h.total)}</td><td style="color:var(--text-soft)">${h.descripcion||'—'}</td><td><button class="btn btn-ghost btn-icon btn-sm" onclick="editHora('${h.id}')" title="Editar">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('horas','${h.id}','horas ${h.trabajador}')">🗑</button></td></tr>`).join('');
   }catch(e){tb.innerHTML=`<tr><td colspan="8" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
   // Re-apply project filter after load
   filtrarModuloPorProyecto('horas');
@@ -10125,24 +10191,52 @@ function filtrarPartidasHorasTabla(){
 }
 
 // ── Carga partidas (versiones + unidades) al seleccionar proyecto en horas ──
-async function cargarPartidasHora(proyId, valorActual){
-  const sel = document.getElementById('h-partida');
+// ─────────────────────────────────────────────────────
+// HELPERS COMPARTIDOS — Partidas / Capítulos
+// ─────────────────────────────────────────────────────
+
+// Resuelve un array de valores partida y devuelve {uuid: nombreLegible}
+async function resolverNombresCapitulos(partidas) {
+  const capIds = [...new Set((partidas||[]).filter(p=>p&&p.startsWith('cap:')).map(p=>p.slice(4)))];
+  if(!capIds.length) return {};
+  try {
+    const rows = await sbGet('presupuesto_lineas', `?id=in.(${capIds.map(id=>encodeURIComponent(id)).join(',')})&select=id,descripcion`);
+    const map = {};
+    (rows||[]).forEach(r => { map[r.id] = r.descripcion || r.id; });
+    return map;
+  } catch(e) { return {}; }
+}
+
+// Genera etiqueta legible para una partida, usando el mapa de nombres ya resuelto
+function partidaLabelConNombres(partida, capNames) {
+  if(!partida) return '— General';
+  if(partida.startsWith('cap:')) {
+    const uuid = partida.slice(4);
+    return '📁 ' + (capNames[uuid] || uuid.slice(0,8)+'…');
+  }
+  if(partida.match(/^v(\d+)$/)) return '📋 Presupuesto V' + partida.slice(1);
+  return '🏠 ' + partida;
+}
+
+// Carga el selector de partidas genérico (compras, subcontratas, horas)
+// prefix: 'co', 'sc', 'h'   → usa #{prefix}-partida, #{prefix}-capitulo, #{prefix}-capitulo-group
+async function cargarPartidasGenerico(proyId, prefix, valorActual) {
+  const sel = document.getElementById(`${prefix}-partida`);
   if(!sel) return;
-  const pid = proyId || document.getElementById('h-proyecto')?.value;
-  if(!pid){
+  if(!proyId) {
     sel.innerHTML = '<option value="">— General (sin partida) —</option>';
-    _ocultarCapituloGroup();
+    _ocultarCapituloGroupPfx(prefix);
     return;
   }
   sel.innerHTML = '<option value="">Cargando…</option>';
   try {
     const [lineas, unidades] = await Promise.all([
-      sbGet('presupuesto_lineas', `?proyecto_id=eq.${encodeURIComponent(pid)}&select=version&es_capitulo=eq.false`),
-      sbGet('proyecto_unidades', `?proyecto_id=eq.${encodeURIComponent(pid)}&order=orden,ref_unidad&select=ref_unidad,cliente_nombre`)
+      sbGet('presupuesto_lineas', `?proyecto_id=eq.${encodeURIComponent(proyId)}&select=version&es_capitulo=eq.false`),
+      sbGet('proyecto_unidades', `?proyecto_id=eq.${encodeURIComponent(proyId)}&order=orden,ref_unidad&select=ref_unidad,cliente_nombre`)
     ]);
     const versiones = [...new Set((lineas||[]).map(l=>l.version).filter(Boolean))].sort();
     let opts = '<option value="">— General (sin partida) —</option>';
-    if(versiones.length){
+    if(versiones.length) {
       opts += '<optgroup label="📋 Presupuesto / Versiones">';
       versiones.forEach(v => {
         const label = v.match(/^v(\d+)$/) ? `Presupuesto V${v.slice(1)}` : v;
@@ -10150,8 +10244,8 @@ async function cargarPartidasHora(proyId, valorActual){
       });
       opts += '</optgroup>';
     }
-    if(unidades && unidades.length){
-      const p = PC.find(x=>x.proyecto_id===pid);
+    if(unidades && unidades.length) {
+      const p = PC.find(x=>x.proyecto_id===proyId);
       const tipoLabel = (p && p.tipo_unidades) ? p.tipo_unidades : 'Unidades';
       opts += `<optgroup label="🏠 ${tipoLabel}">`;
       unidades.forEach(u => {
@@ -10161,46 +10255,38 @@ async function cargarPartidasHora(proyId, valorActual){
       opts += '</optgroup>';
     }
     sel.innerHTML = opts;
-    // Si el valor actual es un capítulo (cap:uuid), seleccionar la versión y cargar capítulos
-    if(valorActual && valorActual.startsWith('cap:')){
-      // Averiguar a qué versión pertenece el capítulo
+    if(valorActual && valorActual.startsWith('cap:')) {
       const capId = valorActual.slice(4);
       try {
         const capData = await sbGet('presupuesto_lineas', `?id=eq.${capId}&select=version`);
         const capVersion = capData && capData[0] ? capData[0].version : null;
-        if(capVersion && versiones.includes(capVersion)){
+        if(capVersion && versiones.includes(capVersion)) {
           sel.value = capVersion;
-          await cargarCapitulosHora(pid, capVersion, valorActual);
-        } else {
-          _ocultarCapituloGroup();
-        }
-      } catch(e){ _ocultarCapituloGroup(); }
+          await cargarCapitulosGenerico(proyId, capVersion, prefix, valorActual);
+        } else { _ocultarCapituloGroupPfx(prefix); }
+      } catch(e) { _ocultarCapituloGroupPfx(prefix); }
     } else {
       sel.value = valorActual || '';
-      // Si el valor es una versión, cargar capítulos
-      if(valorActual && versiones.includes(valorActual)){
-        await cargarCapitulosHora(pid, valorActual, null);
-      } else {
-        _ocultarCapituloGroup();
-      }
+      if(valorActual && versiones.includes(valorActual)) {
+        await cargarCapitulosGenerico(proyId, valorActual, prefix, null);
+      } else { _ocultarCapituloGroupPfx(prefix); }
     }
-  } catch(e){
+  } catch(e) {
     sel.innerHTML = '<option value="">— General (sin partida) —</option>';
-    _ocultarCapituloGroup();
-    console.warn('cargarPartidasHora error:', e);
+    _ocultarCapituloGroupPfx(prefix);
   }
 }
 
-function _ocultarCapituloGroup(){
-  const g = document.getElementById('h-capitulo-group');
+function _ocultarCapituloGroupPfx(prefix) {
+  const g = document.getElementById(`${prefix}-capitulo-group`);
   if(g) g.style.display = 'none';
-  const c = document.getElementById('h-capitulo');
+  const c = document.getElementById(`${prefix}-capitulo`);
   if(c) c.value = '';
 }
 
-async function cargarCapitulosHora(proyId, version, valorActual){
-  const g = document.getElementById('h-capitulo-group');
-  const c = document.getElementById('h-capitulo');
+async function cargarCapitulosGenerico(proyId, version, prefix, valorActual) {
+  const g = document.getElementById(`${prefix}-capitulo-group`);
+  const c = document.getElementById(`${prefix}-capitulo`);
   if(!g || !c) return;
   c.innerHTML = '<option value="">Cargando…</option>';
   g.style.display = 'block';
@@ -10208,34 +10294,45 @@ async function cargarCapitulosHora(proyId, version, valorActual){
     const caps = await sbGet('presupuesto_lineas',
       `?proyecto_id=eq.${encodeURIComponent(proyId)}&version=eq.${version}&es_capitulo=eq.true&order=orden.asc&select=id,descripcion`);
     let opts = '<option value="">— Todo el presupuesto —</option>';
-    (caps||[]).forEach(cap => {
-      opts += `<option value="cap:${cap.id}">📁 ${cap.descripcion||'Sin nombre'}</option>`;
-    });
+    (caps||[]).forEach(cap => { opts += `<option value="cap:${cap.id}">📁 ${cap.descripcion||'Sin nombre'}</option>`; });
     c.innerHTML = opts;
     if(valorActual) c.value = valorActual;
-  } catch(e){
-    c.innerHTML = '<option value="">— Todo el presupuesto —</option>';
-    console.warn('cargarCapitulosHora error:', e);
-  }
+  } catch(e) { c.innerHTML = '<option value="">— Todo el presupuesto —</option>'; }
+}
+
+// Obtiene el valor final de partida (capítulo si está seleccionado, versión o unidad si no)
+function getPartidaFinalPfx(prefix) {
+  const partida = document.getElementById(`${prefix}-partida`)?.value || null;
+  const capGrp = document.getElementById(`${prefix}-capitulo-group`);
+  const capVal = document.getElementById(`${prefix}-capitulo`)?.value || null;
+  if(capGrp && capGrp.style.display !== 'none' && capVal) return capVal;
+  return partida;
+}
+
+async function onChangePartidaGenerico(prefix) {
+  const sel = document.getElementById(`${prefix}-partida`);
+  const val = sel?.value || '';
+  const pid = document.getElementById(`${prefix}-proyecto`)?.value;
+  _ocultarCapituloGroupPfx(prefix);
+  if(val && val.match(/^v\d+$/) && pid) await cargarCapitulosGenerico(pid, val, prefix, null);
+}
+
+async function onChangeProyectoGenerico(prefix) {
+  const pid = document.getElementById(`${prefix}-proyecto`)?.value;
+  await cargarPartidasGenerico(pid, prefix, null);
+}
+
+async function cargarPartidasHora(proyId, valorActual){
+  await cargarPartidasGenerico(proyId || document.getElementById('h-proyecto')?.value, 'h', valorActual);
 }
 
 async function onChangeHPartida(){
-  const sel = document.getElementById('h-partida');
-  const val = sel?.value || '';
-  const pid = document.getElementById('h-proyecto')?.value;
-  _ocultarCapituloGroup();
-  if(val && val.match(/^v\d+$/) && pid){
-    await cargarCapitulosHora(pid, val, null);
-  }
+  await onChangePartidaGenerico('h');
 }
 
 async function saveHora(){
   const id=document.getElementById('h-id')?.value;
-  const _hPartida = document.getElementById('h-partida')?.value||null;
-  const _hCapitulo = document.getElementById('h-capitulo')?.value||null;
-  const _hCapGrp = document.getElementById('h-capitulo-group');
-  // Si hay capítulo seleccionado (y el grupo está visible), guardar cap:uuid; si no, guardar la versión o la unidad
-  const partidaFinal = (_hCapGrp && _hCapGrp.style.display!=='none' && _hCapitulo) ? _hCapitulo : _hPartida;
+  const partidaFinal = getPartidaFinalPfx('h');
   const d={fecha:document.getElementById('h-fecha').value||new Date().toISOString().split('T')[0],proyecto_id:document.getElementById('h-proyecto').value||null,partida:partidaFinal||null,trabajador:document.getElementById('h-trab').value,horas:parseFloat(document.getElementById('h-horas').value)||0,coste_hora:parseFloat(document.getElementById('h-coste').value)||18,descripcion:document.getElementById('h-desc').value};
   try{
     if(id){await sb('horas','PATCH',d,null,`?id=eq.${id}`);toast('Horas actualizadas ✅');}
