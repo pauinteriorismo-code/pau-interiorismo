@@ -3902,6 +3902,49 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
   </div>
 </div>
 
+<!-- PANEL MÚLTIPLE ENTREGAS A CUENTA -->
+<div class="overlay" id="m-entregas-panel" style="z-index:500">
+  <div class="modal" style="width:760px;max-width:96vw">
+    <div class="modal-head">
+      <div class="modal-title">💵 Entregas a cuenta del proyecto</div>
+      <button class="modal-close" onclick="closeModal('m-entregas-panel')">×</button>
+    </div>
+    <div class="modal-body" style="padding:0">
+      <!-- Tabla de entregas existentes + nuevas -->
+      <table style="width:100%;border-collapse:collapse;font-size:13px" id="ea-tabla">
+        <thead>
+          <tr style="background:var(--navy);color:#fff">
+            <th style="padding:9px 10px;text-align:left;font-weight:600;width:120px">Fecha</th>
+            <th style="padding:9px 10px;text-align:left;font-weight:600">Concepto</th>
+            <th style="padding:9px 10px;text-align:right;font-weight:600;width:130px">Importe (s/IVA)</th>
+            <th style="padding:9px 10px;text-align:center;font-weight:600;width:50px"></th>
+          </tr>
+        </thead>
+        <tbody id="ea-tabla-body"></tbody>
+        <tfoot>
+          <tr style="background:#f5eeff;border-top:2px solid #c9a0e0">
+            <td colspan="2" style="padding:10px;font-weight:700;color:#7b3fa0;font-size:13px">TOTAL ENTREGAS</td>
+            <td style="padding:10px;text-align:right;font-weight:700;color:#7b3fa0;font-size:14px" id="ea-total-footer">0,00 €</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+      <!-- Botón añadir fila -->
+      <div style="padding:12px 14px;border-top:1px solid var(--border)">
+        <button class="btn btn-ghost btn-sm" onclick="eaAnadirFila()" style="color:#7b3fa0;border-color:#c9a0e0">＋ Añadir entrega</button>
+        <span style="font-size:11px;color:var(--text-soft);margin-left:10px">Máx. 10 entregas por proyecto</span>
+      </div>
+      <div style="background:#f5eeff;border-top:1px solid #c9a0e0;padding:10px 14px;font-size:11px;color:#7b3fa0">
+        💡 Las entregas a cuenta se descuentan de la base del presupuesto, sin IVA. No generan factura.
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('m-entregas-panel')">Cerrar</button>
+      <button class="btn btn-primary" style="background:#7b3fa0" onclick="eaGuardarTodas()">💾 Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
 <!-- PRESUPUESTO CAPÍTULO -->
 <div class="overlay" id="m-pres-cap"><div class="modal" style="width:400px">
   <div class="modal-head"><div class="modal-title">📂 Nuevo capítulo</div><button class="modal-close" onclick="closeModal(&#39;m-pres-cap&#39;)">×</button></div>
@@ -4341,7 +4384,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div style="background:#fff;border-radius:8px;padding:10px 14px;border:1px solid var(--border);position:relative">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
           <div style="font-size:10px;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px">Entregas a cuenta</div>
-          <button onclick="abrirModalEntrega()" style="background:var(--navy);color:#fff;border:none;border-radius:50%;width:16px;height:16px;font-size:11px;cursor:pointer;line-height:16px;padding:0;text-align:center" title="Registrar entrega a cuenta">＋</button>
+          <button onclick="abrirPanelEntregas()" style="background:var(--navy);color:#fff;border:none;border-radius:50%;width:16px;height:16px;font-size:11px;cursor:pointer;line-height:16px;padding:0;text-align:center" title="Registrar entrega a cuenta">＋</button>
         </div>
         <div id="exp-k-entrega" style="font-size:18px;font-weight:800;color:#7b3fa0">—</div>
       </div>
@@ -4837,7 +4880,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 
 <div class="toast error" id="toast">Error al cargar datos: </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script>
@@ -12489,7 +12532,7 @@ async function enviarFacturaEmail(id){
         max_tokens:1000,
         messages:[{role:'user',content:`Send an email using Gmail MCP.
 To: ${emailDest.trim()}
-From: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="f6868493858386839385829985b68697839f988293849f99849f859b99d89385">[email&#160;protected]</a>  
+From: presupuestos@pauinteriorismo.es  
 Subject: Factura ${f.num_factura} - PAU INTERIORISMO S.L.
 Body (HTML): ${htmlFactura}
 
@@ -14826,7 +14869,7 @@ const IMEX_FREGADEROS_DTO = 0.40;
 
 // ══════════════════════════════════════════════════════════════
 // CATÁLOGO GENEXIA — ESPEJOS LED 2026
-// Fabricante: Genexia Deco · <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="ee87808881ae898b808b96878f8a8b8d81c08d8183">[email&#160;protected]</a>
+// Fabricante: Genexia Deco · administracion@pauinteriorismo.es
 // Dto PAU: 40% sobre PVP catálogo
 // ══════════════════════════════════════════════════════════════
 const GENEXIA_DTO = 0.40;
@@ -19572,6 +19615,115 @@ async function borrarEntrega(){
   }catch(e){ toast('Error: '+e.message,'error'); }
 }
 
+// ═══════════════════════════════════════════
+// PANEL MÚLTIPLE ENTREGAS A CUENTA
+// ═══════════════════════════════════════════
+let _eaFilasNuevas = []; // filas pendientes de guardar
+
+function abrirPanelEntregas(){
+  const pid = _expProyId;
+  if(!pid){ toast('Selecciona un proyecto','error'); return; }
+  const existentes = (EAC||[]).filter(e=>e.proyecto_id===pid).sort((a,b)=>a.fecha>b.fecha?1:-1);
+  _eaFilasNuevas = [];
+  const tbody = document.getElementById('ea-tabla-body');
+  tbody.innerHTML = '';
+
+  // Filas de entregas existentes
+  existentes.forEach(e => _eaRenderFila(e, false));
+
+  // Si no hay entregas, añadir una fila vacía automáticamente
+  if(existentes.length === 0) eaAnadirFila();
+
+  _eaActualizarTotal();
+  openModal('m-entregas-panel');
+}
+
+function _eaRenderFila(e, isNew){
+  const tbody = document.getElementById('ea-tabla-body');
+  const tr = document.createElement('tr');
+  tr.dataset.id = e.id || '';
+  tr.dataset.nuevo = isNew ? '1' : '0';
+  tr.style.borderBottom = '1px solid #f0f0f0';
+  tr.innerHTML = `
+    <td style="padding:6px 8px"><input type="date" value="${e.fecha||new Date().toISOString().split('T')[0]}" style="border:1px solid #ddd;border-radius:4px;padding:4px 6px;font-size:12px;width:115px" class="ea-f-fecha"></td>
+    <td style="padding:6px 8px"><input type="text" value="${(e.concepto||'').replace(/"/g,'&quot;')}" placeholder="Ej: 1ª entrega · Transferencia" style="border:1px solid #ddd;border-radius:4px;padding:4px 8px;font-size:12px;width:100%" class="ea-f-concepto"></td>
+    <td style="padding:6px 8px"><input type="number" step="0.01" value="${e.importe||''}" placeholder="0,00" style="border:1px solid #ddd;border-radius:4px;padding:4px 8px;font-size:13px;font-weight:700;color:#7b3fa0;text-align:right;width:120px" class="ea-f-importe" oninput="_eaActualizarTotal()"></td>
+    <td style="padding:6px 8px;text-align:center"><button onclick="_eaBorrarFila(this)" style="background:none;border:none;cursor:pointer;color:#c0392b;font-size:16px;line-height:1" title="Eliminar">🗑</button></td>
+  `;
+  tbody.appendChild(tr);
+}
+
+function eaAnadirFila(){
+  const tbody = document.getElementById('ea-tabla-body');
+  if(tbody.children.length >= 10){ toast('Máximo 10 entregas por proyecto','error'); return; }
+  _eaRenderFila({ fecha: new Date().toISOString().split('T')[0], concepto: '', importe: '' }, true);
+}
+
+function _eaBorrarFila(btn){
+  const tr = btn.closest('tr');
+  const id = tr.dataset.id;
+  if(id && tr.dataset.nuevo === '0'){
+    // Fila existente — marcar para borrar
+    tr.style.opacity = '0.35';
+    tr.style.textDecoration = 'line-through';
+    tr.dataset.borrar = '1';
+    btn.textContent = '↩️';
+    btn.title = 'Restaurar';
+    btn.onclick = () => {
+      tr.style.opacity = ''; tr.style.textDecoration = '';
+      tr.dataset.borrar = '0';
+      btn.textContent = '🗑'; btn.title = 'Eliminar';
+      btn.onclick = () => _eaBorrarFila(btn);
+    };
+  } else {
+    tr.remove();
+  }
+  _eaActualizarTotal();
+}
+
+function _eaActualizarTotal(){
+  let total = 0;
+  document.querySelectorAll('#ea-tabla-body tr:not([data-borrar="1"]) .ea-f-importe').forEach(inp => {
+    total += parseFloat(inp.value)||0;
+  });
+  document.getElementById('ea-total-footer').textContent = fmtES(total) + ' €';
+}
+
+async function eaGuardarTodas(){
+  const pid = _expProyId;
+  const btn = document.querySelector('#m-entregas-panel .btn-primary');
+  btn.disabled = true; btn.textContent = 'Guardando...';
+
+  try {
+    const filas = document.querySelectorAll('#ea-tabla-body tr');
+    for(const tr of filas){
+      const id      = tr.dataset.id;
+      const borrar  = tr.dataset.borrar === '1';
+      const fecha   = tr.querySelector('.ea-f-fecha')?.value || new Date().toISOString().split('T')[0];
+      const concepto= tr.querySelector('.ea-f-concepto')?.value || 'Entrega a cuenta';
+      const importe = parseFloat(tr.querySelector('.ea-f-importe')?.value)||0;
+
+      if(borrar && id){
+        await sbDelete('entregas_cuenta', id);
+      } else if(!borrar){
+        if(!importe) continue; // fila vacía, ignorar
+        const d = { proyecto_id: pid, fecha, concepto: concepto||'Entrega a cuenta', importe, notas: '' };
+        if(id){ await sb('entregas_cuenta','PATCH',d,null,`?id=eq.${id}`); }
+        else   { await sbPost('entregas_cuenta', d); }
+      }
+    }
+    toast('✅ Entregas guardadas correctamente');
+    closeModal('m-entregas-panel');
+    await loadEntregas();
+    await calcExpKPIs(pid);
+    expTab('resumen');
+  } catch(e){
+    toast('Error: '+e.message,'error');
+  } finally {
+    btn.disabled = false; btn.textContent = '💾 Guardar cambios';
+  }
+}
+
 async function calcExpKPIs(proyId){
   // Presupuesto: calcula desglose por versión, solo suma las marcadas
   _presDesglobeGlobal = {};
@@ -19764,7 +19916,7 @@ function renderExpResumen(body){
   <div style="margin-top:16px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
       <div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px">💵 Entregas a cuenta del cliente</div>
-      <button class="btn btn-sm" style="background:#7b3fa0;color:#fff;border:none;font-size:11px;padding:3px 10px;border-radius:6px;cursor:pointer" onclick="abrirModalEntrega()">＋ Nueva</button>
+      <button class="btn btn-sm" style="background:#7b3fa0;color:#fff;border:none;font-size:11px;padding:3px 10px;border-radius:6px;cursor:pointer" onclick="abrirPanelEntregas()">＋ Nueva / Gestionar</button>
     </div>
     ${eaResProy.map(e=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #f5f5f5;font-size:12px">
       <span style="color:var(--text-soft)">${fmtD(e.fecha)}</span>
@@ -19774,7 +19926,7 @@ function renderExpResumen(body){
     </div>`).join('')}
     <div style="display:flex;justify-content:flex-end;padding:8px 0;font-size:13px;font-weight:700;color:#7b3fa0;border-top:2px solid #e8d8f5">Total: ${fmt(eaResTotal)}</div>
   </div>
-  ` : `<div style="margin-top:14px;display:flex;align-items:center;justify-content:space-between"><span style="font-size:11px;color:var(--text-soft)">Sin entregas a cuenta registradas</span><button class="btn btn-sm" style="background:#7b3fa0;color:#fff;border:none;font-size:11px;padding:3px 10px;border-radius:6px;cursor:pointer" onclick="abrirModalEntrega()">💵 Registrar entrega</button></div>`}
+  ` : `<div style="margin-top:14px;display:flex;align-items:center;justify-content:space-between"><span style="font-size:11px;color:var(--text-soft)">Sin entregas a cuenta registradas</span><button class="btn btn-sm" style="background:#7b3fa0;color:#fff;border:none;font-size:11px;padding:3px 10px;border-radius:6px;cursor:pointer" onclick="abrirPanelEntregas()">💵 Registrar entrega</button></div>`}
   `;
 }
 
@@ -22779,8 +22931,4 @@ function vpGuardarPDF(){
 
       <div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:4px">Retribución</div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px">
-        <div><label class="form-label">Bruto / mes (€)</label><input class="form-input" id="trab-bruto" type="number" min="0" step="0.01" oninput="calcNomina()"></div>
-        <div><label class="form-label">IRPF %</label><input class="form-input" id="trab-irpf" type="number" value="15" min="0" max="50" step="0.01" oninput="calcNomina()"></div>
-        <div><label class="form-label">SS trabajador %</label><input class="form-input" id="trab-ss-trab" type="number" value="6.35" step="0.01" oninput="calcNomina()"></div>
-        <div><label class="form-label">SS empresa %</label><input class="form-input" id="trab-ss-emp" type="number" value="30" step="0.01" oninput="calcNomina()"></div>
-        <div><label class="form-label">Paga extra (€)</label><input class="form-input" id="trab
+        <div><label class="form-label">Bruto / mes (€)</label><input class="form-input" id="trab-bruto" type="number" min="0" step="0.01" oni
