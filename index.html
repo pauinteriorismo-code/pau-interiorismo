@@ -2973,14 +2973,15 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     <div class="view" id="view-horas">
       <div class="search-bar" style="gap:8px;flex-wrap:wrap;align-items:center">
         <select class="form-input" style="width:200px;flex-shrink:0" id="filter-cliente-horas" onchange="cascadaClienteProyecto(&#39;horas&#39;)"><option value="">👤 Cliente…</option><option value="CLI-H015">4F Fernando</option><option value="CLI-H014">4G daniel Dominguez</option><option value="CLI-H018">Amparo Forner Pastor</option><option value="CLI-H026">Ana María Palau Sastre</option><option value="CLI-H031">Belinda</option><option value="CLI-H004">CARMELO RODRIGUEZ VILA</option><option value="CLI-H032">Daniel palma gallardo</option><option value="CLI-H003">DESIRE NAVARRO MARI</option><option value="CLI-033">Estudi Encis SL</option><option value="CLI-H009">FERNANDO JOSE SAN GERMAN IBORRA</option><option value="CLI-H029">Francisco Navarro Garcia</option><option value="CLI-H019">Jose Antonio Martos Ortiz</option><option value="CLI-H013">Jose Manuel Garcia Seller Nº 7 Pta 4</option><option value="CLI-H030">Jose Manuel Pinzón Valbuena</option><option value="CLI-H007">Juanmi</option><option value="CLI-H012">Júlia Fabregat Mestre</option><option value="CLI-H028">Lara Blasco - Lara Blasco Iborra</option><option value="CLI-H027">Laura Doria Gomez</option><option value="CLI-H021">MERCEDES HIGUERAS GOMEZ</option><option value="CLI-H024">MICHELL BENITO</option><option value="CLI-H022">Miguel cocina</option><option value="CLI-001">Miguel Zaragozá Garzón</option><option value="CLI-H023">Miguel Zaragozá Garzón</option><option value="CLI-H002">Mª PAU BRAVO JOSE</option><option value="CLI-H005">PATRI</option><option value="CLI-H020">Rafael Francés Llàcer</option><option value="CLI-H010">REME IBORRA GIL</option><option value="CLI-H001">ROSA CHANZA SOLER</option><option value="CLI-H016">Sara Muñoz Abella</option><option value="CLI-H011">TONI TATAY DAVID</option><option value="CLI-H025">URKO Y FRANCESC</option><option value="CLI-H008">VICENT MARI SERRA</option><option value="CLI-034">Vicenta Baixauli Hernandez</option><option value="CLI-002">Vicenta Folch Gil</option><option value="CLI-H006">Vicenta Folch Gil</option><option value="CLI-H017">Yasmina Cabezuelo Alaminos</option></select>
-        <select class="form-input" style="width:220px;flex-shrink:0" id="filter-proyecto-horas" onchange="filtrarModuloPorProyecto(&#39;horas&#39;)"><option value="">📁 Proyecto…</option><option value="PRY-001">PRY-001 · Mobiliario de cocina</option><option value="PRY-002">PRY-002 · Rehabilitación lateral fachada</option><option value="PRY-003">PRY-003 · Pavimento/revestimiento vivienda.</option><option value="PRY-004">PRY-004 · Rehabilitación estudio</option><option value="PRY-005">PRY-005 · Trabajos en terraza</option></select>
-        <div class="search-wrap" style="flex:1;min-width:160px"><span class="search-icon">🔍</span><input class="form-input" id="search-horas" placeholder="Buscar…" oninput="filterTable(&#39;horas-tbody&#39;,&#39;search-horas&#39;)"></div>
+        <select class="form-input" style="width:220px;flex-shrink:0" id="filter-proyecto-horas" onchange="filtrarModuloPorProyecto('horas');cargarFiltroPartidaHoras()"><option value="">📁 Proyecto…</option><option value="PRY-001">PRY-001 · Mobiliario de cocina</option><option value="PRY-002">PRY-002 · Rehabilitación lateral fachada</option><option value="PRY-003">PRY-003 · Pavimento/revestimiento vivienda.</option><option value="PRY-004">PRY-004 · Rehabilitación estudio</option><option value="PRY-005">PRY-005 · Trabajos en terraza</option></select>
+        <select class="form-input" style="width:160px;flex-shrink:0" id="filter-partida-horas" onchange="filtrarPartidasHorasTabla()"><option value="">🔖 Partida…</option></select>
+        <div class="search-wrap" style="flex:1;min-width:160px"><span class="search-icon">🔍</span><input class="form-input" id="search-horas" placeholder="Buscar…" oninput="filterTable('horas-tbody','search-horas')"></div>
         <button class="btn btn-ghost btn-sm" onclick="exportarExcel('horas')" style="font-size:11px">📊 Excel</button>
 <button class="btn btn-primary" onclick="openModal(&#39;m-hora&#39;)">＋ Registrar horas</button> <a href="manual_obra.html" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;padding:5px 8px" title="Manual">❓</a>
       </div>
       <div class="card">
         <div class="card-header"><div class="card-title">⏱ Horas<span id="horas-count" style="font-size:11px;font-weight:400;color:var(--text-soft);margin-left:6px"></span></div></div>
-        <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Proyecto</th><th>Trabajador</th><th>Horas</th><th>€/h</th><th>Total</th><th>Descripción</th><th></th></tr></thead>
+        <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Proyecto</th><th>Partida</th><th>Trabajador</th><th>Horas</th><th>€/h</th><th>Total</th><th>Descripción</th><th></th></tr></thead>
         <tbody id="horas-tbody"><tr><td colspan="8" class="loading">Cargando…</td></tr></tbody></table></div>
       </div>
     </div>
@@ -4437,7 +4438,8 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
   <div class="modal-body"><input type="hidden" id="h-id">
     <div class="form-grid">
       <div class="form-group"><label class="form-label">Fecha</label><input class="form-input" id="h-fecha" type="date"></div>
-      <div class="form-group"><label class="form-label">Proyecto</label><select class="form-input" id="h-proyecto"><option value="">Seleccionar…</option><option value="PRY-001">PRY-001 · Mobiliario de cocina</option><option value="PRY-002">PRY-002 · Rehabilitación lateral fachada</option><option value="PRY-003">PRY-003 · Pavimento/revestimiento vivienda.</option><option value="PRY-004">PRY-004 · Rehabilitación estudio</option><option value="PRY-005">PRY-005 · Trabajos en terraza</option></select></div>
+      <div class="form-group"><label class="form-label">Proyecto</label><select class="form-input" id="h-proyecto" onchange="cargarPartidasHora()"><option value="">Seleccionar…</option><option value="PRY-001">PRY-001 · Mobiliario de cocina</option><option value="PRY-002">PRY-002 · Rehabilitación lateral fachada</option><option value="PRY-003">PRY-003 · Pavimento/revestimiento vivienda.</option><option value="PRY-004">PRY-004 · Rehabilitación estudio</option><option value="PRY-005">PRY-005 · Trabajos en terraza</option></select></div>
+      <div class="form-group"><label class="form-label">Partida / Unidad</label><select class="form-input" id="h-partida"><option value="">— General (sin partida) —</option></select></div>
       <div class="form-group"><label class="form-label">Trabajador</label><select class="form-input" id="h-trab"><option value="">Seleccionar…</option><option value="Francisco Gascón Gil">Francisco Gascón Gil</option><option value="Jose Asins Primo">Jose Asins Primo</option><option value="Julio Alemany Fort">Julio Alemany Fort</option><option value="María Paz Primo Iborra">María Paz Primo Iborra</option><option value="Raúl Gascón Gil">Raúl Gascón Gil</option><option value="Salvador Aguado Simó">Salvador Aguado Simó</option></select></div>
       <div class="form-group"><label class="form-label">Horas</label><input class="form-input" id="h-horas" type="number" step="0.5" placeholder="8"></div>
       <div class="form-group"><label class="form-label">€/hora</label><input class="form-input" id="h-coste" type="number" value="18"></div>
@@ -9831,6 +9833,13 @@ function editHora(id) {
   document.getElementById('h-id').value       = h.id;
   document.getElementById('h-fecha').value    = h.fecha || '';
   document.getElementById('h-proyecto').value = h.proyecto_id || '';
+  // Cargar partidas y luego restaurar valor
+  if(h.proyecto_id){
+    cargarPartidasHora(h.proyecto_id, h.partida||'');
+  } else {
+    const sel=document.getElementById('h-partida');
+    if(sel){ sel.innerHTML='<option value="">— General (sin partida) —</option>'; sel.value=''; }
+  }
   document.getElementById('h-trab').value     = h.trabajador || '';
   document.getElementById('h-horas').value    = h.horas || '';
   document.getElementById('h-coste').value    = h.coste_hora || 18;
@@ -9867,7 +9876,7 @@ async function loadHoras(){
     HC=await sbGet('horas','?order=fecha.desc');
     document.getElementById('horas-count').textContent=HC.length+' registros';
     if(!HC.length){tb.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="empty-icon">⏱</div><div class="empty-text">Sin horas registradas</div><button class="btn btn-primary" onclick="openModal('m-hora')">＋ Registrar</button></div></td></tr>`;return;}
-    tb.innerHTML=HC.map(h=>`<tr data-search="${(h.proyecto_id+h.trabajador+h.descripcion).toLowerCase()}"><td>${fmtD(h.fecha)}</td><td class="td-mono">${h.proyecto_id?`<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:1px 5px;color:var(--navy);font-weight:700" title="Ver expediente" onclick="abrirExpediente('${h.proyecto_id}')">${h.proyecto_id}</button>`:"<span style='color:var(--text-soft)'>—</span>"}</td><td><strong>${h.trabajador||'—'}</strong></td><td class="td-mono">${h.horas}h</td><td class="td-mono">${fmt(h.coste_hora)}</td><td class="td-mono" style="font-weight:700">${fmt(h.total)}</td><td style="color:var(--text-soft)">${h.descripcion||'—'}</td><td><button class="btn btn-ghost btn-icon btn-sm" onclick="editHora('${h.id}')" title="Editar">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('horas','${h.id}','horas ${h.trabajador}')">🗑</button></td></tr>`).join('');
+    tb.innerHTML=HC.map(h=>`<tr data-search="${(h.proyecto_id+(h.partida||'')+h.trabajador+(h.descripcion||'')).toLowerCase()}"><td>${fmtD(h.fecha)}</td><td class="td-mono">${h.proyecto_id?`<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:1px 5px;color:var(--navy);font-weight:700" title="Ver expediente" onclick="abrirExpediente('${h.proyecto_id}')">${h.proyecto_id}</button>`:"<span style='color:var(--text-soft)'>—</span>"}</td><td class="td-mono" style="color:var(--copper);font-weight:600">${h.partida||'<span style=color:var(--text-soft)>—</span>'}</td><td><strong>${h.trabajador||'—'}</strong></td><td class="td-mono">${h.horas}h</td><td class="td-mono">${fmt(h.coste_hora)}</td><td class="td-mono" style="font-weight:700">${fmt(h.total)}</td><td style="color:var(--text-soft)">${h.descripcion||'—'}</td><td><button class="btn btn-ghost btn-icon btn-sm" onclick="editHora('${h.id}')" title="Editar">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('horas','${h.id}','horas ${h.trabajador}')">🗑</button></td></tr>`).join('');
   }catch(e){tb.innerHTML=`<tr><td colspan="8" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
   // Re-apply project filter after load
   filtrarModuloPorProyecto('horas');
@@ -10055,9 +10064,80 @@ async function exportarPresupuestoPDF(){
 }
 
 
+// ── Filtro de partida en la tabla de horas ──
+function cargarFiltroPartidaHoras(){
+  const pid = document.getElementById('filter-proyecto-horas')?.value;
+  const sel = document.getElementById('filter-partida-horas');
+  if(!sel) return;
+  if(!pid || !HC){
+    sel.innerHTML = '<option value="">🔖 Partida…</option>';
+    return;
+  }
+  // Collect unique partidas from loaded records for this project
+  const partidas = [...new Set(HC.filter(h=>h.proyecto_id===pid && h.partida).map(h=>h.partida))].sort();
+  let opts = '<option value="">🔖 Partida…</option>';
+  if(partidas.length) opts += partidas.map(p=>`<option value="${p}">${p}</option>`).join('');
+  sel.innerHTML = opts;
+}
+
+function filtrarPartidasHorasTabla(){
+  const partida = document.getElementById('filter-partida-horas')?.value || '';
+  const rows = document.querySelectorAll('#horas-tbody tr');
+  rows.forEach(tr => {
+    if(!partida){ tr.style.display=''; return; }
+    const ds = tr.dataset.search || '';
+    tr.style.display = ds.includes(partida.toLowerCase()) ? '' : 'none';
+  });
+}
+
+// ── Carga partidas (versiones + unidades) al seleccionar proyecto en horas ──
+async function cargarPartidasHora(proyId, valorActual){
+  const sel = document.getElementById('h-partida');
+  if(!sel) return;
+  const pid = proyId || document.getElementById('h-proyecto')?.value;
+  if(!pid){
+    sel.innerHTML = '<option value="">— General (sin partida) —</option>';
+    return;
+  }
+  sel.innerHTML = '<option value="">Cargando…</option>';
+  try {
+    // Obtener versiones activas (con al menos 1 línea)
+    const lineas = await sbGet('presupuesto_lineas', `?proyecto_id=eq.${encodeURIComponent(pid)}&select=version&es_capitulo=eq.false`);
+    const versiones = [...new Set((lineas||[]).map(l=>l.version).filter(Boolean))].sort();
+    // Obtener unidades del proyecto
+    const unidades = await sbGet('proyecto_unidades', `?proyecto_id=eq.${encodeURIComponent(pid)}&order=orden,ref_unidad&select=ref_unidad,cliente_nombre`);
+    // Construir opciones
+    let opts = '<option value="">— General (sin partida) —</option>';
+    if(versiones.length){
+      opts += '<optgroup label="📋 Presupuesto / Versiones">';
+      versiones.forEach(v => {
+        const label = v.match(/^v\d+$/) ? `Presupuesto ${v.toUpperCase()}` : v;
+        opts += `<option value="${v}">${label}</option>`;
+      });
+      opts += '</optgroup>';
+    }
+    if(unidades && unidades.length){
+      const p = PC.find(x=>x.proyecto_id===pid);
+      const tipoLabel = (p && p.tipo_unidades) ? p.tipo_unidades : 'Unidades';
+      opts += `<optgroup label="🏠 ${tipoLabel}">`;
+      unidades.forEach(u => {
+        const lbl = u.ref_unidad + (u.cliente_nombre ? ' · ' + u.cliente_nombre : '');
+        opts += `<option value="${u.ref_unidad}">${lbl}</option>`;
+      });
+      opts += '</optgroup>';
+    }
+    sel.innerHTML = opts;
+    if(valorActual !== undefined) sel.value = valorActual || '';
+  } catch(e){
+    sel.innerHTML = '<option value="">— General (sin partida) —</option>';
+    console.warn('cargarPartidasHora error:', e);
+  }
+}
+
 async function saveHora(){
   const id=document.getElementById('h-id')?.value;
-  const d={fecha:document.getElementById('h-fecha').value||new Date().toISOString().split('T')[0],proyecto_id:document.getElementById('h-proyecto').value||null,trabajador:document.getElementById('h-trab').value,horas:parseFloat(document.getElementById('h-horas').value)||0,coste_hora:parseFloat(document.getElementById('h-coste').value)||18,descripcion:document.getElementById('h-desc').value};
+  const _hPartida = document.getElementById('h-partida')?.value||null;
+  const d={fecha:document.getElementById('h-fecha').value||new Date().toISOString().split('T')[0],proyecto_id:document.getElementById('h-proyecto').value||null,partida:_hPartida||null,trabajador:document.getElementById('h-trab').value,horas:parseFloat(document.getElementById('h-horas').value)||0,coste_hora:parseFloat(document.getElementById('h-coste').value)||18,descripcion:document.getElementById('h-desc').value};
   try{
     if(id){await sb('horas','PATCH',d,null,`?id=eq.${id}`);toast('Horas actualizadas ✅');}
     else{await sbPost('horas',d);toast('Horas registradas ✅');}
