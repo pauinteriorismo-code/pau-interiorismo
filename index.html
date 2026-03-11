@@ -16,7 +16,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="PAU Gestión">
 <!-- manifest PWA desactivado para evitar caché -->
-<!-- PAU INTERIORISMO v76 · Build: 2026-02-28 10:00 -->
+<!-- PAU INTERIORISMO v77 · Build: 2026-02-28 10:00 -->
 <title>PAU INTERIORISMO - Gestión v20260228-0858</title>
 <style>
 :root{--navy:#1a2a3a;--navy-mid:#27405b;--navy-light:#3d5a78;--blue-soft:#b8cce4;--blue-light:#e8f4ff;--cream:#f7f4ef;--sand:#ede8df;--copper:#b87333;--copper-light:#f4e8da;--green:#1e6b3d;--green-soft:#d5e8d4;--amber:#7d6608;--amber-soft:#fff2cc;--red:#7b241c;--red-soft:#fce8e6;--white:#fff;--text:#1a2a3a;--text-mid:#4a5f72;--text-soft:#8a9aaa;--border:#dce6f0;--radius:8px;--radius-sm:4px;--shadow:0 1px 3px rgba(26,42,58,.08),0 4px 16px rgba(26,42,58,.06);--shadow-lg:0 8px 32px rgba(26,42,58,.14);--sidebar:220px;--header:56px}
@@ -3523,7 +3523,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     </div>
     <div class="card-body">
       <div class="info-box" style="margin-bottom:12px">
-        📥 <strong>Santander:</strong> Banca Online → Mis cuentas → Extractos → Norma 43 → Descargar fichero .n43 (o usa también CSV). El sistema cruzará automáticamente los movimientos con tus facturas y compras pendientes por <strong>importe y fecha</strong>.
+        📥 <strong>Santander:</strong> Banca Online → Mis cuentas → Movimientos → icono descarga → <strong>TXT</strong>. El sistema cruzará automáticamente los movimientos con tus facturas y compras pendientes por <strong>importe y fecha</strong>.
       </div>
       <div style="display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap">
         <div style="flex:1;min-width:200px">
@@ -3533,7 +3533,8 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
             <option value="caixabank">CaixaBank</option>
             <option value="santander">Santander</option>
             <option value="sabadell">Banco Sabadell</option>
-            <option value="norma43">Norma 43 (Santander estándar) ⭐</option>
+            <option value="santander_txt">Santander TXT ⭐ (recomendado)</option>
+            <option value="norma43">Norma 43 (.43)</option>
             <option value="generico">Genérico (fecha, concepto, importe)</option>
           </select>
           <label class="form-label">Archivo CSV del extracto</label>
@@ -13090,7 +13091,9 @@ function procesarCSV(){
       preview.style.display='block';
       preview.textContent = text.split('\n').slice(0,5).join('\n');
     }
-    movimientosBanco = formato === 'norma43' ? parsearNorma43(text) : parsearCSV(text, formato);
+    movimientosBanco = formato === 'norma43' ? parsearNorma43(text)
+      : formato === 'santander_txt' ? parsearSantanderTXT(text)
+      : parsearCSV(text, formato);
     if(!movimientosBanco.length){
       toast('No se encontraron movimientos en el CSV','error'); return;
     }
@@ -13154,6 +13157,59 @@ function parsearCSV(texto, formato){
 }
 
 
+
+
+// ─── PARSER SANTANDER TXT ─────────────────────────────────────
+function parsearSantanderTXT(texto) {
+  const lineas = texto.split('\n').map(l => l.trim());
+  const movimientos = [];
+  let cuentaIBAN = '';
+  let enMovimientos = false;
+
+  // Extraer IBAN de la primera línea
+  const ibanMatch = texto.match(/ES\d{2}[\s\d]+/);
+  if (ibanMatch) cuentaIBAN = ibanMatch[0].trim();
+
+  for (const linea of lineas) {
+    // Detectar cabecera de columnas
+    if (linea.startsWith('Fecha Operación')) { enMovimientos = true; continue; }
+    if (!enMovimientos) continue;
+    if (!linea || linea.length < 20) continue;
+
+    // Formato: Fecha Op | Fecha Valor | Código | Concepto | Importe EUR | Saldo | ...
+    // Fecha: dd/mm/yyyy al inicio
+    const fechaMatch = linea.match(/^(\d{2}\/\d{2}\/\d{4})/);
+    if (!fechaMatch) continue;
+
+    const fecha = normalizarFecha(fechaMatch[1]);
+
+    // Importe: buscar patrón "-X.XXX,XX EUR" o "X.XXX,XX EUR"
+    const importeMatch = linea.match(/(-?[\d.]+,\d{2})\s+EUR/);
+    if (!importeMatch) continue;
+    const importe = parseFloat(
+      importeMatch[1].replace(/\./g, '').replace(',', '.')
+    );
+
+    // Concepto: todo el texto entre la fecha valor+código y el importe
+    // Quitar fecha op, fecha valor (2 fechas), código (3 dígitos), extraer concepto
+    const sinFechas = linea.replace(/^\d{2}\/\d{2}\/\d{4}\s+\d{2}\/\d{2}\/\d{4}\s+\d+\s+/, '');
+    const importeIdx = sinFechas.indexOf(importeMatch[0]);
+    const concepto = importeIdx > 0
+      ? sinFechas.substring(0, importeIdx).trim().replace(/\s+/g, ' ')
+      : sinFechas.split(/\s{3,}/)[0].trim();
+
+    movimientos.push({
+      fecha,
+      concepto: concepto || '—',
+      importe,
+      saldo: 0,
+      referencia: '',
+      cuenta_iban: cuentaIBAN
+    });
+  }
+
+  return movimientos;
+}
 
 // ─── PARSER NORMA 43 ──────────────────────────────────────────
 function parsearNorma43(texto) {
