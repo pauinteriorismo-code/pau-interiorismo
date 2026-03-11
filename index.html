@@ -22989,15 +22989,25 @@ async function enviarDocumentoEmail(){
   st.textContent='Conectando con servidor de envío…';
 
   try{
-    const resp = await fetch(`${SB_EDGE}/send-document-email`, {
+    // Enviar vía Resend directamente
+    const fromDisplay = docType==='presupuesto' ? 'PAU INTERIORISMO <presupuestos@pauinteriorismo.es>'
+                      : 'PAU INTERIORISMO <administracion@pauinteriorismo.es>';
+
+    const payload = { from: fromDisplay, to:[to], subject, html: htmlBody };
+
+    const resp = await fetch('https://api.resend.com/emails', {
       method:'POST',
-      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+SB_ANON_KEY },
-      body: JSON.stringify({ to, from_email:fromEmail, subject, html_body:htmlBody, proyecto_id:proyId, doc_type:docType, doc_ref:docRef })
+      headers:{ 'Authorization':'Bearer re_CURadbN3_PqQ2Fu43yEbW5Xe7YWUU8Te5', 'Content-Type':'application/json' },
+      body: JSON.stringify(payload)
     });
     const result = await resp.json();
-    if(!resp.ok||result.error){ throw new Error(result.error||'Error del servidor'); }
+    if(!resp.ok||result.error){ throw new Error(result.error||result.message||'Error Resend API'); }
 
-    DEC.unshift({ tracking_id:result.tracking_id, proyecto_id:proyId, doc_type:docType, doc_ref:docRef, recipient_email:to, sender_email:fromEmail, subject, sent_at:new Date().toISOString(), read_at:null, read_count:0 });
+    // Registrar en historial local
+    if(typeof DEC !== 'undefined'){
+      DEC.unshift({ tracking_id:result.id||'', proyecto_id:proyId, doc_type:docType, doc_ref:docRef,
+        recipient_email:to, sender_email:fromEmail, subject, sent_at:new Date().toISOString(), read_at:null, read_count:0 });
+    }
 
     if(docType==='factura'){
       const fId = FC.find(f=>f.num_factura===docRef)?.id;
@@ -23008,16 +23018,16 @@ async function enviarDocumentoEmail(){
     }
 
     st.style.background='#e8f5ee'; st.style.color='#1a7a40';
-    st.textContent=`\u2705 Enviado correctamente a ${to}`;
-    btn.textContent='\u2705 Enviado';
-    toast(`\u{1F4EC} Documento enviado a ${to}`,'success');
+    st.textContent=`✅ Enviado correctamente a ${to}`;
+    btn.textContent='✅ Enviado';
+    toast(`📬 Documento enviado a ${to}`,'success');
     if(docType==='factura') try{renderFacturas();}catch(_){}
     setTimeout(()=>closeModal('m-enviar-email'), 2000);
 
   } catch(e){
     st.style.background='#fdecea'; st.style.color='#c0392b';
-    st.textContent='\u274C Error: '+e.message;
-    btn.disabled=false; btn.textContent='\u{1F4E4} Reintentar';
+    st.textContent='❌ Error: '+e.message;
+    btn.disabled=false; btn.textContent='📤 Reintentar';
     toast('Error al enviar: '+e.message,'error');
   }
 }
