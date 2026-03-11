@@ -16,7 +16,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="PAU Gestión">
 <!-- manifest PWA desactivado para evitar caché -->
-<!-- PAU INTERIORISMO v74 · Build: 2026-02-28 10:00 -->
+<!-- PAU INTERIORISMO v75 · Build: 2026-02-28 10:00 -->
 <title>PAU INTERIORISMO - Gestión v20260228-0858</title>
 <style>
 :root{--navy:#1a2a3a;--navy-mid:#27405b;--navy-light:#3d5a78;--blue-soft:#b8cce4;--blue-light:#e8f4ff;--cream:#f7f4ef;--sand:#ede8df;--copper:#b87333;--copper-light:#f4e8da;--green:#1e6b3d;--green-soft:#d5e8d4;--amber:#7d6608;--amber-soft:#fff2cc;--red:#7b241c;--red-soft:#fce8e6;--white:#fff;--text:#1a2a3a;--text-mid:#4a5f72;--text-soft:#8a9aaa;--border:#dce6f0;--radius:8px;--radius-sm:4px;--shadow:0 1px 3px rgba(26,42,58,.08),0 4px 16px rgba(26,42,58,.06);--shadow-lg:0 8px 32px rgba(26,42,58,.14);--sidebar:220px;--header:56px}
@@ -5304,6 +5304,7 @@ async function deleteListItem(clave, listId, val){
 // CONFIG
 // ═══════════════════════════════════════════
 const SB_URL='https://qxyflndntpmcdbyvwjnj.supabase.co';
+  const SB_EDGE = 'https://qxyflndntpmcdbyvwjnj.supabase.co/functions/v1';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4eWZsbmRudHBtY2RieXZ3am5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MjgzOTMsImV4cCI6MjA4NzUwNDM5M30.WQ193I6oS9ANMvuWG8XXa_J6oFleoTSlLQKeFVR_d50';
 const USERS={'jose':'pau2026','pau':'pau2026'};
 const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -5647,6 +5648,7 @@ function filterTable(tbId,inId){const q=document.getElementById(inId)?.value.toL
 // ═══════════════════════════════════════════
 let connTimeout;
 let CC=[],PC=[],TC=[],ProvC=[],IntC=[],CoC=[],ScC=[],HC=[],FC=[],PedC=[],CmpC=[],PresC=[],CyCache=[];
+var DEC=[];
 let TRABAJADORES=['Paco','Raúl','Boro','Julio','Pau','Jose Asins'];
 let LISTAS={
   estados_proyecto:['Nuevo lead','Presupuesto enviado','Aprobado','En ejecución','Finalizado','Facturado','Cobrado','Cancelado'],
@@ -22693,6 +22695,220 @@ function vpGuardarPDF(){
 }
 
 // === INSERT EN POSICION + ELIMINAR VERSION (v75) ===
+async function loadAllEmailStatus(){
+  try{ DEC = await sbGet('document_emails','?order=sent_at.desc&limit=500') || []; }
+  catch(e){ DEC=[]; }
+}
+
+function emailBadge(proyectoId, docType, docRef){
+  const emails = DEC.filter(e=>
+    (!proyectoId||e.proyecto_id===proyectoId) &&
+    (!docType||e.doc_type===docType) &&
+    (!docRef||e.doc_ref===docRef)
+  );
+  if(!emails.length) return '';
+  if(emails.some(e=>e.read_at)) return '<span title="Leído por el cliente" style="cursor:default;font-size:14px">📬</span>';
+  return '<span title="Enviado, sin leer aún" style="cursor:default;font-size:14px">✉️</span>';
+}
+
+function buildEmailWrapper(titulo, nombreCliente, referencia, importeStr, mensaje, bodyExtra){
+  const ref  = referencia ? `<div style="font-size:12px;color:#666;margin-bottom:4px"><strong>Referencia:</strong> ${referencia}</div>` : '';
+  const imp  = importeStr ? `<div style="font-size:14px;font-weight:700;color:#1a3a5c"><strong>Importe:</strong> ${importeStr}</div>` : '';
+  const box  = (ref||imp) ? `<div style="background:#f8f4ef;border-left:3px solid #b87333;padding:12px 16px;margin:0 0 20px;border-radius:0 4px 4px 0">${ref}${imp}</div>` : '';
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="margin:0;background:#f0f0f0;font-family:'Segoe UI',Arial,sans-serif">
+<div style="max-width:600px;margin:0 auto;background:#fff">
+  <div style="background:#1a3a5c;padding:20px 28px;display:flex;align-items:center">
+    <div style="color:#b87333;font-weight:800;font-size:18px;letter-spacing:.5px">PAU INTERIORISMO</div>
+    <div style="color:#fff;opacity:.5;font-size:11px;margin-left:auto">pauinteriorismo.com</div>
+  </div>
+  <div style="padding:28px 32px">
+    <h2 style="margin:0 0 18px;color:#1a3a5c;font-size:16px">${titulo}</h2>
+    <p style="margin:0 0 16px;color:#444;line-height:1.6">Estimado/a <strong>${nombreCliente||'cliente'}</strong>,</p>
+    <p style="margin:0 0 20px;color:#444;line-height:1.6">${mensaje}</p>
+    ${box}
+    ${bodyExtra||''}
+    <p style="margin:24px 0 0;color:#444;line-height:1.6">Quedamos a su disposición para cualquier consulta.</p>
+    <p style="margin:8px 0 0;color:#444">Atentamente,<br><strong>PAU INTERIORISMO S.L.</strong><br>
+    <span style="color:#888;font-size:12px">Tel: 961 20 01 87 · Alcàsser (Valencia)</span></p>
+  </div>
+  <div style="background:#f5f5f5;padding:14px 32px;font-size:10px;color:#999;text-align:center">
+    PAU INTERIORISMO S.L. · CIF B-56909641 · C/ Tomás y Valiente Nº 6 Bajo · 46290 Alcàsser
+  </div>
+</div>
+
+<!-- ═══ MODAL ENVÍO EMAIL ═══ -->
+<div class="modal" id="m-email-send">
+  <div class="modal-dialog" style="max-width:540px">
+    <div class="modal-header">
+      <div class="modal-title" id="m-email-title">📧 Enviar documento</div>
+      <button class="modal-close" onclick="closeModal('m-email-send')">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="em-doc-type">
+      <input type="hidden" id="em-doc-ref">
+      <input type="hidden" id="em-proyecto-id">
+      <input type="hidden" id="em-from-email">
+      <input type="hidden" id="em-html-body">
+      <div class="form-grid">
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="form-label">Para (destinatario) *</label>
+          <input class="form-input" id="em-to" type="email" placeholder="cliente@email.com">
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="form-label">Asunto</label>
+          <input class="form-input" id="em-subject">
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="form-label">Mensaje personalizado</label>
+          <textarea class="form-input" id="em-mensaje" rows="4" placeholder="Estimado/a cliente, adjunto le enviamos..." style="resize:vertical"></textarea>
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="form-label" style="color:var(--text-soft);font-size:11px">Enviando desde</label>
+          <div id="em-from-label" style="font-size:12px;color:var(--text-soft);padding:4px 0"></div>
+        </div>
+        <div id="em-status" style="grid-column:1/-1;display:none;padding:10px;border-radius:6px;font-size:12px;text-align:center"></div>
+      </div>
+    </div>
+    <div class="modal-footer" style="justify-content:flex-end;gap:8px">
+      <button class="btn btn-ghost" onclick="closeModal('m-email-send')">Cancelar</button>
+      <button class="btn btn-primary" id="em-btn-send" onclick="enviarDocumentoEmail()">📤 Enviar</button>
+    </div>
+  </div>
+
+</body></html>`;
+}
+
+function openEmailModal({docType, docRef, proyectoId, defaultTo, subject, fromEmail, mensaje, htmlBody}){
+  document.getElementById('em-doc-type').value    = docType||'';
+  document.getElementById('em-doc-ref').value     = docRef||'';
+  document.getElementById('em-proyecto-id').value = proyectoId||'';
+  document.getElementById('em-from-email').value  = fromEmail||'presupuestos@pauinteriorismo.es';
+  document.getElementById('em-html-body').value   = htmlBody||'';
+  document.getElementById('em-to').value          = defaultTo||'';
+  document.getElementById('em-subject').value     = subject||'';
+  document.getElementById('em-mensaje').value     = mensaje||'';
+  document.getElementById('em-from-label').textContent = fromEmail||'presupuestos@pauinteriorismo.es';
+  const labels = {presupuesto:'Presupuesto',contrato:'Contrato',pedido:'Pedido',factura:'Factura'};
+  document.getElementById('m-email-title').textContent = '\u{1F4E7} Enviar ' + (labels[docType]||docType||'documento');
+  const st=document.getElementById('em-status'); st.style.display='none'; st.textContent='';
+  const btn=document.getElementById('em-btn-send'); btn.disabled=false; btn.textContent='\u{1F4E4} Enviar';
+  openModal('m-email-send');
+}
+
+async function enviarDocumentoEmail(){
+  const to        = document.getElementById('em-to').value.trim();
+  const subject   = document.getElementById('em-subject').value.trim();
+  const docType   = document.getElementById('em-doc-type').value;
+  const docRef    = document.getElementById('em-doc-ref').value;
+  const proyId    = document.getElementById('em-proyecto-id').value;
+  const fromEmail = document.getElementById('em-from-email').value;
+  const mensaje   = document.getElementById('em-mensaje').value.trim();
+  let   htmlBody  = document.getElementById('em-html-body').value;
+
+  if(!to||!to.includes('@')){ toast('Email de destino no válido','error'); return; }
+  if(!subject){ toast('Indica un asunto','error'); return; }
+
+  if(mensaje && htmlBody.includes('MENSAJE_PH')){
+    htmlBody = htmlBody.split('MENSAJE_PH').join(mensaje);
+  }
+
+  const btn=document.getElementById('em-btn-send');
+  btn.disabled=true; btn.textContent='Enviando…';
+  const st=document.getElementById('em-status');
+  st.style.display='block'; st.style.background='#f0f8ff'; st.style.color='#1a3a5c';
+  st.textContent='Conectando con servidor de envío…';
+
+  try{
+    const resp = await fetch(`${SB_EDGE}/send-document-email`, {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+SB_ANON_KEY },
+      body: JSON.stringify({ to, from_email:fromEmail, subject, html_body:htmlBody, proyecto_id:proyId, doc_type:docType, doc_ref:docRef })
+    });
+    const result = await resp.json();
+    if(!resp.ok||result.error){ throw new Error(result.error||'Error del servidor'); }
+
+    DEC.unshift({ tracking_id:result.tracking_id, proyecto_id:proyId, doc_type:docType, doc_ref:docRef, recipient_email:to, sender_email:fromEmail, subject, sent_at:new Date().toISOString(), read_at:null, read_count:0 });
+
+    if(docType==='factura'){
+      const fId = FC.find(f=>f.num_factura===docRef)?.id;
+      if(fId){
+        await sb('facturas','PATCH',{email_enviado:true,fecha_envio:new Date().toISOString().split('T')[0]},null,`?id=eq.${fId}`).catch(()=>{});
+        const fi=FC.findIndex(f=>f.num_factura===docRef); if(fi>=0){FC[fi].email_enviado=true;}
+      }
+    }
+
+    st.style.background='#e8f5ee'; st.style.color='#1a7a40';
+    st.textContent=`\u2705 Enviado correctamente a ${to}`;
+    btn.textContent='\u2705 Enviado';
+    toast(`\u{1F4EC} Documento enviado a ${to}`,'success');
+    if(docType==='factura') try{renderFacturas();}catch(_){}
+    setTimeout(()=>closeModal('m-email-send'), 2000);
+
+  } catch(e){
+    st.style.background='#fdecea'; st.style.color='#c0392b';
+    st.textContent='\u274C Error: '+e.message;
+    btn.disabled=false; btn.textContent='\u{1F4E4} Reintentar';
+    toast('Error al enviar: '+e.message,'error');
+  }
+}
+
+async function enviarFacturaEmail(id){
+  const f = FC.find(x=>String(x.id)===String(id));
+  if(!f){ toast('Factura no encontrada','error'); return; }
+  if((f.tipo_factura||'Venta')==='Compra'){ toast('Solo facturas de venta','error'); return; }
+  const cli = CC.find(c=>String(c.id)===String(f.cliente_id)||c.cliente_id===f.cliente_id);
+  const base = f.base_imponible||0, iva=base*ivaPct(f.iva_pct)/100, total=base+iva;
+  const mensaje = `Le enviamos la factura ${f.num_factura} con fecha ${fmtD(f.fecha_emision)} por importe de ${fmtE(total)}. Adjunto encontrará el documento en formato PDF.`;
+  const htmlBody = buildEmailWrapper(
+    `Factura ${f.num_factura}`, cli?.nombre||'',
+    `Factura ${f.num_factura} · ${fmtD(f.fecha_emision)}`, fmtE(total),
+    'MENSAJE_PH', ''
+  );
+  openEmailModal({ docType:'factura', docRef:f.num_factura, proyectoId:f.proyecto_id||'',
+    defaultTo:cli?.email||'', subject:`Factura ${f.num_factura} \u2014 PAU INTERIORISMO S.L.`,
+    fromEmail:'administracion@pauinteriorismo.es', mensaje, htmlBody });
+}
+
+function enviarPresupuestoEmail(proyectoId, version){
+  const proy = PC.find(p=>p.proyecto_id===proyectoId||String(p.id)===String(proyectoId));
+  const cli  = CC.find(c=>c.cliente_id===(proy?.cliente_id)||String(c.id)===String(proy?.cliente_id));
+  const ref  = `PF-${proyectoId}-v${version||1}`;
+  const mensaje = `Adjunto le enviamos el presupuesto correspondiente a su obra. Quedo a su disposición para cualquier consulta o modificación.`;
+  const htmlBody = buildEmailWrapper(
+    `Presupuesto \u2014 ${proy?.nombre||proyectoId}`, cli?.nombre||'', ref, '',
+    'MENSAJE_PH',
+    '<p style="color:#888;font-size:11px;margin:16px 0 0">El presupuesto detallado est\u00e1 adjunto en formato PDF.</p>'
+  );
+  openEmailModal({ docType:'presupuesto', docRef:ref, proyectoId,
+    defaultTo:cli?.email||'', subject:`Presupuesto ${proy?.nombre||proyectoId} \u2014 PAU INTERIORISMO S.L.`,
+    fromEmail:'presupuestos@pauinteriorismo.es', mensaje, htmlBody });
+}
+
+function enviarContratoEmail(proyectoId){
+  const proy = PC.find(p=>p.proyecto_id===proyectoId||String(p.id)===String(proyectoId));
+  const cli  = CC.find(c=>c.cliente_id===(proy?.cliente_id)||String(c.id)===String(proy?.cliente_id));
+  const ref  = `CONT-${proyectoId}`;
+  const mensaje = `Adjunto le enviamos el contrato de obra para su revisi\u00f3n y firma. Por favor, revise el documento y cont\u00e1ctenos para cualquier consulta.`;
+  const htmlBody = buildEmailWrapper(
+    `Contrato \u2014 ${proy?.nombre||proyectoId}`, cli?.nombre||'', ref, '', 'MENSAJE_PH', '');
+  openEmailModal({ docType:'contrato', docRef:ref, proyectoId,
+    defaultTo:cli?.email||'', subject:`Contrato ${proy?.nombre||proyectoId} \u2014 PAU INTERIORISMO S.L.`,
+    fromEmail:'administracion@pauinteriorismo.es', mensaje, htmlBody });
+}
+
+function enviarPedidoEmail(pedidoId){
+  const ped  = PedC.find(p=>String(p.id)===String(pedidoId));
+  const ref  = ped?.num_pedido||`PED-${pedidoId}`;
+  const proyId = ped?.proyecto_id||'';
+  const mensaje = `Adjunto le enviamos el pedido ${ref}. Por favor, confirme la recepci\u00f3n y el plazo de entrega.`;
+  const htmlBody = buildEmailWrapper(
+    `Pedido ${ref}`, ped?.proveedor||'proveedor', ref,
+    ped?.importe_total ? fmtE(ped.importe_total) : '', 'MENSAJE_PH', '');
+  openEmailModal({ docType:'pedido', docRef:ref, proyectoId:proyId,
+    defaultTo:'', subject:`Pedido ${ref} \u2014 PAU INTERIORISMO S.L.`,
+    fromEmail:'presupuestos@pauinteriorismo.es', mensaje, htmlBody });
+}
+
 async function eliminarVersionPresupuesto(){
   var proy=document.getElementById('pres-proyecto-sel').value;
   var ver=document.getElementById('pres-version-sel').value;
