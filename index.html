@@ -16,7 +16,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="PAU Gestión">
 <!-- manifest PWA desactivado para evitar caché -->
-<!-- PAU INTERIORISMO v75 · Build: 2026-02-28 10:00 -->
+<!-- PAU INTERIORISMO v76 · Build: 2026-02-28 10:00 -->
 <title>PAU INTERIORISMO - Gestión v20260228-0858</title>
 <style>
 :root{--navy:#1a2a3a;--navy-mid:#27405b;--navy-light:#3d5a78;--blue-soft:#b8cce4;--blue-light:#e8f4ff;--cream:#f7f4ef;--sand:#ede8df;--copper:#b87333;--copper-light:#f4e8da;--green:#1e6b3d;--green-soft:#d5e8d4;--amber:#7d6608;--amber-soft:#fff2cc;--red:#7b241c;--red-soft:#fce8e6;--white:#fff;--text:#1a2a3a;--text-mid:#4a5f72;--text-soft:#8a9aaa;--border:#dce6f0;--radius:8px;--radius-sm:4px;--shadow:0 1px 3px rgba(26,42,58,.08),0 4px 16px rgba(26,42,58,.06);--shadow-lg:0 8px 32px rgba(26,42,58,.14);--sidebar:220px;--header:56px}
@@ -3523,8 +3523,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     </div>
     <div class="card-body">
       <div class="info-box" style="margin-bottom:12px">
-        📥 Descarga el extracto de tu banco en formato CSV (BBVA: Mis cuentas → Exportar / CaixaBank: Movimientos → Descargar CSV). 
-        El sistema cruzará automáticamente los movimientos con tus facturas pendientes por <strong>importe y fecha</strong>.
+        📥 <strong>Santander:</strong> Banca Online → Mis cuentas → Extractos → Norma 43 → Descargar fichero .n43 (o usa también CSV). El sistema cruzará automáticamente los movimientos con tus facturas y compras pendientes por <strong>importe y fecha</strong>.
       </div>
       <div style="display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap">
         <div style="flex:1;min-width:200px">
@@ -3534,10 +3533,11 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
             <option value="caixabank">CaixaBank</option>
             <option value="santander">Santander</option>
             <option value="sabadell">Banco Sabadell</option>
+            <option value="norma43">Norma 43 (Santander estándar) ⭐</option>
             <option value="generico">Genérico (fecha, concepto, importe)</option>
           </select>
           <label class="form-label">Archivo CSV del extracto</label>
-          <input type="file" id="csv-input" accept=".csv,.txt" class="form-input" onchange="procesarCSV()" style="padding:6px">
+          <input type="file" id="csv-input" accept=".csv,.txt,.n43,.43" class="form-input" onchange="procesarCSV()" style="padding:6px">
         </div>
         <div style="flex:2;min-width:280px">
           <div id="csv-preview" style="display:none;background:var(--bg);border-radius:6px;padding:10px;font-size:11px;max-height:120px;overflow-y:auto;font-family:monospace;color:var(--text-soft);border:1px solid var(--border)"></div>
@@ -13090,11 +13090,17 @@ function procesarCSV(){
       preview.style.display='block';
       preview.textContent = text.split('\n').slice(0,5).join('\n');
     }
-    movimientosBanco = parsearCSV(text, formato);
+    movimientosBanco = formato === 'norma43' ? parsearNorma43(text) : parsearCSV(text, formato);
     if(!movimientosBanco.length){
       toast('No se encontraron movimientos en el CSV','error'); return;
     }
-    toast(`${movimientosBanco.length} movimientos detectados. Conciliando…`);
+    toast(`${movimientosBanco.length} movimientos detectados. Guardando y conciliando…`);
+    // Guardar en Supabase (ignorar duplicados por fecha+importe)
+    try {
+      for (const mov of movimientosBanco) {
+        await sbPost('movimientos_banco', mov);
+      }
+    } catch(_) {}
     await conciliarMovimientos();
   };
   reader.readAsText(file, 'UTF-8');
@@ -13144,6 +13150,87 @@ function parsearCSV(texto, formato){
       }
     }catch(err){}
   }
+  return movimientos;
+}
+
+
+
+// ─── PARSER NORMA 43 ──────────────────────────────────────────
+function parsearNorma43(texto) {
+  const lineas = texto.split('\n').map(l => l.trim()).filter(l => l.length >= 2);
+  const movimientos = [];
+  let cuentaIBAN = '';
+
+  for (const linea of lineas) {
+    const tipo = linea.substring(0, 2);
+
+    // Registro 11: cabecera de cuenta
+    if (tipo === '11') {
+      const entidad = linea.substring(2, 6);
+      const oficina = linea.substring(6, 10);
+      const dc      = linea.substring(10, 12);
+      const cuenta  = linea.substring(12, 22);
+      cuentaIBAN = `ES** ${entidad} ${oficina} ${dc} ${cuenta}`;
+    }
+
+    // Registro 22: movimiento
+    if (tipo === '22') {
+      try {
+        const fechaOp  = linea.substring(2, 8);   // AAMMDD
+        // const fechaVal = linea.substring(8, 14);
+        const concepto1= linea.substring(14, 16);
+        const signo    = linea.substring(27, 28);  // 1=haber, 2=debe
+        const importeStr = linea.substring(28, 42); // 14 dígitos, 2 decimales
+        const importe  = parseFloat(importeStr) / 100;
+        const importeFinal = signo === '1' ? importe : -importe;
+
+        // Fecha: AAMMDD → YYYY-MM-DD
+        const aa = fechaOp.substring(0, 2);
+        const mm = fechaOp.substring(2, 4);
+        const dd = fechaOp.substring(4, 6);
+        const year = parseInt(aa) < 50 ? '20' + aa : '19' + aa;
+        const fecha = `${year}-${mm}-${dd}`;
+
+        movimientos.push({
+          fecha,
+          concepto: '',
+          importe: importeFinal,
+          saldo: 0,
+          referencia: '',
+          cuenta_iban: cuentaIBAN,
+          _conceptoLines: []
+        });
+      } catch(_) {}
+    }
+
+    // Registro 23: concepto complementario (se añade al último movimiento)
+    if (tipo === '23' && movimientos.length > 0) {
+      const last = movimientos[movimientos.length - 1];
+      const texto23 = linea.substring(4).trim();
+      if (texto23) last._conceptoLines.push(texto23);
+    }
+
+    // Registro 24: información adicional (referencia)
+    if (tipo === '24' && movimientos.length > 0) {
+      const last = movimientos[movimientos.length - 1];
+      last.referencia = linea.substring(4, 22).trim();
+    }
+
+    // Registro 33: saldo de la cuenta
+    if (tipo === '33' && movimientos.length > 0) {
+      const signo = linea.substring(14, 15);
+      const saldoStr = linea.substring(15, 29);
+      const saldo = parseFloat(saldoStr) / 100;
+      movimientos[movimientos.length - 1].saldo = signo === '1' ? saldo : -saldo;
+    }
+  }
+
+  // Consolidar conceptos
+  for (const mov of movimientos) {
+    mov.concepto = mov._conceptoLines.join(' ').trim() || '—';
+    delete mov._conceptoLines;
+  }
+
   return movimientos;
 }
 
