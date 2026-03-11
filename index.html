@@ -12507,45 +12507,35 @@ async function enviarFacturaEmail(id){
     </div>
   `;
 
-  toast('Enviando factura...','info');
+  toast('Enviando factura…','info');
 
   try{
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method:'POST',
-      headers: getAnthropicHeaders(),
-      body: JSON.stringify({
-        model:'claude-sonnet-4-5',
-        max_tokens:1000,
-        messages:[{role:'user',content:`Send an email using Gmail MCP.
-To: ${emailDest.trim()}
-From: presupuestos@pauinteriorismo.es  
-Subject: Factura ${f.num_factura} - PAU INTERIORISMO S.L.
-Body (HTML): ${htmlFactura}
+    const payload = {
+      from: 'PAU INTERIORISMO <administracion@pauinteriorismo.es>',
+      to: [emailDest.trim()],
+      subject: `Factura ${f.num_factura} - PAU INTERIORISMO S.L.`,
+      html: htmlFactura
+    };
 
-Please send this email now using the Gmail tool.`}],
-        mcp_servers:[{type:'url',url:'https://gmail.mcp.claude.com/mcp',name:'gmail-mcp'}]
-      })
+    const res = await fetch('https://api.resend.com/emails',{
+      method:'POST',
+      headers:{ 'Authorization':'Bearer re_CURadbN3_PqQ2Fu43yEbW5Xe7YWUU8Te5', 'Content-Type':'application/json' },
+      body: JSON.stringify(payload)
     });
 
-    if(response.ok){
-      // Registrar en BD
+    if(res.ok){
       const hoy = new Date().toISOString().split('T')[0];
       await sb('facturas','PATCH',{email_enviado:true, fecha_envio:hoy},null,`?id=eq.${id}`);
-      // Actualizar caché local
       const idx = FC.findIndex(x=>String(x.id)===String(id));
       if(idx>=0){ FC[idx].email_enviado=true; FC[idx].fecha_envio=hoy; }
       renderFacturas();
-      toast(`📬 Factura enviada a ${emailDest}`,'success');
+      toast(`📤 Factura enviada a ${emailDest} ✅`,'success');
     } else {
-      const err = await response.text();
-      throw new Error('API error: '+err.substring(0,100));
+      const err = await res.json().catch(()=>({message:'Error desconocido'}));
+      throw new Error(err.message || 'Error Resend API');
     }
   } catch(e){
-    // Fallback: abrir cliente de correo
-    const asunto = encodeURIComponent(`Factura ${f.num_factura} - PAU INTERIORISMO S.L.`);
-    const cuerpo = encodeURIComponent(`Estimado/a ${d.contra},\n\nAdjunto la factura ${f.num_factura} por importe de ${fmtE(total)}.\n\nQuedo a su disposición para cualquier consulta.\n\nAtentamente,\nPAU INTERIORISMO S.L.\nTel: 961 20 01 87`);
-    window.open(`mailto:${emailDest}?subject=${asunto}&body=${cuerpo}`);
-    toast('Abriendo cliente de email (fallback)','info');
+    toast('Error enviando: '+e.message,'error');
   }
 }
 
@@ -22739,14 +22729,16 @@ async function ejecutarEnvioEmail(){
   const cc     = document.getElementById('email-cc').value.trim();
   const asunto = document.getElementById('email-asunto').value.trim();
   const cuerpo = document.getElementById('email-cuerpo').value.trim();
+  const desde  = document.getElementById('email-desde')?.value?.trim() || 'presupuestos@pauinteriorismo.es';
 
   if(!para){ toast('Introduce el email del destinatario','error'); return; }
+  if(!para.includes('@')){ toast('Email no válido','error'); return; }
 
   const btnEnviar = document.querySelector('#m-enviar-email .btn-primary');
-  if(btnEnviar){ btnEnviar.textContent='\u23f3 Generando PDF\u2026'; btnEnviar.disabled=true; }
-  toast('Generando PDF\u2026');
+  if(btnEnviar){ btnEnviar.textContent='⏳ Generando PDF…'; btnEnviar.disabled=true; }
 
   try{
+    // 1. Generar PDF como blob
     const opt = {
       margin:[8,8,8,8], filename:_emailFilename,
       image:{type:'jpeg',quality:0.98},
@@ -22754,33 +22746,64 @@ async function ejecutarEnvioEmail(){
       jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
       pagebreak:{mode:['css','legacy']}
     };
-    await html2pdf().set(opt).from(_emailDocEl).toPdf().get('pdf').then(async function(pdf){
-      await añadirCabeceraPDF(pdf,_emailDocEl);
-    }).save();
-    toast('PDF descargado \u2705');
-  }catch(e){
-    toast('Error generando PDF: '+e.message,'error');
-    if(btnEnviar){ btnEnviar.textContent='\ud83d\udce7 Preparar env\xedo'; btnEnviar.disabled=false; }
-    return;
+    const pdfBlob = await new Promise((resolve, reject)=>{
+      html2pdf().set(opt).from(_emailDocEl).toPdf().get('pdf').then(async function(pdf){
+        try{ await añadirCabeceraPDF(pdf, _emailDocEl); }catch(e){}
+        resolve(pdf.output('blob'));
+      }).catch(reject);
+    });
+
+    // 2. Convertir blob a base64
+    const base64Pdf = await new Promise((resolve, reject)=>{
+      const reader = new FileReader();
+      reader.onload  = ()=> resolve(reader.result.split(',')[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(pdfBlob);
+    });
+
+    if(btnEnviar) btnEnviar.textContent='⏳ Enviando…';
+
+    // 3. Enviar vía Resend con PDF adjunto
+    const htmlBody = `<div style="font-family:'Segoe UI',Arial,sans-serif;max-width:600px;margin:0 auto;color:#333">
+      <div style="background:#b87333;padding:16px 24px">
+        <span style="color:white;font-size:16px;font-weight:700">PAU INTERIORISMO S.L.</span>
+      </div>
+      <div style="padding:24px;background:#fff;border:1px solid #e8e0d4">
+        <pre style="font-family:'Segoe UI',Arial,sans-serif;white-space:pre-wrap;font-size:13px;color:#333;margin:0">${cuerpo.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>
+      </div>
+      <div style="padding:12px 24px;background:#f7f4ef;font-size:10px;color:#888;text-align:center;border:1px solid #e8e0d4;border-top:none">
+        PAU INTERIORISMO S.L. · CIF B-56909641 · C/ Tomás y Valiente Nº 6 Bajo · 46290 Alcàsser (Valencia) · Tel: 961 20 01 87
+      </div>
+    </div>`;
+
+    const payload = {
+      from: `PAU INTERIORISMO <${desde}>`,
+      to: [para],
+      subject: asunto,
+      html: htmlBody,
+      attachments: [{ filename: _emailFilename, content: base64Pdf }]
+    };
+    if(cc) payload.cc = [cc];
+
+    const res = await fetch('https://api.resend.com/emails',{
+      method:'POST',
+      headers:{ 'Authorization':'Bearer re_CURadbN3_PqQ2Fu43yEbW5Xe7YWUU8Te5', 'Content-Type':'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if(res.ok){
+      closeModal('m-enviar-email');
+      toast('📤 Email enviado a '+para+' ✅','success');
+    } else {
+      const err = await res.json().catch(()=>({message:'Error desconocido'}));
+      throw new Error(err.message || 'Error Resend API');
+    }
+  } catch(e){
+    toast('Error: '+e.message,'error');
+  } finally {
+    if(btnEnviar){ btnEnviar.textContent='📧 Enviar'; btnEnviar.disabled=false; }
   }
-
-  // Banner naranja para re-descargar tras el login en el webmail
-  mostrarBannerPDF(_emailFilename, _emailDocEl);
-
-  setTimeout(()=>{
-    const rcUrl = 'https://correo01.vadavo.com:2096/'
-      + '?_task=mail&_action=compose'
-      + '&_to='      + encodeURIComponent(para)
-      + (cc ? '&_cc='+encodeURIComponent(cc) : '')
-      + '&_subject=' + encodeURIComponent(asunto)
-      + '&_body='    + encodeURIComponent(cuerpo);
-    window.open(rcUrl, '_blank');
-    closeModal('m-enviar-email');
-    toast('Webmail abierto \u2013 si pide login, usa la barra naranja para re-descargar el PDF','success');
-    if(btnEnviar){ btnEnviar.textContent='\ud83d\udce7 Preparar env\xedo'; btnEnviar.disabled=false; }
-  }, 800);
 }
-
 function mostrarBannerPDF(filename, docEl){
   const prev = document.getElementById('pdf-redownload-banner');
   if(prev) prev.remove();
