@@ -22950,19 +22950,21 @@ function buildEmailWrapper(titulo, nombreCliente, referencia, importeStr, mensaj
 }
 
 function openEmailModal({docType, docRef, proyectoId, defaultTo, subject, fromEmail, mensaje, htmlBody}){
-  document.getElementById('em-doc-type').value    = docType||'';
-  document.getElementById('em-doc-ref').value     = docRef||'';
-  document.getElementById('em-proyecto-id').value = proyectoId||'';
-  document.getElementById('em-from-email').value  = fromEmail||'presupuestos@pauinteriorismo.es';
-  document.getElementById('em-html-body').value   = htmlBody||'';
-  document.getElementById('em-to').value          = defaultTo||'';
-  document.getElementById('em-subject').value     = subject||'';
-  document.getElementById('em-mensaje').value     = mensaje||'';
-  document.getElementById('em-from-label').textContent = fromEmail||'presupuestos@pauinteriorismo.es';
+  const setVal = (id,v) => { const el=document.getElementById(id); if(el) el.value=v||''; };
+  const setTxt = (id,v) => { const el=document.getElementById(id); if(el) el.textContent=v||''; };
+  setVal('em-doc-type', docType);
+  setVal('em-doc-ref', docRef);
+  setVal('em-proyecto-id', proyectoId);
+  setVal('em-from-email', fromEmail||'presupuestos@pauinteriorismo.es');
+  setVal('em-html-body', htmlBody);
+  setVal('em-to', defaultTo);
+  setVal('em-subject', subject);
+  setVal('em-mensaje', mensaje);
+  setTxt('em-from-label', fromEmail||'presupuestos@pauinteriorismo.es');
   const labels = {presupuesto:'Presupuesto',contrato:'Contrato',pedido:'Pedido',factura:'Factura'};
-  document.getElementById('m-email-title').textContent = '\u{1F4E7} Enviar ' + (labels[docType]||docType||'documento');
-  const st=document.getElementById('em-status'); st.style.display='none'; st.textContent='';
-  const btn=document.getElementById('em-btn-send'); btn.disabled=false; btn.textContent='\u{1F4E4} Enviar';
+  setTxt('m-email-title', '\u{1F4E7} Enviar ' + (labels[docType]||docType||'documento'));
+  const st=document.getElementById('em-status'); if(st){st.style.display='none'; st.textContent='';}
+  const btn=document.getElementById('em-btn-send'); if(btn){btn.disabled=false; btn.textContent='\u{1F4E4} Enviar';}
   openModal('m-enviar-email');
 }
 
