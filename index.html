@@ -5141,7 +5141,7 @@ if('serviceWorker' in navigator){
   </div>
   <div class="modal-footer" style="justify-content:flex-end;gap:8px">
     <button class="btn btn-ghost" onclick="closeModal('m-enviar-email')">Cancelar</button>
-    <button class="btn btn-primary" id="em-btn-send" onclick="enviarDocumentoEmail()">📤 Enviar</button>
+    <button class="btn btn-primary" id="em-btn-send" onclick="ejecutarEnvioEmail()">📤 Enviar</button>
   </div>
 </div>
 </div>
@@ -22766,16 +22766,16 @@ function abrirEnviarEmail(tipo){
 }
 
 async function ejecutarEnvioEmail(){
-  const para   = document.getElementById('email-para').value.trim();
-  const cc     = document.getElementById('email-cc').value.trim();
-  const asunto = document.getElementById('email-asunto').value.trim();
-  const cuerpo = document.getElementById('email-cuerpo').value.trim();
-  const desde  = document.getElementById('email-desde')?.value?.trim() || 'presupuestos@pauinteriorismo.es';
+  const para   = document.getElementById('em-to').value.trim();
+  const cc     = '';
+  const asunto = document.getElementById('em-subject').value.trim();
+  const cuerpo = document.getElementById('em-mensaje').value.trim();
+  const desde  = document.getElementById('em-from-email')?.value?.trim() || 'presupuestos@pauinteriorismo.es';
 
   if(!para){ toast('Introduce el email del destinatario','error'); return; }
   if(!para.includes('@')){ toast('Email no válido','error'); return; }
 
-  const btnEnviar = document.querySelector('#m-enviar-email .btn-primary');
+  const btnEnviar = document.getElementById('em-btn-send');
   if(btnEnviar){ btnEnviar.textContent='⏳ Generando PDF…'; btnEnviar.disabled=true; }
 
   try{
