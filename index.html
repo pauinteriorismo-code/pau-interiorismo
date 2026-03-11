@@ -12558,9 +12558,9 @@ async function enviarFacturaEmail(id){
       html: htmlFactura
     };
 
-    const res = await fetch('https://api.resend.com/emails',{
+    const res = await fetch('/api/send-email',{
       method:'POST',
-      headers:{ 'Authorization':'Bearer re_CURadbN3_PqQ2Fu43yEbW5Xe7YWUU8Te5', 'Content-Type':'application/json' },
+      headers:{ 'Content-Type':'application/json' },
       body: JSON.stringify(payload)
     });
 
@@ -22826,9 +22826,9 @@ async function ejecutarEnvioEmail(){
     };
     if(cc) payload.cc = [cc];
 
-    const res = await fetch('https://api.resend.com/emails',{
+    const res = await fetch('/api/send-email',{
       method:'POST',
-      headers:{ 'Authorization':'Bearer re_CURadbN3_PqQ2Fu43yEbW5Xe7YWUU8Te5', 'Content-Type':'application/json' },
+      headers:{ 'Content-Type':'application/json' },
       body: JSON.stringify(payload)
     });
 
@@ -22996,9 +22996,9 @@ async function enviarDocumentoEmail(){
 
     const payload = { from: fromDisplay, to:[to], subject, html: htmlBody };
 
-    const resp = await fetch('https://api.resend.com/emails', {
+    const resp = await fetch('/api/send-email', {
       method:'POST',
-      headers:{ 'Authorization':'Bearer re_CURadbN3_PqQ2Fu43yEbW5Xe7YWUU8Te5', 'Content-Type':'application/json' },
+      headers:{ 'Content-Type':'application/json' },
       body: JSON.stringify(payload)
     });
     const result = await resp.json();
