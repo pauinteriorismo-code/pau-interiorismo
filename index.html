@@ -315,6 +315,7 @@ tbody td{padding:7px 10px;vertical-align:middle}
   text-align:center;
 }
 
+#topbar-menu-btn{display:inline-flex!important}
 @media(max-width:768px){
   /* Ocultar sidebar, mostrar nav inferior */
   .sidebar{display:none!important}
@@ -605,6 +606,12 @@ button, .btn, .nav-item, .card { cursor:pointer; touch-action:manipulation; }
 @supports(padding-top: env(safe-area-inset-top)){
   .topbar { padding-top: env(safe-area-inset-top); }
 }
+
+@media(max-width:768px){
+  .topbar button[onclick*="abrirBusquedaGlobal"]{display:none!important}
+  #topbar-menu-btn{display:inline-flex!important}
+  .topbar{padding:0 12px}
+}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
@@ -706,11 +713,11 @@ button, .btn, .nav-item, .card { cursor:pointer; touch-action:manipulation; }
     <div class="mnav-item" id="mnav-horas" onclick="mnavTo('horas')">
       <span class="mnav-icon">⏱</span><span>Horas</span>
     </div>
-    <div class="mnav-item" id="mnav-contabilidad" onclick="mnavTo('contabilidad')">
-      <span class="mnav-icon">📊</span><span>Contabilidad</span>
+    <div class="mnav-item" id="mnav-presupuesto" onclick="mnavTo('presupuesto')">
+      <span class="mnav-icon">💰</span><span>Presupuesto</span>
     </div>
-    <div class="mnav-item" id="mnav-mas" onclick="openMobileDrawer()">
-      <span class="mnav-icon">☰</span><span>Más</span>
+    <div class="mnav-item" id="mnav-proyectos" onclick="mnavTo('proyectos')">
+      <span class="mnav-icon">📁</span><span>Proyectos</span>
     </div>
   </div>
 </nav>
@@ -755,7 +762,7 @@ function mnavTo(v){
   document.querySelectorAll('#mobile-nav .mnav-item').forEach(el=>el.classList.remove('active'));
   const el = document.getElementById('mnav-'+v);
   if(el) el.classList.add('active');
-  else document.getElementById('mnav-mas')?.classList.add('active');
+  else document.getElementById('mnav-gerencia')?.classList.add('active');
 }
 function openMobileDrawer(){
   document.getElementById('mobile-drawer').classList.add('open');
@@ -788,6 +795,7 @@ if(window.MutationObserver){
 
 <div class="main">
   <div class="topbar">
+    <button id="topbar-menu-btn" onclick="openMobileDrawer()" style="display:none;background:none;border:none;font-size:22px;padding:0 10px 0 0;cursor:pointer;color:var(--navy);line-height:1;touch-action:manipulation" aria-label="Menú">☰</button>
     <div><div class="topbar-title" id="tb-title">Gerencia · Panel ejecutivo</div><div class="topbar-bc" id="tb-bc">Datos en tiempo real</div></div>
     <div class="topbar-right">
       <!-- Búsqueda global Ctrl+K -->
