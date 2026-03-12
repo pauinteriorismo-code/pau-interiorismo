@@ -4922,7 +4922,23 @@ async function pfProyChanged(){
   loadPresupuestoFinal();
 }
 
-async function loadPresupuestoFinal(){
+async function loadPresupuestoFinal(proyOverride, verOverride){
+  // Si se pasan parámetros directos (desde Constructor), inyectarlos en los selectores
+  if(proyOverride){
+    const pfSel = document.getElementById('pf-proyecto-sel');
+    const pfVer = document.getElementById('pf-version-sel');
+    // Añadir opción si no existe
+    if(pfSel && ![...pfSel.options].some(o=>o.value===proyOverride)){
+      // Buscar nombre del proyecto en PC
+      const p = (typeof PC !== 'undefined' ? PC : []).find(p=>p.proyecto_id===proyOverride);
+      const opt = document.createElement('option');
+      opt.value = proyOverride;
+      opt.text  = p ? `${proyOverride} · ${p.nombre}` : proyOverride;
+      pfSel.appendChild(opt);
+    }
+    if(pfSel) pfSel.value = proyOverride;
+    if(pfVer && verOverride) pfVer.value = verOverride;
+  }
   const proy=document.getElementById('pf-proyecto-sel').value;
   const ver=document.getElementById('pf-version-sel').value;
   const empty=document.getElementById('pf-empty');
@@ -10323,31 +10339,14 @@ async function exportarPDF(elementId, nombreArchivo){
 }
 
 async function exportarPresupuestoPDF(){
-  // Sincronizar proyecto/versión del Constructor → Presupuesto Final
-  const proyConstructor = document.getElementById('pres-proyecto-sel')?.value;
-  const verConstructor  = document.getElementById('pres-version-sel')?.value || 'v1';
-  const cliConstructor  = document.getElementById('filter-cliente-presupuesto')?.value || '';
-
-  if(proyConstructor){
-    const pfProy = document.getElementById('pf-proyecto-sel');
-    const pfVer  = document.getElementById('pf-version-sel');
-    const pfCli  = document.getElementById('filter-cliente-pres_final');
-    if(pfProy && pfProy.value !== proyConstructor){
-      // Primero el cliente para que se popule el selector de proyecto
-      if(pfCli && cliConstructor) pfCli.value = cliConstructor;
-      pfProy.value = proyConstructor;
-    }
-    if(pfVer) pfVer.value = verConstructor;
-  }
-
-  // Cargar el documento y abrir visor
-  await loadPresupuestoFinal();
+  const proy = document.getElementById('pres-proyecto-sel')?.value;
+  const ver  = document.getElementById('pres-version-sel')?.value || 'v1';
+  if(!proy){ toast('Selecciona un proyecto primero','error'); return; }
+  // Cargar directamente pasando proyecto y versión como parámetros
+  await loadPresupuestoFinal(proy, ver);
   await new Promise(r=>setTimeout(r,400));
-  // Nombre de archivo con proyecto y versión
-  const _proy = document.getElementById('pf-proyecto-sel')?.value || 'PRES';
-  const _ver  = document.getElementById('pf-version-sel')?.value  || 'v1';
-  const _cn   = _safeNombre(document.getElementById('pf-cliente-nombre')?.textContent||'');
-  const _fn   = _cn ? `${_proy}-${_ver}_${_cn}` : `${_proy}-${_ver}`;
+  const _cn = _safeNombre(document.getElementById('pf-cliente-nombre')?.textContent||'');
+  const _fn = _cn ? `${proy}-${ver.toUpperCase()}_${_cn}` : `${proy}-${ver.toUpperCase()}`;
   abrirVistaPrevia('pf-doc','Presupuesto', true, _fn);
 }
 
