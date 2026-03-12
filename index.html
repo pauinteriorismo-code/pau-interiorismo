@@ -19074,23 +19074,22 @@ function fHandleFile(file){
   const tipoEl = document.getElementById('f-tipo');
   const numEl  = document.getElementById('f-num');
   if(tipoEl && tipoEl.value === 'Compra' && numEl && !numEl.value.trim()){
-    // Limpiar nombre: quitar extensión y guiones bajos
-    const nombreLimpio = file.name.replace(/\.pdf$/i,'').replace(/_/g,' ').trim();
-    numEl.value = nombreLimpio;
-    // Auto-rellenar año desde la fecha de emisión si tiene formato fecha en el nombre
-    // Buscar patrón de año (4 dígitos entre 2020-2030)
+    const sinExt  = file.name.replace(/\.pdf$/i,'');
+    const partes  = sinExt.split(/[_\-\s]+/);
+    const ignorar = /^(factura|fra|fac|inv|bill|invoice)$/i;
+    const esDate  = /^(\d{4}[-]\d{2}[-]\d{2}|\d{2}[-]\d{2}[-]\d{4}|\d{8})$/;
+    const filtradas = partes.filter(p => !ignorar.test(p) && !esDate.test(p) && p.length > 0);
+    if(filtradas.length > 0) numEl.value = filtradas.join('-');
+    // Auto-año desde el nombre del archivo
     const matchAnyo = file.name.match(/20(2[0-9])/);
     if(matchAnyo){
-      const anyoDetectado = matchAnyo[0]; // ej: "2025"
-      // Si la fecha de emisión está vacía o el año no coincide, actualizar
+      const anyoDetectado = matchAnyo[0];
       const fechaEl = document.getElementById('f-fecha');
-      if(fechaEl && (!fechaEl.value || fechaEl.value.slice(0,4) !== anyoDetectado)){
-        // Solo actualizar el año si la fecha actual es de otro año
-        const fechaActual = fechaEl.value || new Date().toISOString().slice(0,10);
-        const partes = fechaActual.split('-');
-        if(partes.length===3 && partes[0] !== anyoDetectado){
-          fechaEl.value = anyoDetectado + '-' + (partes[1]||'01') + '-' + (partes[2]||'01');
-        }
+      if(fechaEl){
+        const fc = fechaEl.value || new Date().toISOString().slice(0,10);
+        const fp = fc.split('-');
+        if(fp.length===3 && fp[0] !== anyoDetectado)
+          fechaEl.value = anyoDetectado+'-'+(fp[1]||'01')+'-'+(fp[2]||'01');
       }
     }
     toast('PDF cargado · Nº factura autocompletado ✅');
