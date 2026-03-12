@@ -1,9 +1,7 @@
-// Vercel Serverless Function — /api/parse-invoice
-// Recibe: { pdfText: string }
-// Devuelve: { numFra, fecha, base, iva, total, formaPago, proveedor, vencimientos:[{fecha,importe}] }
+// /api/parse-invoice.js — Vercel Serverless Function (CommonJS)
+const https = require('https');
 
-export default async function handler(req, res) {
-  // CORS para que funcione desde pau-interiorismo.vercel.app
+module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -54,48 +52,64 @@ export default async function handler(req, res) {
     "Vodafone España SAU"
   ];
 
-  const prompt = `Eres un sistema de extracción de datos de facturas españolas para una empresa de construcción e interiorismo.
+  const prompt = `Eres un sistema de extracción de datos de facturas españolas.
 
-Analiza el siguiente texto de factura y extrae los datos. Devuelve ÚNICAMENTE un objeto JSON válido, sin texto adicional, sin markdown, sin explicaciones.
+Analiza el siguiente texto y devuelve ÚNICAMENTE un objeto JSON válido, sin markdown, sin texto extra.
 
-LISTA DE PROVEEDORES REGISTRADOS (usa exactamente uno de estos nombres si coincide con el emisor):
+PROVEEDORES REGISTRADOS (usa el nombre exacto de esta lista si coincide con el emisor):
 ${JSON.stringify(PROVEEDORES)}
 
-REGLAS IMPORTANTES:
-- invoice_number: número de factura del EMISOR (busca "N.º", "Nº", "Factura N°", "Invoice", etc.). NUNCA uses número de albarán, pedido ni referencia interna.
-- supplier_name: el EMISOR de la factura (quien cobra), NO PAU INTERIORISMO que es el cliente. Busca en la lista de proveedores la coincidencia más cercana.
-- issue_date: fecha de EMISIÓN de la factura en formato DD/MM/YYYY. No la fecha de albarán ni vencimiento.
-- tax_base: base imponible en número decimal. Si hay varias líneas, es la etiquetada "Base imponible".
-- vat_percent: porcentaje de IVA (4, 10 o 21).
-- vat_amount: importe del IVA en decimal.
-- total_amount: total final de la factura.
-- payment_method: mapear a exactamente uno de: "Domiciliación", "Transferencia", "Giro", "Pagaré", "Confirming", "Efectivo". Si no se indica claramente, usa "Domiciliación".
-- due_dates: array de objetos {date: "DD/MM/YYYY", amount: número} con los vencimientos. Si no hay, array vacío.
-- concept: descripción corta del producto/servicio principal (máximo 80 caracteres). Si no está claro, null.
+CAMPOS A EXTRAER:
+- invoice_number: número de factura del emisor. Busca etiquetas como "N.º", "Nº", "Factura", "Invoice". NUNCA uses número de albarán.
+- supplier_name: el EMISOR (quien cobra), no PAU INTERIORISMO que es el cliente. Busca coincidencia en la lista de proveedores.
+- issue_date: fecha de emisión en formato DD/MM/YYYY
+- tax_base: base imponible como número (ej: 358.00)
+- vat_percent: porcentaje IVA como número (4, 10 o 21)
+- vat_amount: importe IVA como número
+- total_amount: total factura como número
+- payment_method: uno de exactamente: "Domiciliación", "Transferencia", "Giro", "Pagaré", "Confirming", "Efectivo". Si no está claro usa "Domiciliación".
+- due_dates: array [{date:"DD/MM/YYYY", amount:número}]. Si no hay vencimientos, array vacío [].
+- concept: descripción corta del producto/servicio (máximo 80 chars). null si no está claro.
 
 TEXTO DE LA FACTURA:
-${pdfText.slice(0, 4000)}
-
-JSON de respuesta (solo esto, nada más):`;
+${pdfText.slice(0, 4000)}`;
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001', // rápido y barato para extracción
-        max_tokens: 600,
-        messages: [{ role: 'user', content: prompt }]
-      })
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) return res.status(500).json({ error: 'ANTHROPIC_API_KEY no configurada' });
+
+    const body = JSON.stringify({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 600,
+      messages: [{ role: 'user', content: prompt }]
     });
 
-    const data = await response.json();
-    if (!response.ok) {
-      console.error('Anthropic error:', data);
+    // Llamada HTTPS nativa (sin fetch, compatible con Node 16/18)
+    const result = await new Promise((resolve, reject) => {
+      const options = {
+        hostname: 'api.anthropic.com',
+        path: '/v1/messages',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'Content-Length': Buffer.byteLength(body)
+        }
+      };
+      const reqApi = https.request(options, (r) => {
+        let data = '';
+        r.on('data', chunk => data += chunk);
+        r.on('end', () => resolve({ status: r.statusCode, body: data }));
+      });
+      reqApi.on('error', reject);
+      reqApi.write(body);
+      reqApi.end();
+    });
+
+    const data = JSON.parse(result.body);
+    if (result.status !== 200) {
+      console.error('Anthropic error:', result.body);
       return res.status(500).json({ error: 'Error API Claude', detail: data });
     }
 
@@ -108,4 +122,4 @@ JSON de respuesta (solo esto, nada más):`;
     console.error('parse-invoice error:', err);
     return res.status(500).json({ error: 'Error procesando factura', detail: err.message });
   }
-}
+};
