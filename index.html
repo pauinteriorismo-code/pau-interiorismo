@@ -19070,49 +19070,34 @@ function poblarProveedorSearch(valorActual){
 }
 
 // ═══════════════════════════════════════════════════════════
-// PDF.js carga robusta con blob worker (sin CSP issues)
-// Usa PDF.js 2.16.105 que soporta disableWorker real
+// PDF.js – carga con blob worker (evita CSP/CORS en Vercel)
 // ═══════════════════════════════════════════════════════════
-const _PDFJS_URL='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js';
-const _PDFJS_WORKER='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-
-function _cargarScript(url){
-  return new Promise((res,rej)=>{
-    if(document.querySelector(`script[src="${url}"]`)){res();return;}
-    const s=document.createElement('script');
-    s.src=url;
-    s.onload=res;
-    s.onerror=()=>rej(new Error('No cargó: '+url));
-    document.head.appendChild(s);
-  });
-}
+const _PDFJS_SRC    = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js';
+const _PDFJS_WORKER = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
 async function _initPdfJs(){
-  if(window._pdfJsReady) return true;
+  if(window._pdfJsOk) return true;
+  await new Promise((res,rej)=>{
+    if(window.pdfjsLib){res();return;}
+    const s=document.createElement('script');
+    s.src=_PDFJS_SRC; s.onload=res; s.onerror=rej;
+    document.head.appendChild(s);
+  });
+  // Intentar blob worker (evita CORS) → fallback CDN directo
   try{
-    await _cargarScript(_PDFJS_URL);
-    if(!window.pdfjsLib) throw new Error('pdfjsLib no disponible');
-    // Intentar blob worker primero (evita CORS/CSP)
-    try{
-      const r=await fetch(_PDFJS_WORKER);
-      const blob=await r.blob();
-      pdfjsLib.GlobalWorkerOptions.workerSrc=URL.createObjectURL(blob);
-    }catch(e){
-      // Fallback: apuntar al CDN directamente
-      pdfjsLib.GlobalWorkerOptions.workerSrc=_PDFJS_WORKER;
-    }
-    window._pdfJsReady=true;
-    return true;
+    const r=await fetch(_PDFJS_WORKER);
+    const blob=await r.blob();
+    pdfjsLib.GlobalWorkerOptions.workerSrc=URL.createObjectURL(blob);
   }catch(e){
-    console.warn('[PDF] Error cargando PDF.js:',e);
-    return false;
+    pdfjsLib.GlobalWorkerOptions.workerSrc=_PDFJS_WORKER;
   }
+  window._pdfJsOk=true;
+  return true;
 }
 
 async function _pdfTexto(b64){
-  const ok=await _initPdfJs();
-  if(!ok||!window.pdfjsLib){console.warn('[PDF] pdfjsLib no disponible');return '';}
   try{
+    await _initPdfJs();
     const bin=atob(b64),buf=new Uint8Array(bin.length);
     for(let i=0;i<bin.length;i++) buf[i]=bin.charCodeAt(i);
     const doc=await pdfjsLib.getDocument({data:buf}).promise;
@@ -19120,99 +19105,118 @@ async function _pdfTexto(b64){
     for(let p=1;p<=Math.min(doc.numPages,4);p++){
       const pg=await doc.getPage(p);
       const tc=await pg.getTextContent();
-      // Agrupar por línea (coordenada Y)
       const byY={};
       for(const it of tc.items){
         const y=Math.round(it.transform[5]);
         if(!byY[y]) byY[y]=[];
         byY[y].push({x:it.transform[4],str:it.str});
       }
-      const ys=Object.keys(byY).map(Number).sort((a,b)=>b-a);
-      for(const y of ys){
+      Object.keys(byY).map(Number).sort((a,b)=>b-a).forEach(y=>{
         const ln=byY[y].sort((a,b)=>a.x-b.x).map(i=>i.str).join(' ').trim();
         if(ln) lineas.push(ln);
-      }
+      });
     }
     const txt=lineas.join('\n');
-    console.log('[PDF] OK, chars:',txt.length,'\n'+txt.slice(0,300));
+    console.log('[PDF] Extraídos',txt.length,'chars\n'+txt.slice(0,400));
     return txt;
-  }catch(e){console.error('[PDF] Error extrayendo texto:',e);return '';}
+  }catch(e){console.error('[PDF] Error:',e);return '';}
 }
 
 // ═══════════════════════════════════════════════════════════
-// Parser: basado en estructura real de facturas ES
-// Probado con Mármoles Santamaria FR26C100
+// Parser robusto — probado con Mármoles Santamaria y Ricalmadera
+// Soporta facturas con o sin etiquetas, cualquier maquetación
 // ═══════════════════════════════════════════════════════════
 function _parsearFacturaPDF(txt){
   const lineas=txt.split('\n').map(l=>l.trim()).filter(Boolean);
-  const tFlat=lineas.join(' ');
+  const flat=lineas.join(' ');
   const datos={};
   const rF=/(0?[1-9]|[12]\d|3[01])[\/\-](0?[1-9]|1[0-2])[\/\-](\d{4})/g;
   const toISO=(d,m,y)=>`${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
-  const toFloat=s=>parseFloat(s.replace(/\./g,'').replace(',','.'));
-  const esNum=s=>/^[\d.,]+$/.test(s.trim());
+  const toF=s=>parseFloat(s.replace(/\./g,'').replace(',','.').replace(/€/g,'').trim());
 
-  // Todas las fechas del doc
-  const fechas=[...tFlat.matchAll(rF)].map(m=>({iso:toISO(m[1],m[2],m[3]),idx:m.index}));
+  // Todas las fechas del documento
+  const todasF=[...flat.matchAll(rF)].map(m=>toISO(m[1],m[2],m[3]));
 
-  // Fecha emisión: línea que contiene CIF (letra-números)
-  let fechaEmision=null;
-  for(const l of lineas){
-    if(/[A-Z]-?\d{2}[.\-]\d{3}[.\-]\d{3}/.test(l)){
-      const m=[...l.matchAll(rF)];
-      if(m.length){fechaEmision=toISO(m[0][1],m[0][2],m[0][3]);datos.fecha=fechaEmision;break;}
+  // ── FECHA EMISIÓN ──
+  // 1. Etiqueta "Fecha: dd/mm/yyyy"
+  const mFL=flat.match(new RegExp('\\bfecha\\s*[:\\-]\\s*'+rF.source,'i'));
+  if(mFL) datos.fecha=toISO(mFL[1],mFL[2],mFL[3]);
+  // 2. Línea que contiene CIF proveedor (B12345678 o B-12.345.678)
+  if(!datos.fecha){
+    for(const l of lineas){
+      if(/\b[A-Z]\d{8}\b|\b[A-Z]-?\d{2}[.\-]\d{3}[.\-]\d{3}/.test(l)){
+        const m2=l.match(rF); if(m2){datos.fecha=toISO(m2[1],m2[2],m2[3]);break;}
+      }
     }
   }
-  if(!datos.fecha&&fechas.length) {datos.fecha=fechas[0].iso;fechaEmision=fechas[0].iso;}
+  // 3. Primera fecha del doc
+  if(!datos.fecha&&todasF.length) datos.fecha=todasF[0];
 
-  // IVA: primer porcentaje 4/10/21 del doc
-  const mIva=tFlat.match(/\b(21|10|4)\s*%/);
+  // ── IVA ──
+  const mIva=flat.match(/\b(21|10|4)\s*%/);
   if(mIva){const p=parseInt(mIva[1]);if([4,10,21].includes(p))datos.iva=p+'%';}
 
-  // Vencimiento: línea con FECHA + IMPORTE (ej: "05/04/2026 810,70")
-  for(const l of lineas){
-    const m=l.match(/^(0?[1-9]|[12]\d|3[01])[\/\-](0?[1-9]|1[0-2])[\/\-](\d{4})\s+([\d.,]+)/);
-    if(m&&toISO(m[1],m[2],m[3])!==fechaEmision){datos.vto=toISO(m[1],m[2],m[3]);break;}
+  // ── BASE IMPONIBLE ──
+  // Prioridad: etiquetas explícitas → número antes de línea IVA
+  const patronesBase=[
+    /b\.?\s*imponible\s*[:\-]?\s*([\d.,]+)\s*€?/i,
+    /base\s*imponible\s*[:\-]?\s*([\d.,]+)\s*€?/i,
+    /base\s*imp[^€\n]{0,5}[:\s]([\d.,]+)\s*€?/i,
+    /\bbase\s*[:\-]\s*([\d.,]+)\s*€/i,
+  ];
+  for(const pat of patronesBase){
+    const m=flat.match(pat);
+    if(m){try{datos.base=toF(m[1]).toFixed(2);break;}catch(e){}}
   }
-  // Fallback: última fecha != emisión
-  if(!datos.vto){
-    const otras=fechas.filter(f=>f.iso!==fechaEmision);
-    if(otras.length) datos.vto=otras[otras.length-1].iso;
-  }
-
-  // Base imponible: número solo en línea, justo antes de la línea con %IVA
-  for(let i=0;i<lineas.length;i++){
-    if(/\b(21|10|4)\s*%/.test(lineas[i])&&!datos.base){
-      for(let j=i-1;j>=Math.max(0,i-5);j--){
-        if(esNum(lineas[j])&&toFloat(lineas[j])>0){
-          datos.base=toFloat(lineas[j]).toFixed(2);
-          break;
+  if(!datos.base){
+    for(let i=0;i<lineas.length;i++){
+      if(/\b(21|10|4)\s*%/.test(lineas[i])){
+        for(let j=i-1;j>=Math.max(0,i-6);j--){
+          const s=lineas[j].replace(/€/g,'').trim();
+          if(/^[\d.,]+$/.test(s)){try{datos.base=toF(s).toFixed(2);break;}catch(e){}}
         }
+        if(datos.base) break;
       }
-      // Si no encontró línea sola, buscar repetición (base suele aparecer 3 veces)
-      if(!datos.base){
-        const freq={};
-        for(let j=Math.max(0,i-8);j<i;j++){
-          if(esNum(lineas[j])){const v=lineas[j].trim();freq[v]=(freq[v]||0)+1;}
-        }
-        const top=Object.entries(freq).sort((a,b)=>b[1]-a[1]);
-        if(top.length) datos.base=toFloat(top[0][0]).toFixed(2);
-      }
-      break;
     }
   }
 
-  // Forma de pago: etiqueta o keywords sueltas al final del doc
-  const mLabel=tFlat.match(/forma\s*(?:de\s*)?pago\s*[:\-]?\s*([a-zA-Z\u00C0-\u024F ]{3,30})/i);
-  const srcPago=mLabel?mLabel[1].toLowerCase():tFlat.toLowerCase().slice(-500);
-  if(/\bgiro\b/.test(srcPago))                  datos.formaPago='Giro';
-  else if(/domicil|adeudo/.test(srcPago))        datos.formaPago='Domiciliación';
-  else if(/transferencia|transf\b/.test(srcPago))datos.formaPago='Transferencia';
-  else if(/pagar[eé]/.test(srcPago))             datos.formaPago='Pagaré';
-  else if(/confirming/.test(srcPago))            datos.formaPago='Confirming';
-  else if(/efectivo|contado/.test(srcPago))      datos.formaPago='Efectivo';
+  // ── VENCIMIENTO ──
+  // 1. Línea: "dd/mm/yyyy  importe [texto...]"
+  for(const l of lineas){
+    const m=l.match(/^(0?[1-9]|[12]\d|3[01])[\/\-](0?[1-9]|1[0-2])[\/\-](\d{4})\s+([\d.,]+)/);
+    if(m){
+      const vto=toISO(m[1],m[2],m[3]);
+      if(vto!==datos.fecha){datos.vto=vto;break;}
+    }
+  }
+  // 2. Sección "FECHA VENCIMIENTOS" o "VENCIMIENTOS"
+  if(!datos.vto){
+    for(let i=0;i<lineas.length;i++){
+      if(/fecha\s*vencimiento|vencimientos/i.test(lineas[i])){
+        const blq=lineas.slice(i,i+4).join(' ');
+        const m2=[...blq.matchAll(rF)];
+        const candidatas=m2.map(x=>toISO(x[1],x[2],x[3])).filter(f=>f!==datos.fecha);
+        if(candidatas.length){datos.vto=candidatas[0];break;}
+      }
+    }
+  }
+  // 3. Última fecha distinta de emisión
+  if(!datos.vto){
+    const otras=todasF.filter(f=>f!==datos.fecha);
+    if(otras.length) datos.vto=otras[otras.length-1];
+  }
 
-  // Proveedor: coincidir tokens con lista ProvC + ScC
+  // ── FORMA DE PAGO ──
+  const mPL=flat.match(/forma\s*(?:de\s*)?pago\s*[:\-\.]\s*([A-Za-z\u00C0-\u024F ]{3,30})/i);
+  const src=mPL?mPL[1].toLowerCase():flat.toLowerCase().slice(-600);
+  if(/\bgiro\b|letra\s*bancaria/.test(src))        datos.formaPago='Giro';
+  else if(/transferencia|transf\b/.test(src))       datos.formaPago='Transferencia';
+  else if(/domicili|adeudo/.test(src))              datos.formaPago='Domiciliación';
+  else if(/pagar[eé]/.test(src))                    datos.formaPago='Pagaré';
+  else if(/confirming/.test(src))                   datos.formaPago='Confirming';
+  else if(/efectivo|contado|vista/.test(src))       datos.formaPago='Efectivo';
+
+  // ── PROVEEDOR ──
   const cands=[...ProvC.map(p=>p.nombre),...new Set(ScC.map(s=>s.proveedor_id))].filter(Boolean);
   let mejor=null,best=0;
   for(const nom of cands){
@@ -19220,14 +19224,14 @@ function _parsearFacturaPDF(txt){
     if(!tks.length) continue;
     let hits=0;
     for(const tk of tks){
-      try{if(new RegExp(tk.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i').test(tFlat))hits++;}catch(e){}
+      try{if(new RegExp(tk.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i').test(flat))hits++;}catch(e){}
     }
     const sc=hits/tks.length;
     if(sc>best&&sc>=0.4){best=sc;mejor=nom;}
   }
   if(mejor) datos.proveedor=mejor;
 
-  console.log('[PDF] Datos detectados:',JSON.stringify(datos));
+  console.log('[PDF] Detectado:',JSON.stringify(datos));
   return datos;
 }
 
@@ -19246,7 +19250,7 @@ function _aplicarDatosPDF(datos){
 }
 
 // ═══════════════════════════════════════════════════════════
-// fHandleFile principal
+// fHandleFile
 // ═══════════════════════════════════════════════════════════
 function fHandleFile(file){
   if(!file) return;
@@ -19265,7 +19269,8 @@ function fHandleFile(file){
     if(btnVer) btnVer.style.display='block';
     if(prev){
       prev.style.display='flex';
-      prev.innerHTML='<span style="font-size:12px;color:var(--navy)">✅ '+file.name+' ('+(file.size/1024).toFixed(0)+' KB)</span>'
+      prev.innerHTML='<span style="font-size:12px;color:var(--navy)">✅ '+file.name
+        +' ('+(file.size/1024).toFixed(0)+' KB)</span>'
         +'<button class="btn btn-ghost btn-sm" style="font-size:11px;color:var(--red)" onclick="fQuitarPDF()">✕ Quitar</button>';
     }
     const tipoEl=document.getElementById('f-tipo');
@@ -19282,7 +19287,7 @@ function fHandleFile(file){
       const anyo=mA?mA[0]:new Date().getFullYear();
       const sn=serieEl?(parseInt(serieEl.value)||3):3;
       if(numEl&&filtradas.length) numEl.value=sn+'-'+filtradas.join('-')+'/'+anyo;
-      // Leer y autocompletar
+      // Leer PDF y autocompletar
       toast('🔍 Leyendo PDF…');
       const texto=await _pdfTexto(b64);
       if(texto&&texto.trim().length>10){
@@ -19292,7 +19297,7 @@ function fHandleFile(file){
       } else {
         ['f-vto','f-vto2','f-vto3','f-vto4'].forEach(id=>{const el=document.getElementById(id);if(el){el.value='';el.style.color='';}});
         setTimeout(()=>{if(typeof sugerirDiasPago==='function')sugerirDiasPago();},150);
-        toast('PDF cargado · Nº autocompletado ✅ (abre consola si faltan campos)');
+        toast('PDF cargado · Nº fra autocompletado ✅');
       }
     } else {
       toast('PDF cargado ✅');
