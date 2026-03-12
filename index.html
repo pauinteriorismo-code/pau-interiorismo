@@ -10323,11 +10323,32 @@ async function exportarPDF(elementId, nombreArchivo){
 }
 
 async function exportarPresupuestoPDF(){
-  // Ensure pf-doc is loaded first
+  // Sincronizar proyecto/versión del Constructor → Presupuesto Final
+  const proyConstructor = document.getElementById('pres-proyecto-sel')?.value;
+  const verConstructor  = document.getElementById('pres-version-sel')?.value || 'v1';
+  const cliConstructor  = document.getElementById('filter-cliente-presupuesto')?.value || '';
+
+  if(proyConstructor){
+    const pfProy = document.getElementById('pf-proyecto-sel');
+    const pfVer  = document.getElementById('pf-version-sel');
+    const pfCli  = document.getElementById('filter-cliente-pres_final');
+    if(pfProy && pfProy.value !== proyConstructor){
+      // Primero el cliente para que se popule el selector de proyecto
+      if(pfCli && cliConstructor) pfCli.value = cliConstructor;
+      pfProy.value = proyConstructor;
+    }
+    if(pfVer) pfVer.value = verConstructor;
+  }
+
+  // Cargar el documento y abrir visor
   await loadPresupuestoFinal();
-  // Small delay for DOM to settle, then open print view
-  await new Promise(r=>setTimeout(r,300));
-  abrirVistaPrevia('pf-doc','Presupuesto');
+  await new Promise(r=>setTimeout(r,400));
+  // Nombre de archivo con proyecto y versión
+  const _proy = document.getElementById('pf-proyecto-sel')?.value || 'PRES';
+  const _ver  = document.getElementById('pf-version-sel')?.value  || 'v1';
+  const _cn   = _safeNombre(document.getElementById('pf-cliente-nombre')?.textContent||'');
+  const _fn   = _cn ? `${_proy}-${_ver}_${_cn}` : `${_proy}-${_ver}`;
+  abrirVistaPrevia('pf-doc','Presupuesto', true, _fn);
 }
 
 
