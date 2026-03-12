@@ -208,36 +208,22 @@ tbody td{padding:7px 10px;vertical-align:middle}
   justify-content:center;
   padding:8px 4px 6px;
   cursor:pointer;
-  color:rgba(255,255,255,.45);
+  color:rgba(255,255,255,.5);
   font-size:10px;
   font-weight:600;
   gap:3px;
   -webkit-tap-highlight-color:transparent;
   transition:color .15s;
-  min-height:54px;
-  position:relative;
-  letter-spacing:.02em;
+  min-height:52px;
 }
-/* Indicador activo: barra superior cobre */
-#mobile-nav .mnav-item::before{
-  content:'';
-  position:absolute;
-  top:0; left:20%; right:20%;
-  height:3px;
-  border-radius:0 0 3px 3px;
-  background:var(--copper);
-  opacity:0;
-  transition:opacity .2s;
-}
-#mobile-nav .mnav-item.active::before{ opacity:1 }
 #mobile-nav .mnav-item.active,
 #mobile-nav .mnav-item:active{
-  color:#fff;
+  color:var(--copper);
 }
-#mobile-nav .mnav-icon{font-size:21px;line-height:1}
+#mobile-nav .mnav-icon{font-size:20px;line-height:1}
 #mobile-nav .mnav-badge{
   position:absolute;
-  top:6px;
+  top:4px;
   background:var(--copper);
   color:#fff;
   font-size:9px;
@@ -249,7 +235,7 @@ tbody td{padding:7px 10px;vertical-align:middle}
   align-items:center;
   justify-content:center;
   padding:0 4px;
-  margin-left:14px;
+  margin-left:12px;
   margin-top:-2px;
 }
 #mobile-nav .mnav-item{position:relative}
@@ -261,19 +247,17 @@ tbody td{padding:7px 10px;vertical-align:middle}
   inset:0;
   background:rgba(0,0,0,.5);
   z-index:160;
-  backdrop-filter:blur(2px);
-  -webkit-backdrop-filter:blur(2px);
 }
 #mobile-drawer{
   position:fixed;
-  top:0;left:0;
-  width:82vw;
-  max-width:300px;
+  top:0;right:0;
+  width:80vw;
+  max-width:320px;
   height:100%;
   background:var(--navy);
   z-index:161;
-  transform:translateX(-100%);
-  transition:transform .28s cubic-bezier(.4,0,.2,1);
+  transform:translateX(100%);
+  transition:transform .3s cubic-bezier(.4,0,.2,1);
   overflow-y:auto;
   padding-bottom:env(safe-area-inset-bottom);
 }
@@ -281,72 +265,54 @@ tbody td{padding:7px 10px;vertical-align:middle}
 #mobile-drawer-overlay.open{display:block}
 #mobile-drawer .drawer-head{
   display:flex;
-  flex-direction:column;
-  padding:20px 18px 16px;
-  padding-top:calc(20px + env(safe-area-inset-top));
-  border-bottom:1px solid rgba(255,255,255,.1);
-  background:rgba(255,255,255,.04);
-}
-#mobile-drawer .drawer-logo-row{
-  display:flex;
   align-items:center;
   justify-content:space-between;
-  margin-bottom:10px;
+  padding:16px 18px;
+  padding-top:calc(16px + env(safe-area-inset-top));
+  border-bottom:1px solid rgba(255,255,255,.1);
 }
 #mobile-drawer .drawer-brand{
-  font-size:15px;
-  font-weight:800;
+  font-size:14px;
+  font-weight:700;
   color:#fff;
-  letter-spacing:.04em;
-  text-transform:uppercase;
-}
-#mobile-drawer .drawer-sub{
-  font-size:11px;
-  color:rgba(255,255,255,.4);
-  font-weight:500;
-  letter-spacing:.03em;
+  letter-spacing:.02em;
 }
 #mobile-drawer .drawer-close{
-  background:rgba(255,255,255,.1);border:none;
-  color:rgba(255,255,255,.7);
-  font-size:18px;
+  background:none;border:none;
+  color:rgba(255,255,255,.6);
+  font-size:24px;
   cursor:pointer;
-  padding:4px 8px;
-  border-radius:6px;
+  padding:0;
   line-height:1;
 }
 #mobile-drawer .drawer-section{
   font-size:9px;
   font-weight:700;
   color:rgba(255,255,255,.3);
-  letter-spacing:.14em;
+  letter-spacing:.12em;
   text-transform:uppercase;
   padding:14px 18px 5px;
 }
 #mobile-drawer .drawer-item{
   display:flex;
   align-items:center;
-  gap:13px;
-  padding:13px 18px;
-  color:rgba(255,255,255,.75);
-  font-size:13.5px;
-  font-weight:500;
+  gap:12px;
+  padding:12px 18px;
+  color:rgba(255,255,255,.7);
+  font-size:13px;
   cursor:pointer;
   -webkit-tap-highlight-color:transparent;
-  transition:background .12s;
-  border-left:3px solid transparent;
+  transition:background .15s;
 }
 #mobile-drawer .drawer-item:active,
 #mobile-drawer .drawer-item.active{
-  background:rgba(255,255,255,.07);
+  background:rgba(255,255,255,.08);
   color:#fff;
-  border-left-color:var(--copper);
 }
 #mobile-drawer .drawer-item .di{
-  font-size:17px;
-  width:24px;
+  font-size:16px;
+  width:22px;
   text-align:center;
-  flex-shrink:0;
 }
 
 @media(max-width:768px){
@@ -361,21 +327,11 @@ tbody td{padding:7px 10px;vertical-align:middle}
     padding-bottom:calc(70px + env(safe-area-inset-bottom));
   }
 
-  /* Topbar móvil */
+  /* Topbar */
   .topbar{
-    padding-left:12px;
-    padding-right:12px;
+    padding-left:14px;
     padding-top:env(safe-area-inset-top);
-    gap:8px;
   }
-  /* Ocultar elementos de escritorio en topbar */
-  #topbar-search-btn,
-  #topbar-ayuda-btn,
-  #topbar-salir-btn{ display:none!important }
-  /* Botón hamburguesa visible solo en móvil */
-  #mobile-menu-btn{ display:flex!important }
-  /* Botón + Nuevo compacto */
-  .topbar .btn-primary{ padding:7px 12px; font-size:12px }
 
   /* Toast no quede tapado por nav */
   .toast{
@@ -732,18 +688,19 @@ th.sortable:not(.sort-asc):not(.sort-desc) .sort-arrow::after{content:'⇅'}
     <div class="mnav-item active" id="mnav-gerencia" onclick="mnavTo('gerencia')">
       <span class="mnav-icon">🏠</span><span>Inicio</span>
     </div>
-    <div class="mnav-item" id="mnav-proyectos" onclick="mnavTo('proyectos')">
-      <span class="mnav-icon">📁</span><span>Proyectos</span>
-    </div>
     <div class="mnav-item" id="mnav-agenda" onclick="mnavTo('agenda')">
-      <span class="mnav-icon">🔔</span><span>Avisos</span>
+      <span class="mnav-icon">🔔</span>
       <span class="mnav-badge" id="mnav-agenda-badge" style="display:none"></span>
+      <span>Agenda</span>
     </div>
     <div class="mnav-item" id="mnav-horas" onclick="mnavTo('horas')">
       <span class="mnav-icon">⏱</span><span>Horas</span>
     </div>
-    <div class="mnav-item" id="mnav-presupuesto" onclick="mnavTo('presupuesto')">
-      <span class="mnav-icon">💰</span><span>Presupuesto</span>
+    <div class="mnav-item" id="mnav-contabilidad" onclick="mnavTo('contabilidad')">
+      <span class="mnav-icon">📊</span><span>Contabilidad</span>
+    </div>
+    <div class="mnav-item" id="mnav-mas" onclick="openMobileDrawer()">
+      <span class="mnav-icon">☰</span><span>Más</span>
     </div>
   </div>
 </nav>
@@ -752,13 +709,8 @@ th.sortable:not(.sort-asc):not(.sort-desc) .sort-arrow::after{content:'⇅'}
 <div id="mobile-drawer-overlay" onclick="closeMobileDrawer()"></div>
 <div id="mobile-drawer">
   <div class="drawer-head">
-    <div class="drawer-logo-row">
-      <div>
-        <div class="drawer-brand">PAU Interiorismo</div>
-        <div class="drawer-sub">Gestión · Construcción e Interiorismo</div>
-      </div>
-      <button class="drawer-close" onclick="closeMobileDrawer()">✕</button>
-    </div>
+    <span class="drawer-brand">PAU INTERIORISMO</span>
+    <button class="drawer-close" onclick="closeMobileDrawer()">×</button>
   </div>
   <div class="drawer-section">Principal</div>
   <div class="drawer-item" onclick="mnavTo('clientes');closeMobileDrawer()"><span class="di">🤝</span>Clientes</div>
@@ -784,7 +736,6 @@ th.sortable:not(.sort-asc):not(.sort-desc) .sort-arrow::after{content:'⇅'}
   <div class="drawer-item" onclick="mnavTo('contrato');closeMobileDrawer()"><span class="di">📝</span>Contrato</div>
   <div class="drawer-item" onclick="mnavTo('configuracion');closeMobileDrawer()"><span class="di">⚙️</span>Configuración</div>
   <div class="drawer-item" onclick="window.open('ayuda.html','_blank');closeMobileDrawer()"><span class="di">❓</span>Centro de Ayuda</div>
-  <div class="drawer-item" onclick="doLogout();closeMobileDrawer()" style="border-top:1px solid rgba(255,255,255,.08);margin-top:8px"><span class="di">🚪</span>Cerrar sesión</div>
 </div>
 
 <script>
@@ -806,18 +757,6 @@ function closeMobileDrawer(){
   document.getElementById('mobile-drawer-overlay').classList.remove('open');
   document.body.style.overflow='';
 }
-// Swipe para cerrar el drawer deslizando a la izquierda
-(function(){
-  let startX=0, startY=0;
-  const drawer=document.getElementById('mobile-drawer');
-  if(!drawer)return;
-  drawer.addEventListener('touchstart',e=>{startX=e.touches[0].clientX;startY=e.touches[0].clientY;},{passive:true});
-  drawer.addEventListener('touchend',e=>{
-    const dx=e.changedTouches[0].clientX-startX;
-    const dy=Math.abs(e.changedTouches[0].clientY-startY);
-    if(dx<-60&&dy<50) closeMobileDrawer();
-  },{passive:true});
-})();
 function syncMnavBadge(){
   const src=document.getElementById('agenda-badge');
   const dst=document.getElementById('mnav-agenda-badge');
@@ -839,16 +778,14 @@ if(window.MutationObserver){
 
 <div class="main">
   <div class="topbar">
-    <!-- Botón hamburguesa (solo visible en móvil) -->
-    <button id="mobile-menu-btn" onclick="openMobileDrawer()" style="display:none;align-items:center;justify-content:center;width:36px;height:36px;background:rgba(26,42,58,.07);border:none;border-radius:8px;cursor:pointer;color:var(--navy);font-size:20px;flex-shrink:0;-webkit-tap-highlight-color:transparent">☰</button>
     <div><div class="topbar-title" id="tb-title">Gerencia · Panel ejecutivo</div><div class="topbar-bc" id="tb-bc">Datos en tiempo real</div></div>
     <div class="topbar-right">
       <!-- Búsqueda global Ctrl+K -->
-      <button id="topbar-search-btn" onclick="abrirBusquedaGlobal()" style="display:flex;align-items:center;gap:7px;padding:6px 14px;background:#f5f7fa;border:1px solid var(--border);border-radius:8px;cursor:pointer;color:var(--text-mid);font-size:12px;transition:all .15s" onmouseover="this.style.background='var(--blue-light)'" onmouseout="this.style.background='#f5f7fa'">
+      <button onclick="abrirBusquedaGlobal()" style="display:flex;align-items:center;gap:7px;padding:6px 14px;background:#f5f7fa;border:1px solid var(--border);border-radius:8px;cursor:pointer;color:var(--text-mid);font-size:12px;transition:all .15s" onmouseover="this.style.background='var(--blue-light)'" onmouseout="this.style.background='#f5f7fa'">
         <span>🔍</span><span style="color:var(--text-soft)">Buscar…</span><kbd style="background:#e8e8e8;border-radius:3px;padding:1px 5px;font-size:10px;color:var(--text-soft)">Ctrl K</kbd>
       </button>
       <div id="conn-status" style="font-size: 11px; padding: 3px 9px; border-radius: 10px; background: var(--amber-soft); color: var(--amber); font-weight: 600; cursor:pointer;" onclick="reconectarApp()" title="Clic para reconectar">🟡 Conectando…</div>
-      <a id="topbar-ayuda-btn" href="ayuda.html" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;display:inline-flex;align-items:center;gap:5px" title="Centro de Ayuda">❓ Ayuda</a><button id="topbar-salir-btn" class="btn btn-ghost btn-sm" onclick="doLogout()">Salir</button>
+      <a href="ayuda.html" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;display:inline-flex;align-items:center;gap:5px" title="Centro de Ayuda">❓ Ayuda</a><button class="btn btn-ghost btn-sm" onclick="doLogout()">Salir</button>
       <button class="btn btn-primary btn-sm" onclick="openModal('m-quick')">＋ Nuevo</button>
     </div>
   </div>
@@ -1195,6 +1132,8 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <div class="kpi" style="background:#e6f0ff;border-left:4px solid #1a5fa8"><div class="kpi-label" style="color:#1a5fa8">📐 S1 · Obra</div><div class="kpi-value" id="g-ventas-s1" style="font-size:20px">—</div><div class="kpi-sub">Ventas serie 1</div></div>
         <div class="kpi" style="background:#f0e6ff;border-left:4px solid #7b2fa8"><div class="kpi-label" style="color:#7b2fa8">🛋️ S2 · Interiorismo</div><div class="kpi-value" id="g-ventas-s2" style="font-size:20px">—</div><div class="kpi-sub">Ventas serie 2</div></div>
         <div class="kpi red"><div class="kpi-label">Total Costes (Base Imp.)</div><div class="kpi-value" id="g-costes">—</div><div class="kpi-sub">Facturas recibidas</div></div>
+        <div class="kpi" style="background:#e6f5e6;border-left:4px solid #2a7a2a"><div class="kpi-label" style="color:#2a7a2a">🔧 S3 · Proveedores</div><div class="kpi-value" id="g-compras-s3" style="font-size:20px">—</div><div class="kpi-sub">Compras serie 3</div></div>
+        <div class="kpi" style="background:#fff3e6;border-left:4px solid #b85c00"><div class="kpi-label" style="color:#b85c00">📋 S4 · Gastos</div><div class="kpi-value" id="g-compras-s4" style="font-size:20px">—</div><div class="kpi-sub">Compras serie 4</div></div>
         <div class="kpi green"><div class="kpi-label">Beneficio Neto</div><div class="kpi-value" id="g-benef">—</div><div class="kpi-sub">Ventas − Costes (base imp.)</div></div>
         <div class="kpi amber"><div class="kpi-label">Margen Neto %</div><div class="kpi-value" id="g-margen">—</div><div class="kpi-sub">Sobre base imponible</div></div>
       </div>
@@ -1223,6 +1162,8 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
             <div class="cuenta-row" style="background:#f8f5ff"><span style="padding-left:12px;color:#7b2fa8">↳ S2 · Interiorismo</span><span id="ge-ventas-s2" style="color:#7b2fa8">—</span><span id="ge-ventas-s2-pct" style="color:#7b2fa8">—</span></div>
             <div class="cuenta-row"><span>IVA Repercutido</span><span id="ge-iva-rep">—</span><span></span></div>
             <div class="cuenta-row"><span style="color:var(--text-soft)">— Compras (fact. recibidas)</span><span id="ge-compras">—</span><span id="ge-compras-pct">—</span></div>
+            <div class="cuenta-row" style="background:#f0f9f0"><span style="padding-left:12px;color:#2a7a2a">↳ S3 · Proveedores</span><span id="ge-compras-s3" style="color:#2a7a2a">—</span><span id="ge-compras-s3-pct" style="color:#2a7a2a">—</span></div>
+            <div class="cuenta-row" style="background:#fff8f0"><span style="padding-left:12px;color:#b85c00">↳ S4 · Gastos empresa</span><span id="ge-compras-s4" style="color:#b85c00">—</span><span id="ge-compras-s4-pct" style="color:#b85c00">—</span></div>
             <div class="cuenta-row" style="display:none"><span></span><span id="ge-subcs">—</span><span id="ge-subcs-pct"></span></div>
             <div class="cuenta-row" style="display:none"><span></span><span id="ge-mo">—</span><span id="ge-mo-pct"></span></div>
             <div class="cuenta-row total"><span>TOTAL COSTES (Base Imp.)</span><span id="ge-costes-tot">—</span><span id="ge-costes-pct">—</span></div>
@@ -3507,6 +3448,8 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <option value="">— Serie —</option>
           <option value="1">Serie 1 · Obra</option>
           <option value="2">Serie 2 · Interiorismo</option>
+          <option value="3">Serie 3 · Proveedores</option>
+          <option value="4">Serie 4 · Gastos</option>
         </select>
         <select class="form-input" style="width:120px" id="filt-fac-estado" onchange="filtrarFacturas()">
           <option value="">— Estado —</option>
@@ -4714,6 +4657,8 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <select class="form-input" id="f-serie" onchange="autoNumFactura()">
           <option value="1">Serie 1 · Obra</option>
           <option value="2">Serie 2 · Interiorismo</option>
+          <option value="3">Serie 3 · Proveedores</option>
+          <option value="4">Serie 4 · Gastos</option>
         </select>
       </div>
       <!-- Venta → Cliente | Compra → Proveedor -->
@@ -6775,7 +6720,7 @@ function exportarInformeFacturas(){
     const estColor = f.estado==='Cobrada'||f.estado==='Pagada'?'#27ae60':f.estado==='Vencida'?'#e74c3c':'#e67e22';
     return `<tr style="border-bottom:1px solid #f0f0f0;font-size:11px">
       <td style="padding:5px 6px">${badge}</td>
-       <td style="padding:5px 6px;text-align:center">${esC?'':('<span style="background:'+(f.serie===2?'#f0e6ff':'#e6f0ff')+(';color:')+(f.serie===2?'#7b2fa8':'#1a5fa8')+';padding:1px 7px;border-radius:10px;font-size:10px;font-weight:700">S'+(f.serie||1)+'</span>')}</td>
+       <td style="padding:5px 6px;text-align:center">${(()=>{const s=f.serie||1;const sc={1:['#e6f0ff','#1a5fa8'],2:['#f0e6ff','#7b2fa8'],3:['#e6f5e6','#2a7a2a'],4:['#fff3e6','#b85c00']};const c=sc[s]||sc[1];return`<span style="background:${c[0]};color:${c[1]};padding:1px 7px;border-radius:10px;font-size:10px;font-weight:700">S${s}</span>`;})()}</td>
       <td style="padding:5px 6px;font-weight:700;font-family:monospace">${f.num_factura||'—'}</td>
       <td style="padding:5px 6px">${fmtD(f.fecha_emision)}</td>
       <td style="padding:5px 6px;color:#888">${fmtD(f.fecha_vencimiento)}</td>
@@ -6955,6 +6900,8 @@ async function loadGerencia(){
     const kpiVentas = facVenta.reduce((s,f)=>s+(f.base_imponible||0),0);
     const kpiVentasS1 = facVenta.filter(f=>(f.serie||1)===1).reduce((s,f)=>s+(f.base_imponible||0),0);
     const kpiVentasS2 = facVenta.filter(f=>(f.serie||1)===2).reduce((s,f)=>s+(f.base_imponible||0),0);
+    const kpiCompraS3 = facCompra.filter(f=>(f.serie||3)===3).reduce((s,f)=>s+(f.base_imponible||0),0);
+    const kpiCompraS4 = facCompra.filter(f=>(f.serie||3)===4).reduce((s,f)=>s+(f.base_imponible||0),0);
     const kpiCostes = facCompra.reduce((s,f)=>s+(f.base_imponible||0),0);
     const kpiBenef  = kpiVentas - kpiCostes;
     const kpiMargen = kpiVentas>0?(kpiBenef/kpiVentas)*100:0;
@@ -6965,6 +6912,8 @@ async function loadGerencia(){
     document.getElementById('g-ventas').textContent=fmt(kpiVentas);
     const _sv1=document.getElementById('g-ventas-s1'); if(_sv1) _sv1.textContent=fmt(kpiVentasS1);
     const _sv2=document.getElementById('g-ventas-s2'); if(_sv2) _sv2.textContent=fmt(kpiVentasS2);
+    const _sc3=document.getElementById('g-compras-s3'); if(_sc3) _sc3.textContent=fmt(kpiCompraS3);
+    const _sc4=document.getElementById('g-compras-s4'); if(_sc4) _sc4.textContent=fmt(kpiCompraS4);
     document.getElementById('g-costes').textContent=fmt(kpiCostes);
     document.getElementById('g-benef').textContent=fmt(kpiBenef);
     document.getElementById('g-benef').style.color=kpiBenef>=0?'var(--green)':'var(--red)';
@@ -6983,6 +6932,10 @@ async function loadGerencia(){
     const _geS2=document.getElementById('ge-ventas-s2'); if(_geS2) _geS2.textContent=fmt(kpiVentasS2);
     const _geS1p=document.getElementById('ge-ventas-s1-pct'); if(_geS1p) _geS1p.textContent=kpiVentas>0?fmtP(kpiVentasS1/kpiVentas*100):'—';
     const _geS2p=document.getElementById('ge-ventas-s2-pct'); if(_geS2p) _geS2p.textContent=kpiVentas>0?fmtP(kpiVentasS2/kpiVentas*100):'—';
+    const _geCS3=document.getElementById('ge-compras-s3'); if(_geCS3) _geCS3.textContent=fmt(kpiCompraS3);
+    const _geCS4=document.getElementById('ge-compras-s4'); if(_geCS4) _geCS4.textContent=fmt(kpiCompraS4);
+    const _geCS3p=document.getElementById('ge-compras-s3-pct'); if(_geCS3p) _geCS3p.textContent=kpiCostes>0?fmtP(kpiCompraS3/kpiCostes*100):'—';
+    const _geCS4p=document.getElementById('ge-compras-s4-pct'); if(_geCS4p) _geCS4p.textContent=kpiCostes>0?fmtP(kpiCompraS4/kpiCostes*100):'—';
     document.getElementById('ge-iva-rep').textContent=fmt(totalIvaRep);
     document.getElementById('ge-compras').textContent=fmt(kpiCostes);
     document.getElementById('ge-compras-pct').textContent=pv?fmtP(kpiCostes/kpiVentas*100):'—';
@@ -11101,7 +11054,7 @@ async function loadFacturas(){
       const srch=(tipo+' '+(f.num_factura||'')+' '+contra+' '+(f.proyecto_id||'')+' '+(f.concepto||'')).toLowerCase();
       return `<tr data-fid="${f.id}" data-tipo="${tipo}" data-serie="${f.serie||1}" data-contra="${contra.toLowerCase()}" data-vto="${f.fecha_vencimiento||''}" data-estado="${f.estado||''}" data-search="${srch}">
         <td>${badge}</td>
-        <td style="text-align:center">${esC?'':(`<span style="background:${(f.serie||1)===2?'#f0e6ff':'#e6f0ff'};color:${(f.serie||1)===2?'#7b2fa8':'#1a5fa8'};padding:1px 7px;border-radius:10px;font-size:10px;font-weight:700">S${f.serie||1}</span>`)}</td>
+        <td style="text-align:center">${(()=>{const s=f.serie||1;const sc={1:['#e6f0ff','#1a5fa8'],2:['#f0e6ff','#7b2fa8'],3:['#e6f5e6','#2a7a2a'],4:['#fff3e6','#b85c00']};const c=sc[s]||sc[1];return`<span style="background:${c[0]};color:${c[1]};padding:1px 7px;border-radius:10px;font-size:10px;font-weight:700">S${s}</span>`;})()}</td>
         <td class="td-mono" style="font-weight:700">${f.num_factura||'—'}</td>
         <td>${fmtD(f.fecha_emision)}</td>
         <td>${fmtD(f.fecha_vencimiento)}</td>
@@ -11619,9 +11572,12 @@ function _buildFacturaPDF(){
       const precConDto=prec*(1-dto/100);
       const sub=cant*precConDto;
       const dtoCell=dto>0?`<td style="padding:8px;text-align:center;color:#c62828;font-weight:700">-${dto.toFixed(1)}%</td>`:'<td style="padding:8px;text-align:center;color:#aaa">—</td>';
-      const pUnitCell=dto>0
-        ?'<td style="padding:8px;text-align:right;line-height:1.5">'          +'<span style="text-decoration:line-through;color:#aaa;font-size:10px">'+fmtES(Number(prec))+'€</span><br>'          +'<span style="color:#c62828;font-weight:700">'+fmtES(Number(precConDto))+'€</span>'          +'</td>'        :'<td style="padding:8px;text-align:right">'+fmtES(Number(prec))+'€</td>';
-      return '<tr style="border-bottom:1px solid #eee">'        +'<td style="padding:8px">'+escH(l.desc||'—')+'</td>'        +'<td style="padding:8px;text-align:center">'+escH(l.ud||'Ud')+'</td>'        +'<td style="padding:8px;text-align:right">'+cant+'</td>'        +pUnitCell        +dtoCell
+      return '<tr style="border-bottom:1px solid #eee">'
+        +'<td style="padding:8px">'+escH(l.desc||'—')+'</td>'
+        +'<td style="padding:8px;text-align:center">'+escH(l.ud||'Ud')+'</td>'
+        +'<td style="padding:8px;text-align:right">'+cant+'</td>'
+        +'<td style="padding:8px;text-align:right">'+fmtES(Number(precConDto))+'€</td>'
+        +dtoCell
         +'<td style="padding:8px;text-align:center">'+(l.iva||'21%')+'</td>'
         +'<td style="padding:8px;text-align:right;font-weight:700">'+fmtES(Number(sub))+'€</td>'
       +'</tr>';
@@ -11848,8 +11804,16 @@ function editFactura(id){
   document.getElementById('f-id').value      = f.id;
   document.getElementById('f-num').value     = f.num_factura||'';
   document.getElementById('f-fecha').value   = f.fecha_emision||'';
-  const _serieEl=document.getElementById('f-serie'); if(_serieEl) _serieEl.value=String(f.serie||1);
-  const _grpSerie=document.getElementById('f-grp-serie'); if(_grpSerie) _grpSerie.style.display=esC?'none':'';
+  const _serieEl=document.getElementById('f-serie');
+  if(_serieEl){
+    _serieEl.value=String(f.serie||(esC?3:1));
+    // Filtrar opciones según tipo
+    Array.from(_serieEl.options).forEach(o=>{
+      if(esC) o.hidden = o.value==='1'||o.value==='2';
+      else o.hidden = o.value==='3'||o.value==='4';
+    });
+  }
+  const _grpSerie=document.getElementById('f-grp-serie'); if(_grpSerie) _grpSerie.style.display='';
   document.getElementById('f-concepto').value= f.concepto||'';
   document.getElementById('f-observaciones').value= f.observaciones||'';
   document.getElementById('f-base').value    = f.base_imponible||'';
@@ -11936,22 +11900,35 @@ function editFactura(id){
 function autoNumFactura(esC){
   const serieEl = document.getElementById('f-serie');
   const grpSerie = document.getElementById('f-grp-serie');
-  // Ocultar serie en facturas de Compra (solo Venta tiene series)
-  if(esC===true){ if(grpSerie) grpSerie.style.display='none'; }
-  else if(esC===false){ if(grpSerie) grpSerie.style.display=''; }
+  // Mostrar serie siempre, pero filtrar opciones según tipo
+  if(grpSerie) grpSerie.style.display='';
+  if(serieEl && esC===true){
+    // Compra: mostrar solo S3 y S4
+    Array.from(serieEl.options).forEach(o=>{
+      o.hidden = o.value==='1'||o.value==='2';
+    });
+    if(serieEl.value==='1'||serieEl.value==='2') serieEl.value='3';
+  } else if(serieEl && esC===false){
+    // Venta: mostrar solo S1 y S2
+    Array.from(serieEl.options).forEach(o=>{
+      o.hidden = o.value==='3'||o.value==='4';
+    });
+    if(serieEl.value==='3'||serieEl.value==='4') serieEl.value='1';
+  }
 
   const year = new Date().getFullYear();
   const tipo = document.getElementById('f-tipo')?.value||'Venta';
   const isCompra = tipo==='Compra';
+  const serie = serieEl ? parseInt(serieEl.value)||1 : 1;
   if(isCompra){
-    // Compras: formato FRA-001/2026
-    const nums = (FC||[]).map(f=>(f.num_factura||'')).filter(n=>n.startsWith('FRA-')).map(n=>parseInt((n.replace('FRA-','').split('/')[0]))||0);
+    // Compras S3 o S4: formato 3-001/2026 o 4-001/2026
+    const prefix = serie+'-';
+    const nums = (FC||[]).filter(f=>(f.tipo_factura||'Venta')==='Compra'&&(f.serie||3)===serie).map(f=>(f.num_factura||'')).map(n=>{const m=n.match(/^\d+-(\d+)\//);return m?parseInt(m[1]):0;});
     const sig = (nums.length?Math.max(...nums):0)+1;
-    document.getElementById('f-num').value='FRA-'+String(sig).padStart(3,'0')+'/'+year;
+    document.getElementById('f-num').value=prefix+String(sig).padStart(3,'0')+'/'+year;
     return;
   }
   // Ventas: serie 1 o 2
-  const serie = serieEl ? parseInt(serieEl.value)||1 : 1;
   const prefix = serie+'-';
   const nums = (FC||[]).filter(f=>(f.tipo_factura||'Venta')==='Venta'&&(f.serie||1)===serie).map(f=>(f.num_factura||'')).map(n=>{const m=n.match(/^\d+-?(\d+)\//);return m?parseInt(m[1]):0;});
   const sig = (nums.length?Math.max(...nums):0)+1;
@@ -11985,7 +11962,7 @@ async function saveFactura(){
       : (document.getElementById('f-vto-venta')?.value||null),
     estado:          document.getElementById('f-estado').value||'Pendiente',
     importe_cobrado: parseFloat(document.getElementById('f-cobrado').value)||0,
-    serie:           parseInt(document.getElementById('f-serie')?.value)||1,
+    serie:           parseInt(document.getElementById('f-serie')?.value)||(esC?3:1),
     concepto:        document.getElementById('f-concepto').value,
     observaciones:   document.getElementById('f-observaciones')?.value||null,
     // Pagos a cuenta (hasta 3 pagos parciales)
