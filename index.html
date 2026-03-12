@@ -19069,29 +19069,40 @@ function fHandleFile(file){
   }
   if(file.size > 5*1024*1024){ toast('El PDF no puede superar 5MB','error'); return; }
 
-  // ── Auto-rellenar Nº Factura y Año desde el nombre del archivo ──
-  // Solo si es factura de compra y el campo nº factura está vacío
-  const tipoEl = document.getElementById('f-tipo');
-  const numEl  = document.getElementById('f-num');
+  // ── Auto-rellenar Nº Factura al subir PDF en factura de compra ──
+  const tipoEl  = document.getElementById('f-tipo');
+  const numEl   = document.getElementById('f-num');
+  const serieEl = document.getElementById('f-serie');
   if(tipoEl && tipoEl.value === 'Compra' && numEl && !numEl.value.trim()){
-    const sinExt  = file.name.replace(/\.pdf$/i,'');
-    const partes  = sinExt.split(/[_\-\s]+/);
-    const ignorar = /^(factura|fra|fac|inv|bill|invoice)$/i;
-    const esDate  = /^(\d{4}[-]\d{2}[-]\d{2}|\d{2}[-]\d{2}[-]\d{4}|\d{8})$/;
+    const sinExt   = file.name.replace(/\.pdf$/i,'');
+    const partes   = sinExt.split(/[_\-\s]+/);
+    const ignorar  = /^(factura|fra|fac|inv|bill|invoice)$/i;
+    const esDate   = /^(\d{4}[-]\d{2}[-]\d{2}|\d{2}[-]\d{2}[-]\d{4}|\d{8})$/;
     const filtradas = partes.filter(p => !ignorar.test(p) && !esDate.test(p) && p.length > 0);
-    if(filtradas.length > 0) numEl.value = filtradas.join('-');
-    // Auto-año desde el nombre del archivo
+
+    // Año: desde nombre del archivo o el de la fecha de emisión
     const matchAnyo = file.name.match(/20(2[0-9])/);
-    if(matchAnyo){
-      const anyoDetectado = matchAnyo[0];
-      const fechaEl = document.getElementById('f-fecha');
-      if(fechaEl){
-        const fc = fechaEl.value || new Date().toISOString().slice(0,10);
-        const fp = fc.split('-');
-        if(fp.length===3 && fp[0] !== anyoDetectado)
-          fechaEl.value = anyoDetectado+'-'+(fp[1]||'01')+'-'+(fp[2]||'01');
-      }
+    const anyo = matchAnyo ? matchAnyo[0] : new Date().getFullYear();
+
+    // Serie: número de serie seleccionado (3, 4, etc.)
+    const serieNum = serieEl ? (parseInt(serieEl.value)||3) : 3;
+
+    // Nº extraído del PDF (las partes filtradas unidas)
+    const numOriginal = filtradas.join('-');
+
+    // Formato final: 3-CU0004691304/2026
+    if(numOriginal) numEl.value = serieNum + '-' + numOriginal + '/' + anyo;
+
+    // Actualizar año en fecha de emisión si difiere
+    const fechaEl = document.getElementById('f-fecha');
+    if(fechaEl && matchAnyo){
+      const fp = (fechaEl.value||new Date().toISOString().slice(0,10)).split('-');
+      if(fp[0] !== String(anyo)) fechaEl.value = anyo+'-'+(fp[1]||'01')+'-'+(fp[2]||'01');
     }
+
+    // Auto-calcular vencimientos si el importe ya está relleno
+    setTimeout(()=>{ if(typeof sugerirDiasPago==='function') sugerirDiasPago(); }, 100);
+
     toast('PDF cargado · Nº factura autocompletado ✅');
   } else {
     toast('PDF cargado ✅');
