@@ -5114,46 +5114,6 @@ if('serviceWorker' in navigator){
 }
 \u003c/script>
 
-<!-- ═══ MODAL ENVÍO EMAIL ═══ -->
-<div class="overlay" id="m-enviar-email" onclick="if(event.target===this)closeModal('m-enviar-email')">
-<div class="modal" style="max-width:540px">
-  <div class="modal-header">
-    <div class="modal-title" id="m-email-title">📧 Enviar documento</div>
-    <button class="modal-close" onclick="closeModal('m-enviar-email')">×</button>
-  </div>
-  <div class="modal-body">
-    <input type="hidden" id="em-doc-type">
-    <input type="hidden" id="em-doc-ref">
-    <input type="hidden" id="em-proyecto-id">
-    <input type="hidden" id="em-from-email">
-    <input type="hidden" id="em-html-body">
-    <div class="form-grid">
-      <div class="form-group" style="grid-column:1/-1">
-        <label class="form-label">Para (destinatario) *</label>
-        <input class="form-input" id="em-to" type="email" placeholder="cliente@email.com">
-      </div>
-      <div class="form-group" style="grid-column:1/-1">
-        <label class="form-label">Asunto</label>
-        <input class="form-input" id="em-subject">
-      </div>
-      <div class="form-group" style="grid-column:1/-1">
-        <label class="form-label">Mensaje personalizado</label>
-        <textarea class="form-input" id="em-mensaje" rows="4" placeholder="Estimado/a cliente, adjunto le enviamos..." style="resize:vertical"></textarea>
-      </div>
-      <div class="form-group" style="grid-column:1/-1">
-        <label class="form-label" style="color:var(--text-soft);font-size:11px">Enviando desde</label>
-        <div id="em-from-label" style="font-size:12px;color:var(--text-soft);padding:4px 0"></div>
-      </div>
-      <div id="em-status" style="grid-column:1/-1;display:none;padding:10px;border-radius:6px;font-size:12px;text-align:center"></div>
-    </div>
-  </div>
-  <div class="modal-footer" style="justify-content:flex-end;gap:8px">
-    <button class="btn btn-ghost" onclick="closeModal('m-enviar-email')">Cancelar</button>
-    <button class="btn btn-primary" id="em-btn-send" onclick="ejecutarEnvioEmail()">📤 Enviar</button>
-  </div>
-</div>
-</div>
-
 </body></html>`);
   w.document.close();
 }
@@ -23291,3 +23251,42 @@ renderPresupuesto=function(){
       <div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:4px">Contrato</div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:16px">
         <div><label class="form-label">Categorí
+<!-- ═══ MODAL ENVÍO EMAIL ═══ -->
+<div class="overlay" id="m-enviar-email" onclick="if(event.target===this)closeModal('m-enviar-email')">
+<div class="modal" style="max-width:540px">
+  <div class="modal-header">
+    <div class="modal-title" id="m-email-title">📧 Enviar documento</div>
+    <button class="modal-close" onclick="closeModal('m-enviar-email')">×</button>
+  </div>
+  <div class="modal-body">
+    <input type="hidden" id="em-doc-type">
+    <input type="hidden" id="em-doc-ref">
+    <input type="hidden" id="em-proyecto-id">
+    <input type="hidden" id="em-from-email">
+    <input type="hidden" id="em-html-body">
+    <div class="form-grid">
+      <div class="form-group" style="grid-column:1/-1">
+        <label class="form-label">Para (destinatario) *</label>
+        <input class="form-input" id="em-to" type="email" placeholder="cliente@email.com">
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label class="form-label">Asunto</label>
+        <input class="form-input" id="em-subject">
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label class="form-label">Mensaje personalizado</label>
+        <textarea class="form-input" id="em-mensaje" rows="4" placeholder="Estimado/a cliente, adjunto le enviamos..." style="resize:vertical"></textarea>
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label class="form-label" style="color:var(--text-soft);font-size:11px">Enviando desde</label>
+        <div id="em-from-label" style="font-size:12px;color:var(--text-soft);padding:4px 0"></div>
+      </div>
+      <div id="em-status" style="grid-column:1/-1;display:none;padding:10px;border-radius:6px;font-size:12px;text-align:center"></div>
+    </div>
+  </div>
+  <div class="modal-footer" style="justify-content:flex-end;gap:8px">
+    <button class="btn btn-ghost" onclick="closeModal('m-enviar-email')">Cancelar</button>
+    <button class="btn btn-primary" id="em-btn-send" onclick="ejecutarEnvioEmail()">📤 Enviar</button>
+  </div>
+</div>
+</div>
