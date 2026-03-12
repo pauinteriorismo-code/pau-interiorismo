@@ -10923,7 +10923,11 @@ async function loadFacturas(){
   try{
     FC=await sbGet('facturas','?order=fecha_emision.desc');
     // Poblar proveedor select en modal (proveedores + subcontratistas)
-    // Proveedor: datalist hardcoded en HTML, no necesita poblarse
+    const fProv=document.getElementById('f-proveedor');
+    if(fProv){
+      const cur=fProv.value;
+      // datalist hardcoded en HTML
+    }
     // KPIs
     let vTotal=0,vCob=0,vPdte=0,vVenc=0,vIva=0;
     let cTotal=0,cPag=0,cPdte=0,cIva=0;
@@ -11168,7 +11172,13 @@ function abrirNuevaFactura(tipo){
   const fCliente=document.getElementById('f-cliente');
   if(fCliente) fCliente.value='';
   const fProv=document.getElementById('f-proveedor');
-  if(fProv) fProv.value=''; // datalist hardcoded en HTML
+  if(fProv){
+    const provNames=ProvC.map(p=>p.nombre).filter(Boolean);
+    const subNames=[...new Set(ScC.map(s=>s.proveedor_id).filter(Boolean))];
+    const allNames=[...new Set([...provNames,...subNames])].sort();
+    fProv.innerHTML='<option value="">Seleccionar…</option>'+allNames.map(n=>`<option value="${n}">${n}</option>`).join('');
+    fProv.value='';
+  }
   // Reset proyecto: vacío hasta que se elija cliente (venta) o mostrar todos (compra)
   const fProy=document.getElementById('f-proyecto');
   if(fProy){
@@ -19048,98 +19058,92 @@ function scVerPDF(){const b64=window._scPDFActual||document.getElementById('sc-p
 function scVerPDFById(id){const s=ScC.find(x=>String(x.id)===String(id));if(!s||!s.adjunto_pdf){toast('Sin PDF adjunto','error');return;}abrirVisorPDF(s.adjunto_pdf,'factura_subcontrata.pdf');}
 
 // ── PDF adjunto para FACTURAS ──
-// ═══════════════════════════════════════
-// PDF.js blob worker
-// ═══════════════════════════════════════
 const _PDFJS_SRC    = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js';
 const _PDFJS_WORKER = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 async function _initPdfJs(){
   if(window._pdfJsOk) return true;
   await new Promise((res,rej)=>{
     if(window.pdfjsLib){res();return;}
-    const s=document.createElement('script');
-    s.src=_PDFJS_SRC; s.onload=res; s.onerror=rej;
+    const s=document.createElement('script');s.src=_PDFJS_SRC;s.onload=res;s.onerror=rej;
     document.head.appendChild(s);
   });
-  try{const r=await fetch(_PDFJS_WORKER);const blob=await r.blob();pdfjsLib.GlobalWorkerOptions.workerSrc=URL.createObjectURL(blob);}
+  try{const r=await fetch(_PDFJS_WORKER);const b=await r.blob();pdfjsLib.GlobalWorkerOptions.workerSrc=URL.createObjectURL(b);}
   catch(e){pdfjsLib.GlobalWorkerOptions.workerSrc=_PDFJS_WORKER;}
-  window._pdfJsOk=true; return true;
+  window._pdfJsOk=true;return true;
 }
 async function _pdfTexto(b64){
   try{
     await _initPdfJs();
     const bin=atob(b64),buf=new Uint8Array(bin.length);
-    for(let i=0;i<bin.length;i++) buf[i]=bin.charCodeAt(i);
+    for(let i=0;i<bin.length;i++)buf[i]=bin.charCodeAt(i);
     const doc=await pdfjsLib.getDocument({data:buf}).promise;
     let lineas=[];
-    for(let p=1;p<=Math.min(doc.numPages,3);p++){
-      const pg=await doc.getPage(p);
-      const tc=await pg.getTextContent();
+    for(let p=1;p<=Math.min(doc.numPages,4);p++){
+      const pg=await doc.getPage(p);const tc=await pg.getTextContent();
       const byY={};
-      for(const it of tc.items){
-        const y=Math.round(it.transform[5]);
-        if(!byY[y])byY[y]=[];
-        byY[y].push({x:it.transform[4],str:it.str});
-      }
+      for(const it of tc.items){const y=Math.round(it.transform[5]);if(!byY[y])byY[y]=[];byY[y].push({x:it.transform[4],str:it.str});}
       Object.keys(byY).map(Number).sort((a,b)=>b-a).forEach(y=>{
         const ln=byY[y].sort((a,b)=>a.x-b.x).map(i=>i.str).join(' ').trim();
-        if(ln) lineas.push(ln);
+        if(ln)lineas.push(ln);
       });
     }
-    const txt=lineas.join('\n');
-    console.log('[PDF texto]\n'+txt.slice(0,800));
-    return txt;
+    return lineas.join('\n');
   }catch(e){console.error('[PDF]',e);return '';}
 }
-
-// ── Extraer Nº Factura del texto PDF ────────────────────────────
-// Solo acepta cuando hay una etiqueta explícita en el documento.
-// Nunca inventa ni usa el nombre del archivo.
-function _extraerNumFra(txt){
-  // Normalizar: quitar saltos, compactar espacios
-  const flat=txt.replace(/\n+/g,' ').replace(/\s+/g,' ');
-  
-  // Patrones etiqueta + valor (muy específicos para evitar falsos positivos)
-  const patrones=[
-    // "Nº Factura: FA-2026-001" / "Nº Fra: ..." / "Num. Factura: ..."
-    /n[^\s]{0,3}\.?\s*(?:de\s*)?factura\s*[:\-]\s*([A-Z0-9][A-Z0-9\/\-\.]{1,30})/i,
-    // "Factura Nº FA-2026-001" / "Factura N. ..."
-    /factura\s+n[^\s]{0,3}\.?\s*[:\-]?\s*([A-Z0-9][A-Z0-9\/\-\.]{1,30})/i,
-    // "Invoice No: " / "Invoice Number: "
-    /invoice\s*(?:no|number|num|n)[^\s]{0,3}\.?\s*[:\-]\s*([A-Z0-9][A-Z0-9\/\-\.]{1,30})/i,
-    // "Documento: " / "Doc. Nº: "
-    /doc(?:umento)?\.?\s*n[^\s]{0,3}\.?\s*[:\-]\s*([A-Z0-9][A-Z0-9\/\-\.]{1,30})/i,
-    // "Ref.:" cuando es la línea de referencia de factura
-    /^ref(?:erencia)?\.?\s*[:\-]\s*([A-Z0-9][A-Z0-9\/\-\.]{3,25})$/im,
-  ];
-
-  // Caracteres que NO puede contener un nº factura
-  const esInvalido=s=>{
-    if(!s||s.length<2||s.length>30) return true;
-    if(!/\d/.test(s)) return true;              // debe tener al menos un dígito
-    if(/^[A-Z]\d{8}$/.test(s)) return true;    // parece CIF
-    if(/^\d{2}[\/\-]\d{2}[\/\-]\d{2,4}$/.test(s)) return true; // parece fecha
-    if(/^(EUR|IVA|CIF|NIF|REF|TEL|FAX|PAU|SL|SA)$/i.test(s)) return true;
-    return false;
-  };
-
-  for(const pat of patrones){
-    const m=flat.match(pat);
-    if(m&&!esInvalido(m[1])){
-      const v=m[1].trim().replace(/[.,]$/, ''); // quitar puntuación final
-      console.log('[Nº fra detectado]', v, '← patrón:', pat.toString().slice(0,40));
-      return v;
-    }
-  }
-  console.log('[Nº fra] No detectado con etiqueta explícita');
-  return null;
+function _marcarVerde(id){
+  const el=document.getElementById(id);if(!el)return;
+  el.style.borderColor='#22c55e';el.style.background='rgba(34,197,94,0.06)';
+  const q=()=>{el.style.borderColor='';el.style.background='';el.removeEventListener('input',q);el.removeEventListener('change',q);};
+  el.addEventListener('input',q);el.addEventListener('change',q);
 }
-
-// ═══════════════════════════════════════
-// fHandleFile — solo Nº factura + pago default
-// ═══════════════════════════════════════
+async function _autocompletar(b64,nombreArchivo){
+  const texto=await _pdfTexto(b64);
+  if(!texto||texto.trim().length<20){
+    toast('📄 PDF sin texto · rellena los campos manualmente');return;
+  }
+  toast('🤖 Claude está leyendo la factura…');
+  try{
+    const resp=await fetch('/api/parse-invoice',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({pdfText:texto})
+    });
+    if(!resp.ok)throw new Error('HTTP '+resp.status);
+    const d=await resp.json();
+    if(d.error)throw new Error(d.error);
+    const log=[];
+    if(d.invoice_number){const el=document.getElementById('f-num');if(el){el.value=d.invoice_number;_marcarVerde('f-num');log.push('Nº fra');}}
+    if(d.issue_date){
+      // Convertir DD/MM/YYYY → YYYY-MM-DD para input[type=date]
+      const p=d.issue_date.split('/');
+      if(p.length===3){const iso=`${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;const el=document.getElementById('f-fecha');if(el){el.value=iso;_marcarVerde('f-fecha');log.push('fecha');}}
+    }
+    if(d.tax_base){const el=document.getElementById('f-base');if(el){el.value=String(d.tax_base).replace('.',',');_marcarVerde('f-base');calcTotalFac();log.push('base');}}
+    if(d.vat_percent){const el=document.getElementById('f-iva');if(el){el.value=d.vat_percent+'%';_marcarVerde('f-iva');calcTotalFac();log.push('IVA');}}
+    if(d.supplier_name){const el=document.getElementById('f-proveedor');if(el){el.value=d.supplier_name;_marcarVerde('f-proveedor');log.push('proveedor');}}
+    if(d.payment_method){const el=document.getElementById('f-pago');if(el){el.value=d.payment_method;log.push('pago');}}
+    else{const el=document.getElementById('f-pago');if(el&&!el.value)el.value='Domiciliación';}
+    if(d.concept){const el=document.getElementById('f-concepto');if(el&&!el.value){el.value=d.concept;_marcarVerde('f-concepto');log.push('concepto');}}
+    // Vencimientos
+    ['f-vto','f-vto2','f-vto3','f-vto4'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+    ['f-importe-vto1','f-importe-vto2','f-importe-vto3','f-importe-vto4'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+    if(d.due_dates&&d.due_dates.length){
+      const ids=[['f-vto','f-importe-vto1'],['f-vto2','f-importe-vto2'],['f-vto3','f-importe-vto3'],['f-vto4','f-importe-vto4']];
+      d.due_dates.slice(0,4).forEach((v,i)=>{
+        if(v.date){const p=v.date.split('/');if(p.length===3){const iso=`${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;const el=document.getElementById(ids[i][0]);if(el){el.value=iso;_marcarVerde(ids[i][0]);}}}
+        if(v.amount!=null){const el=document.getElementById(ids[i][1]);if(el)el.value=String(v.amount).replace('.',',');}
+      });
+      log.push('vencimiento'+(d.due_dates.length>1?'s':''));
+    }
+    setTimeout(()=>{if(typeof sugerirDiasPago==='function')sugerirDiasPago();},300);
+    toast('✅ Autocompletado: '+log.join(', '));
+  }catch(err){
+    console.error('[IA]',err);
+    toast('⚠️ No se pudo leer la factura automáticamente','warning');
+  }
+}
 function fHandleFile(file){
-  if(!file) return;
+  if(!file)return;
   if(file.type!=='application/pdf'&&!file.name.endsWith('.pdf')){toast('Solo se admiten archivos PDF','error');return;}
   if(file.size>5*1024*1024){toast('El PDF no puede superar 5MB','error');return;}
   const reader=new FileReader();
@@ -19148,37 +19152,24 @@ function fHandleFile(file){
     document.getElementById('f-pdf-b64').value=b64;
     document.getElementById('f-pdf-nombre').value=file.name;
     window._fPDFActual=b64;
-    // Mostrar nombre archivo en zona PDF
     const lbl=document.getElementById('f-pdf-label');
     const prev=document.getElementById('f-pdf-preview');
     const btnVer=document.getElementById('f-pdf-btn-ver');
-    if(lbl) lbl.style.display='none';
-    if(btnVer) btnVer.style.display='block';
+    if(lbl)lbl.style.display='none';
+    if(btnVer)btnVer.style.display='block';
     if(prev){
       prev.style.display='flex';
-      prev.innerHTML='<span style="font-size:12px;color:var(--navy)">✅ '+file.name+' ('+(file.size/1024).toFixed(0)+' KB)</span>'
-        +'<button class="btn btn-ghost btn-sm" style="font-size:11px;color:var(--red)" onclick="fQuitarPDF()">✕ Quitar</button>';
+      prev.innerHTML=`<span style="font-size:12px;color:var(--navy)">✅ ${file.name} (${(file.size/1024).toFixed(0)} KB)</span>`
+        +`<button class="btn btn-ghost btn-sm" style="font-size:11px;color:var(--red)" onclick="fQuitarPDF()">✕ Quitar</button>`;
     }
     const tipoEl=document.getElementById('f-tipo');
     if(tipoEl&&tipoEl.value==='Compra'){
-      // ── Forma de pago: Domiciliación por defecto ──
+      // Pago por defecto inmediato
       const pagoEl=document.getElementById('f-pago');
-      if(pagoEl&&!pagoEl.value) pagoEl.value='Domiciliación';
-      // ── Nº Factura: leer del PDF ──
-      toast('🔍 Leyendo Nº factura del PDF…');
-      const texto=await _pdfTexto(b64);
-      const numFra=texto?_extraerNumFra(texto):null;
-      const numEl=document.getElementById('f-num');
-      if(numFra&&numEl){
-        numEl.value=numFra;
-        numEl.style.borderColor='#22c55e';
-        numEl.style.background='rgba(34,197,94,0.06)';
-        numEl.addEventListener('input',()=>{numEl.style.borderColor='';numEl.style.background='';},{once:true});
-        toast('✅ Nº factura detectado: '+numFra);
-      } else {
-        toast('📄 PDF adjunto · introduce el Nº de factura manualmente');
-      }
-    } else {
+      if(pagoEl&&!pagoEl.value)pagoEl.value='Domiciliación';
+      // Lanzar autocompletado IA
+      await _autocompletar(b64,file.name);
+    }else{
       toast('PDF cargado ✅');
     }
   };
