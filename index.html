@@ -11292,8 +11292,8 @@ function calcTotalFac(){
   const total=base*(1+iva/100);
   const el=document.getElementById('f-total-display');
   if(el) el.value=total>0?fmtES(Number(total))+'€':'';
-  const esC2=(document.getElementById('f-tipo')?.value||'Venta')==='Compra';
-  if(esC2 && base>0 && typeof sugerirDiasPago==='function') sugerirDiasPago();
+  const _esC=(document.getElementById('f-tipo')?.value||'Venta')==='Compra';
+  if(_esC && parseFloat(document.getElementById('f-base')?.value)>0 && typeof sugerirDiasPago==='function') sugerirDiasPago();
 }
 
 function calcTotalPagos(){
@@ -19050,152 +19050,212 @@ function scVerPDF(){const b64=window._scPDFActual||document.getElementById('sc-p
 function scVerPDFById(id){const s=ScC.find(x=>String(x.id)===String(id));if(!s||!s.adjunto_pdf){toast('Sin PDF adjunto','error');return;}abrirVisorPDF(s.adjunto_pdf,'factura_subcontrata.pdf');}
 
 // ── PDF adjunto para FACTURAS ──
-// ═══════════════════════════════════════════════════════
-// PROVEEDOR SEARCH (input + datalist)
-// ═══════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════
+// PROVEEDOR: input + datalist (busqueda manual)
+// ══════════════════════════════════════════════════════════════════
 function poblarProveedorSearch(valorActual){
-  const _render = () => {
-    const dl = document.getElementById('f-prov-datalist');
-    const inp = document.getElementById('f-proveedor');
+  const _render=()=>{
+    const dl=document.getElementById('f-prov-datalist');
+    const inp=document.getElementById('f-proveedor');
     if(!dl||!inp) return;
-    const provNames = ProvC.map(p=>p.nombre).filter(Boolean);
-    const subNames  = [...new Set(ScC.map(s=>s.proveedor_id).filter(Boolean))];
-    const allNames  = [...new Set([...provNames,...subNames])].sort((a,b)=>a.localeCompare(b,'es'));
-    dl.innerHTML = allNames.map(n=>`<option value="${n}">`).join('');
-    inp.value = valorActual||'';
+    const pn=ProvC.map(p=>p.nombre).filter(Boolean);
+    const sn=[...new Set(ScC.map(s=>s.proveedor_id).filter(Boolean))];
+    const all=[...new Set([...pn,...sn])].sort((a,b)=>a.localeCompare(b,'es'));
+    dl.innerHTML=all.map(n=>`<option value="${n}">`).join('');
+    inp.value=valorActual||'';
   };
   if(!ProvC.length){
-    sbGet('proveedores','?order=nombre.asc').then(d=>{ ProvC=d||[]; _render(); }).catch(()=>_render());
+    sbGet('proveedores','?order=nombre.asc').then(d=>{ProvC=d||[];_render();}).catch(()=>_render());
   } else { _render(); }
 }
 
-// ═══════════════════════════════════════════════════════
-// PDF.js: extraer texto del PDF para detectar vencimiento
-// ═══════════════════════════════════════════════════════
-function _pdfJsPromise(){
-  if(window._pdfJsReady) return Promise.resolve();
-  return new Promise(resolve=>{
-    if(window.pdfjsLib){ window._pdfJsReady=true; resolve(); return; }
+// ══════════════════════════════════════════════════════════════════
+// PDF.js: cargar libreria, extraer texto y detectar campos
+// ══════════════════════════════════════════════════════════════════
+function _pdfJsReady(){
+  if(window._pdfJsLoaded) return Promise.resolve();
+  return new Promise(res=>{
+    if(window.pdfjsLib){window._pdfJsLoaded=true;res();return;}
     const s=document.createElement('script');
     s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
     s.onload=()=>{
       pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-      window._pdfJsReady=true; resolve();
+      window._pdfJsLoaded=true; res();
     };
-    s.onerror=()=>resolve();
+    s.onerror=()=>res();
     document.head.appendChild(s);
   });
 }
 
-async function _extraerTextoPDF(b64){
-  await _pdfJsPromise();
+async function _pdfTexto(b64){
+  await _pdfJsReady();
   if(!window.pdfjsLib) return '';
   try{
-    const bin=atob(b64);
-    const buf=new Uint8Array(bin.length);
+    const bin=atob(b64), buf=new Uint8Array(bin.length);
     for(let i=0;i<bin.length;i++) buf[i]=bin.charCodeAt(i);
-    const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+    const doc=await pdfjsLib.getDocument({data:buf}).promise;
     let txt='';
-    for(let p=1;p<=Math.min(pdf.numPages,4);p++){
-      const page=await pdf.getPage(p);
+    for(let p=1;p<=Math.min(doc.numPages,4);p++){
+      const page=await doc.getPage(p);
       const tc=await page.getTextContent();
       let lastY=null;
-      for(const item of tc.items){
-        const y=item.transform?.[5];
-        if(lastY!==null && Math.abs(y-lastY)>5) txt+='\n';
-        txt+=item.str+' ';
-        lastY=y;
+      for(const it of tc.items){
+        const y=it.transform?.[5];
+        if(lastY!==null && Math.abs(y-lastY)>4) txt+='\n';
+        txt+=it.str+' '; lastY=y;
       }
       txt+='\n';
     }
     return txt;
-  }catch(e){ return ''; }
+  }catch(e){return '';}
 }
 
-function _buscarFechaVtoPDF(txt){
-  const clave=/fecha\s*vencimiento|vencimiento|fecha\s*(?:de\s*)?pago|plazo\s*pago|fecha\s*l[ií]mite|vto\.?|f\.?\s*vto|due\s*date/i;
-  const rF=/(0?[1-9]|[12]\d|3[01])[\/\-\.](0?[1-9]|1[0-2])[\/\-\.](\d{4})/g;
-  const lineas=txt.split('\n');
+// Extrae todos los campos posibles del texto del PDF
+function _parsearFacturaPDF(txt, nombreArchivo){
+  const t=txt.replace(/\r/g,'');
+  const lineas=t.split('\n').map(l=>l.trim()).filter(Boolean);
+  const tFlat=lineas.join(' ');
+  const datos={};
+
+  // ── Fecha emisión: buscar patrones "FECHA: dd/mm/yyyy" o similares ──
+  const mFechaEmis = tFlat.match(/(?:fecha\s*(?:de\s*)?(?:emisi[oó]n|factura)?)\s*[:\-]?\s*(0?[1-9]|[12]\d|3[01])[\/\-\.](0?[1-9]|1[0-2])[\/\-\.](\d{4})/i)
+    || tFlat.match(/\bfecha\s*[:\-]\s*(0?[1-9]|[12]\d|3[01])[\/\-\.](0?[1-9]|1[0-2])[\/\-\.](\d{4})/i);
+  if(mFechaEmis){
+    const [,d,m,y]=mFechaEmis.slice(1);
+    datos.fecha=`${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
+  }
+
+  // ── Fecha vencimiento ──
+  const rVto=/(0?[1-9]|[12]\d|3[01])[\/\-\.](0?[1-9]|1[0-2])[\/\-\.](\d{4})/g;
+  const claveVto=/fecha\s*vencimiento|vencimiento|fecha\s*(?:de\s*)?pago|plazo\s*pago|fecha\s*l[ií]mite|vto\.?|f\.?\s*vto/i;
   for(let i=0;i<lineas.length;i++){
-    if(clave.test(lineas[i])){
-      const bloque=lineas.slice(i,i+3).join(' ');
-      const m=[...bloque.matchAll(rF)];
-      if(m.length){ const [,d,mo,y]=m[0]; return `${y}-${mo.padStart(2,'0')}-${d.padStart(2,'0')}`; }
+    if(claveVto.test(lineas[i])){
+      const blq=lineas.slice(i,i+3).join(' ');
+      const m=[...blq.matchAll(rVto)];
+      if(m.length){ const [,d,mo,y]=m[0]; datos.vto=`${y}-${mo.padStart(2,'0')}-${d.padStart(2,'0')}`; break; }
     }
   }
-  const t=txt.replace(/\s+/g,' ');
-  const idx=t.search(clave);
-  if(idx>=0){
-    const trozo=t.slice(idx,idx+80);
-    const m=[...trozo.matchAll(rF)];
-    if(m.length){ const [,d,mo,y]=m[0]; return `${y}-${mo.padStart(2,'0')}-${d.padStart(2,'0')}`; }
+  if(!datos.vto){
+    const idx=tFlat.search(claveVto);
+    if(idx>=0){ const m=[...tFlat.slice(idx,idx+80).matchAll(rVto)]; if(m.length){ const [,d,mo,y]=m[0]; datos.vto=`${y}-${mo.padStart(2,'0')}-${d.padStart(2,'0')}`; } }
   }
-  return null;
+
+  // ── Base imponible ──
+  const mBase = tFlat.match(/base\s*imponible\s*[:\-]?\s*([\d\.]+(?:[,\.]\d{1,2})?)\s*[€\s]/i)
+    || tFlat.match(/importe\s*(?:base|bruto)\s*[:\-]?\s*([\d\.]+(?:[,\.]\d{1,2})?)\s*[€\s]/i);
+  if(mBase){ datos.base=parseFloat(mBase[1].replace('.','').replace(',','.')).toFixed(2); }
+
+  // ── IVA ──
+  const mIva = tFlat.match(/(?:%\s*iva|iva\s*%|tipo\s*iva)[:\s]*(\d{1,2})\s*%/i)
+    || tFlat.match(/\b(21|10|4)\s*%\s*(?:iva|i\.v\.a)/i);
+  if(mIva){ const pct=parseInt(mIva[1]||mIva[0]); if([4,10,21].includes(pct)) datos.iva=pct+'%'; }
+  // Fallback: buscar porcentaje solo si no ambiguo
+  if(!datos.iva){
+    const mPct=tFlat.match(/\b(21|10|4)%/);
+    if(mPct) datos.iva=mPct[1]+'%';
+  }
+
+  // ── Forma de pago ──
+  const mPago=tFlat.match(/forma\s*(?:de\s*)?pago\s*[:\-]?\s*([^\n\r.]{3,30})/i);
+  if(mPago){
+    const p=mPago[1].toLowerCase().trim();
+    if(/giro|letra/.test(p))          datos.formaPago='Giro';
+    else if(/domic|adeudo/.test(p))   datos.formaPago='Domiciliaci\u00f3n';
+    else if(/transf|transfer/.test(p)) datos.formaPago='Transferencia';
+    else if(/pagar[eé]/.test(p))      datos.formaPago='Pagar\u00e9';
+    else if(/confirming/.test(p))     datos.formaPago='Confirming';
+    else if(/efectivo|contado/.test(p)) datos.formaPago='Efectivo';
+  }
+
+  // ── Proveedor: buscar coincidencia con ProvC/ScC ──
+  const candidatos=[...ProvC.map(p=>p.nombre),...new Set(ScC.map(s=>s.proveedor_id))].filter(Boolean);
+  let mejorMatch=null, mejorScore=0;
+  for(const nombre of candidatos){
+    // Tokenizar nombre en palabras significativas (>3 letras)
+    const tokens=nombre.split(/[\s\-,.\/]+/).filter(w=>w.length>3);
+    if(!tokens.length) continue;
+    const hits=tokens.filter(tok=>new RegExp(tok.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i').test(tFlat));
+    const score=hits.length/tokens.length;
+    if(score>mejorScore && score>=0.5){ mejorScore=score; mejorMatch=nombre; }
+  }
+  if(mejorMatch) datos.proveedor=mejorMatch;
+
+  return datos;
 }
 
+// Aplica los datos extraídos del PDF al formulario
+function _aplicarDatosPDF(datos){
+  const log=[];
+  if(datos.fecha){ const el=document.getElementById('f-fecha'); if(el){el.value=datos.fecha;log.push('fecha');} }
+  if(datos.base){ const el=document.getElementById('f-base'); if(el){el.value=datos.base;log.push('base');calcTotalFac();} }
+  if(datos.iva){ const el=document.getElementById('f-iva'); if(el){el.value=datos.iva;log.push('IVA');calcTotalFac();} }
+  if(datos.formaPago){ const el=document.getElementById('f-pago'); if(el){el.value=datos.formaPago;log.push('forma pago');} }
+  if(datos.proveedor){ const el=document.getElementById('f-proveedor'); if(el){el.value=datos.proveedor;log.push('proveedor');} }
+  // Vencimiento
+  ['f-vto','f-vto2','f-vto3','f-vto4'].forEach(id=>{const el=document.getElementById(id);if(el){el.value='';el.style.color='';}});
+  ['f-importe-vto1','f-importe-vto2','f-importe-vto3','f-importe-vto4'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  if(datos.vto){
+    const vto1=document.getElementById('f-vto');
+    if(vto1){vto1.value=datos.vto;vto1.style.color='var(--navy)';log.push('vencimiento');}
+  }
+  setTimeout(()=>{if(typeof sugerirDiasPago==='function') sugerirDiasPago();},150);
+  return log;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// fHandleFile: carga PDF + autocompletado completo en compras
+// ══════════════════════════════════════════════════════════════════
 function fHandleFile(file){
   if(!file) return;
-  if(file.type !== 'application/pdf' && !file.name.endsWith('.pdf')){
-    toast('Solo se admiten archivos PDF','error'); return;
-  }
-  if(file.size > 5*1024*1024){ toast('El PDF no puede superar 5MB','error'); return; }
+  if(file.type!=='application/pdf'&&!file.name.endsWith('.pdf')){toast('Solo se admiten archivos PDF','error');return;}
+  if(file.size>5*1024*1024){toast('El PDF no puede superar 5MB','error');return;}
 
-  const reader = new FileReader();
-  reader.onload = async (e) => {
-    const b64 = e.target.result.split(',')[1];
-    document.getElementById('f-pdf-b64').value = b64;
-    document.getElementById('f-pdf-nombre').value = file.name;
-    window._fPDFActual = b64;
+  const reader=new FileReader();
+  reader.onload=async(e)=>{
+    const b64=e.target.result.split(',')[1];
+    document.getElementById('f-pdf-b64').value=b64;
+    document.getElementById('f-pdf-nombre').value=file.name;
+    window._fPDFActual=b64;
     const lbl=document.getElementById('f-pdf-label');
     const prev=document.getElementById('f-pdf-preview');
     const btnVer=document.getElementById('f-pdf-btn-ver');
-    if(lbl) lbl.style.display='none';
-    if(btnVer) btnVer.style.display='block';
+    if(lbl)lbl.style.display='none';
+    if(btnVer)btnVer.style.display='block';
     if(prev){
       prev.style.display='flex';
       prev.innerHTML=`<span style="font-size:12px;color:var(--navy)">\u2705 ${file.name} (${(file.size/1024).toFixed(0)} KB)</span>
         <button class="btn btn-ghost btn-sm" style="font-size:11px;color:var(--red)" onclick="fQuitarPDF()">\u2715 Quitar</button>`;
     }
 
-    const tipoEl = document.getElementById('f-tipo');
-    const numEl  = document.getElementById('f-num');
-    const serieEl= document.getElementById('f-serie');
+    const tipoEl=document.getElementById('f-tipo');
+    const serieEl=document.getElementById('f-serie');
+    const numEl=document.getElementById('f-num');
     if(tipoEl && tipoEl.value==='Compra'){
 
-      // 1. N\u00ba factura desde nombre del archivo
-      const sinExt    = file.name.replace(/\.pdf$/i,'');
-      const partes    = sinExt.split(/[_\-\s]+/);
-      const ignorar   = /^(factura|fra|fac|inv|bill|invoice)$/i;
-      const esDate    = /^(\d{4}[-]\d{2}[-]\d{2}|\d{2}[-]\d{2}[-]\d{4}|\d{8})$/;
-      const filtradas = partes.filter(p=>!ignorar.test(p)&&!esDate.test(p)&&p.length>0);
-      const matchAnyo = file.name.match(/20(2[0-9])/);
-      const anyo      = matchAnyo?matchAnyo[0]:new Date().getFullYear();
-      const serieNum  = serieEl?(parseInt(serieEl.value)||3):3;
-      const numOrig   = filtradas.join('-');
-      if(numEl && numOrig) numEl.value = serieNum+'-'+numOrig+'/'+anyo;
+      // Nº factura desde nombre archivo
+      const sinExt=file.name.replace(/\.pdf$/i,'');
+      const partes=sinExt.split(/[_\-\s]+/);
+      const ignorar=/^(factura|fra|fac|inv|bill|invoice)$/i;
+      const esDate=/^(\d{4}[-]\d{2}[-]\d{2}|\d{2}[-]\d{2}[-]\d{4}|\d{8})$/;
+      const filtradas=partes.filter(p=>!ignorar.test(p)&&!esDate.test(p)&&p.length>0);
+      const matchAnyo=file.name.match(/20(2[0-9])/);
+      const anyo=matchAnyo?matchAnyo[0]:new Date().getFullYear();
+      const serieNum=serieEl?(parseInt(serieEl.value)||3):3;
+      const numOrig=filtradas.join('-');
+      if(numEl&&numOrig) numEl.value=serieNum+'-'+numOrig+'/'+anyo;
 
-      const fechaEl=document.getElementById('f-fecha');
-      if(fechaEl && matchAnyo){
-        const fp=(fechaEl.value||new Date().toISOString().slice(0,10)).split('-');
-        if(fp[0]!==String(anyo)) fechaEl.value=anyo+'-'+(fp[1]||'01')+'-'+(fp[2]||'01');
-      }
-
-      // 2. Leer texto del PDF para extraer fecha de vencimiento
-      toast('Leyendo PDF\u2026');
-      const texto = await _extraerTextoPDF(b64);
-      const fechaVto = texto ? _buscarFechaVtoPDF(texto) : null;
-
-      ['f-vto','f-vto2','f-vto3','f-vto4'].forEach(id=>{const el=document.getElementById(id);if(el){el.value='';el.style.color='';}});
-      ['f-importe-vto1','f-importe-vto2','f-importe-vto3','f-importe-vto4'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-
-      if(fechaVto){
-        const vto1=document.getElementById('f-vto');
-        if(vto1){ vto1.value=fechaVto; vto1.style.color='var(--navy)'; }
-        setTimeout(()=>{ if(typeof sugerirDiasPago==='function') sugerirDiasPago(); },150);
-        toast('\uD83D\uDCC5 N\u00ba fra y vencimiento detectados del PDF \u2705');
+      // Leer texto del PDF
+      toast('\uD83D\uDD0D Leyendo PDF\u2026');
+      const texto=await _pdfTexto(b64);
+      if(texto){
+        const datos=_parsearFacturaPDF(texto, file.name);
+        const campos=_aplicarDatosPDF(datos);
+        const resumen=campos.length ? campos.join(', ') : 'vencimiento sugerido';
+        toast(`\uD83E\uDD16 Autocompletado: N\u00ba fra, ${resumen} \u2705`);
       } else {
-        setTimeout(()=>{ if(typeof sugerirDiasPago==='function') sugerirDiasPago(); },150);
-        toast('PDF cargado \u00b7 N\u00ba autocompletado \u2705 (vto por d\u00edas de pago)');
+        ['f-vto','f-vto2','f-vto3','f-vto4'].forEach(id=>{const el=document.getElementById(id);if(el){el.value='';el.style.color='';}});
+        setTimeout(()=>{if(typeof sugerirDiasPago==='function') sugerirDiasPago();},150);
+        toast('PDF cargado \u00b7 N\u00ba autocompletado \u2705');
       }
     } else {
       toast('PDF cargado \u2705');
