@@ -634,10 +634,10 @@ th.sortable:not(.sort-asc):not(.sort-desc) .sort-arrow::after{content:'⇅'}
 <!-- APP -->
 <div class="app" style="display: flex;">
 <nav class="sidebar">
-  <div class="sidebar-logo"><div class="brand">PAU INTERIORISMO</div><div class="brand-sub">Sistema de gestión · <span style="color:#b87333">v74</span></div></div>
+  <div class="sidebar-logo"><div class="brand">PAU INTERIORISMO</div><div class="brand-sub">Sistema de gestión · <span style="color:#b87333">v75</span></div></div>
   <div class="nav-section">
     <div class="nav-label">Principal</div>
-    <div class="nav-item active" data-view="gerencia" onclick="navTo('gerencia')"><span class="ni">🏠</span><span>Gerencia</span></div>
+    <div class="nav-item active" data-view="gerencia" onclick="navTo('gerencia')"><span class="ni">🏠</span><span>Inicio</span></div>
     <div class="nav-item" data-view="agenda" onclick="navTo('agenda')"><span class="ni">🔔</span><span>Agenda</span><span class="nav-badge" id="agenda-badge" style="display:none"></span></div>
     <div class="nav-item" data-view="clientes" onclick="navTo('clientes')"><span class="ni">🤝</span><span>Clientes</span></div>
     <div class="nav-item" data-view="proyectos" onclick="navTo('proyectos')"><span class="ni">📁</span><span>Proyectos</span></div>
@@ -645,34 +645,39 @@ th.sortable:not(.sort-asc):not(.sort-desc) .sort-arrow::after{content:'⇅'}
   <div class="nav-section">
     <div class="nav-label">Presupuestación</div>
     <div class="nav-item" data-view="presupuesto" onclick="navTo('presupuesto')"><span class="ni">💰</span><span>Presupuesto</span></div>
-    <div class="nav-item" data-view="comparativa" onclick="navTo('comparativa')"><span class="ni">⚖️</span><span>Comparativa ofertas</span></div>
     <div class="nav-item" data-view="tarifario" onclick="navTo('tarifario')"><span class="ni">📋</span><span>Tarifario</span></div>
     <div class="nav-item" data-view="cype" onclick="navTo('cype')"><span class="ni">📐</span><span>CYPE 2026</span></div>
     <div class="nav-item" data-view="catalogos" onclick="navTo('catalogos')"><span class="ni">📚</span><span>Catálogos</span></div>
+    <div class="nav-item" data-view="comparativa" onclick="navTo('comparativa')"><span class="ni">⚖️</span><span>Comparativa ofertas</span></div>
   </div>
   <div class="nav-section">
     <div class="nav-label">Ejecución</div>
     <div class="nav-item" data-view="compras" onclick="navTo('compras')"><span class="ni">🛒</span><span>Compras</span></div>
+    <div class="nav-item" data-view="pedidos" onclick="navTo('pedidos')"><span class="ni">📦</span><span>Pedidos</span></div>
+    <div class="nav-item" data-view="albaranes" onclick="navTo('albaranes')"><span class="ni">📄</span><span>Albaranes</span></div>
     <div class="nav-item" data-view="subcontratas" onclick="navTo('subcontratas')"><span class="ni">👷</span><span>Subcontratas</span></div>
-    <div class="nav-item" data-view="horas" onclick="navTo('horas')"><span class="ni">⏱</span><span>Horas</span></div>
-    <div class="nav-item" data-view="albaranes" onclick="navTo('albaranes')"><span class="ni">📋</span><span>Albaranes</span></div><div class="nav-item" data-view="pedidos" onclick="navTo('pedidos')"><span class="ni">📦</span><span>Pedidos</span></div>
-    <div class="nav-item" data-view="control_horario" onclick="navTo('control_horario')"><span class="ni">📅</span><span>Control horario</span></div>
     <div class="nav-item" data-view="proveedores" onclick="navTo('proveedores')"><span class="ni">🏭</span><span>Proveedores</span></div>
+    <div class="nav-item" data-view="horas" onclick="navTo('horas')"><span class="ni">⏱</span><span>Horas</span></div>
+    <div class="nav-item" data-view="control_horario" onclick="navTo('control_horario')"><span class="ni">📅</span><span>Control horario</span></div>
   </div>
   <div class="nav-section">
     <div class="nav-label">Cierre</div>
+    <div class="nav-item" data-view="facturas" onclick="navTo('facturas')"><span class="ni">🧾</span><span>Facturas</span></div>
+    <div class="nav-item" data-view="certificaciones" onclick="navTo('certificaciones')"><span class="ni">🏗️</span><span>Certificaciones</span></div>
     <div class="nav-item" data-view="rentabilidad" onclick="navTo('rentabilidad')"><span class="ni">📈</span><span>Rentabilidad</span></div>
-    <div class="nav-item" data-view="certificaciones" onclick="navTo('certificaciones')"><span class="ni">🏗️</span><span>Certificaciones</span></div><div class="nav-item" data-view="facturas" onclick="navTo('facturas')"><span class="ni">🧾</span><span>Facturas</span></div>
     <div class="nav-item" data-view="conciliacion" onclick="navTo('conciliacion')"><span class="ni">🏦</span><span>Conciliación bancaria</span></div>
     <div class="nav-item" data-view="contabilidad" onclick="navTo('contabilidad')"><span class="ni">📊</span><span>Contabilidad</span></div>
     <div class="nav-item" data-view="informe_mensual" onclick="navTo('informe_mensual')"><span class="ni">📅</span><span>Informe mensual</span></div>
     <div class="nav-item" data-view="rrhh" onclick="navTo('rrhh')"><span class="ni">👤</span><span>RR.HH. · Nóminas</span></div>
   </div>
   <div class="nav-section">
-    <div class="nav-label">Sistema</div>
+    <div class="nav-label">Documentos</div>
     <div class="nav-item" data-view="pres_final" onclick="navTo('pres_final')"><span class="ni">📄</span><span>Presupuesto final</span></div>
     <div class="nav-item" data-view="contrato" onclick="navTo('contrato')"><span class="ni">📝</span><span>Contrato</span></div>
     <div class="nav-item" data-view="pedido_doc" onclick="navTo('pedido_doc')"><span class="ni">📋</span><span>Doc. Pedido</span></div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Sistema</div>
     <div class="nav-item" data-view="listas" onclick="navTo('listas')"><span class="ni">🗂</span><span>Listas</span></div>
     <div class="nav-item" data-view="configuracion" onclick="navTo('configuracion')"><span class="ni">⚙️</span><span>Configuración</span></div>
   </div>
@@ -22950,21 +22955,16 @@ function buildEmailWrapper(titulo, nombreCliente, referencia, importeStr, mensaj
 }
 
 function openEmailModal({docType, docRef, proyectoId, defaultTo, subject, fromEmail, mensaje, htmlBody}){
-  const setVal = (id,v) => { const el=document.getElementById(id); if(el) el.value=v||''; };
-  const setTxt = (id,v) => { const el=document.getElementById(id); if(el) el.textContent=v||''; };
-  setVal('em-doc-type', docType);
-  setVal('em-doc-ref', docRef);
-  setVal('em-proyecto-id', proyectoId);
-  setVal('em-from-email', fromEmail||'presupuestos@pauinteriorismo.es');
-  setVal('em-html-body', htmlBody);
-  setVal('em-to', defaultTo);
-  setVal('em-subject', subject);
-  setVal('em-mensaje', mensaje);
-  setTxt('em-from-label', fromEmail||'presupuestos@pauinteriorismo.es');
-  const labels = {presupuesto:'Presupuesto',contrato:'Contrato',pedido:'Pedido',factura:'Factura'};
-  setTxt('m-email-title', '\u{1F4E7} Enviar ' + (labels[docType]||docType||'documento'));
-  const st=document.getElementById('em-status'); if(st){st.style.display='none'; st.textContent='';}
-  const btn=document.getElementById('em-btn-send'); if(btn){btn.disabled=false; btn.textContent='\u{1F4E4} Enviar';}
+  const _sv=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v||'';};
+  const _st=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v||'';};
+  _sv('em-doc-type',docType); _sv('em-doc-ref',docRef); _sv('em-proyecto-id',proyectoId);
+  _sv('em-from-email',fromEmail||'presupuestos@pauinteriorismo.es');
+  _sv('em-html-body',htmlBody); _sv('em-to',defaultTo); _sv('em-subject',subject); _sv('em-mensaje',mensaje);
+  _st('em-from-label',fromEmail||'presupuestos@pauinteriorismo.es');
+  const labels={presupuesto:'Presupuesto',contrato:'Contrato',pedido:'Pedido',factura:'Factura'};
+  _st('m-email-title','\u{1F4E7} Enviar '+(labels[docType]||docType||'documento'));
+  const st=document.getElementById('em-status');if(st){st.style.display='none';st.textContent='';}
+  const btn=document.getElementById('em-btn-send');if(btn){btn.disabled=false;btn.textContent='\u{1F4E4} Enviar';}
   openModal('m-enviar-email');
 }
 
