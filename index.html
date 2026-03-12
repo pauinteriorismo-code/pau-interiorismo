@@ -19051,35 +19051,31 @@ function scVerPDFById(id){const s=ScC.find(x=>String(x.id)===String(id));if(!s||
 
 // ── PDF adjunto para FACTURAS ──
 // ═══════════════════════════════════════════════════════════
-// PROVEEDOR: datalist con todos los proveedores y subcontratas
+// PROVEEDOR datalist — lee del select co-prov que ya tiene
+// todos los proveedores cargados en el HTML (no necesita API)
 // ═══════════════════════════════════════════════════════════
 function poblarProveedorSearch(valorActual){
-  const _render=()=>{
-    const dl=document.getElementById('f-prov-datalist');
-    const inp=document.getElementById('f-proveedor');
-    if(!dl||!inp) return;
+  const dl=document.getElementById('f-prov-datalist');
+  const inp=document.getElementById('f-proveedor');
+  if(!dl||!inp) return;
+  // co-prov tiene todos los proveedores hardcodeados en el HTML
+  const src=document.getElementById('co-prov');
+  if(src&&src.options.length>1){
+    const names=[...src.options].slice(1).map(o=>o.value).filter(Boolean);
+    dl.innerHTML=names.map(n=>`<option value="${n}">`).join('');
+    console.log('[Prov] datalist desde co-prov:',names.length,'opciones');
+  } else {
+    // Fallback si co-prov no está disponible
     const pn=(ProvC||[]).map(p=>p.nombre).filter(Boolean);
     const sn=[...new Set((ScC||[]).map(s=>s.proveedor_id).filter(Boolean))];
     const all=[...new Set([...pn,...sn])].sort((a,b)=>a.localeCompare(b,'es'));
     dl.innerHTML=all.map(n=>`<option value="${n}">`).join('');
-    inp.value=valorActual||'';
-    console.log('[Prov] datalist poblado con',all.length,'opciones');
-  };
-  // Asegurar que ProvC y ScC estén cargados
-  const faltaProv=!ProvC||!ProvC.length;
-  const faltaSc=!ScC||!ScC.length;
-  if(faltaProv||faltaSc){
-    const ps=[];
-    if(faltaProv) ps.push(sbGet('proveedores','?order=nombre.asc').then(d=>{ProvC=d||[];}));
-    if(faltaSc)   ps.push(sbGet('subcontratas','?order=proveedor_id.asc').then(d=>{ScC=d||[];}));
-    Promise.all(ps).catch(()=>{}).finally(_render);
-  } else {
-    _render();
   }
+  inp.value=valorActual||'';
 }
 
 // ═══════════════════════════════════════════════════════════
-// PDF.js: extracción de texto (blob worker evita CSP)
+// PDF.js: blob worker evita bloqueos CSP en Vercel
 // ═══════════════════════════════════════════════════════════
 const _PDFJS_SRC    = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js';
 const _PDFJS_WORKER = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
@@ -19124,57 +19120,163 @@ async function _pdfTexto(b64){
         if(ln) lineas.push(ln);
       });
     }
-    return lineas.join('\n');
-  }catch(e){console.error('[PDF]',e);return '';}
+    const txt=lineas.join('\n');
+    console.log('[PDF] Texto extraído ('+txt.length+' chars):\n'+txt.slice(0,500));
+    return txt;
+  }catch(e){console.error('[PDF] Error:',e);return '';}
 }
 
 // ═══════════════════════════════════════════════════════════
-// PARSER CON IA: usa Claude API para extraer datos de cualquier
-// estructura de factura, sin necesidad de regex específicos
+// PARSER UNIVERSAL — sin IA, funciona con cualquier estructura
+// Estrategia en capas: etiquetas → posición → contexto
+// Probado: Mármoles Santamaria, Ricalmadera, Prismica/efectoled
 // ═══════════════════════════════════════════════════════════
-async function _parsearFacturaClaude(textoFactura){
-  const listaProv=[...(ProvC||[]).map(p=>p.nombre),...new Set((ScC||[]).map(s=>s.proveedor_id))].filter(Boolean);
-  const prompt=`Eres un asistente especializado en facturas españolas. Extrae los datos del siguiente texto de factura y devuelve SOLO un objeto JSON válido (sin markdown, sin explicación, solo el JSON).
+function _parsearFacturaPDF(txt){
+  const lineas=txt.split('\n').map(l=>l.trim()).filter(Boolean);
+  const flat=lineas.join(' ');
+  const datos={};
 
-Campos a extraer:
-- fecha: fecha de emisión en formato YYYY-MM-DD
-- base: base imponible como número con punto decimal (ej: 670.00)
-- iva: tipo de IVA como string (solo "4%", "10%" o "21%")
-- vto: fecha de vencimiento/pago en formato YYYY-MM-DD  
-- formaPago: uno de estos valores exactos: "Giro", "Transferencia", "Domiciliación", "Pagaré", "Confirming", "Efectivo"
-- proveedor: nombre del proveedor emisor de la factura, buscando coincidencia con esta lista: ${JSON.stringify(listaProv.slice(0,50))}
+  const MESES={enero:1,febrero:2,marzo:3,abril:4,mayo:5,junio:6,
+               julio:7,agosto:8,septiembre:9,octubre:10,noviembre:11,diciembre:12};
+  const rF4=/(0?[1-9]|[12]\d|3[01])[\/\-](0?[1-9]|1[0-2])[\/\-](\d{4})/g;
+  const rF2=/(0?[1-9]|[12]\d|3[01])[\/\-](0?[1-9]|1[0-2])[\/\-](\d{2})\b/g;
+  const toISO4=(d,m,y)=>`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  const toISO2=(d,m,y)=>`${2000+parseInt(y)}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  const toF=s=>parseFloat(s.replace(/\./g,'').replace(',','.').replace(/€/g,'').trim());
 
-Si un campo no está disponible, ponlo como null.
+  const todas4=[...flat.matchAll(rF4)].map(m=>toISO4(m[1],m[2],m[3]));
 
-TEXTO DE LA FACTURA:
-${textoFactura.slice(0,3000)}`;
-
-  try{
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:300,
-        messages:[{role:'user',content:prompt}]
-      })
-    });
-    const data=await resp.json();
-    const txt=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('');
-    const clean=txt.replace(/```json|```/g,'').trim();
-    const parsed=JSON.parse(clean);
-    console.log('[PDF+IA] Datos detectados:',parsed);
-    return parsed;
-  }catch(e){
-    console.error('[PDF+IA] Error API Claude:',e);
-    return {};
+  // ── FECHA EMISIÓN ──────────────────────────────────────
+  // 1. "11 de Marzo de 2026"
+  const mFT=flat.match(/(\d{1,2})\s+de\s+([a-zA-Z\u00C0-\u024F]+)\s+de\s+(\d{4})/i);
+  if(mFT){const mes=MESES[mFT[2].toLowerCase()];if(mes)datos.fecha=toISO4(mFT[1],mes,mFT[3]);}
+  // 2. "Fecha: 09/03/2026"
+  if(!datos.fecha){
+    const m=flat.match(/\bfecha\s*[:\-]\s*(0?[1-9]|[12]\d|3[01])[\/\-](0?[1-9]|1[0-2])[\/\-](\d{4})/i);
+    if(m) datos.fecha=toISO4(m[1],m[2],m[3]);
   }
+  // 3. Línea con CIF del proveedor (B12345678)
+  if(!datos.fecha){
+    for(const l of lineas){
+      if(/\b[A-Z]\d{8}\b|\b[A-Z]-?\d{2}[.\-]\d{3}[.\-]\d{3}/.test(l)){
+        const m=l.match(/(0?[1-9]|[12]\d|3[01])[\/\-](0?[1-9]|1[0-2])[\/\-](\d{4})/);
+        if(m){datos.fecha=toISO4(m[1],m[2],m[3]);break;}
+      }
+    }
+  }
+  // 4. Primera fecha 4 dígitos del doc
+  if(!datos.fecha&&todas4.length) datos.fecha=todas4[0];
+
+  // ── IVA ───────────────────────────────────────────────
+  const mIva=flat.match(/\b(21|10|4)\s*%/);
+  if(mIva&&[4,10,21].includes(parseInt(mIva[1]))) datos.iva=mIva[1]+'%';
+
+  // ── BASE IMPONIBLE ─────────────────────────────────────
+  // Prioridad 1: etiquetas
+  const patsBase=[
+    /b\.?\s*imponible\s*[:\-]?\s*([\d.,]+)\s*€?/i,
+    /base\s*imponible\s*[:\-]?\s*([\d.,]+)\s*€?/i,
+    /base\s*imp\b[^€\n]{0,5}[:\s]([\d.,]+)\s*€?/i,
+    /\bbase\s*[:\-]\s*([\d.,]+)\s*€/i,
+  ];
+  for(const pat of patsBase){
+    const m=flat.match(pat);
+    if(m){try{datos.base=toF(m[1]).toFixed(2);break;}catch(e){}}
+  }
+  // Prioridad 2: número en misma línea que % IVA (antes del %)
+  if(!datos.base){
+    for(const l of lineas){
+      const mI=l.match(/\b(21|10|4)\s*%/);
+      if(mI){
+        const antes=l.slice(0,mI.index).trim();
+        const nums=antes.match(/[\d.,]+/g);
+        if(nums){try{datos.base=toF(nums[nums.length-1]).toFixed(2);}catch(e){}}
+        break;
+      }
+    }
+  }
+  // Prioridad 3: número solo en línea antes de línea IVA
+  if(!datos.base){
+    for(let i=0;i<lineas.length;i++){
+      if(/\b(21|10|4)\s*%/.test(lineas[i])){
+        for(let j=i-1;j>=Math.max(0,i-6);j--){
+          const s=lineas[j].replace(/€/g,'').trim();
+          if(/^[\d.,]+$/.test(s)){try{datos.base=toF(s).toFixed(2);break;}catch(e){}}
+        }
+        if(datos.base) break;
+      }
+    }
+  }
+
+  // ── VENCIMIENTO ────────────────────────────────────────
+  // 1. Línea: "dd/mm/yyyy  importe" (4 dígitos)
+  for(const l of lineas){
+    const m=l.match(/^(0?[1-9]|[12]\d|3[01])[\/\-](0?[1-9]|1[0-2])[\/\-](\d{4})\s+([\d.,]+)/);
+    if(m){const v=toISO4(m[1],m[2],m[3]);if(v!==datos.fecha){datos.vto=v;break;}}
+  }
+  // 2. Fecha con año 2 dígitos: "10/04/26"
+  if(!datos.vto){
+    const all=[...flat.matchAll(rF2)];
+    for(const m of all){
+      const v=toISO2(m[1],m[2],m[3]);
+      if(v!==datos.fecha){datos.vto=v;break;}
+    }
+  }
+  // 3. Sección VENCIMIENTOS
+  if(!datos.vto){
+    for(let i=0;i<lineas.length;i++){
+      if(/fecha\s*vencimiento|vencimientos/i.test(lineas[i])){
+        const blq=lineas.slice(i,i+4).join(' ');
+        const m=[...blq.matchAll(rF4)];
+        const c=m.map(x=>toISO4(x[1],x[2],x[3])).filter(f=>f!==datos.fecha);
+        if(c.length){datos.vto=c[0];break;}
+      }
+    }
+  }
+  // 4. Última fecha 4-dígitos distinta de emisión
+  if(!datos.vto){
+    const otras=todas4.filter(f=>f!==datos.fecha);
+    if(otras.length) datos.vto=otras[otras.length-1];
+  }
+
+  // ── FORMA DE PAGO ──────────────────────────────────────
+  const mPL=flat.match(/forma\s*(?:de\s*)?pago\s*[:\-\.]\s*([A-Za-z\u00C0-\u024F ]{3,30})/i);
+  const src=mPL?mPL[1].toLowerCase():flat.toLowerCase().slice(-600);
+  if(/\bgiro\b|letra\s*bancaria/.test(src))              datos.formaPago='Giro';
+  else if(/transferencia|transf\b/.test(src))             datos.formaPago='Transferencia';
+  else if(/domicili|adeudo|recibo\s*domicil/.test(src))   datos.formaPago='Domiciliación';
+  else if(/pagar[eé]/.test(src))                          datos.formaPago='Pagaré';
+  else if(/confirming/.test(src))                         datos.formaPago='Confirming';
+  else if(/efectivo|contado|vista/.test(src))             datos.formaPago='Efectivo';
+
+  // ── PROVEEDOR: coincidir con lista de co-prov ──────────
+  const srcEl=document.getElementById('co-prov');
+  const cands=srcEl&&srcEl.options.length>1
+    ? [...srcEl.options].slice(1).map(o=>o.value).filter(Boolean)
+    : [...(ProvC||[]).map(p=>p.nombre),...new Set((ScC||[]).map(s=>s.proveedor_id))].filter(Boolean);
+
+  let mejor=null,best=0;
+  for(const nom of cands){
+    // Usar todas las palabras significativas del nombre
+    const tks=nom.replace(/[.\-,]/g,' ').split(/\s+/).filter(w=>w.length>3&&!/^(sl|slu|slp|sa|sau|sac|sll|srl)$/i.test(w));
+    if(!tks.length) continue;
+    let hits=0;
+    for(const tk of tks){
+      try{if(new RegExp(tk.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i').test(flat))hits++;}catch(e){}
+    }
+    const sc=hits/tks.length;
+    if(sc>best&&sc>=0.4){best=sc;mejor=nom;}
+  }
+  if(mejor) datos.proveedor=mejor;
+
+  console.log('[PDF] Detectado:',JSON.stringify(datos));
+  return datos;
 }
 
 function _aplicarDatosPDF(datos){
   const log=[];
   if(datos.fecha){const el=document.getElementById('f-fecha');if(el){el.value=datos.fecha;log.push('fecha');}}
-  if(datos.base!=null){const el=document.getElementById('f-base');if(el){el.value=String(datos.base).replace('.',',');log.push('base');calcTotalFac();}}
+  if(datos.base!=null){const el=document.getElementById('f-base');if(el){el.value=String(parseFloat(datos.base)).replace('.',',');log.push('base');calcTotalFac();}}
   if(datos.iva){const el=document.getElementById('f-iva');if(el){el.value=datos.iva;log.push('IVA');calcTotalFac();}}
   if(datos.formaPago){const el=document.getElementById('f-pago');if(el){el.value=datos.formaPago;log.push('forma pago');}}
   if(datos.proveedor){const el=document.getElementById('f-proveedor');if(el){el.value=datos.proveedor;log.push('proveedor');}}
@@ -19186,7 +19288,7 @@ function _aplicarDatosPDF(datos){
 }
 
 // ═══════════════════════════════════════════════════════════
-// fHandleFile principal
+// fHandleFile
 // ═══════════════════════════════════════════════════════════
 function fHandleFile(file){
   if(!file) return;
@@ -19212,21 +19314,20 @@ function fHandleFile(file){
     const tipoEl=document.getElementById('f-tipo');
     const numEl=document.getElementById('f-num');
     if(tipoEl&&tipoEl.value==='Compra'){
-      // Nº fra: solo el nombre del archivo sin extensión, sin prefijos
+      // Nº fra: nombre de archivo limpio sin extensión ni prefijos genéricos
       if(numEl){
         const sinExt=file.name.replace(/\.pdf$/i,'');
-        // Eliminar prefijos comunes (FAC-, FRA-, INV-, etc.)
         const limpio=sinExt.replace(/^(factura[-_\s]?|fra[-_\s]?|fac[-_\s]?|inv[-_\s]?|bill[-_\s]?|invoice[-_\s]?)/i,'').trim();
         numEl.value=limpio||sinExt;
       }
-      // Leer PDF y usar IA para extraer campos
-      toast('🔍 Analizando PDF con IA…');
+      // Leer PDF y autocompletar
+      toast('🔍 Leyendo PDF…');
       const texto=await _pdfTexto(b64);
       if(texto&&texto.trim().length>10){
-        const datos=await _parsearFacturaClaude(texto);
+        const datos=_parsearFacturaPDF(texto);
         const campos=_aplicarDatosPDF(datos);
         if(campos.length){
-          toast('🤖 IA completó: '+campos.join(', ')+' ✅');
+          toast('🤖 Autocompletado: '+campos.join(', ')+' ✅');
         } else {
           toast('📄 PDF cargado · Nº autocompletado ✅');
         }
