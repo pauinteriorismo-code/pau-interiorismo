@@ -10925,17 +10925,12 @@ async function loadFacturas(){
     // Poblar proveedor select en modal (proveedores + subcontratistas)
     const fProv=document.getElementById('f-proveedor');
     if(fProv){
-      const _curProv=fProv.value;
-      const _poblarEditProv = () => {
-        const provNames=ProvC.map(p=>p.nombre).filter(Boolean);
-        const subNames=[...new Set(ScC.map(s=>s.proveedor_id).filter(Boolean))];
-        const allNames=[...new Set([...provNames,...subNames])].sort((a,b)=>a.localeCompare(b,'es'));
-        fProv.innerHTML='<option value="">Seleccionar…</option>'+allNames.map(n=>`<option value="${n}">${n}</option>`).join('');
-        if(_curProv) fProv.value=_curProv;
-      };
-      if(!ProvC.length){
-        sbGet('proveedores','?order=nombre.asc').then(data=>{ ProvC=data||[]; _poblarEditProv(); }).catch(()=>_poblarEditProv());
-      } else { _poblarEditProv(); }
+      const cur=fProv.value;
+      const provNames=ProvC.map(p=>p.nombre).filter(Boolean);
+      const subNames=[...new Set(ScC.map(s=>s.proveedor_id).filter(Boolean))];
+      const allNames=[...new Set([...provNames,...subNames])].sort();
+      fProv.innerHTML='<option value="">Seleccionar…</option>'+allNames.map(n=>`<option value="${n}">${n}</option>`).join('');
+      if(cur)fProv.value=cur;
     }
     // KPIs
     let vTotal=0,vCob=0,vPdte=0,vVenc=0,vIva=0;
@@ -11182,16 +11177,11 @@ function abrirNuevaFactura(tipo){
   if(fCliente) fCliente.value='';
   const fProv=document.getElementById('f-proveedor');
   if(fProv){
-    const _poblarFProv = () => {
-      const provNames=ProvC.map(p=>p.nombre).filter(Boolean);
-      const subNames=[...new Set(ScC.map(s=>s.proveedor_id).filter(Boolean))];
-      const allNames=[...new Set([...provNames,...subNames])].sort((a,b)=>a.localeCompare(b,'es'));
-      fProv.innerHTML='<option value="">Seleccionar…</option>'+allNames.map(n=>`<option value="${n}">${n}</option>`).join('');
-      fProv.value='';
-    };
-    if(!ProvC.length){
-      sbGet('proveedores','?order=nombre.asc').then(data=>{ ProvC=data||[]; _poblarFProv(); }).catch(()=>_poblarFProv());
-    } else { _poblarFProv(); }
+    const provNames=ProvC.map(p=>p.nombre).filter(Boolean);
+    const subNames=[...new Set(ScC.map(s=>s.proveedor_id).filter(Boolean))];
+    const allNames=[...new Set([...provNames,...subNames])].sort();
+    fProv.innerHTML='<option value="">Seleccionar…</option>'+allNames.map(n=>`<option value="${n}">${n}</option>`).join('');
+    fProv.value='';
   }
   // Reset proyecto: vacío hasta que se elija cliente (venta) o mostrar todos (compra)
   const fProy=document.getElementById('f-proyecto');
@@ -11316,8 +11306,16 @@ function calcTotalFac(){
   const total=base*(1+iva/100);
   const el=document.getElementById('f-total-display');
   if(el) el.value=total>0?fmtES(Number(total))+'€':'';
+  // En compras: recalcular vencimientos al cambiar la base
   const esC=(document.getElementById('f-tipo')?.value||'Venta')==='Compra';
-  if(esC && base>0 && typeof sugerirDiasPago==='function') sugerirDiasPago();
+  if(esC && base>0 && typeof sugerirDiasPago==='function'){
+    // Limpiar fechas no confirmadas (sin valor o con estilo gris) para recalcular
+    ['f-vto','f-vto2','f-vto3','f-vto4'].forEach(id=>{
+      const el2=document.getElementById(id);
+      if(el2 && el2.style.color==='var(--text-soft)') el2.value='';
+    });
+    sugerirDiasPago();
+  }
 }
 
 function calcTotalPagos(){
@@ -19081,27 +19079,44 @@ function fHandleFile(file){
   }
   if(file.size > 5*1024*1024){ toast('El PDF no puede superar 5MB','error'); return; }
 
+  // ── Solo en facturas de COMPRA: auto-rellenar Nº y vencimientos ──
   const tipoEl  = document.getElementById('f-tipo');
   const numEl   = document.getElementById('f-num');
   const serieEl = document.getElementById('f-serie');
-  if(tipoEl && tipoEl.value === 'Compra' && numEl && !numEl.value.trim()){
-    const sinExt   = file.name.replace(/\.pdf$/i,'');
-    const partes   = sinExt.split(/[_\-\s]+/);
-    const ignorar  = /^(factura|fra|fac|inv|bill|invoice)$/i;
-    const esDate   = /^(\d{4}[-]\d{2}[-]\d{2}|\d{2}[-]\d{2}[-]\d{4}|\d{8})$/;
+  if(tipoEl && tipoEl.value === 'Compra'){
+    // Extraer número limpio del nombre del PDF
+    const sinExt    = file.name.replace(/\.pdf$/i,'');
+    const partes    = sinExt.split(/[_\-\s]+/);
+    const ignorar   = /^(factura|fra|fac|inv|bill|invoice)$/i;
+    const esDate    = /^(\d{4}[-]\d{2}[-]\d{2}|\d{2}[-]\d{2}[-]\d{4}|\d{8})$/;
     const filtradas = partes.filter(p => !ignorar.test(p) && !esDate.test(p) && p.length > 0);
     const matchAnyo = file.name.match(/20(2[0-9])/);
-    const anyo = matchAnyo ? matchAnyo[0] : new Date().getFullYear();
-    const serieNum = serieEl ? (parseInt(serieEl.value)||3) : 3;
-    const numOriginal = filtradas.join('-');
-    if(numOriginal) numEl.value = serieNum + '-' + numOriginal + '/' + anyo;
+    const anyo      = matchAnyo ? matchAnyo[0] : new Date().getFullYear();
+    const serieNum  = serieEl ? (parseInt(serieEl.value)||3) : 3;
+    const numOrig   = filtradas.join('-');
+
+    // Siempre sobreescribir el número (aunque autoNumFactura ya haya puesto uno)
+    if(numEl && numOrig) numEl.value = serieNum + '-' + numOrig + '/' + anyo;
+
+    // Actualizar año en fecha de emisión si difiere
     const fechaEl = document.getElementById('f-fecha');
     if(fechaEl && matchAnyo){
       const fp = (fechaEl.value||new Date().toISOString().slice(0,10)).split('-');
       if(fp[0] !== String(anyo)) fechaEl.value = anyo+'-'+(fp[1]||'01')+'-'+(fp[2]||'01');
     }
-    setTimeout(()=>{ if(typeof sugerirDiasPago==='function') sugerirDiasPago(); }, 100);
-    toast('PDF cargado · Nº factura autocompletado ✅');
+
+    // Limpiar fechas de vencimiento para que sugerirDiasPago las rellene desde cero
+    ['f-vto','f-vto2','f-vto3','f-vto4'].forEach(id=>{
+      const el=document.getElementById(id); if(el) el.value='';
+    });
+    ['f-importe-vto1','f-importe-vto2','f-importe-vto3','f-importe-vto4'].forEach(id=>{
+      const el=document.getElementById(id); if(el) el.value='';
+    });
+
+    // Sugerir vencimientos (fecha + importe si ya hay base)
+    setTimeout(()=>{ if(typeof sugerirDiasPago==='function') sugerirDiasPago(); }, 150);
+
+    toast('PDF cargado · Nº fra y vencimiento autocompletados ✅');
   } else {
     toast('PDF cargado ✅');
   }
