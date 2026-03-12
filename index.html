@@ -6835,7 +6835,8 @@ async function loadGerencia(){
     const subc = await sbGet('subcontratas');
     const hor  = await sbGet('horas');
     const fac  = await sbGet('facturas');
-    CC=cl;PC=pr;TC=ta;CoC=comp;ScC=subc;HC=hor;FC=fac;
+    const prov = await sbGet('proveedores','?order=nombre.asc');
+    CC=cl;PC=pr;TC=ta;CoC=comp;ScC=subc;HC=hor;FC=fac;ProvC=prov;
     // Diagnóstico: detectar facturas sin tipo definido
     const sinTipo=fac.filter(f=>!f.tipo_factura);
     if(sinTipo.length){console.warn('⚠️ Facturas sin tipo_factura (se cuentan como Venta por defecto):',sinTipo.map(f=>f.num_factura||f.id));}
@@ -11298,6 +11299,8 @@ async function convertirPresupuestoAFactura(){
     return `${pct}: ${fmtES(Number(g.base))}€`;
   }).join(' · ');
   toast(`✅ Presupuesto importado — ${grupos_txt}`, 'ok');
+  const esC=(document.getElementById('f-tipo')?.value||'Venta')==='Compra';
+  if(esC && base>0 && typeof sugerirDiasPago==='function') sugerirDiasPago();
 }
 
 function calcTotalFac(){
@@ -11306,16 +11309,8 @@ function calcTotalFac(){
   const total=base*(1+iva/100);
   const el=document.getElementById('f-total-display');
   if(el) el.value=total>0?fmtES(Number(total))+'€':'';
-  // En compras: recalcular vencimientos al cambiar la base
-  const esC=(document.getElementById('f-tipo')?.value||'Venta')==='Compra';
-  if(esC && base>0 && typeof sugerirDiasPago==='function'){
-    // Limpiar fechas no confirmadas (sin valor o con estilo gris) para recalcular
-    ['f-vto','f-vto2','f-vto3','f-vto4'].forEach(id=>{
-      const el2=document.getElementById(id);
-      if(el2 && el2.style.color==='var(--text-soft)') el2.value='';
-    });
-    sugerirDiasPago();
-  }
+  const esC2=(document.getElementById('f-tipo')?.value||'Venta')==='Compra';
+  if(esC2 && base>0 && typeof sugerirDiasPago==='function') sugerirDiasPago();
 }
 
 function calcTotalPagos(){
@@ -19072,6 +19067,68 @@ function scVerPDF(){const b64=window._scPDFActual||document.getElementById('sc-p
 function scVerPDFById(id){const s=ScC.find(x=>String(x.id)===String(id));if(!s||!s.adjunto_pdf){toast('Sin PDF adjunto','error');return;}abrirVisorPDF(s.adjunto_pdf,'factura_subcontrata.pdf');}
 
 // ── PDF adjunto para FACTURAS ──
+// Carga PDF.js dinámicamente si no está disponible
+function _loadPdfJs(cb){
+  if(window.pdfjsLib){ cb(); return; }
+  const s=document.createElement('script');
+  s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+  s.onload=()=>{ window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; cb(); };
+  document.head.appendChild(s);
+}
+
+// Extrae texto plano de un ArrayBuffer de PDF
+async function _extraerTextoPDF(arrayBuffer){
+  return new Promise((resolve)=>{
+    _loadPdfJs(async ()=>{
+      try{
+        const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+        let texto = '';
+        for(let i=1;i<=Math.min(pdf.numPages,3);i++){
+          const page = await pdf.getPage(i);
+          const tc   = await page.getTextContent();
+          texto += tc.items.map(x=>x.str).join(' ') + '\n';
+        }
+        resolve(texto);
+      }catch(e){ resolve(''); }
+    });
+  });
+}
+
+// Busca la primera fecha de vencimiento en el texto del PDF
+// Acepta formatos: dd/mm/yyyy, dd-mm-yyyy, dd.mm.yyyy
+function _buscarFechaVencPDF(texto){
+  // Palabras clave de vencimiento
+  const claves = /vencimiento|vto\.?|fecha\s*(?:de\s*)?pago|fecha\s*l[ií]mite|due\s*date|plazo\s*pago|fecha\s*venc/i;
+  const lineas = texto.split(/\n/);
+  const rFecha = /(\d{1,2})[/\-\.](\d{1,2})[/\-\.](\d{2,4})/g;
+
+  // 1) Buscar fecha en la misma línea que la palabra clave
+  for(const linea of lineas){
+    if(claves.test(linea)){
+      const m = [...linea.matchAll(rFecha)];
+      if(m.length){
+        const [,d,mo,y] = m[0];
+        const anyo = y.length===2?'20'+y:y;
+        return `${anyo}-${mo.padStart(2,'0')}-${d.padStart(2,'0')}`;
+      }
+    }
+  }
+  // 2) Buscar la primera fecha después de la palabra clave (en líneas siguientes)
+  for(let i=0;i<lineas.length;i++){
+    if(claves.test(lineas[i])){
+      for(let j=i;j<=Math.min(i+3,lineas.length-1);j++){
+        const m=[...lineas[j].matchAll(rFecha)];
+        if(m.length){
+          const [,d,mo,y]=m[0];
+          const anyo=y.length===2?'20'+y:y;
+          return `${anyo}-${mo.padStart(2,'0')}-${d.padStart(2,'0')}`;
+        }
+      }
+    }
+  }
+  return null;
+}
+
 function fHandleFile(file){
   if(!file) return;
   if(file.type !== 'application/pdf' && !file.name.endsWith('.pdf')){
@@ -19079,50 +19136,8 @@ function fHandleFile(file){
   }
   if(file.size > 5*1024*1024){ toast('El PDF no puede superar 5MB','error'); return; }
 
-  // ── Solo en facturas de COMPRA: auto-rellenar Nº y vencimientos ──
-  const tipoEl  = document.getElementById('f-tipo');
-  const numEl   = document.getElementById('f-num');
-  const serieEl = document.getElementById('f-serie');
-  if(tipoEl && tipoEl.value === 'Compra'){
-    // Extraer número limpio del nombre del PDF
-    const sinExt    = file.name.replace(/\.pdf$/i,'');
-    const partes    = sinExt.split(/[_\-\s]+/);
-    const ignorar   = /^(factura|fra|fac|inv|bill|invoice)$/i;
-    const esDate    = /^(\d{4}[-]\d{2}[-]\d{2}|\d{2}[-]\d{2}[-]\d{4}|\d{8})$/;
-    const filtradas = partes.filter(p => !ignorar.test(p) && !esDate.test(p) && p.length > 0);
-    const matchAnyo = file.name.match(/20(2[0-9])/);
-    const anyo      = matchAnyo ? matchAnyo[0] : new Date().getFullYear();
-    const serieNum  = serieEl ? (parseInt(serieEl.value)||3) : 3;
-    const numOrig   = filtradas.join('-');
-
-    // Siempre sobreescribir el número (aunque autoNumFactura ya haya puesto uno)
-    if(numEl && numOrig) numEl.value = serieNum + '-' + numOrig + '/' + anyo;
-
-    // Actualizar año en fecha de emisión si difiere
-    const fechaEl = document.getElementById('f-fecha');
-    if(fechaEl && matchAnyo){
-      const fp = (fechaEl.value||new Date().toISOString().slice(0,10)).split('-');
-      if(fp[0] !== String(anyo)) fechaEl.value = anyo+'-'+(fp[1]||'01')+'-'+(fp[2]||'01');
-    }
-
-    // Limpiar fechas de vencimiento para que sugerirDiasPago las rellene desde cero
-    ['f-vto','f-vto2','f-vto3','f-vto4'].forEach(id=>{
-      const el=document.getElementById(id); if(el) el.value='';
-    });
-    ['f-importe-vto1','f-importe-vto2','f-importe-vto3','f-importe-vto4'].forEach(id=>{
-      const el=document.getElementById(id); if(el) el.value='';
-    });
-
-    // Sugerir vencimientos (fecha + importe si ya hay base)
-    setTimeout(()=>{ if(typeof sugerirDiasPago==='function') sugerirDiasPago(); }, 150);
-
-    toast('PDF cargado · Nº fra y vencimiento autocompletados ✅');
-  } else {
-    toast('PDF cargado ✅');
-  }
-
   const reader = new FileReader();
-  reader.onload = e => {
+  reader.onload = async (e) => {
     const b64 = e.target.result.split(',')[1];
     document.getElementById('f-pdf-b64').value = b64;
     document.getElementById('f-pdf-nombre').value = file.name;
@@ -19136,6 +19151,64 @@ function fHandleFile(file){
       prev.style.display='flex';
       prev.innerHTML=`<span style="font-size:12px;color:var(--navy)">✅ ${file.name} (${(file.size/1024).toFixed(0)} KB)</span>
         <button class="btn btn-ghost btn-sm" style="font-size:11px;color:var(--red)" onclick="fQuitarPDF()">✕ Quitar</button>`;
+    }
+
+    // ── Solo facturas de COMPRA: auto-rellenar Nº + vencimiento ──
+    const tipoEl  = document.getElementById('f-tipo');
+    const numEl   = document.getElementById('f-num');
+    const serieEl = document.getElementById('f-serie');
+    if(tipoEl && tipoEl.value === 'Compra'){
+      // 1. Nº factura desde nombre del archivo
+      const sinExt    = file.name.replace(/\.pdf$/i,'');
+      const partes    = sinExt.split(/[_\-\s]+/);
+      const ignorar   = /^(factura|fra|fac|inv|bill|invoice)$/i;
+      const esDate    = /^(\d{4}[-]\d{2}[-]\d{2}|\d{2}[-]\d{2}[-]\d{4}|\d{8})$/;
+      const filtradas = partes.filter(p => !ignorar.test(p) && !esDate.test(p) && p.length > 0);
+      const matchAnyo = file.name.match(/20(2[0-9])/);
+      const anyo      = matchAnyo ? matchAnyo[0] : new Date().getFullYear();
+      const serieNum  = serieEl ? (parseInt(serieEl.value)||3) : 3;
+      const numOrig   = filtradas.join('-');
+      if(numEl && numOrig) numEl.value = serieNum + '-' + numOrig + '/' + anyo;
+
+      // Año en fecha emisión
+      const fechaEl = document.getElementById('f-fecha');
+      if(fechaEl && matchAnyo){
+        const fp = (fechaEl.value||new Date().toISOString().slice(0,10)).split('-');
+        if(fp[0] !== String(anyo)) fechaEl.value = anyo+'-'+(fp[1]||'01')+'-'+(fp[2]||'01');
+      }
+
+      // 2. Leer texto del PDF para extraer fecha de vencimiento
+      try{
+        const arrayBuffer = e.target.result;
+        // Convertir base64 a ArrayBuffer para pdfjs
+        const binStr = atob(b64);
+        const bytes  = new Uint8Array(binStr.length);
+        for(let i=0;i<binStr.length;i++) bytes[i]=binStr.charCodeAt(i);
+        const texto = await _extraerTextoPDF(bytes.buffer);
+        const fechaVto = _buscarFechaVencPDF(texto);
+
+        // Limpiar vencimientos previos (sugeridos)
+        ['f-vto','f-vto2','f-vto3','f-vto4'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+        ['f-importe-vto1','f-importe-vto2','f-importe-vto3','f-importe-vto4'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+
+        if(fechaVto){
+          // Poner la fecha encontrada en Vto.1
+          const vto1=document.getElementById('f-vto');
+          if(vto1){ vto1.value=fechaVto; vto1.style.color='var(--navy)'; }
+          // Calcular importe si hay base
+          setTimeout(()=>{ if(typeof sugerirDiasPago==='function') sugerirDiasPago(); }, 150);
+          toast('PDF cargado · Nº y vencimiento detectados ✅');
+        } else {
+          // Sin fecha en PDF: sugerir por días de pago configurados
+          setTimeout(()=>{ if(typeof sugerirDiasPago==='function') sugerirDiasPago(); }, 150);
+          toast('PDF cargado · Nº autocompletado (vencimiento sugerido) ✅');
+        }
+      }catch(err){
+        setTimeout(()=>{ if(typeof sugerirDiasPago==='function') sugerirDiasPago(); }, 150);
+        toast('PDF cargado ✅');
+      }
+    } else {
+      toast('PDF cargado ✅');
     }
   };
   reader.readAsDataURL(file);
