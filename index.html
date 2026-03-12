@@ -208,22 +208,36 @@ tbody td{padding:7px 10px;vertical-align:middle}
   justify-content:center;
   padding:8px 4px 6px;
   cursor:pointer;
-  color:rgba(255,255,255,.5);
+  color:rgba(255,255,255,.45);
   font-size:10px;
   font-weight:600;
   gap:3px;
   -webkit-tap-highlight-color:transparent;
   transition:color .15s;
-  min-height:52px;
+  min-height:54px;
+  position:relative;
+  letter-spacing:.02em;
 }
+/* Indicador activo: barra superior cobre */
+#mobile-nav .mnav-item::before{
+  content:'';
+  position:absolute;
+  top:0; left:20%; right:20%;
+  height:3px;
+  border-radius:0 0 3px 3px;
+  background:var(--copper);
+  opacity:0;
+  transition:opacity .2s;
+}
+#mobile-nav .mnav-item.active::before{ opacity:1 }
 #mobile-nav .mnav-item.active,
 #mobile-nav .mnav-item:active{
-  color:var(--copper);
+  color:#fff;
 }
-#mobile-nav .mnav-icon{font-size:20px;line-height:1}
+#mobile-nav .mnav-icon{font-size:21px;line-height:1}
 #mobile-nav .mnav-badge{
   position:absolute;
-  top:4px;
+  top:6px;
   background:var(--copper);
   color:#fff;
   font-size:9px;
@@ -235,7 +249,7 @@ tbody td{padding:7px 10px;vertical-align:middle}
   align-items:center;
   justify-content:center;
   padding:0 4px;
-  margin-left:12px;
+  margin-left:14px;
   margin-top:-2px;
 }
 #mobile-nav .mnav-item{position:relative}
@@ -247,17 +261,19 @@ tbody td{padding:7px 10px;vertical-align:middle}
   inset:0;
   background:rgba(0,0,0,.5);
   z-index:160;
+  backdrop-filter:blur(2px);
+  -webkit-backdrop-filter:blur(2px);
 }
 #mobile-drawer{
   position:fixed;
-  top:0;right:0;
-  width:80vw;
-  max-width:320px;
+  top:0;left:0;
+  width:82vw;
+  max-width:300px;
   height:100%;
   background:var(--navy);
   z-index:161;
-  transform:translateX(100%);
-  transition:transform .3s cubic-bezier(.4,0,.2,1);
+  transform:translateX(-100%);
+  transition:transform .28s cubic-bezier(.4,0,.2,1);
   overflow-y:auto;
   padding-bottom:env(safe-area-inset-bottom);
 }
@@ -265,54 +281,72 @@ tbody td{padding:7px 10px;vertical-align:middle}
 #mobile-drawer-overlay.open{display:block}
 #mobile-drawer .drawer-head{
   display:flex;
+  flex-direction:column;
+  padding:20px 18px 16px;
+  padding-top:calc(20px + env(safe-area-inset-top));
+  border-bottom:1px solid rgba(255,255,255,.1);
+  background:rgba(255,255,255,.04);
+}
+#mobile-drawer .drawer-logo-row{
+  display:flex;
   align-items:center;
   justify-content:space-between;
-  padding:16px 18px;
-  padding-top:calc(16px + env(safe-area-inset-top));
-  border-bottom:1px solid rgba(255,255,255,.1);
+  margin-bottom:10px;
 }
 #mobile-drawer .drawer-brand{
-  font-size:14px;
-  font-weight:700;
+  font-size:15px;
+  font-weight:800;
   color:#fff;
-  letter-spacing:.02em;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+}
+#mobile-drawer .drawer-sub{
+  font-size:11px;
+  color:rgba(255,255,255,.4);
+  font-weight:500;
+  letter-spacing:.03em;
 }
 #mobile-drawer .drawer-close{
-  background:none;border:none;
-  color:rgba(255,255,255,.6);
-  font-size:24px;
+  background:rgba(255,255,255,.1);border:none;
+  color:rgba(255,255,255,.7);
+  font-size:18px;
   cursor:pointer;
-  padding:0;
+  padding:4px 8px;
+  border-radius:6px;
   line-height:1;
 }
 #mobile-drawer .drawer-section{
   font-size:9px;
   font-weight:700;
   color:rgba(255,255,255,.3);
-  letter-spacing:.12em;
+  letter-spacing:.14em;
   text-transform:uppercase;
   padding:14px 18px 5px;
 }
 #mobile-drawer .drawer-item{
   display:flex;
   align-items:center;
-  gap:12px;
-  padding:12px 18px;
-  color:rgba(255,255,255,.7);
-  font-size:13px;
+  gap:13px;
+  padding:13px 18px;
+  color:rgba(255,255,255,.75);
+  font-size:13.5px;
+  font-weight:500;
   cursor:pointer;
   -webkit-tap-highlight-color:transparent;
-  transition:background .15s;
+  transition:background .12s;
+  border-left:3px solid transparent;
 }
 #mobile-drawer .drawer-item:active,
 #mobile-drawer .drawer-item.active{
-  background:rgba(255,255,255,.08);
+  background:rgba(255,255,255,.07);
   color:#fff;
+  border-left-color:var(--copper);
 }
 #mobile-drawer .drawer-item .di{
-  font-size:16px;
-  width:22px;
+  font-size:17px;
+  width:24px;
   text-align:center;
+  flex-shrink:0;
 }
 
 @media(max-width:768px){
@@ -327,11 +361,21 @@ tbody td{padding:7px 10px;vertical-align:middle}
     padding-bottom:calc(70px + env(safe-area-inset-bottom));
   }
 
-  /* Topbar */
+  /* Topbar móvil */
   .topbar{
-    padding-left:14px;
+    padding-left:12px;
+    padding-right:12px;
     padding-top:env(safe-area-inset-top);
+    gap:8px;
   }
+  /* Ocultar elementos de escritorio en topbar */
+  #topbar-search-btn,
+  #topbar-ayuda-btn,
+  #topbar-salir-btn{ display:none!important }
+  /* Botón hamburguesa visible solo en móvil */
+  #mobile-menu-btn{ display:flex!important }
+  /* Botón + Nuevo compacto */
+  .topbar .btn-primary{ padding:7px 12px; font-size:12px }
 
   /* Toast no quede tapado por nav */
   .toast{
@@ -688,19 +732,18 @@ th.sortable:not(.sort-asc):not(.sort-desc) .sort-arrow::after{content:'⇅'}
     <div class="mnav-item active" id="mnav-gerencia" onclick="mnavTo('gerencia')">
       <span class="mnav-icon">🏠</span><span>Inicio</span>
     </div>
+    <div class="mnav-item" id="mnav-proyectos" onclick="mnavTo('proyectos')">
+      <span class="mnav-icon">📁</span><span>Proyectos</span>
+    </div>
     <div class="mnav-item" id="mnav-agenda" onclick="mnavTo('agenda')">
-      <span class="mnav-icon">🔔</span>
+      <span class="mnav-icon">🔔</span><span>Avisos</span>
       <span class="mnav-badge" id="mnav-agenda-badge" style="display:none"></span>
-      <span>Agenda</span>
     </div>
     <div class="mnav-item" id="mnav-horas" onclick="mnavTo('horas')">
       <span class="mnav-icon">⏱</span><span>Horas</span>
     </div>
-    <div class="mnav-item" id="mnav-contabilidad" onclick="mnavTo('contabilidad')">
-      <span class="mnav-icon">📊</span><span>Contabilidad</span>
-    </div>
     <div class="mnav-item" id="mnav-mas" onclick="openMobileDrawer()">
-      <span class="mnav-icon">☰</span><span>Más</span>
+      <span class="mnav-icon">☰</span><span>Menú</span>
     </div>
   </div>
 </nav>
@@ -709,8 +752,13 @@ th.sortable:not(.sort-asc):not(.sort-desc) .sort-arrow::after{content:'⇅'}
 <div id="mobile-drawer-overlay" onclick="closeMobileDrawer()"></div>
 <div id="mobile-drawer">
   <div class="drawer-head">
-    <span class="drawer-brand">PAU INTERIORISMO</span>
-    <button class="drawer-close" onclick="closeMobileDrawer()">×</button>
+    <div class="drawer-logo-row">
+      <div>
+        <div class="drawer-brand">PAU Interiorismo</div>
+        <div class="drawer-sub">Gestión · Construcción e Interiorismo</div>
+      </div>
+      <button class="drawer-close" onclick="closeMobileDrawer()">✕</button>
+    </div>
   </div>
   <div class="drawer-section">Principal</div>
   <div class="drawer-item" onclick="mnavTo('clientes');closeMobileDrawer()"><span class="di">🤝</span>Clientes</div>
@@ -736,6 +784,7 @@ th.sortable:not(.sort-asc):not(.sort-desc) .sort-arrow::after{content:'⇅'}
   <div class="drawer-item" onclick="mnavTo('contrato');closeMobileDrawer()"><span class="di">📝</span>Contrato</div>
   <div class="drawer-item" onclick="mnavTo('configuracion');closeMobileDrawer()"><span class="di">⚙️</span>Configuración</div>
   <div class="drawer-item" onclick="window.open('ayuda.html','_blank');closeMobileDrawer()"><span class="di">❓</span>Centro de Ayuda</div>
+  <div class="drawer-item" onclick="doLogout();closeMobileDrawer()" style="border-top:1px solid rgba(255,255,255,.08);margin-top:8px"><span class="di">🚪</span>Cerrar sesión</div>
 </div>
 
 <script>
@@ -757,6 +806,18 @@ function closeMobileDrawer(){
   document.getElementById('mobile-drawer-overlay').classList.remove('open');
   document.body.style.overflow='';
 }
+// Swipe para cerrar el drawer deslizando a la izquierda
+(function(){
+  let startX=0, startY=0;
+  const drawer=document.getElementById('mobile-drawer');
+  if(!drawer)return;
+  drawer.addEventListener('touchstart',e=>{startX=e.touches[0].clientX;startY=e.touches[0].clientY;},{passive:true});
+  drawer.addEventListener('touchend',e=>{
+    const dx=e.changedTouches[0].clientX-startX;
+    const dy=Math.abs(e.changedTouches[0].clientY-startY);
+    if(dx<-60&&dy<50) closeMobileDrawer();
+  },{passive:true});
+})();
 function syncMnavBadge(){
   const src=document.getElementById('agenda-badge');
   const dst=document.getElementById('mnav-agenda-badge');
@@ -778,14 +839,16 @@ if(window.MutationObserver){
 
 <div class="main">
   <div class="topbar">
+    <!-- Botón hamburguesa (solo visible en móvil) -->
+    <button id="mobile-menu-btn" onclick="openMobileDrawer()" style="display:none;align-items:center;justify-content:center;width:36px;height:36px;background:rgba(26,42,58,.07);border:none;border-radius:8px;cursor:pointer;color:var(--navy);font-size:20px;flex-shrink:0;-webkit-tap-highlight-color:transparent">☰</button>
     <div><div class="topbar-title" id="tb-title">Gerencia · Panel ejecutivo</div><div class="topbar-bc" id="tb-bc">Datos en tiempo real</div></div>
     <div class="topbar-right">
       <!-- Búsqueda global Ctrl+K -->
-      <button onclick="abrirBusquedaGlobal()" style="display:flex;align-items:center;gap:7px;padding:6px 14px;background:#f5f7fa;border:1px solid var(--border);border-radius:8px;cursor:pointer;color:var(--text-mid);font-size:12px;transition:all .15s" onmouseover="this.style.background='var(--blue-light)'" onmouseout="this.style.background='#f5f7fa'">
+      <button id="topbar-search-btn" onclick="abrirBusquedaGlobal()" style="display:flex;align-items:center;gap:7px;padding:6px 14px;background:#f5f7fa;border:1px solid var(--border);border-radius:8px;cursor:pointer;color:var(--text-mid);font-size:12px;transition:all .15s" onmouseover="this.style.background='var(--blue-light)'" onmouseout="this.style.background='#f5f7fa'">
         <span>🔍</span><span style="color:var(--text-soft)">Buscar…</span><kbd style="background:#e8e8e8;border-radius:3px;padding:1px 5px;font-size:10px;color:var(--text-soft)">Ctrl K</kbd>
       </button>
       <div id="conn-status" style="font-size: 11px; padding: 3px 9px; border-radius: 10px; background: var(--amber-soft); color: var(--amber); font-weight: 600; cursor:pointer;" onclick="reconectarApp()" title="Clic para reconectar">🟡 Conectando…</div>
-      <a href="ayuda.html" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;display:inline-flex;align-items:center;gap:5px" title="Centro de Ayuda">❓ Ayuda</a><button class="btn btn-ghost btn-sm" onclick="doLogout()">Salir</button>
+      <a id="topbar-ayuda-btn" href="ayuda.html" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;display:inline-flex;align-items:center;gap:5px" title="Centro de Ayuda">❓ Ayuda</a><button id="topbar-salir-btn" class="btn btn-ghost btn-sm" onclick="doLogout()">Salir</button>
       <button class="btn btn-primary btn-sm" onclick="openModal('m-quick')">＋ Nuevo</button>
     </div>
   </div>
@@ -5086,6 +5149,66 @@ function abrirVistaPrevia(docId, titulo, autoPrint=false, filename=null){
       if(autoPrint){ setTimeout(function(){ window.print(); }, 600); }
     });
   \u003c/script>\n  
+
+<script>
+// ── PWA: Registrar Service Worker ──
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => {
+        console.log('SW registrado:', reg.scope);
+        // Escuchar mensajes del SW (ej: navegar a agenda al pulsar notificación)
+        navigator.serviceWorker.addEventListener('message', e => {
+          if(e.data && e.data.action === 'navAgenda'){
+            if(typeof navTo === 'function') navTo('agenda');
+          }
+        });
+      })
+      .catch(err => console.warn('SW error:', err));
+  });
+}
+\u003c/script>
+
+<!-- ═══ MODAL ENVÍO EMAIL ═══ -->
+<div class="overlay" id="m-enviar-email" onclick="if(event.target===this)closeModal('m-enviar-email')">
+<div class="modal" style="max-width:540px">
+  <div class="modal-header">
+    <div class="modal-title" id="m-email-title">📧 Enviar documento</div>
+    <button class="modal-close" onclick="closeModal('m-enviar-email')">×</button>
+  </div>
+  <div class="modal-body">
+    <input type="hidden" id="em-doc-type">
+    <input type="hidden" id="em-doc-ref">
+    <input type="hidden" id="em-proyecto-id">
+    <input type="hidden" id="em-from-email">
+    <input type="hidden" id="em-html-body">
+    <div class="form-grid">
+      <div class="form-group" style="grid-column:1/-1">
+        <label class="form-label">Para (destinatario) *</label>
+        <input class="form-input" id="em-to" type="email" placeholder="cliente@email.com">
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label class="form-label">Asunto</label>
+        <input class="form-input" id="em-subject">
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label class="form-label">Mensaje personalizado</label>
+        <textarea class="form-input" id="em-mensaje" rows="4" placeholder="Estimado/a cliente, adjunto le enviamos..." style="resize:vertical"></textarea>
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label class="form-label" style="color:var(--text-soft);font-size:11px">Enviando desde</label>
+        <div id="em-from-label" style="font-size:12px;color:var(--text-soft);padding:4px 0"></div>
+      </div>
+      <div id="em-status" style="grid-column:1/-1;display:none;padding:10px;border-radius:6px;font-size:12px;text-align:center"></div>
+    </div>
+  </div>
+  <div class="modal-footer" style="justify-content:flex-end;gap:8px">
+    <button class="btn btn-ghost" onclick="closeModal('m-enviar-email')">Cancelar</button>
+    <button class="btn btn-primary" id="em-btn-send" onclick="ejecutarEnvioEmail()">📤 Enviar</button>
+  </div>
+</div>
+</div>
+
 </body></html>`);
   w.document.close();
 }
@@ -11541,12 +11664,11 @@ function previsualizarFactura(){
   +'*{box-sizing:border-box;margin:0;padding:0}'
   +'body{font-family:"Segoe UI",Arial,sans-serif;font-size:12px;color:#333;background:#f5f3ef}'
   +'@media print{body{background:white}.toolbar{display:none}@page{size:A4;margin:12mm}}'
-  +'.toolbar{display:flex;align-items:center;gap:8px;padding:0 20px;background:#1e2d3d;height:52px}'
+  +'.toolbar{display:flex;gap:10px;justify-content:center;padding:14px;background:#4a3728}'
   +'.btn{padding:9px 22px;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:700}'
-  +'.toolbar{position:fixed!important;top:0;left:0;right:0;height:52px!important;background:#1e2d3d;display:flex;align-items:center;gap:8px;padding:0 20px;z-index:9999;box-shadow:0 2px 8px rgba(0,0,0,.4)}'
-  +'.btn-close-fa{padding:8px 16px;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;background:#c0c0c0;color:#1e2d3d}'
-  +'.btn-print-fa{padding:8px 16px;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;background:#b87333;color:white}'
-  +'.toolbar-info{color:#aaa;font-size:11px;margin-left:6px;flex:1}'
+  +'.btn-print{background:#fff;color:#4a3728}'
+  +'.btn-pdf{background:#b87333;color:#fff}'
+  +'.btn-close{background:rgba(255,255,255,.15);color:#fff}'
   +'.page{background:white;max-width:794px;margin:16px auto;box-shadow:0 2px 16px rgba(0,0,0,.08)}'
   +'.hdr{padding:28px 32px;display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #b87333}'
   +'.logo-img{height:70px;margin-bottom:6px}'
@@ -11572,9 +11694,9 @@ function previsualizarFactura(){
   +'.foot{text-align:center;color:#bbb;font-size:9px;padding:14px 32px;border-top:1px solid #e8e0d4}'
   +'</style></head><body>'
   +'<div class="toolbar">'
-  +'<button class="btn-close-fa" onclick="window.close()">&#10005; Cerrar</button>'
-  +'<button class="btn-print-fa" onclick="window.print()">&#128438; Imprimir / Guardar PDF</button>'
-  +'<span class="toolbar-info">Usar &ldquo;Imprimir &rarr; Destino: Guardar como PDF&rdquo;</span>'
+  +'<button class="btn btn-print" onclick="window.print()">🖨️ Imprimir</button>'
+  +'<button class="btn btn-pdf" id="btn-pdf" onclick="dlPDF()">📥 Guardar PDF</button>'
+  +'<button class="btn btn-close" onclick="window.close()">✕ Cerrar</button>'
   +'</div>'
   +'<div class="page" id="fpdf">'
     +'<div class="hdr">'
@@ -12499,9 +12621,9 @@ async function enviarFacturaEmail(id){
       html: htmlFactura
     };
 
-    const res = await fetch('/api/send-email',{
+    const res = await fetch('https://api.resend.com/emails',{
       method:'POST',
-      headers:{ 'Content-Type':'application/json' },
+      headers:{ 'Authorization':'Bearer re_CURadbN3_PqQ2Fu43yEbW5Xe7YWUU8Te5', 'Content-Type':'application/json' },
       body: JSON.stringify(payload)
     });
 
@@ -22767,9 +22889,9 @@ async function ejecutarEnvioEmail(){
     };
     if(cc) payload.cc = [cc];
 
-    const res = await fetch('/api/send-email',{
+    const res = await fetch('https://api.resend.com/emails',{
       method:'POST',
-      headers:{ 'Content-Type':'application/json' },
+      headers:{ 'Authorization':'Bearer re_CURadbN3_PqQ2Fu43yEbW5Xe7YWUU8Te5', 'Content-Type':'application/json' },
       body: JSON.stringify(payload)
     });
 
@@ -22937,9 +23059,9 @@ async function enviarDocumentoEmail(){
 
     const payload = { from: fromDisplay, to:[to], subject, html: htmlBody };
 
-    const resp = await fetch('/api/send-email', {
+    const resp = await fetch('https://api.resend.com/emails', {
       method:'POST',
-      headers:{ 'Content-Type':'application/json' },
+      headers:{ 'Authorization':'Bearer re_CURadbN3_PqQ2Fu43yEbW5Xe7YWUU8Te5', 'Content-Type':'application/json' },
       body: JSON.stringify(payload)
     });
     const result = await resp.json();
