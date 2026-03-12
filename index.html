@@ -10,7 +10,7 @@
   <meta name="apple-mobile-web-app-title" content="PAU">
   <link rel="apple-touch-icon" href="/icon-192.png">
   <meta name="theme-color" content="#1a2a3a">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#1a2a3a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -107,7 +107,7 @@ tbody td{padding:7px 10px;vertical-align:middle}
 .fg-full{grid-column:1/-1}.fg-3{grid-column:span 1}
 .form-group{display:flex;flex-direction:column;gap:4px}
 .form-label{font-size:11px;font-weight:600;color:var(--text-mid)}
-.form-input{padding:7px 9px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;color:var(--text);background:var(--white);outline:none;transition:border-color .15s;width:100%}
+.form-input{-webkit-appearance:none;padding:7px 9px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;color:var(--text);background:var(--white);outline:none;transition:border-color .15s;width:100%}
 .search-dd{position:absolute;top:100%;left:0;right:0;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-sm);box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:9999;max-height:220px;overflow-y:auto;margin-top:2px}
 .search-dd-item{padding:8px 10px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--border-light,#f0f0f0)}
 .search-dd-item:hover{background:var(--blue-light)}
@@ -595,6 +595,16 @@ th.sortable:not(.sort-asc):not(.sort-desc) .sort-arrow::after{content:'⇅'}
 .exp-tab:hover { background: #f5f7fa; }
 
 
+
+/* ── iOS Safari optimizations ── */
+input, select, textarea { font-size:16px!important; } /* evita zoom automático */
+input[type="date"]::-webkit-date-and-time-value { text-align:left; }
+* { -webkit-tap-highlight-color:transparent; }
+button, .btn, .nav-item, .card { cursor:pointer; touch-action:manipulation; }
+.modal-body { -webkit-overflow-scrolling:touch; overscroll-behavior:contain; }
+@supports(padding-top: env(safe-area-inset-top)){
+  .topbar { padding-top: env(safe-area-inset-top); }
+}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
@@ -4666,7 +4676,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <select class="form-input" id="f-cliente" onchange="cascadaClienteFactura()"><option value="">Seleccionar…</option><option value="CLI-H015">4F Fernando</option><option value="CLI-H014">4G daniel Dominguez</option><option value="CLI-H018">Amparo Forner Pastor</option><option value="CLI-H026">Ana María Palau Sastre</option><option value="CLI-H031">Belinda</option><option value="CLI-H004">CARMELO RODRIGUEZ VILA</option><option value="CLI-H032">Daniel palma gallardo</option><option value="CLI-H003">DESIRE NAVARRO MARI</option><option value="CLI-033">Estudi Encis SL</option><option value="CLI-H009">FERNANDO JOSE SAN GERMAN IBORRA</option><option value="CLI-H029">Francisco Navarro Garcia</option><option value="CLI-H019">Jose Antonio Martos Ortiz</option><option value="CLI-H013">Jose Manuel Garcia Seller Nº 7 Pta 4</option><option value="CLI-H030">Jose Manuel Pinzón Valbuena</option><option value="CLI-H007">Juanmi</option><option value="CLI-H012">Júlia Fabregat Mestre</option><option value="CLI-H028">Lara Blasco - Lara Blasco Iborra</option><option value="CLI-H027">Laura Doria Gomez</option><option value="CLI-H021">MERCEDES HIGUERAS GOMEZ</option><option value="CLI-H024">MICHELL BENITO</option><option value="CLI-H022">Miguel cocina</option><option value="CLI-001">Miguel Zaragozá Garzón</option><option value="CLI-H023">Miguel Zaragozá Garzón</option><option value="CLI-H002">Mª PAU BRAVO JOSE</option><option value="CLI-H005">PATRI</option><option value="CLI-H020">Rafael Francés Llàcer</option><option value="CLI-H010">REME IBORRA GIL</option><option value="CLI-H001">ROSA CHANZA SOLER</option><option value="CLI-H016">Sara Muñoz Abella</option><option value="CLI-H011">TONI TATAY DAVID</option><option value="CLI-H025">URKO Y FRANCESC</option><option value="CLI-H008">VICENT MARI SERRA</option><option value="CLI-034">Vicenta Baixauli Hernandez</option><option value="CLI-002">Vicenta Folch Gil</option><option value="CLI-H006">Vicenta Folch Gil</option><option value="CLI-H017">Yasmina Cabezuelo Alaminos</option></select>
       </div>
       <div class="form-group" id="f-grp-proveedor" style="display:none"><label class="form-label">Proveedor</label>
-        <input class="form-input" id="f-proveedor" list="f-prov-datalist" placeholder="Buscar proveedor…" autocomplete="off"><datalist id="f-prov-datalist"><option value="ABDELHAK BOUZIZOUA SAID"><option value="Aguas de Valencia - Aguas de Valencia SA"><option value="Aquaservice - Viva Aqua Service Spain SA"><option value="AROMAS DEL CAMPO - AROMAS DEL CAMPO LIGHTING S.L.U."><option value="Asesoría Jose Carmelo Palau - Jose Carmelo Palau S.L"><option value="BATEIG PIEDRA NATURALBateig"><option value="BRICOLAJE BRICOMAN SLU"><option value="C.DOMA - SERVICIOS DE RECOGIDA ECOLOGICOS SLL"><option value="Cafrán Norte SLU"><option value="CAMENGO ESPAÑA SL"><option value="CANALONES MEDITERRANEA"><option value="COMERCIAL Y DERIVADOS ELECTRICOS SL"><option value="Comercial y derivados eléctricos SL"><option value="D Aqua Kitchen &amp; Living SL"><option value="DESARROLLO Y TECNICAS DEL BAÑOS.L.U"><option value="Desarrollo y Técnicas del Baño SLU"><option value="Disclima SL"><option value="DISCLIMA"><option value="Efecto Led - PRISMICA SLU"><option value="Emilio Montador - Emilio J. Monterde Sanchez"><option value="F Franco e Hijos SL"><option value="FERRETERIA TEN Y MONREAL S.L."><option value="Ferretería Ten y Monreal SL"><option value="Fiora bath collections  SL"><option value="FIORA BATH COLLECTIONS SOCIEDAD LIMITADA."><option value="FNMT-RCM"><option value="Franca Grupo Inmobiliario"><option value="Franco Furniture - F Franco e Hijos SL"><option value="Fustes Bonet Llopis SL"><option value="Garcia Zacares SL"><option value="Glicerio Chaves Hornero SL"><option value="Grupo Mundobaño Electrokitchen SL"><option value="Holded"><option value="Iberdrola - Iberdrola clientes SAU"><option value="Iván Millán Garcia"><option value="IXIA REGAL SA"><option value="Jose Asins Primo"><option value="Jose Ignacio Chilet Crespo"><option value="Marmoles Santa Maria - MARMOLES SANTAMARIA SL"><option value="Materiales Calabuig SL"><option value="MERCEDES BENZ - MERCEDES BENZ ESPAÑA SOCIEDAD ANONIMA"><option value="Mercedes Benz - Mercedes Benz Financial services España EFC SA"><option value="Moeve - Moeve Card Services, S.A.U."><option value="Moeve - Moeve pro services SAU"><option value="Mohammed Ghanouch"><option value="Movistar - Telefónica móviles España SAU"><option value="Mármoles Santa maría SL"><option value="NAVARRO RUBIO SILLERIA S. L."><option value="Navarro Rubio Silleria SL"><option value="NESTLE NESPRESSO SA OFICINA DE REPRESENTACION EN BARCELONA"><option value="O.T.P. OFICINA TECNICA DE PREVENCION, S.A. - OTP-OFICINA TECNICA DE PREVENCION SL"><option value="Optica Alcasser - DOSMIRADAS2020,SL"><option value="Otp-Oficina Técnica de Prevención SL"><option value="Pinturas Gopidecor SL"><option value="PINTURAS GOPIDECOR SOCIEDAD LIMITADA."><option value="Poalgi SL"><option value="Prismica SLU"><option value="PUERTAS SEVILLANO SL"><option value="Pulidor - Jose Vicente Figueres Peris"><option value="Rafael Albert SL"><option value="RAFAEL ALBERT, S.L."><option value="Raúl Martín - Engenios Sanchez"><option value="Said Pladur - SAID LOUDYI"><option value="Saitra Cocinas SL"><option value="Saniceramic Import And Export Sl"><option value="SIMO PINTOR - MOHAMMED GHANOUCH"><option value="Stanila Adrián Ioan"><option value="Tancat Cerramientos - Raul Martín-Engenios Sänchez"><option value="Techos Calabuig - MATERIALES CALABUIG SOCIEDAD LIMITADA."><option value="TEXTILES INDUCAM"><option value="Tobisa Fabrica de Muebles SL"><option value="TOBISA MUEBLES - TOBISA FABRICA DE MUEBLES SL"><option value="VENTANAS CORTIZO - VICMAN GLASS S.L.U."><option value="Vicentclima SL"><option value="Vicman Glass SLU"><option value="Vives Azulejos y Gres SA"><option value="VIVES AZULEJOS Y GRES, S.A. - VIVES AZULEJOS Y GRES SA"><option value="Vodafone España SAU"></datalist>
+        <input class="form-input" id="f-proveedor" type="text" list="f-prov-datalist" placeholder="Buscar proveedor…" autocomplete="off"><datalist id="f-prov-datalist"><option value="ABDELHAK BOUZIZOUA SAID"><option value="Aguas de Valencia - Aguas de Valencia SA"><option value="Aquaservice - Viva Aqua Service Spain SA"><option value="AROMAS DEL CAMPO - AROMAS DEL CAMPO LIGHTING S.L.U."><option value="Asesoría Jose Carmelo Palau - Jose Carmelo Palau S.L"><option value="BATEIG PIEDRA NATURALBateig"><option value="BRICOLAJE BRICOMAN SLU"><option value="C.DOMA - SERVICIOS DE RECOGIDA ECOLOGICOS SLL"><option value="Cafrán Norte SLU"><option value="CAMENGO ESPAÑA SL"><option value="CANALONES MEDITERRANEA"><option value="COMERCIAL Y DERIVADOS ELECTRICOS SL"><option value="Comercial y derivados eléctricos SL"><option value="D Aqua Kitchen &amp; Living SL"><option value="DESARROLLO Y TECNICAS DEL BAÑOS.L.U"><option value="Desarrollo y Técnicas del Baño SLU"><option value="Disclima SL"><option value="DISCLIMA"><option value="Efecto Led - PRISMICA SLU"><option value="Emilio Montador - Emilio J. Monterde Sanchez"><option value="F Franco e Hijos SL"><option value="FERRETERIA TEN Y MONREAL S.L."><option value="Ferretería Ten y Monreal SL"><option value="Fiora bath collections  SL"><option value="FIORA BATH COLLECTIONS SOCIEDAD LIMITADA."><option value="FNMT-RCM"><option value="Franca Grupo Inmobiliario"><option value="Franco Furniture - F Franco e Hijos SL"><option value="Fustes Bonet Llopis SL"><option value="Garcia Zacares SL"><option value="Glicerio Chaves Hornero SL"><option value="Grupo Mundobaño Electrokitchen SL"><option value="Holded"><option value="Iberdrola - Iberdrola clientes SAU"><option value="Iván Millán Garcia"><option value="IXIA REGAL SA"><option value="Jose Asins Primo"><option value="Jose Ignacio Chilet Crespo"><option value="Marmoles Santa Maria - MARMOLES SANTAMARIA SL"><option value="Materiales Calabuig SL"><option value="MERCEDES BENZ - MERCEDES BENZ ESPAÑA SOCIEDAD ANONIMA"><option value="Mercedes Benz - Mercedes Benz Financial services España EFC SA"><option value="Moeve - Moeve Card Services, S.A.U."><option value="Moeve - Moeve pro services SAU"><option value="Mohammed Ghanouch"><option value="Movistar - Telefónica móviles España SAU"><option value="Mármoles Santa maría SL"><option value="NAVARRO RUBIO SILLERIA S. L."><option value="Navarro Rubio Silleria SL"><option value="NESTLE NESPRESSO SA OFICINA DE REPRESENTACION EN BARCELONA"><option value="O.T.P. OFICINA TECNICA DE PREVENCION, S.A. - OTP-OFICINA TECNICA DE PREVENCION SL"><option value="Optica Alcasser - DOSMIRADAS2020,SL"><option value="Otp-Oficina Técnica de Prevención SL"><option value="Pinturas Gopidecor SL"><option value="PINTURAS GOPIDECOR SOCIEDAD LIMITADA."><option value="Poalgi SL"><option value="Prismica SLU"><option value="PUERTAS SEVILLANO SL"><option value="Pulidor - Jose Vicente Figueres Peris"><option value="Rafael Albert SL"><option value="RAFAEL ALBERT, S.L."><option value="Raúl Martín - Engenios Sanchez"><option value="Said Pladur - SAID LOUDYI"><option value="Saitra Cocinas SL"><option value="Saniceramic Import And Export Sl"><option value="SIMO PINTOR - MOHAMMED GHANOUCH"><option value="Stanila Adrián Ioan"><option value="Tancat Cerramientos - Raul Martín-Engenios Sänchez"><option value="Techos Calabuig - MATERIALES CALABUIG SOCIEDAD LIMITADA."><option value="TEXTILES INDUCAM"><option value="Tobisa Fabrica de Muebles SL"><option value="TOBISA MUEBLES - TOBISA FABRICA DE MUEBLES SL"><option value="VENTANAS CORTIZO - VICMAN GLASS S.L.U."><option value="Vicentclima SL"><option value="Vicman Glass SLU"><option value="Vives Azulejos y Gres SA"><option value="VIVES AZULEJOS Y GRES, S.A. - VIVES AZULEJOS Y GRES SA"><option value="Vodafone España SAU"></datalist>
       </div>
       <div class="form-group" id="f-grp-proyecto">
         <label class="form-label">Proyecto <span style="font-size:10px;color:var(--text-soft);font-weight:400">(opcional)</span></label>
@@ -5437,7 +5447,7 @@ async function sb(table,method='GET',body=null,id=null,extra=''){
   const opts={method,headers,mode:'cors',credentials:'omit'};
   if(needsBody) opts.body=JSON.stringify(body);
   const ctrl=new AbortController();
-  const tid=setTimeout(()=>ctrl.abort(),20000);
+  const tid=setTimeout(()=>ctrl.abort(),30000); // iOS: 30s en redes lentas
   opts.signal=ctrl.signal;
   try{
     const r=await fetch(url,opts);
@@ -11168,7 +11178,7 @@ function abrirNuevaFactura(tipo){
   // Reset cliente/proyecto
   const fCliente=document.getElementById('f-cliente');
   if(fCliente) fCliente.value='';
-  // proveedor: datalist en HTML
+    // proveedor: datalist en HTML
   // Reset proyecto: vacío hasta que se elija cliente (venta) o mostrar todos (compra)
   const fProy=document.getElementById('f-proyecto');
   if(fProy){
@@ -19059,8 +19069,7 @@ async function _initPdfJs(){
     const s=document.createElement('script');s.src=_PDFJS_SRC;s.onload=res;s.onerror=rej;
     document.head.appendChild(s);
   });
-  try{const r=await fetch(_PDFJS_WORKER);const b=await r.blob();pdfjsLib.GlobalWorkerOptions.workerSrc=URL.createObjectURL(b);}
-  catch(e){pdfjsLib.GlobalWorkerOptions.workerSrc=_PDFJS_WORKER;}
+  pdfjsLib.GlobalWorkerOptions.workerSrc=_PDFJS_WORKER;
   window._pdfJsOk=true;return true;
 }
 async function _pdfTexto(b64){
@@ -19080,7 +19089,7 @@ async function _pdfTexto(b64){
       });
     }
     const txt=lineas.join('\n');
-    console.log('[PDF.js] '+txt.length+' chars:\n'+txt.slice(0,400));
+    console.log('[PDF.js] '+txt.length+' chars');
     return txt;
   }catch(e){console.error('[PDF.js]',e);return '';}
 }
@@ -19092,19 +19101,12 @@ function _marcarVerde(id){
 }
 async function _autocompletar(b64){
   const texto=await _pdfTexto(b64);
-  if(!texto||texto.trim().length<20){
-    toast('📄 PDF sin texto extraíble · rellena manualmente');return;
-  }
-  console.log('[API] Enviando a /api/parse-invoice...');
+  if(!texto||texto.trim().length<20){toast('📄 PDF sin texto extraíble · rellena manualmente');return;}
   toast('🤖 Claude está leyendo la factura…');
   try{
-    const resp=await fetch('/api/parse-invoice',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({pdfText:texto})
-    });
+    const resp=await fetch('/api/parse-invoice',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pdfText:texto})});
     const d=await resp.json();
-    console.log('[API] Respuesta:',JSON.stringify(d));
+    console.log('[API]',JSON.stringify(d));
     if(!resp.ok||d.error)throw new Error(d.error||'HTTP '+resp.status);
     const log=[];
     const toISO=s=>{if(!s)return null;const p=s.split('/');return p.length===3?`${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`:null;};
