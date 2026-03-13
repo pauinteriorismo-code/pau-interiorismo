@@ -9988,7 +9988,7 @@ async function loadCompras(){
     document.getElementById('compras-count').textContent=CoC.length+' registros';
     if(!CoC.length){tb.innerHTML=`<tr><td colspan="10"><div class="empty"><div class="empty-icon">🛒</div><div class="empty-text">Sin compras</div><button class="btn btn-primary" onclick="openModal('m-compra')">＋ Nueva</button></div></td></tr>`;return;}
     const capNames = await resolverNombresCapitulos(CoC.map(c=>c.partida));
-    tb.innerHTML=CoC.map(c=>{const tot=c.base_imponible*(1+ivaPct(c.iva_pct)/100);const hasPDF=!!(c.adjunto_pdf);const partLbl=c.partida?`<span style="font-size:11px;color:var(--copper)">${partidaLabelConNombres(c.partida,capNames)}</span>`:'<span style="color:var(--text-soft)">—</span>';return`<tr data-search="${(c.proyecto_id+c.proveedor_id+c.concepto+(c.partida||'')).toLowerCase()}" data-partida="${c.partida||''}"><td>${fmtD(c.fecha)}</td><td class="td-mono">${c.proyecto_id?`<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:1px 5px;color:var(--navy);font-weight:700" title="Ver expediente" onclick="abrirExpediente('${c.proyecto_id}')">${c.proyecto_id}</button>`:"<span style='color:var(--text-soft)'>—</span>"}</td><td>${partLbl}</td><td>${c.proveedor_id||'—'}</td><td>${c.concepto||'—'}${hasPDF?' 📎':''}</td><td class="td-mono">${fmt(c.base_imponible)}</td><td class="td-mono">${c.iva_pct}</td><td class="td-mono" style="font-weight:700">${fmt(tot)}</td><td>${bE(c.estado_pago)}</td><td style="display:flex;gap:4px">${hasPDF?`<button class="btn btn-ghost btn-icon btn-sm" onclick="coVerPDFById('${c.id}')" style="font-size:11px;color:var(--navy)" title="Ver PDF">📄</button>`:''}<button class="btn btn-ghost btn-icon btn-sm" onclick="editCompra('${c.id}')" style="font-size:11px">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('compras','${c.id}','${(c.concepto||'compra').replace(/'/g,"\\'")}')">🗑</button></td></tr>`;}).join('');
+    tb.innerHTML=CoC.map(c=>{const tot=c.base_imponible*(1+ivaPct(c.iva_pct)/100);const hasPDF=!!(c.adjunto_pdf);const partLbl=c.partida?`<span style="font-size:11px;color:var(--copper)">${partidaLabelConNombres(c.partida,capNames)}</span>`:'<span style="color:var(--text-soft)">—</span>';return`<tr data-search="${(c.proyecto_id+c.proveedor_id+c.concepto+(c.partida||'')).toLowerCase()}" data-partida="${c.partida||''}"><td>${fmtD(c.fecha)}</td><td class="td-mono">${c.proyecto_id?`<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:1px 5px;color:var(--navy);font-weight:700" title="Ver expediente" onclick="abrirExpediente('${c.proyecto_id}')">${c.proyecto_id}</button>`:"<span style='color:var(--text-soft)'>—</span>"}</td><td>${partLbl}</td><td>${c.proveedor_id||'—'}</td><td>${c.concepto||'—'}${hasPDF?' 📎':''}</td><td class="td-mono">${fmt(c.base_imponible)}</td><td class="td-mono">${c.iva_pct}</td><td class="td-mono" style="font-weight:700">${fmt(tot)}</td><td>${bE(c.estado||c.estado_pago)}</td><td style="display:flex;gap:4px">${hasPDF?`<button class="btn btn-ghost btn-icon btn-sm" onclick="coVerPDFById('${c.id}')" style="font-size:11px;color:var(--navy)" title="Ver PDF">📄</button>`:''}<button class="btn btn-ghost btn-icon btn-sm" onclick="editCompra('${c.id}')" style="font-size:11px">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('compras','${c.id}','${(c.concepto||'compra').replace(/'/g,"\\'")}')">🗑</button></td></tr>`;}).join('');
   }catch(e){tb.innerHTML=`<tr><td colspan="10" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
   filtrarModuloPorProyecto('compras');
   aplicarFiltroPartida('compras');
@@ -9997,7 +9997,7 @@ async function saveCompra(){
   const id=document.getElementById('co-id')?.value;
   const pdfB64=document.getElementById('co-pdf-b64')?.value||null;
   // Datos base SIN PDF para evitar error de columna en schema cache
-  const d={fecha:document.getElementById('co-fecha').value||new Date().toISOString().split('T')[0],proyecto_id:document.getElementById('co-proyecto').value||null,proveedor_id:document.getElementById('co-prov').value||null,concepto:document.getElementById('co-concepto').value,base_imponible:parseFloat(document.getElementById('co-base').value)||0,iva_pct:document.getElementById('co-iva').value,estado_pago:document.getElementById('co-estado').value,notas:document.getElementById('co-notas').value,partida:getPartidaFinalPfx('co')||null};
+  const d={fecha:document.getElementById('co-fecha').value||new Date().toISOString().split('T')[0],proyecto_id:document.getElementById('co-proyecto').value||null,proveedor_id:document.getElementById('co-prov').value||null,concepto:document.getElementById('co-concepto').value,base_imponible:parseFloat(document.getElementById('co-base').value)||0,iva_pct:document.getElementById('co-iva').value,estado:document.getElementById('co-estado').value,notas:document.getElementById('co-notas').value,partida:getPartidaFinalPfx('co')||null};
   try{
     let savedId = id;
     if(id){
@@ -10038,7 +10038,7 @@ async function loadSubcontratas(){
     document.getElementById('subcontratas-count').textContent=ScC.length+' registros';
     if(!ScC.length){tb.innerHTML=`<tr><td colspan="10"><div class="empty"><div class="empty-icon">👷</div><div class="empty-text">Sin subcontratas</div><button class="btn btn-primary" onclick="openModal('m-subcontrata')">＋ Nueva</button></div></td></tr>`;return;}
     const capNames = await resolverNombresCapitulos(ScC.map(s=>s.partida));
-    tb.innerHTML=ScC.map(s=>{const tot=s.importe*(1+ivaPct(s.iva_pct)/100);const partLbl=s.partida?`<span style="font-size:11px;color:var(--copper)">${partidaLabelConNombres(s.partida,capNames)}</span>`:'<span style="color:var(--text-soft)">—</span>';return`<tr data-search="${(s.proyecto_id+s.proveedor_id+s.trabajo+(s.partida||'')).toLowerCase()}" data-partida="${s.partida||''}"><td>${fmtD(s.fecha)}</td><td class="td-mono">${s.proyecto_id?`<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:1px 5px;color:var(--navy);font-weight:700" title="Ver expediente" onclick="abrirExpediente('${s.proyecto_id}')">${s.proyecto_id}</button>`:"<span style='color:var(--text-soft)'>—</span>"}</td><td>${partLbl}</td><td>${s.proveedor_id||'—'}</td><td>${s.trabajo||'—'}</td><td class="td-mono">${fmt(s.importe)}</td><td class="td-mono">${s.iva_pct}</td><td class="td-mono" style="font-weight:700">${fmt(tot)}</td><td>${bE(s.estado_pago)}</td><td style="display:flex;gap:4px">${s.adjunto_pdf?`<button class="btn btn-ghost btn-icon btn-sm" onclick="scVerPDFById('${s.id}')" style="font-size:11px;color:var(--navy)" title="Ver PDF">📄</button>`:''}<button class="btn btn-ghost btn-icon btn-sm" onclick="editSubcontrata('${s.id}')" title="Editar">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('subcontratas','${s.id}','${(s.trabajo||'subcontrata').replace(/'/g,"\\'")}')">🗑</button></td></tr>`;}).join('');
+    tb.innerHTML=ScC.map(s=>{const tot=s.importe*(1+ivaPct(s.iva_pct)/100);const partLbl=s.partida?`<span style="font-size:11px;color:var(--copper)">${partidaLabelConNombres(s.partida,capNames)}</span>`:'<span style="color:var(--text-soft)">—</span>';return`<tr data-search="${(s.proyecto_id+s.proveedor_id+s.trabajo+(s.partida||'')).toLowerCase()}" data-partida="${s.partida||''}"><td>${fmtD(s.fecha)}</td><td class="td-mono">${s.proyecto_id?`<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:1px 5px;color:var(--navy);font-weight:700" title="Ver expediente" onclick="abrirExpediente('${s.proyecto_id}')">${s.proyecto_id}</button>`:"<span style='color:var(--text-soft)'>—</span>"}</td><td>${partLbl}</td><td>${s.proveedor_id||'—'}</td><td>${s.trabajo||'—'}</td><td class="td-mono">${fmt(s.importe)}</td><td class="td-mono">${s.iva_pct}</td><td class="td-mono" style="font-weight:700">${fmt(tot)}</td><td>${bE(s.estado||s.estado_pago)}</td><td style="display:flex;gap:4px">${s.adjunto_pdf?`<button class="btn btn-ghost btn-icon btn-sm" onclick="scVerPDFById('${s.id}')" style="font-size:11px;color:var(--navy)" title="Ver PDF">📄</button>`:''}<button class="btn btn-ghost btn-icon btn-sm" onclick="editSubcontrata('${s.id}')" title="Editar">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('subcontratas','${s.id}','${(s.trabajo||'subcontrata').replace(/'/g,"\\'")}')">🗑</button></td></tr>`;}).join('');
   }catch(e){tb.innerHTML=`<tr><td colspan="10" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
   filtrarModuloPorProyecto('subcontratas');
   aplicarFiltroPartida('subcontratas');
@@ -10101,7 +10101,7 @@ function editCompra(id) {
   document.getElementById('co-concepto').value  = c.concepto || '';
   document.getElementById('co-base').value      = c.base_imponible || 0;
   document.getElementById('co-iva').value       = c.iva_pct || '21%';
-  document.getElementById('co-estado').value    = c.estado_pago || 'Pendiente';
+  document.getElementById('co-estado').value    = c.estado || c.estado_pago || 'Pendiente';
   document.getElementById('co-notas').value     = c.notas || '';
   // Restaurar partida
   if(c.proyecto_id) {
@@ -10182,7 +10182,7 @@ function _setHoraProyecto(proyId, partidaVal) {
 async function saveSubcontrata(){
   const id=document.getElementById('sc-id')?.value;
   const pdfB64=document.getElementById('sc-pdf-b64')?.value||null;
-  const d={fecha:document.getElementById('sc-fecha').value||new Date().toISOString().split('T')[0],proyecto_id:document.getElementById('sc-proyecto').value||null,proveedor_id:document.getElementById('sc-prov').value||null,trabajo:document.getElementById('sc-trabajo').value,importe:parseFloat(document.getElementById('sc-importe').value)||0,iva_pct:document.getElementById('sc-iva').value,estado_pago:document.getElementById('sc-estado').value,fecha_acta1:document.getElementById('sc-fecha-acta1')?.value||null,importe_acta1:parseFloat(document.getElementById('sc-importe-acta1')?.value)||null,fecha_acta2:document.getElementById('sc-fecha-acta2')?.value||null,importe_acta2:parseFloat(document.getElementById('sc-importe-acta2')?.value)||null,fecha_acta3:document.getElementById('sc-fecha-acta3')?.value||null,importe_acta3:parseFloat(document.getElementById('sc-importe-acta3')?.value)||null,partida:getPartidaFinalPfx('sc')||null};
+  const d={fecha:document.getElementById('sc-fecha').value||new Date().toISOString().split('T')[0],proyecto_id:document.getElementById('sc-proyecto').value||null,proveedor_id:document.getElementById('sc-prov').value||null,trabajo:document.getElementById('sc-trabajo').value,importe:parseFloat(document.getElementById('sc-importe').value)||0,iva_pct:document.getElementById('sc-iva').value,estado:document.getElementById('sc-estado').value,fecha_acta1:document.getElementById('sc-fecha-acta1')?.value||null,importe_acta1:parseFloat(document.getElementById('sc-importe-acta1')?.value)||null,fecha_acta2:document.getElementById('sc-fecha-acta2')?.value||null,importe_acta2:parseFloat(document.getElementById('sc-importe-acta2')?.value)||null,fecha_acta3:document.getElementById('sc-fecha-acta3')?.value||null,importe_acta3:parseFloat(document.getElementById('sc-importe-acta3')?.value)||null,partida:getPartidaFinalPfx('sc')||null};
   try{
     let savedId=id;
     if(id){ await sb('subcontratas','PATCH',d,null,`?id=eq.${id}`); }
@@ -10690,7 +10690,6 @@ async function savePedido(){
     proyecto_id:  document.getElementById('ped-proyecto-id')?.value||null,
     tipo:         document.getElementById('ped-tipo').value,
     proveedor:    document.getElementById('ped-prov')?.value||'',
-    partida:      getPartidaFinalPfx('ped')||null,
     referencia:   document.getElementById('ped-ref')?.value||'',
     importe:      parseFloat(document.getElementById('ped-importe').value)||0,
     estado:       document.getElementById('ped-estado').value,
@@ -18887,7 +18886,7 @@ function sortAndRenderCompras(col, dir) {
       <td class="td-mono">${fmt(c.base_imponible)}</td>
       <td class="td-mono">${c.iva_pct}</td>
       <td class="td-mono" style="font-weight:700">${fmt(tot)}</td>
-      <td>${bE(c.estado_pago)}</td>
+      <td>${bE(c.estado||c.estado_pago)}</td>
       <td style="display:flex;gap:4px">
         <button class="btn btn-ghost btn-icon btn-sm" onclick="editCompra('${c.id}')" title="Editar">✏️</button>
         <button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('compras','${c.id}','${(c.concepto||'compra').replace(/'/g,"\\'")}')">🗑</button>
@@ -20165,7 +20164,7 @@ async function renderExpCompras(body){
         <td style="padding:6px 10px;font-family:monospace">${fmt(c.base_imponible)}</td>
         <td style="padding:6px 10px">${c.iva_pct}</td>
         <td style="padding:6px 10px;font-weight:700;font-family:monospace;color:var(--amber)">${fmt(tot)}</td>
-        <td style="padding:6px 10px">${bE(c.estado_pago)}</td>
+        <td style="padding:6px 10px">${bE(c.estado||c.estado_pago)}</td>
         <td style="padding:6px 10px">${c.adjunto_pdf?`<button class="btn btn-ghost btn-sm" style="font-size:10px" onclick="coVerPDFById('${c.id}')">📄</button>`:''}<button class="btn btn-ghost btn-icon btn-sm" onclick="editCompra('${c.id}');closeModal('m-expediente')" title="Editar">✏️</button></td>
       </tr>`}).join('')}</tbody>
     </table></div>
@@ -20213,7 +20212,7 @@ async function renderExpSubcontratas(body){
         <td style="padding:6px 10px">${s.proveedor_id||'—'}</td>
         <td style="padding:6px 10px">${s.trabajo||'—'}</td>
         <td style="padding:6px 10px;font-weight:700;font-family:monospace">${fmt((s.importe||0)*(1+ivaPct(s.iva_pct)/100))}${(()=>{const pagActas=(s.importe_acta1||0)+(s.importe_acta2||0)+(s.importe_acta3||0);if(!pagActas)return'';const pend=Math.max(0,(s.importe||0)-pagActas);return`<div style="font-size:10px;color:var(--text-soft);font-weight:400;font-family:sans-serif">Actas: ${fmt(pagActas)} · Pdte: <span style="color:${pend>0?'var(--red)':'var(--green)'}">${fmt(pend)}</span></div>`})()}</td>
-        <td style="padding:6px 10px">${bE(s.estado_pago)}</td>
+        <td style="padding:6px 10px">${bE(s.estado||s.estado_pago)}</td>
         <td style="padding:6px 10px">${s.adjunto_pdf?`<button class="btn btn-ghost btn-icon btn-sm" onclick="scVerPDFById('${s.id}')" style="font-size:11px;color:var(--navy)" title="Ver PDF">📄</button>`:''}<button class="btn btn-ghost btn-icon btn-sm" onclick="editSubcontrata('${s.id}');closeModal('m-expediente')" title="Editar">✏️</button></td>
       </tr>`}).join('')}</tbody>
     </table></div>
@@ -22605,7 +22604,6 @@ async function guardarAlbaran() {
     estado: document.getElementById('alb-estado').value,
     direccion_entrega: document.getElementById('alb-dir').value,
     observaciones: document.getElementById('alb-obs').value,
-    partida: getPartidaFinalPfx('alb') || null,
     lineas: JSON.stringify(lineas)
   };
   try {
@@ -22722,7 +22720,7 @@ async function exportarExcel(vista) {
           const base = r.base_imponible||0;
           const iva = base * ivaPct(r.iva_pct)/100;
           data.push([r.fecha||'', r.proyecto_id||'', r.proveedor_id||r.proveedor||'', r.concepto||r.descripcion||'',
-            base, r.iva_pct||21, base+iva, r.estado_pago||'', r.fecha_vencimiento||'']);
+            base, r.iva_pct||21, base+iva, r.estado||r.estado_pago||'', r.fecha_vencimiento||'']);
         });
         filename = `Compras_${new Date().toISOString().split('T')[0]}.xlsx`;
         break;
