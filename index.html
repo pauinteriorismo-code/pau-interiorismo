@@ -3063,6 +3063,16 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="form-group" style="margin:0;min-width:130px"><label class="form-label">Fecha entrega</label><input type="date" class="form-input" id="alb-fecha"></div>
       <div class="form-group" style="margin:0;min-width:130px"><label class="form-label">Estado</label>
         <select class="form-input" id="alb-estado"><option>Borrador</option><option>Entregado</option><option>Firmado</option><option>Incidencia</option></select></div>
+      <div class="form-group" style="margin:0;min-width:160px"><label class="form-label">Destinatario</label>
+        <select class="form-input" id="alb-dest-tipo" onchange="albToggleDest()">
+          <option value="cliente">👤 Cliente</option>
+          <option value="proveedor">🏭 Proveedor/Subcontrata</option>
+        </select></div>
+      <div class="form-group" id="alb-dest-prov-group" style="margin:0;min-width:200px;display:none">
+        <label class="form-label">Proveedor / Subcontratista</label>
+        <input class="form-input" id="alb-dest-prov" list="alb-dest-prov-dl" placeholder="Buscar proveedor…" autocomplete="off">
+        <datalist id="alb-dest-prov-dl"><option value="ABDELHAK BOUZIZOUA SAID"><option value="Aguas de Valencia - Aguas de Valencia SA"><option value="Aquaservice - Viva Aqua Service Spain SA"><option value="AROMAS DEL CAMPO - AROMAS DEL CAMPO LIGHTING S.L.U."><option value="Asesoría Jose Carmelo Palau - Jose Carmelo Palau S.L"><option value="BATEIG PIEDRA NATURALBateig"><option value="BRICOLAJE BRICOMAN SLU"><option value="C.DOMA - SERVICIOS DE RECOGIDA ECOLOGICOS SLL"><option value="Cafrán Norte SLU"><option value="CAMENGO ESPAÑA SL"><option value="CANALONES MEDITERRANEA"><option value="COMERCIAL Y DERIVADOS ELECTRICOS SL"><option value="Comercial y derivados eléctricos SL"><option value="D Aqua Kitchen &amp; Living SL"><option value="DESARROLLO Y TECNICAS DEL BAÑOS.L.U"><option value="Desarrollo y Técnicas del Baño SLU"><option value="Disclima SL"><option value="DISCLIMA"><option value="Efecto Led - PRISMICA SLU"><option value="Emilio Montador - Emilio J. Monterde Sanchez"><option value="F Franco e Hijos SL"><option value="FERRETERIA TEN Y MONREAL S.L."><option value="Ferretería Ten y Monreal SL"><option value="Fiora bath collections  SL"><option value="FIORA BATH COLLECTIONS SOCIEDAD LIMITADA."><option value="FNMT-RCM"><option value="Franca Grupo Inmobiliario"><option value="Franco Furniture - F Franco e Hijos SL"><option value="Fustes Bonet Llopis SL"><option value="Garcia Zacares SL"><option value="Glicerio Chaves Hornero SL"><option value="Grupo Mundobaño Electrokitchen SL"><option value="Holded"><option value="Iberdrola - Iberdrola clientes SAU"><option value="Iván Millán Garcia"><option value="IXIA REGAL SA"><option value="Jose Asins Primo"><option value="Jose Ignacio Chilet Crespo"><option value="Marmoles Santa Maria - MARMOLES SANTAMARIA SL"><option value="Materiales Calabuig SL"><option value="MERCEDES BENZ - MERCEDES BENZ ESPAÑA SOCIEDAD ANONIMA"><option value="Mercedes Benz - Mercedes Benz Financial services España EFC SA"><option value="Moeve - Moeve Card Services, S.A.U."><option value="Moeve - Moeve pro services SAU"><option value="Mohammed Ghanouch"><option value="Movistar - Telefónica móviles España SAU"><option value="Mármoles Santa maría SL"><option value="NAVARRO RUBIO SILLERIA S. L."><option value="Navarro Rubio Silleria SL"><option value="NESTLE NESPRESSO SA OFICINA DE REPRESENTACION EN BARCELONA"><option value="O.T.P. OFICINA TECNICA DE PREVENCION, S.A. - OTP-OFICINA TECNICA DE PREVENCION SL"><option value="Optica Alcasser - DOSMIRADAS2020,SL"><option value="Otp-Oficina Técnica de Prevención SL"><option value="Pinturas Gopidecor SL"><option value="PINTURAS GOPIDECOR SOCIEDAD LIMITADA."><option value="Poalgi SL"><option value="Prismica SLU"><option value="PUERTAS SEVILLANO SL"><option value="Pulidor - Jose Vicente Figueres Peris"><option value="Rafael Albert SL"><option value="RAFAEL ALBERT, S.L."><option value="Raúl Martín - Engenios Sanchez"><option value="Said Pladur - SAID LOUDYI"><option value="Saitra Cocinas SL"><option value="Saniceramic Import And Export Sl"><option value="SIMO PINTOR - MOHAMMED GHANOUCH"><option value="Stanila Adrián Ioan"><option value="Tancat Cerramientos - Raul Martín-Engenios Sänchez"><option value="Techos Calabuig - MATERIALES CALABUIG SOCIEDAD LIMITADA."><option value="TEXTILES INDUCAM"><option value="Tobisa Fabrica de Muebles SL"><option value="TOBISA MUEBLES - TOBISA FABRICA DE MUEBLES SL"><option value="VENTANAS CORTIZO - VICMAN GLASS S.L.U."><option value="Vicentclima SL"><option value="Vicman Glass SLU"><option value="Vives Azulejos y Gres SA"><option value="VIVES AZULEJOS Y GRES, S.A. - VIVES AZULEJOS Y GRES SA"><option value="Vodafone España SAU"></datalist>
+      </div>
       <div class="form-group" style="margin:0;min-width:160px"><label class="form-label">Partida / Capítulo</label><select class="form-input" id="alb-partida" onchange="onChangePartidaGenerico('alb')"><option value="">— General —</option></select></div>
       <div class="form-group" id="alb-capitulo-group" style="margin:0;min-width:160px;display:none"><label class="form-label">Capítulo</label><select class="form-input" id="alb-capitulo"><option value="">— Todo —</option></select></div>
       <div class="form-group" style="margin:0;flex:1;min-width:200px"><label class="form-label">Dirección de entrega</label><input class="form-input" id="alb-dir" placeholder="C/ Dirección obra…"></div>
@@ -5489,6 +5499,7 @@ async function sb(table,method='GET',body=null,id=null,extra=''){
   const headers={'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`};
   if(needsBody) headers['Content-Type']='application/json';
   if(method==='POST') headers['Prefer']='return=representation';
+  if(method==='PATCH') headers['Prefer']='return=minimal';
   const opts={method,headers,mode:'cors',credentials:'omit'};
   if(needsBody) opts.body=JSON.stringify(body);
   const ctrl=new AbortController();
@@ -22531,6 +22542,10 @@ async function nuevoAlbaran() {
   document.getElementById('alb-obs').value = '';
   document.getElementById('alb-lineas-tbody').innerHTML = '';
   albResetPDF();
+  // Reset destinatario
+  const _destTipo=document.getElementById('alb-dest-tipo'); if(_destTipo) _destTipo.value='cliente';
+  const _destGrp=document.getElementById('alb-dest-prov-group'); if(_destGrp) _destGrp.style.display='none';
+  const _destProv=document.getElementById('alb-dest-prov'); if(_destProv) _destProv.value='';
   // Cargar partidas del proyecto
   _ocultarCapituloGroupPfx('alb');
   const albPs = document.getElementById('alb-partida');
@@ -22551,6 +22566,14 @@ async function editarAlbaran(id) {
   document.getElementById('alb-estado').value = alb.estado || 'Borrador';
   document.getElementById('alb-dir').value = alb.direccion_entrega || '';
   document.getElementById('alb-obs').value = alb.observaciones || '';
+  // Cargar destinatario
+  const _aDT=document.getElementById('alb-dest-tipo');
+  const _aDG=document.getElementById('alb-dest-prov-group');
+  const _aDP=document.getElementById('alb-dest-prov');
+  const _destT = alb.destinatario_tipo||'cliente';
+  if(_aDT) _aDT.value=_destT;
+  if(_aDG) _aDG.style.display=_destT==='proveedor'?'':'none';
+  if(_aDP) _aDP.value=alb.destinatario_prov||'';
   // Cargar PDF adjunto si existe
   albResetPDF();
   if(alb.adjunto_pdf){
@@ -22630,6 +22653,12 @@ function getAlbLineas() {
 
 
 // ── PDF adjunto para ALBARANES ──
+
+function albToggleDest(){
+  const tipo = document.getElementById('alb-dest-tipo')?.value;
+  const grp  = document.getElementById('alb-dest-prov-group');
+  if(grp) grp.style.display = tipo==='proveedor' ? '' : 'none';
+}
 function albHandleFile(file){
   window._albPDFChanged = true;
   if(!file) return;
@@ -22693,12 +22722,16 @@ async function guardarAlbaran() {
   if (!proy) return;
   const lineas = getAlbLineas();
   if (!lineas.length) { toast('Añade al menos un artículo', 'error'); return; }
+  const destTipo = document.getElementById('alb-dest-tipo')?.value || 'cliente';
+  const destProv = destTipo==='proveedor' ? (document.getElementById('alb-dest-prov')?.value||null) : null;
   const payload = {
     proyecto_id: proy,
     fecha: document.getElementById('alb-fecha').value,
     estado: document.getElementById('alb-estado').value,
     direccion_entrega: document.getElementById('alb-dir').value,
     observaciones: document.getElementById('alb-obs').value,
+    destinatario_tipo: destTipo,
+    destinatario_prov: destProv,
     lineas: JSON.stringify(lineas)
   };
   try {
@@ -22761,7 +22794,11 @@ async function exportarAlbaranPDF(id) {
   // Client & delivery info
   pdf.setFontSize(9); pdf.setTextColor(50);
   const cl = (CC||[]).find(c=>String(c.id)===String(p.cliente_id)||c.nombre===p.cliente_id);
-  pdf.text(`Cliente: ${p.cliente_id||'—'}`, mX, y); y+=5;
+  const albDestTipo = alb.destinatario_tipo||'cliente';
+  const albDestLabel = albDestTipo==='proveedor'
+    ? `Proveedor/Subcontrata: ${alb.destinatario_prov||'—'}`
+    : `Cliente: ${p.cliente_id||'—'}`;
+  pdf.text(albDestLabel, mX, y); y+=5;
   pdf.text(`Proyecto: ${alb.proyecto_id} · ${p.nombre||''}`, mX, y); y+=5;
   pdf.text(`Dirección de entrega: ${alb.direccion_entrega||p.direccion_obra||'—'}`, mX, y); y+=7;
 
@@ -22944,12 +22981,16 @@ async function guardarAlbaranYPDF() {
   if (!proy) return;
   const lineas = getAlbLineas();
   if (!lineas.length) { toast('Añade al menos un artículo', 'error'); return; }
+  const destTipo = document.getElementById('alb-dest-tipo')?.value || 'cliente';
+  const destProv = destTipo==='proveedor' ? (document.getElementById('alb-dest-prov')?.value||null) : null;
   const payload = {
     proyecto_id: proy,
     fecha: document.getElementById('alb-fecha').value,
     estado: document.getElementById('alb-estado').value,
     direccion_entrega: document.getElementById('alb-dir').value,
     observaciones: document.getElementById('alb-obs').value,
+    destinatario_tipo: destTipo,
+    destinatario_prov: destProv,
     lineas: JSON.stringify(lineas)
   };
   try {
