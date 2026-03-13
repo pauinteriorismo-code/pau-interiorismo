@@ -328,10 +328,15 @@ tbody td{padding:7px 10px;vertical-align:middle}
     padding-bottom:calc(70px + env(safe-area-inset-bottom));
   }
 
-  /* Topbar */
+  /* Topbar — iOS safe area */
   .topbar{
-    padding-left:14px;
-    padding-top:env(safe-area-inset-top);
+    padding-left:12px;
+    padding-right:12px;
+    height:auto;
+    min-height:calc(var(--header) + env(safe-area-inset-top));
+    padding-top:calc(env(safe-area-inset-top) + 10px);
+    padding-bottom:10px;
+    align-items:center;
   }
 
   /* Toast no quede tapado por nav */
@@ -603,9 +608,7 @@ input[type="date"]::-webkit-date-and-time-value { text-align:left; }
 * { -webkit-tap-highlight-color:transparent; }
 button, .btn, .nav-item, .card { cursor:pointer; touch-action:manipulation; }
 .modal-body { -webkit-overflow-scrolling:touch; overscroll-behavior:contain; }
-@supports(padding-top: env(safe-area-inset-top)){
-  .topbar { padding-top: env(safe-area-inset-top); }
-}
+/* safe-area topbar: gestionado en media query móvil */
 
 @media(max-width:768px){
   .topbar button[onclick*="abrirBusquedaGlobal"]{display:none!important}
