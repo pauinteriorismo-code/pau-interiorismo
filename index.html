@@ -19904,9 +19904,9 @@ function renderExpResumen(body){
   const factTotal=factBase+factIva;
   const factCobrado=factProy.reduce((s,f)=>s+(f.importe_cobrado||0),0);
   const eaTotal=eaResProy.reduce((s,e)=>s+(parseFloat(e.importe)||0),0);
-  const beneficio=factBase+eaTotal-costesBase;
   const ingresosReales=factBase+eaTotal;
-  const margenPct=ingresosReales>0?(beneficio/ingresosReales)*100:0;
+  const beneficio=presBase-costesBase;
+  const margenPct=presBase>0?(beneficio/presBase)*100:0;
   const compPend=compProy.filter(c=>(c.estado||c.estado_pago)==='Pendiente').reduce((s,c)=>s+(c.base_imponible||0)*(1+(c.iva_porcentaje||21)/100),0);
   const scPend=scProy.filter(s=>['Pendiente','Parcial','Vencido'].includes(s.estado||s.estado_pago)).reduce((s,c)=>s+(c.importe||0)*(1+ivaPct(c.iva_pct)/100),0);
   const pendientePagar=compPend+scPend;
@@ -19941,10 +19941,10 @@ function renderExpResumen(body){
     </div>
     <div style="background:${beneficio>=0?'#f0f9f0':'#fff0f0'};border-radius:6px;padding:8px 10px;margin-bottom:6px">
       <div style="display:flex;justify-content:space-between;align-items:center">
-        <span style="font-size:12px;font-weight:700;color:${beneficio>=0?'var(--green)':'var(--red)'}">💰 BENEFICIO REAL (s/IVA)</span>
+        <span style="font-size:12px;font-weight:700;color:${beneficio>=0?'var(--green)':'var(--red)'}">💰 BENEFICIO POTENCIAL (s/IVA)</span>
         <span style="font-size:14px;font-weight:700;color:${beneficio>=0?'var(--green)':'var(--red)'}">${fmt(beneficio)} <span style="font-size:11px">(${fmtP(margenPct)})</span></span>
       </div>
-      <div style="font-size:10px;color:var(--text-soft);margin-top:3px">Ingresos reales (facturas + entregas) − costes</div>
+      <div style="font-size:10px;color:var(--text-soft);margin-top:3px">Presupuesto − costes totales</div>
     </div>
     <div style="background:#f5f0ff;border-radius:6px;padding:8px 10px">
       <div style="font-size:10px;font-weight:700;color:#7b3fa0;margin-bottom:4px">💵 FLUJO DE CAJA</div>
