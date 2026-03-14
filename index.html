@@ -10023,24 +10023,38 @@ async function loadCompras(){
 async function saveCompra(){
   const id=document.getElementById('co-id')?.value;
   const pdfB64=document.getElementById('co-pdf-b64')?.value||null;
-  // Payload base SIN columnas nuevas (partida, adjunto) para evitar schema cache
-  const dBase={fecha:document.getElementById('co-fecha').value||new Date().toISOString().split('T')[0],proyecto_id:document.getElementById('co-proyecto').value||null,proveedor_id:document.getElementById('co-prov').value||null,concepto:document.getElementById('co-concepto').value,base_imponible:parseFloat(document.getElementById('co-base').value)||0,iva_pct:document.getElementById('co-iva').value,estado:document.getElementById('co-estado').value,notas:document.getElementById('co-notas').value};
-  const partida = getPartidaFinalPfx('co')||null;
+  // Columnas ORIGINALES de compras (sin las añadidas con ALTER TABLE)
+  const dOrig={
+    fecha:       document.getElementById('co-fecha').value||new Date().toISOString().split('T')[0],
+    proyecto_id: document.getElementById('co-proyecto').value||null,
+    proveedor_id:document.getElementById('co-prov').value||null,
+    concepto:    document.getElementById('co-concepto').value,
+    base_imponible: parseFloat(document.getElementById('co-base').value)||0,
+    iva_pct:     document.getElementById('co-iva').value,
+    notas:       document.getElementById('co-notas').value
+  };
+  const dExtras = {
+    estado:  document.getElementById('co-estado').value,
+    partida: getPartidaFinalPfx('co')||null
+  };
   const pdfNombre = document.getElementById('co-pdf-nombre')?.value||'factura_compra.pdf';
   try{
-    let savedId = id;
+    let savedId = id||null;
     if(id){
-      await sb('compras','PATCH',dBase,null,`?id=eq.${id}`);
+      // Edición: PATCH campos originales
+      await sb('compras','PATCH',dOrig,null,`?id=eq.${id}`);
+      savedId = id;
     } else {
-      const res = await sbPost('compras',dBase);
+      // Nuevo: POST solo campos originales
+      const res = await sbPost('compras',dOrig);
       if(res && res[0] && res[0].id) savedId = res[0].id;
     }
-    // Paso 2: PATCH con columnas nuevas (partida + PDF) por separado
+    // PATCH2: columnas nuevas (estado, partida, PDF) — separate para evitar schema cache
     if(savedId){
-      const patch2 = {};
-      if(partida) patch2.partida = partida;
-      if(pdfB64 && window._coPDFChanged){ patch2.adjunto_pdf = pdfB64; patch2.adjunto_nombre = pdfNombre; }
-      if(Object.keys(patch2).length) await sb('compras','PATCH',patch2,null,`?id=eq.${savedId}`);
+      const patch2 = {...dExtras};
+      if(pdfB64 && window._coPDFChanged){ patch2.adjunto_pdf=pdfB64; patch2.adjunto_nombre=pdfNombre; }
+      try{ await sb('compras','PATCH',patch2,null,`?id=eq.${savedId}`); }
+      catch(e2){ console.warn('PATCH extras fallido (schema cache):',e2.message); }
     }
     toast(id?'Compra actualizada ✅':'Compra registrada ✅');
     document.getElementById('co-id').value='';
