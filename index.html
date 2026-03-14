@@ -10028,6 +10028,7 @@ async function saveCompra(){
   // Todos los valores del formulario
   const vals = {
     serie_compra:   3,
+    factura_numero: document.getElementById('co-concepto').value||'—',
     concepto:       document.getElementById('co-concepto').value||null,
     base_imponible: parseFloat(document.getElementById('co-base').value)||0,
     notas:          document.getElementById('co-notas').value||null,
@@ -10061,9 +10062,8 @@ async function saveCompra(){
       // Solo concepto es obligatorio, el resto vía PATCH
       let res = null;
       const payloads = [
-        {concepto: vals.concepto||'Nueva compra', base_imponible: vals.base_imponible, serie_compra: 3},
-        {concepto: vals.concepto||'Nueva compra', serie_compra: 3},
-        {serie_compra: 3}
+        {concepto: vals.concepto||'Nueva compra', base_imponible: vals.base_imponible, serie_compra: 3, factura_numero: vals.factura_numero||'—'},
+        {serie_compra: 3, factura_numero: vals.factura_numero||'—'},
       ];
       for(const payload of payloads){
         try{ res = await sbPost('compras', payload); if(res&&res[0]) break; }
