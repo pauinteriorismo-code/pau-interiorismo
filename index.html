@@ -10065,7 +10065,7 @@ async function saveCompra(){
         try{ await sb('compras','PATCH',payload,null,`?id=eq.${id}`); patched=true; break; }
         catch(e){ if(!isSchemaErr(e)) throw e; }
       }
-      if(!patched) throw new Error('No se pudo guardar: schema cache de Supabase desactualizado. Ejecuta NOTIFY pgrst,'reload schema' en Supabase SQL.');
+      if(!patched) throw new Error("No se pudo guardar: schema cache desactualizado. Ejecuta NOTIFY pgrst reload schema en Supabase SQL.");
       savedId = id;
     } else {
       // Nuevo: POST progresivo
