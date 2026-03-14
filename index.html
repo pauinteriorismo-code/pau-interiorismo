@@ -19675,14 +19675,22 @@ function recalcPresKPI(){
     const lbl = document.getElementById('chk-'+v)?.parentElement;
     if(lbl) lbl.style.display = (_presDesglobeGlobal[v]||0) > 0 ? '' : 'none';
   });
-  // Actualizar margen con nuevo presupuesto
+  // Actualizar margen KPI con nuevo presupuesto (leyendo costes ya calculados)
   const costesRaw = document.getElementById('exp-k-costes')?.textContent||'';
   const costes = parseFloat(costesRaw.replace(/\./g,'').replace(',','.'))||0;
   if(tot > 0){
     const margen = ((tot - costes) / tot) * 100;
     const el2 = document.getElementById('exp-k-margen');
     if(el2){ el2.textContent = fmtP(margen); el2.style.color = margen>=20?'var(--green)':margen>=0?'var(--amber)':'var(--red)'; }
+    // Actualizar subtitle del margen con el total correcto (versiones marcadas)
+    const sub = el2?.parentNode?.querySelector('.kpi-margen-sub');
+    if(sub) sub.textContent = 'Sobre venta · Pres. '+fmt(tot);
   }
+  // Re-renderizar resumen financiero para que refleje el presupuesto actualizado
+  const body = document.getElementById('exp-body');
+  const activeTab = document.querySelector('.exp-tab[style*="border-bottom: 2px solid var(--navy)"], .exp-tab[style*="border-bottom:2px solid var(--navy)"]');
+  const tabActivo = activeTab?.dataset?.tab || 'resumen';
+  if(body && tabActivo === 'resumen') renderExpResumen(body);
 }
 
 // ═══════════════════════════════════════════
@@ -19792,8 +19800,8 @@ async function calcExpKPIs(proyId){
   const factProy = (FC||[]).filter(f=>f.proyecto_id===proyId&&(f.tipo_factura||'Venta')==='Venta');
   const factTotal = factProy.reduce((s,f)=>s+(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100), 0);
 
-  // Compras del proyecto
-  const compProy = (CoC||[]).filter(c=>c.proyecto_id===proyId);
+  // Compras del proyecto (campo puede ser proyecto_id o proyecto)
+  const compProy = (CoC||[]).filter(c=>c.proyecto_id===proyId || c.proyecto===proyId);
   const compTotal = compProy.reduce((s,c)=>s+(c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100), 0);
 
   // Horas / mano de obra del proyecto
@@ -19905,10 +19913,12 @@ function renderExpResumen(body){
   const factCobrado=factProy.reduce((s,f)=>s+(f.importe_cobrado||0),0);
   const eaTotal=eaResProy.reduce((s,e)=>s+(parseFloat(e.importe)||0),0);
   const ingresosReales=factBase+eaTotal;
-  // Presupuesto desde KPI ya calculado en calcExpKPIs (debe declararse ANTES de beneficio)
-  const presKpiEl = document.getElementById('exp-k-pres');
-  const presKpiTxt = presKpiEl?.textContent||'';
-  const presBase = parseFloat(presKpiTxt.replace(/\./g,'').replace(',','.'))||0;
+  // Presupuesto: suma de versiones marcadas en los checkboxes (igual que recalcPresKPI)
+  let presBase = 0;
+  ['v1','v2','v3','v4','v5','v6','v7','v8'].forEach(v=>{
+    if(document.getElementById('chk-'+v)?.checked) presBase += (_presDesglobeGlobal[v]||0);
+  });
+  Object.keys(_presDesglobeGlobal).forEach(k=>{ if(!k.match(/^v\d+$/)) presBase += _presDesglobeGlobal[k]; });
   const beneficio=presBase-costesBase;
   const margenPct=presBase>0?(beneficio/presBase)*100:0;
   const compPend=compProy.filter(c=>(c.estado||c.estado_pago)==='Pendiente').reduce((s,c)=>s+(c.base_imponible||0)*(1+(c.iva_porcentaje||21)/100),0);
