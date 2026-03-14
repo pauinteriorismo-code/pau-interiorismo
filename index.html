@@ -10178,17 +10178,23 @@ function editCompra(id) {
   if (!c) { toast('Registro no encontrado', 'error'); return; }
   document.querySelector('#m-compra .modal-title').textContent = '✏️ Editar compra';
   document.getElementById('co-id').value        = c.id;
-  document.getElementById('co-fecha').value     = c.fecha || '';
-  document.getElementById('co-proyecto').value  = c.proyecto || c.proyecto_id || '';
+  // La tabla compras usa fecha_factura, pero también puede tener fecha
+  const _coFecha = c.fecha_factura || c.fecha || '';
+  document.getElementById('co-fecha').value     = _coFecha;
+  const _coProy = c.proyecto || c.proyecto_id || '';
+  document.getElementById('co-proyecto').value  = _coProy;
   document.getElementById('co-prov').value = c.proveedor||c.proveedor_id||'';
-  document.getElementById('co-concepto').value  = c.concepto || '';
+  // concepto puede estar en c.concepto o en c.factura_numero (campo original del schema)
+  document.getElementById('co-concepto').value  = c.concepto || c.factura_numero || '';
   document.getElementById('co-base').value      = c.base_imponible || 0;
-  document.getElementById('co-iva').value       = c.iva_pct || '21%';
+  // IVA puede ser iva_pct (texto "21%") o iva_porcentaje (número 21)
+  const _coIva = c.iva_pct || (c.iva_porcentaje ? c.iva_porcentaje+'%' : '21%');
+  document.getElementById('co-iva').value       = _coIva;
   document.getElementById('co-estado').value    = c.estado || c.estado_pago || 'Pendiente';
   document.getElementById('co-notas').value     = c.notas || '';
-  // Restaurar partida
-  if(c.proyecto_id) {
-    cargarPartidasGenerico(c.proyecto_id, 'co', c.partida || null);
+  // Restaurar partida (usar c.proyecto que es donde guardamos el ID de proyecto)
+  if(_coProy) {
+    cargarPartidasGenerico(_coProy, 'co', c.partida || null);
   } else {
     _ocultarCapituloGroupPfx('co');
     const ps = document.getElementById('co-partida');
