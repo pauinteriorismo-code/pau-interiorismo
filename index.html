@@ -10015,7 +10015,7 @@ async function loadCompras(){
     document.getElementById('compras-count').textContent=CoC.length+' registros';
     if(!CoC.length){tb.innerHTML=`<tr><td colspan="10"><div class="empty"><div class="empty-icon">🛒</div><div class="empty-text">Sin compras</div><button class="btn btn-primary" onclick="openModal('m-compra')">＋ Nueva</button></div></td></tr>`;return;}
     const capNames = await resolverNombresCapitulos(CoC.map(c=>c.partida));
-    tb.innerHTML=CoC.map(c=>{const tot=c.base_imponible*(1+ivaPct(c.iva_pct)/100);const hasPDF=!!(c.adjunto_pdf);const partLbl=c.partida?`<span style="font-size:11px;color:var(--copper)">${partidaLabelConNombres(c.partida,capNames)}</span>`:'<span style="color:var(--text-soft)">—</span>';return`<tr data-search="${(c.proyecto_id+c.proveedor_id+c.concepto+(c.partida||'')).toLowerCase()}" data-partida="${c.partida||''}"><td>${fmtD(c.fecha)}</td><td class="td-mono">${c.proyecto_id?`<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:1px 5px;color:var(--navy);font-weight:700" title="Ver expediente" onclick="abrirExpediente('${c.proyecto_id}')">${c.proyecto_id}</button>`:"<span style='color:var(--text-soft)'>—</span>"}</td><td>${partLbl}</td><td>${c.proveedor_id||'—'}</td><td>${c.concepto||'—'}${hasPDF?' 📎':''}</td><td class="td-mono">${fmt(c.base_imponible)}</td><td class="td-mono">${c.iva_pct}</td><td class="td-mono" style="font-weight:700">${fmt(tot)}</td><td>${bE(c.estado||c.estado_pago)}</td><td style="display:flex;gap:4px">${hasPDF?`<button class="btn btn-ghost btn-icon btn-sm" onclick="coVerPDFById('${c.id}')" style="font-size:11px;color:var(--navy)" title="Ver PDF">📄</button>`:''}<button class="btn btn-ghost btn-icon btn-sm" onclick="editCompra('${c.id}')" style="font-size:11px">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('compras','${c.id}','${(c.concepto||'compra').replace(/'/g,"\\'")}')">🗑</button></td></tr>`;}).join('');
+    tb.innerHTML=CoC.map(c=>{const tot=c.base_imponible*(1+ivaPct(c.iva_pct)/100);const hasPDF=!!(c.adjunto_pdf);const partLbl=c.partida?`<span style="font-size:11px;color:var(--copper)">${partidaLabelConNombres(c.partida,capNames)}</span>`:'<span style="color:var(--text-soft)">—</span>';return`<tr data-search="${(c.proyecto_id+c.proveedor_id+c.concepto+(c.partida||'')).toLowerCase()}" data-partida="${c.partida||''}"><td>${fmtD(c.fecha)}</td><td class="td-mono">${c.proyecto_id?`<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:1px 5px;color:var(--navy);font-weight:700" title="Ver expediente" onclick="abrirExpediente('${c.proyecto_id}')">${c.proyecto_id}</button>`:"<span style='color:var(--text-soft)'>—</span>"}</td><td>${partLbl}</td><td>${c.proveedor_id||'—'}</td><td>${c.concepto||'—'}${hasPDF?' 📎':''}</td><td class="td-mono">${fmt(c.base_imponible)}</td><td class="td-mono">${c.iva_pct}</td><td class="td-mono" style="font-weight:700">${fmt(tot)}</td><td>${bE(c.estado||c.estado_pago)}</td><td style="display:flex;gap:4px">${hasPDF?`<button class="btn btn-ghost btn-sm" onclick="coVerPDFById('${c.id}')" style="font-size:11px;color:var(--navy);font-weight:600" title="Ver PDF adjunto">📄 PDF</button>`:''}<button class="btn btn-ghost btn-icon btn-sm" onclick="editCompra('${c.id}')" style="font-size:11px">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('compras','${c.id}','${(c.concepto||'compra').replace(/'/g,"\\'")}')">🗑</button></td></tr>`;}).join('');
   }catch(e){tb.innerHTML=`<tr><td colspan="10" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
   filtrarModuloPorProyecto('compras');
   aplicarFiltroPartida('compras');
@@ -10023,28 +10023,24 @@ async function loadCompras(){
 async function saveCompra(){
   const id=document.getElementById('co-id')?.value;
   const pdfB64=document.getElementById('co-pdf-b64')?.value||null;
-  // Datos base SIN PDF para evitar error de columna en schema cache
-  const d={fecha:document.getElementById('co-fecha').value||new Date().toISOString().split('T')[0],proyecto_id:document.getElementById('co-proyecto').value||null,proveedor_id:document.getElementById('co-prov').value||null,concepto:document.getElementById('co-concepto').value,base_imponible:parseFloat(document.getElementById('co-base').value)||0,iva_pct:document.getElementById('co-iva').value,estado:document.getElementById('co-estado').value,notas:document.getElementById('co-notas').value,partida:getPartidaFinalPfx('co')||null};
+  // Payload base SIN columnas nuevas (partida, adjunto) para evitar schema cache
+  const dBase={fecha:document.getElementById('co-fecha').value||new Date().toISOString().split('T')[0],proyecto_id:document.getElementById('co-proyecto').value||null,proveedor_id:document.getElementById('co-prov').value||null,concepto:document.getElementById('co-concepto').value,base_imponible:parseFloat(document.getElementById('co-base').value)||0,iva_pct:document.getElementById('co-iva').value,estado:document.getElementById('co-estado').value,notas:document.getElementById('co-notas').value};
+  const partida = getPartidaFinalPfx('co')||null;
+  const pdfNombre = document.getElementById('co-pdf-nombre')?.value||'factura_compra.pdf';
   try{
     let savedId = id;
     if(id){
-      await sb('compras','PATCH',d,null,`?id=eq.${id}`);
+      await sb('compras','PATCH',dBase,null,`?id=eq.${id}`);
     } else {
-      const res = await sbPost('compras',d);
-      // Obtener el id del registro recién creado
+      const res = await sbPost('compras',dBase);
       if(res && res[0] && res[0].id) savedId = res[0].id;
     }
-    // Paso 2: guardar PDF por separado (PATCH independiente) si hay uno nuevo
-    if(pdfB64 && window._coPDFChanged && savedId){
-      try{
-        await sb('compras','PATCH',{adjunto_pdf:pdfB64},null,`?id=eq.${savedId}`);
-      }catch(ePDF){
-        console.warn('PDF no guardado (columna no disponible):', ePDF.message);
-        toast('Compra guardada. PDF no adjuntado (error de columna) ⚠️','warning');
-        document.getElementById('co-id').value='';
-        document.querySelector('#m-compra .modal-title').textContent='🛒 Nueva compra';
-        coResetPDF(); closeModal('m-compra'); loadCompras(); return;
-      }
+    // Paso 2: PATCH con columnas nuevas (partida + PDF) por separado
+    if(savedId){
+      const patch2 = {};
+      if(partida) patch2.partida = partida;
+      if(pdfB64 && window._coPDFChanged){ patch2.adjunto_pdf = pdfB64; patch2.adjunto_nombre = pdfNombre; }
+      if(Object.keys(patch2).length) await sb('compras','PATCH',patch2,null,`?id=eq.${savedId}`);
     }
     toast(id?'Compra actualizada ✅':'Compra registrada ✅');
     document.getElementById('co-id').value='';
@@ -10065,7 +10061,7 @@ async function loadSubcontratas(){
     document.getElementById('subcontratas-count').textContent=ScC.length+' registros';
     if(!ScC.length){tb.innerHTML=`<tr><td colspan="10"><div class="empty"><div class="empty-icon">👷</div><div class="empty-text">Sin subcontratas</div><button class="btn btn-primary" onclick="openModal('m-subcontrata')">＋ Nueva</button></div></td></tr>`;return;}
     const capNames = await resolverNombresCapitulos(ScC.map(s=>s.partida));
-    tb.innerHTML=ScC.map(s=>{const tot=s.importe*(1+ivaPct(s.iva_pct)/100);const partLbl=s.partida?`<span style="font-size:11px;color:var(--copper)">${partidaLabelConNombres(s.partida,capNames)}</span>`:'<span style="color:var(--text-soft)">—</span>';return`<tr data-search="${(s.proyecto_id+s.proveedor_id+s.trabajo+(s.partida||'')).toLowerCase()}" data-partida="${s.partida||''}"><td>${fmtD(s.fecha)}</td><td class="td-mono">${s.proyecto_id?`<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:1px 5px;color:var(--navy);font-weight:700" title="Ver expediente" onclick="abrirExpediente('${s.proyecto_id}')">${s.proyecto_id}</button>`:"<span style='color:var(--text-soft)'>—</span>"}</td><td>${partLbl}</td><td>${s.proveedor_id||'—'}</td><td>${s.trabajo||'—'}</td><td class="td-mono">${fmt(s.importe)}</td><td class="td-mono">${s.iva_pct}</td><td class="td-mono" style="font-weight:700">${fmt(tot)}</td><td>${bE(s.estado||s.estado_pago)}</td><td style="display:flex;gap:4px">${s.adjunto_pdf?`<button class="btn btn-ghost btn-icon btn-sm" onclick="scVerPDFById('${s.id}')" style="font-size:11px;color:var(--navy)" title="Ver PDF">📄</button>`:''}<button class="btn btn-ghost btn-icon btn-sm" onclick="editSubcontrata('${s.id}')" title="Editar">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('subcontratas','${s.id}','${(s.trabajo||'subcontrata').replace(/'/g,"\\'")}')">🗑</button></td></tr>`;}).join('');
+    tb.innerHTML=ScC.map(s=>{const tot=s.importe*(1+ivaPct(s.iva_pct)/100);const partLbl=s.partida?`<span style="font-size:11px;color:var(--copper)">${partidaLabelConNombres(s.partida,capNames)}</span>`:'<span style="color:var(--text-soft)">—</span>';return`<tr data-search="${(s.proyecto_id+s.proveedor_id+s.trabajo+(s.partida||'')).toLowerCase()}" data-partida="${s.partida||''}"><td>${fmtD(s.fecha)}</td><td class="td-mono">${s.proyecto_id?`<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:1px 5px;color:var(--navy);font-weight:700" title="Ver expediente" onclick="abrirExpediente('${s.proyecto_id}')">${s.proyecto_id}</button>`:"<span style='color:var(--text-soft)'>—</span>"}</td><td>${partLbl}</td><td>${s.proveedor_id||'—'}</td><td>${s.trabajo||'—'}</td><td class="td-mono">${fmt(s.importe)}</td><td class="td-mono">${s.iva_pct}</td><td class="td-mono" style="font-weight:700">${fmt(tot)}</td><td>${bE(s.estado||s.estado_pago)}</td><td style="display:flex;gap:4px">${s.adjunto_pdf?`<button class="btn btn-ghost btn-sm" onclick="scVerPDFById('${s.id}')" style="font-size:11px;color:var(--navy);font-weight:600" title="Ver PDF adjunto">📄 PDF</button>`:''}<button class="btn btn-ghost btn-icon btn-sm" onclick="editSubcontrata('${s.id}')" title="Editar">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('subcontratas','${s.id}','${(s.trabajo||'subcontrata').replace(/'/g,"\\'")}')">🗑</button></td></tr>`;}).join('');
   }catch(e){tb.innerHTML=`<tr><td colspan="10" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
   filtrarModuloPorProyecto('subcontratas');
   aplicarFiltroPartida('subcontratas');
@@ -10107,6 +10103,15 @@ function editSubcontrata(id) {
     window._scPDFActual = s.adjunto_pdf;
     document.getElementById('sc-pdf-b64').value  = s.adjunto_pdf;
     document.getElementById('sc-pdf-nombre').value = s.adjunto_nombre || 'factura_subcontrata.pdf';
+    const _scPdfZone = document.getElementById('sc-pdf-zone');
+    const _scPdfPrev = document.getElementById('sc-pdf-preview');
+    if(_scPdfZone) _scPdfZone.style.display='none';
+    if(_scPdfPrev){
+      _scPdfPrev.style.display='flex';
+      _scPdfPrev.innerHTML=`<span style="font-size:13px">📄</span>
+        <button class="btn btn-ghost btn-sm" style="font-size:12px;color:var(--navy);font-weight:600;text-decoration:underline;cursor:pointer" onclick="scVerPDF()" title="Abrir PDF">${s.adjunto_nombre||'factura_subcontrata.pdf'}</button>
+        <button class="btn btn-ghost btn-sm" style="font-size:11px;color:var(--red);margin-left:4px" onclick="scQuitarPDF()">✕ Quitar</button>`;
+    }
     document.getElementById('sc-pdf-label').textContent = '📎 ' + (s.adjunto_nombre || 'PDF adjunto');
     document.getElementById('sc-pdf-preview').style.display = 'flex';
     document.getElementById('sc-pdf-btn-ver').style.display = 'block';
@@ -10143,12 +10148,17 @@ function editCompra(id) {
     window._coPDFActual = c.adjunto_pdf;
     document.getElementById('co-pdf-b64').value  = c.adjunto_pdf;
     document.getElementById('co-pdf-nombre').value = c.adjunto_nombre || 'factura_compra.pdf';
-    const lbl = document.getElementById('co-pdf-label');
-    if (lbl) lbl.textContent = '📎 ' + (c.adjunto_nombre || 'PDF adjunto');
-    const prev = document.getElementById('co-pdf-preview');
-    if (prev) prev.style.display = 'flex';
-    const btnVer = document.getElementById('co-pdf-btn-ver');
-    if (btnVer) btnVer.style.display = 'block';
+    const _coPdfZone2 = document.getElementById('co-pdf-zone');
+    const _coPdfPrev2 = document.getElementById('co-pdf-preview');
+    const _coBtnVer2  = document.getElementById('co-pdf-btn-ver');
+    if(_coPdfZone2) _coPdfZone2.style.display='none';
+    if(_coBtnVer2)  _coBtnVer2.style.display='none';
+    if(_coPdfPrev2){
+      _coPdfPrev2.style.display='flex';
+      _coPdfPrev2.innerHTML=`<span style="font-size:13px">📄</span>
+        <button class="btn btn-ghost btn-sm" style="font-size:12px;color:var(--navy);font-weight:600;text-decoration:underline;cursor:pointer" onclick="coVerPDF()" title="Abrir PDF">${c.adjunto_nombre||'factura_compra.pdf'}</button>
+        <button class="btn btn-ghost btn-sm" style="font-size:11px;color:var(--red);margin-left:4px" onclick="coQuitarPDF()">✕ Quitar</button>`;
+    }
   } else {
     if (typeof coResetPDF === 'function') coResetPDF();
   }
