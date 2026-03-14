@@ -19074,19 +19074,19 @@ function coHandleFile(file){
     document.getElementById('co-pdf-b64').value = b64;
     document.getElementById('co-pdf-nombre').value = file.name;
     window._coPDFActual = b64;
-    const lbl=document.getElementById('co-pdf-label');
-    const prev=document.getElementById('co-pdf-preview');
-    const btnVer=document.getElementById('co-pdf-btn-ver');
-    const zone=document.getElementById('co-pdf-zone');
-    if(zone) zone.style.display='none';
-    if(lbl) lbl.style.display='none';
-    if(btnVer) btnVer.style.display='none'; // botón inferior ya no necesario
+    const lbl    = document.getElementById('co-pdf-label');
+    const prev   = document.getElementById('co-pdf-preview');
+    const btnVer = document.getElementById('co-pdf-btn-ver');
+    const zone   = document.getElementById('co-pdf-zone');
+    if(zone)   zone.style.display = 'none';
+    if(lbl)    lbl.style.display  = 'none';
+    if(btnVer) btnVer.style.display = 'flex';   // igual que subcontratas
     if(prev){
-      prev.style.display='flex';
-      prev.innerHTML=`<span style="font-size:13px">📄</span>
-        <button class="btn btn-ghost btn-sm" style="font-size:12px;color:var(--navy);font-weight:600;text-decoration:underline;cursor:pointer" onclick="coVerPDF()" title="Abrir PDF">${file.name}</button>
-        <span style="font-size:11px;color:var(--text-soft)">(${(file.size/1024).toFixed(0)} KB)</span>
-        <button class="btn btn-ghost btn-sm" style="font-size:11px;color:var(--red);margin-left:4px" onclick="coQuitarPDF()">✕ Quitar</button>`;
+      prev.style.display = 'flex';
+      prev.innerHTML = '<span style="font-size:13px">✅</span>'
+        + '<span style="font-size:12px;color:var(--navy);font-weight:600">' + file.name + '</span>'
+        + '<span style="font-size:11px;color:var(--text-soft)">(' + Math.round(file.size/1024) + ' KB)</span>'
+        + '<button class="btn btn-ghost btn-sm" style="font-size:11px;color:var(--red);margin-left:4px" onclick="coQuitarPDF()">✕ Quitar</button>';
     }
     toast('PDF cargado ✅');
   };
@@ -19102,6 +19102,7 @@ function coQuitarPDF(){
   document.getElementById('co-pdf-nombre').value='';
   const inp=document.getElementById('co-pdf-input'); if(inp) inp.value='';
   window._coPDFActual=null;
+  window._coPDFChanged=true;
   const lbl=document.getElementById('co-pdf-label');
   const prev=document.getElementById('co-pdf-preview');
   const btnVer=document.getElementById('co-pdf-btn-ver');
