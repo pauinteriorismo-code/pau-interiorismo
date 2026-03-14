@@ -23537,6 +23537,8 @@ function insertarDespuesDe(id,tipo){
 }
 
 // Patch renderPresupuesto - boton insertar en cada fila
+window.addEventListener('load',function(){
+if(typeof renderPresupuesto!=='function')return;
 var _origRenderPresIns=renderPresupuesto;
 renderPresupuesto=function(){
   _origRenderPresIns();
@@ -23576,6 +23578,7 @@ renderPresupuesto=function(){
     actionsDiv.insertBefore(btn,actionsDiv.firstChild);
   });
 };
+}); // end load
 
 
 </script>
