@@ -10015,7 +10015,7 @@ async function loadCompras(){
     document.getElementById('compras-count').textContent=CoC.length+' registros';
     if(!CoC.length){tb.innerHTML=`<tr><td colspan="10"><div class="empty"><div class="empty-icon">🛒</div><div class="empty-text">Sin compras</div><button class="btn btn-primary" onclick="openModal('m-compra')">＋ Nueva</button></div></td></tr>`;return;}
     const capNames = await resolverNombresCapitulos(CoC.map(c=>c.partida));
-    tb.innerHTML=CoC.map(c=>{const tot=c.base_imponible*(1+(ivaPct(c.iva_pct)||c.iva_porcentaje||21)/100);const hasPDF=!!(c.adjunto_pdf);const partLbl=c.partida?`<span style="font-size:11px;color:var(--copper)">${partidaLabelConNombres(c.partida,capNames)}</span>`:'<span style="color:var(--text-soft)">—</span>';return`<tr data-search="${((c.proyecto||c.proyecto_id||'')+(c.proveedor||c.proveedor_id||'')+(c.concepto||'')+(c.partida||'')).toLowerCase()}" data-partida="${c.partida||''}"><td>${fmtD(c.fecha)}</td><td class="td-mono">${(c.proyecto||c.proyecto_id)?`<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:1px 5px;color:var(--navy);font-weight:700" title="Ver expediente" onclick="abrirExpediente('${c.proyecto||c.proyecto_id}')">${c.proyecto||c.proyecto_id}</button>`:"<span style='color:var(--text-soft)'>—</span>"}</td><td>${partLbl}</td><td>${c.proveedor||c.proveedor_id||'—'}</td><td>${c.concepto||'—'}${hasPDF?' 📎':''}</td><td class="td-mono">${fmt(c.base_imponible)}</td><td class="td-mono">${c.iva_pct}</td><td class="td-mono" style="font-weight:700">${fmt(tot)}</td><td>${bE(c.estado||c.estado_pago)}</td><td style="display:flex;gap:4px">${hasPDF?`<button class="btn btn-ghost btn-sm" onclick="coVerPDFById('${c.id}')" style="font-size:11px;color:var(--navy);font-weight:600" title="Ver PDF adjunto">📄 PDF</button>`:''}<button class="btn btn-ghost btn-icon btn-sm" onclick="editCompra('${c.id}')" style="font-size:11px">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('compras','${c.id}','${(c.concepto||'compra').replace(/'/g,"\\'")}')">🗑</button></td></tr>`;}).join('');
+    tb.innerHTML=CoC.map(c=>{const tot=c.base_imponible*(1+(ivaPct(c.iva_pct)||c.iva_porcentaje||21)/100);const hasPDF=!!(c.adjunto_pdf);const partLbl=c.partida?`<span style="font-size:11px;color:var(--copper)">${partidaLabelConNombres(c.partida,capNames)}</span>`:'<span style="color:var(--text-soft)">—</span>';return`<tr data-search="${((c.proyecto||c.proyecto_id||'')+(c.proveedor||c.proveedor_id||'')+(c.concepto||'')+(c.partida||'')).toLowerCase()}" data-partida="${c.partida||''}"><td>${fmtD(c.fecha_factura||c.fecha)}</td><td class="td-mono">${(c.proyecto||c.proyecto_id)?`<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:1px 5px;color:var(--navy);font-weight:700" title="Ver expediente" onclick="abrirExpediente('${c.proyecto||c.proyecto_id}')">${c.proyecto||c.proyecto_id}</button>`:"<span style='color:var(--text-soft)'>—</span>"}</td><td>${partLbl}</td><td>${c.proveedor||c.proveedor_id||'—'}</td><td>${c.concepto||'—'}${hasPDF?' 📎':''}</td><td class="td-mono">${fmt(c.base_imponible)}</td><td class="td-mono">${c.iva_pct||c.iva_porcentaje||'21%'}</td><td class="td-mono" style="font-weight:700">${fmt(tot)}</td><td>${bE(c.estado||c.estado_pago)}</td><td style="display:flex;gap:4px">${hasPDF?`<button class="btn btn-ghost btn-sm" onclick="coVerPDFById('${c.id}')" style="font-size:11px;color:var(--navy);font-weight:600" title="Ver PDF adjunto">📄 PDF</button>`:''}<button class="btn btn-ghost btn-icon btn-sm" onclick="editCompra('${c.id}')" style="font-size:11px">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('compras','${c.id}','${(c.concepto||'compra').replace(/'/g,"\\'")}')">🗑</button></td></tr>`;}).join('');
   }catch(e){tb.innerHTML=`<tr><td colspan="10" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
   filtrarModuloPorProyecto('compras');
   aplicarFiltroPartida('compras');
@@ -10032,6 +10032,7 @@ async function saveCompra(){
     factura_numero:  document.getElementById('co-concepto').value||'—', // NOT NULL
     factura_anyo:    parseInt(fechaVal.substring(0,4))||new Date().getFullYear(), // NOT NULL DEFAULT
     fecha_factura:   fechaVal,                                           // NOT NULL
+    fecha:           fechaVal,  // alias para compatibilidad con render/filtros
     base_imponible:  parseFloat(document.getElementById('co-base').value)||0,
     iva_porcentaje:  parseFloat((document.getElementById('co-iva').value||'21').replace('%',''))||21,
     concepto:        document.getElementById('co-concepto').value||null,
@@ -11098,7 +11099,7 @@ async function loadRentabilidad(){
     const bar=document.getElementById('rent-bar');bar.style.width=Math.min(pct,100)+'%';bar.style.background=pct<80?'var(--green)':pct<100?'var(--copper)':'var(--red)';
     document.getElementById('rent-bar-label').textContent=`${pct.toFixed(1)}% consumido`;document.getElementById('rent-bar-nums').textContent=`${fmt(totalCoste)} de ${fmt(totalPres)}`;
     document.getElementById('rk-compras-total').textContent=fmt(totalCompras);
-    document.getElementById('rk-compras-list').innerHTML=compras.length?compras.map(c=>`<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px 10px;color:var(--text-soft)">${fmtD(c.fecha)}</td><td style="padding:5px 10px">${c.concepto||c.proveedor_id||'—'}</td><td style="padding:5px 10px;text-align:right;font-weight:700">${fmt(c.base_imponible)}</td></tr>`).join(''):'<tr><td colspan="3" style="padding:12px;text-align:center;color:var(--text-soft)">Sin compras</td></tr>';
+    document.getElementById('rk-compras-list').innerHTML=compras.length?compras.map(c=>`<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px 10px;color:var(--text-soft)">${fmtD(c.fecha_factura||c.fecha)}</td><td style="padding:5px 10px">${c.concepto||c.proveedor_id||'—'}</td><td style="padding:5px 10px;text-align:right;font-weight:700">${fmt(c.base_imponible)}</td></tr>`).join(''):'<tr><td colspan="3" style="padding:12px;text-align:center;color:var(--text-soft)">Sin compras</td></tr>';
     document.getElementById('rk-sub-total').textContent=fmt(totalSubcs);
     document.getElementById('rk-sub-list').innerHTML=subcs.length?subcs.map(s=>`<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px 10px;color:var(--text-soft)">${fmtD(s.fecha)}</td><td style="padding:5px 10px">${s.trabajo||'—'}</td><td style="padding:5px 10px;text-align:right;font-weight:700">${fmt(s.importe)}</td></tr>`).join(''):'<tr><td colspan="3" style="padding:12px;text-align:center;color:var(--text-soft)">Sin subcontratas</td></tr>';
     document.getElementById('rk-horas-total').textContent=fmt(totalHoras);
@@ -18973,7 +18974,7 @@ function sortAndRenderCompras(col, dir) {
   tb.innerHTML = sorted.map(c => {
     const tot = c.base_imponible*(1+ivaPct(c.iva_pct)/100);
     return `<tr data-search="${(c.proyecto_id+c.proveedor_id+c.concepto).toLowerCase()}">
-      <td>${fmtD(c.fecha)}</td>
+      <td>${fmtD(c.fecha_factura||c.fecha)}</td>
       <td class="td-mono" style="color:var(--text-soft)">${c.proyecto_id||'—'}</td>
       <td>${c.proveedor||c.proveedor_id||'—'}</td>
       <td>${c.concepto||'—'}</td>
@@ -19487,7 +19488,7 @@ function gsSearch(q){
     hits.push({ico:'🧾',label:`${f.num_factura||'Sin nº'} — ${contra}`,sub:`Factura ${f.tipo_factura||'Venta'} · ${fmtD(f.fecha_emision)} · ${fmt((f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100))}`,go:'facturas'});
   });
   (CoC||[]).filter(c=>(c.concepto||'').toLowerCase().includes(q)||(c.proveedor_id||'').toLowerCase().includes(q)).slice(0,4).forEach(c=>
-    hits.push({ico:'🛒',label:c.concepto||c.proveedor_id||'—',sub:`Compra · ${c.proveedor_id||''} · ${fmtD(c.fecha)} · ${fmt(c.base_imponible)}`,go:'compras'}));
+    hits.push({ico:'🛒',label:c.concepto||c.proveedor_id||'—',sub:`Compra · ${c.proveedor_id||''} · ${fmtD(c.fecha_factura||c.fecha)} · ${fmt(c.base_imponible)}`,go:'compras'}));
   (ProvC||[]).filter(p=>(p.nombre||'').toLowerCase().includes(q)).slice(0,3).forEach(p=>
     hits.push({ico:'🏭',label:p.nombre,sub:'Proveedor',go:'proveedores'}));
   window.gsHits=hits;
@@ -20262,7 +20263,7 @@ function renderExpResumen(body){
   <div style="margin-top:16px">
     <div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Últimas compras del proyecto</div>
     ${compProy.slice(0,5).map(c=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #f5f5f5;font-size:12px">
-      <span>${fmtD(c.fecha)} · <strong>${c.proveedor||c.proveedor_id||'—'}</strong></span>
+      <span>${fmtD(c.fecha_factura||c.fecha)} · <strong>${c.proveedor||c.proveedor_id||'—'}</strong></span>
       <span style="color:var(--amber);font-weight:600">${fmt((c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100))} ${bE(c.estado_pago)}</span>
     </div>`).join('')}
     ${compProy.length>5?`<div style="font-size:11px;color:var(--text-soft);padding:4px 0">+${compProy.length-5} más — ver pestaña Compras</div>`:''}
@@ -20303,7 +20304,7 @@ async function renderExpCompras(body){
     <table style="width:100%;font-size:12px;border-collapse:collapse">
       <thead style="position:sticky;top:0;z-index:1"><tr style="background:var(--navy);color:#fff">${['Fecha','Partida','Proveedor','Concepto','Base','IVA','Total','Estado'].map(h=>`<th style="padding:7px 10px;text-align:left;font-weight:600">${h}</th>`).join('')}<th></th></tr></thead>
       <tbody>${items.map((c,i)=>{const tot=(c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100);const pLbl=c.partida?partidaLabelConNombres(c.partida,capNames):'—';return`<tr style="background:${i%2?'#fafafa':'#fff'}">
-        <td style="padding:6px 10px;white-space:nowrap">${fmtD(c.fecha)}</td><td style="padding:6px 10px">${pLbl}</td><td style="padding:6px 10px">${c.proveedor||c.proveedor_id||'—'}</td>
+        <td style="padding:6px 10px;white-space:nowrap">${fmtD(c.fecha_factura||c.fecha)}</td><td style="padding:6px 10px">${pLbl}</td><td style="padding:6px 10px">${c.proveedor||c.proveedor_id||'—'}</td>
         <td style="padding:6px 10px">${c.concepto||'—'}${c.adjunto_pdf?' 📎':''}</td>
         <td style="padding:6px 10px;font-family:monospace">${fmt(c.base_imponible)}</td>
         <td style="padding:6px 10px">${c.iva_pct}</td>
@@ -21426,7 +21427,7 @@ async function loadCertificaciones() {
     const total = (c.base_imponible||0) + iva;
     return `<tr>
       <td class="td-mono" style="font-weight:700">${c.num_cert||'—'}</td>
-      <td>${fmtD(c.fecha)}</td>
+      <td>${fmtD(c.fecha_factura||c.fecha)}</td>
       <td><span class="badge ${c.estado==='Cobrada'?'b-green':c.estado==='Emitida'?'b-amber':'b-gray'}">${c.estado||'—'}</span></td>
       <td class="td-mono" style="text-align:right;color:var(--navy)">${presBase>0?pctEsta.toFixed(1)+'%':'—'}</td>
       <td class="td-mono" style="text-align:right;font-weight:600">${presBase>0?pctAcum.toFixed(1)+'%':'—'}</td>
