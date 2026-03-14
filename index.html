@@ -10074,7 +10074,7 @@ async function saveCompra(){
         try{ res = await sbPost('compras', payload); break; }
         catch(e){ if(!isSchemaErr(e)) throw e; }
       }
-      if(!res||!res[0]) throw new Error('No se pudo crear la compra. Ejecuta NOTIFY pgrst,'reload schema' en Supabase SQL.');
+      if(!res||!res[0]) throw new Error("No se pudo crear la compra. Ejecuta NOTIFY pgrst reload schema en Supabase SQL.");
       savedId = res[0].id;
       // PATCH2: campos que no se pudieron enviar en el POST
       if(savedId){
