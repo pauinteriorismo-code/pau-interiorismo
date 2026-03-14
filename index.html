@@ -10021,61 +10021,76 @@ async function loadCompras(){
   aplicarFiltroPartida('compras');
 }
 async function saveCompra(){
-  const id=document.getElementById('co-id')?.value;
-  const pdfB64=document.getElementById('co-pdf-b64')?.value||null;
-  // Columnas ORIGINALES de compras (sin las añadidas con ALTER TABLE)
-  const dOrig={
-    fecha:       document.getElementById('co-fecha').value||new Date().toISOString().split('T')[0],
-    proyecto_id: document.getElementById('co-proyecto').value||null,
-    proveedor_id:document.getElementById('co-prov').value||null,
-    concepto:    document.getElementById('co-concepto').value,
-    base_imponible: parseFloat(document.getElementById('co-base').value)||0,
-    iva_pct:     document.getElementById('co-iva').value,
-    notas:       document.getElementById('co-notas').value
-  };
-  const dExtras = {
-    estado:  document.getElementById('co-estado').value,
-    partida: getPartidaFinalPfx('co')||null
-  };
+  const id        = document.getElementById('co-id')?.value||null;
+  const pdfB64    = document.getElementById('co-pdf-b64')?.value||null;
   const pdfNombre = document.getElementById('co-pdf-nombre')?.value||'factura_compra.pdf';
-  // sbSafe: reintenta con campos mínimos si falla por schema cache
-  const sbSafe = async (method, payload, filter) => {
-    try{
-      if(method==='POST') return await sbPost('compras', payload);
-      return await sb('compras','PATCH',payload,null,filter);
-    }catch(e){
-      if(e.message&&(e.message.includes('PGRST204')||e.message.includes('schema cache')||e.message.includes('fecha'))){
-        // Schema cache desactualizado: enviar solo campos seguros
-        const mini={concepto:payload.concepto, base_imponible:payload.base_imponible, iva_pct:payload.iva_pct};
-        if(payload.proyecto_id) mini.proyecto_id=payload.proyecto_id;
-        if(payload.proveedor_id) mini.proveedor_id=payload.proveedor_id;
-        if(payload.notas) mini.notas=payload.notas;
-        if(method==='POST') return await sbPost('compras', mini);
-        return await sb('compras','PATCH',mini,null,filter);
-      }
-      throw e;
-    }
+
+  // Todos los campos que queremos guardar
+  const todo = {
+    fecha:          document.getElementById('co-fecha').value||new Date().toISOString().split('T')[0],
+    proyecto_id:    document.getElementById('co-proyecto').value||null,
+    proveedor_id:   document.getElementById('co-prov').value||null,
+    concepto:       document.getElementById('co-concepto').value||null,
+    base_imponible: parseFloat(document.getElementById('co-base').value)||0,
+    iva_pct:        document.getElementById('co-iva').value||'21%',
+    notas:          document.getElementById('co-notas').value||null,
+    estado:         document.getElementById('co-estado').value||'Pendiente',
+    partida:        getPartidaFinalPfx('co')||null
   };
+  if(pdfB64 && window._coPDFChanged){
+    todo.adjunto_pdf    = pdfB64;
+    todo.adjunto_nombre = pdfNombre;
+  }
+
+  // Intento progresivo: todo → sin columnas nuevas → mínimo absoluto
+  const intentos = [
+    todo,
+    // Sin columnas añadidas con ALTER TABLE
+    (()=>{ const d={...todo}; delete d.estado; delete d.partida; delete d.adjunto_pdf; delete d.adjunto_nombre; return d; })(),
+    // Sin fecha ni iva_pct (los más problemáticos en schema cache)
+    (()=>{ const d={...todo}; delete d.estado; delete d.partida; delete d.adjunto_pdf; delete d.adjunto_nombre; delete d.fecha; delete d.iva_pct; return d; })(),
+    // Mínimo absoluto: solo concepto + proyecto
+    { concepto: todo.concepto, proyecto_id: todo.proyecto_id }
+  ];
+
+  const isSchemaErr = e => e.message&&(e.message.includes('PGRST204')||e.message.includes('schema cache')||e.message.includes('Could not find'));
+
   try{
     let savedId = id||null;
+
     if(id){
-      await sbSafe('PATCH', dOrig, `?id=eq.${id}`);
+      // Edición: mismo enfoque progresivo con PATCH
+      let patched = false;
+      for(const payload of intentos){
+        try{ await sb('compras','PATCH',payload,null,`?id=eq.${id}`); patched=true; break; }
+        catch(e){ if(!isSchemaErr(e)) throw e; }
+      }
+      if(!patched) throw new Error('No se pudo guardar: schema cache de Supabase desactualizado. Ejecuta NOTIFY pgrst,'reload schema' en Supabase SQL.');
       savedId = id;
     } else {
-      const res = await sbSafe('POST', dOrig, null);
-      if(res && res[0] && res[0].id) savedId = res[0].id;
+      // Nuevo: POST progresivo
+      let res = null;
+      for(const payload of intentos){
+        try{ res = await sbPost('compras', payload); break; }
+        catch(e){ if(!isSchemaErr(e)) throw e; }
+      }
+      if(!res||!res[0]) throw new Error('No se pudo crear la compra. Ejecuta NOTIFY pgrst,'reload schema' en Supabase SQL.');
+      savedId = res[0].id;
+      // PATCH2: campos que no se pudieron enviar en el POST
+      if(savedId){
+        const patch2 = { estado: todo.estado };
+        if(todo.partida)        patch2.partida        = todo.partida;
+        if(todo.adjunto_pdf)    patch2.adjunto_pdf    = todo.adjunto_pdf;
+        if(todo.adjunto_nombre) patch2.adjunto_nombre = todo.adjunto_nombre;
+        try{ await sb('compras','PATCH',patch2,null,`?id=eq.${savedId}`); } catch(e2){console.warn('patch2:',e2.message);}
+      }
     }
-    if(savedId){
-      const patch2 = {...dExtras};
-      if(pdfB64 && window._coPDFChanged){ patch2.adjunto_pdf=pdfB64; patch2.adjunto_nombre=pdfNombre; }
-      try{ await sb('compras','PATCH',patch2,null,`?id=eq.${savedId}`); }
-      catch(e2){ console.warn('PATCH extras:',e2.message); }
-    }
+
     toast(id?'Compra actualizada ✅':'Compra registrada ✅');
     document.getElementById('co-id').value='';
     document.querySelector('#m-compra .modal-title').textContent='🛒 Nueva compra';
     coResetPDF(); closeModal('m-compra'); loadCompras();
-  }catch(e){toast('Error al guardar: '+e.message,'error');}
+  }catch(e){ toast('Error: '+e.message,'error'); }
 }
 
 // ═══════════════════════════════════════════
