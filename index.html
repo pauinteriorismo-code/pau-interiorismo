@@ -19658,26 +19658,36 @@ let _expEaTotal = 0;      // entregas a cuenta
 let _expIvaFactPct = 21;  // IVA medio facturas (para estimar pendiente c/IVA)
 
 function recalcPresKPI(){
-  const v1 = document.getElementById('chk-v1')?.checked ? (_presDesglobeGlobal['v1']||0) : 0;
-  const v2 = document.getElementById('chk-v2')?.checked ? (_presDesglobeGlobal['v2']||0) : 0;
-  const v3 = document.getElementById('chk-v3')?.checked ? (_presDesglobeGlobal['v3']||0) : 0;
-  const v4 = document.getElementById('chk-v4')?.checked ? (_presDesglobeGlobal['v4']||0) : 0;
-  const v5 = document.getElementById('chk-v5')?.checked ? (_presDesglobeGlobal['v5']||0) : 0;
-  const v6 = document.getElementById('chk-v6')?.checked ? (_presDesglobeGlobal['v6']||0) : 0;
-  const v7 = document.getElementById('chk-v7')?.checked ? (_presDesglobeGlobal['v7']||0) : 0;
-  const v8 = document.getElementById('chk-v8')?.checked ? (_presDesglobeGlobal['v8']||0) : 0;
+  const v1 = document.getElementById('chk-v1')?.checked ? (_presDesglobeGlobal['v1']?.sIVA||0) : 0;
+  const v2 = document.getElementById('chk-v2')?.checked ? (_presDesglobeGlobal['v2']?.sIVA||0) : 0;
+  const v3 = document.getElementById('chk-v3')?.checked ? (_presDesglobeGlobal['v3']?.sIVA||0) : 0;
+  const v4 = document.getElementById('chk-v4')?.checked ? (_presDesglobeGlobal['v4']?.sIVA||0) : 0;
+  const v5 = document.getElementById('chk-v5')?.checked ? (_presDesglobeGlobal['v5']?.sIVA||0) : 0;
+  const v6 = document.getElementById('chk-v6')?.checked ? (_presDesglobeGlobal['v6']?.sIVA||0) : 0;
+  const v7 = document.getElementById('chk-v7')?.checked ? (_presDesglobeGlobal['v7']?.sIVA||0) : 0;
+  const v8 = document.getElementById('chk-v8')?.checked ? (_presDesglobeGlobal['v8']?.sIVA||0) : 0;
+  // cIVA total de versiones marcadas (respeta el IVA real de cada versión)
+  const v1c = document.getElementById('chk-v1')?.checked ? (_presDesglobeGlobal['v1']?.cIVA||0) : 0;
+  const v2c = document.getElementById('chk-v2')?.checked ? (_presDesglobeGlobal['v2']?.cIVA||0) : 0;
+  const v3c = document.getElementById('chk-v3')?.checked ? (_presDesglobeGlobal['v3']?.cIVA||0) : 0;
+  const v4c = document.getElementById('chk-v4')?.checked ? (_presDesglobeGlobal['v4']?.cIVA||0) : 0;
+  const v5c = document.getElementById('chk-v5')?.checked ? (_presDesglobeGlobal['v5']?.cIVA||0) : 0;
+  const v6c = document.getElementById('chk-v6')?.checked ? (_presDesglobeGlobal['v6']?.cIVA||0) : 0;
+  const v7c = document.getElementById('chk-v7')?.checked ? (_presDesglobeGlobal['v7']?.cIVA||0) : 0;
+  const v8c = document.getElementById('chk-v8')?.checked ? (_presDesglobeGlobal['v8']?.cIVA||0) : 0;
   // Sum all unit versions (any key that is not v1-v8)
-  let unitsTotal = 0;
+  let unitsTotal = 0, unitsTotalCIVA = 0;
   Object.keys(_presDesglobeGlobal).forEach(k => {
-    if(!k.match(/^v\d+$/)) unitsTotal += _presDesglobeGlobal[k];
+    if(!k.match(/^v\d+$/)){ unitsTotal += (_presDesglobeGlobal[k]?.sIVA||0); unitsTotalCIVA += (_presDesglobeGlobal[k]?.cIVA||0); }
   });
   const tot = v1 + v2 + v3 + v4 + v5 + v6 + v7 + v8 + unitsTotal;
+  const totCIVA = v1c + v2c + v3c + v4c + v5c + v6c + v7c + v8c + unitsTotalCIVA;
   const el = document.getElementById('exp-k-pres');
   if(el) el.textContent = tot > 0 ? fmt(tot) : '—';
   // Ocultar checkboxes de versiones sin datos
   ['v1','v2','v3','v4','v5','v6','v7','v8'].forEach(v=>{
     const lbl = document.getElementById('chk-'+v)?.parentElement;
-    if(lbl) lbl.style.display = (_presDesglobeGlobal[v]||0) > 0 ? '' : 'none';
+    if(lbl) lbl.style.display = (_presDesglobeGlobal[v]?.sIVA||0) > 0 ? '' : 'none';
   });
   // Actualizar margen KPI con nuevo presupuesto (leyendo costes ya calculados)
   const costesRaw = document.getElementById('exp-k-costes')?.textContent||'';
@@ -19697,11 +19707,11 @@ function recalcPresKPI(){
     if(!subF){ subF=document.createElement('div'); subF.className='kpi-fact-sub'; subF.style.cssText='font-size:10px;margin-top:2px;line-height:1.4'; kpiFact.parentNode.appendChild(subF); }
     const cobradoTotal = _expFactBI + _expEaTotal;
     const pendSinIva = tot - cobradoTotal;
-    const ivaRate = _expIvaFactPct || 21;
-    const pendConIva = pendSinIva * (1 + ivaRate/100);
+    // pendiente c/IVA: usa el IVA real de cada versión (totCIVA) descontando lo ya facturado c/IVA
+    const pendConIva = totCIVA - _expFactIvaTotal - _expEaTotal;
     if(pendSinIva > 0.01){
       subF.style.color='var(--amber)';
-      subF.innerHTML = `Pdte: <b>${fmt(pendSinIva)}</b> s/IVA<br><span style="color:#b85c00">${fmt(pendConIva)} c/IVA (${ivaRate}%)</span>`;
+      subF.innerHTML = `Pdte: <b>${fmt(pendSinIva)}</b> s/IVA<br><span style="color:#b85c00">${fmt(Math.max(0,pendConIva))} c/IVA</span>`;
     } else if(pendSinIva <= 0){
       subF.style.color='var(--green)';
       subF.textContent='✓ Todo facturado';
@@ -19799,23 +19809,27 @@ async function calcExpKPIs(proyId){
     const lineas = await sbGet('presupuesto_lineas', `?proyecto_id=eq.${proyId}&es_capitulo=eq.false`);
     lineas.forEach(l=>{
       const pv=l.precio_venta||0, ci=l.ci_gg_bi_pct||0, sub=(l.cantidad||0)*pv;
-      const importe = ci>0 ? sub*(1+ci/100) : sub;
+      const importeBI = ci>0 ? sub*(1+ci/100) : sub;
+      const ivaN = l.iva_pct==='Exento' ? 0 : (parseFloat((l.iva_pct||'21%').replace('%',''))||21);
+      const importeIVA = importeBI * (1 + ivaN/100);
       const ver = l.version||'v1';
-      _presDesglobeGlobal[ver] = (_presDesglobeGlobal[ver]||0) + importe;
+      if(!_presDesglobeGlobal[ver]) _presDesglobeGlobal[ver] = {sIVA:0, cIVA:0};
+      _presDesglobeGlobal[ver].sIVA += importeBI;
+      _presDesglobeGlobal[ver].cIVA += importeIVA;
     });
   }catch(e){}
   // Por defecto solo V1 marcada, ocultar las que no tienen datos
   ['v1','v2','v3'].forEach(v=>{
     const chk = document.getElementById('chk-'+v);
     if(chk){
-      const tieneData = (_presDesglobeGlobal[v]||0) > 0;
+      const tieneData = (_presDesglobeGlobal[v]?.sIVA||0) > 0;
       chk.parentElement.style.display = tieneData ? '' : 'none';
       if(v!=='v1') chk.checked = false; // v2 y v3 siempre desmarcadas por defecto
     }
   });
-  // presTot = v1 + all unit versions
-  let presTot = _presDesglobeGlobal['v1'] || 0;
-  Object.keys(_presDesglobeGlobal).forEach(k => { if(!k.match(/^v\d+$/)) presTot += _presDesglobeGlobal[k]; });
+  // presTot = v1.sIVA + all unit versions.sIVA
+  let presTot = _presDesglobeGlobal['v1']?.sIVA || 0;
+  Object.keys(_presDesglobeGlobal).forEach(k => { if(!k.match(/^v\d+$/)) presTot += (_presDesglobeGlobal[k]?.sIVA||0); });
 
   // Facturas de venta del proyecto
   const factProy = (FC||[]).filter(f=>f.proyecto_id===proyId&&(f.tipo_factura||'Venta')==='Venta');
@@ -19932,9 +19946,9 @@ function renderExpResumen(body){
   // Presupuesto: suma de versiones marcadas en los checkboxes (igual que recalcPresKPI)
   let presBase = 0;
   ['v1','v2','v3','v4','v5','v6','v7','v8'].forEach(v=>{
-    if(document.getElementById('chk-'+v)?.checked) presBase += (_presDesglobeGlobal[v]||0);
+    if(document.getElementById('chk-'+v)?.checked) presBase += (_presDesglobeGlobal[v]?.sIVA||0);
   });
-  Object.keys(_presDesglobeGlobal).forEach(k=>{ if(!k.match(/^v\d+$/)) presBase += _presDesglobeGlobal[k]; });
+  Object.keys(_presDesglobeGlobal).forEach(k=>{ if(!k.match(/^v\d+$/)) presBase += (_presDesglobeGlobal[k]?.sIVA||0); });
   const beneficio=presBase-costesBase;
   const margenPct=presBase>0?(beneficio/presBase)*100:0;
   const compPend=compProy.filter(c=>(c.estado||c.estado_pago)==='Pendiente').reduce((s,c)=>s+(c.base_imponible||0)*(1+(c.iva_porcentaje||21)/100),0);
