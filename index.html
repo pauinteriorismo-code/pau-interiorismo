@@ -10024,56 +10024,72 @@ async function saveCompra(){
   const id        = document.getElementById('co-id')?.value||null;
   const pdfB64    = document.getElementById('co-pdf-b64')?.value||null;
   const pdfNombre = document.getElementById('co-pdf-nombre')?.value||'factura_compra.pdf';
+  const fechaVal  = document.getElementById('co-fecha').value||new Date().toISOString().split('T')[0];
 
-  // Todos los valores del formulario
-  const vals = {
-    serie_compra:   3,
-    factura_numero: document.getElementById('co-concepto').value||'—',
-    concepto:       document.getElementById('co-concepto').value||null,
-    base_imponible: parseFloat(document.getElementById('co-base').value)||0,
-    notas:          document.getElementById('co-notas').value||null,
-    fecha:          document.getElementById('co-fecha').value||new Date().toISOString().split('T')[0],
-    proyecto:       document.getElementById('co-proyecto').value||null,
-    proveedor:      document.getElementById('co-prov').value||null,
-    iva_pct:        document.getElementById('co-iva').value||'21%',
-    estado:         document.getElementById('co-estado').value||'Pendiente',
-    partida:        getPartidaFinalPfx('co')||null
+  // Payload con los campos REALES de la tabla compras (según schema original)
+  const d = {
+    serie_compra:    'S3',                                              // NOT NULL CHECK('S3','S4','S5')
+    factura_numero:  document.getElementById('co-concepto').value||'—', // NOT NULL
+    factura_anyo:    parseInt(fechaVal.substring(0,4))||new Date().getFullYear(), // NOT NULL DEFAULT
+    fecha_factura:   fechaVal,                                           // NOT NULL
+    base_imponible:  parseFloat(document.getElementById('co-base').value)||0,
+    iva_porcentaje:  parseFloat((document.getElementById('co-iva').value||'21').replace('%',''))||21,
+    concepto:        document.getElementById('co-concepto').value||null,
+    notas:           document.getElementById('co-notas').value||null,
+    // Columnas añadidas con ALTER TABLE (texto, sin restricciones)
+    proyecto:        document.getElementById('co-proyecto').value||null,
+    proveedor:       document.getElementById('co-prov').value||null,
+    estado:          document.getElementById('co-estado').value||'Pendiente',
+    partida:         getPartidaFinalPfx('co')||null
   };
-  if(pdfB64 && window._coPDFChanged){ vals.adjunto_pdf=pdfB64; vals.adjunto_nombre=pdfNombre; }
+  if(pdfB64 && window._coPDFChanged){
+    d.adjunto_pdf    = pdfB64;
+    d.adjunto_nombre = pdfNombre;
+  }
 
-  // Guardar un campo individualmente, ignorando cualquier error
-  const patchCampo = async (recId, campo, valor) => {
-    if(valor==null||valor==='') return;
+  // Guardar campo individual ignorando errores (para columnas opcionales)
+  const patchField = async (recId, campo, valor) => {
+    if(valor==null) return;
     try{ await sb('compras','PATCH',{[campo]:valor},null,`?id=eq.${recId}`); }
-    catch(e){ console.warn(`[compras] PATCH ${campo}:`, e.message); }
+    catch(e){ console.warn(`[compras PATCH ${campo}]:`,e.message); }
   };
 
   try{
     let savedId = id||null;
-
     if(id){
-      // Edición: PATCH campo a campo, cada uno con su propio try/catch
-      for(const [k,v] of Object.entries(vals)){
-        await patchCampo(id, k, v);
+      // Edición: intentar PATCH con todos los campos, campo a campo si falla
+      try{
+        await sb('compras','PATCH',d,null,`?id=eq.${id}`);
+      }catch(e){
+        console.warn('[compras PATCH completo]:', e.message);
+        for(const [k,v] of Object.entries(d)){
+          await patchField(id, k, v);
+        }
       }
       savedId = id;
     } else {
-      // Creación: POST con payload mínimo absoluto que nunca falla
-      // Solo concepto es obligatorio, el resto vía PATCH
+      // Creación: POST con campos obligatorios del schema real
       let res = null;
+      // Intentos en orden de completitud
       const payloads = [
-        {concepto: vals.concepto||'Nueva compra', base_imponible: vals.base_imponible, serie_compra: 3, factura_numero: vals.factura_numero||'—'},
-        {serie_compra: 3, factura_numero: vals.factura_numero||'—'},
+        d,  // Todo
+        {serie_compra:'S3', factura_numero:d.factura_numero, fecha_factura:d.fecha_factura,
+         base_imponible:d.base_imponible, iva_porcentaje:d.iva_porcentaje, factura_anyo:d.factura_anyo,
+         concepto:d.concepto},
+        {serie_compra:'S3', factura_numero:d.factura_numero||'—', fecha_factura:d.fecha_factura,
+         base_imponible:d.base_imponible, iva_porcentaje:d.iva_porcentaje},
+        {serie_compra:'S3', factura_numero:'—', fecha_factura:d.fecha_factura, base_imponible:0, iva_porcentaje:21},
       ];
       for(const payload of payloads){
-        try{ res = await sbPost('compras', payload); if(res&&res[0]) break; }
-        catch(e){ console.warn('[compras] POST intento:', e.message); }
+        try{ res = await sbPost('compras', payload); if(res&&res[0]){break;} }
+        catch(e){ console.warn('[compras POST intento]:', JSON.stringify(payload).substring(0,100), e.message); }
       }
-      if(!res||!res[0]){ toast('Error: no se pudo crear el registro en Supabase','error'); return; }
+      if(!res||!res[0]){ toast('Error: no se pudo crear el registro. Verifica Supabase.','error'); return; }
       savedId = res[0].id;
-      // PATCH cada campo por separado
-      for(const [k,v] of Object.entries(vals)){
-        await patchCampo(savedId, k, v);
+      // PATCH con los campos opcionales/nuevos uno a uno
+      for(const [k,v] of Object.entries(d)){
+        if(['serie_compra','factura_numero','fecha_factura','base_imponible','iva_porcentaje','factura_anyo'].includes(k)) continue;
+        await patchField(savedId, k, v);
       }
     }
 
