@@ -19678,8 +19678,8 @@ function recalcPresKPI(){
   // Actualizar margen con nuevo presupuesto
   const costesRaw = document.getElementById('exp-k-costes')?.textContent||'';
   const costes = parseFloat(costesRaw.replace(/\./g,'').replace(',','.'))||0;
-  if(costes > 0 && tot > 0){
-    const margen = ((tot - costes) / costes) * 100;
+  if(tot > 0){
+    const margen = ((tot - costes) / tot) * 100;
     const el2 = document.getElementById('exp-k-margen');
     if(el2){ el2.textContent = fmtP(margen); el2.style.color = margen>=20?'var(--green)':margen>=0?'var(--amber)':'var(--red)'; }
   }
@@ -19816,9 +19816,9 @@ async function calcExpKPIs(proyId){
   const eaProy = (EAC||[]).filter(e=>e.proyecto_id===proyId);
   const eaTotal = eaProy.reduce((s,e)=>s+(parseFloat(e.importe)||0), 0);
 
-  // Margen SIEMPRE sobre coste: (Venta - Coste) / Coste × 100
+  // Margen potencial sobre venta: (Presupuesto - Coste) / Presupuesto × 100
   const beneficio = presTot - costeTotal;
-  const margen    = costeTotal > 0 ? (beneficio / costeTotal) * 100 : 0;
+  const margen    = presTot > 0 ? (beneficio / presTot) * 100 : 0;
 
   const setEl = (id,val,style) => { const el=document.getElementById(id); if(el){el.textContent=val; if(style) Object.assign(el.style,style);} };
   setEl('exp-k-costes', fmt(costeTotal));
@@ -19856,7 +19856,7 @@ async function calcExpKPIs(proyId){
   if(kpiMg){
     let sub = kpiMg.parentNode.querySelector('.kpi-margen-sub');
     if(!sub){ sub=document.createElement("div"); sub.className="kpi-margen-sub"; sub.style.cssText="font-size:10px;color:var(--text-soft);margin-top:1px"; kpiMg.parentNode.appendChild(sub); }
-    sub.textContent = 'Sobre coste · Pres. '+fmt(presTot);
+    sub.textContent = 'Sobre venta · Pres. '+fmt(presTot);
   }
 }
 
@@ -19904,16 +19904,19 @@ function renderExpResumen(body){
   const factTotal=factBase+factIva;
   const factCobrado=factProy.reduce((s,f)=>s+(f.importe_cobrado||0),0);
   const eaTotal=eaResProy.reduce((s,e)=>s+(parseFloat(e.importe)||0),0);
-  const beneficio=factBase-costesBase;
-  const margenPct=factBase>0?(beneficio/factBase)*100:0;
+  const beneficio=factBase+eaTotal-costesBase;
+  const ingresosReales=factBase+eaTotal;
+  const margenPct=ingresosReales>0?(beneficio/ingresosReales)*100:0;
   const compPend=compProy.filter(c=>(c.estado||c.estado_pago)==='Pendiente').reduce((s,c)=>s+(c.base_imponible||0)*(1+(c.iva_porcentaje||21)/100),0);
   const scPend=scProy.filter(s=>['Pendiente','Parcial','Vencido'].includes(s.estado||s.estado_pago)).reduce((s,c)=>s+(c.importe||0)*(1+ivaPct(c.iva_pct)/100),0);
   const pendientePagar=compPend+scPend;
   const pendienteCobrar=factTotal-factCobrado-eaTotal;
   const rS=(k,v,c)=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f0f0f0;font-size:12px"><span style="color:var(--text-soft)">${k}</span><span style="font-weight:600${c?';color:'+c:''}">${v}</span></div>`;
   const rD=(k,b,t,c)=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f0f0f0;font-size:12px"><span style="color:var(--text-soft)">${k}</span><span style="font-weight:600;text-align:right${c?';color:'+c:''}"><span style="font-size:11px">${fmt(b)}</span> <span style="font-size:10px;color:var(--text-soft);font-weight:400">(${fmt(t)} c/IVA)</span></span></div>`;
-  // Presupuesto desde KPI ya calculado en abrirExpediente
-  const presBase=parseFloat(document.getElementById('rk-pres')?.textContent?.replace(/[.,€\s]/g,'')||'0')/100||0;
+  // Presupuesto desde KPI ya calculado en calcExpKPIs
+  const presKpiEl = document.getElementById('exp-k-pres');
+  const presKpiTxt = presKpiEl?.textContent||'';
+  const presBase = parseFloat(presKpiTxt.replace(/\./g,'').replace(',','.'))||0;
   body.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
   <div>
     <div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Información del proyecto</div>
@@ -19925,7 +19928,9 @@ function renderExpResumen(body){
     <div style="background:#f0f9f0;border-radius:6px;padding:8px 10px;margin-bottom:6px">
       <div style="font-size:10px;font-weight:700;color:#2a7a2a;margin-bottom:4px">📥 INGRESOS</div>
       ${rD('Facturado',factBase,factTotal,'var(--green)')}
-      ${rS('Pendiente facturar',fmt(Math.max(0,(presBase||0)-factBase)),(presBase||0)>factBase?'var(--amber)':'var(--green)')}
+      ${eaTotal>0?rS('Entregas a cuenta',fmt(eaTotal),'#7b3fa0'):''}
+      ${ingresosReales>0?`<div style="display:flex;justify-content:space-between;padding:5px 0;border-top:2px solid #c8e6c9;margin-top:3px;font-size:12px"><span style="font-weight:700;color:#2a7a2a">TOTAL INGRESOS</span><span style="font-weight:700;color:#2a7a2a">${fmt(ingresosReales)}</span></div>`:''}
+      ${presBase>0?rS('Pendiente facturar',fmt(Math.max(0,presBase-ingresosReales)),presBase>ingresosReales?'var(--amber)':'var(--green)'):''}
     </div>
     <div style="background:#fff8f0;border-radius:6px;padding:8px 10px;margin-bottom:6px">
       <div style="font-size:10px;font-weight:700;color:#b85c00;margin-bottom:4px">📤 COSTES</div>
@@ -19936,9 +19941,10 @@ function renderExpResumen(body){
     </div>
     <div style="background:${beneficio>=0?'#f0f9f0':'#fff0f0'};border-radius:6px;padding:8px 10px;margin-bottom:6px">
       <div style="display:flex;justify-content:space-between;align-items:center">
-        <span style="font-size:12px;font-weight:700;color:${beneficio>=0?'var(--green)':'var(--red)'}">💰 BENEFICIO (s/IVA)</span>
+        <span style="font-size:12px;font-weight:700;color:${beneficio>=0?'var(--green)':'var(--red)'}">💰 BENEFICIO REAL (s/IVA)</span>
         <span style="font-size:14px;font-weight:700;color:${beneficio>=0?'var(--green)':'var(--red)'}">${fmt(beneficio)} <span style="font-size:11px">(${fmtP(margenPct)})</span></span>
       </div>
+      <div style="font-size:10px;color:var(--text-soft);margin-top:3px">Ingresos reales (facturas + entregas) − costes</div>
     </div>
     <div style="background:#f5f0ff;border-radius:6px;padding:8px 10px">
       <div style="font-size:10px;font-weight:700;color:#7b3fa0;margin-bottom:4px">💵 FLUJO DE CAJA</div>
