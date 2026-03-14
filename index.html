@@ -19652,6 +19652,10 @@ async function abrirExpediente(proyId){
 
 // Desglose global por versión (se rellena en calcExpKPIs y se usa en recalcPresKPI)
 let _presDesglobeGlobal = {};
+let _expFactBI = 0;       // facturas venta base imponible
+let _expFactIvaTotal = 0; // facturas venta total c/IVA
+let _expEaTotal = 0;      // entregas a cuenta
+let _expIvaFactPct = 21;  // IVA medio facturas (para estimar pendiente c/IVA)
 
 function recalcPresKPI(){
   const v1 = document.getElementById('chk-v1')?.checked ? (_presDesglobeGlobal['v1']||0) : 0;
@@ -19685,6 +19689,23 @@ function recalcPresKPI(){
     // Actualizar subtitle del margen con el total correcto (versiones marcadas)
     const sub = el2?.parentNode?.querySelector('.kpi-margen-sub');
     if(sub) sub.textContent = 'Sobre venta · Pres. '+fmt(tot);
+  }
+  // Actualizar pendiente de facturar en KPI "Facturado" usando tot (versiones marcadas)
+  const kpiFact = document.getElementById('exp-k-fact');
+  if(kpiFact && tot > 0){
+    let subF = kpiFact.parentNode.querySelector('.kpi-fact-sub');
+    if(!subF){ subF=document.createElement('div'); subF.className='kpi-fact-sub'; subF.style.cssText='font-size:10px;margin-top:2px;line-height:1.4'; kpiFact.parentNode.appendChild(subF); }
+    const cobradoTotal = _expFactBI + _expEaTotal;
+    const pendSinIva = tot - cobradoTotal;
+    const ivaRate = _expIvaFactPct || 21;
+    const pendConIva = pendSinIva * (1 + ivaRate/100);
+    if(pendSinIva > 0.01){
+      subF.style.color='var(--amber)';
+      subF.innerHTML = `Pdte: <b>${fmt(pendSinIva)}</b> s/IVA<br><span style="color:#b85c00">${fmt(pendConIva)} c/IVA (${ivaRate}%)</span>`;
+    } else if(pendSinIva <= 0){
+      subF.style.color='var(--green)';
+      subF.textContent='✓ Todo facturado';
+    } else { subF.textContent=''; }
   }
   // Re-renderizar resumen financiero para que refleje el presupuesto actualizado
   const body = document.getElementById('exp-body');
@@ -19828,25 +19849,20 @@ async function calcExpKPIs(proyId){
   const beneficio = presTot - costeTotal;
   const margen    = presTot > 0 ? (beneficio / presTot) * 100 : 0;
 
+  // Guardar en globales para que recalcPresKPI pueda calcular el pendiente con versiones marcadas
+  _expFactBI = factTotalBI;
+  _expFactIvaTotal = factProy.reduce((s,f)=>s+(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100), 0);
+  _expEaTotal = eaTotal;
+  if(factProy.length>0) _expIvaFactPct = factProy.reduce((s,f)=>s+ivaPct(f.iva_pct),0)/factProy.length;
+
   const setEl = (id,val,style) => { const el=document.getElementById(id); if(el){el.textContent=val; if(style) Object.assign(el.style,style);} };
   setEl('exp-k-costes', fmt(costeTotal));
-  recalcPresKPI(); // Renderiza presupuesto y margen (necesita exp-k-costes ya actualizado)
+  recalcPresKPI(); // Renderiza presupuesto, margen y pendiente (necesita exp-k-costes ya actualizado)
   const nFact = factProy.length;
   setEl('exp-k-fact', factTotalBI>0 ? fmt(factTotalBI) : '—');
   // Label con nº facturas
   const lblFact = document.getElementById('exp-k-fact-label');
   if(lblFact) lblFact.textContent = nFact > 1 ? `Facturado (${nFact})` : 'Facturado';
-  // Sub: pendiente de facturar (descontando también entregas a cuenta)
-  const kpiFact = document.getElementById('exp-k-fact');
-  if(kpiFact && presTot>0){
-    let subF = kpiFact.parentNode.querySelector('.kpi-fact-sub');
-    if(!subF){ subF=document.createElement('div'); subF.className='kpi-fact-sub'; subF.style.cssText='font-size:10px;margin-top:1px'; kpiFact.parentNode.appendChild(subF); }
-    const cobradoTotal = factTotalBI + eaTotal;
-    const pendFact = presTot - cobradoTotal;
-    if(pendFact > 0.01){ subF.style.color='var(--amber)'; subF.textContent='Pdte: '+fmt(pendFact); }
-    else if(pendFact <= 0){ subF.style.color='var(--green)'; subF.textContent='✓ Todo cobrado'; }
-    else { subF.textContent=''; }
-  }
   // KPI entregas a cuenta
   const kpiEA = document.getElementById('exp-k-entrega');
   if(kpiEA){
