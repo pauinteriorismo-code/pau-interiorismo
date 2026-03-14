@@ -10038,29 +10038,44 @@ async function saveCompra(){
     partida: getPartidaFinalPfx('co')||null
   };
   const pdfNombre = document.getElementById('co-pdf-nombre')?.value||'factura_compra.pdf';
+  // sbSafe: reintenta con campos mínimos si falla por schema cache
+  const sbSafe = async (method, payload, filter) => {
+    try{
+      if(method==='POST') return await sbPost('compras', payload);
+      return await sb('compras','PATCH',payload,null,filter);
+    }catch(e){
+      if(e.message&&(e.message.includes('PGRST204')||e.message.includes('schema cache')||e.message.includes('fecha'))){
+        // Schema cache desactualizado: enviar solo campos seguros
+        const mini={concepto:payload.concepto, base_imponible:payload.base_imponible, iva_pct:payload.iva_pct};
+        if(payload.proyecto_id) mini.proyecto_id=payload.proyecto_id;
+        if(payload.proveedor_id) mini.proveedor_id=payload.proveedor_id;
+        if(payload.notas) mini.notas=payload.notas;
+        if(method==='POST') return await sbPost('compras', mini);
+        return await sb('compras','PATCH',mini,null,filter);
+      }
+      throw e;
+    }
+  };
   try{
     let savedId = id||null;
     if(id){
-      // Edición: PATCH campos originales
-      await sb('compras','PATCH',dOrig,null,`?id=eq.${id}`);
+      await sbSafe('PATCH', dOrig, `?id=eq.${id}`);
       savedId = id;
     } else {
-      // Nuevo: POST solo campos originales
-      const res = await sbPost('compras',dOrig);
+      const res = await sbSafe('POST', dOrig, null);
       if(res && res[0] && res[0].id) savedId = res[0].id;
     }
-    // PATCH2: columnas nuevas (estado, partida, PDF) — separate para evitar schema cache
     if(savedId){
       const patch2 = {...dExtras};
       if(pdfB64 && window._coPDFChanged){ patch2.adjunto_pdf=pdfB64; patch2.adjunto_nombre=pdfNombre; }
       try{ await sb('compras','PATCH',patch2,null,`?id=eq.${savedId}`); }
-      catch(e2){ console.warn('PATCH extras fallido (schema cache):',e2.message); }
+      catch(e2){ console.warn('PATCH extras:',e2.message); }
     }
     toast(id?'Compra actualizada ✅':'Compra registrada ✅');
     document.getElementById('co-id').value='';
     document.querySelector('#m-compra .modal-title').textContent='🛒 Nueva compra';
     coResetPDF(); closeModal('m-compra'); loadCompras();
-  }catch(e){toast('Error: '+e.message,'error');}
+  }catch(e){toast('Error al guardar: '+e.message,'error');}
 }
 
 // ═══════════════════════════════════════════
@@ -19069,7 +19084,7 @@ function coHandleFile(file){
   }
   if(file.size > 5*1024*1024){ toast('El PDF no puede superar 5MB','error'); return; }
   const reader = new FileReader();
-  reader.onload = e => {
+  reader.onload = async e => {
     const b64 = e.target.result.split(',')[1];
     document.getElementById('co-pdf-b64').value = b64;
     document.getElementById('co-pdf-nombre').value = file.name;
@@ -19080,7 +19095,7 @@ function coHandleFile(file){
     const zone   = document.getElementById('co-pdf-zone');
     if(zone)   zone.style.display = 'none';
     if(lbl)    lbl.style.display  = 'none';
-    if(btnVer) btnVer.style.display = 'flex';   // igual que subcontratas
+    if(btnVer) btnVer.style.display = 'flex';
     if(prev){
       prev.style.display = 'flex';
       prev.innerHTML = '<span style="font-size:13px">✅</span>'
@@ -19088,9 +19103,33 @@ function coHandleFile(file){
         + '<span style="font-size:11px;color:var(--text-soft)">(' + Math.round(file.size/1024) + ' KB)</span>'
         + '<button class="btn btn-ghost btn-sm" style="font-size:11px;color:var(--red);margin-left:4px" onclick="coQuitarPDF()">✕ Quitar</button>';
     }
-    toast('PDF cargado ✅');
+    // Autocompletar campos desde el PDF (igual que facturas de compra)
+    await _autocompletarCompra(b64);
   };
   reader.readAsDataURL(file);
+}
+async function _autocompletarCompra(b64){
+  const texto = await _pdfTexto(b64);
+  if(!texto || texto.trim().length < 20){ toast('📄 PDF sin texto extraíble · rellena manualmente'); return; }
+  toast('🤖 Claude está leyendo la factura…');
+  try{
+    const resp = await fetch('/api/parse-invoice',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pdfText:texto})});
+    const d = await resp.json();
+    if(!resp.ok || d.error) throw new Error(d.error||'HTTP '+resp.status);
+    const log = [];
+    const toISO = s => { if(!s)return null; const p=s.split('/'); return p.length===3?`${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`:null; };
+    const setV = (id,val) => { const el=document.getElementById(id); if(el&&val!=null&&val!==''){el.value=val;_marcarVerde(id);return true;} return false; };
+    if(d.issue_date && setV('co-fecha', toISO(d.issue_date))) log.push('fecha');
+    if(d.supplier_name && setV('co-prov', d.supplier_name))  log.push('proveedor');
+    if(d.invoice_number && setV('co-concepto', d.invoice_number)) log.push('Nº fra');
+    else if(d.concept && setV('co-concepto', d.concept))          log.push('concepto');
+    if(d.tax_base != null && setV('co-base', String(d.tax_base).replace(',','.'))) log.push('base');
+    if(d.vat_percent){ const ivaEl=document.getElementById('co-iva'); if(ivaEl){ ivaEl.value=d.vat_percent+'%'; log.push('IVA'); } }
+    toast(log.length ? '✅ Autocompletado: '+log.join(', ') : '📄 PDF leído · revisa los campos');
+  }catch(err){
+    console.error('[coAutocompletar]',err);
+    toast('PDF cargado ✅ (autocompletado no disponible)');
+  }
 }
 function coHandleDrop(e){
   e.preventDefault();
