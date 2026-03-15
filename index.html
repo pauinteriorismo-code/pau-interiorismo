@@ -20197,8 +20197,19 @@ function renderExpResumen(body){
   const pendienteCobrar=factTotal-factCobrado-eaTotal;
   const rS=(k,v,c)=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f0f0f0;font-size:12px"><span style="color:var(--text-soft)">${k}</span><span style="font-weight:600${c?';color:'+c:''}">${v}</span></div>`;
   const rD=(k,b,t,c)=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f0f0f0;font-size:12px"><span style="color:var(--text-soft)">${k}</span><span style="font-weight:600;text-align:right${c?';color:'+c:''}"><span style="font-size:11px">${fmt(b)}</span> <span style="font-size:10px;color:var(--text-soft);font-weight:400">(${fmt(t)} c/IVA)</span></span></div>`;
-  // Presupuesto desde KPI ya calculado en abrirExpediente
-  const presBase=parseFloat(document.getElementById('rk-pres')?.textContent?.replace(/[.,€\s]/g,'')||'0')/100||0;
+  // Presupuesto: calcular directamente desde _presDesglobeGlobal con las versiones marcadas
+  let presBase = 0;
+  if(_presDesglobeGlobal && Object.keys(_presDesglobeGlobal).length > 0){
+    // Sumar solo las versiones marcadas (chk-v1, chk-v2, chk-v3)
+    ['v1','v2','v3'].forEach(v=>{
+      const chk = document.getElementById('chk-'+v);
+      if(chk && chk.checked) presBase += (_presDesglobeGlobal[v]||0);
+    });
+    // Añadir versiones no estándar (unidades, etc.)
+    Object.keys(_presDesglobeGlobal).forEach(k=>{
+      if(!k.match(/^v\d+$/)) presBase += (_presDesglobeGlobal[k]||0);
+    });
+  }
   body.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
   <div>
     <div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Información del proyecto</div>
