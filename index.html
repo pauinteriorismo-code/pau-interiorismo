@@ -7041,7 +7041,7 @@ async function loadProyectos(){
     PC=await sbGet('proyectos','?order=created_at.desc');
     document.getElementById('proyectos-count').textContent=PC.length+' proyectos';
     if(!PC.length){tb.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="empty-icon">📁</div><div class="empty-text">Sin proyectos</div><button class="btn btn-primary" onclick="openModal('m-proyecto')">＋ Nuevo</button></div></td></tr>`;return;}
-    tb.innerHTML=PC.map(p=>`<tr data-search="${(p.proyecto_id+p.nombre+p.cliente_id+p.tipo+p.estado).toLowerCase()}"><td class="td-mono" style="color:var(--text-soft)">${p.proyecto_id||'—'}</td><td><strong style="cursor:pointer;color:var(--navy)" onclick="abrirExpediente('${p.proyecto_id}')" title="Ver expediente completo">${p.nombre}</strong></td><td>${(CC.find(c=>c.cliente_id===p.cliente_id)||{}).nombre||p.cliente_id||'—'}</td><td>${bE(p.tipo)}</td><td>${bE(p.estado)}</td><td>${p.responsable||'—'}</td><td>${fmtD(p.fecha_inicio)}</td><td class="td-mono" style="text-align:right">${(()=>{const fv=(FC||[]).filter(f=>f.proyecto_id===p.proyecto_id&&(f.tipo_factura||'Venta')==='Venta');const t=fv.reduce((s,f)=>s+(f.base_imponible||0),0);return t>0?'<span style="font-size:11px">'+fmt(t)+'</span>':'<span style="color:var(--text-soft)">—</span>';})()}</td><td class="td-mono" style="text-align:right">${(()=>{const co=(CoC||[]).filter(c=>c.proyecto_id===p.proyecto_id).reduce((s,c)=>s+(c.base_imponible||0),0);const sc=(ScC||[]).filter(s=>s.proyecto_id===p.proyecto_id).reduce((s,c)=>s+(c.importe||0),0);const mo=(HC||[]).filter(h=>h.proyecto_id===p.proyecto_id).reduce((s,h)=>s+(h.total||0),0);const costesBI=co+sc+mo;const lineas=(PresC||[]).filter(l=>l.proyecto_id===p.proyecto_id&&!l.es_capitulo&&(l.version||'v1')==='v1');const pres=lineas.reduce((s,l)=>{const pv=l.precio_venta||0,ci=l.ci_gg_bi_pct||0,sub=(l.cantidad||0)*pv;return s+(ci>0?sub*(1+ci/100):sub);},0);if(pres<=0||costesBI<=0)return'<span style="color:var(--text-soft)">—</span>';const m=((pres-costesBI)/pres)*100;const c=m>=20?'var(--green)':m>=10?'var(--amber)':'var(--red)';return'<span style="font-weight:700;color:'+c+'">'+fmtP(m)+'</span>';})()}</td><td><div class="td-actions"><button class="btn btn-ghost btn-sm" style="font-size:11px;color:var(--navy);font-weight:600" onclick="abrirExpediente('${p.proyecto_id}')">📁 Exp.</button><button class="btn btn-ghost btn-icon btn-sm" onclick="editProyecto('${p.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('proyectos','${p.id}','${p.nombre.replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`).join('');
+    tb.innerHTML=PC.map(p=>`<tr data-search="${(p.proyecto_id+p.nombre+p.cliente_id+p.tipo+p.estado).toLowerCase()}"><td class="td-mono" style="color:var(--text-soft)">${p.proyecto_id||'—'}</td><td><strong style="cursor:pointer;color:var(--navy)" onclick="abrirExpediente('${p.proyecto_id}')" title="Ver expediente completo">${p.nombre}</strong></td><td>${(CC.find(c=>c.cliente_id===p.cliente_id)||{}).nombre||p.cliente_id||'—'}</td><td>${bE(p.tipo)}</td><td>${bE(p.estado)}</td><td>${p.responsable||'—'}</td><td>${fmtD(p.fecha_inicio)}</td><td class="td-mono" style="text-align:right">${(()=>{const fv=(FC||[]).filter(f=>f.proyecto_id===p.proyecto_id&&(f.tipo_factura||'Venta')==='Venta');const t=fv.reduce((s,f)=>s+(f.base_imponible||0),0);return t>0?'<span style="font-size:11px">'+fmt(t)+'</span>':'<span style="color:var(--text-soft)">—</span>';})()}</td><td class="td-mono" style="text-align:right">${(()=>{const fv=(FC||[]).filter(f=>f.proyecto_id===p.proyecto_id&&(f.tipo_factura||'Venta')==='Venta');const v=fv.reduce((s,f)=>s+(f.base_imponible||0),0);const co=(CoC||[]).filter(c=>c.proyecto_id===p.proyecto_id).reduce((s,c)=>s+(c.base_imponible||0),0);const sc=(ScC||[]).filter(s=>s.proyecto_id===p.proyecto_id).reduce((s,c)=>s+(c.importe||0),0);const m=v>0?((v-co-sc)/v)*100:null;if(m===null)return'<span style="color:var(--text-soft)">—</span>';const c=m>=20?'var(--green)':m>=10?'var(--amber)':'var(--red)';return'<span style="font-weight:700;color:'+c+'">'+fmtP(m)+'</span>';})()}</td><td><div class="td-actions"><button class="btn btn-ghost btn-sm" style="font-size:11px;color:var(--navy);font-weight:600" onclick="abrirExpediente('${p.proyecto_id}')">📁 Exp.</button><button class="btn btn-ghost btn-icon btn-sm" onclick="editProyecto('${p.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('proyectos','${p.id}','${p.nombre.replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`).join('');
     populateSelects();
     poblarFiltrosCliente();
     filtrarProyectosPorCliente();
@@ -9904,7 +9904,7 @@ async function loadCompras(){
     document.getElementById('compras-count').textContent=CoC.length+' registros';
     if(!CoC.length){tb.innerHTML=`<tr><td colspan="10"><div class="empty"><div class="empty-icon">🛒</div><div class="empty-text">Sin compras</div><button class="btn btn-primary" onclick="openModal('m-compra')">＋ Nueva</button></div></td></tr>`;return;}
     const capNames = await resolverNombresCapitulos(CoC.map(c=>c.partida));
-    tb.innerHTML=CoC.map(c=>{const tot=c.base_imponible*(1+ivaPct(c.iva_pct)/100);const hasPDF=!!(c.adjunto_pdf);const partLbl=c.partida?`<span style="font-size:11px;color:var(--copper)">${partidaLabelConNombres(c.partida,capNames)}</span>`:'<span style="color:var(--text-soft)">—</span>';const pId=(c.proyecto_id||c.proyecto||'');return`<tr data-search="${(pId+c.proveedor_id+c.concepto+(c.partida||'')).toLowerCase()}" data-partida="${c.partida||''}"><td>${fmtD(c.fecha)}</td><td class="td-mono">${pId?`<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:1px 5px;color:var(--navy);font-weight:700" title="Ver expediente" onclick="abrirExpediente('${pId}')">${pId}</button>`:"<span style='color:var(--text-soft)'>—</span>"}</td><td>${partLbl}</td><td>${c.proveedor_id||'—'}</td><td>${c.concepto||'—'}${hasPDF?' 📎':''}</td><td class="td-mono">${fmt(c.base_imponible)}</td><td class="td-mono">${c.iva_pct}</td><td class="td-mono" style="font-weight:700">${fmt(tot)}</td><td>${bE(c.estado_pago)}</td><td style="display:flex;gap:4px">${hasPDF?`<button class="btn btn-ghost btn-icon btn-sm" onclick="coVerPDFById('${c.id}')" style="font-size:11px;color:var(--navy)" title="Ver PDF">📄</button>`:''}<button class="btn btn-ghost btn-icon btn-sm" onclick="editCompra('${c.id}')" style="font-size:11px">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('compras','${c.id}','${(c.concepto||'compra').replace(/'/g,"\\'")}')">🗑</button></td></tr>`;}).join('');
+    tb.innerHTML=CoC.map(c=>{const tot=c.base_imponible*(1+ivaPct(c.iva_pct)/100);const hasPDF=!!(c.adjunto_pdf);const partLbl=c.partida?`<span style="font-size:11px;color:var(--copper)">${partidaLabelConNombres(c.partida,capNames)}</span>`:'<span style="color:var(--text-soft)">—</span>';return`<tr data-search="${(c.proyecto_id+c.proveedor_id+c.concepto+(c.partida||'')).toLowerCase()}" data-partida="${c.partida||''}"><td>${fmtD(c.fecha)}</td><td class="td-mono">${c.proyecto_id?`<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:1px 5px;color:var(--navy);font-weight:700" title="Ver expediente" onclick="abrirExpediente('${c.proyecto_id}')">${c.proyecto_id}</button>`:"<span style='color:var(--text-soft)'>—</span>"}</td><td>${partLbl}</td><td>${c.proveedor_id||'—'}</td><td>${c.concepto||'—'}${hasPDF?' 📎':''}</td><td class="td-mono">${fmt(c.base_imponible)}</td><td class="td-mono">${c.iva_pct}</td><td class="td-mono" style="font-weight:700">${fmt(tot)}</td><td>${bE(c.estado_pago)}</td><td style="display:flex;gap:4px">${hasPDF?`<button class="btn btn-ghost btn-icon btn-sm" onclick="coVerPDFById('${c.id}')" style="font-size:11px;color:var(--navy)" title="Ver PDF">📄</button>`:''}<button class="btn btn-ghost btn-icon btn-sm" onclick="editCompra('${c.id}')" style="font-size:11px">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('compras','${c.id}','${(c.concepto||'compra').replace(/'/g,"\\'")}')">🗑</button></td></tr>`;}).join('');
   }catch(e){tb.innerHTML=`<tr><td colspan="10" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
   filtrarModuloPorProyecto('compras');
   aplicarFiltroPartida('compras');
@@ -9912,29 +9912,44 @@ async function loadCompras(){
 async function saveCompra(){
   const id=document.getElementById('co-id')?.value;
   const pdfB64=document.getElementById('co-pdf-b64')?.value||null;
-  const estadoVal = document.getElementById('co-estado').value;
-  // Intentar con estado_pago primero; si falla por schema, usar estado
-  const d={fecha:document.getElementById('co-fecha').value||new Date().toISOString().split('T')[0],proyecto_id:document.getElementById('co-proyecto').value||null,proveedor_id:document.getElementById('co-prov').value||null,concepto:document.getElementById('co-concepto').value,base_imponible:parseFloat(document.getElementById('co-base').value)||0,iva_pct:document.getElementById('co-iva').value,estado_pago:estadoVal,notas:document.getElementById('co-notas').value,partida:getPartidaFinalPfx('co')||null};
-  const dAlt={...d};delete dAlt.estado_pago;dAlt.estado=estadoVal;
+  const estadoVal=document.getElementById('co-estado').value;
+  // Resolver proyecto_id: el select guarda "PRY-001" (texto), pero Supabase espera UUID o texto según BD
+  // Intentar ambos: primero el valor directo, si falla por UUID buscar el id interno
+  const proyTexto=document.getElementById('co-proyecto').value||null;
+  const proyObj=proyTexto?(PC||[]).find(p=>p.proyecto_id===proyTexto):null;
+  // Usar UUID interno si existe, si no usar el texto (compatibilidad con distintas configs de BD)
+  const proyIdFinal=proyObj?.id||proyTexto||null;
+
+  const d={fecha:document.getElementById('co-fecha').value||new Date().toISOString().split('T')[0],
+    proyecto_id:proyIdFinal,
+    proveedor_id:document.getElementById('co-prov').value||null,
+    concepto:document.getElementById('co-concepto').value,
+    base_imponible:parseFloat(document.getElementById('co-base').value)||0,
+    iva_pct:document.getElementById('co-iva').value,
+    estado_pago:estadoVal,
+    notas:document.getElementById('co-notas').value,
+    partida:getPartidaFinalPfx('co')||null};
+  // Versión alternativa con "estado" en vez de "estado_pago"
+  const dAlt={...d}; delete dAlt.estado_pago; dAlt.estado=estadoVal;
+
   try{
-    let savedId = id;
+    let savedId=id;
     try{
       if(id){ await sb('compras','PATCH',d,null,`?id=eq.${id}`); }
       else { const res=await sbPost('compras',d); if(res&&res[0]&&res[0].id) savedId=res[0].id; }
     }catch(eCol){
-      // Si el error es de columna estado_pago, reintentar con "estado"
+      // Si falla por estado_pago → reintentar con "estado"
       if(eCol.message&&eCol.message.includes('estado_pago')){
         if(id){ await sb('compras','PATCH',dAlt,null,`?id=eq.${id}`); }
         else { const res=await sbPost('compras',dAlt); if(res&&res[0]&&res[0].id) savedId=res[0].id; }
       } else { throw eCol; }
     }
-    // Paso 2: guardar PDF por separado (PATCH independiente) si hay uno nuevo
-    if(pdfB64 && window._coPDFChanged && savedId){
-      try{
-        await sb('compras','PATCH',{adjunto_pdf:pdfB64},null,`?id=eq.${savedId}`);
-      }catch(ePDF){
-        console.warn('PDF no guardado (columna no disponible):', ePDF.message);
-        toast('Compra guardada. PDF no adjuntado (error de columna) ⚠️','warning');
+    // Guardar PDF por separado
+    if(pdfB64&&window._coPDFChanged&&savedId){
+      try{ await sb('compras','PATCH',{adjunto_pdf:pdfB64},null,`?id=eq.${savedId}`); }
+      catch(ePDF){
+        console.warn('PDF no guardado:',ePDF.message);
+        toast('Compra guardada. PDF no adjuntado ⚠️','warning');
         document.getElementById('co-id').value='';
         document.querySelector('#m-compra .modal-title').textContent='🛒 Nueva compra';
         coResetPDF(); closeModal('m-compra'); loadCompras(); return;
@@ -18794,21 +18809,24 @@ function sortAndRenderCompras(col, dir) {
   if (!tb) return;
   tb.innerHTML = sorted.map(c => {
     const tot = c.base_imponible*(1+ivaPct(c.iva_pct)/100);
-    return `<tr data-search="${(c.proyecto_id+c.proveedor_id+c.concepto).toLowerCase()}">
+    const pId = c.proyecto_id || c.proyecto || '';
+    return `<tr data-search="${(pId+c.proveedor_id+c.concepto).toLowerCase()}">
       <td>${fmtD(c.fecha)}</td>
-      <td class="td-mono" style="color:var(--text-soft)">${c.proyecto_id||'—'}</td>
+      <td class="td-mono" style="color:var(--text-soft)">${pId?`<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:1px 5px;color:var(--navy);font-weight:700" onclick="abrirExpediente('${pId}')">${pId}</button>`:'—'}</td>
       <td>${c.proveedor_id||'—'}</td>
       <td>${c.concepto||'—'}</td>
       <td class="td-mono">${fmt(c.base_imponible)}</td>
       <td class="td-mono">${c.iva_pct}</td>
       <td class="td-mono" style="font-weight:700">${fmt(tot)}</td>
-      <td>${bE(c.estado_pago)}</td>
+      <td>${bE(c.estado_pago||c.estado)}</td>
       <td style="display:flex;gap:4px">
         <button class="btn btn-ghost btn-icon btn-sm" onclick="editCompra('${c.id}')" title="Editar">✏️</button>
         <button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('compras','${c.id}','${(c.concepto||'compra').replace(/'/g,"\\'")}')">🗑</button>
       </td>
     </tr>`;
   }).join('');
+  // Reaplicar filtro de proyecto (importante: debe ir ANTES del filtro de texto)
+  filtrarModuloPorProyecto('compras');
   const q = document.getElementById('search-compras')?.value || '';
   if (q) filterTable('compras-tbody','search-compras');
 }
@@ -18934,7 +18952,7 @@ function coHandleFile(file){
   }
   if(file.size > 5*1024*1024){ toast('El PDF no puede superar 5MB','error'); return; }
   const reader = new FileReader();
-  reader.onload = e => {
+  reader.onload = async e => {
     const b64 = e.target.result.split(',')[1];
     document.getElementById('co-pdf-b64').value = b64;
     document.getElementById('co-pdf-nombre').value = file.name;
@@ -18945,15 +18963,66 @@ function coHandleFile(file){
     const zone=document.getElementById('co-pdf-zone');
     if(zone) zone.style.display='none';
     if(lbl) lbl.style.display='none';
-    if(btnVer) btnVer.style.display='none'; // botón inferior ya no necesario
+    if(btnVer) btnVer.style.display='none';
     if(prev){
       prev.style.display='flex';
       prev.innerHTML=`<span style="font-size:13px">📄</span>
         <button class="btn btn-ghost btn-sm" style="font-size:12px;color:var(--navy);font-weight:600;text-decoration:underline;cursor:pointer" onclick="coVerPDF()" title="Abrir PDF">${file.name}</button>
         <span style="font-size:11px;color:var(--text-soft)">(${(file.size/1024).toFixed(0)} KB)</span>
-        <button class="btn btn-ghost btn-sm" style="font-size:11px;color:var(--red);margin-left:4px" onclick="coQuitarPDF()">✕ Quitar</button>`;
+        <button class="btn btn-ghost btn-sm" style="font-size:11px;color:var(--red);margin-left:4px" onclick="coQuitarPDF()">✕ Quitar</button>
+        <span id="co-pdf-leyendo" style="font-size:11px;color:var(--amber);margin-left:8px">🤖 Leyendo factura…</span>`;
     }
-    toast('PDF cargado ✅');
+    // Autofill con Anthropic si hay API key
+    try{
+      const key = window._ANTHROPIC_KEY||'';
+      if(!key){ toast('PDF cargado ✅ (sin API key para autoleer)'); return; }
+      const resp = await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+        body:JSON.stringify({
+          model:'claude-sonnet-4-5',
+          max_tokens:800,
+          messages:[{role:'user',content:[
+            {type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}},
+            {type:'text',text:`Extrae de esta factura de proveedor los siguientes datos y devuelve SOLO JSON sin markdown:
+{"num_factura":"","fecha":"YYYY-MM-DD","proveedor":"nombre empresa emisora","concepto":"descripción breve del concepto principal","base_imponible":0.00,"iva_pct":"21%"}
+Reglas: fecha en formato YYYY-MM-DD, iva_pct puede ser "21%","10%","4%" o "Exento", base_imponible es el importe sin IVA como número decimal.`}
+          ]}]
+        })
+      });
+      if(resp.ok){
+        const data=await resp.json();
+        const raw=data.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+        const clean=raw.replace(/```json|```/g,'').trim();
+        const ex=JSON.parse(clean);
+        if(ex.num_factura && !document.getElementById('co-concepto').value)
+          document.getElementById('co-concepto').value = ex.num_factura+(ex.concepto?' · '+ex.concepto:'');
+        else if(ex.concepto && !document.getElementById('co-concepto').value)
+          document.getElementById('co-concepto').value = ex.concepto;
+        if(ex.fecha) document.getElementById('co-fecha').value = ex.fecha;
+        if(ex.base_imponible) document.getElementById('co-base').value = parseFloat(ex.base_imponible).toFixed(2);
+        if(ex.iva_pct){
+          const sel=document.getElementById('co-iva');
+          if(sel){[...sel.options].forEach(o=>{if(o.value===ex.iva_pct||o.value.replace('%','')===String(ex.iva_pct).replace('%',''))sel.value=o.value;});}
+        }
+        // Intentar encontrar proveedor por nombre
+        if(ex.proveedor){
+          const pSel=document.getElementById('co-prov');
+          if(pSel){
+            const nombre=ex.proveedor.toLowerCase();
+            const opt=[...pSel.options].find(o=>o.text.toLowerCase().includes(nombre)||nombre.includes(o.text.toLowerCase().slice(0,8)));
+            if(opt) pSel.value=opt.value;
+          }
+        }
+        toast('✅ Factura leída automáticamente');
+      } else { toast('PDF cargado ✅'); }
+    }catch(eAI){
+      console.warn('Autofill PDF error:',eAI.message);
+      toast('PDF cargado ✅ (no se pudo autoleer: '+eAI.message+')');
+    } finally {
+      const leyendo=document.getElementById('co-pdf-leyendo');
+      if(leyendo) leyendo.remove();
+    }
   };
   reader.readAsDataURL(file);
 }
@@ -19657,76 +19726,37 @@ async function abrirExpediente(proyId){
 
 // Desglose global por versión (se rellena en calcExpKPIs y se usa en recalcPresKPI)
 let _presDesglobeGlobal = {};
-let _expFactBI = 0;       // facturas venta base imponible
-let _expFactIvaTotal = 0; // facturas venta total c/IVA
-let _expEaTotal = 0;      // entregas a cuenta
-let _expIvaFactPct = 21;  // IVA medio facturas (para estimar pendiente c/IVA)
 
 function recalcPresKPI(){
-  const v1 = document.getElementById('chk-v1')?.checked ? (_presDesglobeGlobal['v1']?.sIVA||0) : 0;
-  const v2 = document.getElementById('chk-v2')?.checked ? (_presDesglobeGlobal['v2']?.sIVA||0) : 0;
-  const v3 = document.getElementById('chk-v3')?.checked ? (_presDesglobeGlobal['v3']?.sIVA||0) : 0;
-  const v4 = document.getElementById('chk-v4')?.checked ? (_presDesglobeGlobal['v4']?.sIVA||0) : 0;
-  const v5 = document.getElementById('chk-v5')?.checked ? (_presDesglobeGlobal['v5']?.sIVA||0) : 0;
-  const v6 = document.getElementById('chk-v6')?.checked ? (_presDesglobeGlobal['v6']?.sIVA||0) : 0;
-  const v7 = document.getElementById('chk-v7')?.checked ? (_presDesglobeGlobal['v7']?.sIVA||0) : 0;
-  const v8 = document.getElementById('chk-v8')?.checked ? (_presDesglobeGlobal['v8']?.sIVA||0) : 0;
-  // cIVA total de versiones marcadas (respeta el IVA real de cada versión)
-  const v1c = document.getElementById('chk-v1')?.checked ? (_presDesglobeGlobal['v1']?.cIVA||0) : 0;
-  const v2c = document.getElementById('chk-v2')?.checked ? (_presDesglobeGlobal['v2']?.cIVA||0) : 0;
-  const v3c = document.getElementById('chk-v3')?.checked ? (_presDesglobeGlobal['v3']?.cIVA||0) : 0;
-  const v4c = document.getElementById('chk-v4')?.checked ? (_presDesglobeGlobal['v4']?.cIVA||0) : 0;
-  const v5c = document.getElementById('chk-v5')?.checked ? (_presDesglobeGlobal['v5']?.cIVA||0) : 0;
-  const v6c = document.getElementById('chk-v6')?.checked ? (_presDesglobeGlobal['v6']?.cIVA||0) : 0;
-  const v7c = document.getElementById('chk-v7')?.checked ? (_presDesglobeGlobal['v7']?.cIVA||0) : 0;
-  const v8c = document.getElementById('chk-v8')?.checked ? (_presDesglobeGlobal['v8']?.cIVA||0) : 0;
+  const v1 = document.getElementById('chk-v1')?.checked ? (_presDesglobeGlobal['v1']||0) : 0;
+  const v2 = document.getElementById('chk-v2')?.checked ? (_presDesglobeGlobal['v2']||0) : 0;
+  const v3 = document.getElementById('chk-v3')?.checked ? (_presDesglobeGlobal['v3']||0) : 0;
+  const v4 = document.getElementById('chk-v4')?.checked ? (_presDesglobeGlobal['v4']||0) : 0;
+  const v5 = document.getElementById('chk-v5')?.checked ? (_presDesglobeGlobal['v5']||0) : 0;
+  const v6 = document.getElementById('chk-v6')?.checked ? (_presDesglobeGlobal['v6']||0) : 0;
+  const v7 = document.getElementById('chk-v7')?.checked ? (_presDesglobeGlobal['v7']||0) : 0;
+  const v8 = document.getElementById('chk-v8')?.checked ? (_presDesglobeGlobal['v8']||0) : 0;
   // Sum all unit versions (any key that is not v1-v8)
-  let unitsTotal = 0, unitsTotalCIVA = 0;
+  let unitsTotal = 0;
   Object.keys(_presDesglobeGlobal).forEach(k => {
-    if(!k.match(/^v\d+$/)){ unitsTotal += (_presDesglobeGlobal[k]?.sIVA||0); unitsTotalCIVA += (_presDesglobeGlobal[k]?.cIVA||0); }
+    if(!k.match(/^v\d+$/)) unitsTotal += _presDesglobeGlobal[k];
   });
   const tot = v1 + v2 + v3 + v4 + v5 + v6 + v7 + v8 + unitsTotal;
-  const totCIVA = v1c + v2c + v3c + v4c + v5c + v6c + v7c + v8c + unitsTotalCIVA;
   const el = document.getElementById('exp-k-pres');
   if(el) el.textContent = tot > 0 ? fmt(tot) : '—';
   // Ocultar checkboxes de versiones sin datos
   ['v1','v2','v3','v4','v5','v6','v7','v8'].forEach(v=>{
     const lbl = document.getElementById('chk-'+v)?.parentElement;
-    if(lbl) lbl.style.display = (_presDesglobeGlobal[v]?.sIVA||0) > 0 ? '' : 'none';
+    if(lbl) lbl.style.display = (_presDesglobeGlobal[v]||0) > 0 ? '' : 'none';
   });
-  // Actualizar margen KPI con nuevo presupuesto (leyendo costes ya calculados)
+  // Actualizar margen con nuevo presupuesto
   const costesRaw = document.getElementById('exp-k-costes')?.textContent||'';
   const costes = parseFloat(costesRaw.replace(/\./g,'').replace(',','.'))||0;
-  if(tot > 0){
-    const margen = ((tot - costes) / tot) * 100;
+  if(costes > 0 && tot > 0){
+    const margen = ((tot - costes) / costes) * 100;
     const el2 = document.getElementById('exp-k-margen');
     if(el2){ el2.textContent = fmtP(margen); el2.style.color = margen>=20?'var(--green)':margen>=0?'var(--amber)':'var(--red)'; }
-    // Actualizar subtitle del margen con el total correcto (versiones marcadas)
-    const sub = el2?.parentNode?.querySelector('.kpi-margen-sub');
-    if(sub) sub.textContent = 'Sobre venta · Pres. '+fmt(tot);
   }
-  // Actualizar pendiente de facturar en KPI "Facturado" usando tot (versiones marcadas)
-  const kpiFact = document.getElementById('exp-k-fact');
-  if(kpiFact && tot > 0){
-    let subF = kpiFact.parentNode.querySelector('.kpi-fact-sub');
-    if(!subF){ subF=document.createElement('div'); subF.className='kpi-fact-sub'; subF.style.cssText='font-size:10px;margin-top:2px;line-height:1.4'; kpiFact.parentNode.appendChild(subF); }
-    const cobradoTotal = _expFactBI + _expEaTotal;
-    const pendSinIva = tot - cobradoTotal;
-    // pendiente c/IVA: usa el IVA real de cada versión (totCIVA) descontando lo ya facturado c/IVA
-    const pendConIva = totCIVA - _expFactIvaTotal - _expEaTotal;
-    if(pendSinIva > 0.01){
-      subF.style.color='var(--amber)';
-      subF.innerHTML = `Pdte: <b>${fmt(pendSinIva)}</b> s/IVA<br><span style="color:#b85c00">${fmt(Math.max(0,pendConIva))} c/IVA</span>`;
-    } else if(pendSinIva <= 0){
-      subF.style.color='var(--green)';
-      subF.textContent='✓ Todo facturado';
-    } else { subF.textContent=''; }
-  }
-  // Re-renderizar resumen financiero para que refleje el presupuesto actualizado
-  const body = document.getElementById('exp-body');
-  const activeTab = document.querySelector('.exp-tab[style*="border-bottom: 2px solid var(--navy)"], .exp-tab[style*="border-bottom:2px solid var(--navy)"]');
-  const tabActivo = activeTab?.dataset?.tab || 'resumen';
-  if(body && tabActivo === 'resumen') renderExpResumen(body);
 }
 
 // ═══════════════════════════════════════════
@@ -19814,34 +19844,30 @@ async function calcExpKPIs(proyId){
     const lineas = await sbGet('presupuesto_lineas', `?proyecto_id=eq.${proyId}&es_capitulo=eq.false`);
     lineas.forEach(l=>{
       const pv=l.precio_venta||0, ci=l.ci_gg_bi_pct||0, sub=(l.cantidad||0)*pv;
-      const importeBI = ci>0 ? sub*(1+ci/100) : sub;
-      const ivaN = l.iva_pct==='Exento' ? 0 : (parseFloat((l.iva_pct||'21%').replace('%',''))||21);
-      const importeIVA = importeBI * (1 + ivaN/100);
+      const importe = ci>0 ? sub*(1+ci/100) : sub;
       const ver = l.version||'v1';
-      if(!_presDesglobeGlobal[ver]) _presDesglobeGlobal[ver] = {sIVA:0, cIVA:0};
-      _presDesglobeGlobal[ver].sIVA += importeBI;
-      _presDesglobeGlobal[ver].cIVA += importeIVA;
+      _presDesglobeGlobal[ver] = (_presDesglobeGlobal[ver]||0) + importe;
     });
   }catch(e){}
   // Por defecto solo V1 marcada, ocultar las que no tienen datos
   ['v1','v2','v3'].forEach(v=>{
     const chk = document.getElementById('chk-'+v);
     if(chk){
-      const tieneData = (_presDesglobeGlobal[v]?.sIVA||0) > 0;
+      const tieneData = (_presDesglobeGlobal[v]||0) > 0;
       chk.parentElement.style.display = tieneData ? '' : 'none';
       if(v!=='v1') chk.checked = false; // v2 y v3 siempre desmarcadas por defecto
     }
   });
-  // presTot = v1.sIVA + all unit versions.sIVA
-  let presTot = _presDesglobeGlobal['v1']?.sIVA || 0;
-  Object.keys(_presDesglobeGlobal).forEach(k => { if(!k.match(/^v\d+$/)) presTot += (_presDesglobeGlobal[k]?.sIVA||0); });
+  // presTot = v1 + all unit versions
+  let presTot = _presDesglobeGlobal['v1'] || 0;
+  Object.keys(_presDesglobeGlobal).forEach(k => { if(!k.match(/^v\d+$/)) presTot += _presDesglobeGlobal[k]; });
 
   // Facturas de venta del proyecto
   const factProy = (FC||[]).filter(f=>f.proyecto_id===proyId&&(f.tipo_factura||'Venta')==='Venta');
   const factTotal = factProy.reduce((s,f)=>s+(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100), 0);
 
-  // Compras del proyecto (campo puede ser proyecto_id o proyecto)
-  const compProy = (CoC||[]).filter(c=>c.proyecto_id===proyId || c.proyecto===proyId);
+  // Compras del proyecto
+  const compProy = (CoC||[]).filter(c=>c.proyecto_id===proyId);
   const compTotal = compProy.reduce((s,c)=>s+(c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100), 0);
 
   // Horas / mano de obra del proyecto
@@ -19864,24 +19890,29 @@ async function calcExpKPIs(proyId){
   const eaProy = (EAC||[]).filter(e=>e.proyecto_id===proyId);
   const eaTotal = eaProy.reduce((s,e)=>s+(parseFloat(e.importe)||0), 0);
 
-  // Margen potencial sobre venta: (Presupuesto - Coste) / Presupuesto × 100
+  // Margen SIEMPRE sobre coste: (Venta - Coste) / Coste × 100
   const beneficio = presTot - costeTotal;
-  const margen    = presTot > 0 ? (beneficio / presTot) * 100 : 0;
-
-  // Guardar en globales para que recalcPresKPI pueda calcular el pendiente con versiones marcadas
-  _expFactBI = factTotalBI;
-  _expFactIvaTotal = factProy.reduce((s,f)=>s+(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100), 0);
-  _expEaTotal = eaTotal;
-  if(factProy.length>0) _expIvaFactPct = factProy.reduce((s,f)=>s+ivaPct(f.iva_pct),0)/factProy.length;
+  const margen    = costeTotal > 0 ? (beneficio / costeTotal) * 100 : 0;
 
   const setEl = (id,val,style) => { const el=document.getElementById(id); if(el){el.textContent=val; if(style) Object.assign(el.style,style);} };
   setEl('exp-k-costes', fmt(costeTotal));
-  recalcPresKPI(); // Renderiza presupuesto, margen y pendiente (necesita exp-k-costes ya actualizado)
+  recalcPresKPI(); // Renderiza presupuesto y margen (necesita exp-k-costes ya actualizado)
   const nFact = factProy.length;
   setEl('exp-k-fact', factTotalBI>0 ? fmt(factTotalBI) : '—');
   // Label con nº facturas
   const lblFact = document.getElementById('exp-k-fact-label');
   if(lblFact) lblFact.textContent = nFact > 1 ? `Facturado (${nFact})` : 'Facturado';
+  // Sub: pendiente de facturar (descontando también entregas a cuenta)
+  const kpiFact = document.getElementById('exp-k-fact');
+  if(kpiFact && presTot>0){
+    let subF = kpiFact.parentNode.querySelector('.kpi-fact-sub');
+    if(!subF){ subF=document.createElement('div'); subF.className='kpi-fact-sub'; subF.style.cssText='font-size:10px;margin-top:1px'; kpiFact.parentNode.appendChild(subF); }
+    const cobradoTotal = factTotalBI + eaTotal;
+    const pendFact = presTot - cobradoTotal;
+    if(pendFact > 0.01){ subF.style.color='var(--amber)'; subF.textContent='Pdte: '+fmt(pendFact); }
+    else if(pendFact <= 0){ subF.style.color='var(--green)'; subF.textContent='✓ Todo cobrado'; }
+    else { subF.textContent=''; }
+  }
   // KPI entregas a cuenta
   const kpiEA = document.getElementById('exp-k-entrega');
   if(kpiEA){
@@ -19899,7 +19930,7 @@ async function calcExpKPIs(proyId){
   if(kpiMg){
     let sub = kpiMg.parentNode.querySelector('.kpi-margen-sub');
     if(!sub){ sub=document.createElement("div"); sub.className="kpi-margen-sub"; sub.style.cssText="font-size:10px;color:var(--text-soft);margin-top:1px"; kpiMg.parentNode.appendChild(sub); }
-    sub.textContent = 'Sobre venta · Pres. '+fmt(presTot);
+    sub.textContent = 'Sobre coste · Pres. '+fmt(presTot);
   }
 }
 
@@ -19947,21 +19978,16 @@ function renderExpResumen(body){
   const factTotal=factBase+factIva;
   const factCobrado=factProy.reduce((s,f)=>s+(f.importe_cobrado||0),0);
   const eaTotal=eaResProy.reduce((s,e)=>s+(parseFloat(e.importe)||0),0);
-  const ingresosReales=factBase+eaTotal;
-  // Presupuesto: suma de versiones marcadas en los checkboxes (igual que recalcPresKPI)
-  let presBase = 0;
-  ['v1','v2','v3','v4','v5','v6','v7','v8'].forEach(v=>{
-    if(document.getElementById('chk-'+v)?.checked) presBase += (_presDesglobeGlobal[v]?.sIVA||0);
-  });
-  Object.keys(_presDesglobeGlobal).forEach(k=>{ if(!k.match(/^v\d+$/)) presBase += (_presDesglobeGlobal[k]?.sIVA||0); });
-  const beneficio=presBase-costesBase;
-  const margenPct=presBase>0?(beneficio/presBase)*100:0;
+  const beneficio=factBase-costesBase;
+  const margenPct=factBase>0?(beneficio/factBase)*100:0;
   const compPend=compProy.filter(c=>(c.estado||c.estado_pago)==='Pendiente').reduce((s,c)=>s+(c.base_imponible||0)*(1+(c.iva_porcentaje||21)/100),0);
   const scPend=scProy.filter(s=>['Pendiente','Parcial','Vencido'].includes(s.estado||s.estado_pago)).reduce((s,c)=>s+(c.importe||0)*(1+ivaPct(c.iva_pct)/100),0);
   const pendientePagar=compPend+scPend;
   const pendienteCobrar=factTotal-factCobrado-eaTotal;
   const rS=(k,v,c)=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f0f0f0;font-size:12px"><span style="color:var(--text-soft)">${k}</span><span style="font-weight:600${c?';color:'+c:''}">${v}</span></div>`;
   const rD=(k,b,t,c)=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f0f0f0;font-size:12px"><span style="color:var(--text-soft)">${k}</span><span style="font-weight:600;text-align:right${c?';color:'+c:''}"><span style="font-size:11px">${fmt(b)}</span> <span style="font-size:10px;color:var(--text-soft);font-weight:400">(${fmt(t)} c/IVA)</span></span></div>`;
+  // Presupuesto desde KPI ya calculado en abrirExpediente
+  const presBase=parseFloat(document.getElementById('rk-pres')?.textContent?.replace(/[.,€\s]/g,'')||'0')/100||0;
   body.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
   <div>
     <div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Información del proyecto</div>
@@ -19973,9 +19999,7 @@ function renderExpResumen(body){
     <div style="background:#f0f9f0;border-radius:6px;padding:8px 10px;margin-bottom:6px">
       <div style="font-size:10px;font-weight:700;color:#2a7a2a;margin-bottom:4px">📥 INGRESOS</div>
       ${rD('Facturado',factBase,factTotal,'var(--green)')}
-      ${eaTotal>0?rS('Entregas a cuenta',fmt(eaTotal),'#7b3fa0'):''}
-      ${ingresosReales>0?`<div style="display:flex;justify-content:space-between;padding:5px 0;border-top:2px solid #c8e6c9;margin-top:3px;font-size:12px"><span style="font-weight:700;color:#2a7a2a">TOTAL INGRESOS</span><span style="font-weight:700;color:#2a7a2a">${fmt(ingresosReales)}</span></div>`:''}
-      ${presBase>0?rS('Pendiente facturar',fmt(Math.max(0,presBase-ingresosReales)),presBase>ingresosReales?'var(--amber)':'var(--green)'):''}
+      ${rS('Pendiente facturar',fmt(Math.max(0,(presBase||0)-factBase)),(presBase||0)>factBase?'var(--amber)':'var(--green)')}
     </div>
     <div style="background:#fff8f0;border-radius:6px;padding:8px 10px;margin-bottom:6px">
       <div style="font-size:10px;font-weight:700;color:#b85c00;margin-bottom:4px">📤 COSTES</div>
@@ -19986,10 +20010,9 @@ function renderExpResumen(body){
     </div>
     <div style="background:${beneficio>=0?'#f0f9f0':'#fff0f0'};border-radius:6px;padding:8px 10px;margin-bottom:6px">
       <div style="display:flex;justify-content:space-between;align-items:center">
-        <span style="font-size:12px;font-weight:700;color:${beneficio>=0?'var(--green)':'var(--red)'}">💰 BENEFICIO POTENCIAL (s/IVA)</span>
+        <span style="font-size:12px;font-weight:700;color:${beneficio>=0?'var(--green)':'var(--red)'}">💰 BENEFICIO (s/IVA)</span>
         <span style="font-size:14px;font-weight:700;color:${beneficio>=0?'var(--green)':'var(--red)'}">${fmt(beneficio)} <span style="font-size:11px">(${fmtP(margenPct)})</span></span>
       </div>
-      <div style="font-size:10px;color:var(--text-soft);margin-top:3px">Presupuesto − costes totales</div>
     </div>
     <div style="background:#f5f0ff;border-radius:6px;padding:8px 10px">
       <div style="font-size:10px;font-weight:700;color:#7b3fa0;margin-bottom:4px">💵 FLUJO DE CAJA</div>
@@ -20000,14 +20023,14 @@ function renderExpResumen(body){
     </div>
   </div></div>
   ${compProy.length?`<div style="margin-top:14px"><div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Últimas compras</div>${compProy.slice(0,5).map(c=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f5f5f5;font-size:12px"><span>${fmtD(c.fecha_factura||c.fecha)} · <strong>${c.proveedor||c.proveedor_id||'—'}</strong></span><span style="color:var(--amber);font-weight:600">${fmt(c.base_imponible||0)} / ${fmt((c.base_imponible||0)*(1+(c.iva_porcentaje||21)/100))}</span></div>`).join('')}${compProy.length>5?`<div style="font-size:11px;color:var(--text-soft);padding:4px 0">+${compProy.length-5} más — ver pestaña Compras</div>`:''}</div>`:''}
-  ${eaResProy.length?`<div style="margin-top:14px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px">💵 Entregas a cuenta del cliente</div><button class="btn btn-sm" style="background:#7b3fa0;color:#fff;border:none;font-size:11px;padding:3px 10px;border-radius:6px;cursor:pointer" onclick="abrirModalEntrega()">＋ Nueva</button></div>${eaResProy.map(e=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #f5f5f5;font-size:12px"><span style="color:var(--text-soft);white-space:nowrap">${fmtD(e.fecha)}</span><span style="flex:1;margin:0 10px">${e.concepto||'Entrega a cuenta'}</span><span style="font-weight:700;color:#7b3fa0;margin-right:8px">${fmt(e.importe)}</span><button onclick="abrirModalEntrega('${e.id}')" style="background:none;border:1px solid #ddd;border-radius:4px;padding:2px 7px;font-size:11px;cursor:pointer;color:var(--text-mid);flex-shrink:0" title="Editar / Eliminar">✏️</button></div>`).join('')}<div style="text-align:right;font-size:13px;font-weight:700;color:#7b3fa0;padding-top:6px">Total: ${fmt(eaTotal)}</div></div>`:''}
+  ${eaResProy.length?`<div style="margin-top:14px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px">💵 Entregas a cuenta del cliente</div><button class="btn btn-sm" style="background:#7b3fa0;color:#fff;border:none;font-size:11px;padding:3px 10px;border-radius:6px;cursor:pointer" onclick="abrirModalEntrega()">＋ Nueva</button></div>${eaResProy.map(e=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #f5f5f5;font-size:12px"><span style="color:var(--text-soft)">${fmtD(e.fecha)}</span><span style="flex:1;margin:0 10px">${e.concepto||'Entrega a cuenta'}</span><span style="font-weight:700;color:#7b3fa0">${fmt(e.importe)}</span></div>`).join('')}<div style="text-align:right;font-size:13px;font-weight:700;color:#7b3fa0;padding-top:6px">Total: ${fmt(eaTotal)}</div></div>`:''}
   <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border)"><button class="btn btn-ghost btn-sm" onclick="typeof abrirFichaObra!=='undefined'&&abrirFichaObra('${pid}')">📋 Ficha de obra (vista móvil)</button></div>
   `;
 }
 
 async function renderExpCompras(body){
   const pid = _expProyId;
-  const items = (CoC||[]).filter(c=>(c.proyecto_id===pid||c.proyecto===pid)).sort((a,b)=>b.fecha>a.fecha?1:-1);
+  const items = (CoC||[]).filter(c=>c.proyecto_id===pid).sort((a,b)=>b.fecha>a.fecha?1:-1);
   if(!items.length){ body.innerHTML='<div style="text-align:center;padding:32px;color:var(--text-soft)">Sin compras registradas en este proyecto</div>'; return; }
   const total = items.reduce((s,c)=>s+(c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100),0);
   // Resolver nombres de capítulos
@@ -20037,8 +20060,8 @@ async function renderExpCompras(body){
 
 function renderExpFacturas(body){
   const pid = _expProyId;
-  const items = (FC||[]).filter(f=>f.proyecto_id===pid&&(f.tipo_factura||'Venta')==='Venta').sort((a,b)=>b.fecha_emision>a.fecha_emision?1:-1);
-  if(!items.length){ body.innerHTML='<div style="text-align:center;padding:32px;color:var(--text-soft)">Sin facturas de venta en este proyecto</div>'; return; }
+  const items = (FC||[]).filter(f=>f.proyecto_id===pid).sort((a,b)=>b.fecha_emision>a.fecha_emision?1:-1);
+  if(!items.length){ body.innerHTML='<div style="text-align:center;padding:32px;color:var(--text-soft)">Sin facturas en este proyecto</div>'; return; }
   body.innerHTML = `<table style="width:100%;font-size:12px;border-collapse:collapse">
     <thead><tr style="background:var(--navy);color:#fff">${['Nº Factura','Fecha','Tipo','Concepto','Base','Total','Estado'].map(h=>`<th style="padding:7px 10px;text-align:left">${h}</th>`).join('')}</tr></thead>
     <tbody>${items.map((f,i)=>{const tot=(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100);return`<tr style="background:${i%2?'#fafafa':'#fff'}">
