@@ -329,9 +329,10 @@ tbody td{padding:7px 10px;vertical-align:middle}
 
   /* Topbar */
   .topbar{
-    padding-left:14px;
+    padding-left:8px;
     padding-top:env(safe-area-inset-top);
   }
+  #mob-menu-btn{display:flex!important}
 
   /* Toast no quede tapado por nav */
   .toast{
@@ -697,10 +698,13 @@ th.sortable:not(.sort-asc):not(.sort-desc) .sort-arrow::after{content:'⇅'}
     <div class="mnav-item" id="mnav-horas" onclick="mnavTo('horas')">
       <span class="mnav-icon">⏱</span><span>Horas</span>
     </div>
-    <div class="mnav-item" id="mnav-contabilidad" onclick="mnavTo('contabilidad')">
-      <span class="mnav-icon">📊</span><span>Contabilidad</span>
+    <div class="mnav-item" id="mnav-presupuesto" onclick="mnavTo('presupuesto')">
+      <span class="mnav-icon">💰</span><span>Presupuestos</span>
     </div>
-    <div class="mnav-item" id="mnav-mas" onclick="openMobileDrawer()">
+    <div class="mnav-item" id="mnav-proyectos" onclick="mnavTo('proyectos')">
+      <span class="mnav-icon">📁</span><span>Proyectos</span>
+    </div>
+    <div class="mnav-item" id="mnav-mas" onclick="openMobileDrawer()" style="display:none">
       <span class="mnav-icon">☰</span><span>Más</span>
     </div>
   </div>
@@ -779,11 +783,19 @@ if(window.MutationObserver){
 
 <div class="main">
   <div class="topbar">
+    <!-- Botón hamburguesa - solo visible en móvil -->
+    <button id="mob-menu-btn" onclick="openMobileDrawer()" style="display:none;background:none;border:none;cursor:pointer;padding:8px;margin-right:4px;color:var(--navy)">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect y="3" width="22" height="2.5" rx="1.25" fill="#1a2e4a"/>
+        <rect y="10" width="22" height="2.5" rx="1.25" fill="#1a2e4a"/>
+        <rect y="17" width="22" height="2.5" rx="1.25" fill="#1a2e4a"/>
+      </svg>
+    </button>
     <div><div class="topbar-title" id="tb-title">Gerencia · Panel ejecutivo</div><div class="topbar-bc" id="tb-bc">Datos en tiempo real</div></div>
     <div class="topbar-right">
       <!-- Búsqueda global Ctrl+K -->
       <button onclick="abrirBusquedaGlobal()" style="display:flex;align-items:center;gap:7px;padding:6px 14px;background:#f5f7fa;border:1px solid var(--border);border-radius:8px;cursor:pointer;color:var(--text-mid);font-size:12px;transition:all .15s" onmouseover="this.style.background='var(--blue-light)'" onmouseout="this.style.background='#f5f7fa'">
-        <span>🔍</span><span style="color:var(--text-soft)">Buscar…</span><kbd style="background:#e8e8e8;border-radius:3px;padding:1px 5px;font-size:10px;color:var(--text-soft)">Ctrl K</kbd>
+        <span>🔍</span><span style="color:var(--text-soft)">Buscar…</span>
       </button>
       <div id="conn-status" style="font-size: 11px; padding: 3px 9px; border-radius: 10px; background: var(--amber-soft); color: var(--amber); font-weight: 600; cursor:pointer;" onclick="reconectarApp()" title="Clic para reconectar">🟡 Conectando…</div>
       <a href="ayuda.html" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;display:inline-flex;align-items:center;gap:5px" title="Centro de Ayuda">❓ Ayuda</a><button class="btn btn-ghost btn-sm" onclick="doLogout()">Salir</button>
