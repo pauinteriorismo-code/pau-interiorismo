@@ -10958,7 +10958,15 @@ function abrirNuevoProveedor(){
 }
 
 function editProveedor(id){const p=ProvC.find(x=>x.id===id);if(!p)return;document.getElementById('m-proveedor').querySelector('.modal-title').textContent='✏️ Editar proveedor';document.getElementById('pv-id').value=p.id;document.getElementById('pv-nombre').value=p.nombre||'';document.getElementById('pv-cif').value=p.cif||'';document.getElementById('pv-tipo').value=p.tipo||'Proveedor';document.getElementById('pv-tel').value=p.telefono||'';document.getElementById('pv-email').value=p.email||'';document.getElementById('pv-esp').value=p.especialidad||'';document.getElementById('pv-pago').value=p.forma_pago||'Transferencia';document.getElementById('pv-iban').value=p.iban||'';document.getElementById('pv-notas').value=p.notas||'';openModal('m-proveedor');}
-async function saveProveedor(){const nombre=document.getElementById('pv-nombre').value.trim();if(!nombre){toast('El nombre es obligatorio','error');return;}const id=document.getElementById('pv-id').value;const d={nombre,cif:document.getElementById('pv-cif').value,tipo:document.getElementById('pv-tipo').value,telefono:document.getElementById('pv-tel').value,email:document.getElementById('pv-email').value,especialidad:document.getElementById('pv-esp').value,forma_pago:document.getElementById('pv-pago').value,iban:document.getElementById('pv-iban').value,notas:document.getElementById('pv-notas').value};try{if(id){await sbPatch('proveedores',id,d);toast('Proveedor actualizado ✅');}else{d.proveedor_id=genId('PRV',ProvC,'proveedor_id');await sbPost('proveedores',d);toast('Proveedor guardado ✅');}closeModal('m-proveedor');document.getElementById('pv-id').value='';loadProveedores();populateSelects();}catch(e){toast('Error: '+e.message,'error');}
+async function saveProveedor(){const nombre=document.getElementById('pv-nombre').value.trim();if(!nombre){toast('El nombre es obligatorio','error');return;}const id=document.getElementById('pv-id').value;// Columnas confirmadas en schema Supabase (mínimo seguro)
+  const d={
+    nombre,
+    tipo: document.getElementById('pv-tipo').value,
+    cif: document.getElementById('pv-cif').value||null,
+    telefono: document.getElementById('pv-tel').value||null,
+    email: document.getElementById('pv-email').value||null,
+    notas: document.getElementById('pv-notas').value||null,
+  };try{if(id){await sbPatch('proveedores',id,d);toast('Proveedor actualizado ✅');}else{d.proveedor_id=genId('PRV',ProvC,'proveedor_id');await sbPost('proveedores',d);toast('Proveedor guardado ✅');}closeModal('m-proveedor');document.getElementById('pv-id').value='';loadProveedores();populateSelects();}catch(e){toast('Error: '+e.message,'error');}
 }
 
 // ═══════════════════════════════════════════
