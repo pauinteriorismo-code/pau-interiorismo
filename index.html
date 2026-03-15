@@ -16,8 +16,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="PAU Gestión">
 <!-- manifest PWA desactivado para evitar caché -->
-<!-- PAU INTERIORISMO v81 · Build: 2026-02-28 10:00 -->
-<title>PAU INTERIORISMO - Gestión v20260228-0858</title>
+<!-- PAU INTERIORISMO v82 · Build: 2026-02-28 10:00 -->
+<title>PAU INTERIORISMO - Gestión v20260315-1000</title>
 <style>
 :root{--navy:#1a2a3a;--navy-mid:#27405b;--navy-light:#3d5a78;--blue-soft:#b8cce4;--blue-light:#e8f4ff;--cream:#f7f4ef;--sand:#ede8df;--copper:#b87333;--copper-light:#f4e8da;--green:#1e6b3d;--green-soft:#d5e8d4;--amber:#7d6608;--amber-soft:#fff2cc;--red:#7b241c;--red-soft:#fce8e6;--white:#fff;--text:#1a2a3a;--text-mid:#4a5f72;--text-soft:#8a9aaa;--border:#dce6f0;--radius:8px;--radius-sm:4px;--shadow:0 1px 3px rgba(26,42,58,.08),0 4px 16px rgba(26,42,58,.06);--shadow-lg:0 8px 32px rgba(26,42,58,.14);--sidebar:220px;--header:56px}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -635,7 +635,7 @@ th.sortable:not(.sort-asc):not(.sort-desc) .sort-arrow::after{content:'⇅'}
 <!-- APP -->
 <div class="app" style="display: flex;">
 <nav class="sidebar">
-  <div class="sidebar-logo"><div class="brand">PAU INTERIORISMO</div><div class="brand-sub">Sistema de gestión · <span style="color:#b87333">v74</span></div></div>
+  <div class="sidebar-logo"><div class="brand">PAU INTERIORISMO</div><div class="brand-sub">Sistema de gestión · <span style="color:#b87333">v82</span></div></div>
   <div class="nav-section">
     <div class="nav-label">Principal</div>
     <div class="nav-item active" data-view="gerencia" onclick="navTo('gerencia')"><span class="ni">🏠</span><span>Gerencia</span></div>
@@ -4864,7 +4864,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 
 <div class="toast error" id="toast">Error al cargar datos: </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script>
@@ -19183,6 +19183,7 @@ function fResetPDF(){fQuitarPDF();}
 function fVerPDF(){const b64=window._fPDFActual||document.getElementById('f-pdf-b64')?.value;const n=document.getElementById('f-pdf-nombre')?.value||'factura.pdf';if(!b64){toast('No hay PDF adjunto','error');return;}abrirVisorPDF(b64,n);}
 function fVerPDFById(id){const f=FC.find(x=>String(x.id)===String(id));if(!f||!f.adjunto_pdf){toast('Sin PDF adjunto','error');return;}abrirVisorPDF(f.adjunto_pdf,f.adjunto_nombre||'factura.pdf');}
 
+function scRecalcActas(){
   const base = parseFloat(document.getElementById('sc-importe')?.value)||0;
   const a1 = parseFloat(document.getElementById('sc-importe-acta1')?.value)||0;
   const a2 = parseFloat(document.getElementById('sc-importe-acta2')?.value)||0;
@@ -21010,7 +21011,7 @@ function pdfViewerDescargar(){
 }
 
 </script>
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 // PAU_LOGO loaded from element below
 
 
