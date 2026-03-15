@@ -10978,12 +10978,12 @@ function abrirNuevoProveedor(){
 }
 
 function editProveedor(id){const p=ProvC.find(x=>x.id===id);if(!p)return;document.getElementById('m-proveedor').querySelector('.modal-title').textContent='✏️ Editar proveedor';document.getElementById('pv-id').value=p.id;document.getElementById('pv-nombre').value=p.nombre||'';document.getElementById('pv-cif').value=p.cif||'';// Mapear tipo antiguo a valores del constraint
-  const tipoMap={'Proveedor':'material','Subcontrata':'subcontrata','material':'material','subcontrata':'subcontrata','Servicio':'servicio','Alquiler':'alquiler','Transporte':'transporte','Otros':'otros'};
+  const tipoMap={'Proveedor':'material','Subcontrata':'subcontrata','material':'material','subcontrata':'subcontrata','servicio':'servicio','alquiler':'alquiler','transporte':'transporte','otros':'otros','Servicio':'servicio','Alquiler':'alquiler','Transporte':'transporte','Otros':'otros',null:'material',undefined:'material','':'material'};
   document.getElementById('pv-tipo').value=tipoMap[p.tipo]||p.tipo||'material';document.getElementById('pv-tel').value=p.telefono||'';document.getElementById('pv-email').value=p.email||'';document.getElementById('pv-esp').value=p.especialidad||'';document.getElementById('pv-pago').value=p.forma_pago||'Transferencia';document.getElementById('pv-iban').value=p.iban||'';document.getElementById('pv-notas').value=p.notas||'';openModal('m-proveedor');}
 async function saveProveedor(){const nombre=document.getElementById('pv-nombre').value.trim();if(!nombre){toast('El nombre es obligatorio','error');return;}const id=document.getElementById('pv-id').value;// Columnas exactas de la tabla proveedores en Supabase
   const d={
     nombre,
-    tipo: document.getElementById('pv-tipo').value||'Proveedor',
+    tipo: document.getElementById('pv-tipo').value||'material',
     cif: document.getElementById('pv-cif').value||null,
     telefono: document.getElementById('pv-tel').value||null,
     email: document.getElementById('pv-email').value||null,
