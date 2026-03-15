@@ -20236,75 +20236,34 @@ function renderExpResumen(body){
   const rD=(k,b,t,c)=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f0f0f0;font-size:12px"><span style="color:var(--text-soft)">${k}</span><span style="font-weight:600;text-align:right${c?';color:'+c:''}"><span style="font-size:11px">${fmt(b)}</span> <span style="font-size:10px;color:var(--text-soft);font-weight:400">(${fmt(t)} c/IVA)</span></span></div>`;
 
 body.innerHTML = (function(){
-  var rS=(k,v,col)=>'<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f0f0f0;font-size:12px"><span style="color:var(--text-soft)">'+k+'</span><span style="font-weight:600'+(col?';color:'+col:'')+'">'+v+'</span></div>';
-  var rD=(k,b,t,col)=>'<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f0f0f0;font-size:12px"><span style="color:var(--text-soft)">'+k+'</span><span style="font-weight:600;text-align:right'+(col?';color:'+col:'')+'"><span style="font-size:11px">'+fmt(b)+'</span> <span style="font-size:10px;color:var(--text-soft);font-weight:400">('+fmt(t)+' c/IVA)</span></span></div>';
-
-  // Info proyecto
-  var infoRows = [
-    ['Estado','<span style="font-weight:700">'+(p.estado||'—')+'</span>'],
-    ['Tipo', p.tipo||'—'],
-    ['Cliente', p.cliente_id||'—'],
-    ['Responsable', p.responsable||'—'],
-    ['Dirección obra', p.direccion_obra||'—'],
-    ['Fecha inicio', fmtD(p.fecha_inicio)]
-  ].map(function(r){ return '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f0f0f0;font-size:12px"><span style="color:var(--text-soft)">'+r[0]+'</span><span>'+r[1]+'</span></div>'; }).join('');
-
-  // Compras recientes
-  var compRows = compProy.slice(0,5).map(function(c){
-    var tot=(c.base_imponible||0)*(1+(c.iva_porcentaje||ivaPct(c.iva_pct)||21)/100);
-    var pName=findProvName(c.proveedor_id)||c.proveedor_id||'—';
-    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #f5f5f5;font-size:12px">'
-      +'<span style="color:var(--text-soft)">'+fmtD(c.fecha)+'</span>'
-      +'<span style="flex:1;margin:0 10px;font-weight:600">'+pName+'</span>'
-      +'<span style="color:var(--text-soft);flex:2;margin-right:10px">'+((c.concepto||'').substring(0,40))+'</span>'
-      +'<span style="font-weight:600">'+fmt(c.base_imponible)+' / '+fmt(tot)+'</span></div>';
-  }).join('');
-  var compExtra = compProy.length>5 ? '<div style="font-size:11px;color:var(--text-soft);padding:4px 0">+'+(compProy.length-5)+' más — ver pestaña Compras</div>' : '';
-
-  // Entregas a cuenta
-  var eaRows = eaResProy.slice(0,10).map(function(e){
-    return '<div style="display:flex;align-items:center;padding:5px 0;border-bottom:1px solid #f5f5f5;font-size:12px;gap:6px">'
-      +'<span style="color:var(--text-soft);white-space:nowrap">'+fmtD(e.fecha)+'</span>'
-      +'<span style="flex:1">'+(e.concepto||'Entrega a cuenta')+'</span>'
-      +'<span style="font-weight:700;color:#7b3fa0">'+fmt(e.importe)+'</span>'
-      +'<button onclick="abrirModalEntrega(\''+e.id+'\')" style="background:none;border:none;cursor:pointer;font-size:12px" title="Editar">✏️</button>'
-      +'<button onclick="borrarEntrega(\''+e.id+'\')" style="background:none;border:none;cursor:pointer;font-size:12px;color:var(--red)" title="Borrar">🗑</button>'
-      +'</div>';
-  }).join('');
-
-  var benColor = beneficio>=0 ? 'var(--green)' : 'var(--red)';
-
+  var rS=function(k,v,col){ return '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f0f0f0;font-size:12px"><span style="color:var(--text-soft)">'+k+'</span><span style="font-weight:600'+(col?';color:'+col:'')+'">'+v+'</span></div>'; };
+  var rD=function(k,b,t,col){ return '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f0f0f0;font-size:12px"><span style="color:var(--text-soft)">'+k+'</span><span style="font-weight:600;text-align:right'+(col?';color:'+col:'')+'"><span style="font-size:11px">'+fmt(b)+'</span> <span style="font-size:10px;color:var(--text-soft);font-weight:400">('+fmt(t)+' c/IVA)</span></span></div>'; };
+  var infoRows=[['Estado','<span style="font-weight:700">'+(p.estado||'—')+'</span>'],['Tipo',p.tipo||'—'],['Cliente',p.cliente_id||'—'],['Responsable',p.responsable||'—'],['Dirección obra',p.direccion_obra||'—'],['Fecha inicio',fmtD(p.fecha_inicio)]].map(function(r){return '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f0f0f0;font-size:12px"><span style="color:var(--text-soft)">'+r[0]+'</span><span>'+r[1]+'</span></div>';}).join('');
+  var compRows=compProy.slice(0,5).map(function(cx){var tot=(cx.base_imponible||0)*(1+(cx.iva_porcentaje||ivaPct(cx.iva_pct)||21)/100);var pName=findProvName(cx.proveedor_id)||cx.proveedor_id||'—';return '<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #f5f5f5;font-size:12px"><span style="color:var(--text-soft)">'+fmtD(cx.fecha)+'</span><span style="flex:1;margin:0 10px;font-weight:600">'+pName+'</span><span style="color:var(--text-soft);flex:2;margin-right:10px">'+((cx.concepto||'').substring(0,40))+'</span><span style="font-weight:600">'+fmt(cx.base_imponible)+' / '+fmt(tot)+'</span></div>';}).join('');
+  var compExtra=compProy.length>5?'<div style="font-size:11px;color:var(--text-soft);padding:4px 0">+'+(compProy.length-5)+' más — ver pestaña Compras</div>':'';
+  var eaRows=eaResProy.slice(0,10).map(function(e){return '<div style="display:flex;align-items:center;padding:5px 0;border-bottom:1px solid #f5f5f5;font-size:12px;gap:6px"><span style="color:var(--text-soft);white-space:nowrap">'+fmtD(e.fecha)+'</span><span style="flex:1">'+(e.concepto||'Entrega a cuenta')+'</span><span style="font-weight:700;color:#7b3fa0">'+fmt(e.importe)+'</span><button onclick="abrirModalEntrega(''+e.id+'')" style="background:none;border:none;cursor:pointer;font-size:12px" title="Editar">✏️</button><button onclick="borrarEntrega(''+e.id+'')" style="background:none;border:none;cursor:pointer;font-size:12px;color:var(--red)" title="Borrar">🗑</button></div>';}).join('');
+  var benColor=beneficio>=0?'var(--green)':'var(--red)';
   return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">'
-
-    // Columna izquierda
     +'<div>'
     +'<div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Información del proyecto</div>'
     +infoRows
     +'<div style="margin-top:10px"><button class="btn btn-ghost btn-sm" onclick="expCambiarEstado()">🔄 Cambiar estado</button></div>'
     +'</div>'
-
-    // Columna derecha - Financiero
     +'<div>'
     +'<div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Financiero <small style="font-weight:400">(base s/IVA · total c/IVA)</small></div>'
-
-    // INGRESOS
     +'<div style="background:#f0f9f0;border-radius:6px;padding:8px 10px;margin-bottom:6px">'
     +'<div style="font-size:10px;font-weight:700;color:#2a7a2a;margin-bottom:4px">📥 INGRESOS</div>'
     +rD('Facturado',factBase,factTotal,'var(--green)')
-    +(eaTotal>0 ? rS('Entregas a cuenta',fmt(eaTotal),'#7b3fa0') : '')
-    +(pendFactBase>0.01 ? rD('Pendiente facturar',pendFactBase,pendFactIva,'var(--amber)') : rS('Pendiente facturar','✓ Todo facturado','var(--green)'))
+    +(eaTotal>0?rS('Entregas a cuenta',fmt(eaTotal),'#7b3fa0'):'')
+    +(pendFactBase>0.01?rD('Pendiente facturar',pendFactBase,pendFactIva,'var(--amber)'):rS('Pendiente facturar','✓ Todo facturado','var(--green)'))
     +'</div>'
-
-    // COSTES
     +'<div style="background:#fff8f0;border-radius:6px;padding:8px 10px;margin-bottom:6px">'
     +'<div style="font-size:10px;font-weight:700;color:#b85c00;margin-bottom:4px">📤 COSTES</div>'
     +rD('Materiales / compras',compBase,compIva,compBase>0?'var(--amber)':'')
-    +(scBase>0 ? rD('Subcontratas',scBase,scIva,'var(--amber)') : '')
-    +(moBase>0 ? rS('Mano de obra ('+totalHoras.toFixed(1)+'h)',fmt(moBase),'var(--amber)') : '')
+    +(scBase>0?rD('Subcontratas',scBase,scIva,'var(--amber)'):'')
+    +(moBase>0?rS('Mano de obra ('+totalHoras.toFixed(1)+'h)',fmt(moBase),'var(--amber)'):'')
     +'<div style="display:flex;justify-content:space-between;padding:5px 0;border-top:2px solid #f0d0b0;margin-top:3px;font-size:12px"><span style="font-weight:700;color:#b85c00">TOTAL COSTES</span><span style="font-weight:700;color:#b85c00">'+fmt(costesBase)+' s/IVA</span></div>'
     +'</div>'
-
-    // BENEFICIO
     +'<div style="background:'+(beneficio>=0?'#f0f9f0':'#fff0f0')+';border-radius:6px;padding:8px 10px;margin-bottom:6px">'
     +'<div style="display:flex;justify-content:space-between;align-items:center">'
     +'<span style="font-size:12px;font-weight:700;color:'+benColor+'">💰 BENEFICIO (s/IVA)</span>'
@@ -20312,64 +20271,30 @@ body.innerHTML = (function(){
     +'</div>'
     +'<div style="font-size:10px;color:var(--text-soft);margin-top:2px">Pres. '+fmt(presBase)+' − Costes '+fmt(costesBase)+' · Margen sobre presupuesto</div>'
     +'</div>'
-
-    // FLUJO DE CAJA
     +'<div style="background:#f5f0ff;border-radius:6px;padding:8px 10px">'
     +'<div style="font-size:10px;font-weight:700;color:#7b3fa0;margin-bottom:4px">💵 FLUJO DE CAJA</div>'
     +rS('Facturas cobradas',fmt(factCobrado),'var(--green)')
-    +(eaTotal>0 ? rS('Entregas a cuenta recibidas',fmt(eaTotal),'#7b3fa0') : '')
+    +(eaTotal>0?rS('Entregas a cuenta recibidas',fmt(eaTotal),'#7b3fa0'):'')
     +'<div style="display:flex;justify-content:space-between;padding:5px 0;border-top:1px solid #d0c0f0;margin-top:2px;font-size:12px"><span style="font-weight:600;color:#7b3fa0">Total recibido del cliente</span><span style="font-weight:700;color:#7b3fa0">'+fmt(factCobrado+eaTotal)+'</span></div>'
-    +(pendienteCobrar>0.01 ? rS('Pendiente cobrar facturas (c/IVA)',fmt(pendienteCobrar),'var(--amber)') : '')
-    +(pendientePagar>0 ? rS('Pdte. pagar proveedores (c/IVA)',fmt(pendientePagar),'var(--red)') : '')
+    +(pendienteCobrar>0.01?rS('Pendiente cobrar facturas (c/IVA)',fmt(pendienteCobrar),'var(--amber)'):'')
+    +(pendientePagar>0?rS('Pdte. pagar proveedores (c/IVA)',fmt(pendientePagar),'var(--red)'):'')
     +'</div>'
     +'</div>'
     +'</div>'
-
-    // ÚLTIMAS COMPRAS
-    +(compProy.length ? '<div style="margin-top:14px"><div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Últimas compras</div>'+compRows+compExtra+'</div>' : '')
-
-    // ENTREGAS A CUENTA
+    +(compProy.length?'<div style="margin-top:14px"><div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Últimas compras</div>'+compRows+compExtra+'</div>':'')
     +(eaResProy.length>0
-      ? '<div style="margin-top:14px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px">Entregas a cuenta</div><button class="btn btn-ghost btn-sm" onclick="abrirModalEntrega()" style="font-size:11px;background:#f5f0ff;color:#7b3fa0;border:none;padding:3px 10px;border-radius:6px;cursor:pointer">＋ Nueva</button></div>'
-        +eaRows
-        +(eaResProy.length>10 ? '<div style="font-size:11px;color:var(--text-soft);padding:4px 0">+'+(eaResProy.length-10)+' entregas más</div>' : '')
-        +'<div style="text-align:right;font-size:13px;font-weight:700;color:#7b3fa0;padding-top:6px">Total: '+fmt(eaTotal)+'</div></div>'
-      : '<div style="margin-top:10px"><button class="btn btn-ghost btn-sm" onclick="abrirModalEntrega()" style="font-size:11px;background:#f5f0ff;color:#7b3fa0;border:none;padding:3px 10px;border-radius:6px;cursor:pointer">＋ Registrar entrega a cuenta</button></div>'
+      ?'<div style="margin-top:14px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px">Entregas a cuenta</div><button class="btn btn-ghost btn-sm" onclick="abrirModalEntrega()" style="font-size:11px;background:#f5f0ff;color:#7b3fa0;border:none;padding:3px 10px;border-radius:6px;cursor:pointer">＋ Nueva</button></div>'
+       +eaRows
+       +(eaResProy.length>10?'<div style="font-size:11px;color:var(--text-soft);padding:4px 0">+'+(eaResProy.length-10)+' entregas más</div>':'')
+       +'<div style="text-align:right;font-size:13px;font-weight:700;color:#7b3fa0;padding-top:6px">Total: '+fmt(eaTotal)+'</div></div>'
+      :'<div style="margin-top:10px"><button class="btn btn-ghost btn-sm" onclick="abrirModalEntrega()" style="font-size:11px;background:#f5f0ff;color:#7b3fa0;border:none;padding:3px 10px;border-radius:6px;cursor:pointer">＋ Registrar entrega a cuenta</button></div>'
     )
-
-    // BOTONES FICHA
     +'<div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">'
     +'<button class="btn btn-ghost btn-sm" onclick="expVerFichaObra()" style="font-size:12px">📋 Ficha de obra (vista móvil)</button>'
     +'<button class="btn btn-ghost btn-sm" onclick="expVerFichaObra2()" style="font-size:12px">📄 Ficha de obra (vista móvil)</button>'
     +'</div>';
-})();  }).join('')}
-  ${compProy.length>5 ? `<div style="font-size:11px;color:var(--text-soft);padding:4px 0">+${compProy.length-5} más — ver pestaña Compras</div>` : ''}
-</div>` : ''}
-
-<!-- ENTREGAS A CUENTA -->
-${eaResProy.length ? `<div style="margin-top:14px">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-    <div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px">Entregas a cuenta</div>
-    <button class="btn btn-ghost btn-sm" onclick="abrirModalEntrega()" style="font-size:11px;background:#f5f0ff;color:#7b3fa0;border:none;padding:3px 10px;border-radius:6px;cursor:pointer">＋ Nueva</button>
-  </div>
-  ${eaResProy.slice(0,10).map(e=>\`<div style="display:flex;align-items:center;padding:5px 0;border-bottom:1px solid #f5f5f5;font-size:12px;gap:6px">
-    <span style="color:var(--text-soft);white-space:nowrap">\${fmtD(e.fecha)}</span>
-    <span style="flex:1">\${e.concepto||'Entrega a cuenta'}</span>
-    <span style="font-weight:700;color:#7b3fa0">\${fmt(e.importe)}</span>
-    <button onclick="abrirModalEntrega('\${e.id}')" style="background:none;border:none;cursor:pointer;font-size:12px" title="Editar">✏️</button>
-    <button onclick="borrarEntrega('\${e.id}')" style="background:none;border:none;cursor:pointer;font-size:12px;color:var(--red)" title="Borrar">🗑</button>
-  </div>\`).join('')}
-  <div style="text-align:right;font-size:13px;font-weight:700;color:#7b3fa0;padding-top:6px">Total: ${fmt(eaTotal)}</div>
-</div>` : `<div style="margin-top:10px">
-  <button class="btn btn-ghost btn-sm" onclick="abrirModalEntrega()" style="font-size:11px;background:#f5f0ff;color:#7b3fa0;border:none;padding:3px 10px;border-radius:6px;cursor:pointer">＋ Registrar entrega a cuenta</button>
-</div>`}
-
-<!-- BOTONES FICHA -->
-<div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
-  <button class="btn btn-ghost btn-sm" onclick="expVerFichaObra()" style="font-size:12px">📋 Ficha de obra (vista móvil)</button>
-  <button class="btn btn-ghost btn-sm" onclick="expVerFichaObra2()" style="font-size:12px">📄 Ficha de obra (vista móvil)</button>
-</div>
-`;}
+})();
+}
 
 async function renderExpCompras(body){
   const pid = _expProyId;
