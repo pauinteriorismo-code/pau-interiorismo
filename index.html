@@ -4634,7 +4634,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     <div class="form-grid">
       <div class="form-group fg-full"><label class="form-label">Nombre *</label><input class="form-input" id="pv-nombre"></div>
       <div class="form-group"><label class="form-label">CIF</label><input class="form-input" id="pv-cif"></div>
-      <div class="form-group"><label class="form-label">Tipo</label><select class="form-input" id="pv-tipo"><option value="material" selected>Proveedor / Material</option><option value="subcontrata">Subcontrata</option><option value="servicio">Servicio</option><option value="alquiler">Alquiler</option><option value="transporte">Transporte</option><option value="otros">Otros</option></select></div>
+      <div class="form-group"><label class="form-label">Tipo</label><select class="form-input" id="pv-tipo"><option value="Proveedor" selected>Proveedor</option><option value="Subcontrata">Subcontrata</option><option value="Servicio">Servicio</option><option value="Alquiler">Alquiler</option><option value="Transporte">Transporte</option><option value="Otros">Otros</option></select></div>
       <div class="form-group"><label class="form-label">Teléfono</label><input class="form-input" id="pv-tel"></div>
       <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="pv-email" type="email"></div>
       <div class="form-group"><label class="form-label">Especialidad</label><input class="form-input" id="pv-esp"></div>
@@ -10978,12 +10978,12 @@ function abrirNuevoProveedor(){
 }
 
 function editProveedor(id){const p=ProvC.find(x=>x.id===id);if(!p)return;document.getElementById('m-proveedor').querySelector('.modal-title').textContent='✏️ Editar proveedor';document.getElementById('pv-id').value=p.id;document.getElementById('pv-nombre').value=p.nombre||'';document.getElementById('pv-cif').value=p.cif||'';// Mapear tipo antiguo a valores del constraint
-  const tipoMap={'Proveedor':'material','Subcontrata':'subcontrata','material':'material','subcontrata':'subcontrata','servicio':'servicio','alquiler':'alquiler','transporte':'transporte','otros':'otros','Servicio':'servicio','Alquiler':'alquiler','Transporte':'transporte','Otros':'otros',null:'material',undefined:'material','':'material'};
-  document.getElementById('pv-tipo').value=tipoMap[p.tipo]||p.tipo||'material';document.getElementById('pv-tel').value=p.telefono||'';document.getElementById('pv-email').value=p.email||'';document.getElementById('pv-esp').value=p.especialidad||'';document.getElementById('pv-pago').value=p.forma_pago||'Transferencia';document.getElementById('pv-iban').value=p.iban||'';document.getElementById('pv-notas').value=p.notas||'';openModal('m-proveedor');}
+  const tipoMap={'material':'Proveedor','subcontrata':'Subcontrata','Proveedor':'Proveedor','Subcontrata':'Subcontrata','Servicio':'Servicio','Alquiler':'Alquiler','Transporte':'Transporte','Otros':'Otros'};
+  document.getElementById('pv-tipo').value=(tipoMap[p.tipo]||p.tipo||'Proveedor');document.getElementById('pv-tel').value=p.telefono||'';document.getElementById('pv-email').value=p.email||'';document.getElementById('pv-esp').value=p.especialidad||'';document.getElementById('pv-pago').value=p.forma_pago||'Transferencia';document.getElementById('pv-iban').value=p.iban||'';document.getElementById('pv-notas').value=p.notas||'';openModal('m-proveedor');}
 async function saveProveedor(){const nombre=document.getElementById('pv-nombre').value.trim();if(!nombre){toast('El nombre es obligatorio','error');return;}const id=document.getElementById('pv-id').value;// Columnas exactas de la tabla proveedores en Supabase
   const d={
     nombre,
-    tipo: document.getElementById('pv-tipo').value||'material',
+    tipo: document.getElementById('pv-tipo').value||'Proveedor',
     cif: document.getElementById('pv-cif').value||null,
     telefono: document.getElementById('pv-tel').value||null,
     email: document.getElementById('pv-email').value||null,
