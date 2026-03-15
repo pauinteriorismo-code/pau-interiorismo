@@ -19992,6 +19992,19 @@ function abrirModalEntrega(id){
   openModal('m-entrega-cuenta');
 }
 
+async function borrarEntrega(id){
+  if(!confirm('¿Eliminar esta entrega a cuenta?')) return;
+  try{
+    await sbDelete('entregas_cuenta', id);
+    toast('Entrega eliminada ✅');
+    await loadEntregas();
+    await calcExpKPIs(_expProyId);
+    // Refrescar la vista actual del expediente
+    const bodyEl = document.getElementById('exp-body');
+    if(bodyEl) expTab('resumen');
+  }catch(e){ toast('Error: '+e.message,'error'); }
+}
+
 async function saveEntrega(){
   const id = document.getElementById('ea-id').value;
   const proyId = document.getElementById('ea-proyecto').value || _expProyId;
@@ -20197,7 +20210,12 @@ function renderExpResumen(body){
     <div style="background:#f0f9f0;border-radius:6px;padding:8px 10px;margin-bottom:6px">
       <div style="font-size:10px;font-weight:700;color:#2a7a2a;margin-bottom:4px">📥 INGRESOS</div>
       ${rD('Facturado',factBase,factTotal,'var(--green)')}
-      ${rS('Pendiente facturar',fmt(Math.max(0,(presBase||0)-factBase)),(presBase||0)>factBase?'var(--amber)':'var(--green)')}
+      ${(()=>{
+        const pendBase=Math.max(0,(presBase||0)-factBase);
+        const pendIva=pendBase*1.21; // estimación c/21% IVA
+        if(pendBase<=0.01) return rS('Pendiente facturar','✓ Todo facturado','var(--green)');
+        return rD('Pendiente facturar',pendBase,pendIva,'var(--amber)');
+      })()}
     </div>
     <div style="background:#fff8f0;border-radius:6px;padding:8px 10px;margin-bottom:6px">
       <div style="font-size:10px;font-weight:700;color:#b85c00;margin-bottom:4px">📤 COSTES</div>
@@ -20221,7 +20239,15 @@ function renderExpResumen(body){
     </div>
   </div></div>
   ${compProy.length?`<div style="margin-top:14px"><div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Últimas compras</div>${compProy.slice(0,5).map(c=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f5f5f5;font-size:12px"><span>${fmtD(c.fecha_factura||c.fecha)} · <strong>${c.proveedor||c.proveedor_id||'—'}</strong></span><span style="color:var(--amber);font-weight:600">${fmt(c.base_imponible||0)} / ${fmt((c.base_imponible||0)*(1+(c.iva_porcentaje||21)/100))}</span></div>`).join('')}${compProy.length>5?`<div style="font-size:11px;color:var(--text-soft);padding:4px 0">+${compProy.length-5} más — ver pestaña Compras</div>`:''}</div>`:''}
-  ${eaResProy.length?`<div style="margin-top:14px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px">💵 Entregas a cuenta del cliente</div><button class="btn btn-sm" style="background:#7b3fa0;color:#fff;border:none;font-size:11px;padding:3px 10px;border-radius:6px;cursor:pointer" onclick="abrirModalEntrega()">＋ Nueva</button></div>${eaResProy.map(e=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #f5f5f5;font-size:12px"><span style="color:var(--text-soft)">${fmtD(e.fecha)}</span><span style="flex:1;margin:0 10px">${e.concepto||'Entrega a cuenta'}</span><span style="font-weight:700;color:#7b3fa0">${fmt(e.importe)}</span></div>`).join('')}<div style="text-align:right;font-size:13px;font-weight:700;color:#7b3fa0;padding-top:6px">Total: ${fmt(eaTotal)}</div></div>`:''}
+  ${eaResProy.length?`<div style="margin-top:14px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px">💵 Entregas a cuenta del cliente</div><button class="btn btn-sm" style="background:#7b3fa0;color:#fff;border:none;font-size:11px;padding:3px 10px;border-radius:6px;cursor:pointer" onclick="abrirModalEntrega()">＋ Nueva</button></div>${eaResProy.slice(0,10).map(e=>`<div style="display:flex;align-items:center;padding:5px 0;border-bottom:1px solid #f5f5f5;font-size:12px;gap:6px">
+  <span style="color:var(--text-soft);white-space:nowrap">${fmtD(e.fecha)}</span>
+  <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.concepto||'Entrega a cuenta'}</span>
+  <span style="font-weight:700;color:#7b3fa0;white-space:nowrap">${fmt(e.importe)}</span>
+  <button onclick="abrirModalEntrega('${e.id}')" style="background:none;border:none;cursor:pointer;padding:0 2px;font-size:12px" title="Editar">✏️</button>
+  <button onclick="borrarEntrega('${e.id}')" style="background:none;border:none;cursor:pointer;padding:0 2px;font-size:12px;color:var(--red)" title="Borrar">🗑</button>
+</div>`).join('')}
+${eaResProy.length>10?`<div style="font-size:11px;color:var(--text-soft);padding:4px 0">+${eaResProy.length-10} entregas más</div>`:''}
+<div style="text-align:right;font-size:13px;font-weight:700;color:#7b3fa0;padding-top:6px">Total: ${fmt(eaTotal)}</div></div>`:''}
   <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border)"><button class="btn btn-ghost btn-sm" onclick="typeof abrirFichaObra!=='undefined'&&abrirFichaObra('${pid}')">📋 Ficha de obra (vista móvil)</button></div>
   `;
 }
