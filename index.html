@@ -4277,7 +4277,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     <div class="form-grid">
       <div class="form-group"><label class="form-label">Fecha</label><input class="form-input" id="co-fecha" type="date"></div>
       <div class="form-group"><label class="form-label">Proyecto</label><select class="form-input" id="co-proyecto" onchange="onChangeProyectoGenerico('co')"><option value="">Seleccionar…</option><option value="PRY-001">PRY-001 · Mobiliario de cocina</option><option value="PRY-002">PRY-002 · Rehabilitación lateral fachada</option><option value="PRY-003">PRY-003 · Pavimento/revestimiento vivienda.</option><option value="PRY-004">PRY-004 · Rehabilitación estudio</option><option value="PRY-005">PRY-005 · Trabajos en terraza</option></select></div>
-      <div class="form-group"><label class="form-label">Proveedor</label><select class="form-input" id="co-prov"><option value="">Seleccionar proveedor…</option></select></div>
+      <div class="form-group"><label class="form-label">Proveedor</label><input class="form-input" id="co-prov" list="dl-proveedores" placeholder="Buscar proveedor…" autocomplete="off" oninput="_syncProvInput('co-prov')"><datalist id="dl-proveedores"></datalist></div>
       <div class="form-group"><label class="form-label">IVA</label><select class="form-input" id="co-iva"><option>10%</option><option selected>21%</option><option>4%</option><option>Exento</option></select></div>
       <div class="form-group"><label class="form-label">Partida / Capítulo</label><select class="form-input" id="co-partida" onchange="onChangePartidaGenerico('co')"><option value="">— General (sin partida) —</option></select></div>
       <div class="form-group" id="co-capitulo-group" style="display:none"><label class="form-label">Capítulo</label><select class="form-input" id="co-capitulo"><option value="">— Todo el presupuesto —</option></select></div>
@@ -4466,7 +4466,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     <div class="form-grid">
       <div class="form-group"><label class="form-label">Fecha</label><input class="form-input" id="sc-fecha" type="date"></div>
       <div class="form-group"><label class="form-label">Proyecto</label><select class="form-input" id="sc-proyecto" onchange="onChangeProyectoGenerico('sc')"><option value="">Seleccionar…</option><option value="PRY-001">PRY-001 · Mobiliario de cocina</option><option value="PRY-002">PRY-002 · Rehabilitación lateral fachada</option><option value="PRY-003">PRY-003 · Pavimento/revestimiento vivienda.</option><option value="PRY-004">PRY-004 · Rehabilitación estudio</option><option value="PRY-005">PRY-005 · Trabajos en terraza</option></select></div>
-      <div class="form-group"><label class="form-label">Subcontratista</label><select class="form-input" id="sc-prov"><option value="">Seleccionar proveedor…</option></select></div>
+      <div class="form-group"><label class="form-label">Subcontratista</label><input class="form-input" id="sc-prov" list="dl-proveedores" placeholder="Buscar subcontratista…" autocomplete="off" oninput="_syncProvInput('sc-prov')"><div id="dl-sc-prov-anchor"></div></div>
       <div class="form-group"><label class="form-label">IVA</label><select class="form-input" id="sc-iva"><option>10%</option><option selected>21%</option><option>4%</option><option>Exento</option></select></div>
       <div class="form-group"><label class="form-label">Partida / Capítulo</label><select class="form-input" id="sc-partida" onchange="onChangePartidaGenerico('sc')"><option value="">— General (sin partida) —</option></select></div>
       <div class="form-group" id="sc-capitulo-group" style="display:none"><label class="form-label">Capítulo</label><select class="form-input" id="sc-capitulo"><option value="">— Todo el presupuesto —</option></select></div>
@@ -4667,7 +4667,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <select class="form-input" id="f-cliente" onchange="cascadaClienteFactura()"><option value="">Seleccionar…</option><option value="CLI-H015">4F Fernando</option><option value="CLI-H014">4G daniel Dominguez</option><option value="CLI-H018">Amparo Forner Pastor</option><option value="CLI-H026">Ana María Palau Sastre</option><option value="CLI-H031">Belinda</option><option value="CLI-H004">CARMELO RODRIGUEZ VILA</option><option value="CLI-H032">Daniel palma gallardo</option><option value="CLI-H003">DESIRE NAVARRO MARI</option><option value="CLI-033">Estudi Encis SL</option><option value="CLI-H009">FERNANDO JOSE SAN GERMAN IBORRA</option><option value="CLI-H029">Francisco Navarro Garcia</option><option value="CLI-H019">Jose Antonio Martos Ortiz</option><option value="CLI-H013">Jose Manuel Garcia Seller Nº 7 Pta 4</option><option value="CLI-H030">Jose Manuel Pinzón Valbuena</option><option value="CLI-H007">Juanmi</option><option value="CLI-H012">Júlia Fabregat Mestre</option><option value="CLI-H028">Lara Blasco - Lara Blasco Iborra</option><option value="CLI-H027">Laura Doria Gomez</option><option value="CLI-H021">MERCEDES HIGUERAS GOMEZ</option><option value="CLI-H024">MICHELL BENITO</option><option value="CLI-H022">Miguel cocina</option><option value="CLI-001">Miguel Zaragozá Garzón</option><option value="CLI-H023">Miguel Zaragozá Garzón</option><option value="CLI-H002">Mª PAU BRAVO JOSE</option><option value="CLI-H005">PATRI</option><option value="CLI-H020">Rafael Francés Llàcer</option><option value="CLI-H010">REME IBORRA GIL</option><option value="CLI-H001">ROSA CHANZA SOLER</option><option value="CLI-H016">Sara Muñoz Abella</option><option value="CLI-H011">TONI TATAY DAVID</option><option value="CLI-H025">URKO Y FRANCESC</option><option value="CLI-H008">VICENT MARI SERRA</option><option value="CLI-034">Vicenta Baixauli Hernandez</option><option value="CLI-002">Vicenta Folch Gil</option><option value="CLI-H006">Vicenta Folch Gil</option><option value="CLI-H017">Yasmina Cabezuelo Alaminos</option></select>
       </div>
       <div class="form-group" id="f-grp-proveedor" style="display:none"><label class="form-label">Proveedor</label>
-        <select class="form-input" id="f-proveedor"><option value="">Seleccionar…</option></select>
+        <input class="form-input" id="f-proveedor" list="dl-proveedores" placeholder="Buscar proveedor…" autocomplete="off" oninput="_syncProvInput('f-proveedor')">
       </div>
       <div class="form-group" id="f-grp-proyecto">
         <label class="form-label">Proyecto <span style="font-size:10px;color:var(--text-soft);font-weight:400">(opcional)</span></label>
@@ -6476,16 +6476,18 @@ async function populateSelects(){
   if(!PC.length)PC=await sbGet('proyectos').catch(()=>[]);
   // Siempre recargar ProvC para que refleje altas/bajas recientes
   ProvC=await sbGet('proveedores','?order=nombre.asc').catch(()=>ProvC||[]);
+  _refrescarDatalistProveedores(); // Poblar datalist compartido al inicio
   ['p-cliente','f-cliente'].forEach(id=>{const el=document.getElementById(id);if(!el)return;const cur=el.value;el.innerHTML='<option value="">Seleccionar…</option>'+[...CC].sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||'','es')).map(c=>`<option value="${c.cliente_id}">${c.nombre}</option>`).join('');if(cur)el.value=cur;});
   ['co-proyecto','sc-proyecto','h-proyecto','f-proyecto','i-proyecto','ped-proyecto','pres-proyecto-sel','comp-proyecto-sel','rent-proyecto-sel','cmp-proyecto','s-proyecto'].forEach(id=>{const el=document.getElementById(id);if(!el)return;const cur=el.value;el.innerHTML='<option value="">Seleccionar…</option>'+[...PC].sort((a,b)=>a.proyecto_id.localeCompare(b.proyecto_id,'es',{numeric:true})).map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');if(cur)el.value=cur;}); ixPopulateProyectoSel();
-  const provOpts='<option value="">Seleccionar proveedor…</option>'+[...ProvC].sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||'','es')).map(p=>`<option value="${p.nombre}">${p.nombre}${p.tipo?' · '+p.tipo:''}</option>`).join('');
-  ['co-prov','sc-prov','ped-prov','f-proveedor'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(!el)return;
-    const cur=el.value;
-    el.innerHTML=provOpts;
-    if(cur)el.value=cur;
-  });
+  // Refrescar datalist compartido de proveedores
+  _refrescarDatalistProveedores();
+  // ped-prov sigue siendo select (tiene su propio buscador), actualizarlo también
+  const pedProv=document.getElementById('ped-prov');
+  if(pedProv && pedProv.tagName==='SELECT'){
+    const cur=pedProv.value;
+    pedProv.innerHTML='<option value="">Seleccionar proveedor…</option>'+[...ProvC].sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||'','es')).map(p=>`<option value="${p.nombre}">${p.nombre}${p.tipo?' · '+p.tipo:''}</option>`).join('');
+    if(cur)pedProv.value=cur;
+  }
 }
 async function populateIntCatalog(){
   if(!TC.length)TC=await sbGet('tarifario').catch(()=>[]);
@@ -11232,6 +11234,9 @@ async function abrirNuevaFactura(tipo){
   document.getElementById('f-vto').value='';
   document.getElementById('f-fecha').value=new Date().toISOString().split('T')[0];
   document.getElementById('f-estado').value='Pendiente'; // Siempre Pendiente por defecto
+  // Forma de pago por defecto según tipo
+  const fPagoEl=document.getElementById('f-pago');
+  if(fPagoEl) fPagoEl.value=esC?'Domiciliación':'Transferencia';
   // Reset cliente/proyecto
   const fCliente=document.getElementById('f-cliente');
   if(fCliente) fCliente.value='';
@@ -18983,15 +18988,25 @@ document.addEventListener('keydown', e => {
 // ══════════════════════════════════════════════════════════════════════
 
 // Poblar selects de proveedor dinámicamente desde ProvC (siempre al vuelo)
+// Función helper: sincroniza el valor visible del input con el valor real
+function _syncProvInput(inputId){
+  // Con datalist nativo el value del input ya ES el valor — no hace falta nada más
+}
+
 async function _poblarProvSel(selId){
-  const el=document.getElementById(selId); if(!el)return;
-  const cur=el.value;
   // Siempre recargar para reflejar nuevos proveedores dados de alta
   try{ ProvC=await sbGet('proveedores','?order=nombre.asc'); }catch(e){ if(!ProvC.length)ProvC=[]; }
-  el.innerHTML='<option value="">Seleccionar proveedor…</option>'+
-    [...ProvC].sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||'','es'))
+  _refrescarDatalistProveedores();
+  // Si es un input, mantener valor actual; si fuera select (ped-prov) usar value
+  const el=document.getElementById(selId); if(!el)return;
+  // el.value ya está establecido por el caller si viene de edición
+}
+
+function _refrescarDatalistProveedores(){
+  const dl=document.getElementById('dl-proveedores'); if(!dl)return;
+  dl.innerHTML=[...ProvC]
+    .sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||'','es'))
     .map(p=>`<option value="${p.nombre}">${p.nombre}${p.tipo?' · '+p.tipo:''}</option>`).join('');
-  if(cur)el.value=cur;
 }
 
 // Mostrar PDF inline en el preview div
@@ -19042,14 +19057,27 @@ Reglas: iva_pct puede ser "21%","10%","4%" o "Exento". base_imponible es el impo
 // Función genérica para asignar valor a un select por texto parcial
 function _setSelectByText(selId, texto){
   if(!texto)return;
-  const sel=document.getElementById(selId); if(!sel)return;
+  const el=document.getElementById(selId); if(!el)return;
+  // Input con datalist: buscar el proveedor más parecido en ProvC
+  if(el.tagName==='INPUT'){
+    const t=texto.toLowerCase();
+    const match=[...ProvC].find(p=>
+      (p.nombre||'').toLowerCase()===t ||
+      (p.nombre||'').toLowerCase().includes(t.slice(0,12)) ||
+      t.includes((p.nombre||'').toLowerCase().slice(0,12))
+    );
+    if(match) el.value=match.nombre;
+    else el.value=texto; // fallback: poner el texto tal cual
+    return;
+  }
+  // Select clásico
   const t=texto.toLowerCase();
-  const opt=[...sel.options].find(o=>
+  const opt=[...el.options].find(o=>
     o.value.toLowerCase()===t ||
     o.value.toLowerCase().includes(t.slice(0,10)) ||
     t.includes(o.value.toLowerCase().slice(0,10))
   );
-  if(opt) sel.value=opt.value;
+  if(opt) el.value=opt.value;
 }
 function _setIVA(selId, iva){
   if(!iva)return;
