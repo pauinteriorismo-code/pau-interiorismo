@@ -4278,10 +4278,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="form-group"><label class="form-label">Fecha</label><input class="form-input" id="co-fecha" type="date"></div>
       <div class="form-group"><label class="form-label">Proyecto</label><select class="form-input" id="co-proyecto" onchange="onChangeProyectoGenerico('co')"><option value="">Seleccionar…</option><option value="PRY-001">PRY-001 · Mobiliario de cocina</option><option value="PRY-002">PRY-002 · Rehabilitación lateral fachada</option><option value="PRY-003">PRY-003 · Pavimento/revestimiento vivienda.</option><option value="PRY-004">PRY-004 · Rehabilitación estudio</option><option value="PRY-005">PRY-005 · Trabajos en terraza</option></select></div>
       <div class="form-group"><label class="form-label">Proveedor</label>
-  <input class="form-input" id="co-prov-search" placeholder="Escribe para filtrar…" autocomplete="off"
-    oninput="_filterProvSelect('co-prov-search','co-prov-sel','co-prov-id')">
-  <select class="form-input" id="co-prov-sel" size="1" style="margin-top:4px"
-    onchange="_selectProv('co-prov-sel','co-prov-search','co-prov-id')">
+  <select class="form-input" id="co-prov-sel" onchange="document.getElementById('co-prov-id').value=this.value">
     <option value="">— Seleccionar proveedor —</option>
   </select>
   <input type="hidden" id="co-prov-id">
@@ -4475,10 +4472,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="form-group"><label class="form-label">Fecha</label><input class="form-input" id="sc-fecha" type="date"></div>
       <div class="form-group"><label class="form-label">Proyecto</label><select class="form-input" id="sc-proyecto" onchange="onChangeProyectoGenerico('sc')"><option value="">Seleccionar…</option><option value="PRY-001">PRY-001 · Mobiliario de cocina</option><option value="PRY-002">PRY-002 · Rehabilitación lateral fachada</option><option value="PRY-003">PRY-003 · Pavimento/revestimiento vivienda.</option><option value="PRY-004">PRY-004 · Rehabilitación estudio</option><option value="PRY-005">PRY-005 · Trabajos en terraza</option></select></div>
       <div class="form-group"><label class="form-label">Subcontratista</label>
-  <input class="form-input" id="sc-prov-search" placeholder="Escribe para filtrar…" autocomplete="off"
-    oninput="_filterProvSelect('sc-prov-search','sc-prov-sel','sc-prov-id')">
-  <select class="form-input" id="sc-prov-sel" size="1" style="margin-top:4px"
-    onchange="_selectProv('sc-prov-sel','sc-prov-search','sc-prov-id')">
+  <select class="form-input" id="sc-prov-sel" onchange="document.getElementById('sc-prov-id').value=this.value">
     <option value="">— Seleccionar subcontratista —</option>
   </select>
   <input type="hidden" id="sc-prov-id">
@@ -4683,10 +4677,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <select class="form-input" id="f-cliente" onchange="cascadaClienteFactura()"><option value="">Seleccionar…</option><option value="CLI-H015">4F Fernando</option><option value="CLI-H014">4G daniel Dominguez</option><option value="CLI-H018">Amparo Forner Pastor</option><option value="CLI-H026">Ana María Palau Sastre</option><option value="CLI-H031">Belinda</option><option value="CLI-H004">CARMELO RODRIGUEZ VILA</option><option value="CLI-H032">Daniel palma gallardo</option><option value="CLI-H003">DESIRE NAVARRO MARI</option><option value="CLI-033">Estudi Encis SL</option><option value="CLI-H009">FERNANDO JOSE SAN GERMAN IBORRA</option><option value="CLI-H029">Francisco Navarro Garcia</option><option value="CLI-H019">Jose Antonio Martos Ortiz</option><option value="CLI-H013">Jose Manuel Garcia Seller Nº 7 Pta 4</option><option value="CLI-H030">Jose Manuel Pinzón Valbuena</option><option value="CLI-H007">Juanmi</option><option value="CLI-H012">Júlia Fabregat Mestre</option><option value="CLI-H028">Lara Blasco - Lara Blasco Iborra</option><option value="CLI-H027">Laura Doria Gomez</option><option value="CLI-H021">MERCEDES HIGUERAS GOMEZ</option><option value="CLI-H024">MICHELL BENITO</option><option value="CLI-H022">Miguel cocina</option><option value="CLI-001">Miguel Zaragozá Garzón</option><option value="CLI-H023">Miguel Zaragozá Garzón</option><option value="CLI-H002">Mª PAU BRAVO JOSE</option><option value="CLI-H005">PATRI</option><option value="CLI-H020">Rafael Francés Llàcer</option><option value="CLI-H010">REME IBORRA GIL</option><option value="CLI-H001">ROSA CHANZA SOLER</option><option value="CLI-H016">Sara Muñoz Abella</option><option value="CLI-H011">TONI TATAY DAVID</option><option value="CLI-H025">URKO Y FRANCESC</option><option value="CLI-H008">VICENT MARI SERRA</option><option value="CLI-034">Vicenta Baixauli Hernandez</option><option value="CLI-002">Vicenta Folch Gil</option><option value="CLI-H006">Vicenta Folch Gil</option><option value="CLI-H017">Yasmina Cabezuelo Alaminos</option></select>
       </div>
       <div class="form-group" id="f-grp-proveedor" style="display:none"><label class="form-label">Proveedor</label>
-        <input class="form-input" id="f-prov-search" placeholder="Escribe para filtrar…" autocomplete="off"
-    oninput="_filterProvSelect('f-prov-search','f-prov-sel','f-proveedor')">
-  <select class="form-input" id="f-prov-sel" size="1" style="margin-top:4px"
-    onchange="_selectProv('f-prov-sel','f-prov-search','f-proveedor')">
+        <select class="form-input" id="f-prov-sel" onchange="document.getElementById('f-proveedor').value=this.value">
     <option value="">— Seleccionar proveedor —</option>
   </select>
   <input type="hidden" id="f-proveedor">
@@ -5624,9 +5615,9 @@ async function openModal(id){
   if(['m-compra','m-subcontrata','m-factura'].includes(id)){
     try{ ProvC=await sbGet('proveedores','?order=nombre.asc'); }catch(e){ if(!ProvC.length)ProvC=[]; }
     // Poblar el select nativo con los datos frescos
-    if(id==='m-compra') _initProvSelect('co-prov-search','co-prov-sel','co-prov-id');
-    if(id==='m-subcontrata') _initProvSelect('sc-prov-search','sc-prov-sel','sc-prov-id');
-    if(id==='m-factura') _initProvSelect('f-prov-search','f-prov-sel','f-proveedor');
+    if(id==='m-compra') _initProvSelect(null,'co-prov-sel','co-prov-id');
+    if(id==='m-subcontrata') _initProvSelect(null,'sc-prov-sel','sc-prov-id');
+    if(id==='m-factura') _initProvSelect(null,'f-prov-sel','f-proveedor');
   }
   if(id==='m-comparativa'){
     await poblarProveedoresComparativa();
@@ -5661,8 +5652,7 @@ async function openModal(id){
       const coEs = document.getElementById('co-estado');
       if(coEs) coEs.value = 'Pendiente';
       // Limpiar proveedor
-      const coPS=document.getElementById('co-prov-search'); if(coPS) coPS.value='';
-      const coPH=document.getElementById('co-prov-id');     if(coPH) coPH.value='';
+      const coPH=document.getElementById('co-prov-id'); if(coPH) coPH.value='';
       const coSel=document.getElementById('co-prov-sel'); if(coSel) coSel.value='';
     }
   }
@@ -5688,8 +5678,7 @@ async function openModal(id){
       const scEs = document.getElementById('sc-estado');
       if(scEs) scEs.value = 'Pendiente';
       // Limpiar subcontratista
-      const scPS=document.getElementById('sc-prov-search'); if(scPS) scPS.value='';
-      const scPH=document.getElementById('sc-prov-id');     if(scPH) scPH.value='';
+      const scPH=document.getElementById('sc-prov-id'); if(scPH) scPH.value='';
       const scSel=document.getElementById('sc-prov-sel'); if(scSel) scSel.value='';
     }
   }
@@ -6645,16 +6634,14 @@ function toggleGrentExpand(){
 
 // ── Selector de proveedor robusto (select nativo + filtro síncrono) ──────────
 function _initProvSelect(inputId, selectId, hiddenId){
-  const inp = document.getElementById(inputId);
   const sel = document.getElementById(selectId);
   const hid = document.getElementById(hiddenId);
-  if(!sel || !inp) return;
-  // Rellenar el select con ProvC actual
+  if(!sel) return;
   const cur = hid?.value||'';
   sel.innerHTML = '<option value="">— Seleccionar proveedor —</option>' +
     [...ProvC].sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||'','es'))
     .map(p=>`<option value="${p.id}">${p.nombre}${p.tipo?' · '+p.tipo:''}</option>`).join('');
-  if(cur){ sel.value=cur; if(inp) inp.value=sel.options[sel.selectedIndex]?.text.split(' · ')[0]||''; }
+  if(cur) sel.value = cur;
 }
 function _filterProvSelect(inputId, selectId, hiddenId){
   const inp = document.getElementById(inputId);
@@ -10146,10 +10133,9 @@ function editSubcontrata(id) {
   document.getElementById('sc-id').value        = s.id;
   document.getElementById('sc-fecha').value     = s.fecha || '';
   document.getElementById('sc-proyecto').value  = s.proyecto_id || '';
-  // Restaurar subcontratista en select nativo
   const scProvHid = document.getElementById('sc-prov-id');
   if(scProvHid) scProvHid.value = s.proveedor_id||'';
-  _initProvSelect('sc-prov-search','sc-prov-sel','sc-prov-id');
+  _initProvSelect(null,'sc-prov-sel','sc-prov-id');
   document.getElementById('sc-trabajo').value   = s.trabajo || '';
   document.getElementById('sc-importe').value   = s.importe || 0;
   document.getElementById('sc-iva').value       = s.iva_pct || '21%';
@@ -10192,10 +10178,10 @@ function editCompra(id) {
   document.getElementById('co-id').value        = c.id;
   document.getElementById('co-fecha').value     = c.fecha || '';
   document.getElementById('co-proyecto').value  = c.proyecto_id || '';
-  // Restaurar proveedor en select nativo
+  // Restaurar proveedor en select
   const coProvHid = document.getElementById('co-prov-id');
   if(coProvHid) coProvHid.value = c.proveedor_id||'';
-  _initProvSelect('co-prov-search','co-prov-sel','co-prov-id');
+  _initProvSelect(null,'co-prov-sel','co-prov-id');
   document.getElementById('co-concepto').value  = c.concepto || '';
   document.getElementById('co-base').value      = c.base_imponible || 0;
   document.getElementById('co-iva').value       = c.iva_pct || '21%';
@@ -10971,8 +10957,8 @@ function abrirNuevoProveedor(){
   openModal('m-proveedor');
 }
 
-function editProveedor(id){const p=ProvC.find(x=>x.id===id);if(!p)return;document.getElementById('m-proveedor').querySelector('.modal-title').textContent='✏️ Editar proveedor';document.getElementById('pv-id').value=p.id;document.getElementById('pv-nombre').value=p.nombre||'';document.getElementById('pv-cif').value=p.cif||'';document.getElementById('pv-tipo').value=p.tipo||'Proveedor';document.getElementById('pv-tel').value=p.telefono||'';document.getElementById('pv-email').value=p.email||'';document.getElementById('pv-esp').value=p.especialidad||'';document.getElementById('pv-pago').value=p.forma_pago||'Transferencia';document.getElementById('pv-iban').value=p.iban||'';document.getElementById('pv-notas').value=p.notas||'';document.getElementById('pv-dir').value=p.direccion||'';document.getElementById('pv-cp').value=p.cp||'';document.getElementById('pv-poblacion').value=p.poblacion||'';document.getElementById('pv-provincia').value=p.provincia||'Valencia';initPoblacionAC('pv-poblacion');openModal('m-proveedor');}
-async function saveProveedor(){const nombre=document.getElementById('pv-nombre').value.trim();if(!nombre){toast('El nombre es obligatorio','error');return;}const id=document.getElementById('pv-id').value;const d={nombre,cif:document.getElementById('pv-cif').value,tipo:document.getElementById('pv-tipo').value,telefono:document.getElementById('pv-tel').value,email:document.getElementById('pv-email').value,especialidad:document.getElementById('pv-esp').value,forma_pago:document.getElementById('pv-pago').value,iban:document.getElementById('pv-iban').value,notas:document.getElementById('pv-notas').value,direccion:document.getElementById('pv-dir').value.trim()||null,cp:document.getElementById('pv-cp').value.trim()||null,poblacion:document.getElementById('pv-poblacion').value.trim()||null,provincia:document.getElementById('pv-provincia').value.trim()||null};try{if(id){await sbPatch('proveedores',id,d);toast('Proveedor actualizado ✅');}else{d.proveedor_id=genId('PRV',ProvC,'proveedor_id');await sbPost('proveedores',d);toast('Proveedor guardado ✅');}closeModal('m-proveedor');document.getElementById('pv-id').value='';loadProveedores();populateSelects();}catch(e){toast('Error: '+e.message,'error');}
+function editProveedor(id){const p=ProvC.find(x=>x.id===id);if(!p)return;document.getElementById('m-proveedor').querySelector('.modal-title').textContent='✏️ Editar proveedor';document.getElementById('pv-id').value=p.id;document.getElementById('pv-nombre').value=p.nombre||'';document.getElementById('pv-cif').value=p.cif||'';document.getElementById('pv-tipo').value=p.tipo||'Proveedor';document.getElementById('pv-tel').value=p.telefono||'';document.getElementById('pv-email').value=p.email||'';document.getElementById('pv-esp').value=p.especialidad||'';document.getElementById('pv-pago').value=p.forma_pago||'Transferencia';document.getElementById('pv-iban').value=p.iban||'';document.getElementById('pv-notas').value=p.notas||'';openModal('m-proveedor');}
+async function saveProveedor(){const nombre=document.getElementById('pv-nombre').value.trim();if(!nombre){toast('El nombre es obligatorio','error');return;}const id=document.getElementById('pv-id').value;const d={nombre,cif:document.getElementById('pv-cif').value,tipo:document.getElementById('pv-tipo').value,telefono:document.getElementById('pv-tel').value,email:document.getElementById('pv-email').value,especialidad:document.getElementById('pv-esp').value,forma_pago:document.getElementById('pv-pago').value,iban:document.getElementById('pv-iban').value,notas:document.getElementById('pv-notas').value};try{if(id){await sbPatch('proveedores',id,d);toast('Proveedor actualizado ✅');}else{d.proveedor_id=genId('PRV',ProvC,'proveedor_id');await sbPost('proveedores',d);toast('Proveedor guardado ✅');}closeModal('m-proveedor');document.getElementById('pv-id').value='';loadProveedores();populateSelects();}catch(e){toast('Error: '+e.message,'error');}
 }
 
 // ═══════════════════════════════════════════
@@ -11354,8 +11340,7 @@ async function abrirNuevaFactura(tipo){
   // Reset cliente/proyecto
   const fCliente=document.getElementById('f-cliente');
   if(fCliente) fCliente.value='';
-  // Limpiar campos de proveedor
-  const fProvSearch=document.getElementById('f-prov-search'); if(fProvSearch) fProvSearch.value='';
+  // Limpiar proveedor
   const fProvHid=document.getElementById('f-proveedor'); if(fProvHid) fProvHid.value='';
   const fProvSel=document.getElementById('f-prov-sel'); if(fProvSel) fProvSel.value='';
   // Reset proyecto: vacío hasta que se elija cliente (venta) o mostrar todos (compra)
@@ -11986,10 +11971,9 @@ function editFactura(id){
 
   // 6. Cliente/proveedor y cascada proyecto
   if(esC){
-    // Restaurar proveedor en select nativo
-  const fpHidEl=document.getElementById('f-proveedor');
+    const fpHidEl=document.getElementById('f-proveedor');
   if(fpHidEl) fpHidEl.value = f.proveedor_id||'';
-  _initProvSelect('f-prov-search','f-prov-sel','f-proveedor');
+  _initProvSelect(null,'f-prov-sel','f-proveedor');
   } else {
     const fcEl=document.getElementById('f-cliente');
     if(fcEl){
@@ -19174,16 +19158,13 @@ function _setSelectByText(selId, texto){
   const tNorm = norm(texto);
   const match=[...ProvC].find(p=> norm(p.nombre||'').includes(tNorm) || tNorm.includes(norm(p.nombre||'').slice(0,8)));
   if(!match) return;
-  // Mapear al select+hidden correcto
-  const selMap={'co-prov':['co-prov-sel','co-prov-search','co-prov-id'],
-                'sc-prov':['sc-prov-sel','sc-prov-search','sc-prov-id'],
-                'f-proveedor':['f-prov-sel','f-prov-search','f-proveedor']};
+  const selMap={'co-prov':['co-prov-sel','co-prov-id'],
+                'sc-prov':['sc-prov-sel','sc-prov-id'],
+                'f-proveedor':['f-prov-sel','f-proveedor']};
   const ids = selMap[selId] || selMap['co-prov'];
   const sel = document.getElementById(ids[0]);
-  const inp = document.getElementById(ids[1]);
-  const hid = document.getElementById(ids[2]);
+  const hid = document.getElementById(ids[1]);
   if(sel) sel.value = match.id||'';
-  if(inp) inp.value = match.nombre||'';
   if(hid) hid.value = match.id||'';
 }
 function _setIVA(selId, iva){
