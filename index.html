@@ -4279,8 +4279,8 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="form-group"><label class="form-label">Proyecto</label><select class="form-input" id="co-proyecto" onchange="onChangeProyectoGenerico('co')"><option value="">Seleccionar…</option><option value="PRY-001">PRY-001 · Mobiliario de cocina</option><option value="PRY-002">PRY-002 · Rehabilitación lateral fachada</option><option value="PRY-003">PRY-003 · Pavimento/revestimiento vivienda.</option><option value="PRY-004">PRY-004 · Rehabilitación estudio</option><option value="PRY-005">PRY-005 · Trabajos en terraza</option></select></div>
       <div class="form-group"><label class="form-label">Proveedor</label><div style="position:relative">
   <input class="form-input" id="co-prov-search" placeholder="Buscar proveedor…" autocomplete="off"
-    oninput="filtrarSearchSelect('co-prov-search','co-prov-dd','co-prov-id','co-prov-val',ProvC,'nombre','id')"
-    onfocus="filtrarSearchSelect('co-prov-search','co-prov-dd','co-prov-id','co-prov-val',ProvC,'nombre','id');abrirSearchDd('co-prov-dd')"
+    oninput="_provSearch('co-prov-search','co-prov-dd','co-prov-id','co-prov-val')"
+    onfocus="_provSearch('co-prov-search','co-prov-dd','co-prov-id','co-prov-val')"
     onblur="setTimeout(()=>cerrarSearchDd('co-prov-dd'),200)">
   <input type="hidden" id="co-prov-id">
   <input type="hidden" id="co-prov-val">
@@ -4476,8 +4476,8 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="form-group"><label class="form-label">Proyecto</label><select class="form-input" id="sc-proyecto" onchange="onChangeProyectoGenerico('sc')"><option value="">Seleccionar…</option><option value="PRY-001">PRY-001 · Mobiliario de cocina</option><option value="PRY-002">PRY-002 · Rehabilitación lateral fachada</option><option value="PRY-003">PRY-003 · Pavimento/revestimiento vivienda.</option><option value="PRY-004">PRY-004 · Rehabilitación estudio</option><option value="PRY-005">PRY-005 · Trabajos en terraza</option></select></div>
       <div class="form-group"><label class="form-label">Subcontratista</label><div style="position:relative">
   <input class="form-input" id="sc-prov-search" placeholder="Buscar subcontratista…" autocomplete="off"
-    oninput="filtrarSearchSelect('sc-prov-search','sc-prov-dd','sc-prov-id','sc-prov-val',ProvC,'nombre','id')"
-    onfocus="filtrarSearchSelect('sc-prov-search','sc-prov-dd','sc-prov-id','sc-prov-val',ProvC,'nombre','id');abrirSearchDd('sc-prov-dd')"
+    oninput="_provSearch('sc-prov-search','sc-prov-dd','sc-prov-id','sc-prov-val')"
+    onfocus="_provSearch('sc-prov-search','sc-prov-dd','sc-prov-id','sc-prov-val')"
     onblur="setTimeout(()=>cerrarSearchDd('sc-prov-dd'),200)">
   <input type="hidden" id="sc-prov-id">
   <input type="hidden" id="sc-prov-val">
@@ -4685,8 +4685,8 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="form-group" id="f-grp-proveedor" style="display:none"><label class="form-label">Proveedor</label>
         <div style="position:relative">
   <input class="form-input" id="f-prov-search" placeholder="Buscar proveedor…" autocomplete="off"
-    oninput="filtrarSearchSelect('f-prov-search','f-prov-dd','f-proveedor','f-prov-val',ProvC,'nombre','id')"
-    onfocus="filtrarSearchSelect('f-prov-search','f-prov-dd','f-proveedor','f-prov-val',ProvC,'nombre','id');abrirSearchDd('f-prov-dd')"
+    oninput="_provSearch('f-prov-search','f-prov-dd','f-proveedor','f-prov-val')"
+    onfocus="_provSearch('f-prov-search','f-prov-dd','f-proveedor','f-prov-val')"
     onblur="setTimeout(()=>cerrarSearchDd('f-prov-dd'),200)">
   <input type="hidden" id="f-proveedor">
   <input type="hidden" id="f-prov-val">
@@ -6635,6 +6635,15 @@ function toggleGrentExpand(){
 // ════════════════════════════════════════════
 // SEARCHABLE SELECT — reutilizable
 // ════════════════════════════════════════════
+// Wrapper para búsqueda de proveedores: carga ProvC si está vacío
+async function _provSearch(inputId, ddId, hiddenId, hiddenValId){
+  if(!ProvC.length){
+    try{ ProvC=await sbGet('proveedores','?order=nombre.asc'); }catch(e){ ProvC=[]; }
+  }
+  filtrarSearchSelect(inputId, ddId, hiddenId, hiddenValId, ProvC,'nombre','id');
+  abrirSearchDd(ddId);
+}
+
 function filtrarSearchSelect(inputId, ddId, hiddenId, hiddenValId, arr, labelField, valueField){
   const input = document.getElementById(inputId);
   const dd    = document.getElementById(ddId);
