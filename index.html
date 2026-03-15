@@ -20070,9 +20070,14 @@ async function calcExpKPIs(proyId){
       if(v!=='v1') chk.checked = false; // v2 y v3 siempre desmarcadas por defecto
     }
   });
-  // presTot = v1 + all unit versions
-  let presTot = _presDesglobeGlobal['v1'] || 0;
-  Object.keys(_presDesglobeGlobal).forEach(k => { if(!k.match(/^v\d+$/)) presTot += _presDesglobeGlobal[k]; });
+  // presTot = suma de versiones MARCADAS (igual que el KPI de presupuesto)
+  let presTot = 0;
+  ['v1','v2','v3','v4','v5','v6','v7','v8'].forEach(v=>{
+    const chk = document.getElementById('chk-'+v);
+    if(chk && chk.checked) presTot += (_presDesglobeGlobal[v]||0);
+  });
+  // Versiones no estándar (unidades, etc.)
+  Object.keys(_presDesglobeGlobal).forEach(k=>{ if(!k.match(/^v\d+$/)) presTot += (_presDesglobeGlobal[k]||0); });
 
   // Facturas de venta del proyecto
   const factProy = (FC||[]).filter(f=>f.proyecto_id===proyId&&(f.tipo_factura||'Venta')==='Venta');
@@ -20120,10 +20125,15 @@ async function calcExpKPIs(proyId){
     let subF = kpiFact.parentNode.querySelector('.kpi-fact-sub');
     if(!subF){ subF=document.createElement('div'); subF.className='kpi-fact-sub'; subF.style.cssText='font-size:10px;margin-top:1px'; kpiFact.parentNode.appendChild(subF); }
     const cobradoTotal = factTotalBI + eaTotal;
-    const pendFact = presTot - cobradoTotal;
-    if(pendFact > 0.01){ subF.style.color='var(--amber)'; subF.textContent='Pdte: '+fmt(pendFact); }
-    else if(pendFact <= 0){ subF.style.color='var(--green)'; subF.textContent='✓ Todo cobrado'; }
-    else { subF.textContent=''; }
+    const pendFact = Math.max(0, presTot - cobradoTotal);
+    const pendFactCIva = pendFact * 1.21;
+    if(pendFact > 0.01){
+      subF.style.color='var(--amber)';
+      subF.textContent='Pdte: '+fmt(pendFact)+' s/IVA ('+fmt(pendFactCIva)+' c/IVA)';
+    } else {
+      subF.style.color='var(--green)';
+      subF.textContent='✓ Todo facturado';
+    }
   }
   // KPI entregas a cuenta
   const kpiEA = document.getElementById('exp-k-entrega');
