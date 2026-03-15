@@ -18833,6 +18833,7 @@ function sortAndRenderFacturas(col, dir) {
           : `<button class="btn btn-sm ${yaCobrada?'btn-green':'btn-ghost'}" style="font-size:10px;padding:2px 6px" title="${yaCobrada?'Ya pagada':'Marcar como pagada'}" onclick="marcarFacturaPagada('${f.id}')">💳</button>`
         }
         ${!esC ? `<button class="btn btn-ghost btn-sm" style="font-size:11px;padding:2px 5px;${f.email_enviado?'color:var(--green)':''}" title="${f.email_enviado?'📬 Enviada el '+fmtD(f.fecha_envio):'📧 Enviar por email'}" onclick="enviarFacturaEmail('${f.id}')">${f.email_enviado?'📬':'📧'}</button>` : ''}
+        ${f.adjunto_pdf?`<button class="btn btn-ghost btn-icon btn-sm" onclick="fVerPDFById('${f.id}')" style="font-size:11px;color:var(--navy)" title="Ver PDF">📄</button>`:''}
         <button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('facturas','${f.id}','${(f.num_factura||'factura').replace(/'/g,"\\'")}')">🗑</button>
       </td>
     </tr>`;
@@ -18857,6 +18858,7 @@ function sortAndRenderCompras(col, dir) {
       <td class="td-mono" style="font-weight:700">${fmt(tot)}</td>
       <td>${bE(c.estado_pago||c.estado)}</td>
       <td style="display:flex;gap:4px">
+        ${c.adjunto_pdf?`<button class="btn btn-ghost btn-icon btn-sm" onclick="coVerPDFById('${c.id}')" style="font-size:11px;color:var(--navy)" title="Ver PDF">📄</button>`:''}
         <button class="btn btn-ghost btn-icon btn-sm" onclick="editCompra('${c.id}')" title="Editar">✏️</button>
         <button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('compras','${c.id}','${(c.concepto||'compra').replace(/'/g,"\\'")}')">🗑</button>
       </td>
@@ -19012,12 +19014,12 @@ async function _pdfAutofill(b64, tipo, onResult){
   if(!key){ toast('PDF cargado ✅ — configura la API Key en ⚙️ para autoleer','warning'); return; }
   try{
     const prompt = tipo==='factura_venta'
-      ? `Extrae de esta factura los datos y devuelve SOLO JSON sin markdown:
-{"num_factura":"","fecha":"YYYY-MM-DD","cliente":"nombre del cliente","concepto":"descripción breve","base_imponible":0.00,"iva_pct":"21%"}
-iva_pct puede ser "21%","10%","4%" o "Exento". base_imponible es el importe sin IVA como número decimal.`
-      : `Extrae de esta factura de proveedor los datos y devuelve SOLO JSON sin markdown:
-{"num_factura":"","fecha":"YYYY-MM-DD","proveedor":"nombre empresa emisora","concepto":"descripción breve del concepto principal","base_imponible":0.00,"iva_pct":"21%"}
-iva_pct puede ser "21%","10%","4%" o "Exento". base_imponible es el importe sin IVA como número decimal.`;
+      ? `Extrae de esta factura los datos y devuelve SOLO JSON sin markdown ni texto adicional:
+{"num_factura":"","fecha":"YYYY-MM-DD","fecha_vencimiento":"YYYY-MM-DD","cliente":"nombre del cliente","concepto":"descripción breve del concepto principal","base_imponible":0.00,"iva_pct":"21%"}
+Reglas: iva_pct puede ser "21%","10%","4%" o "Exento". base_imponible es el importe sin IVA como número decimal. fecha_vencimiento es la fecha límite de pago (vacía si no aparece).`
+      : `Extrae de esta factura de proveedor todos los datos y devuelve SOLO JSON sin markdown ni texto adicional:
+{"num_factura":"","fecha":"YYYY-MM-DD","proveedor":"nombre empresa emisora","concepto":"descripción breve del concepto principal","base_imponible":0.00,"iva_pct":"21%","vencimientos":[{"fecha":"YYYY-MM-DD","importe":0.00}]}
+Reglas: iva_pct puede ser "21%","10%","4%" o "Exento". base_imponible es el importe sin IVA como número decimal. En "vencimientos" incluye los plazos de pago (máximo 4); si solo hay una fecha de vencimiento ponla con el importe total con IVA; si no hay ninguna fecha de pago devuelve array vacío.`;
     const resp=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
       headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
@@ -19162,7 +19164,24 @@ function fHandleFile(file){
       if(ex.base_imponible)document.getElementById('f-base').value=parseFloat(ex.base_imponible).toFixed(2);
       if(ex.iva_pct)_setIVA('f-iva',ex.iva_pct);
       if(ex.concepto&&!document.getElementById('f-concepto').value)document.getElementById('f-concepto').value=ex.concepto;
-      if(tipoFac==='factura_compra'&&ex.proveedor){_poblarProvSel('f-proveedor');_setSelectByText('f-proveedor',ex.proveedor);}
+      if(tipoFac==='factura_compra'){
+        if(ex.proveedor){_poblarProvSel('f-proveedor');_setSelectByText('f-proveedor',ex.proveedor);}
+        // Rellenar vencimientos
+        const vtos=ex.vencimientos||[];
+        const vtoIds=['f-vto','f-vto2','f-vto3','f-vto4'];
+        const impIds=['f-importe-vto1','f-importe-vto2','f-importe-vto3','f-importe-vto4'];
+        vtos.slice(0,4).forEach((v,i)=>{
+          const dEl=document.getElementById(vtoIds[i]); if(dEl&&v.fecha)dEl.value=v.fecha;
+          const iEl=document.getElementById(impIds[i]); if(iEl&&v.importe)iEl.value=parseFloat(v.importe).toFixed(2);
+        });
+        // Si no hay vencimientos pero sí fecha única
+        if(!vtos.length && ex.fecha_vencimiento){
+          const dEl=document.getElementById('f-vto'); if(dEl)dEl.value=ex.fecha_vencimiento;
+        }
+      } else {
+        // Factura de venta — fecha vencimiento simple
+        if(ex.fecha_vencimiento){const el=document.getElementById('f-vto-venta');if(el)el.value=ex.fecha_vencimiento;}
+      }
       if(typeof calcTotalFac==='function')calcTotalFac();
     });
   };
