@@ -5609,6 +5609,11 @@ function openModal(id){
     }
   }
   if(id==='m-compra'){
+    // Asegurar que los proveedores están cargados en el select
+    if(ProvC.length) {
+      const provOpts='<option value="">Seleccionar proveedor…</option>'+[...ProvC].sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||'','es')).map(p=>`<option value="${p.nombre}">${p.nombre}${p.tipo?' · '+p.tipo:''}</option>`).join('');
+      ['co-prov'].forEach(sid=>{const el=document.getElementById(sid);if(!el)return;const cur=el.value;el.innerHTML=provOpts;if(cur)el.value=cur;});
+    }
     // Poblar proyecto con el filtro activo y cargar partidas
     const pid = document.getElementById('filter-proyecto-compras')?.value || '';
     const coProySel = document.getElementById('co-proyecto');
@@ -6457,7 +6462,15 @@ async function populateSelects(){
   if(!ProvC.length)ProvC=await sbGet('proveedores','?order=nombre.asc').catch(()=>[]);
   ['p-cliente','f-cliente'].forEach(id=>{const el=document.getElementById(id);if(!el)return;const cur=el.value;el.innerHTML='<option value="">Seleccionar…</option>'+[...CC].sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||'','es')).map(c=>`<option value="${c.cliente_id}">${c.nombre}</option>`).join('');if(cur)el.value=cur;});
   ['co-proyecto','sc-proyecto','h-proyecto','f-proyecto','i-proyecto','ped-proyecto','pres-proyecto-sel','comp-proyecto-sel','rent-proyecto-sel','cmp-proyecto','s-proyecto'].forEach(id=>{const el=document.getElementById(id);if(!el)return;const cur=el.value;el.innerHTML='<option value="">Seleccionar…</option>'+[...PC].sort((a,b)=>a.proyecto_id.localeCompare(b.proyecto_id,'es',{numeric:true})).map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');if(cur)el.value=cur;}); ixPopulateProyectoSel();
-  ['co-prov','sc-prov','ped-prov'].forEach(id=>{const el=document.getElementById(id);if(!el)return;const cur=el.value;el.innerHTML='<option value="">Seleccionar proveedor…</option>'+[...ProvC].sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||'','es')).map(p=>`<option value="${p.nombre}">${p.nombre}${p.tipo?' · '+p.tipo:''}</option>`).join('');if(cur)el.value=cur;});
+  if(!ProvC.length) ProvC=await sbGet('proveedores','?order=nombre.asc').catch(()=>[]);
+  const provOpts='<option value="">Seleccionar proveedor…</option>'+[...ProvC].sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||'','es')).map(p=>`<option value="${p.nombre}">${p.nombre}${p.tipo?' · '+p.tipo:''}</option>`).join('');
+  ['co-prov','sc-prov','ped-prov','f-proveedor'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    const cur=el.value;
+    el.innerHTML=provOpts;
+    if(cur)el.value=cur;
+  });
 }
 async function populateIntCatalog(){
   if(!TC.length)TC=await sbGet('tarifario').catch(()=>[]);
@@ -9904,7 +9917,27 @@ async function loadCompras(){
     document.getElementById('compras-count').textContent=CoC.length+' registros';
     if(!CoC.length){tb.innerHTML=`<tr><td colspan="10"><div class="empty"><div class="empty-icon">🛒</div><div class="empty-text">Sin compras</div><button class="btn btn-primary" onclick="openModal('m-compra')">＋ Nueva</button></div></td></tr>`;return;}
     const capNames = await resolverNombresCapitulos(CoC.map(c=>c.partida));
-    tb.innerHTML=CoC.map(c=>{const tot=c.base_imponible*(1+ivaPct(c.iva_pct)/100);const hasPDF=!!(c.adjunto_pdf);const partLbl=c.partida?`<span style="font-size:11px;color:var(--copper)">${partidaLabelConNombres(c.partida,capNames)}</span>`:'<span style="color:var(--text-soft)">—</span>';return`<tr data-search="${(c.proyecto_id+c.proveedor_id+c.concepto+(c.partida||'')).toLowerCase()}" data-partida="${c.partida||''}"><td>${fmtD(c.fecha)}</td><td class="td-mono">${c.proyecto_id?`<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:1px 5px;color:var(--navy);font-weight:700" title="Ver expediente" onclick="abrirExpediente('${c.proyecto_id}')">${c.proyecto_id}</button>`:"<span style='color:var(--text-soft)'>—</span>"}</td><td>${partLbl}</td><td>${c.proveedor_id||'—'}</td><td>${c.concepto||'—'}${hasPDF?' 📎':''}</td><td class="td-mono">${fmt(c.base_imponible)}</td><td class="td-mono">${c.iva_pct}</td><td class="td-mono" style="font-weight:700">${fmt(tot)}</td><td>${bE(c.estado_pago)}</td><td style="display:flex;gap:4px">${hasPDF?`<button class="btn btn-ghost btn-icon btn-sm" onclick="coVerPDFById('${c.id}')" style="font-size:11px;color:var(--navy)" title="Ver PDF">📄</button>`:''}<button class="btn btn-ghost btn-icon btn-sm" onclick="editCompra('${c.id}')" style="font-size:11px">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('compras','${c.id}','${(c.concepto||'compra').replace(/'/g,"\\'")}')">🗑</button></td></tr>`;}).join('');
+    tb.innerHTML=CoC.map(c=>{
+      const tot=c.base_imponible*(1+ivaPct(c.iva_pct)/100);
+      const hasPDF=!!(c.adjunto_pdf);
+      const partLbl=c.partida?`<span style="font-size:11px;color:var(--copper)">${partidaLabelConNombres(c.partida,capNames)}</span>`:'<span style="color:var(--text-soft)">—</span>';
+      // Resolver siempre el texto PRY-XXX para data-search y display
+      // c.proyecto = texto "PRY-004" (campo legacy) | c.proyecto_id puede ser UUID o texto
+      const pText = c.proyecto || PC.find(p=>p.id===c.proyecto_id)?.proyecto_id || c.proyecto_id || '';
+      const pDisplay = pText || '—';
+      return`<tr data-search="${(pText+' '+(c.proveedor_id||'')+' '+(c.concepto||'')+(c.partida||'')).toLowerCase()}" data-partida="${c.partida||''}">
+        <td>${fmtD(c.fecha)}</td>
+        <td class="td-mono">${pText?`<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:1px 5px;color:var(--navy);font-weight:700" title="Ver expediente" onclick="abrirExpediente('${pText}')">${pDisplay}</button>`:"<span style='color:var(--text-soft)'>—</span>"}</td>
+        <td>${partLbl}</td>
+        <td>${c.proveedor_id||'—'}</td>
+        <td>${c.concepto||'—'}${hasPDF?' 📎':''}</td>
+        <td class="td-mono">${fmt(c.base_imponible)}</td>
+        <td class="td-mono">${c.iva_pct||'—'}</td>
+        <td class="td-mono" style="font-weight:700">${fmt(tot)}</td>
+        <td>${bE(c.estado_pago||c.estado)}</td>
+        <td style="display:flex;gap:4px">${hasPDF?`<button class="btn btn-ghost btn-icon btn-sm" onclick="coVerPDFById('${c.id}')" style="font-size:11px;color:var(--navy)" title="Ver PDF">📄</button>`:''}<button class="btn btn-ghost btn-icon btn-sm" onclick="editCompra('${c.id}')" style="font-size:11px">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('compras','${c.id}','${(c.concepto||'compra').replace(/'/g,"\\'")}')">🗑</button></td>
+      </tr>`;
+    }).join('');
   }catch(e){tb.innerHTML=`<tr><td colspan="10" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
   filtrarModuloPorProyecto('compras');
   aplicarFiltroPartida('compras');
@@ -9913,23 +9946,24 @@ async function saveCompra(){
   const id=document.getElementById('co-id')?.value;
   const pdfB64=document.getElementById('co-pdf-b64')?.value||null;
   const estadoVal=document.getElementById('co-estado').value;
-  // Resolver proyecto_id: el select guarda "PRY-001" (texto), pero Supabase espera UUID o texto según BD
-  // Intentar ambos: primero el valor directo, si falla por UUID buscar el id interno
-  const proyTexto=document.getElementById('co-proyecto').value||null;
+  const proyTexto=document.getElementById('co-proyecto').value||null; // "PRY-004"
   const proyObj=proyTexto?(PC||[]).find(p=>p.proyecto_id===proyTexto):null;
-  // Usar UUID interno si existe, si no usar el texto (compatibilidad con distintas configs de BD)
-  const proyIdFinal=proyObj?.id||proyTexto||null;
+  const proyUUID=proyObj?.id||null;
 
-  const d={fecha:document.getElementById('co-fecha').value||new Date().toISOString().split('T')[0],
-    proyecto_id:proyIdFinal,
-    proveedor_id:document.getElementById('co-prov').value||null,
-    concepto:document.getElementById('co-concepto').value,
-    base_imponible:parseFloat(document.getElementById('co-base').value)||0,
-    iva_pct:document.getElementById('co-iva').value,
-    estado_pago:estadoVal,
-    notas:document.getElementById('co-notas').value,
-    partida:getPartidaFinalPfx('co')||null};
-  // Versión alternativa con "estado" en vez de "estado_pago"
+  // Enviamos AMBOS campos: proyecto (texto PRY-XXX) y proyecto_id (UUID si existe)
+  // Así funciona tanto si la BD usa texto como si usa UUID como FK
+  const d={
+    fecha: document.getElementById('co-fecha').value||new Date().toISOString().split('T')[0],
+    proyecto: proyTexto,                    // campo texto "PRY-004" (filtros/display)
+    proyecto_id: proyUUID||proyTexto||null, // UUID si existe, fallback a texto
+    proveedor_id: document.getElementById('co-prov').value||null,
+    concepto: document.getElementById('co-concepto').value,
+    base_imponible: parseFloat(document.getElementById('co-base').value)||0,
+    iva_pct: document.getElementById('co-iva').value,
+    estado_pago: estadoVal,
+    notas: document.getElementById('co-notas').value,
+    partida: getPartidaFinalPfx('co')||null
+  };
   const dAlt={...d}; delete dAlt.estado_pago; dAlt.estado=estadoVal;
 
   try{
@@ -9938,22 +9972,20 @@ async function saveCompra(){
       if(id){ await sb('compras','PATCH',d,null,`?id=eq.${id}`); }
       else { const res=await sbPost('compras',d); if(res&&res[0]&&res[0].id) savedId=res[0].id; }
     }catch(eCol){
-      // Si falla por estado_pago → reintentar con "estado"
       if(eCol.message&&eCol.message.includes('estado_pago')){
+        // Reintentar sin estado_pago → usar estado
         if(id){ await sb('compras','PATCH',dAlt,null,`?id=eq.${id}`); }
         else { const res=await sbPost('compras',dAlt); if(res&&res[0]&&res[0].id) savedId=res[0].id; }
+      } else if(eCol.message&&(eCol.message.includes('uuid')||eCol.message.includes('proyecto_id'))){
+        // Si proyecto_id es UUID y falla, enviar solo texto en campo proyecto
+        const dSinUUID={...d}; dSinUUID.proyecto_id=null;
+        if(id){ await sb('compras','PATCH',dSinUUID,null,`?id=eq.${id}`); }
+        else { const res=await sbPost('compras',dSinUUID); if(res&&res[0]&&res[0].id) savedId=res[0].id; }
       } else { throw eCol; }
     }
-    // Guardar PDF por separado
     if(pdfB64&&window._coPDFChanged&&savedId){
       try{ await sb('compras','PATCH',{adjunto_pdf:pdfB64},null,`?id=eq.${savedId}`); }
-      catch(ePDF){
-        console.warn('PDF no guardado:',ePDF.message);
-        toast('Compra guardada. PDF no adjuntado ⚠️','warning');
-        document.getElementById('co-id').value='';
-        document.querySelector('#m-compra .modal-title').textContent='🛒 Nueva compra';
-        coResetPDF(); closeModal('m-compra'); loadCompras(); return;
-      }
+      catch(ePDF){ console.warn('PDF no guardado:',ePDF.message); toast('Compra guardada. PDF no adjuntado ⚠️','warning'); }
     }
     toast(id?'Compra actualizada ✅':'Compra registrada ✅');
     document.getElementById('co-id').value='';
@@ -18809,14 +18841,14 @@ function sortAndRenderCompras(col, dir) {
   if (!tb) return;
   tb.innerHTML = sorted.map(c => {
     const tot = c.base_imponible*(1+ivaPct(c.iva_pct)/100);
-    const pId = c.proyecto_id || c.proyecto || '';
-    return `<tr data-search="${(pId+c.proveedor_id+c.concepto).toLowerCase()}">
+    const pText = c.proyecto || PC.find(p=>p.id===c.proyecto_id)?.proyecto_id || c.proyecto_id || '';
+    return `<tr data-search="${(pText+' '+(c.proveedor_id||'')+' '+(c.concepto||'')).toLowerCase()}">
       <td>${fmtD(c.fecha)}</td>
-      <td class="td-mono" style="color:var(--text-soft)">${pId?`<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:1px 5px;color:var(--navy);font-weight:700" onclick="abrirExpediente('${pId}')">${pId}</button>`:'—'}</td>
+      <td class="td-mono" style="color:var(--text-soft)">${pText?`<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:1px 5px;color:var(--navy);font-weight:700" onclick="abrirExpediente('${pText}')">${pText}</button>`:'—'}</td>
       <td>${c.proveedor_id||'—'}</td>
       <td>${c.concepto||'—'}</td>
       <td class="td-mono">${fmt(c.base_imponible)}</td>
-      <td class="td-mono">${c.iva_pct}</td>
+      <td class="td-mono">${c.iva_pct||'—'}</td>
       <td class="td-mono" style="font-weight:700">${fmt(tot)}</td>
       <td>${bE(c.estado_pago||c.estado)}</td>
       <td style="display:flex;gap:4px">
