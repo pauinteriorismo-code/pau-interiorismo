@@ -19925,6 +19925,7 @@ async function abrirExpediente(proyId){
 
 // Desglose global por versión (se rellena en calcExpKPIs y se usa en recalcPresKPI)
 let _presDesglobeGlobal = {};
+let _presIvaGlobal = {}; // IVA acumulado por versión
 
 function recalcPresKPI(){
   const v1 = document.getElementById('chk-v1')?.checked ? (_presDesglobeGlobal['v1']||0) : 0;
@@ -19953,7 +19954,7 @@ function recalcPresKPI(){
   const costes = parseFloat(costesRaw.replace(/\./g,'').replace(',','.'))||0;
   if(costes > 0 && tot > 0){
     const ben = tot - costes;
-    const margen = (ben / tot) * 100; // sobre presupuesto
+    const margen = costes > 0 ? (ben / costes) * 100 : 0; // sobre coste
     const el2 = document.getElementById('exp-k-margen');
     if(el2){ el2.textContent = fmtP(margen); el2.style.color = margen>=20?'var(--green)':margen>=0?'var(--amber)':'var(--red)'; }
   }
@@ -20082,6 +20083,7 @@ async function borrarEntrega(){
 async function calcExpKPIs(proyId){
   // Presupuesto: calcula desglose por versión, solo suma las marcadas
   _presDesglobeGlobal = {};
+  _presIvaGlobal = {};
   try{
     const lineas = await sbGet('presupuesto_lineas', `?proyecto_id=eq.${proyId}&es_capitulo=eq.false`);
     lineas.forEach(l=>{
@@ -20089,6 +20091,10 @@ async function calcExpKPIs(proyId){
       const importe = ci>0 ? sub*(1+ci/100) : sub;
       const ver = l.version||'v1';
       _presDesglobeGlobal[ver] = (_presDesglobeGlobal[ver]||0) + importe;
+      // Acumular IVA por versión para cálculo correcto de c/IVA
+      const ivaPctLinea = parseFloat(l.iva_pct)||0;
+      const ivaImporte = importe * ivaPctLinea / 100;
+      _presIvaGlobal[ver] = (_presIvaGlobal[ver]||0) + ivaImporte;
     });
   }catch(e){}
   // Por defecto solo V1 marcada, ocultar las que no tienen datos
@@ -20257,11 +20263,18 @@ function renderExpResumen(body){
   // ── Cálculos principales ─────────────────────────────────
   // Beneficio = Presupuesto seleccionado - Costes totales (s/IVA)
   const beneficio  = presBase - costesBase;
-  // Margen SIEMPRE sobre presupuesto
-  const margenPct  = presBase > 0 ? (beneficio / presBase) * 100 : 0;
+  // Margen SOBRE COSTE: costes × (1 + margen/100) = presupuesto
+  const margenPct  = costesBase > 0 ? (beneficio / costesBase) * 100 : 0;
   // Pendiente facturar = Presupuesto - Facturado - Entregas a cuenta
   const pendFactBase = Math.max(0, presBase - factBase - eaTotal);
-  const pendFactIva  = pendFactBase * 1.21;  // Estimación c/IVA 21%
+  // IVA real por versión (acumulado en calcExpKPIs via _presIvaGlobal)
+  let _presIvaAcum = 0;
+  ['v1','v2','v3','v4','v5','v6','v7','v8'].forEach(function(v){
+    const chk=document.getElementById('chk-'+v);
+    if(chk && chk.checked) _presIvaAcum += ((_presIvaGlobal||{})[v]||0);
+  });
+  const _ivaPctReal = presBase > 0 ? _presIvaAcum / presBase : 0.21;
+  const pendFactIva  = pendFactBase * (1 + _ivaPctReal);
   // Pendiente cobrar = facturado c/IVA - lo ya cobrado
   const pendienteCobrar = Math.max(0, factTotal - factCobrado);
   // Proveedores pendientes de pago
