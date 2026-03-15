@@ -10084,8 +10084,8 @@ async function saveCompra(){
     fecha: document.getElementById('co-fecha').value||new Date().toISOString().split('T')[0],
     proyecto: proyTexto,                    // campo texto "PRY-004" (filtros/display)
     proyecto_id: proyUUID||proyTexto||null, // UUID si existe, fallback a texto
-    // Guardar nombre del proveedor (proveedor_id en compras es texto, no UUID)
-    proveedor_id: (()=>{ const sel=document.getElementById('co-prov-sel'); return sel&&sel.value?(sel.options[sel.selectedIndex]?.text||sel.value):null; })(),
+    // Guardar UUID del proveedor en campo proveedor_id
+    proveedor_id: (()=>{ const sel=document.getElementById('co-prov-sel'); return sel&&sel.value?sel.value:null; })(),
     concepto: document.getElementById('co-concepto').value,
     base_imponible: parseFloat(document.getElementById('co-base').value)||0,
     iva_pct: document.getElementById('co-iva').value,
@@ -10282,7 +10282,7 @@ function _setHoraProyecto(proyId, partidaVal) {
 async function saveSubcontrata(){
   const id=document.getElementById('sc-id')?.value;
   const pdfB64=document.getElementById('sc-pdf-b64')?.value||null;
-  const d={fecha:document.getElementById('sc-fecha').value||new Date().toISOString().split('T')[0],proyecto_id:document.getElementById('sc-proyecto').value||null,proveedor_id:(()=>{ const sel=document.getElementById('sc-prov-sel'); return sel&&sel.value?(sel.options[sel.selectedIndex]?.text||sel.value):null; })(),trabajo:document.getElementById('sc-trabajo').value,importe:parseFloat(document.getElementById('sc-importe').value)||0,iva_pct:document.getElementById('sc-iva').value,estado_pago:document.getElementById('sc-estado').value,fecha_acta1:document.getElementById('sc-fecha-acta1')?.value||null,importe_acta1:parseFloat(document.getElementById('sc-importe-acta1')?.value)||null,fecha_acta2:document.getElementById('sc-fecha-acta2')?.value||null,importe_acta2:parseFloat(document.getElementById('sc-importe-acta2')?.value)||null,fecha_acta3:document.getElementById('sc-fecha-acta3')?.value||null,importe_acta3:parseFloat(document.getElementById('sc-importe-acta3')?.value)||null,partida:getPartidaFinalPfx('sc')||null};
+  const d={fecha:document.getElementById('sc-fecha').value||new Date().toISOString().split('T')[0],proyecto_id:document.getElementById('sc-proyecto').value||null,proveedor_id:(()=>{ const sel=document.getElementById('sc-prov-sel'); return sel&&sel.value?sel.value:null; })(),trabajo:document.getElementById('sc-trabajo').value,importe:parseFloat(document.getElementById('sc-importe').value)||0,iva_pct:document.getElementById('sc-iva').value,estado_pago:document.getElementById('sc-estado').value,fecha_acta1:document.getElementById('sc-fecha-acta1')?.value||null,importe_acta1:parseFloat(document.getElementById('sc-importe-acta1')?.value)||null,fecha_acta2:document.getElementById('sc-fecha-acta2')?.value||null,importe_acta2:parseFloat(document.getElementById('sc-importe-acta2')?.value)||null,fecha_acta3:document.getElementById('sc-fecha-acta3')?.value||null,importe_acta3:parseFloat(document.getElementById('sc-importe-acta3')?.value)||null,partida:getPartidaFinalPfx('sc')||null};
   try{
     let savedId=id;
     if(id){ await sb('subcontratas','PATCH',d,null,`?id=eq.${id}`); }
@@ -12100,7 +12100,7 @@ async function saveFactura(){
     fecha_emision:   document.getElementById('f-fecha').value||new Date().toISOString().split('T')[0],
     cliente_id:      document.getElementById('f-cliente').value||null,
     // Para compras: guardar nombre del proveedor (texto), no UUID
-    proveedor_id:    esC?((()=>{ const sel=document.getElementById('f-prov-sel'); return sel&&sel.value?(sel.options[sel.selectedIndex]?.text||sel.value):null; })()):null,
+    proveedor_id:    esC?((()=>{ const sel=document.getElementById('f-prov-sel'); return sel&&sel.value?sel.value:null; })()):null,
     proyecto_id:     document.getElementById('f-proyecto').value||null,
     base_imponible:  parseFloat(document.getElementById('f-base').value)||0,
     iva_pct:         document.getElementById('f-iva').value,
@@ -18982,7 +18982,7 @@ function sortAndRenderCompras(col, dir) {
     return `<tr data-search="${(pText+' '+(c.proveedor_id||'')+' '+(c.concepto||'')).toLowerCase()}">
       <td>${fmtD(c.fecha)}</td>
       <td class="td-mono" style="color:var(--text-soft)">${pText?`<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:1px 5px;color:var(--navy);font-weight:700" onclick="abrirExpediente('${pText}')">${pText}</button>`:'—'}</td>
-      <td><span style="font-size:11px;color:var(--copper)">${c.partida?partidaLabel(c.partida):'—'}</span></td>
+      <td><span style="font-size:11px;color:var(--copper)">${c.partida?c.partida.replace(/^cap:/,'📁 ').replace(/^par:/,''):'—'}</span></td>
       <td>${findProvName(c.proveedor_id)||'—'}</td>
       <td>${c.concepto||'—'}</td>
       <td class="td-mono">${fmt(c.base_imponible)}</td>
