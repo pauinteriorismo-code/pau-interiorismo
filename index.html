@@ -6649,7 +6649,14 @@ function filtrarSearchSelect(inputId, ddId, hiddenId, hiddenValId, arr, labelFie
   const dd    = document.getElementById(ddId);
   const q     = (input?.value||'').toLowerCase().trim();
   if(!dd) return;
-  const items = q ? arr.filter(x=>(x[labelField]||'').toLowerCase().includes(q)) : arr;
+  // Normalizar query: quitar espacios y acentos para buscar "daqua" → "D Aqua"
+  const norm = s => (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'');
+  const qNorm = norm(q);
+  const items = q ? arr.filter(x=>{
+    const name = (x[labelField]||'').toLowerCase();
+    const nameNorm = norm(x[labelField]);
+    return name.includes(q) || nameNorm.includes(qNorm);
+  }) : arr;
   if(!items.length){
     dd.innerHTML=`<div class="search-dd-empty">Sin resultados para "${q}"</div>`;
     dd.style.display='';
@@ -18906,7 +18913,7 @@ function sortAndRenderCompras(col, dir) {
     return `<tr data-search="${(pText+' '+(c.proveedor_id||'')+' '+(c.concepto||'')).toLowerCase()}">
       <td>${fmtD(c.fecha)}</td>
       <td class="td-mono" style="color:var(--text-soft)">${pText?`<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:1px 5px;color:var(--navy);font-weight:700" onclick="abrirExpediente('${pText}')">${pText}</button>`:'—'}</td>
-      <td>${c.proveedor_id||'—'}</td>
+      <td>${findProvName(c.proveedor_id)||'—'}</td>
       <td>${c.concepto||'—'}</td>
       <td class="td-mono">${fmt(c.base_imponible)}</td>
       <td class="td-mono">${c.iva_pct||'—'}</td>
@@ -20168,7 +20175,7 @@ async function renderExpCompras(body){
     <table style="width:100%;font-size:12px;border-collapse:collapse">
       <thead style="position:sticky;top:0;z-index:1"><tr style="background:var(--navy);color:#fff">${['Fecha','Partida','Proveedor','Concepto','Base','IVA','Total','Estado'].map(h=>`<th style="padding:7px 10px;text-align:left;font-weight:600">${h}</th>`).join('')}<th></th></tr></thead>
       <tbody>${items.map((c,i)=>{const tot=(c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100);const pLbl=c.partida?partidaLabelConNombres(c.partida,capNames):'—';return`<tr style="background:${i%2?'#fafafa':'#fff'}">
-        <td style="padding:6px 10px;white-space:nowrap">${fmtD(c.fecha)}</td><td style="padding:6px 10px">${pLbl}</td><td style="padding:6px 10px">${c.proveedor_id||'—'}</td>
+        <td style="padding:6px 10px;white-space:nowrap">${fmtD(c.fecha)}</td><td style="padding:6px 10px">${pLbl}</td><td style="padding:6px 10px">${findProvName(c.proveedor_id)||'—'}</td>
         <td style="padding:6px 10px">${c.concepto||'—'}${c.adjunto_pdf?' 📎':''}</td>
         <td style="padding:6px 10px;font-family:monospace">${fmt(c.base_imponible)}</td>
         <td style="padding:6px 10px">${c.iva_pct||'21%'}</td>
