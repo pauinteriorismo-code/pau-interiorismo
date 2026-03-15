@@ -3120,7 +3120,6 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="search-bar">
         <div class="search-wrap"><span class="search-icon">🔍</span><input class="form-input" id="search-proveedores" placeholder="Buscar…" oninput="filterTable(&#39;proveedores-tbody&#39;,&#39;search-proveedores&#39;)"></div>
         <button class="btn btn-ghost btn-sm" onclick="openModal(&#39;m-import-proveedores&#39;)" style="border:1px dashed var(--border)">📤 Importar Holded</button>
-        <button class="btn btn-ghost btn-sm" onclick="openModal(&#39;m-reparar-proveedores&#39;)" style="border:1px dashed var(--amber);color:var(--amber)">🔧 Reparar proveedores</button>
         <button class="btn btn-primary" onclick="abrirNuevoProveedor()">＋ Nuevo proveedor</button>
       </div>
       <div class="card">
@@ -5130,169 +5129,6 @@ if('serviceWorker' in navigator){
 }
 \u003c/script>
 
-
-<!-- MODAL REPARAR PROVEEDORES -->
-<div class="overlay" id="m-reparar-proveedores"><div class="modal" style="width:680px;max-height:90vh">
-  <div class="modal-head"><div class="modal-title">🔧 Reparar e importar proveedores</div><button class="modal-close" onclick="closeModal('m-reparar-proveedores')">×</button></div>
-  <div class="modal-body" style="padding:16px">
-    <p style="font-size:13px;color:var(--text-soft);margin:0 0 12px">Este proceso detecta automáticamente el schema de la tabla y luego importa 54 proveedores desde el Excel de Holded.</p>
-    <div style="display:flex;gap:8px;margin-bottom:12px">
-      <button class="btn btn-primary" id="btn-rep-1" onclick="repararPaso1()">1. Detectar schema</button>
-      <button class="btn btn-primary" id="btn-rep-2" onclick="repararPaso2()" disabled>2. Importar 54 proveedores</button>
-      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('rep-log').innerHTML=''">Limpiar log</button>
-    </div>
-    <div id="rep-log" style="background:#0d1117;color:#e6edf3;border-radius:8px;padding:12px;height:360px;overflow-y:auto;font-size:11px;font-family:monospace;line-height:1.6"></div>
-  </div>
-</div></div>
-
-<script>
-(function(){
-const PROV_DATA = [{"nombre": "CANALONES MEDITERRANEA", "cif": "44866582E", "telefono": "676654856", "email": "info@canalonesmediterranea.com", "tipo": "Proveedor", "proveedor_id": "PRV-001"}, {"nombre": "ABDELHAK BOUZIZOUA SAID", "cif": "14053046T", "telefono": "632290507", "email": null, "tipo": "Proveedor", "proveedor_id": "PRV-002"}, {"nombre": "BRICOLAJE BRICOMAN SLU", "cif": "B84406289", "telefono": "914286190", "email": "info@bricomart.com", "tipo": "Proveedor", "proveedor_id": "PRV-003"}, {"nombre": "TEXTILES INDUCAM", "cif": "B31186489", "telefono": "948301761", "email": "almohadas@moshy.es", "tipo": "Proveedor", "proveedor_id": "PRV-004"}, {"nombre": "FRANCISCO FOLC HERNANDEZ", "cif": "73756423T", "telefono": "Mª JOSE 659775021", "email": null, "tipo": "Proveedor", "proveedor_id": "PRV-005"}, {"nombre": "PAU ALMUDEVER", "cif": null, "telefono": "675123381", "email": null, "tipo": "Proveedor", "proveedor_id": "PRV-006"}, {"nombre": "O.T.P. OFICINA TECNICA DE PREVENCION, S.A. - OTP-OFICINA TECNICA DE PREVENCION SL", "cif": "B53200598", "telefono": "961278040", "email": "info@otp.es", "tipo": "Proveedor", "proveedor_id": "PRV-007"}, {"nombre": "FNMT-RCM", "cif": "Q2826004J", "telefono": "91 7406982", "email": "representacion.ceres@fnmt.es", "tipo": "Proveedor", "proveedor_id": "PRV-008"}, {"nombre": "BATEIG PIEDRA NATURALBateig", "cif": "A03099405", "telefono": "965604319", "email": "admin@bateig.com", "tipo": "Proveedor", "proveedor_id": "PRV-009"}, {"nombre": "FIORA BATH COLLECTIONS SOCIEDAD LIMITADA.", "cif": "B26416917", "telefono": "941410001", "email": "info@fiorabath.com", "tipo": "Proveedor", "proveedor_id": "PRV-010"}, {"nombre": "C.DOMA - SERVICIOS DE RECOGIDA ECOLOGICOS SLL", "cif": "B97486989", "telefono": "961201145", "email": null, "tipo": "Proveedor", "proveedor_id": "PRV-011"}, {"nombre": "IXIA REGAL SA", "cif": "A53132148", "telefono": "965550615", "email": "ixia@ixia.es", "tipo": "Proveedor", "proveedor_id": "PRV-012"}, {"nombre": "PINTURAS GOPIDECOR SOCIEDAD LIMITADA.", "cif": "B98505647", "telefono": null, "email": "esferic@hotmail.com", "tipo": "Proveedor", "proveedor_id": "PRV-013"}, {"nombre": "FERRETERIA TEN Y MONREAL S.L.", "cif": "B97970529", "telefono": "961235417", "email": null, "tipo": "Proveedor", "proveedor_id": "PRV-014"}, {"nombre": "DESARROLLO Y TECNICAS DEL BAÑOS.L.U", "cif": "B79399226", "telefono": "91 6422620", "email": "deyban@deyban.com", "tipo": "Proveedor", "proveedor_id": "PRV-015"}, {"nombre": "CAMENGO ESPAÑA SL", "cif": "B63346845", "telefono": "901900222", "email": "ventas@casamante.com", "tipo": "Proveedor", "proveedor_id": "PRV-016"}, {"nombre": "DISCLIMA", "cif": "ESB46383972", "telefono": "963764500", "email": "disclima@disclima.com", "tipo": "Proveedor", "proveedor_id": "PRV-017"}, {"nombre": "NAVARRO RUBIO SILLERIA S. L.", "cif": "B73181919", "telefono": "968718257", "email": null, "tipo": "Proveedor", "proveedor_id": "PRV-018"}, {"nombre": "PUERTAS SEVILLANO SL", "cif": "B73418733", "telefono": "961526935", "email": "info@puertassevillano.com", "tipo": "Proveedor", "proveedor_id": "PRV-019"}, {"nombre": "Estudi Encis SL", "cif": "B09779828", "telefono": null, "email": "estudiencis@gmail.com", "tipo": "Proveedor", "proveedor_id": "PRV-020"}, {"nombre": "COMERCIAL ANTONIO BEJAR SL", "cif": "B46378287", "telefono": "963764500", "email": "ventas@comercialantoniobejar.com", "tipo": "Proveedor", "proveedor_id": "PRV-021"}, {"nombre": "Franco Furniture - F Franco e Hijos SL", "cif": "B14553366", "telefono": "957501574", "email": null, "tipo": "Proveedor", "proveedor_id": "PRV-022"}, {"nombre": "TOBISA MUEBLES - TOBISA FABRICA DE MUEBLES SL", "cif": "B43562784", "telefono": "977713870", "email": "hola@tobisamuebles.com", "tipo": "Proveedor", "proveedor_id": "PRV-023"}, {"nombre": "SAITRA COCINAS SOCIEDAD LIMITADA.", "cif": "B50654557", "telefono": "976818512", "email": "cocinas@saitra.com", "tipo": "Proveedor", "proveedor_id": "PRV-024"}, {"nombre": "POALGI SL", "cif": "B96855697", "telefono": "962558256", "email": "administracion@poalgi.es", "tipo": "Proveedor", "proveedor_id": "PRV-025"}, {"nombre": "D AQUA KITCHEN & LIVING SOCIEDAD LIMITADA.", "cif": "B40578858", "telefono": "963814284", "email": "contabilidad@daqua.es", "tipo": "Proveedor", "proveedor_id": "PRV-026"}, {"nombre": "GARCIA ZACARES SL", "cif": "B96144464", "telefono": "961262170", "email": "gzacares@garciazacares.com", "tipo": "Proveedor", "proveedor_id": "PRV-027"}, {"nombre": "FUSTES BONET LLOPIS SL", "cif": "B97944995", "telefono": "961701817", "email": "info@fustesbonet.com", "tipo": "Proveedor", "proveedor_id": "PRV-028"}, {"nombre": "Optica Alcasser - DOSMIRADAS2020,SL", "cif": "B56511793", "telefono": "961235459", "email": "opticalcacer@hotmail.es", "tipo": "Proveedor", "proveedor_id": "PRV-029"}, {"nombre": "Efecto Led - PRISMICA SLU", "cif": "B98845944", "telefono": "911190348", "email": "administracion@efectoled.com", "tipo": "Proveedor", "proveedor_id": "PRV-030"}, {"nombre": "Marmoles Santa Maria - MARMOLES SANTAMARIA SL", "cif": "B97981062", "telefono": null, "email": null, "tipo": "Proveedor", "proveedor_id": "PRV-031"}, {"nombre": "COMERCIAL Y DERIVADOS ELECTRICOS SL", "cif": "B46710075", "telefono": "961242335", "email": "administracion@cydelectric.es", "tipo": "Proveedor", "proveedor_id": "PRV-032"}, {"nombre": "Techos Calabuig - MATERIALES CALABUIG SOCIEDAD LIMITADA.", "cif": "B46989992", "telefono": "963743418", "email": "info@materialescalabuig.com", "tipo": "Proveedor", "proveedor_id": "PRV-033"}, {"nombre": "Movistar - Telefónica móviles España SAU", "cif": "A78923125", "telefono": "914823800", "email": null, "tipo": "Proveedor", "proveedor_id": "PRV-034"}, {"nombre": "Asesoría Jose Carmelo Palau - Jose Carmelo Palau S.L", "cif": "B96823802", "telefono": "961230006", "email": null, "tipo": "Proveedor", "proveedor_id": "PRV-035"}, {"nombre": "Vodafone España SAU", "cif": "A80907397", "telefono": null, "email": null, "tipo": "Proveedor", "proveedor_id": "PRV-036"}, {"nombre": "Aquaservice - Viva Aqua Service Spain SA", "cif": "A41810920", "telefono": "961415500", "email": null, "tipo": "Proveedor", "proveedor_id": "PRV-037"}, {"nombre": "Mercedes Benz - Mercedes Benz Financial services España EFC SA", "cif": "A78510260", "telefono": "902230230", "email": null, "tipo": "Proveedor", "proveedor_id": "PRV-038"}, {"nombre": "Moeve - Moeve pro services SAU", "cif": "A25009192", "telefono": "917288801", "email": null, "tipo": "Proveedor", "proveedor_id": "PRV-039"}, {"nombre": "Iberdrola - Iberdrola clientes SAU", "cif": "A95758389", "telefono": null, "email": null, "tipo": "Proveedor", "proveedor_id": "PRV-040"}, {"nombre": "Aguas de Valencia - Aguas de Valencia SA", "cif": "A46000477", "telefono": "963860600", "email": "mdteca@globalomnuim.com", "tipo": "Proveedor", "proveedor_id": "PRV-041"}, {"nombre": "FRANCA GRUPO INMOBILIARIO SL", "cif": "B96860937", "telefono": "961241104", "email": "comercial@grupofranca.es", "tipo": "Proveedor", "proveedor_id": "PRV-042"}, {"nombre": "GRUPO MUNDOBAÑO-ELECTROKITCHEN SL.", "cif": "B73285728", "telefono": "968476439", "email": "contabilidad@grupomundobano.com", "tipo": "Proveedor", "proveedor_id": "PRV-043"}, {"nombre": "MERCEDES BENZ - MERCEDES BENZ ESPAÑA SOCIEDAD ANONIMA", "cif": "A79380465", "telefono": "914846000", "email": null, "tipo": "Proveedor", "proveedor_id": "PRV-044"}, {"nombre": "VIVES AZULEJOS Y GRES, S.A. - VIVES AZULEJOS Y GRES SA", "cif": "A12015541", "telefono": "964360725", "email": "administracion@vivesceramica.com", "tipo": "Proveedor", "proveedor_id": "PRV-045"}, {"nombre": "Glicerio Chaves Hornero SL", "cif": "ESB13038096", "telefono": "926882187", "email": "pedidos@glicerio-chaves.com", "tipo": "Proveedor", "proveedor_id": "PRV-046"}, {"nombre": "Holded", "cif": "B66543778", "telefono": "932710167", "email": "hello@holded.com", "tipo": "Proveedor", "proveedor_id": "PRV-047"}, {"nombre": "Moeve - Moeve Card Services, S.A.U.", "cif": "A80349590", "telefono": "913 37 60 00", "email": null, "tipo": "Proveedor", "proveedor_id": "PRV-048"}, {"nombre": "SIMO PINTOR - MOHAMMED GHANOUCH", "cif": "NIE Y-6630911-W", "telefono": "632636538", "email": null, "tipo": "Proveedor", "proveedor_id": "PRV-049"}, {"nombre": "RAFAEL ALBERT, S.L.", "cif": "B96221478", "telefono": null, "email": null, "tipo": "Proveedor", "proveedor_id": "PRV-050"}, {"nombre": "VENTANAS CORTIZO - VICMAN GLASS S.L.U.", "cif": "B40553687", "telefono": "6023141268", "email": null, "tipo": "Proveedor", "proveedor_id": "PRV-051"}, {"nombre": "AROMAS DEL CAMPO - AROMAS DEL CAMPO LIGHTING S.L.U.", "cif": "ESB24964009", "telefono": null, "email": null, "tipo": "Proveedor", "proveedor_id": "PRV-052"}, {"nombre": "PAU INTERIORIORISMO", "cif": "B56909641", "telefono": "961200187", "email": null, "tipo": "Proveedor", "proveedor_id": "PRV-053"}, {"nombre": "NESTLE NESPRESSO SA OFICINA DE REPRESENTACION EN BARCELONA", "cif": "N0362722A", "telefono": "934805100", "email": null, "tipo": "Proveedor", "proveedor_id": "PRV-054"}];
-let _tipoValido = null;
-let _colsValidas = [];
-
-function repLog(msg, tipo='info'){
-  const el = document.getElementById('rep-log');
-  if(!el) return;
-  const colors = {ok:'#3fb950',err:'#f85149',warn:'#d29922',info:'#8b949e'};
-  el.innerHTML += `<span style="color:${colors[tipo]||colors.info}">${new Date().toLocaleTimeString()} — ${msg}</span>\n`;
-  el.scrollTop = el.scrollHeight;
-}
-
-async function repPost(path, body){
-  const h = {'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'};
-  const r = await fetch(SB_URL+'/rest/v1/'+path, {method:'POST',headers:h,mode:'cors',credentials:'omit',body:JSON.stringify(body)});
-  const txt = await r.text();
-  if(!r.ok) throw new Error(r.status+':'+txt.slice(0,200));
-  return txt ? JSON.parse(txt) : null;
-}
-async function repDel(path){
-  const h = {'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY};
-  await fetch(SB_URL+'/rest/v1/'+path, {method:'DELETE',headers:h,mode:'cors',credentials:'omit'});
-}
-async function repGet(path){
-  const h = {'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY};
-  const r = await fetch(SB_URL+'/rest/v1/'+path, {method:'GET',headers:h,mode:'cors',credentials:'omit'});
-  const txt = await r.text();
-  if(!r.ok) throw new Error(r.status+':'+txt.slice(0,200));
-  return txt ? JSON.parse(txt) : [];
-}
-async function limpiarTest(){
-  try{ await repDel('proveedores?nombre=eq.__TEST__'); }catch(e){}
-}
-
-window.repararPaso1 = async function(){
-  document.getElementById('btn-rep-1').disabled = true;
-  repLog('=== FASE 1: Descubriendo schema ===');
-  _tipoValido = null; _colsValidas = [];
-
-  // Test solo nombre
-  repLog('Probando INSERT solo con nombre...');
-  try{
-    await limpiarTest();
-    await repPost('proveedores', {nombre:'__TEST__'});
-    await limpiarTest();
-    repLog('✅ nombre funciona','ok');
-    _colsValidas = ['nombre'];
-  }catch(e){
-    repLog('❌ Error con solo nombre: '+e.message,'err');
-    document.getElementById('btn-rep-1').disabled=false;
-    return;
-  }
-
-  // Probar valores de tipo
-  repLog('Probando valores de campo tipo...');
-  const tipos = ['Proveedor','Subcontrata','Alquiler','Servicio','Transporte','Otros',
-                 'proveedor','PROVEEDOR','Cliente','Empresa','supplier','vendor',null,''];
-  for(const t of tipos){
-    try{
-      await limpiarTest();
-      const body = {nombre:'__TEST__'};
-      if(t !== null && t !== '') body.tipo = t;
-      await repPost('proveedores', body);
-      await limpiarTest();
-      _tipoValido = t||null;
-      repLog('✅ tipo="'+t+'" VÁLIDO','ok');
-      if(t) _colsValidas.push('tipo');
-      break;
-    }catch(e){
-      const msg = e.message;
-      if(msg.includes('tipo_check')||msg.includes('23514')){
-        repLog('❌ tipo="'+t+'" rechazado','err');
-      }else if(msg.includes('PGRST204')||msg.includes('column')){
-        repLog('⚠️ columna tipo no existe, continuando sin ella','warn');
-        break;
-      }else{
-        repLog('❌ tipo="'+t+'": '+msg.slice(0,80),'err');
-      }
-      await limpiarTest();
-    }
-  }
-
-  // Probar columnas adicionales
-  repLog('Probando columnas adicionales...');
-  const colsTest = ['cif','telefono','email','notas','especialidad','forma_pago','iban','proveedor_id','activo'];
-  for(const col of colsTest){
-    try{
-      await limpiarTest();
-      const body = {nombre:'__TEST__'};
-      if(_tipoValido) body.tipo = _tipoValido;
-      body[col] = col==='activo' ? true : 'test';
-      await repPost('proveedores', body);
-      await limpiarTest();
-      _colsValidas.push(col);
-      repLog('✅ '+col+' existe','ok');
-    }catch(e){
-      await limpiarTest();
-      if(e.message.includes('PGRST204')||e.message.includes('column')){
-        repLog('⚠️ '+col+' NO existe','warn');
-      }else{
-        repLog('⚠️ '+col+' error: '+e.message.slice(0,80),'warn');
-        _colsValidas.push(col); // existe pero constraint
-      }
-    }
-  }
-
-  repLog('');
-  repLog('RESULTADO → tipo="'+_tipoValido+'" | cols: '+_colsValidas.join(', '),'ok');
-  document.getElementById('btn-rep-2').disabled = false;
-  document.getElementById('btn-rep-1').disabled = false;
-};
-
-window.repararPaso2 = async function(){
-  document.getElementById('btn-rep-2').disabled = true;
-  repLog('');
-  repLog('=== FASE 2: Importando '+PROV_DATA.length+' proveedores ===');
-  repLog('Columnas: '+_colsValidas.join(', '));
-  
-  let ok=0, err=0;
-  for(let i=0; i<PROV_DATA.length; i++){
-    const p = PROV_DATA[i];
-    const d = {};
-    if(_colsValidas.includes('nombre')) d.nombre=p.nombre;
-    if(_colsValidas.includes('tipo')&&_tipoValido) d.tipo=_tipoValido;
-    if(_colsValidas.includes('cif')&&p.cif) d.cif=p.cif;
-    if(_colsValidas.includes('telefono')&&p.telefono) d.telefono=p.telefono;
-    if(_colsValidas.includes('email')&&p.email) d.email=p.email;
-    if(_colsValidas.includes('notas')&&p.notas) d.notas=p.notas;
-    if(_colsValidas.includes('proveedor_id')) d.proveedor_id=p.proveedor_id;
-    if(_colsValidas.includes('activo')) d.activo=true;
-    try{
-      await repPost('proveedores', d);
-      ok++;
-      if(ok%10===0||i===PROV_DATA.length-1) repLog('['+(i+1)+'/'+PROV_DATA.length+'] ✅ '+p.nombre,'ok');
-    }catch(e){
-      err++;
-      repLog('❌ '+p.nombre+': '+e.message.slice(0,80),'err');
-    }
-  }
-  repLog('');
-  repLog('=== FIN: '+ok+' importados, '+err+' errores ===', ok>0?'ok':'err');
-  if(ok>0){ toast('✅ '+ok+' proveedores importados'); loadProveedores(); closeModal('m-reparar-proveedores'); }
-  document.getElementById('btn-rep-2').disabled=false;
-};
-})();
-</script>
 
 </body></html>`);
   w.document.close();
@@ -23685,3 +23521,5 @@ renderPresupuesto=function(){
   </div>
 </div>
 </div>
+</body>
+</html>
