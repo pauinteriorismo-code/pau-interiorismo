@@ -5622,6 +5622,10 @@ function ivaPct(s){return s==='Exento'?0:parseFloat(s)||21}
 let toastT;
 function toast(msg,type='success',dur=3200){const el=document.getElementById('toast');el.innerHTML=msg;el.className=`toast show ${type}`;clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),dur);}
 async function openModal(id){
+  // Cargar/refrescar proveedores siempre al abrir modales que los necesitan
+  if(['m-compra','m-subcontrata','m-factura'].includes(id)){
+    try{ ProvC=await sbGet('proveedores','?order=nombre.asc'); }catch(e){ if(!ProvC.length)ProvC=[]; }
+  }
   if(id==='m-comparativa'){
     await poblarProveedoresComparativa();
     poblarClientesModalCmp();
@@ -6504,9 +6508,8 @@ function populateTrabajadores(){
 async function populateSelects(){
   if(!CC.length)CC=await sbGet('clientes').catch(()=>[]);
   if(!PC.length)PC=await sbGet('proyectos').catch(()=>[]);
-  // Siempre recargar ProvC para que refleje altas/bajas recientes
-  ProvC=await sbGet('proveedores','?order=nombre.asc').catch(()=>ProvC||[]);
-  _refrescarDatalistProveedores(); // Poblar datalist compartido al inicio
+  // Cargar ProvC solo si está vacío (init ya lo carga; openModal recarga si es necesario)
+  if(!ProvC.length) ProvC=await sbGet('proveedores','?order=nombre.asc').catch(()=>[]);
   ['p-cliente','f-cliente'].forEach(id=>{const el=document.getElementById(id);if(!el)return;const cur=el.value;el.innerHTML='<option value="">Seleccionar…</option>'+[...CC].sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||'','es')).map(c=>`<option value="${c.cliente_id}">${c.nombre}</option>`).join('');if(cur)el.value=cur;});
   ['co-proyecto','sc-proyecto','h-proyecto','f-proyecto','i-proyecto','ped-proyecto','pres-proyecto-sel','comp-proyecto-sel','rent-proyecto-sel','cmp-proyecto','s-proyecto'].forEach(id=>{const el=document.getElementById(id);if(!el)return;const cur=el.value;el.innerHTML='<option value="">Seleccionar…</option>'+[...PC].sort((a,b)=>a.proyecto_id.localeCompare(b.proyecto_id,'es',{numeric:true})).map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');if(cur)el.value=cur;}); ixPopulateProyectoSel();
   // Refrescar datalist compartido de proveedores
@@ -6635,10 +6638,19 @@ function toggleGrentExpand(){
 // ════════════════════════════════════════════
 // SEARCHABLE SELECT — reutilizable
 // ════════════════════════════════════════════
-// Wrapper para búsqueda de proveedores: carga ProvC si está vacío
-async function _provSearch(inputId, ddId, hiddenId, hiddenValId){
+// Búsqueda de proveedores — SÍNCRONA, usa ProvC ya cargado en openModal
+function _provSearch(inputId, ddId, hiddenId, hiddenValId){
   if(!ProvC.length){
-    try{ ProvC=await sbGet('proveedores','?order=nombre.asc'); }catch(e){ ProvC=[]; }
+    // ProvC no está cargado — cargar de forma síncrona bloqueante no es posible
+    // Mostrar aviso y reintentar
+    const dd=document.getElementById(ddId);
+    if(dd){ dd.innerHTML='<div class="search-dd-empty">Cargando proveedores...</div>'; dd.style.display=''; }
+    sbGet('proveedores','?order=nombre.asc').then(r=>{
+      ProvC=r||[];
+      filtrarSearchSelect(inputId, ddId, hiddenId, hiddenValId, ProvC,'nombre','id');
+      abrirSearchDd(ddId);
+    }).catch(()=>{});
+    return;
   }
   filtrarSearchSelect(inputId, ddId, hiddenId, hiddenValId, ProvC,'nombre','id');
   abrirSearchDd(ddId);
