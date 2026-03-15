@@ -11329,7 +11329,10 @@ async function abrirNuevaFactura(tipo){
   document.getElementById('f-estado').innerHTML=esC
     ?'<option>Pendiente</option><option>Pagada</option><option>Parcial</option><option>Vencida</option><option>Anulada</option>'
     :'<option>Pendiente</option><option>Cobrada</option><option>Parcial</option><option>Vencida</option><option>Anulada</option>';
-  // Auto-generar número de factura por serie (formato 1-001/2026 o FRA-001/2026)
+  // Limpiar nº factura siempre al abrir nueva (para compras viene del PDF del proveedor)
+  const fNumEl = document.getElementById('f-num');
+  if(fNumEl) fNumEl.value = '';
+  // Auto-generar número de factura por serie (solo para ventas)
   autoNumFactura(esC);
   // Clear otros campos
   document.getElementById('f-concepto').value='';
