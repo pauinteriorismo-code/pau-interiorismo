@@ -19943,7 +19943,19 @@ function recalcPresKPI(){
   });
   const tot = v1 + v2 + v3 + v4 + v5 + v6 + v7 + v8 + unitsTotal;
   const el = document.getElementById('exp-k-pres');
-  if(el) el.textContent = tot > 0 ? fmt(tot) : '—';
+  if(el){
+    el.textContent = tot > 0 ? fmt(tot) : '—';
+    // Calcular total c/IVA real
+    let _ivaKPI = 0;
+    ['v1','v2','v3','v4','v5','v6','v7','v8'].forEach(function(v){
+      const chk=document.getElementById('chk-'+v);
+      if(chk && chk.checked) _ivaKPI += ((_presIvaGlobal||{})[v]||0);
+    });
+    const totCIva = tot + _ivaKPI;
+    let subPres = el.parentNode.querySelector('.kpi-pres-sub');
+    if(!subPres){ subPres=document.createElement('div'); subPres.className='kpi-pres-sub'; subPres.style.cssText='font-size:10px;color:var(--text-soft);margin-top:1px'; el.parentNode.appendChild(subPres); }
+    subPres.textContent = _ivaKPI > 0 ? fmt(totCIva)+' c/IVA' : 'Exento de IVA';
+  }
   // Ocultar checkboxes de versiones sin datos
   ['v1','v2','v3','v4','v5','v6','v7','v8'].forEach(v=>{
     const lbl = document.getElementById('chk-'+v)?.parentElement;
@@ -19965,7 +19977,14 @@ function recalcPresKPI(){
     const EA_proy = (EAC||[]).filter(e=>e.proyecto_id===_expProyId);
     const eaAmt = EA_proy.reduce((s,e)=>s+(parseFloat(e.importe)||0),0);
     const pendBase = Math.max(0, tot - factBI - eaAmt);
-    const pendCIva = pendBase * 1.21;
+    // IVA real: suma del IVA de las versiones marcadas
+    let _ivaAcum = 0;
+    ['v1','v2','v3','v4','v5','v6','v7','v8'].forEach(function(v){
+      const chk=document.getElementById('chk-'+v);
+      if(chk && chk.checked) _ivaAcum += ((_presIvaGlobal||{})[v]||0);
+    });
+    const _ivaPct = tot > 0 ? _ivaAcum / tot : 0;
+    const pendCIva = pendBase * (1 + _ivaPct);
     const kpiFact = document.getElementById('exp-k-fact');
     if(kpiFact){
       let subF = kpiFact.parentNode.querySelector('.kpi-fact-sub');
@@ -20305,7 +20324,7 @@ body.innerHTML = (function(){
     +'<div>'
     +'<div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Financiero <small style="font-weight:400">(base s/IVA · total c/IVA)</small></div>'
     +'<div style="background:#f0f9f0;border-radius:6px;padding:8px 10px;margin-bottom:6px">'
-    +'<div style="font-size:10px;font-weight:700;color:#2a7a2a;margin-bottom:4px">📥 INGRESOS</div>'
+    +'<div style="font-size:10px;font-weight:700;color:#2a7a2a;margin-bottom:4px">📥 INGRESOS <span style="font-weight:400;font-size:9px;color:#5a9a5a">(Pres. '+fmt(presBase)+' s/IVA'+(_presIvaAcum>0?' · '+fmt(presBase+_presIvaAcum)+' c/IVA':' · Exento')+')</span></div>'
     +rD('Facturado',factBase,factTotal,'var(--green)')
     +(eaTotal>0?rS('Entregas a cuenta',fmt(eaTotal),'#7b3fa0'):'')
     +(pendFactBase>0.01?rD('Pendiente facturar',pendFactBase,pendFactIva,'var(--amber)'):rS('Pendiente facturar','✓ Todo facturado','var(--green)'))
