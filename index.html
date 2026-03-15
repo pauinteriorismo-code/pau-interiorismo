@@ -10041,6 +10041,8 @@ async function saveInteriorismo(){
 async function loadCompras(){
   const tb=document.getElementById('compras-tbody');
   try{
+    // Asegurar ProvC cargado para resolver nombres de proveedores
+    if(!ProvC.length) ProvC=await sbGet('proveedores','?order=nombre.asc').catch(()=>[]);
     CoC=await sbGet('compras','?order=fecha.desc');
     document.getElementById('compras-count').textContent=CoC.length+' registros';
     if(!CoC.length){tb.innerHTML=`<tr><td colspan="10"><div class="empty"><div class="empty-icon">🛒</div><div class="empty-text">Sin compras</div><button class="btn btn-primary" onclick="openModal('m-compra')">＋ Nueva</button></div></td></tr>`;return;}
@@ -10129,6 +10131,8 @@ async function saveCompra(){
 async function loadSubcontratas(){
   const tb=document.getElementById('subcontratas-tbody');
   try{
+    // Asegurar ProvC cargado para resolver nombres de proveedores
+    if(!ProvC.length) ProvC=await sbGet('proveedores','?order=nombre.asc').catch(()=>[]);
     ScC=await sbGet('subcontratas','?order=fecha.desc');
     document.getElementById('subcontratas-count').textContent=ScC.length+' registros';
     if(!ScC.length){tb.innerHTML=`<tr><td colspan="10"><div class="empty"><div class="empty-icon">👷</div><div class="empty-text">Sin subcontratas</div><button class="btn btn-primary" onclick="openModal('m-subcontrata')">＋ Nueva</button></div></td></tr>`;return;}
