@@ -4277,7 +4277,15 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     <div class="form-grid">
       <div class="form-group"><label class="form-label">Fecha</label><input class="form-input" id="co-fecha" type="date"></div>
       <div class="form-group"><label class="form-label">Proyecto</label><select class="form-input" id="co-proyecto" onchange="onChangeProyectoGenerico('co')"><option value="">Seleccionar…</option><option value="PRY-001">PRY-001 · Mobiliario de cocina</option><option value="PRY-002">PRY-002 · Rehabilitación lateral fachada</option><option value="PRY-003">PRY-003 · Pavimento/revestimiento vivienda.</option><option value="PRY-004">PRY-004 · Rehabilitación estudio</option><option value="PRY-005">PRY-005 · Trabajos en terraza</option></select></div>
-      <div class="form-group"><label class="form-label">Proveedor</label><input class="form-input" id="co-prov" list="dl-proveedores" placeholder="Buscar proveedor…" autocomplete="off" oninput="_syncProvInput('co-prov')"><datalist id="dl-proveedores"></datalist></div>
+      <div class="form-group"><label class="form-label">Proveedor</label><div style="position:relative">
+  <input class="form-input" id="co-prov-search" placeholder="Buscar proveedor…" autocomplete="off"
+    oninput="filtrarSearchSelect('co-prov-search','co-prov-dd','co-prov-id','co-prov-val',ProvC,'nombre','id')"
+    onfocus="filtrarSearchSelect('co-prov-search','co-prov-dd','co-prov-id','co-prov-val',ProvC,'nombre','id');abrirSearchDd('co-prov-dd')"
+    onblur="setTimeout(()=>cerrarSearchDd('co-prov-dd'),200)">
+  <input type="hidden" id="co-prov-id">
+  <input type="hidden" id="co-prov-val">
+  <div id="co-prov-dd" class="search-dd" style="display:none"></div>
+</div></div>
       <div class="form-group"><label class="form-label">IVA</label><select class="form-input" id="co-iva"><option>10%</option><option selected>21%</option><option>4%</option><option>Exento</option></select></div>
       <div class="form-group"><label class="form-label">Partida / Capítulo</label><select class="form-input" id="co-partida" onchange="onChangePartidaGenerico('co')"><option value="">— General (sin partida) —</option></select></div>
       <div class="form-group" id="co-capitulo-group" style="display:none"><label class="form-label">Capítulo</label><select class="form-input" id="co-capitulo"><option value="">— Todo el presupuesto —</option></select></div>
@@ -4466,7 +4474,15 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     <div class="form-grid">
       <div class="form-group"><label class="form-label">Fecha</label><input class="form-input" id="sc-fecha" type="date"></div>
       <div class="form-group"><label class="form-label">Proyecto</label><select class="form-input" id="sc-proyecto" onchange="onChangeProyectoGenerico('sc')"><option value="">Seleccionar…</option><option value="PRY-001">PRY-001 · Mobiliario de cocina</option><option value="PRY-002">PRY-002 · Rehabilitación lateral fachada</option><option value="PRY-003">PRY-003 · Pavimento/revestimiento vivienda.</option><option value="PRY-004">PRY-004 · Rehabilitación estudio</option><option value="PRY-005">PRY-005 · Trabajos en terraza</option></select></div>
-      <div class="form-group"><label class="form-label">Subcontratista</label><input class="form-input" id="sc-prov" list="dl-proveedores" placeholder="Buscar subcontratista…" autocomplete="off" oninput="_syncProvInput('sc-prov')"><div id="dl-sc-prov-anchor"></div></div>
+      <div class="form-group"><label class="form-label">Subcontratista</label><div style="position:relative">
+  <input class="form-input" id="sc-prov-search" placeholder="Buscar subcontratista…" autocomplete="off"
+    oninput="filtrarSearchSelect('sc-prov-search','sc-prov-dd','sc-prov-id','sc-prov-val',ProvC,'nombre','id')"
+    onfocus="filtrarSearchSelect('sc-prov-search','sc-prov-dd','sc-prov-id','sc-prov-val',ProvC,'nombre','id');abrirSearchDd('sc-prov-dd')"
+    onblur="setTimeout(()=>cerrarSearchDd('sc-prov-dd'),200)">
+  <input type="hidden" id="sc-prov-id">
+  <input type="hidden" id="sc-prov-val">
+  <div id="sc-prov-dd" class="search-dd" style="display:none"></div>
+</div></div>
       <div class="form-group"><label class="form-label">IVA</label><select class="form-input" id="sc-iva"><option>10%</option><option selected>21%</option><option>4%</option><option>Exento</option></select></div>
       <div class="form-group"><label class="form-label">Partida / Capítulo</label><select class="form-input" id="sc-partida" onchange="onChangePartidaGenerico('sc')"><option value="">— General (sin partida) —</option></select></div>
       <div class="form-group" id="sc-capitulo-group" style="display:none"><label class="form-label">Capítulo</label><select class="form-input" id="sc-capitulo"><option value="">— Todo el presupuesto —</option></select></div>
@@ -4667,7 +4683,15 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <select class="form-input" id="f-cliente" onchange="cascadaClienteFactura()"><option value="">Seleccionar…</option><option value="CLI-H015">4F Fernando</option><option value="CLI-H014">4G daniel Dominguez</option><option value="CLI-H018">Amparo Forner Pastor</option><option value="CLI-H026">Ana María Palau Sastre</option><option value="CLI-H031">Belinda</option><option value="CLI-H004">CARMELO RODRIGUEZ VILA</option><option value="CLI-H032">Daniel palma gallardo</option><option value="CLI-H003">DESIRE NAVARRO MARI</option><option value="CLI-033">Estudi Encis SL</option><option value="CLI-H009">FERNANDO JOSE SAN GERMAN IBORRA</option><option value="CLI-H029">Francisco Navarro Garcia</option><option value="CLI-H019">Jose Antonio Martos Ortiz</option><option value="CLI-H013">Jose Manuel Garcia Seller Nº 7 Pta 4</option><option value="CLI-H030">Jose Manuel Pinzón Valbuena</option><option value="CLI-H007">Juanmi</option><option value="CLI-H012">Júlia Fabregat Mestre</option><option value="CLI-H028">Lara Blasco - Lara Blasco Iborra</option><option value="CLI-H027">Laura Doria Gomez</option><option value="CLI-H021">MERCEDES HIGUERAS GOMEZ</option><option value="CLI-H024">MICHELL BENITO</option><option value="CLI-H022">Miguel cocina</option><option value="CLI-001">Miguel Zaragozá Garzón</option><option value="CLI-H023">Miguel Zaragozá Garzón</option><option value="CLI-H002">Mª PAU BRAVO JOSE</option><option value="CLI-H005">PATRI</option><option value="CLI-H020">Rafael Francés Llàcer</option><option value="CLI-H010">REME IBORRA GIL</option><option value="CLI-H001">ROSA CHANZA SOLER</option><option value="CLI-H016">Sara Muñoz Abella</option><option value="CLI-H011">TONI TATAY DAVID</option><option value="CLI-H025">URKO Y FRANCESC</option><option value="CLI-H008">VICENT MARI SERRA</option><option value="CLI-034">Vicenta Baixauli Hernandez</option><option value="CLI-002">Vicenta Folch Gil</option><option value="CLI-H006">Vicenta Folch Gil</option><option value="CLI-H017">Yasmina Cabezuelo Alaminos</option></select>
       </div>
       <div class="form-group" id="f-grp-proveedor" style="display:none"><label class="form-label">Proveedor</label>
-        <input class="form-input" id="f-proveedor" list="dl-proveedores" placeholder="Buscar proveedor…" autocomplete="off" oninput="_syncProvInput('f-proveedor')">
+        <div style="position:relative">
+  <input class="form-input" id="f-prov-search" placeholder="Buscar proveedor…" autocomplete="off"
+    oninput="filtrarSearchSelect('f-prov-search','f-prov-dd','f-proveedor','f-prov-val',ProvC,'nombre','id')"
+    onfocus="filtrarSearchSelect('f-prov-search','f-prov-dd','f-proveedor','f-prov-val',ProvC,'nombre','id');abrirSearchDd('f-prov-dd')"
+    onblur="setTimeout(()=>cerrarSearchDd('f-prov-dd'),200)">
+  <input type="hidden" id="f-proveedor">
+  <input type="hidden" id="f-prov-val">
+  <div id="f-prov-dd" class="search-dd" style="display:none"></div>
+</div>
       </div>
       <div class="form-group" id="f-grp-proyecto">
         <label class="form-label">Proyecto <span style="font-size:10px;color:var(--text-soft);font-weight:400">(opcional)</span></label>
@@ -5630,6 +5654,9 @@ async function openModal(id){
       // Estado por defecto Pendiente
       const coEs = document.getElementById('co-estado');
       if(coEs) coEs.value = 'Pendiente';
+      // Limpiar proveedor
+      const coPS=document.getElementById('co-prov-search'); if(coPS) coPS.value='';
+      const coPH=document.getElementById('co-prov-id');     if(coPH) coPH.value='';
     }
   }
   if(id==='m-subcontrata'){
@@ -5653,6 +5680,9 @@ async function openModal(id){
       // Estado por defecto Pendiente
       const scEs = document.getElementById('sc-estado');
       if(scEs) scEs.value = 'Pendiente';
+      // Limpiar subcontratista
+      const scPS=document.getElementById('sc-prov-search'); if(scPS) scPS.value='';
+      const scPH=document.getElementById('sc-prov-id');     if(scPH) scPH.value='';
     }
   }
   if(id==='m-factura'){
@@ -9974,7 +10004,7 @@ async function saveCompra(){
     fecha: document.getElementById('co-fecha').value||new Date().toISOString().split('T')[0],
     proyecto: proyTexto,                    // campo texto "PRY-004" (filtros/display)
     proyecto_id: proyUUID||proyTexto||null, // UUID si existe, fallback a texto
-    proveedor_id: document.getElementById('co-prov').value||null,
+    proveedor_id: document.getElementById('co-prov-id').value||null,
     concepto: document.getElementById('co-concepto').value,
     base_imponible: parseFloat(document.getElementById('co-base').value)||0,
     iva_pct: document.getElementById('co-iva').value,
@@ -10038,7 +10068,12 @@ function editSubcontrata(id) {
   document.getElementById('sc-id').value        = s.id;
   document.getElementById('sc-fecha').value     = s.fecha || '';
   document.getElementById('sc-proyecto').value  = s.proyecto_id || '';
-  document.getElementById('sc-prov').value      = s.proveedor_id || '';
+  // Restaurar subcontratista: mostrar nombre en input, UUID en hidden
+  const scProvNombre = findProvName(s.proveedor_id)||'';
+  const scProvInput = document.getElementById('sc-prov-search');
+  const scProvHid   = document.getElementById('sc-prov-id');
+  if(scProvInput) scProvInput.value = scProvNombre;
+  if(scProvHid)   scProvHid.value   = s.proveedor_id||'';
   document.getElementById('sc-trabajo').value   = s.trabajo || '';
   document.getElementById('sc-importe').value   = s.importe || 0;
   document.getElementById('sc-iva').value       = s.iva_pct || '21%';
@@ -10081,7 +10116,12 @@ function editCompra(id) {
   document.getElementById('co-id').value        = c.id;
   document.getElementById('co-fecha').value     = c.fecha || '';
   document.getElementById('co-proyecto').value  = c.proyecto_id || '';
-  document.getElementById('co-prov').value      = c.proveedor_id || '';
+  // Restaurar proveedor: mostrar nombre en input, UUID en hidden
+  const coProvNombre = findProvName(c.proveedor_id)||'';
+  const coProvInput = document.getElementById('co-prov-search');
+  const coProvHid   = document.getElementById('co-prov-id');
+  if(coProvInput) coProvInput.value = coProvNombre;
+  if(coProvHid)   coProvHid.value   = c.proveedor_id||'';
   document.getElementById('co-concepto').value  = c.concepto || '';
   document.getElementById('co-base').value      = c.base_imponible || 0;
   document.getElementById('co-iva').value       = c.iva_pct || '21%';
@@ -10166,7 +10206,7 @@ function _setHoraProyecto(proyId, partidaVal) {
 async function saveSubcontrata(){
   const id=document.getElementById('sc-id')?.value;
   const pdfB64=document.getElementById('sc-pdf-b64')?.value||null;
-  const d={fecha:document.getElementById('sc-fecha').value||new Date().toISOString().split('T')[0],proyecto_id:document.getElementById('sc-proyecto').value||null,proveedor_id:document.getElementById('sc-prov').value||null,trabajo:document.getElementById('sc-trabajo').value,importe:parseFloat(document.getElementById('sc-importe').value)||0,iva_pct:document.getElementById('sc-iva').value,estado_pago:document.getElementById('sc-estado').value,fecha_acta1:document.getElementById('sc-fecha-acta1')?.value||null,importe_acta1:parseFloat(document.getElementById('sc-importe-acta1')?.value)||null,fecha_acta2:document.getElementById('sc-fecha-acta2')?.value||null,importe_acta2:parseFloat(document.getElementById('sc-importe-acta2')?.value)||null,fecha_acta3:document.getElementById('sc-fecha-acta3')?.value||null,importe_acta3:parseFloat(document.getElementById('sc-importe-acta3')?.value)||null,partida:getPartidaFinalPfx('sc')||null};
+  const d={fecha:document.getElementById('sc-fecha').value||new Date().toISOString().split('T')[0],proyecto_id:document.getElementById('sc-proyecto').value||null,proveedor_id:document.getElementById('sc-prov-id').value||null,trabajo:document.getElementById('sc-trabajo').value,importe:parseFloat(document.getElementById('sc-importe').value)||0,iva_pct:document.getElementById('sc-iva').value,estado_pago:document.getElementById('sc-estado').value,fecha_acta1:document.getElementById('sc-fecha-acta1')?.value||null,importe_acta1:parseFloat(document.getElementById('sc-importe-acta1')?.value)||null,fecha_acta2:document.getElementById('sc-fecha-acta2')?.value||null,importe_acta2:parseFloat(document.getElementById('sc-importe-acta2')?.value)||null,fecha_acta3:document.getElementById('sc-fecha-acta3')?.value||null,importe_acta3:parseFloat(document.getElementById('sc-importe-acta3')?.value)||null,partida:getPartidaFinalPfx('sc')||null};
   try{
     let savedId=id;
     if(id){ await sb('subcontratas','PATCH',d,null,`?id=eq.${id}`); }
@@ -11240,9 +11280,9 @@ async function abrirNuevaFactura(tipo){
   // Reset cliente/proyecto
   const fCliente=document.getElementById('f-cliente');
   if(fCliente) fCliente.value='';
-  await _poblarProvSel('f-proveedor');
-  const fProv=document.getElementById('f-proveedor');
-  if(fProv) fProv.value='';
+  // Limpiar campos de proveedor
+  const fProvSearch=document.getElementById('f-prov-search'); if(fProvSearch) fProvSearch.value='';
+  const fProvHid=document.getElementById('f-proveedor');      if(fProvHid) fProvHid.value='';
   // Reset proyecto: vacío hasta que se elija cliente (venta) o mostrar todos (compra)
   const fProy=document.getElementById('f-proyecto');
   if(fProy){
@@ -11871,8 +11911,12 @@ function editFactura(id){
 
   // 6. Cliente/proveedor y cascada proyecto
   if(esC){
-    const fpEl=document.getElementById('f-proveedor');
-    if(fpEl) fpEl.value=f.proveedor_id||'';
+    // Restaurar proveedor factura: nombre visible + UUID hidden
+  const fpSearchEl=document.getElementById('f-prov-search');
+  const fpHidEl=document.getElementById('f-proveedor');
+  const fpNombre = findProvName(f.proveedor_id)||'';
+  if(fpSearchEl) fpSearchEl.value = fpNombre;
+  if(fpHidEl)    fpHidEl.value    = f.proveedor_id||'';
   } else {
     const fcEl=document.getElementById('f-cliente');
     if(fcEl){
@@ -18994,12 +19038,8 @@ function _syncProvInput(inputId){
 }
 
 async function _poblarProvSel(selId){
-  // Siempre recargar para reflejar nuevos proveedores dados de alta
+  // Recargar ProvC para tener datos frescos (usado por filtrarSearchSelect en tiempo real)
   try{ ProvC=await sbGet('proveedores','?order=nombre.asc'); }catch(e){ if(!ProvC.length)ProvC=[]; }
-  _refrescarDatalistProveedores();
-  // Si es un input, mantener valor actual; si fuera select (ped-prov) usar value
-  const el=document.getElementById(selId); if(!el)return;
-  // el.value ya está establecido por el caller si viene de edición
 }
 
 function _refrescarDatalistProveedores(){
@@ -19057,27 +19097,25 @@ Reglas: iva_pct puede ser "21%","10%","4%" o "Exento". base_imponible es el impo
 // Función genérica para asignar valor a un select por texto parcial
 function _setSelectByText(selId, texto){
   if(!texto)return;
-  const el=document.getElementById(selId); if(!el)return;
-  // Input con datalist: buscar el proveedor más parecido en ProvC
-  if(el.tagName==='INPUT'){
-    const t=texto.toLowerCase();
-    const match=[...ProvC].find(p=>
-      (p.nombre||'').toLowerCase()===t ||
-      (p.nombre||'').toLowerCase().includes(t.slice(0,12)) ||
-      t.includes((p.nombre||'').toLowerCase().slice(0,12))
-    );
-    if(match) el.value=match.nombre;
-    else el.value=texto; // fallback: poner el texto tal cual
-    return;
-  }
-  // Select clásico
+  // Mapear IDs de select legacy a los nuevos search inputs
+  const idMap={'co-prov':'co-prov-search','sc-prov':'sc-prov-search','f-proveedor':'f-prov-search'};
+  const searchId = idMap[selId] || selId;
+  const el=document.getElementById(searchId); if(!el)return;
   const t=texto.toLowerCase();
-  const opt=[...el.options].find(o=>
-    o.value.toLowerCase()===t ||
-    o.value.toLowerCase().includes(t.slice(0,10)) ||
-    t.includes(o.value.toLowerCase().slice(0,10))
+  const match=[...ProvC].find(p=>
+    (p.nombre||'').toLowerCase()===t ||
+    (p.nombre||'').toLowerCase().includes(t.slice(0,12)) ||
+    t.includes((p.nombre||'').toLowerCase().slice(0,12))
   );
-  if(opt) el.value=opt.value;
+  if(match){
+    el.value=match.nombre;
+    // Rellenar hidden UUID
+    const hidMap={'co-prov-search':'co-prov-id','sc-prov-search':'sc-prov-id','f-prov-search':'f-proveedor'};
+    const hidEl=document.getElementById(hidMap[searchId]);
+    if(hidEl) hidEl.value=match.id||'';
+  } else {
+    el.value=texto;
+  }
 }
 function _setIVA(selId, iva){
   if(!iva)return;
