@@ -4663,7 +4663,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         </select>
       </div>
       <!-- Venta → Cliente | Compra → Proveedor -->
-      <div class="form-group" id="f-grp-cliente"><label class="form-label">Cliente</label>
+      <div class="form-group" id="f-grp-cliente"><label class="form-label">Cliente <span style="font-size:10px;color:var(--text-soft)">(opcional en compra)</span></label>
         <select class="form-input" id="f-cliente" onchange="cascadaClienteFactura()"><option value="">Seleccionar…</option><option value="CLI-H015">4F Fernando</option><option value="CLI-H014">4G daniel Dominguez</option><option value="CLI-H018">Amparo Forner Pastor</option><option value="CLI-H026">Ana María Palau Sastre</option><option value="CLI-H031">Belinda</option><option value="CLI-H004">CARMELO RODRIGUEZ VILA</option><option value="CLI-H032">Daniel palma gallardo</option><option value="CLI-H003">DESIRE NAVARRO MARI</option><option value="CLI-033">Estudi Encis SL</option><option value="CLI-H009">FERNANDO JOSE SAN GERMAN IBORRA</option><option value="CLI-H029">Francisco Navarro Garcia</option><option value="CLI-H019">Jose Antonio Martos Ortiz</option><option value="CLI-H013">Jose Manuel Garcia Seller Nº 7 Pta 4</option><option value="CLI-H030">Jose Manuel Pinzón Valbuena</option><option value="CLI-H007">Juanmi</option><option value="CLI-H012">Júlia Fabregat Mestre</option><option value="CLI-H028">Lara Blasco - Lara Blasco Iborra</option><option value="CLI-H027">Laura Doria Gomez</option><option value="CLI-H021">MERCEDES HIGUERAS GOMEZ</option><option value="CLI-H024">MICHELL BENITO</option><option value="CLI-H022">Miguel cocina</option><option value="CLI-001">Miguel Zaragozá Garzón</option><option value="CLI-H023">Miguel Zaragozá Garzón</option><option value="CLI-H002">Mª PAU BRAVO JOSE</option><option value="CLI-H005">PATRI</option><option value="CLI-H020">Rafael Francés Llàcer</option><option value="CLI-H010">REME IBORRA GIL</option><option value="CLI-H001">ROSA CHANZA SOLER</option><option value="CLI-H016">Sara Muñoz Abella</option><option value="CLI-H011">TONI TATAY DAVID</option><option value="CLI-H025">URKO Y FRANCESC</option><option value="CLI-H008">VICENT MARI SERRA</option><option value="CLI-034">Vicenta Baixauli Hernandez</option><option value="CLI-002">Vicenta Folch Gil</option><option value="CLI-H006">Vicenta Folch Gil</option><option value="CLI-H017">Yasmina Cabezuelo Alaminos</option></select>
       </div>
       <div class="form-group" id="f-grp-proveedor" style="display:none"><label class="form-label">Proveedor</label>
@@ -11200,7 +11200,7 @@ function abrirNuevaFactura(tipo){
   document.getElementById('f-modal-title').textContent=esC?'📥 Nueva factura de compra':'📤 Nueva factura de venta';
   const badge=document.getElementById('f-tipo-badge');
   if(badge){badge.textContent=esC?'📥 COMPRA':'📤 VENTA';badge.style.background=esC?'#fdecea':'#e8f5ee';badge.style.color=esC?'var(--red)':'var(--green)';}
-  document.getElementById('f-grp-cliente').style.display=esC?'none':'';
+  document.getElementById('f-grp-cliente').style.display='';  // siempre visible (opcional)
   document.getElementById('f-grp-proveedor').style.display=esC?'':'none';
   document.getElementById('f-cobrado-lbl').textContent=esC?'💶 Pagos realizados':'💶 Pagos a cuenta';const lbl2=document.getElementById('f-cobrado-lbl2');if(lbl2) lbl2.textContent=esC?'Total pagado:':'Total cobrado:';
   // Mostrar vencimientos múltiples solo en compras
@@ -11800,7 +11800,7 @@ function editFactura(id){
   document.getElementById('f-modal-title').textContent = esC?'✏️ Editar factura de compra':'✏️ Editar factura de venta';
   const badge=document.getElementById('f-tipo-badge');
   if(badge){badge.textContent=esC?'📥 COMPRA':'📤 VENTA';badge.style.background=esC?'#fdecea':'#e8f5ee';badge.style.color=esC?'var(--red)':'var(--green)';}
-  document.getElementById('f-grp-cliente').style.display   = esC?'none':'';
+  document.getElementById('f-grp-cliente').style.display   = '';  // siempre visible
   document.getElementById('f-grp-proveedor').style.display = esC?'':'none';
   document.getElementById('f-cobrado-lbl').textContent = esC?'Importe pagado €':'Importe cobrado €';
 
@@ -11967,7 +11967,7 @@ async function saveFactura(){
     tipo_factura:    tipo,
     num_factura:     numFac,
     fecha_emision:   document.getElementById('f-fecha').value||new Date().toISOString().split('T')[0],
-    cliente_id:      esC?null:(document.getElementById('f-cliente').value||null),
+    cliente_id:      document.getElementById('f-cliente').value||null,
     proveedor_id:    esC?(document.getElementById('f-proveedor').value||null):null,
     proyecto_id:     document.getElementById('f-proyecto').value||null,
     base_imponible:  parseFloat(document.getElementById('f-base').value)||0,
@@ -19742,6 +19742,17 @@ async function kbDrop(e, colEl){
 // FASE 2 — EXPEDIENTE UNIFICADO DE PROYECTO
 // ══════════════════════════════════════════════════════════════════════
 let _expProyId = null;
+// Helper: filtra CoC por proyecto (acepta texto PRY-XXX o UUID)
+function _cocProy(pid){
+  const p = PC.find(x=>x.proyecto_id===pid);
+  const uuid = p?.id;
+  return (CoC||[]).filter(c=> c.proyecto_id===pid || c.proyecto===pid || (uuid && c.proyecto_id===uuid));
+}
+function _scProy(pid){
+  const p = PC.find(x=>x.proyecto_id===pid);
+  const uuid = p?.id;
+  return (ScC||[]).filter(s=> s.proyecto_id===pid || (uuid && s.proyecto_id===uuid));
+}
 
 async function abrirExpediente(proyId){
   _expProyId = proyId;
@@ -19905,7 +19916,7 @@ async function calcExpKPIs(proyId){
   const factTotal = factProy.reduce((s,f)=>s+(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100), 0);
 
   // Compras del proyecto
-  const compProy = (CoC||[]).filter(c=>c.proyecto_id===proyId);
+  const compProy = _cocProy(proyId);
   const compTotal = compProy.reduce((s,c)=>s+(c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100), 0);
 
   // Horas / mano de obra del proyecto
@@ -19913,7 +19924,7 @@ async function calcExpKPIs(proyId){
   const costeHoras = horProy.reduce((s,h)=>s+(h.total||0), 0);
 
   // Subcontratas del proyecto
-  const scProy = (ScC||[]).filter(s=>s.proyecto_id===proyId);
+  const scProy = _scProy(proyId);
   const costeSubc = scProy.reduce((s,c)=>s+(c.importe||0)*(1+ivaPct(c.iva_pct)/100), 0);
 
   // Coste total sin IVA = compras BI + subcontratas BI + mano de obra
@@ -20001,7 +20012,7 @@ function renderExpResumen(body){
   if(!p){body.innerHTML='<p>No encontrado</p>';return;}
   const compProy=(CoC||[]).filter(c=>(c.proyecto||c.proyecto_id)===pid);
   const factProy=(FC||[]).filter(f=>f.proyecto_id===pid&&(f.tipo_factura||'Venta')==='Venta');
-  const scProy=(ScC||[]).filter(s=>s.proyecto_id===pid);
+  const scProy=_scProy(pid);
   const horProy=(HC||[]).filter(h=>h.proyecto_id===pid);
   const eaResProy=(EAC||[]).filter(e=>e.proyecto_id===pid);
   const compBase=compProy.reduce((s,c)=>s+(c.base_imponible||0),0);
@@ -20068,7 +20079,7 @@ function renderExpResumen(body){
 
 async function renderExpCompras(body){
   const pid = _expProyId;
-  const items = (CoC||[]).filter(c=>c.proyecto_id===pid).sort((a,b)=>b.fecha>a.fecha?1:-1);
+  const items = _cocProy(pid).sort((a,b)=>b.fecha>a.fecha?1:-1);
   // Facturas de compra registradas desde el módulo Facturas
   const facCompras = (FC||[]).filter(f=>f.proyecto_id===pid && f.tipo_factura==='Compra').sort((a,b)=>b.fecha_emision>a.fecha_emision?1:-1);
   if(!items.length && !facCompras.length){ body.innerHTML='<div style="text-align:center;padding:32px;color:var(--text-soft)">Sin compras registradas en este proyecto</div>'; return; }
@@ -20134,7 +20145,7 @@ function renderExpFacturas(body){
 
 async function renderExpSubcontratas(body){
   const pid = _expProyId;
-  const items = (ScC||[]).filter(s=>s.proyecto_id===pid);
+  const items = _scProy(pid);
   if(!items.length){ body.innerHTML='<div style="text-align:center;padding:32px;color:var(--text-soft)">Sin subcontratas en este proyecto</div>'; return; }
   const total = items.reduce((s,c)=>s+(c.importe||0)*(1+ivaPct(c.iva_pct)/100),0);
   // Resolver nombres de capítulos
@@ -20335,9 +20346,9 @@ async function renderExpRentabilidad(body){
   let lineas = [];
   try{ lineas = await sbGet('presupuesto_lineas', `?proyecto_id=eq.${pid}&order=orden.asc`); }catch(e){}
 
-  const compProy = (CoC||[]).filter(c=>c.proyecto_id===pid);
+  const compProy = _cocProy(pid);
   const factProy = (FC||[]).filter(f=>f.proyecto_id===pid&&(f.tipo_factura||'Venta')==='Venta');
-  const scProy   = (ScC||[]).filter(s=>s.proyecto_id===pid);
+  const scProy   = _scProy(pid);
   const horProy  = (HC||[]).filter(h=>h.proyecto_id===pid);
 
   // Totales presupuesto
@@ -20579,7 +20590,7 @@ function abrirFichaObra(proyId){
 
   document.getElementById('ficha-subtitle').textContent = `${p.proyecto_id} · ${p.estado||''}`;
 
-  const compProy = (CoC||[]).filter(c=>c.proyecto_id===proyId);
+  const compProy = _cocProy(proyId);
   const factProy = (FC||[]).filter(f=>f.proyecto_id===proyId&&(f.tipo_factura||'Venta')==='Venta');
   const horProy  = (HC||[]).filter(h=>h.proyecto_id===proyId);
 
@@ -20587,7 +20598,7 @@ function abrirFichaObra(proyId){
   const factTot = factProy.reduce((s,f)=>s+(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100),0);
   const hTot = horProy.reduce((s,h)=>s+(h.horas||0),0);
 
-  const scProy2  = (ScC||[]).filter(s=>s.proyecto_id===proyId);
+  const scProy2  = _scProy(proyId);
   const compPend = [
     ...compProy.filter(c=>c.estado_pago==='Pendiente').map(c=>({tipo:'mat', label:c.proveedor_id||c.concepto||'—', importe:(c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100)})),
     ...scProy2.filter(s=>['Pendiente','Parcial','Vencido'].includes(s.estado_pago)).map(s=>({tipo:'sc', label:s.proveedor_id||s.trabajo||'—', importe:(s.importe||0)*(1+ivaPct(s.iva_pct)/100)}))
@@ -20609,7 +20620,7 @@ function abrirFichaObra(proyId){
         ['🛒 Compras', fmt(compTot), 'var(--amber)'],
         ['🧾 Facturado', fmt(factTot), 'var(--green)'],
         ['⏱ Horas', hTot.toFixed(1)+'h', 'var(--navy)'],
-        ['👷 Subcontratas', `${(ScC||[]).filter(s=>s.proyecto_id===proyId).length} reg.`, 'var(--text-mid)'],
+        ['👷 Subcontratas', `${_scProy(proyId).length} reg.`, 'var(--text-mid)'],
       ].map(([k,v,c])=>`<div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:10px 12px"><div style="font-size:10px;color:var(--text-soft)">${k}</div><div style="font-size:16px;font-weight:800;color:${c}">${v}</div></div>`).join('')}
     </div>
 
@@ -21612,8 +21623,8 @@ async function renderExpUnidades(body){
     kpis.facturadoIva = facturas.reduce((s,f)=>{const b=f.base_imponible||0;return s+b+b*ivaPct(f.iva_pct)/100;},0);
     kpis.cobrado = facturas.reduce((s,f)=>s+(f.importe_cobrado||0),0);
     // Costes = compras + subcontratas
-    const compras = (CoC||[]).filter(c=>c.proyecto_id===pid);
-    const subcs = (ScC||[]).filter(s=>s.proyecto_id===pid);
+    const compras = _cocProy(pid);
+    const subcs = _scProy(pid);
     kpis.costes = compras.reduce((s,c)=>s+(c.base_imponible||0),0) + subcs.reduce((s,c)=>s+(c.importe||0),0);
     // Margen
     kpis.margen = kpis.facturado - kpis.costes;
