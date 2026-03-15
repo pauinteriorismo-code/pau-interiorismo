@@ -9904,7 +9904,7 @@ async function loadCompras(){
     document.getElementById('compras-count').textContent=CoC.length+' registros';
     if(!CoC.length){tb.innerHTML=`<tr><td colspan="10"><div class="empty"><div class="empty-icon">🛒</div><div class="empty-text">Sin compras</div><button class="btn btn-primary" onclick="openModal('m-compra')">＋ Nueva</button></div></td></tr>`;return;}
     const capNames = await resolverNombresCapitulos(CoC.map(c=>c.partida));
-    tb.innerHTML=CoC.map(c=>{const tot=c.base_imponible*(1+ivaPct(c.iva_pct)/100);const hasPDF=!!(c.adjunto_pdf);const partLbl=c.partida?`<span style="font-size:11px;color:var(--copper)">${partidaLabelConNombres(c.partida,capNames)}</span>`:'<span style="color:var(--text-soft)">—</span>';return`<tr data-search="${(c.proyecto_id+c.proveedor_id+c.concepto+(c.partida||'')).toLowerCase()}" data-partida="${c.partida||''}"><td>${fmtD(c.fecha)}</td><td class="td-mono">${c.proyecto_id?`<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:1px 5px;color:var(--navy);font-weight:700" title="Ver expediente" onclick="abrirExpediente('${c.proyecto_id}')">${c.proyecto_id}</button>`:"<span style='color:var(--text-soft)'>—</span>"}</td><td>${partLbl}</td><td>${c.proveedor_id||'—'}</td><td>${c.concepto||'—'}${hasPDF?' 📎':''}</td><td class="td-mono">${fmt(c.base_imponible)}</td><td class="td-mono">${c.iva_pct}</td><td class="td-mono" style="font-weight:700">${fmt(tot)}</td><td>${bE(c.estado_pago)}</td><td style="display:flex;gap:4px">${hasPDF?`<button class="btn btn-ghost btn-icon btn-sm" onclick="coVerPDFById('${c.id}')" style="font-size:11px;color:var(--navy)" title="Ver PDF">📄</button>`:''}<button class="btn btn-ghost btn-icon btn-sm" onclick="editCompra('${c.id}')" style="font-size:11px">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('compras','${c.id}','${(c.concepto||'compra').replace(/'/g,"\\'")}')">🗑</button></td></tr>`;}).join('');
+    tb.innerHTML=CoC.map(c=>{const tot=c.base_imponible*(1+ivaPct(c.iva_pct)/100);const hasPDF=!!(c.adjunto_pdf);const partLbl=c.partida?`<span style="font-size:11px;color:var(--copper)">${partidaLabelConNombres(c.partida,capNames)}</span>`:'<span style="color:var(--text-soft)">—</span>';const pId=(c.proyecto_id||c.proyecto||'');return`<tr data-search="${(pId+c.proveedor_id+c.concepto+(c.partida||'')).toLowerCase()}" data-partida="${c.partida||''}"><td>${fmtD(c.fecha)}</td><td class="td-mono">${pId?`<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:1px 5px;color:var(--navy);font-weight:700" title="Ver expediente" onclick="abrirExpediente('${pId}')">${pId}</button>`:"<span style='color:var(--text-soft)'>—</span>"}</td><td>${partLbl}</td><td>${c.proveedor_id||'—'}</td><td>${c.concepto||'—'}${hasPDF?' 📎':''}</td><td class="td-mono">${fmt(c.base_imponible)}</td><td class="td-mono">${c.iva_pct}</td><td class="td-mono" style="font-weight:700">${fmt(tot)}</td><td>${bE(c.estado_pago)}</td><td style="display:flex;gap:4px">${hasPDF?`<button class="btn btn-ghost btn-icon btn-sm" onclick="coVerPDFById('${c.id}')" style="font-size:11px;color:var(--navy)" title="Ver PDF">📄</button>`:''}<button class="btn btn-ghost btn-icon btn-sm" onclick="editCompra('${c.id}')" style="font-size:11px">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('compras','${c.id}','${(c.concepto||'compra').replace(/'/g,"\\'")}')">🗑</button></td></tr>`;}).join('');
   }catch(e){tb.innerHTML=`<tr><td colspan="10" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
   filtrarModuloPorProyecto('compras');
   aplicarFiltroPartida('compras');
@@ -9912,16 +9912,21 @@ async function loadCompras(){
 async function saveCompra(){
   const id=document.getElementById('co-id')?.value;
   const pdfB64=document.getElementById('co-pdf-b64')?.value||null;
-  // Datos base SIN PDF para evitar error de columna en schema cache
-  const d={fecha:document.getElementById('co-fecha').value||new Date().toISOString().split('T')[0],proyecto_id:document.getElementById('co-proyecto').value||null,proveedor_id:document.getElementById('co-prov').value||null,concepto:document.getElementById('co-concepto').value,base_imponible:parseFloat(document.getElementById('co-base').value)||0,iva_pct:document.getElementById('co-iva').value,estado_pago:document.getElementById('co-estado').value,notas:document.getElementById('co-notas').value,partida:getPartidaFinalPfx('co')||null};
+  const estadoVal = document.getElementById('co-estado').value;
+  // Intentar con estado_pago primero; si falla por schema, usar estado
+  const d={fecha:document.getElementById('co-fecha').value||new Date().toISOString().split('T')[0],proyecto_id:document.getElementById('co-proyecto').value||null,proveedor_id:document.getElementById('co-prov').value||null,concepto:document.getElementById('co-concepto').value,base_imponible:parseFloat(document.getElementById('co-base').value)||0,iva_pct:document.getElementById('co-iva').value,estado_pago:estadoVal,notas:document.getElementById('co-notas').value,partida:getPartidaFinalPfx('co')||null};
+  const dAlt={...d};delete dAlt.estado_pago;dAlt.estado=estadoVal;
   try{
     let savedId = id;
-    if(id){
-      await sb('compras','PATCH',d,null,`?id=eq.${id}`);
-    } else {
-      const res = await sbPost('compras',d);
-      // Obtener el id del registro recién creado
-      if(res && res[0] && res[0].id) savedId = res[0].id;
+    try{
+      if(id){ await sb('compras','PATCH',d,null,`?id=eq.${id}`); }
+      else { const res=await sbPost('compras',d); if(res&&res[0]&&res[0].id) savedId=res[0].id; }
+    }catch(eCol){
+      // Si el error es de columna estado_pago, reintentar con "estado"
+      if(eCol.message&&eCol.message.includes('estado_pago')){
+        if(id){ await sb('compras','PATCH',dAlt,null,`?id=eq.${id}`); }
+        else { const res=await sbPost('compras',dAlt); if(res&&res[0]&&res[0].id) savedId=res[0].id; }
+      } else { throw eCol; }
     }
     // Paso 2: guardar PDF por separado (PATCH independiente) si hay uno nuevo
     if(pdfB64 && window._coPDFChanged && savedId){
@@ -20002,7 +20007,7 @@ function renderExpResumen(body){
 
 async function renderExpCompras(body){
   const pid = _expProyId;
-  const items = (CoC||[]).filter(c=>c.proyecto_id===pid).sort((a,b)=>b.fecha>a.fecha?1:-1);
+  const items = (CoC||[]).filter(c=>(c.proyecto_id===pid||c.proyecto===pid)).sort((a,b)=>b.fecha>a.fecha?1:-1);
   if(!items.length){ body.innerHTML='<div style="text-align:center;padding:32px;color:var(--text-soft)">Sin compras registradas en este proyecto</div>'; return; }
   const total = items.reduce((s,c)=>s+(c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100),0);
   // Resolver nombres de capítulos
@@ -20032,8 +20037,8 @@ async function renderExpCompras(body){
 
 function renderExpFacturas(body){
   const pid = _expProyId;
-  const items = (FC||[]).filter(f=>f.proyecto_id===pid).sort((a,b)=>b.fecha_emision>a.fecha_emision?1:-1);
-  if(!items.length){ body.innerHTML='<div style="text-align:center;padding:32px;color:var(--text-soft)">Sin facturas en este proyecto</div>'; return; }
+  const items = (FC||[]).filter(f=>f.proyecto_id===pid&&(f.tipo_factura||'Venta')==='Venta').sort((a,b)=>b.fecha_emision>a.fecha_emision?1:-1);
+  if(!items.length){ body.innerHTML='<div style="text-align:center;padding:32px;color:var(--text-soft)">Sin facturas de venta en este proyecto</div>'; return; }
   body.innerHTML = `<table style="width:100%;font-size:12px;border-collapse:collapse">
     <thead><tr style="background:var(--navy);color:#fff">${['Nº Factura','Fecha','Tipo','Concepto','Base','Total','Estado'].map(h=>`<th style="padding:7px 10px;text-align:left">${h}</th>`).join('')}</tr></thead>
     <tbody>${items.map((f,i)=>{const tot=(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100);return`<tr style="background:${i%2?'#fafafa':'#fff'}">
