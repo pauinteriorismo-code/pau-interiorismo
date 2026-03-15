@@ -19917,9 +19917,10 @@ async function abrirExpediente(proyId){
   await loadEntregas();
   await calcExpKPIs(proyId);
 
-  // Abrir en tab resumen
-  expTab('resumen');
+  // Abrir modal PRIMERO, luego renderizar (necesita DOM del modal disponible)
   openModal('m-expediente');
+  // Pequeño delay para que el modal esté en el DOM
+  setTimeout(()=>{ expTab('resumen'); }, 50);
 }
 
 // Desglose global por versión (se rellena en calcExpKPIs y se usa en recalcPresKPI)
