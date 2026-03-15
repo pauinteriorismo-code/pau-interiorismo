@@ -5604,7 +5604,20 @@ function autoProvincia(inputId){
   if(el && !el.value) el.value = 'Valencia';
 }
 
-function findProvName(id){if(!id)return'';return ProvC.find(p=>String(p.id)===String(id))?.nombre || ScC.find(s=>String(s.proveedor_id)===String(id))?.proveedor_id || ProvC.find(p=>p.nombre===id)?.nombre || id;}
+function findProvName(id){
+  if(!id)return'';
+  const sid=String(id);
+  // 1. Buscar por UUID exacto
+  const byId = ProvC.find(p=>String(p.id)===sid);
+  if(byId) return byId.nombre;
+  // 2. Buscar por nombre exacto (cuando se guardó el nombre en vez del UUID)
+  const byNombre = ProvC.find(p=>p.nombre===sid);
+  if(byNombre) return byNombre.nombre;
+  // 3. Si parece un UUID (36 chars con guiones) — devolver '—' en vez del UUID
+  if(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(sid)) return '—';
+  // 4. Devolver el valor tal cual (puede ser el nombre)
+  return sid;
+}
 function fmtN(n){if(!n&&n!==0)return'—';return fmtES(Number(n))+'€'}
 function fmtP(n){return n!=null?Number(n).toFixed(1)+'%':'—'}
 function fmtD(d){if(!d)return'—';const p=d.split('-');return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:d}
@@ -10071,7 +10084,8 @@ async function saveCompra(){
     fecha: document.getElementById('co-fecha').value||new Date().toISOString().split('T')[0],
     proyecto: proyTexto,                    // campo texto "PRY-004" (filtros/display)
     proyecto_id: proyUUID||proyTexto||null, // UUID si existe, fallback a texto
-    proveedor_id: document.getElementById('co-prov-id').value||null,
+    // Guardar nombre del proveedor (proveedor_id en compras es texto, no UUID)
+    proveedor_id: (()=>{ const sel=document.getElementById('co-prov-sel'); return sel&&sel.value?(sel.options[sel.selectedIndex]?.text||sel.value):null; })(),
     concepto: document.getElementById('co-concepto').value,
     base_imponible: parseFloat(document.getElementById('co-base').value)||0,
     iva_pct: document.getElementById('co-iva').value,
@@ -10268,7 +10282,7 @@ function _setHoraProyecto(proyId, partidaVal) {
 async function saveSubcontrata(){
   const id=document.getElementById('sc-id')?.value;
   const pdfB64=document.getElementById('sc-pdf-b64')?.value||null;
-  const d={fecha:document.getElementById('sc-fecha').value||new Date().toISOString().split('T')[0],proyecto_id:document.getElementById('sc-proyecto').value||null,proveedor_id:document.getElementById('sc-prov-id').value||null,trabajo:document.getElementById('sc-trabajo').value,importe:parseFloat(document.getElementById('sc-importe').value)||0,iva_pct:document.getElementById('sc-iva').value,estado_pago:document.getElementById('sc-estado').value,fecha_acta1:document.getElementById('sc-fecha-acta1')?.value||null,importe_acta1:parseFloat(document.getElementById('sc-importe-acta1')?.value)||null,fecha_acta2:document.getElementById('sc-fecha-acta2')?.value||null,importe_acta2:parseFloat(document.getElementById('sc-importe-acta2')?.value)||null,fecha_acta3:document.getElementById('sc-fecha-acta3')?.value||null,importe_acta3:parseFloat(document.getElementById('sc-importe-acta3')?.value)||null,partida:getPartidaFinalPfx('sc')||null};
+  const d={fecha:document.getElementById('sc-fecha').value||new Date().toISOString().split('T')[0],proyecto_id:document.getElementById('sc-proyecto').value||null,proveedor_id:(()=>{ const sel=document.getElementById('sc-prov-sel'); return sel&&sel.value?(sel.options[sel.selectedIndex]?.text||sel.value):null; })(),trabajo:document.getElementById('sc-trabajo').value,importe:parseFloat(document.getElementById('sc-importe').value)||0,iva_pct:document.getElementById('sc-iva').value,estado_pago:document.getElementById('sc-estado').value,fecha_acta1:document.getElementById('sc-fecha-acta1')?.value||null,importe_acta1:parseFloat(document.getElementById('sc-importe-acta1')?.value)||null,fecha_acta2:document.getElementById('sc-fecha-acta2')?.value||null,importe_acta2:parseFloat(document.getElementById('sc-importe-acta2')?.value)||null,fecha_acta3:document.getElementById('sc-fecha-acta3')?.value||null,importe_acta3:parseFloat(document.getElementById('sc-importe-acta3')?.value)||null,partida:getPartidaFinalPfx('sc')||null};
   try{
     let savedId=id;
     if(id){ await sb('subcontratas','PATCH',d,null,`?id=eq.${id}`); }
@@ -12085,7 +12099,8 @@ async function saveFactura(){
     num_factura:     numFac,
     fecha_emision:   document.getElementById('f-fecha').value||new Date().toISOString().split('T')[0],
     cliente_id:      document.getElementById('f-cliente').value||null,
-    proveedor_id:    esC?(document.getElementById('f-proveedor').value||null):null,
+    // Para compras: guardar nombre del proveedor (texto), no UUID
+    proveedor_id:    esC?((()=>{ const sel=document.getElementById('f-prov-sel'); return sel&&sel.value?(sel.options[sel.selectedIndex]?.text||sel.value):null; })()):null,
     proyecto_id:     document.getElementById('f-proyecto').value||null,
     base_imponible:  parseFloat(document.getElementById('f-base').value)||0,
     iva_pct:         document.getElementById('f-iva').value,
@@ -18967,6 +18982,7 @@ function sortAndRenderCompras(col, dir) {
     return `<tr data-search="${(pText+' '+(c.proveedor_id||'')+' '+(c.concepto||'')).toLowerCase()}">
       <td>${fmtD(c.fecha)}</td>
       <td class="td-mono" style="color:var(--text-soft)">${pText?`<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:1px 5px;color:var(--navy);font-weight:700" onclick="abrirExpediente('${pText}')">${pText}</button>`:'—'}</td>
+      <td><span style="font-size:11px;color:var(--copper)">${c.partida?partidaLabel(c.partida):'—'}</span></td>
       <td>${findProvName(c.proveedor_id)||'—'}</td>
       <td>${c.concepto||'—'}</td>
       <td class="td-mono">${fmt(c.base_imponible)}</td>
