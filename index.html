@@ -20049,7 +20049,9 @@ function renderExpResumen(body){
 async function renderExpCompras(body){
   const pid = _expProyId;
   const items = (CoC||[]).filter(c=>c.proyecto_id===pid).sort((a,b)=>b.fecha>a.fecha?1:-1);
-  if(!items.length){ body.innerHTML='<div style="text-align:center;padding:32px;color:var(--text-soft)">Sin compras registradas en este proyecto</div>'; return; }
+  // Facturas de compra registradas desde el módulo Facturas
+  const facCompras = (FC||[]).filter(f=>f.proyecto_id===pid && f.tipo_factura==='Compra').sort((a,b)=>b.fecha_emision>a.fecha_emision?1:-1);
+  if(!items.length && !facCompras.length){ body.innerHTML='<div style="text-align:center;padding:32px;color:var(--text-soft)">Sin compras registradas en este proyecto</div>'; return; }
   const total = items.reduce((s,c)=>s+(c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100),0);
   // Resolver nombres de capítulos
   const capIds=[...new Set(items.map(c=>c.partida).filter(p=>p&&p.startsWith('cap:')).map(p=>p.slice(4)))];
@@ -20073,13 +20075,29 @@ async function renderExpCompras(body){
         <td style="padding:6px 10px">${c.adjunto_pdf?`<button class="btn btn-ghost btn-sm" style="font-size:10px" onclick="coVerPDFById('${c.id}')">📄</button>`:''}<button class="btn btn-ghost btn-icon btn-sm" onclick="editCompra('${c.id}');closeModal('m-expediente')" title="Editar">✏️</button></td>
       </tr>`}).join('')}</tbody>
     </table></div>
+    ${facCompras.length ? `
+    <div style="margin-top:14px;margin-bottom:6px;font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.05em">📥 Facturas de compra</div>
+    <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden">
+    <table style="width:100%;font-size:12px;border-collapse:collapse">
+      <thead><tr style="background:var(--navy);color:#fff">${['Nº Factura','Fecha','Proveedor','Concepto','Base','IVA','Total','Estado'].map(h=>`<th style="padding:7px 10px;text-align:left;font-weight:600">${h}</th>`).join('')}</tr></thead>
+      <tbody>${facCompras.map((f,i)=>{const tot=(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100);return`<tr style="background:${i%2?'#fafafa':'#fff'}">
+        <td style="padding:6px 10px;font-weight:600">${f.num_factura||'—'}</td>
+        <td style="padding:6px 10px;white-space:nowrap">${fmtD(f.fecha_emision)}</td>
+        <td style="padding:6px 10px">${f.proveedor||f.concepto?.substring(0,20)||'—'}</td>
+        <td style="padding:6px 10px">${f.concepto||'—'}</td>
+        <td style="padding:6px 10px;font-family:monospace">${fmt(f.base_imponible)}</td>
+        <td style="padding:6px 10px">${f.iva_pct||'21%'}</td>
+        <td style="padding:6px 10px;font-weight:700;font-family:monospace;color:var(--amber)">${fmt(tot)}</td>
+        <td style="padding:6px 10px">${bE(f.estado)}</td>
+      </tr>`}).join('')}</tbody>
+    </table></div>` : ''}
     <div style="margin-top:8px;text-align:right"><button class="btn btn-primary btn-sm" onclick="closeModal('m-expediente');setTimeout(()=>{openModal('m-compra')},200)">＋ Nueva compra</button></div>`;
 }
 
 function renderExpFacturas(body){
   const pid = _expProyId;
-  const items = (FC||[]).filter(f=>f.proyecto_id===pid).sort((a,b)=>b.fecha_emision>a.fecha_emision?1:-1);
-  if(!items.length){ body.innerHTML='<div style="text-align:center;padding:32px;color:var(--text-soft)">Sin facturas en este proyecto</div>'; return; }
+  const items = (FC||[]).filter(f=>f.proyecto_id===pid && (f.tipo_factura||'Venta')==='Venta').sort((a,b)=>b.fecha_emision>a.fecha_emision?1:-1);
+  if(!items.length){ body.innerHTML='<div style="text-align:center;padding:32px;color:var(--text-soft)">Sin facturas de venta en este proyecto</div>'; return; }
   body.innerHTML = `<table style="width:100%;font-size:12px;border-collapse:collapse">
     <thead><tr style="background:var(--navy);color:#fff">${['Nº Factura','Fecha','Tipo','Concepto','Base','Total','Estado'].map(h=>`<th style="padding:7px 10px;text-align:left">${h}</th>`).join('')}</tr></thead>
     <tbody>${items.map((f,i)=>{const tot=(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100);return`<tr style="background:${i%2?'#fafafa':'#fff'}">
