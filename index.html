@@ -5653,6 +5653,10 @@ function openModal(id){
     // Poblar proveedor en factura (para facturas de compra)
     _poblarProvSel('f-proveedor');
   }
+  if(id==='m-pedido'){
+    // Asegurar que ProvC está cargado para el buscador de proveedor
+    if(!ProvC.length){ sbGet('proveedores','?order=nombre.asc').then(r=>{ ProvC=r||[]; }).catch(()=>{}); }
+  }
   document.getElementById(id)?.classList.add('open');
 }
 function closeModal(id){document.getElementById(id)?.classList.remove('open')}
@@ -6464,10 +6468,10 @@ function populateTrabajadores(){
 async function populateSelects(){
   if(!CC.length)CC=await sbGet('clientes').catch(()=>[]);
   if(!PC.length)PC=await sbGet('proyectos').catch(()=>[]);
-  if(!ProvC.length)ProvC=await sbGet('proveedores','?order=nombre.asc').catch(()=>[]);
+  // Siempre recargar ProvC para que refleje altas/bajas recientes
+  ProvC=await sbGet('proveedores','?order=nombre.asc').catch(()=>ProvC||[]);
   ['p-cliente','f-cliente'].forEach(id=>{const el=document.getElementById(id);if(!el)return;const cur=el.value;el.innerHTML='<option value="">Seleccionar…</option>'+[...CC].sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||'','es')).map(c=>`<option value="${c.cliente_id}">${c.nombre}</option>`).join('');if(cur)el.value=cur;});
   ['co-proyecto','sc-proyecto','h-proyecto','f-proyecto','i-proyecto','ped-proyecto','pres-proyecto-sel','comp-proyecto-sel','rent-proyecto-sel','cmp-proyecto','s-proyecto'].forEach(id=>{const el=document.getElementById(id);if(!el)return;const cur=el.value;el.innerHTML='<option value="">Seleccionar…</option>'+[...PC].sort((a,b)=>a.proyecto_id.localeCompare(b.proyecto_id,'es',{numeric:true})).map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');if(cur)el.value=cur;}); ixPopulateProyectoSel();
-  if(!ProvC.length) ProvC=await sbGet('proveedores','?order=nombre.asc').catch(()=>[]);
   const provOpts='<option value="">Seleccionar proveedor…</option>'+[...ProvC].sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||'','es')).map(p=>`<option value="${p.nombre}">${p.nombre}${p.tipo?' · '+p.tipo:''}</option>`).join('');
   ['co-prov','sc-prov','ped-prov','f-proveedor'].forEach(id=>{
     const el=document.getElementById(id);
@@ -7421,7 +7425,8 @@ function poblarClientesModalCmp(){
   if(cur)sel.value=cur;
 }
 
-function poblarProveedoresComparativa(){
+async function poblarProveedoresComparativa(){
+  if(!ProvC.length){ try{ ProvC=await sbGet('proveedores','?order=nombre.asc'); }catch(e){ ProvC=[]; } }
   [1,2,3].forEach(n=>{
     const sel=document.getElementById(`o${n}-prov`);
     if(!sel)return;
@@ -9937,7 +9942,7 @@ async function loadCompras(){
         <td>${c.proveedor_id||'—'}</td>
         <td>${c.concepto||'—'}${hasPDF?' 📎':''}</td>
         <td class="td-mono">${fmt(c.base_imponible)}</td>
-        <td class="td-mono">${c.iva_pct||'—'}</td>
+        <td class="td-mono">${c.iva_pct||'21%'}</td>
         <td class="td-mono" style="font-weight:700">${fmt(tot)}</td>
         <td>${bE(c.estado_pago||c.estado)}</td>
         <td style="display:flex;gap:4px">${hasPDF?`<button class="btn btn-ghost btn-icon btn-sm" onclick="coVerPDFById('${c.id}')" style="font-size:11px;color:var(--navy)" title="Ver PDF">📄</button>`:''}<button class="btn btn-ghost btn-icon btn-sm" onclick="editCompra('${c.id}')" style="font-size:11px">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('compras','${c.id}','${(c.concepto||'compra').replace(/'/g,"\\'")}')">🗑</button></td>
@@ -18988,8 +18993,8 @@ document.addEventListener('keydown', e => {
 async function _poblarProvSel(selId){
   const el=document.getElementById(selId); if(!el)return;
   const cur=el.value;
-  // Cargar ProvC si está vacío
-  if(!ProvC.length){ try{ ProvC=await sbGet('proveedores','?order=nombre.asc'); }catch(e){ ProvC=[]; } }
+  // Siempre recargar para reflejar nuevos proveedores dados de alta
+  try{ ProvC=await sbGet('proveedores','?order=nombre.asc'); }catch(e){ if(!ProvC.length)ProvC=[]; }
   el.innerHTML='<option value="">Seleccionar proveedor…</option>'+
     [...ProvC].sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||'','es'))
     .map(p=>`<option value="${p.nombre}">${p.nombre}${p.tipo?' · '+p.tipo:''}</option>`).join('');
@@ -20080,9 +20085,7 @@ function renderExpResumen(body){
 async function renderExpCompras(body){
   const pid = _expProyId;
   const items = _cocProy(pid).sort((a,b)=>b.fecha>a.fecha?1:-1);
-  // Facturas de compra registradas desde el módulo Facturas
-  const facCompras = (FC||[]).filter(f=>f.proyecto_id===pid && f.tipo_factura==='Compra').sort((a,b)=>b.fecha_emision>a.fecha_emision?1:-1);
-  if(!items.length && !facCompras.length){ body.innerHTML='<div style="text-align:center;padding:32px;color:var(--text-soft)">Sin compras registradas en este proyecto</div>'; return; }
+  if(!items.length){ body.innerHTML='<div style="text-align:center;padding:32px;color:var(--text-soft)">Sin compras registradas en este proyecto</div>'; return; }
   const total = items.reduce((s,c)=>s+(c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100),0);
   // Resolver nombres de capítulos
   const capIds=[...new Set(items.map(c=>c.partida).filter(p=>p&&p.startsWith('cap:')).map(p=>p.slice(4)))];
@@ -20100,28 +20103,12 @@ async function renderExpCompras(body){
         <td style="padding:6px 10px;white-space:nowrap">${fmtD(c.fecha)}</td><td style="padding:6px 10px">${pLbl}</td><td style="padding:6px 10px">${c.proveedor_id||'—'}</td>
         <td style="padding:6px 10px">${c.concepto||'—'}${c.adjunto_pdf?' 📎':''}</td>
         <td style="padding:6px 10px;font-family:monospace">${fmt(c.base_imponible)}</td>
-        <td style="padding:6px 10px">${c.iva_pct}</td>
+        <td style="padding:6px 10px">${c.iva_pct||'21%'}</td>
         <td style="padding:6px 10px;font-weight:700;font-family:monospace;color:var(--amber)">${fmt(tot)}</td>
         <td style="padding:6px 10px">${bE(c.estado_pago)}</td>
         <td style="padding:6px 10px">${c.adjunto_pdf?`<button class="btn btn-ghost btn-sm" style="font-size:10px" onclick="coVerPDFById('${c.id}')">📄</button>`:''}<button class="btn btn-ghost btn-icon btn-sm" onclick="editCompra('${c.id}');closeModal('m-expediente')" title="Editar">✏️</button></td>
       </tr>`}).join('')}</tbody>
     </table></div>
-    ${facCompras.length ? `
-    <div style="margin-top:14px;margin-bottom:6px;font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.05em">📥 Facturas de compra</div>
-    <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden">
-    <table style="width:100%;font-size:12px;border-collapse:collapse">
-      <thead><tr style="background:var(--navy);color:#fff">${['Nº Factura','Fecha','Proveedor','Concepto','Base','IVA','Total','Estado'].map(h=>`<th style="padding:7px 10px;text-align:left;font-weight:600">${h}</th>`).join('')}</tr></thead>
-      <tbody>${facCompras.map((f,i)=>{const tot=(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100);return`<tr style="background:${i%2?'#fafafa':'#fff'}">
-        <td style="padding:6px 10px;font-weight:600">${f.num_factura||'—'}</td>
-        <td style="padding:6px 10px;white-space:nowrap">${fmtD(f.fecha_emision)}</td>
-        <td style="padding:6px 10px">${f.proveedor||f.concepto?.substring(0,20)||'—'}</td>
-        <td style="padding:6px 10px">${f.concepto||'—'}</td>
-        <td style="padding:6px 10px;font-family:monospace">${fmt(f.base_imponible)}</td>
-        <td style="padding:6px 10px">${f.iva_pct||'21%'}</td>
-        <td style="padding:6px 10px;font-weight:700;font-family:monospace;color:var(--amber)">${fmt(tot)}</td>
-        <td style="padding:6px 10px">${bE(f.estado)}</td>
-      </tr>`}).join('')}</tbody>
-    </table></div>` : ''}
     <div style="margin-top:8px;text-align:right"><button class="btn btn-primary btn-sm" onclick="closeModal('m-expediente');setTimeout(()=>{openModal('m-compra')},200)">＋ Nueva compra</button></div>`;
 }
 
