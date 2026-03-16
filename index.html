@@ -4925,8 +4925,17 @@ const PAU_LOGO = 'data:image/png;base64,' + (document.getElementById('pau-logo-d
 async function initPresFinal(){
   if(!PC.length)PC=await sbGet('proyectos').catch(()=>[]);
   populateSelects();
+  // NO poblar pf-proyecto-sel aquí — se llena al seleccionar cliente via cascadaModulo
+  // Solo resetear a vacío para que el usuario elija cliente primero
   const sel=document.getElementById('pf-proyecto-sel');
-  sel.innerHTML='<option value="">Seleccionar proyecto…</option>'+[...PC].sort((a,b)=>a.proyecto_id.localeCompare(b.proyecto_id,'es',{numeric:true})).map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
+  const clienteId = document.getElementById('filter-cliente-pres_final')?.value;
+  if(clienteId){
+    // Si ya hay cliente seleccionado, filtrar sus proyectos
+    const filtrados = PC.filter(p=>p.cliente_id===clienteId).sort((a,b)=>a.proyecto_id.localeCompare(b.proyecto_id,'es',{numeric:true}));
+    sel.innerHTML='<option value="">📁 Proyecto…</option>'+filtrados.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
+  } else {
+    sel.innerHTML='<option value="">📁 Proyecto…</option>';
+  }
 }
 async function pfProyChanged(){
   await _loadUnitsIntoSelector(
@@ -6209,7 +6218,7 @@ function cascadaModuloInt(){
   const proySel    = document.getElementById('filter-proyecto-interiorismo');
   if(!proySel) return;
   const filtrados  = clienteId ? PC.filter(p=>p.cliente_id===clienteId) : PC;
-  proySel.innerHTML = '<option value="">📁 Proyecto…</option>'
+  proySel.innerHTML = clienteId ? '<option value="">📁 Proyecto…</option>' : '<option value="">👤 Selecciona cliente primero…</option>'
     + filtrados.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
   filtrarInteriorismo();
 }
@@ -6292,7 +6301,7 @@ function cascadaModulo(mod, proySelId, loadFn){
   const proySel    = document.getElementById(proySelId);
   if(!proySel) return;
   const cur = proySel.value;
-  const filtrados = clienteId ? PC.filter(p=>p.cliente_id===clienteId) : PC;
+  const filtrados = clienteId ? PC.filter(p=>p.cliente_id===clienteId).sort((a,b)=>a.proyecto_id.localeCompare(b.proyecto_id,'es',{numeric:true})) : [];
   proySel.innerHTML = '<option value="">📁 Proyecto…</option>'
     + filtrados.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
   // Restore selection if still valid
