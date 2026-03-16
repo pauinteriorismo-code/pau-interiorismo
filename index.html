@@ -11103,7 +11103,7 @@ async function loadRentabilidad(){
     const verFilter = verActivas.length===1
       ? `version=eq.${verActivas[0]}`
       : `version=in.(${verActivas.join(',')})`;
-    const[lineas,compras,subcs,horas,facturas]=await Promise.all([sbGet('presupuesto_lineas',`?proyecto_id=eq.${proy}&${verFilter}`),sbGet('compras',`?proyecto_id=eq.${proy}`),sbGet('subcontratas',`?proyecto_id=eq.${proy}`),sbGet('horas',`?proyecto_id=eq.${proy}`),sbGet('facturas',`?proyecto_id=eq.${proy}`)]);
+    const[lineas,compras,subcs,horas,facturas]=await Promise.all([sbGet('presupuesto_lineas',`?proyecto_id=eq.${proy}&${verFilter}`),sbGet('compras',`?proyecto=eq.${proy}`),sbGet('subcontratas',`?proyecto_id=eq.${proy}`),sbGet('horas',`?proyecto_id=eq.${proy}`),sbGet('facturas',`?proyecto_id=eq.${proy}`)]);
     const totalPres=lineas.filter(l=>!l.es_capitulo).reduce((s,l)=>s+(l.subtotal||0),0);
     const totalCompras=compras.reduce((s,c)=>s+(c.base_imponible||0),0);
     const totalSubcs=subcs.reduce((s,c)=>s+(c.importe||0),0);
@@ -12574,7 +12574,7 @@ async function calcularAlertas(){
     for(const p of proyectos){
       const [lineas,compras,subcs,horas] = await Promise.all([
         sbGet('presupuesto_lineas',`?proyecto_id=eq.${p.proyecto_id}&version=eq.v1`),
-        sbGet('compras',`?proyecto_id=eq.${p.proyecto_id}`),
+        sbGet('compras',`?proyecto=eq.${p.proyecto_id}`),
         sbGet('subcontratas',`?proyecto_id=eq.${p.proyecto_id}`),
         sbGet('horas',`?proyecto_id=eq.${p.proyecto_id}`)
       ]);
