@@ -10609,7 +10609,37 @@ async function exportarPDF(elementId, nombreArchivo){
     margin:       [10, 10, 15, 10],
     filename:     nombreArchivo || 'documento.pdf',
     image:        { type: 'jpeg', quality: 1.0 },
-    html2canvas:  { scale: 3, useCORS: true, letterRendering: true, allowTaint: false, imageTimeout: 0 },
+    html2canvas:  {
+      scale: 3,
+      useCORS: true,
+      letterRendering: true,
+      allowTaint: false,
+      imageTimeout: 0,
+      onclone: function(doc) {
+        // Convertir inputs y textareas a elementos de texto para mejor nitidez
+        doc.querySelectorAll('input[type="text"],input:not([type]),input[type="date"],textarea').forEach(function(inp){
+          if(inp.closest('.no-print')) return;
+          const span = doc.createElement('span');
+          span.textContent = inp.value || inp.placeholder || '';
+          span.style.cssText = window.getComputedStyle(inp).cssText;
+          span.style.display = 'inline-block';
+          span.style.border = inp.style.border || 'none';
+          span.style.background = inp.style.background || 'transparent';
+          span.style.width = inp.offsetWidth + 'px';
+          span.style.fontSize = window.getComputedStyle(inp).fontSize;
+          span.style.fontFamily = window.getComputedStyle(inp).fontFamily;
+          span.style.fontWeight = window.getComputedStyle(inp).fontWeight;
+          span.style.color = window.getComputedStyle(inp).color || '#1a1a2e';
+          span.style.webkitFontSmoothing = 'antialiased';
+          span.style.textRendering = 'optimizeLegibility';
+          inp.parentNode.replaceChild(span, inp);
+        });
+        // Suavizado global en el clon
+        const style = doc.createElement('style');
+        style.textContent = '* { -webkit-font-smoothing: antialiased !important; text-rendering: optimizeLegibility !important; }';
+        doc.head.appendChild(style);
+      }
+    },
     jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
     pagebreak:    { mode: ['css'] }
   };
@@ -12569,8 +12599,17 @@ const loaders={
   pedido_doc:async()=>{
     PedC = await sbGet('pedidos','?order=fecha.desc').catch(()=>PedC||[]);
     poblarClientesDocumentos();
-    // Si no hay pedido activo, iniciar en blanco
-    if(!window.pdPedidoId){
+    // Poblar selector de pedidos guardados
+    poblarSelectorDocPedido();
+    // Aplicar filtro de proyecto si ya está seleccionado
+    const proyFilter = document.getElementById('filter-proyecto-pedido_doc');
+    if(proyFilter && proyFilter.value) filtrarPedidosPorProyecto();
+    // Si hay un pedido activo (window.pdPedidoId), mantenerlo cargado
+    if(window.pdPedidoId){
+      const sel = document.getElementById('pd-pedido-sel');
+      if(sel) sel.value = window.pdPedidoId;
+    } else {
+      // Solo iniciar en blanco si no hay pedido activo
       window.pdLineas=Array.from({length:20},()=>({cant:'',desc:''}));
       const today=new Date().toISOString().split('T')[0];
       const f=document.getElementById('pd-fecha-input');if(f&&!f.value)f.value=today;
