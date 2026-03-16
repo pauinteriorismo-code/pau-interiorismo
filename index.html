@@ -5634,7 +5634,7 @@ function findProvName(id){
   return sid;
 }
 function fmtN(n){if(!n&&n!==0)return'—';return fmtES(Number(n))+'€'}
-function fmtP(n){return n!=null?Number(n).toFixed(1)+'%':'—'}
+function fmtP(n,dec){return n!=null?Number(n).toFixed(dec!=null?dec:1)+'%':'—'}
 function fmtD(d){if(!d)return'—';const p=d.split('-');return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:d}
 function genId(pre,list,key){const ns=list.map(x=>parseInt((x[key||pre.toLowerCase()+'_id']||'').replace(/\D/g,''))||0);return`${pre}-${(Math.max(0,...ns)+1).toString().padStart(3,'0')}`}
 function ivaPct(s){return s==='Exento'?0:parseFloat(s)||21}
@@ -7432,7 +7432,7 @@ function calcOferta(n){
   set(`o${n}-res-margen`, margenE>0 ? fmt(margenE) : '—');
   const pctEl = document.getElementById(`o${n}-res-pct`);
   if(pctEl){
-    pctEl.textContent = margenPct>0 ? fmtP(margenPct) : '—';
+    pctEl.textContent = margenPct>0 ? fmtP(margenPct,2) : '—';
     pctEl.style.color = margenPct>=20?'var(--green)':margenPct>=10?'var(--amber)':'var(--red)';
   }
   // Highlight mejor oferta
@@ -19997,7 +19997,7 @@ function recalcPresKPI(){
     const margen = costes > 0 ? (ben / costes) * 100 : 0; // sobre coste
     const el2 = document.getElementById('exp-k-margen');
     if(el2){
-      el2.textContent = fmtP(margen);
+      el2.textContent = fmtP(margen, 2);
       el2.style.color = margen>=20?'var(--green)':margen>=0?'var(--amber)':'var(--red)';
       // Actualizar subtítulo con el presupuesto correcto (versiones marcadas)
       let sub2 = el2.parentNode.querySelector('.kpi-margen-sub');
@@ -20377,7 +20377,7 @@ body.innerHTML = (function(){
     +'<div style="background:'+(beneficio>=0?'#f0f9f0':'#fff0f0')+';border-radius:6px;padding:8px 10px;margin-bottom:6px">'
     +'<div style="display:flex;justify-content:space-between;align-items:center">'
     +'<span style="font-size:12px;font-weight:700;color:'+benColor+'">💰 BENEFICIO (s/IVA)</span>'
-    +'<span style="font-size:14px;font-weight:700;color:'+benColor+'">'+fmt(beneficio)+' <span style="font-size:11px">('+fmtP(margenPct)+')</span></span>'
+    +'<span style="font-size:14px;font-weight:700;color:'+benColor+'">'+fmt(beneficio)+' <span style="font-size:11px">('+fmtP(margenPct,2)+')</span></span>'
     +'</div>'
     +'<div style="font-size:10px;color:var(--text-soft);margin-top:2px">Pres. '+fmt(presBase)+' − Costes '+fmt(costesBase)+' · Margen sobre presupuesto</div>'
     +'</div>'
