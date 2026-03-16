@@ -10161,7 +10161,8 @@ async function loadSubcontratas(){
 // ═══════════════════════════════════════════
 // EDIT HELPERS - Subcontratas / Compras / Horas
 // ═══════════════════════════════════════════
-function editSubcontrata(id) {
+async function editSubcontrata(id) {
+  if(!ProvC.length) ProvC = await sbGet('proveedores','?order=nombre.asc').catch(()=>[]);
   const s = ScC.find(x => String(x.id) === String(id));
   if (!s) { toast('Registro no encontrado', 'error'); return; }
   document.querySelector('#m-subcontrata .modal-title').textContent = '✏️ Editar subcontrata';
@@ -10184,8 +10185,8 @@ function editSubcontrata(id) {
   document.getElementById('sc-importe-acta3').value = s.importe_acta3 || '';
   setTimeout(scRecalcActas, 50);
   // Restaurar partida
-  if(s.proyecto_id) {
-    cargarPartidasGenerico(s.proyecto_id, 'sc', s.partida || null);
+  if(s.proyecto_id||s.proyecto) {
+    cargarPartidasGenerico(s.proyecto||s.proyecto_id||'', 'sc', s.partida || null);
   } else {
     _ocultarCapituloGroupPfx('sc');
     const ps = document.getElementById('sc-partida');
@@ -10206,7 +10207,8 @@ function editSubcontrata(id) {
   openModal('m-subcontrata');
 }
 
-function editCompra(id) {
+async function editCompra(id) {
+  if(!ProvC.length) ProvC = await sbGet('proveedores','?order=nombre.asc').catch(()=>[]);
   const c = CoC.find(x => String(x.id) === String(id));
   if (!c) { toast('Registro no encontrado', 'error'); return; }
   document.querySelector('#m-compra .modal-title').textContent = '✏️ Editar compra';
@@ -10222,9 +10224,10 @@ function editCompra(id) {
   document.getElementById('co-iva').value       = c.iva_pct || '21%';
   document.getElementById('co-estado').value    = c.estado_pago || 'Pendiente';
   document.getElementById('co-notas').value     = c.notas || '';
-  // Restaurar partida
-  if(c.proyecto_id) {
-    cargarPartidasGenerico(c.proyecto_id, 'co', c.partida || null);
+  // Restaurar partida - usar campo texto proyecto (no UUID)
+  const coProyText = c.proyecto || c.proyecto_id || '';
+  if(coProyText) {
+    cargarPartidasGenerico(coProyText, 'co', c.partida || null);
   } else {
     _ocultarCapituloGroupPfx('co');
     const ps = document.getElementById('co-partida');
@@ -19146,8 +19149,17 @@ function _syncProvInput(inputId){
 }
 
 async function _poblarProvSel(selId){
-  // Recargar ProvC para tener datos frescos (usado por filtrarSearchSelect en tiempo real)
+  // Recargar ProvC para tener datos frescos
   try{ ProvC=await sbGet('proveedores','?order=nombre.asc'); }catch(e){ if(!ProvC.length)ProvC=[]; }
+  // Poblar el select con los proveedores
+  const sel=document.getElementById(selId+'-sel');
+  if(sel){
+    const cur=sel.value;
+    sel.innerHTML='<option value="">— Seleccionar proveedor —</option>'+
+      [...ProvC].sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||'','es'))
+      .map(p=>`<option value="${p.id}">${p.nombre}</option>`).join('');
+    if(cur) sel.value=cur;
+  }
 }
 
 function _refrescarDatalistProveedores(){
