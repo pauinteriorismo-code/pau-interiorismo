@@ -10101,9 +10101,8 @@ async function saveCompra(){
     fecha: document.getElementById('co-fecha').value||new Date().toISOString().split('T')[0],
     proyecto: proyTexto,                    // campo texto "PRY-004" (filtros/display)
     proyecto_id: proyUUID||proyTexto||null, // UUID si existe, fallback a texto
-    // Guardar UUID del proveedor en proveedor_id y nombre en proveedor_nombre
-    proveedor_id: (()=>{ const sel=document.getElementById('co-prov-sel'); return sel&&sel.value?sel.value:null; })(),
-    proveedor_nombre: (()=>{ const sel=document.getElementById('co-prov-sel'); if(!sel||!sel.value) return null; const opt=sel.options[sel.selectedIndex]; return opt?opt.text.split(' · ')[0]:null; })(),
+    // Guardar NOMBRE del proveedor en proveedor_id (columna TEXT igual que subcontratas)
+    proveedor_id: (()=>{ const sel=document.getElementById('co-prov-sel'); if(!sel||!sel.value) return null; const opt=sel.options[sel.selectedIndex]; return opt?opt.text.split(' · ')[0]:sel.value; })(),
     concepto: document.getElementById('co-concepto').value,
     base_imponible: parseFloat(document.getElementById('co-base').value)||0,
     iva_pct: document.getElementById('co-iva').value,
@@ -19009,7 +19008,7 @@ async function sortAndRenderCompras(col, dir) {
       <td>${fmtD(c.fecha)}</td>
       <td class="td-mono" style="color:var(--text-soft)">${pText?`<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:1px 5px;color:var(--navy);font-weight:700" onclick="abrirExpediente('${pText}')">${pText}</button>`:'—'}</td>
       <td><span style="font-size:11px;color:var(--copper)">${c.partida?c.partida.replace(/^cap:/,'📁 ').replace(/^par:/,''):'—'}</span></td>
-      <td>${c.proveedor_nombre||findProvName(c.proveedor_id)||'—'}</td>
+      <td>${c.proveedor_id||'—'}</td>
       <td>${c.concepto||'—'}</td>
       <td class="td-mono">${fmt(c.base_imponible)}</td>
       <td class="td-mono">${c.iva_pct||'—'}</td>
@@ -20415,7 +20414,7 @@ async function renderExpCompras(body){
     <table style="width:100%;font-size:12px;border-collapse:collapse">
       <thead style="position:sticky;top:0;z-index:1"><tr style="background:var(--navy);color:#fff">${['Fecha','Partida','Proveedor','Concepto','Base','IVA','Total','Estado'].map(h=>`<th style="padding:7px 10px;text-align:left;font-weight:600">${h}</th>`).join('')}<th></th></tr></thead>
       <tbody>${items.map((c,i)=>{const tot=(c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100);const pLbl=c.partida?partidaLabelConNombres(c.partida,capNames):'—';return`<tr style="background:${i%2?'#fafafa':'#fff'}">
-        <td style="padding:6px 10px;white-space:nowrap">${fmtD(c.fecha)}</td><td style="padding:6px 10px">${pLbl}</td><td style="padding:6px 10px">${c.proveedor_nombre||findProvName(c.proveedor_id)||'—'}</td>
+        <td style="padding:6px 10px;white-space:nowrap">${fmtD(c.fecha)}</td><td style="padding:6px 10px">${pLbl}</td><td style="padding:6px 10px">${c.proveedor_id||'—'}</td>
         <td style="padding:6px 10px">${c.concepto||'—'}${c.adjunto_pdf?' 📎':''}</td>
         <td style="padding:6px 10px;font-family:monospace">${fmt(c.base_imponible)}</td>
         <td style="padding:6px 10px">${c.iva_pct||'21%'}</td>
