@@ -5618,16 +5618,19 @@ function autoProvincia(inputId){
 
 function findProvName(id){
   if(!id)return'';
-  const sid=String(id);
-  // 1. Buscar por UUID exacto
+  const sid=String(id).trim();
+  // 1. Buscar por UUID exacto (campo id de proveedores)
   const byId = ProvC.find(p=>String(p.id)===sid);
   if(byId) return byId.nombre;
-  // 2. Buscar por nombre exacto (cuando se guardó el nombre en vez del UUID)
+  // 2. Buscar por nombre exacto o parcial (cuando se guardó el nombre)
   const byNombre = ProvC.find(p=>p.nombre===sid);
   if(byNombre) return byNombre.nombre;
-  // 3. Si parece un UUID (36 chars con guiones) — devolver '—' en vez del UUID
-  if(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(sid)) return '—';
-  // 4. Devolver el valor tal cual (puede ser el nombre)
+  // 3. Si parece un UUID — intentar buscar en ScC por si hay referencia cruzada
+  if(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(sid)){
+    // UUID huérfano — devolver '—' (no mostrar el UUID)
+    return '—';
+  }
+  // 4. El valor ya es un nombre — devolverlo tal cual
   return sid;
 }
 function fmtN(n){if(!n&&n!==0)return'—';return fmtES(Number(n))+'€'}
@@ -20430,6 +20433,8 @@ function renderExpFacturas(body){
 
 async function renderExpSubcontratas(body){
   const pid = _expProyId;
+  // Asegurar ProvC cargado para resolver nombres
+  if(!ProvC.length) ProvC = await sbGet('proveedores','?order=nombre.asc').catch(()=>[]);
   const items = _scProy(pid);
   if(!items.length){ body.innerHTML='<div style="text-align:center;padding:32px;color:var(--text-soft)">Sin subcontratas en este proyecto</div>'; return; }
   const total = items.reduce((s,c)=>s+(c.importe||0)*(1+ivaPct(c.iva_pct)/100),0);
@@ -20448,7 +20453,7 @@ async function renderExpSubcontratas(body){
       <tbody>${items.map((s,i)=>{const pLbl=s.partida?partidaLabelConNombres(s.partida,capNames):'—';return`<tr style="background:${i%2?'#fafafa':'#fff'}">
         <td style="padding:6px 10px;white-space:nowrap">${fmtD(s.fecha)}</td>
         <td style="padding:6px 10px">${pLbl}</td>
-        <td style="padding:6px 10px">${s.proveedor_id||'—'}</td>
+        <td style="padding:6px 10px">${findProvName(s.proveedor_id)||s.proveedor_id||'—'}</td>
         <td style="padding:6px 10px">${s.trabajo||'—'}</td>
         <td style="padding:6px 10px;font-weight:700;font-family:monospace">${fmt((s.importe||0)*(1+ivaPct(s.iva_pct)/100))}${(()=>{const pagActas=(s.importe_acta1||0)+(s.importe_acta2||0)+(s.importe_acta3||0);if(!pagActas)return'';const pend=Math.max(0,(s.importe||0)-pagActas);return`<div style="font-size:10px;color:var(--text-soft);font-weight:400;font-family:sans-serif">Actas: ${fmt(pagActas)} · Pdte: <span style="color:${pend>0?'var(--red)':'var(--green)'}">${fmt(pend)}</span></div>`})()}</td>
         <td style="padding:6px 10px">${bE(s.estado_pago)}</td>
