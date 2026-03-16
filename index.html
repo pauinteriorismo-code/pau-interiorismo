@@ -10136,7 +10136,7 @@ async function saveCompra(){
     toast(id?'Compra actualizada ✅':'Compra registrada ✅');
     document.getElementById('co-id').value='';
     document.querySelector('#m-compra .modal-title').textContent='🛒 Nueva compra';
-    coResetPDF(); closeModal('m-compra'); loadCompras();
+    coResetPDF(); closeModal('m-compra'); await loadCompras();
   }catch(e){toast('Error: '+e.message,'error');}
 }
 
@@ -10317,7 +10317,7 @@ async function saveSubcontrata(){
     toast(id?'Subcontrata actualizada ✅':'Subcontrata registrada ✅');
     document.getElementById('sc-id').value='';
     document.querySelector('#m-subcontrata .modal-title').textContent='👷 Nueva subcontrata';
-    scResetPDF(); closeModal('m-subcontrata'); loadSubcontratas();
+    scResetPDF(); closeModal('m-subcontrata'); await loadSubcontratas();
   }catch(e){toast('Error: '+e.message,'error');}
 }
 
