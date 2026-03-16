@@ -10662,7 +10662,7 @@ function getPartidaFinalPfx(prefix) {
   return partida;
 }
 
-async async function onChangePartidaGenerico(prefix) {
+async function onChangePartidaGenerico(prefix) {
   const sel = document.getElementById(`${prefix}-partida`);
   const val = sel?.value || '';
   const pid = document.getElementById(`${prefix}-proyecto`)?.value;
