@@ -403,6 +403,8 @@ tbody td{padding:7px 10px;vertical-align:middle}
 ══════════════════════════════ */
 @media print {
   .no-print { display: none !important; }
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  body, p, td, th, div, span { -webkit-font-smoothing: antialiased !important; text-rendering: optimizeLegibility !important; }
   input, textarea { border: none !important; background: transparent !important; outline: none !important; resize: none !important; }
   input::placeholder, textarea::placeholder { color: transparent !important; }
 
@@ -5182,8 +5184,8 @@ function ctGuardarPDF(){
   var proy=document.getElementById('ct-proyecto-sel')?.value||'contrato';
   html2pdf().set({
     margin:8, filename:(function(){var _cp=(PC||[]).find(function(x){return x.proyecto_id===proy;})||{};var _cc=(CC||[]).find(function(x){return x.cliente_id===_cp.cliente_id;})||{};var _cn=_safeNombre(_cc.nombre||'');return 'Contrato_'+proy+(_cn?'_'+_cn:'')+'_PAU.pdf';})(),
-    image:{type:'jpeg',quality:0.98},
-    html2canvas:{scale:2,useCORS:true,logging:false},
+    image:{type:'jpeg',quality:1.0},
+    html2canvas:{scale:3,useCORS:true,logging:false,letterRendering:true,imageTimeout:0},
     jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
   }).from(el).save().then(function(){
     if(btn){btn.textContent='Guardar PDF';btn.disabled=false;}
@@ -7071,8 +7073,8 @@ function exportarInformeFacturas(){
   html2pdf().set({
     margin: [8,5,8,5],
     filename: fname,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true, logging: false },
+    image: { type: 'jpeg', quality: 1.0 },
+    html2canvas: { scale: 3, useCORS: true, logging: false, letterRendering: true },
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
     pagebreak: { mode: ['css'] }
   }).from(wrap).save().then(() => {
@@ -9919,7 +9921,7 @@ function saitraImprimir(){
       +'html2pdf().set({'
       +'margin:8,filename:"Valoracion_Cocina_PAU_INTERIORISMO.pdf",'
       +'image:{type:"jpeg",quality:0.98},'
-      +'html2canvas:{scale:2,useCORS:true,logging:false},'
+      +'html2canvas:{scale:3,useCORS:true,logging:false,letterRendering:true},'
       +'jsPDF:{unit:"mm",format:"a4",orientation:"portrait"}'
       +'}).from(document.querySelector(".page")).save().then(function(){'
       +'if(btn){btn.textContent="Guardar PDF";btn.disabled=false;}'
@@ -10606,8 +10608,8 @@ async function exportarPDF(elementId, nombreArchivo){
   const opt = {
     margin:       [10, 10, 15, 10],
     filename:     nombreArchivo || 'documento.pdf',
-    image:        { type: 'jpeg', quality: 0.98 },
-    html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
+    image:        { type: 'jpeg', quality: 1.0 },
+    html2canvas:  { scale: 3, useCORS: true, letterRendering: true, allowTaint: false, imageTimeout: 0 },
     jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
     pagebreak:    { mode: ['css'] }
   };
@@ -12001,7 +12003,7 @@ function previsualizarFactura(){
       +'margin:8,'
       +'filename:"Factura_'+d.num.replace(/[^a-zA-Z0-9_-]/g,'_')+'_'+_safeNombre(d.contra||'')+'_PAU.pdf",'
       +'image:{type:"jpeg",quality:0.98},'
-      +'html2canvas:{scale:2,useCORS:true,logging:false},'
+      +'html2canvas:{scale:3,useCORS:true,logging:false,letterRendering:true},'
       +'jsPDF:{unit:"mm",format:"a4",orientation:"portrait"}'
       +'}).from(document.getElementById("fpdf")).save().then(function(){'
       +'btn.textContent="📥 Guardar PDF";btn.disabled=false;'
@@ -21545,9 +21547,10 @@ async function añadirCabeceraPDF(pdf, docEl, headerH) {
 
     // Capturar header como imagen
     const canvas = await h2c(headerEl, {
-      scale: 2,
+      scale: 3,
       useCORS: true,
       backgroundColor: '#ffffff',
+      letterRendering: true,
       logging: false
     });
     const imgData = canvas.toDataURL('image/jpeg', 0.92);
@@ -23354,8 +23357,8 @@ async function ejecutarEnvioEmail(){
     // 1. Generar PDF como blob
     const opt = {
       margin:[8,8,8,8], filename:_emailFilename,
-      image:{type:'jpeg',quality:0.98},
-      html2canvas:{scale:2,useCORS:true},
+      image:{type:'jpeg',quality:1.0},
+      html2canvas:{scale:3,useCORS:true,letterRendering:true},
       jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
       pagebreak:{mode:['css','legacy']}
     };
@@ -23440,7 +23443,7 @@ async function reDescargarPDF(){
   if(btn){ btn.textContent='\u23f3 Generando...'; btn.disabled=true; }
   try{
     const opt={margin:[8,8,8,8],filename:window._pdfReFn||'documento.pdf',
-      image:{type:'jpeg',quality:0.98},html2canvas:{scale:2,useCORS:true},
+      image:{type:'jpeg',quality:1.0},html2canvas:{scale:3,useCORS:true,letterRendering:true},
       jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
       pagebreak:{mode:['css','legacy']}};
     await html2pdf().set(opt).from(window._pdfReDoc).toPdf().get('pdf').then(async function(pdf){
@@ -23461,7 +23464,7 @@ function vpGuardarPDF(){
   var fn=(window._vpFn||'documento.pdf').replace(/['"]/g,'');
   function doGen(){
     html2pdf().set({margin:[8,8,8,8],filename:fn,
-      image:{type:'jpeg',quality:0.98},html2canvas:{scale:2,useCORS:true,logging:false},
+      image:{type:'jpeg',quality:1.0},html2canvas:{scale:3,useCORS:true,logging:false,letterRendering:true},
       jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
       pagebreak:{mode:['css','legacy']}
     }).from(el).save()
