@@ -3975,8 +3975,12 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         </select>
       </div>
       <div class="form-group">
-        <label class="form-label">PDF del presupuesto</label>
-        <input type="file" id="imp-pdf-file" accept=".pdf" class="form-input" onchange="impOnFileChange(this)">
+        <label class="form-label">📎 PDF o Excel del presupuesto</label>
+        <input type="file" id="imp-pdf-file" accept=".pdf,.xlsx,.xls,.csv" class="form-input" onchange="impOnFileChange(this)">
+        <div style="margin-top:6px;font-size:11px;color:var(--text-soft)">
+          📄 <strong>PDF</strong> — enviado directo a la IA · 
+          📊 <strong>Excel/CSV</strong> — se convierte a texto primero (recomendado para archivos grandes)
+        </div>
       </div>
       <div id="imp-file-info" style="display:none;font-size:12px;color:var(--text-soft);margin-top:4px"></div>
     </div>
@@ -17021,54 +17025,37 @@ async function impProyectoChange(){
 function impOnFileChange(input){
   const f = input.files[0];
   const info = document.getElementById('imp-file-info');
+  const btnAnalizar = document.getElementById('imp-btn-analizar');
   if(f){
+    const ext = f.name.split('.').pop().toLowerCase();
+    const isExcel = ['xlsx','xls','csv'].includes(ext);
+    const icon = isExcel ? '📊' : '📄';
+    const tipo = isExcel ? 'Excel/CSV' : 'PDF';
+    const warn = f.size > 500*1024 && !isExcel ? ' ⚠️ Archivo grande — considera usar Excel' : '';
     info.style.display = '';
-    info.textContent = `📄 ${f.name} · ${(f.size/1024).toFixed(0)} KB`;
-    document.getElementById('imp-btn-analizar').disabled = false;
+    info.innerHTML = `${icon} <strong>${f.name}</strong> · ${(f.size/1024).toFixed(0)} KB · ${tipo}${warn}`;
+    info.style.color = warn ? 'var(--amber)' : 'var(--text-soft)';
+    btnAnalizar.disabled = false;
+    btnAnalizar.textContent = isExcel ? '📊 Analizar Excel' : '🔍 Analizar PDF';
   } else {
     info.style.display = 'none';
-    document.getElementById('imp-btn-analizar').disabled = true;
+    btnAnalizar.disabled = true;
+    btnAnalizar.textContent = '🔍 Analizar PDF';
   }
 }
 
 async function impAnalizarPDF(){
   const file = document.getElementById('imp-pdf-file').files[0];
   const proy = document.getElementById('imp-proyecto-sel').value;
-  if(!file){ toast('Selecciona un PDF','error'); return; }
+  if(!file){ toast('Selecciona un archivo','error'); return; }
   if(!proy){ toast('Selecciona un proyecto destino','error'); return; }
 
-  // Mostrar paso 2 (procesando)
   document.getElementById('imp-step1').style.display = 'none';
   document.getElementById('imp-step2').style.display = '';
   document.getElementById('imp-error').style.display = 'none';
   document.getElementById('imp-btn-analizar').style.display = 'none';
 
-  try {
-    // Leer PDF como base64
-    const base64 = await new Promise((res, rej) => {
-      const r = new FileReader();
-      r.onload = () => res(r.result.split(',')[1]);
-      r.onerror = () => rej(new Error('Error leyendo el archivo'));
-      r.readAsDataURL(file);
-    });
-
-    // Llamar a Claude API
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: getAnthropicHeaders(),
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-5',
-        max_tokens: 4000,
-        messages: [{
-          role: 'user',
-          content: [
-            {
-              type: 'document',
-              source: { type: 'base64', media_type: 'application/pdf', data: base64 }
-            },
-            {
-              type: 'text',
-              text: `Analiza este presupuesto PDF de construcción/interiorismo y extrae TODAS las partidas en formato JSON.
+  const prompt = `Analiza este presupuesto de construcción/interiorismo y extrae TODAS las partidas en formato JSON.
 
 Devuelve SOLO un JSON válido con esta estructura exacta, sin texto adicional ni markdown:
 {
@@ -17089,27 +17076,76 @@ Devuelve SOLO un JSON válido con esta estructura exacta, sin texto adicional ni
 }
 
 Reglas:
-- Si no hay capítulos explícitos, crea uno con nombre vacío y mete todas las líneas ahí
-- Omite filas con cantidad 0 y precio 0 (títulos/encabezados sin precio)
-- precio_venta = precio unitario de la línea (no el subtotal)
-- iva_pct: usa "10%" para obra/instalación, "21%" para otros, o el que indique el PDF
-- Descripción: texto completo incluyendo especificaciones técnicas
-- Si hay notas de pago al final, ignorarlas`
-            }
+- Si no hay capítulos explícitos, crea uno con nombre vacío
+- Omite filas con cantidad 0 y precio 0
+- precio_venta = precio unitario (no el subtotal)
+- iva_pct: usa "10%" para obra/instalación, "21%" para otros
+- Descripción: texto completo incluyendo especificaciones técnicas`;
+
+  try {
+    const ext = file.name.split('.').pop().toLowerCase();
+    let apiBody;
+
+    if(ext === 'pdf') {
+      // PDF: enviar como documento base64 — usar haiku para evitar rate limits
+      const base64 = await new Promise((res, rej) => {
+        const r = new FileReader();
+        r.onload = () => res(r.result.split(',')[1]);
+        r.onerror = () => rej(new Error('Error leyendo el archivo'));
+        r.readAsDataURL(file);
+      });
+      apiBody = {
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 4000,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } },
+            { type: 'text', text: prompt }
           ]
         }]
-      })
-    });
+      };
+    } else {
+      // Excel / CSV: extraer texto con SheetJS y enviar como texto plano
+      const textContent = await impExcelToText(file);
+      apiBody = {
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 4000,
+        messages: [{
+          role: 'user',
+          content: `${prompt}\n\nDatos del archivo (${file.name}):\n\`\`\`\n${textContent}\n\`\`\``
+        }]
+      };
+    }
+
+    // Llamar con reintentos para rate limit
+    let resp, lastErr;
+    for(let attempt = 0; attempt < 3; attempt++) {
+      if(attempt > 0) {
+        document.querySelector('#imp-step2 div:last-child').textContent = `Reintentando... (intento ${attempt+1}/3)`;
+        await new Promise(r => setTimeout(r, attempt * 5000));
+      }
+      resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: getAnthropicHeaders(),
+        body: JSON.stringify(apiBody)
+      });
+      if(resp.status !== 429) break;
+      lastErr = `Límite de uso alcanzado. Reintentando...`;
+    }
 
     if(!resp.ok){
       let errDetail = `API error ${resp.status}`;
-      try{ const errBody = await resp.json(); errDetail = errBody?.error?.message || errDetail; }catch(e){}
+      try{
+        const errBody = await resp.json();
+        errDetail = errBody?.error?.message || errDetail;
+        if(resp.status === 429) errDetail = `Rate limit: demasiadas peticiones. Espera 1 minuto y vuelve a intentarlo, o usa un archivo Excel en lugar de PDF.`;
+      }catch(e){}
       throw new Error(errDetail);
     }
+
     const data = await resp.json();
     const raw = data.content.filter(b => b.type === 'text').map(b => b.text).join('');
-    
-    // Parsear JSON
     let parsed;
     try {
       const clean = raw.replace(/```json|```/g,'').trim();
@@ -17128,8 +17164,45 @@ Reglas:
     document.getElementById('imp-btn-analizar').disabled = false;
     const errEl = document.getElementById('imp-error');
     errEl.style.display = '';
-    errEl.textContent = '❌ ' + err.message;
+    errEl.innerHTML = '❌ ' + err.message + (err.message.includes('Rate limit') || err.message.includes('rate limit') ? '<br><br><strong>💡 Solución:</strong> Usa un archivo Excel (.xlsx) en lugar de PDF para archivos grandes.' : '');
   }
+}
+
+// Extrae el contenido de un Excel/CSV como texto plano para enviarlo a la IA
+async function impExcelToText(file){
+  return new Promise((resolve, reject) => {
+    const ext = file.name.split('.').pop().toLowerCase();
+    if(ext === 'csv') {
+      const r = new FileReader();
+      r.onload = e => resolve(e.target.result.slice(0, 80000)); // max 80k chars
+      r.onerror = () => reject(new Error('Error leyendo CSV'));
+      r.readAsText(file, 'UTF-8');
+      return;
+    }
+    // Excel: usar SheetJS
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    script.onload = () => {
+      const r = new FileReader();
+      r.onload = e => {
+        try {
+          const wb = XLSX.read(e.target.result, { type: 'array' });
+          let text = '';
+          wb.SheetNames.forEach(name => {
+            const ws = wb.Sheets[name];
+            const csv = XLSX.utils.sheet_to_csv(ws, { blankrows: false });
+            if(csv.trim()) text += `[Hoja: ${name}]\n${csv}\n\n`;
+          });
+          resolve(text.slice(0, 80000)); // max 80k chars
+        } catch(e2) { reject(new Error('Error leyendo Excel: ' + e2.message)); }
+      };
+      r.onerror = () => reject(new Error('Error leyendo Excel'));
+      r.readAsArrayBuffer(file);
+    };
+    script.onerror = () => reject(new Error('No se pudo cargar la librería Excel'));
+    if(!window.XLSX) document.head.appendChild(script);
+    else script.onload();
+  });
 }
 
 function impMostrarPreview(parsed){
