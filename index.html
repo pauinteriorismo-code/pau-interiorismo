@@ -1011,7 +1011,6 @@ if(window.MutationObserver){
         </table>
         <div class="no-print" style="margin-bottom:16px">
           <button class="btn btn-ghost btn-sm" onclick="addPedidoLinea()">＋ Añadir línea</button>
-          <button class="btn btn-ghost btn-sm" onclick="clearPedidoLineas()">🗑 Limpiar todo</button>
         </div>
         <!-- NOTA / INSTRUCCIONES FIJAS -->
         <div style="border:1px solid #ddd;padding:10px;border-radius:4px;margin-bottom:14px;font-size:11px">
@@ -3025,7 +3024,8 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     <!-- ═══ PEDIDOS ═══ -->
     <div class="view" id="view-albaranes">
   <div class="search-bar" style="gap:8px;flex-wrap:wrap;align-items:center">
-    <select class="form-input" style="width:280px" id="alb-proyecto-sel" onchange="loadAlbaranes()"><option value="">📁 Seleccionar proyecto…</option></select>
+    <select class="form-input" style="width:190px;flex-shrink:0" id="filter-cliente-albaranes" onchange="cascadaClienteProyecto('albaranes')"><option value="">👤 Cliente…</option></select>
+    <select class="form-input" style="width:240px" id="alb-proyecto-sel" onchange="loadAlbaranes()"><option value="">📁 Seleccionar proyecto…</option></select>
     <button class="btn btn-ghost btn-sm" onclick="exportarExcel('albaranes')" style="font-size:11px">📊 Excel</button>
     <button class="btn btn-primary" id="alb-btn-nuevo" onclick="nuevoAlbaran()" disabled>＋ Nuevo albarán</button>
   </div>
@@ -3185,7 +3185,8 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <div class="card"><div class="card-header"><div class="card-title">👷 Subcontratas</div><div id="rk-sub-total" style="font-weight:700;color:var(--red)"></div></div><div style="padding:0"><table style="width:100%;font-size:12px;border-collapse:collapse"><tbody id="rk-sub-list"></tbody></table></div></div>
           <div class="card"><div class="card-header"><div class="card-title">⏱ Horas</div><div id="rk-horas-total" style="font-weight:700;color:var(--red)"></div></div><div style="padding:0"><table style="width:100%;font-size:12px;border-collapse:collapse"><tbody id="rk-horas-list"></tbody></table></div></div>
         </div>
-        <div class="card"><div class="card-header"><div class="card-title">🧾 Facturas emitidas</div><div id="rk-fact-total" style="font-weight:700;color:var(--green)"></div></div><div class="table-wrap"><table><thead><tr><th>Nº Factura</th><th>Fecha</th><th>Base Imp.</th><th>Total c/IVA</th><th>Estado</th></tr></thead><tbody id="rk-fact-list"></tbody></table></div></div>
+        <div class="card"><div class="card-header"><div class="card-title">📤 Facturas de venta</div><div id="rk-fact-venta-total" style="font-weight:700;color:var(--green)"></div></div><div class="table-wrap"><table><thead><tr><th>Nº Factura</th><th>Fecha</th><th>Base Imp.</th><th>Total c/IVA</th><th>Estado</th></tr></thead><tbody id="rk-fact-venta-list"></tbody></table></div></div>
+        <div class="card"><div class="card-header"><div class="card-title">📥 Facturas de compra</div><div id="rk-fact-compra-total" style="font-weight:700;color:var(--red)"></div></div><div class="table-wrap"><table><thead><tr><th>Nº Factura</th><th>Fecha</th><th>Proveedor</th><th>Base Imp.</th><th>Total c/IVA</th><th>Estado</th></tr></thead><tbody id="rk-fact-compra-list"></tbody></table></div></div>
       </div>
       <div id="rent-empty" class="empty"><div class="empty-icon">📁</div><div class="empty-text">Selecciona un cliente y luego el proyecto para ver su rentabilidad</div></div>
     </div>
@@ -3826,22 +3827,22 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
   <div class="modal-body"><input type="hidden" id="c-id">
     <div class="form-grid">
       <div class="form-group fg-full"><label class="form-label">Nombre *</label><input class="form-input" id="c-nombre"></div>
-      <div class="form-group"><label class="form-label">Tipo doc. / Número</label><div style="display:flex;gap:6px"><select class="form-input" id="c-cif-tipo" style="width:90px;flex-shrink:0"><option value="CIF">CIF</option><option value="NIF">NIF</option><option value="DNI">DNI</option></select><input class="form-input" id="c-cif" placeholder="Número de documento" style="flex:1"></div></div>
+      <div class="form-group"><label class="form-label">Tipo doc. / Número</label><div style="display:flex;gap:6px"><select class="form-input" id="c-cif-tipo" style="width:90px;flex-shrink:0"><option value="CIF">CIF</option><option value="NIF">NIF</option><option value="DNI">DNI</option></select><input class="form-input" id="c-cif" placeholder="" style="flex:1"></div></div>
       <div class="form-group"><label class="form-label">Teléfono</label><input class="form-input" id="c-tel"></div>
       <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="c-email" type="email"></div>
       <div class="form-group"><label class="form-label">Tipo</label><select class="form-input" id="c-tipo" onchange="if(this.value==='Particular'){document.getElementById('c-cif-tipo').value='DNI';}else if(this.value==='Empresa'||this.value==='Promotora'){document.getElementById('c-cif-tipo').value='CIF';}"><option value="">Seleccionar…</option><option value="Administración">Administración</option><option value="Empresa">Empresa</option><option value="Otros">Otros</option><option value="Particular">Particular</option><option value="Promotora">Promotora</option><option value="Proveedor">Proveedor</option></select></div>
       <div class="form-group"><label class="form-label">Forma de pago</label><select class="form-input" id="c-pago"><option value="">Seleccionar…</option><option value="Confirming">Confirming</option><option value="Domiciliación">Domiciliación</option><option value="Efectivo">Efectivo</option><option value="Giro">Giro</option><option value="Pagaré">Pagaré</option><option value="Transferencia">Transferencia</option></select></div>
       <div class="form-group fg-full"><label class="form-label">Dirección</label>
         <div style="display:grid;grid-template-columns:1fr 80px 90px 90px;gap:6px">
-          <input class="form-input" id="c-dir" placeholder="C/ Nombre de la calle" autocomplete="off" oninput="autoFillDireccion(this,'c')">
-          <input class="form-input" id="c-dir-num" placeholder="Nº" style="text-align:center">
-          <input class="form-input" id="c-dir-esc" placeholder="Esc. A">
-          <input class="form-input" id="c-dir-pta" placeholder="Pta. 10">
+          <input class="form-input" id="c-dir" placeholder="" autocomplete="off" oninput="autoFillDireccion(this,'c')">
+          <input class="form-input" id="c-dir-num" placeholder="" style="text-align:center">
+          <input class="form-input" id="c-dir-esc" placeholder="">
+          <input class="form-input" id="c-dir-pta" placeholder="">
         </div>
         <div style="font-size:10px;color:var(--text-soft);margin-top:3px">Todos los campos son opcionales</div>
       </div>
       <div class="form-group"><label class="form-label">C.P.</label><input class="form-input" id="c-cp" placeholder="46290" maxlength="5" oninput="autoFillCP(this,'c')"></div>
-      <div class="form-group"><label class="form-label">Población</label><input class="form-input" id="c-poblacion" placeholder="Escribe para buscar..." autocomplete="off" onfocus="initPoblacionAC('c-poblacion')"></div>
+      <div class="form-group"><label class="form-label">Población</label><input class="form-input" id="c-poblacion" placeholder="" autocomplete="off" onfocus="initPoblacionAC('c-poblacion')"></div>
       <div class="form-group"><label class="form-label">Provincia</label><input class="form-input" id="c-provincia" value="Valencia"></div>
       <div class="form-group fg-full"><label class="form-label">Notas</label><textarea class="form-input" id="c-notas" rows="2"></textarea></div>
     </div>
@@ -4663,7 +4664,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     <div class="form-grid">
       <div class="form-group fg-full"><label class="form-label">Nombre *</label><input class="form-input" id="pv-nombre"></div>
       <div class="form-group"><label class="form-label">Tipo documento</label><select class="form-input" id="pv-tipo-doc"><option value="CIF" selected>CIF (Empresa)</option><option value="NIF">NIF</option><option value="DNI">DNI (Autónomo)</option><option value="NIE">NIE</option><option value="OTRO">Otro</option></select></div>
-      <div class="form-group"><label class="form-label"><span id="pv-cif-label">CIF</span></label><input class="form-input" id="pv-cif" placeholder="B12345678" oninput="document.getElementById('pv-cif-label').textContent=document.getElementById('pv-tipo-doc').value"><script>document.getElementById('pv-tipo-doc')?.addEventListener('change',function(){document.getElementById('pv-cif-label').textContent=this.value;});</script></div>
+      <div class="form-group"><label class="form-label"><span id="pv-cif-label">CIF</span></label><input class="form-input" id="pv-cif" placeholder="" oninput="document.getElementById('pv-cif-label').textContent=document.getElementById('pv-tipo-doc').value"><script>document.getElementById('pv-tipo-doc')?.addEventListener('change',function(){document.getElementById('pv-cif-label').textContent=this.value;});</script></div>
       <div class="form-group"><label class="form-label">Tipo</label><select class="form-input" id="pv-tipo"><option value="Proveedor" selected>Proveedor</option><option value="Subcontrata">Subcontrata</option><option value="Servicio">Servicio</option><option value="Alquiler">Alquiler</option><option value="Transporte">Transporte</option><option value="Otros">Otros</option></select></div>
       <div class="form-group"><label class="form-label">Teléfono</label><input class="form-input" id="pv-tel"></div>
       <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="pv-email" type="email"></div>
@@ -4672,15 +4673,15 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="form-group"><label class="form-label">IBAN</label><input class="form-input" id="pv-iban"></div>
       <div class="form-group fg-full"><label class="form-label">Dirección</label>
         <div style="display:grid;grid-template-columns:1fr 80px 90px 90px;gap:6px">
-          <input class="form-input" id="pv-dir" placeholder="C/ Nombre de la calle" autocomplete="off" oninput="autoFillDireccion(this,'pv')">
-          <input class="form-input" id="pv-dir-num" placeholder="Nº" style="text-align:center">
-          <input class="form-input" id="pv-dir-esc" placeholder="Esc. A">
-          <input class="form-input" id="pv-dir-pta" placeholder="Pta. 10">
+          <input class="form-input" id="pv-dir" placeholder="" autocomplete="off" oninput="autoFillDireccion(this,'pv')">
+          <input class="form-input" id="pv-dir-num" placeholder="" style="text-align:center">
+          <input class="form-input" id="pv-dir-esc" placeholder="">
+          <input class="form-input" id="pv-dir-pta" placeholder="">
         </div>
         <div style="font-size:10px;color:var(--text-soft);margin-top:3px">Todos los campos son opcionales</div>
       </div>
       <div class="form-group"><label class="form-label">C.P.</label><input class="form-input" id="pv-cp" placeholder="46290" maxlength="5" oninput="autoFillCP(this,'pv')"></div>
-      <div class="form-group"><label class="form-label">Población</label><input class="form-input" id="pv-poblacion" placeholder="Escribe para buscar..." autocomplete="off" onfocus="initPoblacionAC('pv-poblacion')"></div>
+      <div class="form-group"><label class="form-label">Población</label><input class="form-input" id="pv-poblacion" placeholder="" autocomplete="off" onfocus="initPoblacionAC('pv-poblacion')"></div>
       <div class="form-group"><label class="form-label">Provincia</label><input class="form-input" id="pv-provincia" value="Valencia"></div>
       <div class="form-group fg-full"><label class="form-label">Notas</label><textarea class="form-input" id="pv-notas" rows="2"></textarea></div>
     </div>
@@ -6452,7 +6453,7 @@ function poblarClientesDocumentos(){
 // ═══════════════════════════════════════════
 
 // Módulos con cascada cliente→proyecto
-const CASCADA_MODS = ['presupuesto','compras','subcontratas','horas','pedidos','interiorismo'];
+const CASCADA_MODS = ['presupuesto','compras','subcontratas','horas','pedidos','interiorismo','albaranes'];
 // Comparativa uses its own cascade function (poblarClientesComparativa)
 
 // Prefijo del campo proyecto en el modal de cada módulo
@@ -6489,6 +6490,8 @@ function cascadaClienteProyecto(mod){
   // Filtrar selector de proyectos según cliente
   const proySel = mod==='presupuesto'
     ? document.getElementById('pres-proyecto-sel')
+    : mod==='albaranes'
+    ? document.getElementById('alb-proyecto-sel')
     : document.getElementById(`filter-proyecto-${mod}`);
 
   if(proySel){
@@ -6501,7 +6504,10 @@ function cascadaClienteProyecto(mod){
   }
 
   // Limpiar filtro de proyecto y re-filtrar tabla (excepto presupuesto que carga solo)
-  if(mod!=='presupuesto'){
+  if(mod==='albaranes'){
+    // albaranes has its own loader
+    if(!clienteId) { const tb=document.getElementById('alb-tbody'); if(tb) tb.innerHTML='<tr><td colspan="7"><div class="empty"><div class="empty-icon">📋</div><div class="empty-text">Selecciona un proyecto</div></div></td></tr>'; }
+  } else if(mod!=='presupuesto'){
     filtrarModuloPorProyecto(mod);
   }
 }
@@ -10644,10 +10650,10 @@ function renderPedidoLineas(){
   tbody.innerHTML=window.pdLineas.map((l,i)=>`
     <tr style="border-bottom:1px solid #ddd">
       <td style="padding:4px 6px;text-align:center;border-right:1px solid #ddd;width:64px;min-height:24px">
-        <input value="${l.cant}" oninput="window.pdLineas[${i}].cant=this.value" style="width:54px;text-align:center;font-size:12px;font-family:'Inter',Arial;border:none;border-bottom:1px dotted #bbb;outline:none;background:transparent;min-height:20px" placeholder=" ">
+        <input value="${l.cant}" oninput="window.pdLineas[${i}].cant=this.value" style="width:54px;text-align:center;font-size:12px;font-family:'Inter',Arial;border:none;outline:none;background:transparent;min-height:20px" placeholder="">
       </td>
       <td style="padding:4px 6px;min-height:24px">
-        <input value="${l.desc}" oninput="window.pdLineas[${i}].desc=this.value" style="width:100%;font-size:12px;font-family:'Inter',Arial;border:none;border-bottom:1px dotted #bbb;outline:none;background:transparent;min-height:20px" placeholder=" ">
+        <input value="${l.desc}" oninput="window.pdLineas[${i}].desc=this.value" style="width:100%;font-size:12px;font-family:'Inter',Arial;border:none;outline:none;background:transparent;min-height:20px" placeholder="">
       </td>
     </tr>`).join('');
 }
@@ -11339,9 +11345,19 @@ async function loadRentabilidad(){
     document.getElementById('rk-horas-total').textContent=fmt(totalHoras);
     const horPorTrab={};horas.forEach(h=>{horPorTrab[h.trabajador]=(horPorTrab[h.trabajador]||0)+(h.total||0);});
     document.getElementById('rk-horas-list').innerHTML=Object.keys(horPorTrab).length?Object.entries(horPorTrab).map(([t,v])=>`<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px 10px" colspan="2">${t}</td><td style="padding:5px 10px;text-align:right;font-weight:700">${fmt(v)}</td></tr>`).join(''):'<tr><td colspan="3" style="padding:12px;text-align:center;color:var(--text-soft)">Sin horas</td></tr>';
-    const totalFact=facturas.reduce((s,f)=>s+(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100),0);
-    document.getElementById('rk-fact-total').textContent=fmt(totalFact);
-    document.getElementById('rk-fact-list').innerHTML=facturas.length?facturas.map(f=>{const tot=(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100);return`<tr><td style="padding:7px 10px;font-weight:700">${f.num_factura||'—'}</td><td style="padding:7px 10px">${fmtD(f.fecha_emision)}</td><td style="padding:7px 10px">${fmt(f.base_imponible)}</td><td style="padding:7px 10px;font-weight:700">${fmt(tot)}</td><td style="padding:7px 10px">${bE(f.estado)}</td></tr>`;}).join(''):'<tr><td colspan="5" style="text-align:center;padding:12px;color:var(--text-soft)">Sin facturas</td></tr>';
+    const facVentas = facturas.filter(f=>(f.tipo_factura||'Venta')==='Venta');
+    const facCompras = facturas.filter(f=>(f.tipo_factura||'Venta')==='Compra');
+    const totalFactVenta = facVentas.reduce((s,f)=>s+(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100),0);
+    const totalFactCompra = facCompras.reduce((s,f)=>s+(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100),0);
+    const rkfv = document.getElementById('rk-fact-venta-total');
+    const rkfc = document.getElementById('rk-fact-compra-total');
+    if(rkfv) rkfv.textContent = fmt(totalFactVenta);
+    if(rkfc) rkfc.textContent = fmt(totalFactCompra);
+    const factRow = (f, cols) => { const tot=(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100); return `<tr><td style="padding:7px 10px;font-weight:700">${f.num_factura||'—'}</td><td style="padding:7px 10px">${fmtD(f.fecha_emision)}</td>${cols===6?`<td style="padding:7px 10px;font-size:11px">${ProvC.find(p=>p.id===f.proveedor_id||p.nombre===f.proveedor_id)?.nombre||f.proveedor_id||'—'}</td>`:''}<td style="padding:7px 10px">${fmt(f.base_imponible)}</td><td style="padding:7px 10px;font-weight:700">${fmt(tot)}</td><td style="padding:7px 10px">${bE(f.estado)}</td></tr>`; };
+    const rkfvl = document.getElementById('rk-fact-venta-list');
+    const rkfcl = document.getElementById('rk-fact-compra-list');
+    if(rkfvl) rkfvl.innerHTML = facVentas.length ? facVentas.map(f=>factRow(f,5)).join('') : '<tr><td colspan="5" style="text-align:center;padding:12px;color:var(--text-soft)">Sin facturas de venta</td></tr>';
+    if(rkfcl) rkfcl.innerHTML = facCompras.length ? facCompras.map(f=>factRow(f,6)).join('') : '<tr><td colspan="6" style="text-align:center;padding:12px;color:var(--text-soft)">Sin facturas de compra</td></tr>';
     document.getElementById('rent-kpis').style.display='block';
   }catch(e){toast('Error: '+e.message,'error');}
 }
