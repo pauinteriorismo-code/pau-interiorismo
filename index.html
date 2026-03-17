@@ -17122,191 +17122,16 @@ async function impAnalizarPDF(){
   document.getElementById('imp-error').style.display = 'none';
   document.getElementById('imp-btn-analizar').style.display = 'none';
 
-  const prompt = `RESPONDE SOLO CON JSON VÁLIDO. NO añadas texto explicativo, saludo, ni bloques de código markdown (no uses \`\`\`). La respuesta debe empezar directamente con { y terminar con }.
-
-Analiza este presupuesto de construcción/interiorismo y extrae TODAS las partidas. Devuelve SOLO este JSON:
-{
-  "capitulos": [
-    {
-      "nombre": "Nombre del capítulo o agrupación (si existe)",
-      "lineas": [
-        {
-          "descripcion": "Descripción completa de la partida",
-          "unidad": "Ud/m2/ml/etc o vacío",
-          "cantidad": 1,
-          "precio_venta": 0.00,
-          "iva_pct": "10%"
-        }
-      ]
-    }
-  ]
-}
-
-Reglas:
-- Si no hay capítulos explícitos, crea uno con nombre vacío
-- Omite filas con cantidad 0 y precio 0
-- precio_venta = precio unitario (no el subtotal)
-- iva_pct: usa "10%" para obra/instalación, "21%" para otros
-- Descripción: texto completo incluyendo especificaciones técnicas`;
-
   try {
     const ext = file.name.split('.').pop().toLowerCase();
-    let apiBody;
 
     if(ext === 'pdf') {
-      // PDF: enviar como documento base64 — usar haiku para evitar rate limits
-      const base64 = await new Promise((res, rej) => {
-        const r = new FileReader();
-        r.onload = () => res(r.result.split(',')[1]);
-        r.onerror = () => rej(new Error('Error leyendo el archivo'));
-        r.readAsDataURL(file);
-      });
-      apiBody = {
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 8000,
-        system: 'Eres un extractor de datos. Responde ÚNICAMENTE con JSON válido, sin ningún texto adicional, sin bloques de código markdown, sin explicaciones. La respuesta debe empezar con { y terminar con }.',
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } },
-            { type: 'text', text: prompt }
-          ]
-        }]
-      };
+      // ── PDF: enviar a IA ──────────────────────────────────────────
+      await _impAnalyzarConIA(file, proy);
     } else {
-      // Excel / CSV: extraer texto con SheetJS y enviar como texto plano
-      const textContent = await impExcelToText(file);
-      apiBody = {
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 8000,
-        system: 'Eres un extractor de datos. Responde ÚNICAMENTE con JSON válido, sin ningún texto adicional, sin bloques de código markdown, sin explicaciones. La respuesta debe empezar con { y terminar con }.',
-        messages: [{
-          role: 'user',
-          content: `${prompt}\n\nDatos del archivo (${file.name}):\n\`\`\`\n${textContent}\n\`\`\``
-        }]
-      };
+      // ── Excel/CSV: parseo directo por capítulos sin IA ────────────
+      await _impParsearExcelCapitulos(file);
     }
-
-    // Llamar con reintentos para rate limit
-    let resp, lastErr;
-    for(let attempt = 0; attempt < 3; attempt++) {
-      if(attempt > 0) {
-        document.querySelector('#imp-step2 div:last-child').textContent = `Reintentando... (intento ${attempt+1}/3)`;
-        await new Promise(r => setTimeout(r, attempt * 5000));
-      }
-      resp = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: getAnthropicHeaders(),
-        body: JSON.stringify(apiBody)
-      });
-      if(resp.status !== 429) break;
-      lastErr = `Límite de uso alcanzado. Reintentando...`;
-    }
-
-    if(!resp.ok){
-      let errDetail = `API error ${resp.status}`;
-      try{
-        const errBody = await resp.json();
-        errDetail = errBody?.error?.message || errDetail;
-        if(resp.status === 429) errDetail = `Rate limit: demasiadas peticiones. Espera 1 minuto y vuelve a intentarlo, o usa un archivo Excel en lugar de PDF.`;
-      }catch(e){}
-      throw new Error(errDetail);
-    }
-
-    const data = await resp.json();
-    const raw = data.content.filter(b => b.type === 'text').map(b => b.text).join('');
-
-    // Extracción robusta del JSON: múltiples estrategias
-    let parsed;
-    try {
-      let parseOk = false;
-
-      // Estrategia 1: parseo directo
-      try { parsed = JSON.parse(raw.trim()); parseOk = true; } catch(e1) {}
-
-      // Estrategia 2: extraer contenido entre ``` usando indexOf (sin regex)
-      if(!parseOk) {
-        const t = raw.trim();
-        const fence1 = t.indexOf('```');
-        if(fence1 !== -1) {
-          // Saltar "```json" o "```"
-          let after = fence1 + 3;
-          if(t.substring(after, after+4).toLowerCase() === 'json') after += 4;
-          // Saltar saltos de línea/espacios tras la apertura
-          while(after < t.length && (t[after] === '\n' || t[after] === '\r' || t[after] === ' ')) after++;
-          const fence2 = t.indexOf('```', after);
-          if(fence2 !== -1) {
-            let fenceContent = t.substring(after, fence2).trim();
-            // Intentar parseo directo
-            try { parsed = JSON.parse(fenceContent); parseOk = true; } catch(e2a) {}
-            // Si falta la llave exterior {}, añadirla
-            if(!parseOk && fenceContent.charAt(0) === '"') {
-              try { parsed = JSON.parse('{' + fenceContent + '}'); parseOk = true; } catch(e2b) {}
-            }
-          }
-        }
-      }
-
-      // Estrategia 3: si el raw empieza por "capitulos": (sin bloque ```)
-      if(!parseOk) {
-        let stripped = raw.trim();
-        // quitar posible ```json al inicio
-        if(stripped.indexOf('```') === 0) {
-          stripped = stripped.substring(3);
-          if(stripped.substring(0,4).toLowerCase() === 'json') stripped = stripped.substring(4);
-          const endFence = stripped.lastIndexOf('```');
-          if(endFence !== -1) stripped = stripped.substring(0, endFence);
-          stripped = stripped.trim();
-        }
-        if(stripped.charAt(0) === '"') {
-          try { parsed = JSON.parse('{' + stripped + '}'); parseOk = true; } catch(e3) {}
-        }
-      }
-
-      // Estrategia 4: balanceo de llaves - buscar el { que contiene "capitulos"
-      if(!parseOk) {
-        let searchFrom = 0;
-        while(!parseOk) {
-          const firstBrace = raw.indexOf('{', searchFrom);
-          if(firstBrace === -1) break;
-          let depth = 0, endIdx = -1;
-          for(let i = firstBrace; i < raw.length; i++){
-            if(raw[i]==='{') depth++;
-            else if(raw[i]==='}') { depth--; if(depth===0){ endIdx=i; break; } }
-          }
-          if(endIdx !== -1) {
-            const jsonBlock = raw.slice(firstBrace, endIdx+1);
-            try {
-              const candidate = JSON.parse(jsonBlock);
-              if(candidate && (candidate.capitulos || candidate.lineas)) {
-                parsed = candidate; parseOk = true;
-              } else { searchFrom = firstBrace + 1; }
-            } catch(e4) { searchFrom = firstBrace + 1; }
-          } else break;
-        }
-      }
-
-      if(!parseOk) {
-        const preview = raw.slice(0, 500).replace(/</g,'&lt;').replace(/\n/g,'<br>');
-        throw new Error(`La IA no devolvió JSON válido. Respuesta recibida:<br><code style="font-size:10px;display:block;margin-top:6px;word-break:break-all;background:#fff3cd;padding:6px;border-radius:4px">${preview}…</code>`);
-      }
-    } catch(e) {
-      throw e;
-    }
-
-    // Normalizar estructura si la IA devolvió variantes
-    if(!parsed.capitulos && Array.isArray(parsed.lineas)) {
-      parsed = { capitulos: [{ nombre: '', lineas: parsed.lineas }] };
-    } else if(!parsed.capitulos && Array.isArray(parsed)) {
-      parsed = { capitulos: [{ nombre: '', lineas: parsed }] };
-    }
-
-    if(!parsed.capitulos || !parsed.capitulos.length) {
-      throw new Error('La IA no encontró partidas en el archivo. Comprueba que el archivo contiene un presupuesto con precios.');
-    }
-
-    _impLineas = parsed;
-    impMostrarPreview(parsed);
 
   } catch(err) {
     document.getElementById('imp-step2').style.display = 'none';
@@ -17315,27 +17140,228 @@ Reglas:
     document.getElementById('imp-btn-analizar').disabled = false;
     const errEl = document.getElementById('imp-error');
     errEl.style.display = '';
-    const isRateLimit = err.message.includes('Rate limit') || err.message.includes('rate limit') || err.message.includes('30,000');
-    errEl.innerHTML = '❌ ' + err.message
-      + (isRateLimit ? '<br><br><strong>💡 Solución:</strong> Usa un archivo Excel (.xlsx) en lugar de PDF para archivos grandes. O espera 1 minuto.' : '');
+    errEl.innerHTML = '❌ ' + err.message;
   }
 }
 
-// Extrae el contenido de un Excel/CSV como texto plano para enviarlo a la IA
+// ── Parseo directo de Excel CYPE por capítulos (sin IA) ─────────────────────
+async function _impParsearExcelCapitulos(file){
+  return new Promise((resolve, reject) => {
+    const ext = file.name.split('.').pop().toLowerCase();
+
+    const procesarDatos = (rows) => {
+      try {
+        // rows = array de arrays (filas del Excel)
+        const capitulos = [];
+        let currentCap = null;
+
+        for(const row of rows){
+          const code = (row[0] || '').toString().trim();
+          const desc = (row[1] || '').toString().trim();
+          const amount = parseFloat((row[2] || '0').toString().replace(',', '.')) || 0;
+
+          if(!code && !desc) continue;
+
+          // Línea de capítulo: empieza por "CAP." o "CAPÍTULO" o "CAPITULO"
+          const isChapter = /^CAP[.\s]/i.test(code) || /^CAP[IÍ]TULO/i.test(code);
+
+          // Línea de resumen final — parar aquí
+          const isSummary = /BASE DE EJECUCI/i.test(code) || /PRESUPUESTO DE CONTRATA/i.test(code) || /PRESUPUESTO TOTAL/i.test(code);
+          if(isSummary) break;
+
+          if(isChapter && amount > 0){
+            currentCap = { nombre: desc || code, lineas: [] };
+            capitulos.push(currentCap);
+            // Añadir el capítulo como una única línea con el importe total
+            currentCap.lineas.push({
+              descripcion: desc || code,
+              unidad: 'Ud',
+              cantidad: 1,
+              precio_venta: amount,
+              iva_pct: '10%'
+            });
+          }
+        }
+
+        if(!capitulos.length){
+          // Fallback: tratar cada fila con importe como una línea en un capítulo genérico
+          const lineas = [];
+          for(const row of rows){
+            const code = (row[0] || '').toString().trim();
+            const desc = (row[1] || '').toString().trim();
+            const amount = parseFloat((row[2] || '0').toString().replace(',', '.')) || 0;
+            if(desc && amount > 0) lineas.push({ descripcion: desc, unidad: 'Ud', cantidad: 1, precio_venta: amount, iva_pct: '10%' });
+          }
+          if(lineas.length) capitulos.push({ nombre: '', lineas });
+        }
+
+        if(!capitulos.length) throw new Error('No se encontraron capítulos con importes en el archivo. Comprueba que el Excel tiene el formato CYPE (columnas: Código, Descripción, Importe).');
+
+        _impLineas = { capitulos };
+        impMostrarPreview({ capitulos });
+        resolve();
+      } catch(e){ reject(e); }
+    };
+
+    if(ext === 'csv'){
+      const r = new FileReader();
+      r.onerror = () => reject(new Error('Error leyendo el archivo. Si está en Google Drive, descárgalo primero al disco duro.'));
+      r.onload = e => {
+        const lines = e.target.result.split('\n').map(l => l.split(/[,;]/).map(c => c.replace(/^"|"$/g,'').trim()));
+        procesarDatos(lines);
+      };
+      r.readAsText(file, 'UTF-8');
+    } else {
+      // Excel con SheetJS
+      const doRead = () => {
+        const r = new FileReader();
+        r.onerror = () => reject(new Error('Error leyendo el archivo. Si está en Google Drive, descárgalo primero al disco duro antes de importarlo.'));
+        r.onload = e => {
+          try {
+            const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+            const ws = wb.Sheets[wb.SheetNames[0]];
+            const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+            procesarDatos(rows);
+          } catch(e2){ reject(new Error('Error procesando Excel: ' + e2.message + '. Si está en Google Drive, descárgalo primero al disco duro.')); }
+        };
+        r.readAsArrayBuffer(file);
+      };
+      if(window.XLSX) doRead();
+      else {
+        const s = document.createElement('script');
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+        s.onload = doRead;
+        s.onerror = () => reject(new Error('No se pudo cargar la librería Excel'));
+        document.head.appendChild(s);
+      }
+    }
+  });
+}
+
+// ── Análisis de PDF con IA ───────────────────────────────────────────────────
+async function _impAnalyzarConIA(file, proy){
+  const prompt = `RESPONDE SOLO CON JSON VÁLIDO. NO uses bloques de código markdown. La respuesta debe empezar con { y terminar con }.
+
+Analiza este presupuesto y extrae los capítulos y partidas. Devuelve SOLO este JSON:
+{"capitulos":[{"nombre":"Nombre capítulo","lineas":[{"descripcion":"desc","unidad":"Ud","cantidad":1,"precio_venta":0.00,"iva_pct":"10%"}]}]}
+
+Reglas: precio_venta = precio unitario. iva_pct: "10%" para obra, "21%" para otros. Omite filas con importe 0.`;
+
+  const base64 = await new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result.split(',')[1]);
+    r.onerror = () => rej(new Error('Error leyendo el PDF'));
+    r.readAsDataURL(file);
+  });
+
+  const apiBody = {
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 8000,
+    system: 'Eres un extractor de datos. Responde ÚNICAMENTE con JSON válido puro, sin markdown, sin bloques de código, sin backticks. Empieza con { y termina con }.',
+    messages: [{ role: 'user', content: [
+      { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } },
+      { type: 'text', text: prompt }
+    ]}]
+  };
+
+  let resp, attempt;
+  for(attempt = 0; attempt < 3; attempt++){
+    if(attempt > 0) await new Promise(r => setTimeout(r, attempt * 5000));
+    resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST', headers: getAnthropicHeaders(), body: JSON.stringify(apiBody)
+    });
+    if(resp.status !== 429) break;
+  }
+
+  if(!resp.ok){
+    let msg = `Error API ${resp.status}`;
+    try { const eb = await resp.json(); msg = eb?.error?.message || msg; } catch(e){}
+    throw new Error(msg);
+  }
+
+  const data = await resp.json();
+  const raw = data.content.filter(b => b.type === 'text').map(b => b.text).join('');
+
+  // Parser robusto sin regex (evita problemas de escapado)
+  let parsed;
+  let parseOk = false;
+
+  // S1: parseo directo
+  try { parsed = JSON.parse(raw.trim()); parseOk = true; } catch(e1){}
+
+  // S2: extraer entre ``` usando indexOf
+  if(!parseOk){
+    const t = raw.trim();
+    const f1 = t.indexOf('`\`\`');
+    if(f1 !== -1){
+      let after = f1 + 3;
+      if(t.substring(after, after+4).toLowerCase() === 'json') after += 4;
+      while(after < t.length && (t[after] === '\n' || t[after] === '\r' || t[after] === ' ')) after++;
+      const f2 = t.indexOf('`\`\`', after);
+      if(f2 !== -1){
+        const fc = t.substring(after, f2).trim();
+        try { parsed = JSON.parse(fc); parseOk = true; } catch(e2a){}
+        if(!parseOk && fc.charAt(0) === '"'){
+          try { parsed = JSON.parse('{' + fc + '}'); parseOk = true; } catch(e2b){}
+        }
+      }
+    }
+  }
+
+  // S3: envolver en {} si empieza por "
+  if(!parseOk){
+    const stripped = raw.trim();
+    if(stripped.charAt(0) === '"'){
+      try { parsed = JSON.parse('{' + stripped + '}'); parseOk = true; } catch(e3){}
+    }
+  }
+
+  // S4: balanceo de llaves buscando el que tiene "capitulos"
+  if(!parseOk){
+    let from = 0;
+    while(!parseOk){
+      const fb = raw.indexOf('{', from);
+      if(fb === -1) break;
+      let depth = 0, end = -1;
+      for(let i = fb; i < raw.length; i++){
+        if(raw[i]==='{') depth++;
+        else if(raw[i]==='}'){depth--; if(depth===0){end=i;break;}}
+      }
+      if(end !== -1){
+        try {
+          const c = JSON.parse(raw.slice(fb, end+1));
+          if(c && (c.capitulos || c.lineas)){ parsed = c; parseOk = true; }
+          else from = fb+1;
+        } catch(e4){ from = fb+1; }
+      } else break;
+    }
+  }
+
+  if(!parseOk){
+    const preview = raw.slice(0,500).replace(/</g,'&lt;').replace(/\n/g,'<br>');
+    throw new Error(`La IA no devolvió JSON válido. Respuesta:<br><code style="font-size:10px;display:block;margin-top:6px;background:#fff3cd;padding:6px;border-radius:4px">${preview}…</code>`);
+  }
+
+  if(!parsed.capitulos && Array.isArray(parsed.lineas)) parsed = { capitulos:[{ nombre:'', lineas: parsed.lineas }] };
+  else if(!parsed.capitulos && Array.isArray(parsed)) parsed = { capitulos:[{ nombre:'', lineas: parsed }] };
+
+  if(!parsed.capitulos || !parsed.capitulos.length) throw new Error('La IA no encontró partidas en el archivo.');
+
+  _impLineas = parsed;
+  impMostrarPreview(parsed);
+}
+
 async function impExcelToText(file){
   return new Promise((resolve, reject) => {
     const ext = file.name.split('.').pop().toLowerCase();
-    if(ext === 'csv') {
+    if(ext === 'csv'){
       const r = new FileReader();
-      r.onload = e => resolve(e.target.result.slice(0, 80000)); // max 80k chars
+      r.onload = e => resolve(e.target.result.slice(0, 80000));
       r.onerror = () => reject(new Error('Error leyendo CSV'));
       r.readAsText(file, 'UTF-8');
       return;
     }
-    // Excel: usar SheetJS
-    const script = document.createElement('script');
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-    script.onload = () => {
+    const doRead = () => {
       const r = new FileReader();
       r.onload = e => {
         try {
@@ -17344,19 +17370,25 @@ async function impExcelToText(file){
           wb.SheetNames.forEach(name => {
             const ws = wb.Sheets[name];
             const csv = XLSX.utils.sheet_to_csv(ws, { blankrows: false });
-            if(csv.trim()) text += `[Hoja: ${name}]\n${csv}\n\n`;
+            if(csv.trim()) text += '[Hoja: ' + name + ']\n' + csv + '\n\n';
           });
-          resolve(text.slice(0, 80000)); // max 80k chars
-        } catch(e2) { reject(new Error('Error leyendo Excel: ' + e2.message)); }
+          resolve(text.slice(0, 80000));
+        } catch(e2){ reject(new Error('Error leyendo Excel: ' + e2.message)); }
       };
       r.onerror = () => reject(new Error('Error leyendo Excel'));
       r.readAsArrayBuffer(file);
     };
-    script.onerror = () => reject(new Error('No se pudo cargar la librería Excel'));
-    if(!window.XLSX) document.head.appendChild(script);
-    else script.onload();
+    if(window.XLSX) doRead();
+    else {
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+      s.onload = doRead;
+      s.onerror = () => reject(new Error('No se pudo cargar la librería Excel'));
+      document.head.appendChild(s);
+    }
   });
 }
+
 
 function impMostrarPreview(parsed){
   document.getElementById('imp-step2').style.display = 'none';
