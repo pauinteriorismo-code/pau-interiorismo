@@ -19414,7 +19414,8 @@ function sortAndRenderClientes(col, dir) {
   if (q) filterTable('clientes-tbody','search-clientes');
 }
 
-function sortAndRenderFacturas(col, dir) {
+async function sortAndRenderFacturas(col, dir) {
+  if(!ProvC.length) ProvC = await sbGet('proveedores','?order=nombre.asc').catch(()=>[]);
   const sorted = doSort(FC, col, dir);
   const tb = document.getElementById('facturas-tbody');
   if (!tb) return;
@@ -19428,7 +19429,7 @@ function sortAndRenderFacturas(col, dir) {
       ? '<span style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:8px;background:#fdecea;color:var(--red)">📥 Compra</span>'
       : '<span style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:8px;background:#e8f5ee;color:var(--green)">📤 Venta</span>';
     const contra = esC
-      ? (f.proveedor_id || '—')
+      ? (ProvC.find(p=>p.id===f.proveedor_id||p.proveedor_id===f.proveedor_id)?.nombre || f.proveedor_id || '—')
       : (CC.find(c=>String(c.id)===String(f.cliente_id)||c.cliente_id===f.cliente_id)?.nombre || f.cliente_id || '—');
     const yaCobrada = f.estado==='Cobrada'||f.estado==='Pagada';
     const srch = (tipo+' '+(f.num_factura||'')+' '+contra+' '+(f.proyecto_id||'')+' '+(f.concepto||'')).toLowerCase();
