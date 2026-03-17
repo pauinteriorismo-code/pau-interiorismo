@@ -1354,7 +1354,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <div class="search-wrap"><span class="search-icon">🔍</span><input class="form-input" id="search-clientes" placeholder="Buscar cliente…" oninput="filterTable(&#39;clientes-tbody&#39;,&#39;search-clientes&#39;)"></div>
         <button class="btn btn-ghost btn-sm" onclick="openModal(&#39;m-import-clientes&#39;)" style="border:1px dashed var(--border)">📤 Importar Holded</button>
         <button class="btn btn-ghost btn-sm" onclick="exportarExcel('clientes')" style="font-size:11px">📊 Excel</button>
-<button class="btn btn-primary" onclick="openModal(&#39;m-cliente&#39;)">＋ Nuevo cliente</button> <a href="manual_proyectos.html" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;padding:5px 8px" title="Manual">❓</a>
+<button class="btn btn-primary" onclick="abrirNuevoCliente()">＋ Nuevo cliente</button> <a href="manual_proyectos.html" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;padding:5px 8px" title="Manual">❓</a>
       </div>
       <div class="card">
         <div class="card-header"><div class="card-title">🤝 Clientes<span id="clientes-count" style="font-size:11px;font-weight:400;color:var(--text-soft);margin-left:6px"></span></div></div>
@@ -3831,7 +3831,15 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="c-email" type="email"></div>
       <div class="form-group"><label class="form-label">Tipo</label><select class="form-input" id="c-tipo" onchange="if(this.value==='Particular'){document.getElementById('c-cif-tipo').value='DNI';}else if(this.value==='Empresa'||this.value==='Promotora'){document.getElementById('c-cif-tipo').value='CIF';}"><option value="">Seleccionar…</option><option value="Administración">Administración</option><option value="Empresa">Empresa</option><option value="Otros">Otros</option><option value="Particular">Particular</option><option value="Promotora">Promotora</option><option value="Proveedor">Proveedor</option></select></div>
       <div class="form-group"><label class="form-label">Forma de pago</label><select class="form-input" id="c-pago"><option value="">Seleccionar…</option><option value="Confirming">Confirming</option><option value="Domiciliación">Domiciliación</option><option value="Efectivo">Efectivo</option><option value="Giro">Giro</option><option value="Pagaré">Pagaré</option><option value="Transferencia">Transferencia</option></select></div>
-      <div class="form-group fg-full"><label class="form-label">Dirección</label><input class="form-input" id="c-dir" placeholder="C/ Nombre, Nº" autocomplete="off" oninput="autoFillDireccion(this,'c')"></div>
+      <div class="form-group fg-full"><label class="form-label">Dirección</label>
+        <div style="display:grid;grid-template-columns:1fr 80px 90px 90px;gap:6px">
+          <input class="form-input" id="c-dir" placeholder="C/ Nombre de la calle" autocomplete="off">
+          <input class="form-input" id="c-dir-num" placeholder="Nº" style="text-align:center">
+          <input class="form-input" id="c-dir-esc" placeholder="Esc. A">
+          <input class="form-input" id="c-dir-pta" placeholder="Pta. 10">
+        </div>
+        <div style="font-size:10px;color:var(--text-soft);margin-top:3px">Todos los campos son opcionales</div>
+      </div>
       <div class="form-group"><label class="form-label">C.P.</label><input class="form-input" id="c-cp" placeholder="46290" maxlength="5" oninput="autoFillCP(this,'c')"></div>
       <div class="form-group"><label class="form-label">Población</label><input class="form-input" id="c-poblacion" placeholder="Escribe para buscar..." autocomplete="off" onfocus="initPoblacionAC('c-poblacion')"></div>
       <div class="form-group"><label class="form-label">Provincia</label><input class="form-input" id="c-provincia" value="Valencia"></div>
@@ -4662,7 +4670,15 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="form-group"><label class="form-label">Especialidad</label><input class="form-input" id="pv-esp"></div>
       <div class="form-group"><label class="form-label">Forma de pago</label><select class="form-input" id="pv-pago"><option value="">Seleccionar…</option><option value="Confirming">Confirming</option><option value="Domiciliación">Domiciliación</option><option value="Efectivo">Efectivo</option><option value="Giro">Giro</option><option value="Pagaré">Pagaré</option><option value="Transferencia">Transferencia</option></select></div>
       <div class="form-group"><label class="form-label">IBAN</label><input class="form-input" id="pv-iban"></div>
-      <div class="form-group fg-full"><label class="form-label">Dirección</label><input class="form-input" id="pv-dir" placeholder="C/ Nombre, Nº" autocomplete="off" oninput="autoFillDireccion(this,'pv')"></div>
+      <div class="form-group fg-full"><label class="form-label">Dirección</label>
+        <div style="display:grid;grid-template-columns:1fr 80px 90px 90px;gap:6px">
+          <input class="form-input" id="pv-dir" placeholder="C/ Nombre de la calle" autocomplete="off">
+          <input class="form-input" id="pv-dir-num" placeholder="Nº" style="text-align:center">
+          <input class="form-input" id="pv-dir-esc" placeholder="Esc. A">
+          <input class="form-input" id="pv-dir-pta" placeholder="Pta. 10">
+        </div>
+        <div style="font-size:10px;color:var(--text-soft);margin-top:3px">Todos los campos son opcionales</div>
+      </div>
       <div class="form-group"><label class="form-label">C.P.</label><input class="form-input" id="pv-cp" placeholder="46290" maxlength="5" oninput="autoFillCP(this,'pv')"></div>
       <div class="form-group"><label class="form-label">Población</label><input class="form-input" id="pv-poblacion" placeholder="Escribe para buscar..." autocomplete="off" onfocus="initPoblacionAC('pv-poblacion')"></div>
       <div class="form-group"><label class="form-label">Provincia</label><input class="form-input" id="pv-provincia" value="Valencia"></div>
@@ -7275,11 +7291,65 @@ async function loadClientes(){
     populateSelects();
   }catch(e){tb.innerHTML=`<tr><td colspan="7" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
 }
-function editCliente(id){const c=CC.find(x=>x.id===id);if(!c)return;document.getElementById('m-cliente-title').textContent='Editar cliente';['c-id','c-nombre','c-tel','c-email','c-dir','c-notas'].forEach((f,i)=>{document.getElementById(f).value=[c.id,c.nombre,c.telefono,c.email,c.direccion,c.notas][i]||'';});const cifRaw=c.cif||'';const cifM=cifRaw.match(/^(CIF|NIF|DNI):\s*(.+)$/);if(cifM){document.getElementById('c-cif-tipo').value=cifM[1];document.getElementById('c-cif').value=cifM[2].trim();}else{document.getElementById('c-cif-tipo').value='CIF';document.getElementById('c-cif').value=cifRaw;}document.getElementById('c-tipo').value=c.tipo||'Particular';document.getElementById('c-pago').value=c.forma_pago||'Transferencia';document.getElementById('c-cp').value=c.cp||'';document.getElementById('c-poblacion').value=c.poblacion||'';document.getElementById('c-provincia').value=c.provincia||'Valencia';initPoblacionAC('c-poblacion');openModal('m-cliente');}
+function editCliente(id){const c=CC.find(x=>x.id===id);if(!c)return;document.getElementById('m-cliente-title').textContent='Editar cliente';['c-id','c-nombre','c-tel','c-email','c-notas'].forEach((f,i)=>{document.getElementById(f).value=[c.id,c.nombre,c.telefono,c.email,c.notas][i]||'';});_parseDireccion(c.direccion||'','c');const cifRaw=c.cif||'';const cifM=cifRaw.match(/^(CIF|NIF|DNI):\s*(.+)$/);if(cifM){document.getElementById('c-cif-tipo').value=cifM[1];document.getElementById('c-cif').value=cifM[2].trim();}else{document.getElementById('c-cif-tipo').value='CIF';document.getElementById('c-cif').value=cifRaw;}document.getElementById('c-tipo').value=c.tipo||'Particular';document.getElementById('c-pago').value=c.forma_pago||'Transferencia';document.getElementById('c-cp').value=c.cp||'';document.getElementById('c-poblacion').value=c.poblacion||'';document.getElementById('c-provincia').value=c.provincia||'Valencia';initPoblacionAC('c-poblacion');openModal('m-cliente');}
+async 
+// ─── Helpers dirección estructurada (calle / nº / esc / pta) ───
+function _buildDireccion(prefix){
+  const dir = (document.getElementById(prefix+'-dir')?.value||'').trim();
+  const num = (document.getElementById(prefix+'-dir-num')?.value||'').trim();
+  const esc = (document.getElementById(prefix+'-dir-esc')?.value||'').trim();
+  const pta = (document.getElementById(prefix+'-dir-pta')?.value||'').trim();
+  let parts = [];
+  if(dir) parts.push(dir);
+  if(num) parts.push('Nº '+num);
+  if(esc) parts.push(esc);
+  if(pta) parts.push(pta);
+  return parts.join(', ');
+}
+function _parseDireccion(dir, prefix){
+  // Limpiar campos primero
+  ['dir','dir-num','dir-esc','dir-pta'].forEach(s=>{
+    const el = document.getElementById(prefix+'-'+s);
+    if(el) el.value = '';
+  });
+  if(!dir) return;
+  // Intentar parsear: "C/ Nombre, Nº 20, Esc. A, Pta. 10"
+  // Separar por ", Nº " para extraer calle y resto
+  const nIdx = dir.search(/,?\s*Nº\s+/i);
+  if(nIdx > 0) {
+    const calleEl = document.getElementById(prefix+'-dir');
+    if(calleEl) calleEl.value = dir.slice(0, nIdx).trim();
+    const resto = dir.slice(nIdx).replace(/^,?\s*Nº\s+/i,'');
+    // resto: "20, Esc. A, Pta. 10"
+    const restoParts = resto.split(/,\s*/);
+    const numEl = document.getElementById(prefix+'-dir-num');
+    if(numEl && restoParts[0]) numEl.value = restoParts[0].trim();
+    const escEl = document.getElementById(prefix+'-dir-esc');
+    if(escEl && restoParts[1]) escEl.value = restoParts[1].trim();
+    const ptaEl = document.getElementById(prefix+'-dir-pta');
+    if(ptaEl && restoParts[2]) ptaEl.value = restoParts[2].trim();
+  } else {
+    // Sin Nº separado — poner todo en campo calle
+    const calleEl = document.getElementById(prefix+'-dir');
+    if(calleEl) calleEl.value = dir;
+  }
+}
+function abrirNuevoCliente(){
+  document.getElementById('m-cliente-title').textContent='Nuevo cliente';
+  ['c-id','c-nombre','c-cif','c-tel','c-email','c-notas','c-dir','c-dir-num','c-dir-esc','c-dir-pta','c-cp','c-poblacion'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('c-cif-tipo').value='CIF';
+  document.getElementById('c-tipo').value='';
+  document.getElementById('c-pago').value='';
+  document.getElementById('c-provincia').value='Valencia';
+  openModal('m-cliente');
+}
+
 async function saveCliente(){
   const nombre=document.getElementById('c-nombre').value.trim();if(!nombre){toast('El nombre es obligatorio','error');return;}
   const id=document.getElementById('c-id').value;
-  const d={nombre,cif:(document.getElementById('c-cif-tipo').value && document.getElementById('c-cif').value.trim() ? document.getElementById('c-cif-tipo').value+': '+document.getElementById('c-cif').value.trim() : document.getElementById('c-cif').value.trim()),telefono:document.getElementById('c-tel').value,email:document.getElementById('c-email').value,direccion:document.getElementById('c-dir').value,tipo:document.getElementById('c-tipo').value,forma_pago:document.getElementById('c-pago').value,notas:document.getElementById('c-notas').value,cp:document.getElementById('c-cp').value.trim()||null,poblacion:document.getElementById('c-poblacion').value.trim()||null,provincia:document.getElementById('c-provincia').value.trim()||null};
+  const d={nombre,cif:(document.getElementById('c-cif-tipo').value && document.getElementById('c-cif').value.trim() ? document.getElementById('c-cif-tipo').value+': '+document.getElementById('c-cif').value.trim() : document.getElementById('c-cif').value.trim()),telefono:document.getElementById('c-tel').value,email:document.getElementById('c-email').value,direccion:_buildDireccion('c'),tipo:document.getElementById('c-tipo').value,forma_pago:document.getElementById('c-pago').value,notas:document.getElementById('c-notas').value,cp:document.getElementById('c-cp').value.trim()||null,poblacion:document.getElementById('c-poblacion').value.trim()||null,provincia:document.getElementById('c-provincia').value.trim()||null};
   try{if(id){await sbPatch('clientes',id,d);toast('Cliente actualizado ✅');}else{d.cliente_id=genId('CLI',CC,'cliente_id');await sbPost('clientes',d);toast('Cliente guardado ✅');}closeModal('m-cliente');document.getElementById('c-id').value='';
     // If creating client from unit form, auto-select and reopen unit modal
     if(_unitCreatingClient){
@@ -11137,6 +11207,8 @@ function abrirNuevoProveedor(){
   });
   document.getElementById('pv-tipo').value='Proveedor';
   document.getElementById('pv-pago').value='Transferencia';
+  document.getElementById('pv-cp').value='';document.getElementById('pv-poblacion').value='';document.getElementById('pv-provincia').value='Valencia';
+  ['pv-dir','pv-dir-num','pv-dir-esc','pv-dir-pta'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('m-proveedor').querySelector('.modal-title').textContent='🏭 Nuevo proveedor';
   openModal('m-proveedor');
 }
@@ -17149,45 +17221,47 @@ Reglas:
     const data = await resp.json();
     const raw = data.content.filter(b => b.type === 'text').map(b => b.text).join('');
 
-    // Extracción robusta del JSON — múltiples estrategias
+    // Extracción robusta del JSON: múltiples estrategias
     let parsed;
     try {
-      // Estrategia 1: limpiar cualquier wrapper markdown (```, `json, etc.)
-      let clean = raw
-        .replace(/`{1,3}json\s*/gi, '')   // ```json o `json
-        .replace(/`{1,3}\s*/g, '')         // ``` o ` sueltos
-        .trim();
-
-      // Estrategia 2: parseo directo del texto limpio
       let parseOk = false;
-      try { parsed = JSON.parse(clean); parseOk = true; } catch(e1) {}
 
-      // Estrategia 3: extraer primer bloque { ... } completo (con balance de llaves)
+      // Estrategia 1: parseo directo
+      try { parsed = JSON.parse(raw.trim()); parseOk = true; } catch(e1) {}
+
+      // Estrategia 2: extraer de bloques ```json ... ``` o ``` ... ```
       if(!parseOk) {
-        const firstBrace = clean.indexOf('{');
+        const fenceMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
+        if(fenceMatch) {
+          try { parsed = JSON.parse(fenceMatch[1].trim()); parseOk = true; } catch(e2) {}
+        }
+      }
+
+      // Estrategia 3: balanceo de llaves desde el primer {
+      if(!parseOk) {
+        const firstBrace = raw.indexOf('{');
         if(firstBrace !== -1) {
-          let depth = 0, end = -1;
-          for(let i = firstBrace; i < clean.length; i++){
-            if(clean[i]==='{') depth++;
-            else if(clean[i]==='}') { depth--; if(depth===0){ end=i; break; } }
+          let depth = 0, endIdx = -1;
+          for(let i = firstBrace; i < raw.length; i++){
+            if(raw[i]==='{') depth++;
+            else if(raw[i]==='}') { depth--; if(depth===0){ endIdx=i; break; } }
           }
-          if(end !== -1) {
-            try { parsed = JSON.parse(clean.slice(firstBrace, end+1)); parseOk = true; }
-            catch(e2) {}
+          if(endIdx !== -1) {
+            const jsonBlock = raw.slice(firstBrace, endIdx+1);
+            try { parsed = JSON.parse(jsonBlock); parseOk = true; } catch(e3) {}
           }
         }
       }
 
-      // Estrategia 4: extraer con regex más permisivo
+      // Estrategia 4: si empieza por "capitulos": sin llave inicial, añadirla
       if(!parseOk) {
-        const m = raw.match(/\{[\s\S]+\}/);
-        if(m) {
-          try { parsed = JSON.parse(m[0]); parseOk = true; } catch(e3) {}
-        }
+        const trimmed = raw.trim().replace(/^```(?:json)?/, '').replace(/```$/, '').trim();
+        const withBraces = trimmed.startsWith('"') ? '{' + trimmed + '}' : trimmed;
+        try { parsed = JSON.parse(withBraces); parseOk = true; } catch(e4) {}
       }
 
       if(!parseOk) {
-        const preview = raw.slice(0, 400).replace(/</g,'&lt;').replace(/\n/g,'<br>');
+        const preview = raw.slice(0, 500).replace(/</g,'&lt;').replace(/\n/g,'<br>');
         throw new Error(`La IA no devolvió JSON válido. Respuesta recibida:<br><code style="font-size:10px;display:block;margin-top:6px;word-break:break-all;background:#fff3cd;padding:6px;border-radius:4px">${preview}…</code>`);
       }
     } catch(e) {
