@@ -17155,47 +17155,77 @@ async function _impParsearExcelCapitulos(file){
         const capitulos = [];
         let currentCap = null;
 
+        // Detectar si es formato CYPE (col1=Código, col1=Tipo, col2=Ud, col3=Resumen, col10=Cantidad, col11=Precio, col12=Importe)
+        // o formato simple (col0=Código, col1=Descripción, col2=Importe)
+        const isCYPE = rows.slice(0,5).some(r => (r[1]||'').toString().trim() === 'Tipo' || (r[1]||'').toString().trim() === 'Capítulo' || (r[1]||'').toString().trim() === 'Partida');
+
         for(const row of rows){
-          const code = (row[0] || '').toString().trim();
-          const desc = (row[1] || '').toString().trim();
-          const amount = parseFloat((row[2] || '0').toString().replace(',', '.')) || 0;
+          let code, tipo, ud, desc, qty, price, amount;
+
+          if(isCYPE){
+            code  = (row[0]||'').toString().trim();
+            tipo  = (row[1]||'').toString().trim();
+            ud    = (row[2]||'').toString().trim();
+            desc  = (row[3]||'').toString().trim();
+            qty   = parseFloat((row[10]||'1').toString().replace(',','.')) || 1;
+            price = parseFloat((row[11]||'0').toString().replace(',','.')) || 0;
+            amount= parseFloat((row[12]||'0').toString().replace(',','.')) || 0;
+          } else {
+            code  = (row[0]||'').toString().trim();
+            desc  = (row[1]||'').toString().trim();
+            amount= parseFloat((row[2]||'0').toString().replace(',','.')) || 0;
+            tipo  = ''; ud = 'Ud'; qty = 1; price = amount;
+          }
 
           if(!code && !desc) continue;
 
-          // Línea de capítulo: empieza por "CAP." o "CAPÍTULO" o "CAPITULO"
-          const isChapter = /^CAP[.\s]/i.test(code) || /^CAP[IÍ]TULO/i.test(code);
-
-          // Línea de resumen final — parar aquí
-          const isSummary = /BASE DE EJECUCI/i.test(code) || /PRESUPUESTO DE CONTRATA/i.test(code) || /PRESUPUESTO TOTAL/i.test(code);
+          // Parar en filas de resumen
+          const isSummary = ['BASE DE EJECUCI','PRESUPUESTO DE CONTRATA','PRESUPUESTO TOTAL','COSTES INDIRECTOS'].some(x => code.toUpperCase().includes(x) || desc.toUpperCase().includes(x));
           if(isSummary) break;
 
-          if(isChapter && amount > 0){
-            currentCap = { nombre: desc || code, lineas: [] };
-            capitulos.push(currentCap);
-            // Añadir el capítulo como una única línea con el importe total
-            currentCap.lineas.push({
-              descripcion: desc || code,
-              unidad: 'Ud',
-              cantidad: 1,
-              precio_venta: amount,
-              iva_pct: '10%'
-            });
+          if(isCYPE){
+            // Capítulo de primer nivel: código de una sola letra mayúscula
+            const isTopChapter = tipo === 'Capítulo' && /^[A-Z]$/.test(code);
+            // También detectar "CAP. 01" etc.
+            const isCapPrefix = tipo === 'Capítulo' && /^CAP[.\s]/i.test(code);
+
+            if((isTopChapter || isCapPrefix) && amount > 0){
+              currentCap = { nombre: desc || code, lineas: [] };
+              capitulos.push(currentCap);
+            } else if(tipo === 'Partida' && currentCap && desc && amount > 0){
+              currentCap.lineas.push({
+                descripcion: desc,
+                unidad: ud || 'Ud',
+                cantidad: qty,
+                precio_venta: price || amount,
+                iva_pct: '10%'
+              });
+            }
+          } else {
+            // Formato simple: CAP.XX = capítulo, resto = partida
+            const isChapter = /^CAP[.\s]/i.test(code) || /^CAP[IÍ]TULO/i.test(code);
+            if(isChapter && amount > 0){
+              currentCap = { nombre: desc || code, lineas: [] };
+              capitulos.push(currentCap);
+              currentCap.lineas.push({ descripcion: desc||code, unidad:'Ud', cantidad:1, precio_venta:amount, iva_pct:'10%' });
+            } else if(currentCap && desc && amount > 0){
+              currentCap.lineas.push({ descripcion: desc, unidad:ud||'Ud', cantidad:qty, precio_venta:price||amount, iva_pct:'10%' });
+            } else if(!currentCap && desc && amount > 0){
+              if(!capitulos.length) capitulos.push({ nombre:'', lineas:[] });
+              capitulos[0].lineas.push({ descripcion:desc, unidad:'Ud', cantidad:1, precio_venta:amount, iva_pct:'10%' });
+            }
           }
         }
 
-        if(!capitulos.length){
-          // Fallback: tratar cada fila con importe como una línea en un capítulo genérico
-          const lineas = [];
-          for(const row of rows){
-            const code = (row[0] || '').toString().trim();
-            const desc = (row[1] || '').toString().trim();
-            const amount = parseFloat((row[2] || '0').toString().replace(',', '.')) || 0;
-            if(desc && amount > 0) lineas.push({ descripcion: desc, unidad: 'Ud', cantidad: 1, precio_venta: amount, iva_pct: '10%' });
-          }
-          if(lineas.length) capitulos.push({ nombre: '', lineas });
-        }
+        // Si los capítulos existen pero sin líneas, añadir el importe total como línea
+        capitulos.forEach(cap => {
+          if(!cap.lineas.length && cap._amount > 0)
+            cap.lineas.push({ descripcion: cap.nombre, unidad:'Ud', cantidad:1, precio_venta:cap._amount, iva_pct:'10%' });
+        });
 
-        if(!capitulos.length) throw new Error('No se encontraron capítulos con importes en el archivo. Comprueba que el Excel tiene el formato CYPE (columnas: Código, Descripción, Importe).');
+        if(!capitulos.length || !capitulos.some(c => c.lineas.length)){
+          throw new Error('No se encontraron capítulos con importes en el archivo. Comprueba que el Excel tiene el formato CYPE (columnas: Código, Tipo, Resumen, Cantidad, Precio, Importe) o formato simple (Código, Descripción, Importe).');
+        }
 
         _impLineas = { capitulos };
         impMostrarPreview({ capitulos });
