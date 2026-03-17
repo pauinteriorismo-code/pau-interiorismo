@@ -821,6 +821,7 @@ if(window.MutationObserver){
         <select class="form-input" style="width:auto;min-width:75px" id="pf-version-sel" onchange="loadPresupuestoFinal()"><option value="v1">v1</option><option value="v2">v2</option><option value="v3">v3</option><option value="v4">v4</option><option value="v5">v5</option><option value="v6">v6</option><option value="v7">v7</option><option value="v8">v8</option></select>
         <button class="btn btn-primary no-print" onclick="pfVistaPrevia()">👁 Vista previa</button>
         <button class="btn btn-ghost no-print" onclick="abrirEnviarEmail('presupuesto')">📧 Enviar</button>
+        <button id="pf-btn-enviado" class="btn btn-ghost no-print" onclick="pfMarcarEnviado()" title="Marcar como enviado al cliente">📤</button>
         <button class="btn btn-ghost no-print" onclick="pfExportarPDF()">⬇️ PDF</button>
         <button class="btn btn-ghost no-print" onclick="window.print()">🖨️ Imprimir</button>
       </div>
@@ -5064,6 +5065,7 @@ async function loadPresupuestoFinal(){
     }
     document.getElementById('pf-total').textContent=fmtES(total)+'€';
     loadPfObs();
+    _refreshEnviadoPres();
   }catch(e){toast('Error: '+e.message,'error');}
 }
 
@@ -10940,7 +10942,7 @@ async function loadPedidos(){
     PedC=await sbGet('pedidos','?order=fecha.desc');
     document.getElementById('pedidos-count').textContent=PedC.length+' pedidos';
     if(!PedC.length){tb.innerHTML=`<tr><td colspan="9"><div class="empty"><div class="empty-icon">📦</div><div class="empty-text">Sin pedidos</div><button class="btn btn-primary" onclick="openModal('m-pedido')">＋ Nuevo</button></div></td></tr>`;return;}
-    tb.innerHTML=PedC.map(p=>`<tr data-search="${(p.num_pedido+p.proyecto_id+p.proveedor+p.tipo).toLowerCase()}"><td class="td-mono" style="font-weight:700">${p.num_pedido||'—'}</td><td>${fmtD(p.fecha)}</td><td class="td-mono" style="color:var(--text-soft)">${p.proyecto_id||'—'}</td><td><span class="badge b-blue">${p.tipo||'—'}</span></td><td>${p.proveedor||'—'}</td><td class="td-mono" style="font-weight:700">${fmt(p.importe)}</td><td>${bE(p.estado)}</td><td style="color:var(--text-soft)">${p.referencia?`<span style="font-weight:600;color:var(--navy)">${p.referencia}</span>`:''} ${p.observaciones||''}</td><td style="display:flex;gap:4px"><button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="editPedido('${p.id}')">Editar</button><button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="abrirDocPedido('${p.id}')">📋 Doc.</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('pedidos','${p.id}','${(p.num_pedido||'pedido').replace(/'/g,"\\'")}')">🗑</button></td></tr>`).join('');
+    tb.innerHTML=PedC.map(p=>`<tr data-search="${(p.num_pedido+p.proyecto_id+p.proveedor+p.tipo).toLowerCase()}"><td class="td-mono" style="font-weight:700">${p.num_pedido||'—'}</td><td>${fmtD(p.fecha)}</td><td class="td-mono" style="color:var(--text-soft)">${p.proyecto_id||'—'}</td><td><span class="badge b-blue">${p.tipo||'—'}</span></td><td>${p.proveedor||'—'}</td><td class="td-mono" style="font-weight:700">${fmt(p.importe)}</td><td>${bE(p.estado)}</td><td style="color:var(--text-soft)">${p.referencia?`<span style="font-weight:600;color:var(--navy)">${p.referencia}</span>`:''} ${p.observaciones||''}</td><td style="display:flex;gap:4px">${_badgeEnviado('pedido',p.id)}<button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="editPedido('${p.id}')">Editar</button><button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="abrirDocPedido('${p.id}')">📋 Doc.</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('pedidos','${p.id}','${(p.num_pedido||'pedido').replace(/'/g,"\\'")}')">🗑</button></td></tr>`).join('');
   }catch(e){tb.innerHTML=`<tr><td colspan="9" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
   // Re-apply project filter after load
   filtrarModuloPorProyecto('pedidos');
@@ -12646,6 +12648,70 @@ function _getPieHtml(esC=false){
 
 
 
+
+
+// ═══════════════════════════════════════════════════════════
+// CONTROL DE ENVÍOS — marcar documentos como enviados
+// ═══════════════════════════════════════════════════════════
+
+function pfMarcarEnviado(){
+  const proy = document.getElementById('pf-proyecto-sel')?.value;
+  const ver  = document.getElementById('pf-version-sel')?.value || 'v1';
+  if(!proy){ toast('Selecciona un proyecto primero','error'); return; }
+  const key = proy + '_' + ver;
+  marcarEnviado('presupuesto', key, 'Presupuesto');
+}
+function _refreshEnviadoPres(){
+  const proy = document.getElementById('pf-proyecto-sel')?.value;
+  const ver  = document.getElementById('pf-version-sel')?.value || 'v1';
+  const btn  = document.getElementById('pf-btn-enviado');
+  if(!btn || !proy) return;
+  const e = _getEnviado('presupuesto', proy+'_'+ver);
+  if(e){
+    btn.style.color = 'var(--green)';
+    btn.style.fontWeight = '700';
+    btn.title = '📬 Enviado el '+fmtD(e.fecha)+' · Pulsa para desmarcar';
+    btn.textContent = '📤 '+fmtD(e.fecha);
+  } else {
+    btn.style.color = '';
+    btn.style.fontWeight = '';
+    btn.title = 'Marcar presupuesto como enviado al cliente';
+    btn.textContent = '📤';
+  }
+}
+
+function _enviadoKey(tipo, id){ return 'enviado_'+tipo+'_'+id; }
+function _getEnviado(tipo, id){
+  try{ return JSON.parse(localStorage.getItem(_enviadoKey(tipo,id))||'null'); }catch(e){ return null; }
+}
+function _setEnviado(tipo, id){
+  const data = { fecha: new Date().toISOString().split('T')[0] };
+  try{ localStorage.setItem(_enviadoKey(tipo,id), JSON.stringify(data)); }catch(e){}
+  return data;
+}
+function _clearEnviado(tipo, id){
+  try{ localStorage.removeItem(_enviadoKey(tipo,id)); }catch(e){}
+}
+function marcarEnviado(tipo, id, label){
+  const ya = _getEnviado(tipo, id);
+  if(ya){
+    if(!confirm('Ya marcado como enviado el '+fmtD(ya.fecha)+'.\n¿Desmarcar?')) return;
+    _clearEnviado(tipo, id);
+    toast('Marcado como no enviado');
+  } else {
+    _setEnviado(tipo, id);
+    toast('📤 '+label+' marcado como enviado ✅');
+  }
+  // Refresh the relevant view
+  if(tipo==='presupuesto') _refreshEnviadoPres();
+  else if(tipo==='pedido') loadPedidos();
+  else if(tipo==='albaran') loadAlbaranes();
+}
+function _badgeEnviado(tipo, id){
+  const e = _getEnviado(tipo, id);
+  if(!e) return '<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px;color:var(--text-mid)" onclick="marcarEnviado(\''+tipo+'\',\''+id+'\',\'Documento\')" title="Marcar como enviado">📤</button>';
+  return '<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px;color:var(--green);font-weight:700" onclick="marcarEnviado(\''+tipo+'\',\''+id+'\',\'Documento\')" title="Enviado el '+fmtD(e.fecha)+'\nPulsa para desmarcar">📤 '+fmtD(e.fecha)+'</button>';
+}
 
 const loaders={
   gerencia:loadGerencia,agenda:loadAgenda,clientes:loadClientes,proyectos:loadProyectos,
@@ -23256,6 +23322,7 @@ async function loadAlbaranes() {
       <td style="text-align:center">${lineas.length} ítem${lineas.length!==1?'s':''}</td>
       <td><span style="font-size:11px;font-weight:700;color:${estadoColor}">${a.estado||'Borrador'}</span></td>
       <td style="white-space:nowrap">
+        ${_badgeEnviado('albaran',a.id)}
         <button class="btn btn-ghost btn-sm" onclick="editarAlbaran('${a.id}')">✏️</button>
         <button class="btn btn-ghost btn-sm" onclick="exportarAlbaranPDF('${a.id}')">⬇️ PDF</button>
         <button class="btn btn-danger btn-sm" onclick="eliminarAlbaran('${a.id}')">🗑</button>
