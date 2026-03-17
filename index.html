@@ -2777,7 +2777,8 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
         <div style="display:flex;align-items:center;gap:8px">
           <label style="font-size:12px;font-weight:600;color:var(--text-soft)">Proyecto:</label>
-          <select class="form-input" id="ed-proyecto" style="width:200px"><option value="">— Seleccionar —</option></select>
+          <select class="form-input" id="ed-proyecto" style="width:220px" onchange="edCargarProyectos()"><option value="">— Seleccionar proyecto —</option></select>
+          <select class="form-input" id="ed-version" style="width:70px"><option value="v1">v1</option><option value="v2">v2</option><option value="v3">v3</option><option value="v4">v4</option><option value="v5">v5</option><option value="v6">v6</option><option value="v7">v7</option><option value="v8">v8</option></select>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
           <label style="font-size:12px;font-weight:600;color:var(--text-soft)">Margen %:</label>
@@ -6683,7 +6684,8 @@ async function populateSelects(){
   // Cargar ProvC solo si está vacío (init ya lo carga; openModal recarga si es necesario)
   if(!ProvC.length) ProvC=await sbGet('proveedores','?order=nombre.asc').catch(()=>[]);
   ['p-cliente','f-cliente'].forEach(id=>{const el=document.getElementById(id);if(!el)return;const cur=el.value;el.innerHTML='<option value="">Seleccionar…</option>'+[...CC].sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||'','es')).map(c=>`<option value="${c.cliente_id}">${c.nombre}</option>`).join('');if(cur)el.value=cur;});
-  ['co-proyecto','sc-proyecto','h-proyecto','f-proyecto','i-proyecto','ped-proyecto','pres-proyecto-sel','comp-proyecto-sel','rent-proyecto-sel','cmp-proyecto','s-proyecto'].forEach(id=>{const el=document.getElementById(id);if(!el)return;const cur=el.value;el.innerHTML='<option value="">Seleccionar…</option>'+[...PC].sort((a,b)=>a.proyecto_id.localeCompare(b.proyecto_id,'es',{numeric:true})).map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');if(cur)el.value=cur;}); ixPopulateProyectoSel();
+  ['co-proyecto','sc-proyecto','h-proyecto','f-proyecto','i-proyecto','ped-proyecto','pres-proyecto-sel','comp-proyecto-sel','rent-proyecto-sel','cmp-proyecto','s-proyecto'].forEach(id=>{const el=document.getElementById(id);if(!el)return;const cur=el.value;el.innerHTML='<option value="">Seleccionar…</option>'+[...PC].sort((a,b)=>a.proyecto_id.localeCompare(b.proyecto_id,'es',{numeric:true})).map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');if(cur)el.value=cur;}); edCargarProyectos();
+  ixPopulateProyectoSel();
   // Refrescar datalist compartido de proveedores
   _refrescarDatalistProveedores();
   // ped-prov sigue siendo select (tiene su propio buscador), actualizarlo también
@@ -21747,6 +21749,7 @@ async function edExportarPresupuesto(){
     try{
       await sbPost('presupuesto_lineas',{
         proyecto_id:pryId,
+        version:document.getElementById('ed-version')?.value||'v1',
         partida:'Electrodomésticos',
         descripcion:(p.marca==='Cata'?'Cata':'Balay')+' '+p.ref+' — '+desc,
         unidad:'Ud',
@@ -21761,13 +21764,20 @@ async function edExportarPresupuesto(){
   toast(ok+' líneas exportadas al presupuesto','success');
 }
 
-async function edCargarProyectos(){
+function edCargarProyectos(){
   const sel=document.getElementById('ed-proyecto');
-  if(!sel||sel.options.length>1) return;
-  try{
-    const data=await sbGet('proyectos','select=id,nombre&order=nombre');
-    if(data&&data.length){data.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.nombre;sel.appendChild(o)})}
-  }catch(e){}
+  if(!sel) return;
+  const cur=sel.value;
+  // Use PC cache (already loaded), store proyecto_id (text) as value
+  const proyectos = (PC||[]).sort((a,b)=>(a.proyecto_id||'').localeCompare(b.proyecto_id||'','es',{numeric:true}));
+  sel.innerHTML='<option value="">— Seleccionar proyecto —</option>'+
+    proyectos.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
+  if(cur) sel.value=cur;
+  // Also populate version selector
+  const vSel=document.getElementById('ed-version');
+  if(vSel && !vSel.options.length){
+    ['v1','v2','v3','v4','v5','v6','v7','v8'].forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;vSel.appendChild(o);});
+  }
 }
 
 
