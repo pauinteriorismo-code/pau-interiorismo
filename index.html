@@ -403,6 +403,8 @@ tbody td{padding:7px 10px;vertical-align:middle}
 ══════════════════════════════ */
 @media print {
   .no-print { display: none !important; }
+  #pf-obs { border: none !important; outline: none !important; }
+  #pf-obs-wrap .no-print { display: none !important; }
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
   body, p, td, th, div, span { -webkit-font-smoothing: antialiased !important; text-rendering: optimizeLegibility !important; }
   input, textarea { border: none !important; background: transparent !important; outline: none !important; resize: none !important; }
@@ -875,10 +877,19 @@ if(window.MutationObserver){
         </div>
         <!-- Observaciones -->
         <div id="pf-obs-wrap" style="margin-top:14px;padding-top:10px;border-top:1px solid #ddd">
-          <div style="margin-bottom:6px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
             <strong style="color:#333;font-size:10px">Observaciones:</strong>
+            <span class="no-print" style="display:flex;gap:3px;margin-left:4px">
+              <button onclick="document.execCommand('bold')" title="Negrita" style="padding:1px 6px;font-weight:900;border:1px solid #ccc;border-radius:3px;background:#f5f5f5;cursor:pointer;font-size:11px">B</button>
+              <button onclick="document.execCommand('italic')" title="Cursiva" style="padding:1px 6px;font-style:italic;border:1px solid #ccc;border-radius:3px;background:#f5f5f5;cursor:pointer;font-size:11px">I</button>
+              <button onclick="document.execCommand('underline')" title="Subrayado" style="padding:1px 6px;text-decoration:underline;border:1px solid #ccc;border-radius:3px;background:#f5f5f5;cursor:pointer;font-size:11px">U</button>
+              <button onclick="document.execCommand('foreColor',false,'#c0392b')" title="Rojo" style="padding:1px 7px;border:1px solid #ccc;border-radius:3px;background:#c0392b;cursor:pointer;font-size:11px;color:white">A</button>
+              <button onclick="document.execCommand('foreColor',false,'#1a5276')" title="Azul" style="padding:1px 7px;border:1px solid #ccc;border-radius:3px;background:#1a5276;cursor:pointer;font-size:11px;color:white">A</button>
+              <button onclick="document.execCommand('foreColor',false,'#1e8449')" title="Verde" style="padding:1px 7px;border:1px solid #ccc;border-radius:3px;background:#1e8449;cursor:pointer;font-size:11px;color:white">A</button>
+              <button onclick="document.execCommand('foreColor',false,'#555')" title="Normal" style="padding:1px 6px;border:1px solid #ccc;border-radius:3px;background:#f5f5f5;cursor:pointer;font-size:11px">↩</button>
+            </span>
           </div>
-          <textarea id="pf-obs" rows="2" style="width:100%;font-size:10px;color:#555;border:1px dashed #ccc;border-radius:4px;padding:6px;resize:vertical;font-family:inherit" placeholder=""></textarea>
+          <div id="pf-obs" contenteditable="true" style="width:100%;min-height:36px;font-size:10px;color:#555;border:1px dashed #ccc;border-radius:4px;padding:6px;font-family:inherit;outline:none;line-height:1.5"></div>
         </div>
         <!-- Condiciones -->
         <div style="margin-top:14px;padding-top:10px;border-top:1px solid #ddd;color:#888;font-size:10px">
@@ -5061,7 +5072,7 @@ async function loadPresupuestoFinal(){
 async function savePfObs(){
   const proy = document.getElementById('pf-proyecto-sel')?.value;
   const ver = document.getElementById('pf-version-sel')?.value || 'v1';
-  const obs = document.getElementById('pf-obs')?.value || '';
+  const obs = document.getElementById('pf-obs')?.innerHTML || '';
   if(!proy) return;
   const key = 'obs_pres_'+proy+'_'+ver;
   try { await upsertConfig(key, obs); toast('Observaciones guardadas ✅'); }
@@ -5076,8 +5087,8 @@ async function loadPfObs(){
   const key = 'obs_pres_'+proy+'_'+ver;
   try {
     const rows = await sbGet('configuracion','?clave=eq.'+encodeURIComponent(key));
-    el.value = (rows && rows[0]) ? rows[0].valor : '';
-  } catch(e){ el.value = ''; }
+    el.innerHTML = (rows && rows[0]) ? rows[0].valor : '';
+  } catch(e){ el.innerHTML = ''; }
 }
 
 function pfVistaPrevia(){ const _cn=_safeNombre(document.getElementById('pf-cliente-nombre')?.textContent||''); const _proy=document.getElementById('pf-proyecto-sel')?.value||'PRES'; const _ver=document.getElementById('pf-version-sel')?.value||'v1'; const _fn=_cn?`${_proy}-${_ver}_${_cn}`:`${_proy}-${_ver}`; abrirVistaPrevia('pf-doc','Presupuesto',true,_fn); }
