@@ -2775,9 +2775,9 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <span class="cat-header-desc">P. Referencia Balay (IVA incl.) · Dto 30% + Margen 35%</span>
       </div>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
-        <div style="display:flex;align-items:center;gap:8px">
-          <label style="font-size:12px;font-weight:600;color:var(--text-soft)">Proyecto:</label>
-          <select class="form-input" id="ed-proyecto" style="width:220px" onchange="edCargarProyectos()"><option value="">— Seleccionar proyecto —</option></select>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <select class="form-input" id="ed-cliente-sel" style="width:190px;flex-shrink:0" onchange="edFiltrarProyectos()"><option value="">👤 Cliente…</option></select>
+          <select class="form-input" id="ed-proyecto" style="width:230px" onchange="edVersionesPorProyecto()"><option value="">📁 Proyecto…</option></select>
           <select class="form-input" id="ed-version" style="width:70px"><option value="v1">v1</option><option value="v2">v2</option><option value="v3">v3</option><option value="v4">v4</option><option value="v5">v5</option><option value="v6">v6</option><option value="v7">v7</option><option value="v8">v8</option></select>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
@@ -17127,6 +17127,7 @@ function catAbrir(fab){
     ixSetTab('roca');
   } else if(fab === 'electrodom'){
     document.getElementById('cat-panel-electrodom').classList.add('open');
+    edCargarProyectos();
     edRenderCatalogo();
   } else if(fab === 'marmoles'){
     document.getElementById('cat-panel-marmoles').classList.add('open');
@@ -21765,19 +21766,40 @@ async function edExportarPresupuesto(){
 }
 
 function edCargarProyectos(){
-  const sel=document.getElementById('ed-proyecto');
-  if(!sel) return;
-  const cur=sel.value;
-  // Use PC cache (already loaded), store proyecto_id (text) as value
-  const proyectos = (PC||[]).sort((a,b)=>(a.proyecto_id||'').localeCompare(b.proyecto_id||'','es',{numeric:true}));
-  sel.innerHTML='<option value="">— Seleccionar proyecto —</option>'+
-    proyectos.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
-  if(cur) sel.value=cur;
-  // Also populate version selector
-  const vSel=document.getElementById('ed-version');
-  if(vSel && !vSel.options.length){
-    ['v1','v2','v3','v4','v5','v6','v7','v8'].forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;vSel.appendChild(o);});
+  // Populate client selector
+  const cliSel = document.getElementById('ed-cliente-sel');
+  if(cliSel){
+    const curCli = cliSel.value;
+    cliSel.innerHTML = '<option value="">👤 Cliente…</option>' +
+      [...CC].sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||'','es'))
+        .map(c=>`<option value="${c.cliente_id||c.id}">${c.nombre}</option>`).join('');
+    if(curCli) cliSel.value = curCli;
   }
+  // Populate project selector (filtered by client if selected)
+  edFiltrarProyectos(false);
+}
+function edFiltrarProyectos(resetProj=true){
+  const cliId = document.getElementById('ed-cliente-sel')?.value || '';
+  const sel = document.getElementById('ed-proyecto');
+  if(!sel) return;
+  const cur = resetProj ? '' : sel.value;
+  const proyectos = cliId
+    ? (PC||[]).filter(p=>p.cliente_id===cliId)
+    : (PC||[]);
+  const sorted = proyectos.sort((a,b)=>(a.proyecto_id||'').localeCompare(b.proyecto_id||'','es',{numeric:true}));
+  sel.innerHTML = '<option value="">📁 Proyecto…</option>' +
+    sorted.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
+  if(cur) sel.value = cur;
+}
+function edVersionesPorProyecto(){
+  // When project changes, select the version that has data (uses presupuesto context if available)
+  const proy = document.getElementById('ed-proyecto')?.value;
+  const vSel = document.getElementById('ed-version');
+  if(!vSel || !proy) return;
+  // Try to match active presupuesto version
+  const activeVer = document.getElementById('pres-version-sel')?.value ||
+                    document.getElementById('pf-version-sel')?.value || 'v1';
+  vSel.value = activeVer;
 }
 
 
