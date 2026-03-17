@@ -17224,29 +17224,46 @@ Reglas:
       // Estrategia 1: parseo directo
       try { parsed = JSON.parse(raw.trim()); parseOk = true; } catch(e1) {}
 
-      // Estrategia 2: extraer de bloque ```json ... ``` y envolver en {} si falta
+      // Estrategia 2: extraer contenido entre ``` usando indexOf (sin regex)
       if(!parseOk) {
-        const fenceMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/s);
-        if(fenceMatch) {
-          let fenceContent = fenceMatch[1].trim();
-          // Intentar parseo directo
-          try { parsed = JSON.parse(fenceContent); parseOk = true; } catch(e2a) {}
-          // Si falla, envolver en {} (la IA omitió las llaves externas)
-          if(!parseOk && fenceContent.startsWith('"')) {
-            try { parsed = JSON.parse('{' + fenceContent + '}'); parseOk = true; } catch(e2b) {}
+        const t = raw.trim();
+        const fence1 = t.indexOf('```');
+        if(fence1 !== -1) {
+          // Saltar "```json" o "```"
+          let after = fence1 + 3;
+          if(t.substring(after, after+4).toLowerCase() === 'json') after += 4;
+          // Saltar saltos de línea/espacios tras la apertura
+          while(after < t.length && (t[after] === '\n' || t[after] === '\r' || t[after] === ' ')) after++;
+          const fence2 = t.indexOf('```', after);
+          if(fence2 !== -1) {
+            let fenceContent = t.substring(after, fence2).trim();
+            // Intentar parseo directo
+            try { parsed = JSON.parse(fenceContent); parseOk = true; } catch(e2a) {}
+            // Si falta la llave exterior {}, añadirla
+            if(!parseOk && fenceContent.charAt(0) === '"') {
+              try { parsed = JSON.parse('{' + fenceContent + '}'); parseOk = true; } catch(e2b) {}
+            }
           }
         }
       }
 
-      // Estrategia 3: envolver raw en {} si empieza por "capitulos":
+      // Estrategia 3: si el raw empieza por "capitulos": (sin bloque ```)
       if(!parseOk) {
-        const stripped = raw.trim().replace(/^```(?:json)?\s*/,'').replace(/\s*```$/,'').trim();
-        if(stripped.startsWith('"')) {
+        let stripped = raw.trim();
+        // quitar posible ```json al inicio
+        if(stripped.indexOf('```') === 0) {
+          stripped = stripped.substring(3);
+          if(stripped.substring(0,4).toLowerCase() === 'json') stripped = stripped.substring(4);
+          const endFence = stripped.lastIndexOf('```');
+          if(endFence !== -1) stripped = stripped.substring(0, endFence);
+          stripped = stripped.trim();
+        }
+        if(stripped.charAt(0) === '"') {
           try { parsed = JSON.parse('{' + stripped + '}'); parseOk = true; } catch(e3) {}
         }
       }
 
-      // Estrategia 4: balanceo de llaves buscando el { raíz (el que contiene "capitulos")
+      // Estrategia 4: balanceo de llaves - buscar el { que contiene "capitulos"
       if(!parseOk) {
         let searchFrom = 0;
         while(!parseOk) {
