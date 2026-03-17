@@ -3833,7 +3833,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="form-group"><label class="form-label">Forma de pago</label><select class="form-input" id="c-pago"><option value="">Seleccionar…</option><option value="Confirming">Confirming</option><option value="Domiciliación">Domiciliación</option><option value="Efectivo">Efectivo</option><option value="Giro">Giro</option><option value="Pagaré">Pagaré</option><option value="Transferencia">Transferencia</option></select></div>
       <div class="form-group fg-full"><label class="form-label">Dirección</label>
         <div style="display:grid;grid-template-columns:1fr 80px 90px 90px;gap:6px">
-          <input class="form-input" id="c-dir" placeholder="C/ Nombre de la calle" autocomplete="off">
+          <input class="form-input" id="c-dir" placeholder="C/ Nombre de la calle" autocomplete="off" oninput="autoFillDireccion(this,'c')">
           <input class="form-input" id="c-dir-num" placeholder="Nº" style="text-align:center">
           <input class="form-input" id="c-dir-esc" placeholder="Esc. A">
           <input class="form-input" id="c-dir-pta" placeholder="Pta. 10">
@@ -4672,7 +4672,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="form-group"><label class="form-label">IBAN</label><input class="form-input" id="pv-iban"></div>
       <div class="form-group fg-full"><label class="form-label">Dirección</label>
         <div style="display:grid;grid-template-columns:1fr 80px 90px 90px;gap:6px">
-          <input class="form-input" id="pv-dir" placeholder="C/ Nombre de la calle" autocomplete="off">
+          <input class="form-input" id="pv-dir" placeholder="C/ Nombre de la calle" autocomplete="off" oninput="autoFillDireccion(this,'pv')">
           <input class="form-input" id="pv-dir-num" placeholder="Nº" style="text-align:center">
           <input class="form-input" id="pv-dir-esc" placeholder="Esc. A">
           <input class="form-input" id="pv-dir-pta" placeholder="Pta. 10">
@@ -5707,11 +5707,7 @@ async function autoFillDireccion(input, prefix){
         return `<div style="padding:7px 10px;cursor:pointer;font-size:12px;border-bottom:1px solid #f5f5f5;line-height:1.3"
           onmousedown="event.preventDefault()"
           onclick="
-            document.getElementById('${input.id}').value='${(road+num).replace(/'/g,"\\'")}';
-            ${cp2?`if(!document.getElementById('${prefix}-cp').value) document.getElementById('${prefix}-cp').value='${cp2}';`:''}
-            ${ciudad?`if(!document.getElementById('${prefix}-poblacion').value) document.getElementById('${prefix}-poblacion').value='${ciudad.replace(/'/g,"\\'")}';`:''}
-            document.getElementById('${ddId}').style.display='none';
-          ">
+            document.getElementById('${input.id}').value='${road.replace(/'/g,"\\'")}';\n            ${addr.house_number?`document.getElementById('${prefix}-dir-num').value='${addr.house_number}';`:''}\n            ${cp2?`if(!document.getElementById('${prefix}-cp').value) document.getElementById('${prefix}-cp').value='${cp2}';`:''}\n            ${ciudad?`if(!document.getElementById('${prefix}-poblacion').value) document.getElementById('${prefix}-poblacion').value='${ciudad.replace(/'/g,"\\'")}';`:''}\n            document.getElementById('${ddId}').style.display='none';\n          ">
           <strong>${label}</strong>
           <span style="color:#999;font-size:11px"> · ${ciudad}${cp2?' '+cp2:''}</span>
         </div>`;
@@ -7292,7 +7288,6 @@ async function loadClientes(){
   }catch(e){tb.innerHTML=`<tr><td colspan="7" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
 }
 function editCliente(id){const c=CC.find(x=>x.id===id);if(!c)return;document.getElementById('m-cliente-title').textContent='Editar cliente';['c-id','c-nombre','c-tel','c-email','c-notas'].forEach((f,i)=>{document.getElementById(f).value=[c.id,c.nombre,c.telefono,c.email,c.notas][i]||'';});_parseDireccion(c.direccion||'','c');const cifRaw=c.cif||'';const cifM=cifRaw.match(/^(CIF|NIF|DNI):\s*(.+)$/);if(cifM){document.getElementById('c-cif-tipo').value=cifM[1];document.getElementById('c-cif').value=cifM[2].trim();}else{document.getElementById('c-cif-tipo').value='CIF';document.getElementById('c-cif').value=cifRaw;}document.getElementById('c-tipo').value=c.tipo||'Particular';document.getElementById('c-pago').value=c.forma_pago||'Transferencia';document.getElementById('c-cp').value=c.cp||'';document.getElementById('c-poblacion').value=c.poblacion||'';document.getElementById('c-provincia').value=c.provincia||'Valencia';initPoblacionAC('c-poblacion');openModal('m-cliente');}
-async 
 // ─── Helpers dirección estructurada (calle / nº / esc / pta) ───
 function _buildDireccion(prefix){
   const dir = (document.getElementById(prefix+'-dir')?.value||'').trim();
