@@ -5878,7 +5878,49 @@ document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{
 let pendingDel=null;
 function confirmDelete(table,id,name){pendingDel={table,id};document.getElementById('confirm-text').textContent=`¿Eliminar "${name}"? No se puede deshacer.`;document.getElementById('confirm-overlay').classList.add('open');}
 function closeConfirm(){pendingDel=null;document.getElementById('confirm-overlay').classList.remove('open');}
-async function confirmDeleteAction(){if(!pendingDel)return;try{await sbDelete(pendingDel.table,pendingDel.id);toast('Eliminado ✅');closeConfirm();loaders[currentView()]?.();}catch(e){toast('Error: '+e.message,'error');}}
+async function confirmDeleteAction(){
+  if(!pendingDel) return;
+  try{
+    // Special handling for proyectos: check for related data first
+    if(pendingDel.table === 'proyectos'){
+      await eliminarProyectoCompleto(pendingDel.id);
+    } else {
+      await sbDelete(pendingDel.table, pendingDel.id);
+      toast('Eliminado ✅');
+    }
+    closeConfirm();
+    loaders[currentView()]?.();
+  }catch(e){ toast('Error al eliminar: '+e.message,'error'); }
+}
+
+async function eliminarProyectoCompleto(proyId){
+  // Get proyecto_id text from id UUID
+  const proy = PC.find(p=>p.id===proyId);
+  const proyectoId = proy?.proyecto_id;
+  
+  // Delete all related data by proyecto_id
+  const deletes = [];
+  if(proyectoId){
+    // Delete related records (non-financial - user must delete facturas manually if any)
+    const facCount = (FC||[]).filter(f=>f.proyecto_id===proyectoId).length;
+    const compCount = (CoC||[]).filter(c=>c.proyecto_id===proyectoId).length;
+    if(facCount>0 || compCount>0){
+      const msg = [];
+      if(facCount>0) msg.push(facCount+' factura(s)');
+      if(compCount>0) msg.push(compCount+' compra(s)');
+      if(!confirm('El proyecto tiene '+msg.join(' y ')+' asociadas.\n¿Eliminar igualmente el proyecto y todos sus datos?')) return;
+    }
+    // Delete related tables
+    for(const tbl of ['presupuesto_lineas','horas_trabajo','certificaciones','entregas_cuenta','fotos_proyecto','proyecto_unidades']){
+      try{ await sb(tbl,'DELETE',null,null,`?proyecto_id=eq.${proyectoId}`); }catch(e){}
+    }
+  }
+  // Delete the project itself
+  await sbDelete('proyectos', proyId);
+  // Refresh caches
+  PC = (PC||[]).filter(p=>p.id!==proyId);
+  toast('Proyecto eliminado ✅');
+}
 function currentView(){return document.querySelector('.view.active')?.id.replace('view-','')||'gerencia';}
 function filterTable(tbId,inId){const q=document.getElementById(inId)?.value.toLowerCase()||'';document.querySelectorAll(`#${tbId} tr[data-search]`).forEach(r=>{r.style.display=r.dataset.search.includes(q)?'':'none';});}
 
