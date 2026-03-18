@@ -12154,30 +12154,55 @@ function previsualizarFactura(){
   +'</div>'
   +'<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js">\u003c/script></body></html>';
 
-  const win=window.open('','_blank','width=870,height=900');
-  if(!win){ toast('Activa las ventanas emergentes para ver la previsualización','error'); return; }
-  win.document.write(html);
-  win.document.close();
-  // Inyectar html2pdf y función dlPDF via script element
-  const s=win.document.createElement('script');
-  s.src='https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-  s.onload=function(){
-    const s2=win.document.createElement('script');
-    s2.textContent='function dlPDF(){'
-      +'var btn=document.getElementById("btn-pdf");'
-      +'btn.textContent="⏳ Generando…";btn.disabled=true;'
-      +'html2pdf().set({'
-      +'margin:8,'
-      +'filename:"Factura_'+d.num.replace(/[^a-zA-Z0-9_-]/g,'_')+'_'+_safeNombre(d.contra||'')+'_PAU.pdf",'
-      +'image:{type:"jpeg",quality:0.98},'
-      +'html2canvas:{scale:3,useCORS:true,logging:false,letterRendering:true},'
-      +'jsPDF:{unit:"mm",format:"a4",orientation:"portrait"}'
-      +'}).from(document.getElementById("fpdf")).save().then(function(){'
-      +'btn.textContent="📥 Guardar PDF";btn.disabled=false;'
-      +'});}';
-    win.document.head.appendChild(s2);
-  };
-  win.document.head.appendChild(s);
+  // Render in-page for crisp text (same as presupuesto)
+  let facDocEl = document.getElementById('fac-preview-doc');
+  if(!facDocEl){
+    facDocEl = document.createElement('div');
+    facDocEl.id = 'fac-preview-doc';
+    facDocEl.style.display = 'none';
+    document.body.appendChild(facDocEl);
+  }
+  // Extract body content from html string
+  const tmpDiv = document.createElement('div');
+  tmpDiv.innerHTML = html.replace(/[\s\S]*<body[^>]*>/, '').replace(/<\/body>[\s\S]*/, '');
+  // Remove toolbar div (has its own buttons)
+  const toolbarEl = tmpDiv.querySelector('.toolbar');
+  if(toolbarEl) toolbarEl.remove();
+  facDocEl.innerHTML = tmpDiv.innerHTML;
+  // Inject the factura CSS into the element
+  let facStyle = document.getElementById('fac-preview-style');
+  if(!facStyle){
+    facStyle = document.createElement('style');
+    facStyle.id = 'fac-preview-style';
+    facStyle.textContent = `
+      #fac-preview-doc { font-family:'Inter','Segoe UI',Arial,sans-serif; font-size:12px; color:#333; background:white; }
+      #fac-preview-doc .page { background:white; max-width:794px; margin:0 auto; box-shadow:none; }
+      #fac-preview-doc .hdr { padding:28px 32px; display:flex; justify-content:space-between; align-items:flex-end; border-bottom:2px solid #b87333; }
+      #fac-preview-doc .logo-img { width:140px; height:auto; object-fit:contain; display:block; }
+      #fac-preview-doc .fnum { text-align:right; display:flex; flex-direction:column; align-items:flex-end; }
+      #fac-preview-doc .fnum h2 { font-size:22px; font-weight:800; color:#4a3728; margin-bottom:4px; }
+      #fac-preview-doc .ftipo { font-size:11px; font-weight:700; color:#b87333; letter-spacing:.08em; text-transform:uppercase; margin-bottom:2px; }
+      #fac-preview-doc .empresa { font-size:10px; color:#888; line-height:1.6; }
+      #fac-preview-doc .iband { display:grid; grid-template-columns:1fr 1fr 1fr; border:1px solid #e8e0d4; border-radius:4px; margin-bottom:20px; }
+      #fac-preview-doc .icell { padding:12px; border-right:1px solid #e8e0d4; }
+      #fac-preview-doc .icell:last-child { border-right:none; }
+      #fac-preview-doc .ilbl { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:#b87333; margin-bottom:4px; }
+      #fac-preview-doc .ival { font-weight:700; font-size:13px; }
+      #fac-preview-doc .isub { font-size:11px; color:#666; }
+      #fac-preview-doc .sec { margin-bottom:20px; }
+      #fac-preview-doc table { width:100%; border-collapse:collapse; }
+      #fac-preview-doc th { font-size:10px; font-weight:700; text-transform:uppercase; padding:8px; border-bottom:1px solid #e8e0d4; }
+      #fac-preview-doc td { padding:8px; border-bottom:1px solid #f0ece6; font-size:12px; }
+      #fac-preview-doc .totals { margin-left:auto; width:280px; }
+      #fac-preview-doc .tot-row { display:flex; justify-content:space-between; padding:5px 0; font-size:12px; border-bottom:1px solid #f0ece6; }
+      #fac-preview-doc .tot-total { display:flex; justify-content:space-between; padding:8px 0; font-size:15px; font-weight:800; color:#4a3728; }
+      #fac-preview-doc .foot { text-align:center; font-size:10px; color:#aaa; padding:16px 32px; border-top:1px solid #e8e0d4; margin-top:20px; }
+      #fac-preview-doc .obs { padding:0 32px 20px; font-size:11px; color:#555; }
+    `;
+    document.head.appendChild(facStyle);
+  }
+  const fn = d.num ? 'Factura_' + d.num.replace(/[^a-zA-Z0-9_-]/g,'_') + '_' + _safeNombre(d.contra||'') + '_PAU' : 'Factura';
+  abrirVistaPrevia('fac-preview-doc', 'Factura', false, fn);
 }
 
 async function onFacProyectoChange(){
