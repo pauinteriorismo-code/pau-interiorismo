@@ -4696,7 +4696,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
   <div class="modal-body"><input type="hidden" id="pv-id">
     <div class="form-grid">
       <div class="form-group fg-full"><label class="form-label">Nombre *</label><input class="form-input" id="pv-nombre"></div>
-      <div class="form-group"><label class="form-label">Tipo documento</label><select class="form-input" id="pv-tipo-doc"><option value="CIF" selected>CIF (Empresa)</option><option value="NIF">NIF</option><option value="DNI">DNI (Autónomo)</option><option value="NIE">NIE</option><option value="OTRO">Otro</option></select></div>
+      <div class="form-group"><label class="form-label">Tipo documento</label><select class="form-input" id="pv-tipo-doc"><option value="CIF" selected>CIF</option><option value="NIF">NIF</option><option value="DNI">DNI</option><option value="NIE">NIE</option><option value="OTRO">Otro</option></select></div>
       <div class="form-group"><label class="form-label"><span id="pv-cif-label">CIF</span></label><input class="form-input" id="pv-cif" placeholder="" oninput="document.getElementById('pv-cif-label').textContent=document.getElementById('pv-tipo-doc').value"><script>document.getElementById('pv-tipo-doc')?.addEventListener('change',function(){document.getElementById('pv-cif-label').textContent=this.value;});</script></div>
       <div class="form-group"><label class="form-label">Tipo</label><select class="form-input" id="pv-tipo"><option value="Proveedor" selected>Proveedor</option><option value="Subcontrata">Subcontrata</option><option value="Servicio">Servicio</option><option value="Alquiler">Alquiler</option><option value="Transporte">Transporte</option><option value="Otros">Otros</option></select></div>
       <div class="form-group"><label class="form-label">Teléfono</label><input class="form-input" id="pv-tel"></div>
@@ -5699,7 +5699,7 @@ async function autoFillCP(input, prefix){
     if(data.places && data.places.length > 0){
       const place = data.places[0];
       if(!pobEl.value) pobEl.value = place['place name'] || '';
-      if(provEl && !provEl.value) provEl.value = place['state'] || 'Valencia';
+      if(provEl && !provEl.value && place['state']) provEl.value = place['state'];
       // Limpiar el estado si ya había algo y es diferente
       if(pobEl.value === '' && place['place name']) pobEl.value = place['place name'];
     }
@@ -5760,7 +5760,7 @@ function autoProvincia(inputId){
   // Auto-fill provincia = Valencia when selecting from the list
   const provField = inputId.replace('poblacion','provincia').replace('pob','prov');
   const el = document.getElementById(provField);
-  if(el && !el.value) el.value = 'Valencia';
+  // provincia not auto-filled
 }
 
 function findProvName(id){
@@ -7033,7 +7033,7 @@ function exportarInformeFacturas(){
     .header{background:#fff;padding:20px 24px;display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #b87333}
     .header h1{margin:0;font-size:15px;font-weight:700;color:#4a3728}
     .header p{margin:3px 0 0;font-size:11px;color:#888}
-    .logo-img{width:160px;height:auto;object-fit:contain}
+    .logo-img{width:140px;height:auto;object-fit:contain;display:block}
     .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:0;border-bottom:1px solid #e8e0d4}
     .kpi{padding:12px 16px;border-right:1px solid #e8e0d4}
     .kpi:last-child{border-right:none}
@@ -7380,7 +7380,7 @@ function abrirNuevoCliente(){
   document.getElementById('c-cif-tipo').value='CIF';
   document.getElementById('c-tipo').value='';
   document.getElementById('c-pago').value='';
-  document.getElementById('c-provincia').value='Valencia';
+  document.getElementById('c-provincia').value='';
   openModal('m-cliente');
 }
 
@@ -9978,7 +9978,7 @@ function saitraImprimir(){
   .toolbar{display:flex;gap:10px;justify-content:center;padding:12px;background:#4a3728}
   .btn{padding:8px 20px;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:700}
   .page{background:white;max-width:794px;margin:16px auto;padding:32px;box-shadow:0 2px 16px rgba(0,0,0,.1)}
-  .hdr{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #b87333;padding-bottom:16px;margin-bottom:20px;align-items:flex-end}
+  .hdr{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #b87333;padding-bottom:16px;margin-bottom:20px}
   .titulo{font-size:22px;font-weight:800;color:#4a3728}
   .subtitulo{font-size:11px;color:#888;margin-top:4px}
   table{width:100%;border-collapse:collapse;margin-bottom:20px}
@@ -11245,7 +11245,7 @@ function abrirNuevoProveedor(){
   });
   document.getElementById('pv-tipo').value='Proveedor';
   document.getElementById('pv-pago').value='Transferencia';
-  document.getElementById('pv-cp').value='';document.getElementById('pv-poblacion').value='';document.getElementById('pv-provincia').value='Valencia';
+  document.getElementById('pv-cp').value='';document.getElementById('pv-poblacion').value='';document.getElementById('pv-provincia').value='';
   ['pv-dir','pv-dir-num','pv-dir-esc','pv-dir-pta'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('m-proveedor').querySelector('.modal-title').textContent='🏭 Nuevo proveedor';
   openModal('m-proveedor');
