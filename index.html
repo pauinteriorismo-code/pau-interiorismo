@@ -5902,17 +5902,26 @@ async function eliminarProyectoCompleto(proyId){
   const deletes = [];
   if(proyectoId){
     // Delete related records (non-financial - user must delete facturas manually if any)
-    const facCount = (FC||[]).filter(f=>f.proyecto_id===proyectoId).length;
+    const facCount  = (FC||[]).filter(f=>f.proyecto_id===proyectoId).length;
     const compCount = (CoC||[]).filter(c=>c.proyecto_id===proyectoId).length;
-    if(facCount>0 || compCount>0){
+    const pedCount  = (window.PedC||[]).filter(p=>p.proyecto_id===proyectoId).length;
+    const total = facCount + compCount + pedCount;
+    if(total > 0){
       const msg = [];
-      if(facCount>0) msg.push(facCount+' factura(s)');
+      if(facCount>0)  msg.push(facCount+' factura(s)');
       if(compCount>0) msg.push(compCount+' compra(s)');
-      if(!confirm('El proyecto tiene '+msg.join(' y ')+' asociadas.\n¿Eliminar igualmente el proyecto y todos sus datos?')) return;
+      if(pedCount>0)  msg.push(pedCount+' pedido(s)');
+      if(!confirm('El proyecto tiene '+msg.join(', ')+' asociados.\n\nSe eliminarán TODOS los datos del proyecto.\n¿Confirmar?')) return;
     }
     // Delete related tables
-    for(const tbl of ['presupuesto_lineas','horas_trabajo','certificaciones','entregas_cuenta','fotos_proyecto','proyecto_unidades']){
-      try{ await sb(tbl,'DELETE',null,null,`?proyecto_id=eq.${proyectoId}`); }catch(e){}
+    // Delete ALL related tables (complete cascade)
+    const tablas = [
+      'pedidos','albaranes','compras','subcontratas','horas_trabajo',
+      'presupuesto_lineas','certificaciones','entregas_cuenta',
+      'fotos_proyecto','proyecto_unidades','facturas'
+    ];
+    for(const tbl of tablas){
+      try{ await sb(tbl,'DELETE',null,null,`?proyecto_id=eq.${proyectoId}`); }catch(e){ console.warn('No se pudo borrar en '+tbl,e); }
     }
   }
   // Delete the project itself
