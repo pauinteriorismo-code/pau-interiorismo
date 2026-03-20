@@ -12059,13 +12059,21 @@ function _buildFacturaPDF(){
   const base = parseFloat(document.getElementById('f-base').value)||0;
   const ivaSel = document.getElementById('f-iva').value;
   const ivaN = ivaPct(ivaSel);
-  // Use f-total-display if available (reflects actual IVA from lines)
-  const totalDisplay = document.getElementById('f-total-display')?.value;
-  // Parse Spanish number format: '15.904,66€' → remove €/spaces, remove thousand dots, replace decimal comma
-  const totalFromDisplay = totalDisplay
-    ? parseFloat(totalDisplay.replace(/[^0-9,.]/g,'').replace(/\./g,'').replace(',','.'))
-    : 0;
-  const total = totalFromDisplay > 0 ? totalFromDisplay : base*(1+ivaN/100);
+  // Calculate real IVA from lines if available
+  let ivaFromLines = 0;
+  let totalFromLines = 0;
+  if(_facLineas && _facLineas.length > 0){
+    _facLineas.forEach(l=>{
+      const cant = parseFloat(l.cantidad)||0;
+      const prec = parseFloat(l.precio)||0;
+      const dto  = parseFloat(l.dto)||0;
+      const sub  = cant * prec * (1 - dto/100);
+      const pct  = ivaPct(l.iva||'21%');
+      ivaFromLines  += sub * pct/100;
+      totalFromLines += sub * (1 + pct/100);
+    });
+  }
+  const total = totalFromLines > 0 ? totalFromLines : base*(1+ivaN/100);
   const cobrado = parseFloat(document.getElementById('f-cobrado').value)||0;
   const pdte = total - cobrado;
   const estado= document.getElementById('f-estado').value;
@@ -12107,9 +12115,9 @@ function _buildFacturaPDF(){
     filasLineas=concepto?'<tr><td colspan="7" style="padding:14px;text-align:center;color:#555">'+escH(concepto)+'</td></tr>':'';
   }
 
-  // IVA real = total - base (correcto aunque las líneas tengan % distinto)
-  const ivaImporte = Math.max(0, total - base);
-  // Compute actual IVA% for display
+  // IVA real desde líneas o desde total-base
+  const ivaImporte = ivaFromLines > 0 ? ivaFromLines : Math.max(0, total - base);
+  // Porcentaje real de IVA para mostrar
   const ivaNDisplay = base > 0 ? Math.round((ivaImporte/base)*100*10)/10 : ivaN;
   const estColor=estado==='Cobrada'||estado==='Pagada'?'#27ae60':estado==='Vencida'?'#e74c3c':'#e67e22';
   const tipoLabel=esC?'FACTURA DE COMPRA':'FACTURA DE VENTA';
