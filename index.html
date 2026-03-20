@@ -4656,15 +4656,15 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     </div>
     <!-- Adjuntos PDF -->
     <div class="form-group fg-full" style="margin-top:10px">
-      <label class="form-label">📎 Archivos adjuntos <span style="font-size:10px;font-weight:400;color:var(--text-soft)">(planos, dibujos — puedes añadir varios PDF)</span></label>
+      <label class="form-label">📎 Archivos adjuntos <span style="font-size:10px;font-weight:400;color:var(--text-soft)">(planos, dibujos — PDF, JPG, PNG)</span></label>
       <div id="ped-adj-zone" style="border:2px dashed var(--border);border-radius:8px;padding:12px;cursor:pointer;background:var(--bg-card);transition:all .15s;text-align:center"
            onclick="document.getElementById('ped-adj-input').click()"
            ondragover="event.preventDefault();this.style.borderColor='var(--navy)'"
            ondragleave="this.style.borderColor='var(--border)'"
            ondrop="pedHandleDrop(event)">
-        <span style="color:var(--text-soft);font-size:12px">📄 Arrastra PDFs aquí o <u style="color:var(--navy)">haz clic para añadir</u></span>
+        <span style="color:var(--text-soft);font-size:12px">📄 Arrastra PDFs o imágenes (JPG/PNG) aquí o <u style="color:var(--navy)">haz clic para añadir</u></span>
       </div>
-      <input type="file" id="ped-adj-input" accept=".pdf,application/pdf" multiple style="display:none" onchange="pedHandleFiles(this.files)">
+      <input type="file" id="ped-adj-input" accept=".pdf,application/pdf,.jpg,.jpeg,.png,image/jpeg,image/png" multiple style="display:none" onchange="pedHandleFiles(this.files)">
       <div id="ped-adj-lista" style="margin-top:6px;display:flex;flex-direction:column;gap:4px"></div>
     </div>
   </div>
@@ -12839,8 +12839,10 @@ function pedHandleFiles(files){
   const processNext = (i) => {
     if(i>=files.length){ if(added>0) pedRenderAdjLista(); return; }
     const file = files[i];
-    if(file.type!=='application/pdf'&&!file.name.endsWith('.pdf')){
-      toast('Solo PDF: '+file.name,'error'); processNext(i+1); return;
+    const isPDF = file.type==='application/pdf'||file.name.toLowerCase().endsWith('.pdf');
+    const isImg = file.type.startsWith('image/')||/\.(jpg|jpeg|png)$/i.test(file.name);
+    if(!isPDF && !isImg){
+      toast('Solo PDF o imágenes JPG/PNG: '+file.name,'error'); processNext(i+1); return;
     }
     if(file.size>10*1024*1024){
       toast(file.name+' supera 10MB','error'); processNext(i+1); return;
@@ -12872,7 +12874,7 @@ function pedRenderAdjLista(){
   }
   lista.innerHTML = window._pedAdjuntos.map((adj,i)=>
     `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--bg-card);border:1px solid var(--border);border-radius:6px">
-      <span style="font-size:14px">📄</span>
+      <span style="font-size:14px">${/\.(jpg|jpeg|png)$/i.test(adj.nombre)?'🖼️':'📄'}</span>
       <span style="flex:1;font-size:12px;font-weight:600;color:var(--navy);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${adj.nombre}</span>
       <span style="font-size:10px;color:var(--text-soft)">${(adj.size/1024).toFixed(0)} KB</span>
       <button class="btn btn-ghost btn-icon btn-sm" onclick="pedVerAdj(${i})" title="Ver PDF" style="color:var(--navy)">👁</button>
@@ -12884,7 +12886,9 @@ function pedRenderAdjLista(){
 function pedVerAdj(i){
   const adj = window._pedAdjuntos[i];
   if(!adj) return;
-  const blob = _b64toBlob(adj.b64,'application/pdf');
+  const mime = /\.(jpg|jpeg)$/i.test(adj.nombre)?'image/jpeg':
+                /\.png$/i.test(adj.nombre)?'image/png':'application/pdf';
+  const blob = _b64toBlob(adj.b64,mime);
   const url = URL.createObjectURL(blob);
   window.open(url,'_blank');
 }
@@ -12917,7 +12921,8 @@ function pedVerAdjById(pedId){
   if(!adjs.length){ toast('Sin adjuntos','warning'); return; }
   if(adjs.length===1){
     // Open directly
-    const blob = _b64toBlob(adjs[0].b64,'application/pdf');
+    const m0 = /\.(jpg|jpeg)$/i.test(adjs[0].nombre)?'image/jpeg':/\.png$/i.test(adjs[0].nombre)?'image/png':'application/pdf';
+    const blob = _b64toBlob(adjs[0].b64,m0);
     window.open(URL.createObjectURL(blob),'_blank');
   } else {
     // Show selector modal
@@ -12945,7 +12950,8 @@ function pedVerAdjById(pedId){
   }
 }
 function pedAbrirAdjFromList(adj){
-  const blob=_b64toBlob(adj.b64,'application/pdf');
+  const mAdj=/\.(jpg|jpeg)$/i.test(adj.nombre)?'image/jpeg':/\.png$/i.test(adj.nombre)?'image/png':'application/pdf';
+  const blob=_b64toBlob(adj.b64,mAdj);
   window.open(URL.createObjectURL(blob),'_blank');
   const sel=document.getElementById('adj-selector'); if(sel) sel.remove();
 }
