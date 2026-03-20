@@ -12059,7 +12059,10 @@ function _buildFacturaPDF(){
   const base = parseFloat(document.getElementById('f-base').value)||0;
   const ivaSel = document.getElementById('f-iva').value;
   const ivaN = ivaPct(ivaSel);
-  const total= base*(1+ivaN/100);
+  // Use f-total-display if available (reflects actual IVA from lines)
+  const totalDisplay = document.getElementById('f-total-display')?.value;
+  const totalFromDisplay = totalDisplay ? parseFloat(totalDisplay.replace(/[^0-9.,]/g,'').replace(',','.')) : 0;
+  const total = totalFromDisplay > 0 ? totalFromDisplay : base*(1+ivaN/100);
   const cobrado = parseFloat(document.getElementById('f-cobrado').value)||0;
   const pdte = total - cobrado;
   const estado= document.getElementById('f-estado').value;
@@ -12101,12 +12104,15 @@ function _buildFacturaPDF(){
     filasLineas=concepto?'<tr><td colspan="7" style="padding:14px;text-align:center;color:#555">'+escH(concepto)+'</td></tr>':'';
   }
 
-  const ivaImporte=base*ivaN/100;
+  // IVA real = total - base (correcto aunque las líneas tengan % distinto)
+  const ivaImporte = Math.max(0, total - base);
+  // Compute actual IVA% for display
+  const ivaNDisplay = base > 0 ? Math.round((ivaImporte/base)*100*10)/10 : ivaN;
   const estColor=estado==='Cobrada'||estado==='Pagada'?'#27ae60':estado==='Vencida'?'#e74c3c':'#e67e22';
   const tipoLabel=esC?'FACTURA DE COMPRA':'FACTURA DE VENTA';
   const hoy=new Date().toLocaleDateString('es-ES');
 
-  return {num,fecha,vto,base,ivaSel,ivaN,total,cobrado,pdte,estado,concepto,fpago,
+  return {num,fecha,vto,base,ivaSel,ivaN,ivaNDisplay,total,cobrado,pdte,estado,concepto,fpago,
           contra,contraDir,contraCIF,contraTel,contraEmail,filasLineas,ivaImporte,estColor,tipoLabel,hoy,esC,observaciones};
 }
 
@@ -12222,7 +12228,7 @@ function previsualizarFactura(){
         <span style="color:#666">Base imponible</span><span style="font-weight:600">${fmt(d.base)}</span>
       </div>
       <div style="display:flex;justify-content:space-between;padding:9px 14px;border-bottom:1px solid #e8e0d4;font-size:12px">
-        <span style="color:#666">IVA (${d.ivaN||21}%)</span><span style="font-weight:600">${fmt(d.ivaImporte)}</span>
+        <span style="color:#666">IVA (${d.ivaNDisplay||d.ivaN||21}%)</span><span style="font-weight:600">${fmt(d.ivaImporte)}</span>
       </div>
       <div style="display:flex;justify-content:space-between;padding:12px 14px;background:#f7f4ef;font-size:15px;font-weight:800;color:#4a3728">
         <span>TOTAL</span><span>${fmt(d.total)}</span>
