@@ -4654,6 +4654,19 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="form-group"><label class="form-label">Estado</label><select class="form-input" id="ped-estado"><option>Cancelado</option><option>Confirmado</option><option>En tránsito</option><option>Pagado</option><option>Pendiente</option><option>Recibido</option><option>Solicitado</option></select></div>
       <div class="form-group fg-full"><label class="form-label">Observaciones</label><input class="form-input" id="ped-obs"></div>
     </div>
+    <!-- Adjuntos PDF -->
+    <div class="form-group fg-full" style="margin-top:10px">
+      <label class="form-label">📎 Archivos adjuntos <span style="font-size:10px;font-weight:400;color:var(--text-soft)">(planos, dibujos — puedes añadir varios PDF)</span></label>
+      <div id="ped-adj-zone" style="border:2px dashed var(--border);border-radius:8px;padding:12px;cursor:pointer;background:var(--bg-card);transition:all .15s;text-align:center"
+           onclick="document.getElementById('ped-adj-input').click()"
+           ondragover="event.preventDefault();this.style.borderColor='var(--navy)'"
+           ondragleave="this.style.borderColor='var(--border)'"
+           ondrop="pedHandleDrop(event)">
+        <span style="color:var(--text-soft);font-size:12px">📄 Arrastra PDFs aquí o <u style="color:var(--navy)">haz clic para añadir</u></span>
+      </div>
+      <input type="file" id="ped-adj-input" accept=".pdf,application/pdf" multiple style="display:none" onchange="pedHandleFiles(this.files)">
+      <div id="ped-adj-lista" style="margin-top:6px;display:flex;flex-direction:column;gap:4px"></div>
+    </div>
   </div>
   <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal(&#39;m-pedido&#39;)">Cancelar</button><button class="btn btn-primary" onclick="savePedido()">💾 Guardar</button></div>
 </div></div>
@@ -11019,7 +11032,7 @@ async function loadPedidos(){
     PedC=await sbGet('pedidos','?order=fecha.desc');
     document.getElementById('pedidos-count').textContent=PedC.length+' pedidos';
     if(!PedC.length){tb.innerHTML=`<tr><td colspan="9"><div class="empty"><div class="empty-icon">📦</div><div class="empty-text">Sin pedidos</div><button class="btn btn-primary" onclick="openModal('m-pedido')">＋ Nuevo</button></div></td></tr>`;return;}
-    tb.innerHTML=PedC.map(p=>`<tr data-search="${(p.num_pedido+p.proyecto_id+p.proveedor+p.tipo).toLowerCase()}"><td class="td-mono" style="font-weight:700">${p.num_pedido||'—'}</td><td>${fmtD(p.fecha)}</td><td class="td-mono" style="color:var(--text-soft)">${p.proyecto_id||'—'}</td><td><span class="badge b-blue">${p.tipo||'—'}</span></td><td>${p.proveedor||'—'}</td><td class="td-mono" style="font-weight:700">${fmt(p.importe)}</td><td>${bE(p.estado)}</td><td style="color:var(--text-soft)">${p.referencia?`<span style="font-weight:600;color:var(--navy)">${p.referencia}</span>`:''} ${p.observaciones||''}</td><td style="display:flex;gap:4px">${_badgeEnviado('pedido',p.id)}<button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="editPedido('${p.id}')">Editar</button><button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="abrirDocPedido('${p.id}')">📋 Doc.</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('pedidos','${p.id}','${(p.num_pedido||'pedido').replace(/'/g,"\\'")}')">🗑</button></td></tr>`).join('');
+    tb.innerHTML=PedC.map(p=>`<tr data-search="${(p.num_pedido+p.proyecto_id+p.proveedor+p.tipo).toLowerCase()}"><td class="td-mono" style="font-weight:700">${p.num_pedido||'—'}</td><td>${fmtD(p.fecha)}</td><td class="td-mono" style="color:var(--text-soft)">${p.proyecto_id||'—'}</td><td><span class="badge b-blue">${p.tipo||'—'}</span></td><td>${p.proveedor||'—'}</td><td class="td-mono" style="font-weight:700">${fmt(p.importe)}</td><td>${bE(p.estado)}</td><td style="color:var(--text-soft)">${p.referencia?`<span style="font-weight:600;color:var(--navy)">${p.referencia}</span>`:''} ${p.observaciones||''}</td><td style="display:flex;gap:4px">${_badgeEnviado('pedido',p.id)}${(()=>{try{const a=p.adjuntos?JSON.parse(p.adjuntos):[];return a.length?`<button class="btn btn-ghost btn-icon btn-sm" onclick="pedVerAdjById('${p.id}')" title="${a.length} adjunto(s)" style="font-size:11px;color:var(--navy)">📎 ${a.length}</button>`:''}catch(e){return'';}})()}<button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="editPedido('${p.id}')">Editar</button><button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="abrirDocPedido('${p.id}')">📋 Doc.</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('pedidos','${p.id}','${(p.num_pedido||'pedido').replace(/'/g,"\\'")}')">🗑</button></td></tr>`).join('');
   }catch(e){tb.innerHTML=`<tr><td colspan="9" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
   // Re-apply project filter after load
   filtrarModuloPorProyecto('pedidos');
@@ -11059,6 +11072,7 @@ function editPedido(id){
   document.getElementById('ped-prov-search').value = p.proveedor||'';
   document.getElementById('ped-prov-val').value = p.proveedor||'';
   document.querySelector('#m-pedido .modal-title').textContent='✏️ Editar pedido';
+  pedCargarAdjuntos(p.adjuntos||null);
   openModal('m-pedido');
 }
 function openPedidoModal(){
@@ -11093,6 +11107,8 @@ function openPedidoModal(){
     const el=document.getElementById(id); if(el) el.value='';
   });
   document.querySelector('#m-pedido .modal-title').textContent='📦 Nuevo pedido';
+  window._pedAdjuntos=[];
+  pedRenderAdjLista();
   openModal('m-pedido');
 }
 async function savePedido(){
@@ -11108,13 +11124,16 @@ async function savePedido(){
     referencia:   document.getElementById('ped-ref')?.value||'',
     importe:      parseFloat(document.getElementById('ped-importe').value)||0,
     estado:       document.getElementById('ped-estado').value,
-    observaciones:document.getElementById('ped-obs').value
+    observaciones:document.getElementById('ped-obs').value,
+    adjuntos: JSON.stringify(window._pedAdjuntos||[])
   };
   try{
     if(id){ await sb('pedidos','PATCH',d,null,`?id=eq.${id}`); toast('Pedido actualizado ✅'); }
     else  { await sbPost('pedidos',d); toast('Pedido registrado ✅'); }
     document.getElementById('ped-id').value='';
     document.querySelector('#m-pedido .modal-title').textContent='📦 Nuevo pedido';
+    window._pedAdjuntos=[];
+    pedRenderAdjLista();
     closeModal('m-pedido'); loadPedidos();
   }catch(e){toast('Error: '+e.message,'error');}
 }
@@ -12806,6 +12825,129 @@ function _badgeEnviado(tipo, id){
   const e = _getEnviado(tipo, id);
   if(!e) return '<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px;color:var(--text-mid)" onclick="marcarEnviado(\''+tipo+'\',\''+id+'\',\'Documento\')" title="Marcar como enviado">📤</button>';
   return '<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px;color:var(--green);font-weight:700" onclick="marcarEnviado(\''+tipo+'\',\''+id+'\',\'Documento\')" title="Enviado el '+fmtD(e.fecha)+'\nPulsa para desmarcar">📤 '+fmtD(e.fecha)+'</button>';
+}
+
+
+// ═══════════════════════════════════════════════════
+// PEDIDOS — Adjuntos PDF (múltiples)
+// ═══════════════════════════════════════════════════
+window._pedAdjuntos = []; // [{nombre, b64, size}]
+
+function pedHandleFiles(files){
+  if(!files||!files.length) return;
+  let added=0;
+  const processNext = (i) => {
+    if(i>=files.length){ if(added>0) pedRenderAdjLista(); return; }
+    const file = files[i];
+    if(file.type!=='application/pdf'&&!file.name.endsWith('.pdf')){
+      toast('Solo PDF: '+file.name,'error'); processNext(i+1); return;
+    }
+    if(file.size>10*1024*1024){
+      toast(file.name+' supera 10MB','error'); processNext(i+1); return;
+    }
+    const reader = new FileReader();
+    reader.onload = e => {
+      const b64 = e.target.result.split(',')[1];
+      window._pedAdjuntos.push({nombre:file.name, b64, size:file.size});
+      added++;
+      processNext(i+1);
+    };
+    reader.readAsDataURL(file);
+  };
+  processNext(0);
+}
+
+function pedHandleDrop(e){
+  e.preventDefault();
+  document.getElementById('ped-adj-zone').style.borderColor='var(--border)';
+  pedHandleFiles(e.dataTransfer.files);
+}
+
+function pedRenderAdjLista(){
+  const lista = document.getElementById('ped-adj-lista');
+  if(!lista) return;
+  if(!window._pedAdjuntos||!window._pedAdjuntos.length){
+    lista.innerHTML='';
+    return;
+  }
+  lista.innerHTML = window._pedAdjuntos.map((adj,i)=>
+    `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--bg-card);border:1px solid var(--border);border-radius:6px">
+      <span style="font-size:14px">📄</span>
+      <span style="flex:1;font-size:12px;font-weight:600;color:var(--navy);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${adj.nombre}</span>
+      <span style="font-size:10px;color:var(--text-soft)">${(adj.size/1024).toFixed(0)} KB</span>
+      <button class="btn btn-ghost btn-icon btn-sm" onclick="pedVerAdj(${i})" title="Ver PDF" style="color:var(--navy)">👁</button>
+      <button class="btn btn-ghost btn-icon btn-sm" onclick="pedDelAdj(${i})" title="Eliminar" style="color:var(--red)">🗑</button>
+    </div>`
+  ).join('');
+}
+
+function pedVerAdj(i){
+  const adj = window._pedAdjuntos[i];
+  if(!adj) return;
+  const blob = _b64toBlob(adj.b64,'application/pdf');
+  const url = URL.createObjectURL(blob);
+  window.open(url,'_blank');
+}
+
+function pedDelAdj(i){
+  window._pedAdjuntos.splice(i,1);
+  pedRenderAdjLista();
+}
+
+function _b64toBlob(b64, mime){
+  const bin = atob(b64);
+  const arr = new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);
+  return new Blob([arr],{type:mime});
+}
+
+function pedCargarAdjuntos(adjJson){
+  try{
+    window._pedAdjuntos = adjJson ? JSON.parse(adjJson) : [];
+  }catch(e){ window._pedAdjuntos=[]; }
+  pedRenderAdjLista();
+}
+
+
+function pedVerAdjById(pedId){
+  const p = PedC.find(x=>String(x.id)===String(pedId));
+  if(!p) return;
+  let adjs=[];
+  try{ adjs = p.adjuntos ? JSON.parse(p.adjuntos) : []; }catch(e){}
+  if(!adjs.length){ toast('Sin adjuntos','warning'); return; }
+  if(adjs.length===1){
+    // Open directly
+    const blob = _b64toBlob(adjs[0].b64,'application/pdf');
+    window.open(URL.createObjectURL(blob),'_blank');
+  } else {
+    // Show selector modal
+    const list = adjs.map((a,i)=>
+      `<div style="padding:8px 12px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);cursor:pointer;hover:background:var(--bg-main)"
+            onclick="pedAbrirAdjFromList(${JSON.stringify(a).replace(/'/g,'&#39;')})">
+        <span style="font-size:18px">📄</span>
+        <span style="flex:1;font-size:13px;font-weight:600">${a.nombre}</span>
+        <span style="font-size:11px;color:var(--text-soft)">${(a.size/1024).toFixed(0)} KB</span>
+      </div>`
+    ).join('');
+    toast('Abriendo selector de adjuntos…');
+    // Create mini popup
+    const div = document.createElement('div');
+    div.id='adj-selector';
+    div.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;border-radius:10px;box-shadow:0 8px 40px rgba(0,0,0,.25);z-index:9999;min-width:340px;max-width:500px;overflow:hidden';
+    div.innerHTML=`
+      <div style="padding:14px 16px;background:var(--navy);color:white;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-weight:700;font-size:14px">📎 Adjuntos del pedido</span>
+        <button onclick="this.closest('#adj-selector').remove()" style="background:none;border:none;color:white;font-size:18px;cursor:pointer">×</button>
+      </div>
+      ${list}`;
+    document.body.appendChild(div);
+    window._adjsForSelector = adjs;
+  }
+}
+function pedAbrirAdjFromList(adj){
+  const blob=_b64toBlob(adj.b64,'application/pdf');
+  window.open(URL.createObjectURL(blob),'_blank');
+  const sel=document.getElementById('adj-selector'); if(sel) sel.remove();
 }
 
 const loaders={
