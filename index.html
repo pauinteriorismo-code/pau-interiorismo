@@ -12061,7 +12061,10 @@ function _buildFacturaPDF(){
   const ivaN = ivaPct(ivaSel);
   // Use f-total-display if available (reflects actual IVA from lines)
   const totalDisplay = document.getElementById('f-total-display')?.value;
-  const totalFromDisplay = totalDisplay ? parseFloat(totalDisplay.replace(/[^0-9.,]/g,'').replace(',','.')) : 0;
+  // Parse Spanish number format: '15.904,66€' → remove €/spaces, remove thousand dots, replace decimal comma
+  const totalFromDisplay = totalDisplay
+    ? parseFloat(totalDisplay.replace(/[^0-9,.]/g,'').replace(/\./g,'').replace(',','.'))
+    : 0;
   const total = totalFromDisplay > 0 ? totalFromDisplay : base*(1+ivaN/100);
   const cobrado = parseFloat(document.getElementById('f-cobrado').value)||0;
   const pdte = total - cobrado;
