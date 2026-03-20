@@ -17838,7 +17838,6 @@ async function impConfirmarImport(){
       }
     }
 
-    closeModal('m-importar-pdf');
     toast(`✅ ${insertadas} líneas importadas correctamente`, 'success');
 
     // Sincronizar la vista: si el proyecto activo coincide, recargar
@@ -17846,16 +17845,22 @@ async function impConfirmarImport(){
        document.getElementById('pres-version-sel').value === ver){
       await loadPresupuesto();
     } else {
-      // Cambiar selector al proyecto importado
       document.getElementById('pres-proyecto-sel').value = proy;
       document.getElementById('pres-version-sel').value = ver;
       await loadPresupuesto();
     }
+    closeModal('m-importar-pdf');
 
   } catch(err){
     toast('Error importando: ' + err.message, 'error');
+  } finally {
+    // SIEMPRE resetear el botón, tanto en éxito como en error
     btn.disabled = false;
     btn.textContent = '✅ Importar líneas';
+    // Limpiar estado para permitir nueva importación sin refrescar
+    _impLineas = null;
+    window._impPDFb64 = null;
+    window._impPDFnombre = null;
   }
 }
 // ═══════════════════════════════════════════════════════════════
