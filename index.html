@@ -24593,7 +24593,113 @@ renderPresupuesto=function(){
 
       <div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:4px">Contrato</div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:16px">
-        <div><label class="form-label">Categorí
+        <div>
+          <label class="form-label">Categoría</label>
+          <select class="form-input" id="trab-categoria">
+            <option>Oficial 1ª</option><option>Oficial 2ª</option><option>Oficial 3ª</option>
+            <option>Peón</option><option>Peón especialista</option>
+            <option>Administrativo</option><option>Encargado</option><option>Jefe de obra</option><option>Otro</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Tipo contrato</label>
+          <select class="form-input" id="trab-contrato">
+            <option>Indefinido</option><option>Temporal</option><option>Obra y servicio</option>
+            <option>Prácticas</option><option>Formación</option><option>Interinidad</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Fecha alta</label>
+          <input class="form-input" id="trab-alta" type="date">
+        </div>
+        <div>
+          <label class="form-label">Estado</label>
+          <select class="form-input" id="trab-estado">
+            <option>Activo</option><option>Baja temporal</option><option>Baja definitiva</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:4px">Nómina</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:16px">
+        <div>
+          <label class="form-label">Salario bruto/mes €</label>
+          <input class="form-input" id="trab-bruto" type="number" step="0.01" placeholder="0.00" oninput="calcNomina()">
+        </div>
+        <div>
+          <label class="form-label">IRPF %</label>
+          <input class="form-input" id="trab-irpf" type="number" step="0.01" placeholder="15" oninput="calcNomina()">
+        </div>
+        <div>
+          <label class="form-label">SS trabajador %</label>
+          <input class="form-input" id="trab-ss-trab" type="number" step="0.01" placeholder="6.35" oninput="calcNomina()">
+        </div>
+        <div>
+          <label class="form-label">SS empresa %</label>
+          <input class="form-input" id="trab-ss-emp" type="number" step="0.01" placeholder="30" oninput="calcNomina()">
+        </div>
+      </div>
+
+      <div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:4px">Pagas extra</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px">
+        <div>
+          <label class="form-label">Importe paga extra €</label>
+          <input class="form-input" id="trab-paga-extra" type="number" step="0.01" placeholder="0.00" oninput="calcNomina()">
+        </div>
+        <div>
+          <label class="form-label">Nº pagas extra / año</label>
+          <input class="form-input" id="trab-num-pagas" type="number" step="1" placeholder="2" oninput="calcNomina()">
+        </div>
+        <div>
+          <label class="form-label">IRPF paga extra %</label>
+          <input class="form-input" id="trab-paga-irpf" type="number" step="0.01" placeholder="15" oninput="calcNomina()">
+        </div>
+      </div>
+
+      <div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:4px">Plus / Bonus</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px">
+        <div>
+          <label class="form-label">Importe bonus €</label>
+          <input class="form-input" id="trab-bonus" type="number" step="0.01" placeholder="0.00" oninput="calcNomina()">
+        </div>
+        <div>
+          <label class="form-label">Periodicidad</label>
+          <select class="form-input" id="trab-bonus-periodo" onchange="calcNomina()">
+            <option value="mensual">Mensual</option>
+            <option value="trimestral">Trimestral</option>
+            <option value="anual">Anual</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">IVA bonus %</label>
+          <input class="form-input" id="trab-bonus-iva" type="number" step="0.01" placeholder="0" oninput="calcNomina()">
+        </div>
+      </div>
+
+      <div style="font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:4px">Vista previa nómina mensual</div>
+      <div id="nomina-preview" style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:16px;font-size:12px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+          <span style="color:var(--text-soft)">Salario bruto</span><span id="np-bruto" class="td-mono" style="text-align:right">—</span>
+          <span style="color:var(--text-soft)">- IRPF retenido</span><span id="np-irpf" class="td-mono" style="text-align:right;color:var(--red)">—</span>
+          <span style="color:var(--text-soft)">- SS trabajador</span><span id="np-ss-trab" class="td-mono" style="text-align:right;color:var(--red)">—</span>
+          <span style="color:var(--text-soft);font-weight:700">= Neto trabajador</span><span id="np-neto" class="td-mono" style="text-align:right;font-weight:700;color:var(--green)">—</span>
+          <span style="color:var(--text-soft);border-top:1px solid var(--border);padding-top:6px;margin-top:2px">+ SS empresa (~30%)</span><span id="np-ss-emp" class="td-mono" style="text-align:right;border-top:1px solid var(--border);padding-top:6px;margin-top:2px">—</span>
+          <span style="color:var(--text-soft);font-weight:700">= Coste total empresa</span><span id="np-total" class="td-mono" style="text-align:right;font-weight:700;color:var(--navy)">—</span>
+        </div>
+      </div>
+
+      <div style="margin-bottom:8px">
+        <label class="form-label">Notas</label>
+        <textarea class="form-input" id="trab-notas" rows="2" placeholder="Observaciones internas…" style="resize:vertical"></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('m-trabajador')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveTrabajador()">💾 Guardar</button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══ MODAL ENVÍO EMAIL ═══ -->
 <div class="overlay" id="m-enviar-email" onclick="if(event.target===this)closeModal('m-enviar-email')">
 <div class="modal" style="max-width:540px">
