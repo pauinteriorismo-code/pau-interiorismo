@@ -3530,7 +3530,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
             <th class="sortable" onclick="sortTable('facturas','num_factura',this)">Nº Factura<span class="sort-arrow"></span></th>
             <th class="sortable" onclick="sortTable('facturas','fecha_emision',this)">Fecha<span class="sort-arrow"></span></th>
             <th class="sortable" onclick="sortTable('facturas','fecha_vencimiento',this)">Vto.<span class="sort-arrow"></span></th>
-            <th class="sortable" onclick="sortTable('facturas','contra',this)">Cliente / Proveedor<span class="sort-arrow"></span></th>
+            <th class="sortable" onclick="sortTable('facturas','contra',this)" style="min-width:180px;max-width:220px;width:220px">Cliente / Proveedor<span class="sort-arrow"></span></th>
             <th>Proyecto</th>
             <th class="sortable" onclick="sortTable('facturas','base_imponible',this)">Base imp.<span class="sort-arrow"></span></th>
             <th>IVA%</th>
@@ -19825,8 +19825,8 @@ async function sortAndRenderFacturas(col, dir) {
       <td class="td-mono" style="font-weight:700">${f.num_factura||'—'}</td>
       <td>${fmtD(f.fecha_emision)}</td>
       <td>${fmtD(f.fecha_vencimiento)}</td>
-      <td>${contra}</td>
-      <td class="td-mono" style="color:var(--text-soft)">${f.proyecto_id||'—'}</td>
+      <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${contra}">${contra}</td>
+      <td class="td-mono" style="color:var(--text-soft);max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.proyecto_id||'—'}</td>
       <td class="td-mono">${fmt(base)}</td>
       <td class="td-mono">${f.iva_pct||'—'}</td>
       <td class="td-mono" style="font-weight:700">${fmt(tot)}</td>
