@@ -13824,7 +13824,9 @@ async function loadConciliacion(){
     const pendientes = [
       ...facturas.map(f=>({
         id: f.id, tipo:'factura',
-        proveedor: findProvName(f.proveedor_id)||f.proveedor_id||'—',
+        proveedor: (f.tipo_factura==='Venta'||f.tipo_factura==='venta')
+          ? ((CC||[]).find(c=>c.cliente_id===f.cliente_id||String(c.id)===String(f.cliente_id))?.nombre || f.cliente_id||'—')
+          : (findProvName(f.proveedor_id)||f.proveedor_id||'—'),
         concepto:  f.concepto||f.num_factura||'—',
         forma_pago: f.forma_pago||'—',
         proyecto:  f.proyecto_id||'—',
@@ -14159,8 +14161,8 @@ function normalizarFecha(str){
 
 async function conciliarMovimientos(){
   if(!movimientosBanco.length) return;
-  // Cargar facturas de compra pendientes
-  const facturas = await sbGet('facturas','?tipo_factura=eq.Compra&estado=in.(Pendiente,Parcial,Vencida)');
+  // Cargar facturas pendientes (compra Y venta)
+  const facturas = await sbGet('facturas','?estado=in.(Pendiente,Parcial,Vencida)&order=fecha_vencimiento.asc');
   let compras = [];
   try {
     compras = await sbGet('compras','?estado_pago=in.(Pendiente,Parcial,Vencido)');
@@ -14171,12 +14173,17 @@ async function conciliarMovimientos(){
   const pendientes = [
     ...facturas.map(f=>({
       id:f.id, tipo:'factura', num:f.num_factura||'—',
-      proveedor:f.proveedor_id||'—', total:(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100),
-      vto:f.fecha_vencimiento
+      proveedor:(f.tipo_factura==='Venta'||f.tipo_factura==='venta')
+        ? ((CC||[]).find(c=>c.cliente_id===f.cliente_id||String(c.id)===String(f.cliente_id))?.nombre||f.cliente_id||'—')
+        : (findProvName(f.proveedor_id)||f.proveedor_id||'—'),
+      total:(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100),
+      vto:f.fecha_vencimiento,
+      tipo_factura: f.tipo_factura||'Compra'
     })),
     ...compras.map(c=>({
       id:c.id, tipo:'compra', num:'(Compra)',
-      proveedor:c.proveedor_id||'—', total:(c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100),
+      proveedor:findProvName(c.proveedor_id)||c.proveedor||c.proveedor_id||'—',
+      total:(c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100),
       vto:c.fecha_vencimiento
     }))
   ];
