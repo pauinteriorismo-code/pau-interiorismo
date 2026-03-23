@@ -13824,7 +13824,7 @@ async function loadConciliacion(){
     const pendientes = [
       ...facturas.map(f=>({
         id: f.id, tipo:'factura',
-        proveedor: f.proveedor_id||'—',
+        proveedor: findProvName(f.proveedor_id)||f.proveedor_id||'—',
         concepto:  f.concepto||f.num_factura||'—',
         forma_pago: f.forma_pago||'—',
         proyecto:  f.proyecto_id||'—',
@@ -13837,7 +13837,7 @@ async function loadConciliacion(){
       })),
       ...compras.map(c=>({
         id: c.id, tipo:'compra',
-        proveedor: c.proveedor_id||'—',
+        proveedor: findProvName(c.proveedor_id)||c.proveedor||c.proveedor_id||'—',
         concepto:  c.concepto||'—',
         forma_pago:'—',
         proyecto:  c.proyecto_id||'—',
