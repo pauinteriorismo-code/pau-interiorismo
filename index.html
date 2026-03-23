@@ -597,6 +597,10 @@ th.sortable.sort-desc .sort-arrow::after{content:'▼'}
 th.sortable:not(.sort-asc):not(.sort-desc) .sort-arrow::after{content:'⇅'}
 
 
+/* Facturas table compact */
+#facturas-tbody td { padding: 6px 5px; font-size: 12px; }
+#facturas-tbody .td-mono { font-size: 11px; }
+
 /* ═══ KANBAN STYLES ═══ */
 .kanban-card:hover { transform: translateY(-1px); }
 .kanban-col.drag-over { outline: 2px dashed var(--navy) !important; background: var(--blue-light) !important; }
@@ -3523,14 +3527,30 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <div class="card-header">
           <div class="card-title">🧾 Facturas <span id="facturas-count" style="font-size:11px;font-weight:400;color:var(--text-soft);margin-left:6px"></span></div>
         </div>
-        <div class="table-wrap"><table>
+        <div class="table-wrap"><table style="table-layout:fixed;width:100%">
+          <colgroup>
+            <col style="width:68px"><!-- Tipo -->
+            <col style="width:38px"><!-- Serie -->
+            <col style="width:105px"><!-- Nº Factura -->
+            <col style="width:78px"><!-- Fecha -->
+            <col style="width:78px"><!-- Vto -->
+            <col style="width:200px"><!-- Cliente/Proveedor -->
+            <col style="width:68px"><!-- Proyecto -->
+            <col style="width:88px"><!-- Base imp -->
+            <col style="width:40px"><!-- IVA% -->
+            <col style="width:88px"><!-- Total -->
+            <col style="width:90px"><!-- Cobrado -->
+            <col style="width:85px"><!-- Pendiente -->
+            <col style="width:82px"><!-- Estado -->
+            <col style="width:88px"><!-- Acciones -->
+          </colgroup>
           <thead><tr>
             <th>Tipo</th>
             <th>Serie</th>
             <th class="sortable" onclick="sortTable('facturas','num_factura',this)">Nº Factura<span class="sort-arrow"></span></th>
             <th class="sortable" onclick="sortTable('facturas','fecha_emision',this)">Fecha<span class="sort-arrow"></span></th>
             <th class="sortable" onclick="sortTable('facturas','fecha_vencimiento',this)">Vto.<span class="sort-arrow"></span></th>
-            <th class="sortable" onclick="sortTable('facturas','contra',this)" style="min-width:180px;max-width:220px;width:220px">Cliente / Proveedor<span class="sort-arrow"></span></th>
+            <th class="sortable" onclick="sortTable('facturas','contra',this)">Cliente / Proveedor<span class="sort-arrow"></span></th>
             <th>Proyecto</th>
             <th class="sortable" onclick="sortTable('facturas','base_imponible',this)">Base imp.<span class="sort-arrow"></span></th>
             <th>IVA%</th>
@@ -11567,9 +11587,9 @@ async function loadFacturas(){
       const yaCobrada = f.estado==='Cobrada'||f.estado==='Pagada';
       const srch=(tipo+' '+(f.num_factura||'')+' '+contra+' '+(f.proyecto_id||'')+' '+(f.concepto||'')).toLowerCase();
       return `<tr data-fid="${f.id}" data-tipo="${tipo}" data-serie="${f.serie||1}" data-contra="${contra.toLowerCase()}" data-vto="${f.fecha_vencimiento||''}" data-estado="${f.estado||''}" data-search="${srch}">
-        <td>${badge}</td>
+        <td style="padding:6px 4px">${badge}</td>
         <td style="text-align:center">${(()=>{const s=f.serie||1;const sc={1:['#e6f0ff','#1a5fa8'],2:['#f0e6ff','#7b2fa8'],3:['#e6f5e6','#2a7a2a'],4:['#fff3e6','#b85c00']};const c=sc[s]||sc[1];return`<span style="background:${c[0]};color:${c[1]};padding:1px 7px;border-radius:10px;font-size:10px;font-weight:700">S${s}</span>`;})()}</td>
-        <td class="td-mono" style="font-weight:700">${f.num_factura||'—'}</td>
+        <td class="td-mono" style="font-weight:700;padding:6px 4px">${f.num_factura||'—'}</td>
         <td>${fmtD(f.fecha_emision)}</td>
         <td>${fmtD(f.fecha_vencimiento)}</td>
         <td>${contra}</td>
@@ -19825,8 +19845,8 @@ async function sortAndRenderFacturas(col, dir) {
       <td class="td-mono" style="font-weight:700">${f.num_factura||'—'}</td>
       <td>${fmtD(f.fecha_emision)}</td>
       <td>${fmtD(f.fecha_vencimiento)}</td>
-      <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${contra}">${contra}</td>
-      <td class="td-mono" style="color:var(--text-soft);max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.proyecto_id||'—'}</td>
+      <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:6px 4px" title="${contra}">${contra}</td>
+      <td class="td-mono" style="color:var(--text-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:6px 4px;font-size:11px">${f.proyecto_id||'—'}</td>
       <td class="td-mono">${fmt(base)}</td>
       <td class="td-mono">${f.iva_pct||'—'}</td>
       <td class="td-mono" style="font-weight:700">${fmt(tot)}</td>
