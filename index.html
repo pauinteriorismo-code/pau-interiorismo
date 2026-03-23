@@ -13811,7 +13811,14 @@ async function loadConciliacion(){
     // Cargar todas las facturas de compra pendientes
     const facturas = await sbGet('facturas','?tipo_factura=eq.Compra&estado=in.(Pendiente,Parcial,Vencida)&order=fecha_vencimiento.asc');
     // Cargar también compras pendientes
-    const compras  = await sbGet('compras','?estado_pago=in.(Pendiente,Parcial,Vencido)&order=fecha_vencimiento.asc');
+    let compras = [];
+    try {
+      compras = await sbGet('compras','?estado_pago=in.(Pendiente,Parcial,Vencido)&order=fecha_vencimiento.asc');
+    } catch(e1) {
+      // Fallback: column might be 'estado' instead of 'estado_pago'
+      try { compras = await sbGet('compras','?estado=in.(Pendiente,Parcial,Vencido)&order=fecha_vencimiento.asc'); }
+      catch(e2) { compras = await sbGet('compras','?order=fecha_vencimiento.asc'); }
+    }
 
     // Combinar ambas fuentes como "pagos pendientes"
     const pendientes = [
@@ -13837,7 +13844,7 @@ async function loadConciliacion(){
         base:      c.base_imponible||0,
         total:     (c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100),
         vto:       c.fecha_vencimiento,
-        estado:    c.estado_pago,
+        estado:    c.estado_pago||c.estado||'Pendiente',
         num:       '(Compra)',
         iva_pct:   c.iva_pct||'21%'
       }))
@@ -13916,7 +13923,8 @@ async function marcarPagado(tipo, id, total){
     if(tipo==='factura'){
       await sb('facturas','PATCH',{estado:'Pagada',importe_cobrado:total},null,`?id=eq.${id}`);
     } else {
-      await sb('compras','PATCH',{estado_pago:'Pagado'},null,`?id=eq.${id}`);
+      try{ await sb('compras','PATCH',{estado_pago:'Pagado'},null,`?id=eq.${id}`); }
+      catch(ep){ await sb('compras','PATCH',{estado:'Pagado'},null,`?id=eq.${id}`); }
     }
     toast('Pago registrado ✅');
     loadConciliacion();
@@ -14153,7 +14161,13 @@ async function conciliarMovimientos(){
   if(!movimientosBanco.length) return;
   // Cargar facturas de compra pendientes
   const facturas = await sbGet('facturas','?tipo_factura=eq.Compra&estado=in.(Pendiente,Parcial,Vencida)');
-  const compras  = await sbGet('compras','?estado_pago=in.(Pendiente,Parcial,Vencido)');
+  let compras = [];
+  try {
+    compras = await sbGet('compras','?estado_pago=in.(Pendiente,Parcial,Vencido)');
+  } catch(e) {
+    try { compras = await sbGet('compras','?estado=in.(Pendiente,Parcial,Vencido)'); }
+    catch(e2) { compras = []; }
+  }
   const pendientes = [
     ...facturas.map(f=>({
       id:f.id, tipo:'factura', num:f.num_factura||'—',
@@ -14254,7 +14268,8 @@ async function aplicarConciliacion(){
         const fLocal = FC.find(f=>f.id===c.factura.id);
         if(fLocal){ fLocal.estado='Pagada'; fLocal.importe_cobrado=c.factura.total; }
       } else {
-        await sb('compras','PATCH',{estado_pago:'Pagado'},null,`?id=eq.${c.factura.id}`);
+        try{ await sb('compras','PATCH',{estado_pago:'Pagado'},null,`?id=eq.${c.factura.id}`); }
+          catch(ep){ await sb('compras','PATCH',{estado:'Pagado'},null,`?id=eq.${c.factura.id}`); }
       }
       aplicados++;
     }catch(e){ console.warn('Error conciliando',e); }
