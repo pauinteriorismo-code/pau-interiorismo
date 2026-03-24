@@ -13202,7 +13202,7 @@ async function pvBuscarEmpresaIA(){
     // Contar campos rellenados
     const filled = Object.values(info).filter(v=>v&&v.trim()).length;
     if(filled > 0){
-      toast(\`✅ \${filled} datos encontrados para "\${nombre}"\`, 'success');
+      toast('✅ ' + filled + ' datos encontrados para "' + nombre + '"', 'success');
     } else {
       toast('No se encontraron datos para esta empresa. Rellena manualmente.', 'warning');
     }
