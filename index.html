@@ -632,11 +632,13 @@ th.sortable:not(.sort-asc):not(.sort-desc) .sort-arrow::after{content:'⇅'}
     <div class="login-sub">Sistema de gestión · Acceso privado</div>
     <div class="login-error" id="login-error" style="display: none;">Usuario o contraseña incorrectos</div>
     <div class="form-group" style="margin-bottom:11px;text-align:left"><label class="form-label">Usuario</label>
-    <select class="form-input" id="login-user" autocomplete="username">
+    <input class="form-input" id="login-user" list="login-user-list"
+           autocomplete="username" placeholder="Escribe o selecciona usuario">
+    <datalist id="login-user-list">
       <option value="jose">Jose</option>
       <option value="pau">Pau</option>
       <option value="sergi">Sergi</option>
-    </select></div>
+    </datalist></div>
     <div class="form-group" style="margin-bottom:18px;text-align:left"><label class="form-label">Contraseña</label><input class="form-input" id="login-pass" type="password" placeholder="••••••••" onkeydown="if(event.key===&#39;Enter&#39;)doLogin()"></div>
     <button class="btn btn-primary" style="width:100%;justify-content:center;padding:10px" onclick="doLogin()">Entrar →</button>
   </div>
