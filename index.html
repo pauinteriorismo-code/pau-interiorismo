@@ -4689,7 +4689,6 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       </div>
 
       <div class="form-group fg-full"><label class="form-label">Referencia / Descripción</label><input class="form-input" id="ped-ref" placeholder="Ej: Azulejo baño modelo X, Mueble cocina ref.123..."></div>
-      <div class="form-group"><label class="form-label">Importe €</label><input class="form-input" id="ped-importe" type="number" step="0.01"></div>
       <div class="form-group"><label class="form-label">Estado</label><select class="form-input" id="ped-estado"><option>Cancelado</option><option selected>Confirmado</option><option>En tránsito</option><option>Pagado</option><option>Pendiente</option><option>Recibido</option><option>Solicitado</option></select></div>
       <div class="form-group fg-full"><label class="form-label">Observaciones</label><input class="form-input" id="ped-obs"></div>
     </div>
@@ -11246,7 +11245,7 @@ function editPedido(id){
   document.getElementById('ped-fecha').value=p.fecha||'';
   document.getElementById('ped-tipo').value=p.tipo||'Material';
   if(document.getElementById('ped-ref')) document.getElementById('ped-ref').value=p.referencia||'';
-  document.getElementById('ped-importe').value=p.importe||'';
+
   document.getElementById('ped-estado').value=p.estado||'Pendiente';
   document.getElementById('ped-obs').value=p.observaciones||'';
   // Cliente / Proyecto (hidden fields + display)
@@ -11272,7 +11271,7 @@ function openPedidoModal(){
   document.getElementById('ped-num').value='PED-'+String((PedC.length||0)+1).padStart(3,'0');
   document.getElementById('ped-fecha').value=new Date().toISOString().split('T')[0];
   document.getElementById('ped-obs').value='';
-  document.getElementById('ped-importe').value='';
+
 
   // Leer cliente y proyecto ya seleccionados en los filtros de la página
   const cliSel  = document.getElementById('filter-cliente-pedidos');
@@ -11314,7 +11313,6 @@ async function savePedido(){
     tipo:         document.getElementById('ped-tipo').value,
     proveedor:    document.getElementById('ped-prov-val')?.value||document.getElementById('ped-prov-search')?.value||'',
     referencia:   document.getElementById('ped-ref')?.value||'',
-    importe:      parseFloat(document.getElementById('ped-importe').value)||0,
     estado:       document.getElementById('ped-estado').value,
     observaciones:document.getElementById('ped-obs').value,
   };
