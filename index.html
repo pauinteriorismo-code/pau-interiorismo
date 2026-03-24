@@ -4747,7 +4747,24 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
   <div class="modal-head"><div class="modal-title">🏭 Nuevo proveedor</div><button class="modal-close" onclick="closeModal(&#39;m-proveedor&#39;)">×</button></div>
   <div class="modal-body"><input type="hidden" id="pv-id">
     <div class="form-grid">
-      <div class="form-group fg-full"><label class="form-label">Nombre *</label><input class="form-input" id="pv-nombre"></div>
+      <div class="form-group fg-full">
+        <label class="form-label">Nombre *</label>
+        <div style="position:relative;display:flex;gap:6px">
+          <div style="flex:1;position:relative">
+            <input class="form-input" id="pv-nombre" placeholder="Escribe el nombre de la empresa…"
+              autocomplete="off"
+              oninput="pvBuscarSugerencias(this.value)"
+              onkeydown="if(event.key==='Escape')pvCerrarSugerencias()">
+            <div id="pv-sugerencias" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:9999;max-height:220px;overflow-y:auto"></div>
+          </div>
+          <button type="button" class="btn btn-ghost btn-sm" id="pv-buscar-btn"
+            onclick="pvBuscarEmpresaIA()"
+            style="white-space:nowrap;padding:0 12px;font-size:12px;border:1px solid var(--copper);color:var(--copper)"
+            title="Buscar información de la empresa con IA">
+            ✨ Buscar datos
+          </button>
+        </div>
+      </div>
       <div class="form-group"><label class="form-label">Tipo documento</label><select class="form-input" id="pv-tipo-doc"><option value="">Seleccionar…</option><option value="CIF">CIF</option><option value="NIF">NIF</option><option value="DNI">DNI</option><option value="NIE">NIE</option><option value="OTRO">Otro</option></select></div>
       <div class="form-group"><label class="form-label"><span id="pv-cif-label">CIF</span></label><input class="form-input" id="pv-cif" placeholder="" oninput="document.getElementById('pv-cif-label').textContent=document.getElementById('pv-tipo-doc').value"><script>document.getElementById('pv-tipo-doc')?.addEventListener('change',function(){document.getElementById('pv-cif-label').textContent=this.value;});</script></div>
       <div class="form-group"><label class="form-label">Tipo</label><select class="form-input" id="pv-tipo"><option value="">Seleccionar…</option><option value="Proveedor">Proveedor</option><option value="Subcontrata">Subcontrata</option><option value="Servicio">Servicio</option><option value="Alquiler">Alquiler</option><option value="Transporte">Transporte</option><option value="Otros">Otros</option></select></div>
@@ -13077,6 +13094,132 @@ function pedAbrirAdjFromList(adj){
   window.open(URL.createObjectURL(blob),'_blank');
   const sel=document.getElementById('adj-selector'); if(sel) sel.remove();
 }
+
+
+// ═══════════════════════════════════════════════════════
+// PROVEEDOR — Autocompletado + Búsqueda IA
+// ═══════════════════════════════════════════════════════
+
+function pvBuscarSugerencias(q){
+  const dd = document.getElementById('pv-sugerencias');
+  if(!dd) return;
+  const term = (q||'').trim().toLowerCase();
+  if(term.length < 2){ dd.style.display='none'; return; }
+
+  // Buscar en caché de proveedores existentes
+  const matches = (ProvC||[])
+    .filter(p => (p.nombre||'').toLowerCase().includes(term))
+    .slice(0,8);
+
+  if(!matches.length){ dd.style.display='none'; return; }
+
+  dd.innerHTML = matches.map(p => `
+    <div onclick="pvSeleccionarExistente('${p.id}')"
+         style="padding:9px 12px;cursor:pointer;border-bottom:1px solid var(--border);font-size:12px"
+         onmouseover="this.style.background='var(--blue-light)'"
+         onmouseout="this.style.background=''">
+      <div style="font-weight:700;color:var(--navy)">${p.nombre}</div>
+      <div style="font-size:11px;color:var(--text-soft)">${p.cif||''} ${p.tipo?'· '+p.tipo:''} ${p.telefono?'· '+p.telefono:''}</div>
+    </div>`).join('');
+  dd.style.display = 'block';
+}
+
+function pvSeleccionarExistente(id){
+  const p = (ProvC||[]).find(x=>String(x.id)===String(id));
+  if(!p) return;
+  pvCerrarSugerencias();
+  // Rellenar todos los campos
+  const set=(id,v)=>{ const el=document.getElementById(id); if(el&&v!=null) el.value=v; };
+  set('pv-nombre', p.nombre||'');
+  set('pv-cif', p.cif||'');
+  set('pv-tel', p.telefono||'');
+  set('pv-email', p.email||'');
+  set('pv-esp', p.especialidad||'');
+  set('pv-iban', p.iban||'');
+  set('pv-notas', p.notas||'');
+  // Dirección
+  const dir = p.direccion||'';
+  set('pv-dir-calle', dir);
+  set('pv-cp', p.cp||'');
+  set('pv-poblacion', p.poblacion||p.municipio||'');
+  set('pv-provincia', p.provincia||'');
+  if(p.tipo){ const sel=document.getElementById('pv-tipo'); if(sel) sel.value=p.tipo; }
+  if(p.tipo_doc||p.cif){ const sd=document.getElementById('pv-tipo-doc'); if(sd) sd.value=p.tipo_doc||'CIF'; }
+  if(p.forma_pago){ const sp=document.getElementById('pv-pago'); if(sp) sp.value=p.forma_pago; }
+  toast('Datos cargados del proveedor existente','info');
+}
+
+function pvCerrarSugerencias(){
+  const dd=document.getElementById('pv-sugerencias');
+  if(dd) dd.style.display='none';
+}
+
+async function pvBuscarEmpresaIA(){
+  const nombre = (document.getElementById('pv-nombre')?.value||'').trim();
+  if(!nombre){ toast('Escribe primero el nombre de la empresa','error'); return; }
+
+  const btn = document.getElementById('pv-buscar-btn');
+  if(btn){ btn.disabled=true; btn.textContent='⏳ Buscando…'; }
+
+  try {
+    const apiKey = document.getElementById('cfg-apikey')?.value || localStorage.getItem('pau-anthropic-key') || '';
+
+    const response = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 400,
+        system: 'Eres un asistente que busca datos de empresas españolas. Responde SOLO con JSON válido, sin texto adicional ni backticks. El JSON debe tener exactamente estos campos: cif, telefono, email, direccion, cp, poblacion, provincia, tipo (Proveedor/Subcontrata/Servicio), especialidad. Si no encuentras un dato pon cadena vacía. El CIF español empieza por letra (A,B,C...) seguida de 8 dígitos.',
+        messages:[{ role:'user', content:`Busca los datos de contacto y fiscales de la empresa española: "${nombre}". Devuelve solo el JSON.`}]
+      })
+    });
+
+    const data = await response.json();
+    const text = (data.content?.[0]?.text||'').trim().replace(/```json|```/g,'').trim();
+
+    let info;
+    try { info = JSON.parse(text); } catch(e){ throw new Error('No se pudo obtener información de esta empresa'); }
+
+    // Rellenar campos con la info obtenida
+    const set=(id,v)=>{ const el=document.getElementById(id); if(el&&v) el.value=v; };
+    set('pv-cif', info.cif);
+    set('pv-tel', info.telefono);
+    set('pv-email', info.email);
+    set('pv-dir-calle', info.direccion);
+    set('pv-cp', info.cp);
+    set('pv-poblacion', info.poblacion);
+    set('pv-provincia', info.provincia);
+    set('pv-esp', info.especialidad);
+    if(info.tipo){ const sel=document.getElementById('pv-tipo'); if(sel) sel.value=info.tipo; }
+    if(info.cif){ const sd=document.getElementById('pv-tipo-doc'); if(sd) sd.value='CIF'; }
+
+    // Contar campos rellenados
+    const filled = Object.values(info).filter(v=>v&&v.trim()).length;
+    if(filled > 0){
+      toast(\`✅ \${filled} datos encontrados para "\${nombre}"\`, 'success');
+    } else {
+      toast('No se encontraron datos para esta empresa. Rellena manualmente.', 'warning');
+    }
+
+  } catch(e){
+    toast('No se pudieron obtener datos: '+e.message, 'error');
+  } finally {
+    if(btn){ btn.disabled=false; btn.textContent='✨ Buscar datos'; }
+  }
+}
+
+// Cerrar sugerencias al hacer clic fuera
+document.addEventListener('click', e=>{
+  if(!e.target.closest('#pv-nombre') && !e.target.closest('#pv-sugerencias')){
+    pvCerrarSugerencias();
+  }
+});
 
 const loaders={
   gerencia:loadGerencia,agenda:loadAgenda,clientes:loadClientes,proyectos:loadProyectos,
