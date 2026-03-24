@@ -597,6 +597,16 @@ th.sortable.sort-desc .sort-arrow::after{content:'▼'}
 th.sortable:not(.sort-asc):not(.sort-desc) .sort-arrow::after{content:'⇅'}
 
 
+/* Permisos por rol */
+body.rol-oficina .gerencia-fin { display: none !important; }
+body.rol-oficina [data-view="rentabilidad"],
+body.rol-oficina [data-view="facturas"],
+body.rol-oficina [data-view="conciliacion"],
+body.rol-oficina [data-view="contabilidad"],
+body.rol-oficina [data-view="informe_mensual"],
+body.rol-oficina [data-view="rrhh"],
+body.rol-oficina [data-view="configuracion"] { display: none !important; }
+
 /* Facturas table compact */
 #facturas-tbody td { padding: 6px 5px; font-size: 12px; }
 #facturas-tbody .td-mono { font-size: 11px; }
@@ -808,6 +818,10 @@ if(window.MutationObserver){
       <button onclick="abrirBusquedaGlobal()" style="display:flex;align-items:center;gap:7px;padding:6px 14px;background:#f5f7fa;border:1px solid var(--border);border-radius:8px;cursor:pointer;color:var(--text-mid);font-size:12px;transition:all .15s" onmouseover="this.style.background='var(--blue-light)'" onmouseout="this.style.background='#f5f7fa'">
         <span>🔍</span><span style="color:var(--text-soft)">Buscar…</span>
       </button>
+      <div id="topbar-user-display" style="display:flex;align-items:center;gap:6px;padding:4px 10px;background:#f5f7fa;border:1px solid var(--border);border-radius:8px">
+        <div id="topbar-user-av" style="width:22px;height:22px;border-radius:50%;background:var(--copper);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff">JO</div>
+        <span id="topbar-user-name" style="font-size:12px;font-weight:600;color:var(--navy)">Jose</span>
+      </div>
       <div id="conn-status" style="font-size: 11px; padding: 3px 9px; border-radius: 10px; background: var(--amber-soft); color: var(--amber); font-weight: 600; cursor:pointer;" onclick="reconectarApp()" title="Clic para reconectar">🟡 Conectando…</div>
       <a href="ayuda.html" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;display:inline-flex;align-items:center;gap:5px" title="Centro de Ayuda">❓ Ayuda</a><button class="btn btn-ghost btn-sm" onclick="doLogout()">Salir</button>
       <button class="btn btn-primary btn-sm" onclick="openModal('m-quick')">＋ Nuevo</button>
@@ -1187,11 +1201,11 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     <div class="view active" id="view-gerencia">
       <div class="kpi-grid">
         <div class="kpi gerencia-fin blue"><div class="kpi-label">Total Ventas (Base Imp.)</div><div class="kpi-value" id="g-ventas">—</div><div class="kpi-sub">Facturas emitidas</div></div>
-        <div class= gerencia-fin"kpi" style="background:#e6f0ff;border-left:4px solid #1a5fa8"><div class="kpi-label" style="color:#1a5fa8">📐 S1 · Obra</div><div class="kpi-value" id="g-ventas-s1" style="font-size:20px">—</div><div class="kpi-sub">Ventas serie 1</div></div>
-        <div class= gerencia-fin"kpi" style="background:#f0e6ff;border-left:4px solid #7b2fa8"><div class="kpi-label" style="color:#7b2fa8">🛋️ S2 · Interiorismo</div><div class="kpi-value" id="g-ventas-s2" style="font-size:20px">—</div><div class="kpi-sub">Ventas serie 2</div></div>
+        <div class="kpi gerencia-fin" style="background:#e6f0ff;border-left:4px solid #1a5fa8"><div class="kpi-label" style="color:#1a5fa8">📐 S1 · Obra</div><div class="kpi-value" id="g-ventas-s1" style="font-size:20px">—</div><div class="kpi-sub">Ventas serie 1</div></div>
+        <div class="kpi gerencia-fin" style="background:#f0e6ff;border-left:4px solid #7b2fa8"><div class="kpi-label" style="color:#7b2fa8">🛋️ S2 · Interiorismo</div><div class="kpi-value" id="g-ventas-s2" style="font-size:20px">—</div><div class="kpi-sub">Ventas serie 2</div></div>
         <div class="kpi gerencia-fin red"><div class="kpi-label">Total Costes (Base Imp.)</div><div class="kpi-value" id="g-costes">—</div><div class="kpi-sub">Facturas recibidas</div></div>
-        <div class= gerencia-fin"kpi" style="background:#e6f5e6;border-left:4px solid #2a7a2a"><div class="kpi-label" style="color:#2a7a2a">🔧 S3 · Proveedores</div><div class="kpi-value" id="g-compras-s3" style="font-size:20px">—</div><div class="kpi-sub">Compras serie 3</div></div>
-        <div class= gerencia-fin"kpi" style="background:#fff3e6;border-left:4px solid #b85c00"><div class="kpi-label" style="color:#b85c00">📋 S4 · Gastos</div><div class="kpi-value" id="g-compras-s4" style="font-size:20px">—</div><div class="kpi-sub">Compras serie 4</div></div>
+        <div class="kpi gerencia-fin" style="background:#e6f5e6;border-left:4px solid #2a7a2a"><div class="kpi-label" style="color:#2a7a2a">🔧 S3 · Proveedores</div><div class="kpi-value" id="g-compras-s3" style="font-size:20px">—</div><div class="kpi-sub">Compras serie 3</div></div>
+        <div class="kpi gerencia-fin" style="background:#fff3e6;border-left:4px solid #b85c00"><div class="kpi-label" style="color:#b85c00">📋 S4 · Gastos</div><div class="kpi-value" id="g-compras-s4" style="font-size:20px">—</div><div class="kpi-sub">Compras serie 4</div></div>
         <div class="kpi gerencia-fin green"><div class="kpi-label">Beneficio Neto</div><div class="kpi-value" id="g-benef">—</div><div class="kpi-sub">Ventas − Costes (base imp.)</div></div>
         <div class="kpi gerencia-fin amber"><div class="kpi-label">Margen Neto %</div><div class="kpi-value" id="g-margen">—</div><div class="kpi-sub">Sobre base imponible</div></div>
       </div>
@@ -1202,16 +1216,16 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <div class="kpi gerencia-fin" style="background:#fff;border:1px solid var(--border);cursor:pointer" onclick="navTo('facturas')">
           <div class="kpi-label">⚠️ Fra. vencidas</div><div class="kpi-value" id="g-fra-vencidas" style="font-size:24px;color:var(--red)">—</div><div class="kpi-sub">Sin cobrar</div>
         </div>
-        <div class="kpi" style="background:#fff;border:1px solid var(--border);cursor:pointer" onclick="navTo('proyectos')">
+        <div class="kpi gerencia-fin" style="background:#fff;border:1px solid var(--border);cursor:pointer" onclick="navTo('proyectos')">
           <div class="kpi-label">📤 Pres. enviados</div><div class="kpi-value" id="g-pres-enviados" style="font-size:24px;color:var(--amber)">—</div><div class="kpi-sub">Sin respuesta</div>
         </div>
-        <div class="kpi" style="background:#fff;border:1px solid var(--border);cursor:pointer" onclick="navTo('compras')">
+        <div class="kpi gerencia-fin" style="background:#fff;border:1px solid var(--border);cursor:pointer" onclick="navTo('compras')">
           <div class="kpi-label">🛒 Compras pdte.</div><div class="kpi-value" id="g-compras-pdte" style="font-size:24px;color:var(--amber)">—</div><div class="kpi-sub">Sin pagar</div>
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
         <!-- Resumen económico -->
-        <div class= gerencia-fin"card">
+        <div class="card gerencia-fin">
           <div class="card-header"><div class="card-title">📊 Resumen económico</div></div>
           <div class="card-body" style="padding:0">
             <div class="cuenta-row header"><span>Concepto</span><span>Importe €</span><span>%</span></div>
@@ -1248,7 +1262,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
         <!-- Seguimiento cobros -->
-        <div class= gerencia-fin"card">
+        <div class="card gerencia-fin">
           <div class="card-header"><div class="card-title">💰 Seguimiento de cobros</div></div>
           <div class="card-body" style="padding:0">
             <div class="cuenta-row"><span>Total Facturado</span><span id="gc-facturado">—</span><span></span></div>
@@ -1258,7 +1272,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           </div>
         </div>
         <!-- Seguimiento pagos -->
-        <div class= gerencia-fin"card">
+        <div class="card gerencia-fin">
           <div class="card-header"><div class="card-title">🏦 Seguimiento de pagos</div></div>
           <div class="card-body" style="padding:0">
             <div class="cuenta-row"><span>Total Facturas de compra</span><span id="gp-compras">—</span><span></span></div>
@@ -1269,7 +1283,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
         <!-- Control horas -->
-        <div class="card">
+        <div class="card gerencia-fin">
           <div class="card-header"><div class="card-title">⏱ Control de horas</div></div>
           <div class="card-body" style="padding:0">
             <div class="cuenta-row"><span>Total horas registradas</span><span id="gh-horas">—</span><span></span></div>
@@ -1278,7 +1292,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           </div>
         </div>
         <!-- IVA -->
-        <div class= gerencia-fin"card">
+        <div class="card gerencia-fin">
           <div class="card-header"><div class="card-title">🧾 IVA trimestral</div></div>
           <div class="card-body" style="padding:0">
             <div class="cuenta-row"><span>IVA Repercutido (ventas)</span><span id="gi-rep">—</span><span></span></div>
@@ -1288,7 +1302,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         </div>
       </div>
       <!-- Rentabilidad por proyecto tabla -->
-      <div class= gerencia-fin"card">
+      <div class="card gerencia-fin">
         <div class="card-header" style="flex-wrap:wrap;gap:8px">
           <div class="card-title">📈 Rentabilidad por proyecto</div>
           <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
@@ -1307,7 +1321,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       </div>
 
       <!-- ═══ PANEL DE ALERTAS ═══ -->
-      <div class= gerencia-fin"card" style="margin-top:14px">
+      <div class="card gerencia-fin" style="margin-top:14px">
         <div class="card-header">
           <div class="card-title">🚨 Alertas de rentabilidad</div>
           <div id="alertas-count" style="font-size:12px;color:var(--text-soft)"></div>
@@ -5527,29 +5541,24 @@ function puedeVerVista(view){
 }
 function aplicarPermisos(){
   const perms = getUserPerms();
-  if(perms.rol === 'admin') return; // admin ve todo
+  // Remove any previous role class
+  document.body.classList.remove('rol-admin','rol-oficina');
 
-  // 1. Ocultar items del sidebar con data-view bloqueado
-  document.querySelectorAll('[data-view]').forEach(el=>{
-    const v = el.getAttribute('data-view');
-    if(perms.bloqueadas.includes(v)){
-      el.style.display = 'none';
-    }
-  });
+  if(perms.rol === 'admin'){
+    document.body.classList.add('rol-admin');
+    return;
+  }
 
-  // 2. Ocultar sección "CIERRE" del sidebar si todos sus items están bloqueados
-  // Los nav-section que contienen solo vistas bloqueadas se ocultan
+  // Apply role class to body — CSS handles hiding (persists through re-renders)
+  document.body.classList.add('rol-' + perms.rol);
+
+  // Also hide sidebar sections via JS for immediate effect
   document.querySelectorAll('.nav-section').forEach(section=>{
     const items = section.querySelectorAll('[data-view]');
     if(items.length > 0){
       const allHidden = [...items].every(el=>perms.bloqueadas.includes(el.getAttribute('data-view')));
       if(allHidden) section.style.display = 'none';
     }
-  });
-
-  // 3. Ocultar datos financieros en Gerencia
-  document.querySelectorAll('.gerencia-fin').forEach(el=>{
-    el.style.display = 'none';
   });
 
   // 4. Mostrar badge de rol en la barra superior
@@ -5564,8 +5573,17 @@ function aplicarPermisos(){
 
 function setUserDisplay(u){
   const n=u.charAt(0).toUpperCase()+u.slice(1);
-  document.getElementById('user-name').textContent=n;
-  document.getElementById('user-av').textContent=n.substring(0,2).toUpperCase();
+  const initials=n.substring(0,2).toUpperCase();
+  // Sidebar user card
+  const un=document.getElementById('user-name');
+  const ua=document.getElementById('user-av');
+  if(un) un.textContent=n;
+  if(ua) ua.textContent=initials;
+  // Topbar pill
+  const tun=document.getElementById('topbar-user-name');
+  const tua=document.getElementById('topbar-user-av');
+  if(tun) tun.textContent=n;
+  if(tua) tua.textContent=initials;
 }
 // ── ARRANQUE: esperar a que el DOM esté listo ──
 function toggleImportMenu(){
