@@ -5728,8 +5728,51 @@ const META={
   albaranes:{t:'Albaranes de entrega',b:'Documentos de entrega de materiales y mobiliario'}
 };
 document.querySelectorAll('.nav-item[data-view]').forEach(el=>el.addEventListener('click',()=>navTo(el.dataset.view)));
-async function navTo(v){
+async 
+// Auto-select cliente/proyecto/pedido in Doc.Pedido after creation
+function _autoSelectPedidoDoc(ped){
+  if(!ped) return;
+  try {
+    // 1. Set cliente filter
+    const cliSel = document.getElementById('filter-cliente-pedido_doc');
+    if(cliSel && ped.cliente_id){
+      cliSel.value = ped.cliente_id;
+      cascadaDocPedido(); // populate projects for this client
+    }
+    // 2. Set proyecto filter
+    setTimeout(()=>{
+      const proySel = document.getElementById('filter-proyecto-pedido_doc');
+      if(proySel && ped.proyecto_id){
+        proySel.value = ped.proyecto_id;
+        filtrarPedidosPorProyecto(); // populate pedidos for this project
+      }
+      // 3. Set pedido
+      setTimeout(()=>{
+        const pedSel = document.getElementById('pd-pedido-sel');
+        if(pedSel && ped.id){
+          // Find by id in options
+          for(let i=0; i<pedSel.options.length; i++){
+            const opt = pedSel.options[i];
+            const pedData = PedC.find(p=>String(p.id)===String(opt.value));
+            if(pedData && String(pedData.id)===String(ped.id)){
+              pedSel.value = opt.value;
+              break;
+            }
+          }
+          cargarPedidoEnDoc();
+        }
+      }, 100);
+    }, 100);
+  } catch(e){ console.warn('Auto-select pedido_doc error:', e); }
+}
+
+function navTo(v){
   if(!puedeVerVista(v)){ toast("No tienes acceso a esta sección","error"); return; }
+  // Auto-select last saved pedido when navigating to Doc. Pedido
+  if(v === 'pedido_doc' && window._lastSavedPedido){
+    setTimeout(()=>_autoSelectPedidoDoc(window._lastSavedPedido), 150);
+    window._lastSavedPedido = null; // consume it
+  }
   // Close any open catalog panels
   document.querySelectorAll('.cat-panel').forEach(p=>p.classList.remove('open'));
   const catSel=document.getElementById('cat-selector'); if(catSel) catSel.style.display='block';
@@ -5757,7 +5800,7 @@ async function navTo(v){
   document.getElementById('tb-title').textContent=m.t||v;
   document.getElementById('tb-bc').textContent=m.b||'';
   // Run loader
-  if(loaders[v]) try{ await loaders[v](); }catch(e){ console.error('navTo loader error ['+v+']:',e); toast('Error cargando sección: '+e.message,'error'); }
+  if(loaders[v]) loaders[v]().catch(e=>{ console.error('navTo loader error ['+v+']:',e); toast('Error cargando sección: '+e.message,'error'); });
 }
 
 // ═══════════════════════════════════════════
