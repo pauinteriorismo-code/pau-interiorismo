@@ -5731,38 +5731,34 @@ document.querySelectorAll('.nav-item[data-view]').forEach(el=>el.addEventListene
 // Auto-select cliente/proyecto/pedido in Doc.Pedido after creation
 function _autoSelectPedidoDoc(ped){
   if(!ped) return;
-  try {
-    // 1. Set cliente filter
-    const cliSel = document.getElementById('filter-cliente-pedido_doc');
-    if(cliSel && ped.cliente_id){
-      cliSel.value = ped.cliente_id;
-      cascadaDocPedido(); // populate projects for this client
-    }
-    // 2. Set proyecto filter
-    setTimeout(()=>{
-      const proySel = document.getElementById('filter-proyecto-pedido_doc');
-      if(proySel && ped.proyecto_id){
-        proySel.value = ped.proyecto_id;
-        filtrarPedidosPorProyecto(); // populate pedidos for this project
+  // Wait for view + loaders to finish, then set filters
+  setTimeout(()=>{
+    try {
+      // 1. Cliente
+      const cliSel = document.getElementById('filter-cliente-pedido_doc');
+      if(cliSel && ped.cliente_id){
+        cliSel.value = ped.cliente_id;
+        cascadaDocPedido();
       }
-      // 3. Set pedido
+      // 2. Proyecto (after cascade)
       setTimeout(()=>{
-        const pedSel = document.getElementById('pd-pedido-sel');
-        if(pedSel && ped.id){
-          // Find by id in options
-          for(let i=0; i<pedSel.options.length; i++){
-            const opt = pedSel.options[i];
-            const pedData = PedC.find(p=>String(p.id)===String(opt.value));
-            if(pedData && String(pedData.id)===String(ped.id)){
-              pedSel.value = opt.value;
-              break;
-            }
-          }
-          cargarPedidoEnDoc();
+        const proySel = document.getElementById('filter-proyecto-pedido_doc');
+        if(proySel && ped.proyecto_id){
+          proySel.value = ped.proyecto_id;
+          filtrarPedidosPorProyecto();
         }
-      }, 100);
-    }, 100);
-  } catch(e){ console.warn('Auto-select pedido_doc error:', e); }
+        // 3. Pedido (after pedido list is populated)
+        setTimeout(()=>{
+          const pedSel = document.getElementById('pd-pedido-sel');
+          if(pedSel && ped.id){
+            // Options have value = p.id (UUID)
+            pedSel.value = String(ped.id);
+            if(pedSel.value) cargarPedidoEnDoc();
+          }
+        }, 200);
+      }, 200);
+    } catch(e){ console.warn('Auto-select error:', e); }
+  }, 400); // wait for loaders
 }
 
 function navTo(v){
@@ -10805,10 +10801,16 @@ async function loadHoras(){
 // ═══════════════════════════════════════════
 
 // Navega a Doc.Pedido y carga el pedido con ese ID
-async function abrirDocPedido(pedidoId){
-  await navTo('pedido_doc');
-  const sel = document.getElementById('pd-pedido-sel');
-  if(sel){ sel.value = pedidoId; cargarPedidoEnDoc(); }
+function abrirDocPedido(pedidoId){
+  // Find the pedido data
+  const ped = PedC.find(p=>String(p.id)===String(pedidoId));
+  // Store for auto-select after navTo
+  window._lastSavedPedido = ped ? {
+    id: ped.id,
+    cliente_id: ped.cliente_id,
+    proyecto_id: ped.proyecto_id
+  } : null;
+  navTo('pedido_doc');
 }
 
 // Nuevo pedido en blanco
