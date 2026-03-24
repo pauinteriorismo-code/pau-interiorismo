@@ -4632,14 +4632,11 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 <div class="overlay" id="m-hora"><div class="modal" style="width:420px">
   <div class="modal-head"><div class="modal-title">⏱ Registrar horas</div><button class="modal-close" onclick="closeModal('m-hora')">×</button></div>
   <div class="modal-body"><input type="hidden" id="h-id"><input type="hidden" id="h-proyecto">
-    <!-- Info proyecto (solo lectura) -->
-    <div id="h-proyecto-band" style="background:var(--blue-light);border-radius:6px;padding:8px 12px;margin-bottom:12px;display:flex;align-items:center;gap:8px">
-      <span style="font-size:11px;font-weight:700;color:var(--navy);text-transform:uppercase">Proyecto</span>
-      <span id="h-proyecto-label" style="font-size:12px;font-weight:600;color:var(--text)">— Sin proyecto seleccionado —</span>
-    </div>
     <div class="form-grid">
+      <div class="form-group"><label class="form-label">👤 Cliente</label><select class="form-input" id="h-cliente" onchange="onChangeHCliente()"><option value="">Seleccionar cliente…</option></select></div>
+      <div class="form-group"><label class="form-label">📁 Proyecto</label><select class="form-input" id="h-proyecto-sel" onchange="onChangeHProyecto()"><option value="">Seleccionar proyecto…</option></select></div>
       <div class="form-group"><label class="form-label">Fecha</label><input class="form-input" id="h-fecha" type="date"></div>
-      <div class="form-group"><label class="form-label">Partida / Unidad</label><select class="form-input" id="h-partida" onchange="onChangeHPartida()"><option value="">— General (sin partida) —</option></select></div>
+      <div class="form-group"><label class="form-label">Partida / Versión presupuesto</label><select class="form-input" id="h-partida" onchange="onChangeHPartida()"><option value="">— General (sin partida) —</option></select></div>
       <div class="form-group" id="h-capitulo-group" style="display:none"><label class="form-label">Capítulo</label><select class="form-input" id="h-capitulo"><option value="">— Todo el presupuesto —</option></select></div>
       <div class="form-group"><label class="form-label">Trabajador</label><select class="form-input" id="h-trab"><option value="">Seleccionar…</option><option value="Francisco Gascón Gil">Francisco Gascón Gil</option><option value="Jose Asins Primo">Jose Asins Primo</option><option value="Julio Alemany Fort">Julio Alemany Fort</option><option value="María Paz Primo Iborra">María Paz Primo Iborra</option><option value="Raúl Gascón Gil">Raúl Gascón Gil</option><option value="Salvador Aguado Simó">Salvador Aguado Simó</option></select></div>
       <div class="form-group"><label class="form-label">Horas</label><input class="form-input" id="h-horas" type="number" step="0.5" placeholder="8"></div>
@@ -4689,6 +4686,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       </div>
 
       <div class="form-group fg-full"><label class="form-label">Referencia / Descripción</label><input class="form-input" id="ped-ref" placeholder="Ej: Azulejo baño modelo X, Mueble cocina ref.123..."></div>
+      <div class="form-group"><label class="form-label">Importe €</label><input class="form-input" id="ped-importe" type="number" step="0.01"></div>
       <div class="form-group"><label class="form-label">Estado</label><select class="form-input" id="ped-estado"><option>Cancelado</option><option selected>Confirmado</option><option>En tránsito</option><option>Pagado</option><option>Pendiente</option><option>Recibido</option><option>Solicitado</option></select></div>
       <div class="form-group fg-full"><label class="form-label">Observaciones</label><input class="form-input" id="ped-obs"></div>
     </div>
@@ -10725,6 +10723,7 @@ function abrirModalHora(proyIdForzado) {
   document.getElementById('h-horas').value = '';
   document.getElementById('h-coste').value = 18;
   document.getElementById('h-desc').value  = '';
+  _poblarHCliente();
   _setHoraProyecto(proyId);
   openModal('m-hora');
 }
@@ -10739,29 +10738,74 @@ function editHora(id) {
   document.getElementById('h-horas').value = h.horas || '';
   document.getElementById('h-coste').value = h.coste_hora || 18;
   document.getElementById('h-desc').value  = h.descripcion || '';
+  _poblarHCliente();
   _setHoraProyecto(h.proyecto_id, h.partida || '');
   openModal('m-hora');
 }
 
-// Actualiza la info-band del proyecto y carga sus partidas
+// Puebla el selector de clientes del modal de horas
+function _poblarHCliente() {
+  const sel = document.getElementById('h-cliente');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">Seleccionar cliente…</option>'
+    + [...CC].sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||'','es'))
+              .map(c=>`<option value="${c.cliente_id||c.id}">${c.nombre}</option>`).join('');
+}
+
+// Puebla/filtra el selector de proyectos del modal según cliente seleccionado
+function _poblarHProyecto(clienteId) {
+  const sel = document.getElementById('h-proyecto-sel');
+  if (!sel) return;
+  const lista = clienteId ? PC.filter(p=>p.cliente_id===clienteId) : PC;
+  sel.innerHTML = '<option value="">Seleccionar proyecto…</option>'
+    + [...lista].sort((a,b)=>a.proyecto_id.localeCompare(b.proyecto_id,'es',{numeric:true}))
+                 .map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
+}
+
+// Actualiza los selectores de cliente/proyecto y carga partidas del proyecto
 function _setHoraProyecto(proyId, partidaVal) {
   document.getElementById('h-proyecto').value = proyId || '';
-  const lbl = document.getElementById('h-proyecto-label');
-  if (lbl) {
-    if (proyId) {
-      const p = PC.find(x => x.proyecto_id === proyId);
-      lbl.textContent = p ? `${p.proyecto_id} · ${p.nombre}` : proyId;
-      lbl.style.color = 'var(--navy)';
-    } else {
-      lbl.textContent = '— Sin proyecto seleccionado —';
-      lbl.style.color = 'var(--text-soft)';
-    }
-  }
+  // Resolver cliente del proyecto para pre-seleccionar
+  const pObj = proyId ? PC.find(x => x.proyecto_id === proyId) : null;
+  const clienteId = pObj?.cliente_id || '';
+  // Poblar cliente
+  const cSel = document.getElementById('h-cliente');
+  if (cSel) cSel.value = clienteId;
+  // Poblar proyectos filtrados por ese cliente
+  _poblarHProyecto(clienteId);
+  // Seleccionar el proyecto
+  const pSel = document.getElementById('h-proyecto-sel');
+  if (pSel) pSel.value = proyId || '';
+  // Cargar partidas
   if (proyId) {
     cargarPartidasHora(proyId, partidaVal);
   } else {
-    const pSel = document.getElementById('h-partida');
-    if (pSel) pSel.innerHTML = '<option value="">— General (sin partida) —</option>';
+    const partSel = document.getElementById('h-partida');
+    if (partSel) partSel.innerHTML = '<option value="">— General (sin partida) —</option>';
+    _ocultarCapituloGroupPfx('h');
+  }
+}
+
+// Handler: cambio de cliente en el modal de horas
+function onChangeHCliente() {
+  const clienteId = document.getElementById('h-cliente')?.value || '';
+  _poblarHProyecto(clienteId);
+  document.getElementById('h-proyecto').value = '';
+  const partSel = document.getElementById('h-partida');
+  if (partSel) partSel.innerHTML = '<option value="">— General (sin partida) —</option>';
+  _ocultarCapituloGroupPfx('h');
+}
+
+// Handler: cambio de proyecto en el modal de horas
+async function onChangeHProyecto() {
+  const proyId = document.getElementById('h-proyecto-sel')?.value || '';
+  document.getElementById('h-proyecto').value = proyId;
+  if (proyId) {
+    await cargarPartidasHora(proyId, null);
+  } else {
+    const partSel = document.getElementById('h-partida');
+    if (partSel) partSel.innerHTML = '<option value="">— General (sin partida) —</option>';
+    _ocultarCapituloGroupPfx('h');
   }
 }
 
@@ -11245,7 +11289,7 @@ function editPedido(id){
   document.getElementById('ped-fecha').value=p.fecha||'';
   document.getElementById('ped-tipo').value=p.tipo||'Material';
   if(document.getElementById('ped-ref')) document.getElementById('ped-ref').value=p.referencia||'';
-
+  document.getElementById('ped-importe').value=p.importe||'';
   document.getElementById('ped-estado').value=p.estado||'Pendiente';
   document.getElementById('ped-obs').value=p.observaciones||'';
   // Cliente / Proyecto (hidden fields + display)
@@ -11271,7 +11315,7 @@ function openPedidoModal(){
   document.getElementById('ped-num').value='PED-'+String((PedC.length||0)+1).padStart(3,'0');
   document.getElementById('ped-fecha').value=new Date().toISOString().split('T')[0];
   document.getElementById('ped-obs').value='';
-
+  document.getElementById('ped-importe').value='';
 
   // Leer cliente y proyecto ya seleccionados en los filtros de la página
   const cliSel  = document.getElementById('filter-cliente-pedidos');
@@ -11313,6 +11357,7 @@ async function savePedido(){
     tipo:         document.getElementById('ped-tipo').value,
     proveedor:    document.getElementById('ped-prov-val')?.value||document.getElementById('ped-prov-search')?.value||'',
     referencia:   document.getElementById('ped-ref')?.value||'',
+    importe:      parseFloat(document.getElementById('ped-importe').value)||0,
     estado:       document.getElementById('ped-estado').value,
     observaciones:document.getElementById('ped-obs').value,
   };
