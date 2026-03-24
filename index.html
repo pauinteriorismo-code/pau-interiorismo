@@ -3065,7 +3065,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="search-bar" style="gap:8px;flex-wrap:wrap;align-items:center">
         <select class="form-input" style="width:200px;flex-shrink:0" id="filter-cliente-horas" onchange="cascadaClienteProyecto(&#39;horas&#39;)"><option value="">👤 Cliente…</option><option value="CLI-H015">4F Fernando</option><option value="CLI-H014">4G daniel Dominguez</option><option value="CLI-H018">Amparo Forner Pastor</option><option value="CLI-H026">Ana María Palau Sastre</option><option value="CLI-H031">Belinda</option><option value="CLI-H004">CARMELO RODRIGUEZ VILA</option><option value="CLI-H032">Daniel palma gallardo</option><option value="CLI-H003">DESIRE NAVARRO MARI</option><option value="CLI-033">Estudi Encis SL</option><option value="CLI-H009">FERNANDO JOSE SAN GERMAN IBORRA</option><option value="CLI-H029">Francisco Navarro Garcia</option><option value="CLI-H019">Jose Antonio Martos Ortiz</option><option value="CLI-H013">Jose Manuel Garcia Seller Nº 7 Pta 4</option><option value="CLI-H030">Jose Manuel Pinzón Valbuena</option><option value="CLI-H007">Juanmi</option><option value="CLI-H012">Júlia Fabregat Mestre</option><option value="CLI-H028">Lara Blasco - Lara Blasco Iborra</option><option value="CLI-H027">Laura Doria Gomez</option><option value="CLI-H021">MERCEDES HIGUERAS GOMEZ</option><option value="CLI-H024">MICHELL BENITO</option><option value="CLI-H022">Miguel cocina</option><option value="CLI-001">Miguel Zaragozá Garzón</option><option value="CLI-H023">Miguel Zaragozá Garzón</option><option value="CLI-H002">Mª PAU BRAVO JOSE</option><option value="CLI-H005">PATRI</option><option value="CLI-H020">Rafael Francés Llàcer</option><option value="CLI-H010">REME IBORRA GIL</option><option value="CLI-H001">ROSA CHANZA SOLER</option><option value="CLI-H016">Sara Muñoz Abella</option><option value="CLI-H011">TONI TATAY DAVID</option><option value="CLI-H025">URKO Y FRANCESC</option><option value="CLI-H008">VICENT MARI SERRA</option><option value="CLI-034">Vicenta Baixauli Hernandez</option><option value="CLI-002">Vicenta Folch Gil</option><option value="CLI-H006">Vicenta Folch Gil</option><option value="CLI-H017">Yasmina Cabezuelo Alaminos</option></select>
         <select class="form-input" style="width:220px;flex-shrink:0" id="filter-proyecto-horas" onchange="recargarModulo('horas')"><option value="">📁 Proyecto…</option><option value="PRY-001">PRY-001 · Mobiliario de cocina</option><option value="PRY-002">PRY-002 · Rehabilitación lateral fachada</option><option value="PRY-003">PRY-003 · Pavimento/revestimiento vivienda.</option><option value="PRY-004">PRY-004 · Rehabilitación estudio</option><option value="PRY-005">PRY-005 · Trabajos en terraza</option></select>
-        <select class="form-input" style="width:160px;flex-shrink:0" id="filter-partida-horas" onchange="aplicarFiltroPartida('horas')"><option value="">📂 Partida…</option></select>
+        <select class="form-input" style="width:160px;flex-shrink:0" id="filter-partida-horas" onchange="filtrarPartidasHorasTabla()"><option value="">🔖 Partida…</option></select>
         <div class="search-wrap" style="flex:1;min-width:160px"><span class="search-icon">🔍</span><input class="form-input" id="search-horas" placeholder="Buscar…" oninput="filterTable('horas-tbody','search-horas')"></div>
         <button class="btn btn-ghost btn-sm" onclick="exportarExcel('horas')" style="font-size:11px">📊 Excel</button>
 <button class="btn btn-primary" onclick="abrirModalHora()">＋ Registrar horas</button> <a href="manual_obra.html" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;padding:5px 8px" title="Manual">❓</a>
@@ -3167,7 +3167,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <div id="ch-resumen" style="margin-left:auto;font-size:12px;color:var(--text-soft)"></div>
       </div>
       <!-- KPIs anuales -->
-      <div id="ch-kpis" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;display:none">
+      <div id="ch-kpis" style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px;display:none">
         <div style="background:#fff;border-radius:8px;padding:12px 14px;border:1px solid var(--border)">
           <div style="font-size:10px;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px">Días trabajados</div>
           <div id="ch-kpi-dias" style="font-size:20px;font-weight:800;color:var(--navy)">—</div>
@@ -3180,8 +3180,12 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <div style="font-size:10px;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px">Media horas/día</div>
           <div id="ch-kpi-media" style="font-size:20px;font-weight:800;color:var(--amber)">—</div>
         </div>
-        <div style="background:#fff;border-radius:8px;padding:12px 14px;border:1px solid var(--border)">
-          <div style="font-size:10px;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px">Vacaciones / Bajas</div>
+        <div style="background:#e3f2fd;border-radius:8px;padding:12px 14px;border:1px solid #1e88e5">
+          <div style="font-size:10px;color:#1565c0;text-transform:uppercase;letter-spacing:.5px">🏖 Vacaciones</div>
+          <div id="ch-kpi-vacaciones" style="font-size:20px;font-weight:800;color:#1e88e5">—</div>
+        </div>
+        <div style="background:#fce4ec;border-radius:8px;padding:12px 14px;border:1px solid #e91e63">
+          <div style="font-size:10px;color:#880e4f;text-transform:uppercase;letter-spacing:.5px">🤒 Bajas / Ausencias</div>
           <div id="ch-kpi-ausencias" style="font-size:20px;font-weight:800;color:var(--red)">—</div>
         </div>
       </div>
@@ -6846,13 +6850,9 @@ function aplicarFiltroPartida(mod) {
   const filtSel = document.getElementById(`filter-partida-${mod}`);
   if(!filtSel) return;
   const val = filtSel.value;
+  if(!val) return; // Sin filtro de partida: no tocar display (el filtro de proyecto ya lo maneja)
   const tbody = document.getElementById(`${mod}-tbody`);
   if(!tbody) return;
-  if(!val) {
-    // Sin filtro de partida: restaurar visibilidad según filtro de proyecto
-    filtrarModuloPorProyecto(mod);
-    return;
-  }
   tbody.querySelectorAll('tr[data-partida]').forEach(tr => {
     // Solo ocultar filas que están visibles y no coinciden; no revelar filas ya ocultas por proyecto
     const dp = tr.dataset.partida || '';
@@ -6924,7 +6924,7 @@ async function recargarModulo(mod){
   // Forzar recarga de datos desde Supabase
   if(mod==='compras') await loadCompras();
   else if(mod==='subcontratas') await loadSubcontratas();
-  else if(mod==='horas'){ await loadHoras(); await cargarFiltroPartidaModulo('horas'); return; }
+  else if(mod==='horas'){ await loadHoras(); await cargarFiltroPartidaHoras(); return; }
   else if(mod==='pedidos') await loadPedidos();
   // filtrarModuloPorProyecto se llama dentro de cada load function
   await cargarFiltroPartidaModulo(mod);
@@ -10795,22 +10795,15 @@ async function saveSubcontrata(){
 // ═══════════════════════════════════════════
 async function loadHoras(){
   const tb=document.getElementById('horas-tbody');
-  const proyId = document.getElementById('filter-proyecto-horas')?.value || '';
   try{
-    // Filtrar por proyecto en Supabase cuando hay uno seleccionado
-    const qs = proyId
-      ? `?proyecto_id=eq.${encodeURIComponent(proyId)}&order=fecha.desc`
-      : '?order=fecha.desc';
-    HC=await sbGet('horas', qs);
-    if(!HC.length){
-      tb.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="empty-icon">⏱</div><div class="empty-text">${proyId?'Sin horas para este proyecto':'Sin horas registradas'}</div><button class="btn btn-primary" onclick="abrirModalHora()">＋ Registrar</button></div></td></tr>`;
-      filtrarModuloPorProyecto('horas');
-      return;
-    }
+    HC=await sbGet('horas','?order=fecha.desc');
+    document.getElementById('horas-count').textContent=HC.length+' registros';
+    if(!HC.length){tb.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="empty-icon">⏱</div><div class="empty-text">Sin horas registradas</div><button class="btn btn-primary" onclick="abrirModalHora()">＋ Registrar</button></div></td></tr>`;return;}
     // Resolver nombres de capítulos
     const capNames = await resolverNombresCapitulos(HC.map(h=>h.partida));
-    tb.innerHTML=HC.map(h=>`<tr data-search="${(h.proyecto_id+' '+(h.partida||'')+' '+h.trabajador+' '+(h.descripcion||'')).toLowerCase()}" data-partida="${h.partida||''}"><td>${fmtD(h.fecha)}</td><td class="td-mono">${h.proyecto_id?`<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:1px 5px;color:var(--navy);font-weight:700" title="Ver expediente" onclick="abrirExpediente('${h.proyecto_id}')">${h.proyecto_id}</button>`:"<span style='color:var(--text-soft)'>—</span>"}</td><td class="td-mono" style="color:var(--copper);font-weight:600">${h.partida ? partidaLabelConNombres(h.partida, capNames) : '<span style=color:var(--text-soft)>—</span>'}</td><td><strong>${h.trabajador||'—'}</strong></td><td class="td-mono">${h.horas}h</td><td class="td-mono">${fmt(h.coste_hora)}</td><td class="td-mono" style="font-weight:700">${fmt(h.total)}</td><td style="color:var(--text-soft)">${h.descripcion||'—'}</td><td><button class="btn btn-ghost btn-icon btn-sm" onclick="editHora('${h.id}')" title="Editar">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('horas','${h.id}','horas ${h.trabajador}')">🗑</button></td></tr>`).join('');
+    tb.innerHTML=HC.map(h=>`<tr data-search="${((h.proyecto_id?PC.find(p=>p.id===h.proyecto_id)?.proyecto_id||h.proyecto_id:'')+' '+(h.partida||'')+' '+h.trabajador+' '+(h.descripcion||'')).toLowerCase()}"><td>${fmtD(h.fecha)}</td><td class="td-mono">${h.proyecto_id?`<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:1px 5px;color:var(--navy);font-weight:700" title="Ver expediente" onclick="abrirExpediente('${h.proyecto_id}')">${h.proyecto_id}</button>`:"<span style='color:var(--text-soft)'>—</span>"}</td><td class="td-mono" style="color:var(--copper);font-weight:600">${h.partida ? partidaLabelConNombres(h.partida, capNames) : '<span style=color:var(--text-soft)>—</span>'}</td><td><strong>${h.trabajador||'—'}</strong></td><td class="td-mono">${h.horas}h</td><td class="td-mono">${fmt(h.coste_hora)}</td><td class="td-mono" style="font-weight:700">${fmt(h.total)}</td><td style="color:var(--text-soft)">${h.descripcion||'—'}</td><td><button class="btn btn-ghost btn-icon btn-sm" onclick="editHora('${h.id}')" title="Editar">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('horas','${h.id}','horas ${h.trabajador}')">🗑</button></td></tr>`).join('');
   }catch(e){tb.innerHTML=`<tr><td colspan="8" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
+  // Re-apply project filter after load
   filtrarModuloPorProyecto('horas');
 }
 // ═══════════════════════════════════════════
@@ -11045,6 +11038,31 @@ async function exportarPresupuestoPDF(){
 }
 
 
+// ── Filtro de partida en la tabla de horas ──
+function cargarFiltroPartidaHoras(){
+  const pid = document.getElementById('filter-proyecto-horas')?.value;
+  const sel = document.getElementById('filter-partida-horas');
+  if(!sel) return;
+  if(!pid || !HC){
+    sel.innerHTML = '<option value="">🔖 Partida…</option>';
+    return;
+  }
+  // Collect unique partidas from loaded records for this project
+  const partidas = [...new Set(HC.filter(h=>h.proyecto_id===pid && h.partida).map(h=>h.partida))].sort();
+  let opts = '<option value="">🔖 Partida…</option>';
+  if(partidas.length) opts += partidas.map(p=>`<option value="${p}">${p}</option>`).join('');
+  sel.innerHTML = opts;
+}
+
+function filtrarPartidasHorasTabla(){
+  const partida = document.getElementById('filter-partida-horas')?.value || '';
+  const rows = document.querySelectorAll('#horas-tbody tr');
+  rows.forEach(tr => {
+    if(!partida){ tr.style.display=''; return; }
+    const ds = tr.dataset.search || '';
+    tr.style.display = ds.includes(partida.toLowerCase()) ? '' : 'none';
+  });
+}
 
 // ── Carga partidas (versiones + unidades) al seleccionar proyecto en horas ──
 // ─────────────────────────────────────────────────────
@@ -11403,9 +11421,10 @@ async function loadControlHorario(){
       grid.innerHTML+=html;
     }
     // KPIs anuales
-    let ausencias=0;
+    let vacaciones=0, ausencias=0;
     Object.values(horasByFecha).forEach(r=>{
-      if(['Vacaciones','Enfermedad','Baja médica','Fallecimiento familiar'].includes(r.tipo)) ausencias++;
+      if(r.tipo==='Vacaciones') vacaciones++;
+      else if(['Enfermedad','Baja médica','Fallecimiento familiar','Asuntos personales','Permiso','Formación','Otros'].includes(r.tipo)) ausencias++;
     });
     const media = diasTrab>0 ? (totalHoras/diasTrab).toFixed(1) : 0;
     const kpisEl = document.getElementById('ch-kpis');
@@ -11413,6 +11432,7 @@ async function loadControlHorario(){
     document.getElementById('ch-kpi-dias').textContent = diasTrab+' días';
     document.getElementById('ch-kpi-horas').textContent = totalHoras+'h';
     document.getElementById('ch-kpi-media').textContent = media+'h';
+    document.getElementById('ch-kpi-vacaciones').textContent = vacaciones+' días';
     document.getElementById('ch-kpi-ausencias').textContent = ausencias+' días';
     document.getElementById('ch-resumen').textContent=`${diasTrab} días · ${totalHoras}h totales`;
   }catch(e){grid.innerHTML=`<div style="color:var(--red);padding:20px;grid-column:1/-1">Error: ${e.message}. Asegúrate de haber ejecutado el SQL de nuevas tablas.</div>`;}
