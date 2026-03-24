@@ -13174,20 +13174,46 @@ async function pvBuscarEmpresaIA(){
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 400,
-        system: 'Eres un asistente que busca datos de empresas españolas. Responde SOLO con JSON válido, sin texto adicional ni backticks. El JSON debe tener exactamente estos campos: cif, telefono, email, direccion, cp, poblacion, provincia, tipo (Proveedor/Subcontrata/Servicio), especialidad. Si no encuentras un dato pon cadena vacía. El CIF español empieza por letra (A,B,C...) seguida de 8 dígitos.',
-        messages:[{ role:'user', content:`Busca los datos de contacto y fiscales de la empresa española: "${nombre}". Devuelve solo el JSON.`}]
+        max_tokens: 600,
+        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+        system: `Eres un asistente que busca datos reales de empresas españolas usando búsqueda web.
+INSTRUCCIONES ESTRICTAS:
+- Busca la empresa en internet para obtener sus datos reales y actuales
+- Busca específicamente: CIF/NIF, dirección fiscal, teléfono, email, web, municipio, provincia, CP
+- El CIF español empieza por letra (A,B,C,E,F,G,H,J,N,P,Q,R,S,U,V,W) seguido de 7 dígitos y letra/número
+- Responde ÚNICAMENTE con JSON válido, sin texto adicional, sin markdown, sin backticks
+- Si un dato no aparece en los resultados de búsqueda, pon "" (cadena vacía) - NUNCA inventes datos
+- El CP debe ser el real de la empresa, NO pongas 28001 ni Madrid por defecto si no lo encuentras
+- Formato JSON exacto: {"cif":"","telefono":"","email":"","web":"","direccion":"","cp":"","poblacion":"","provincia":"","tipo":"Proveedor","especialidad":""}`,
+        messages:[{
+          role:'user',
+          content: 'Busca en internet los datos fiscales y de contacto de la empresa española: "' + nombre + '". Usa web_search para encontrar información real. Devuelve solo el JSON con los datos encontrados, dejando vacíos los que no encuentres.'
+        }]
       })
     });
 
     const data = await response.json();
-    const text = (data.content?.[0]?.text||'').trim().replace(/```json|```/g,'').trim();
 
+    // Extract text from response (may contain tool use blocks)
+    let text = '';
+    if(data.content){
+      for(const block of data.content){
+        if(block.type === 'text') text += block.text;
+      }
+    }
+    text = text.trim().replace(/```json|```/g,'').trim();
+
+    // Find JSON in response
+    const jsonStart = text.indexOf('{');
+    const jsonEnd = text.lastIndexOf('}');
+    if(jsonStart === -1 || jsonEnd === -1) throw new Error('No se encontraron datos para esta empresa');
+    
     let info;
-    try { info = JSON.parse(text); } catch(e){ throw new Error('No se pudo obtener información de esta empresa'); }
+    try { info = JSON.parse(text.slice(jsonStart, jsonEnd+1)); }
+    catch(e){ throw new Error('Error procesando la respuesta'); }
 
-    // Rellenar campos con la info obtenida
-    const set=(id,v)=>{ const el=document.getElementById(id); if(el&&v) el.value=v; };
+    // Fill fields — only if value is non-empty
+    const set=(id,v)=>{ const el=document.getElementById(id); if(el && v && v.toString().trim()) el.value=v.toString().trim(); };
     set('pv-cif', info.cif);
     set('pv-tel', info.telefono);
     set('pv-email', info.email);
@@ -13196,23 +13222,23 @@ async function pvBuscarEmpresaIA(){
     set('pv-poblacion', info.poblacion);
     set('pv-provincia', info.provincia);
     set('pv-esp', info.especialidad);
-    if(info.tipo){ const sel=document.getElementById('pv-tipo'); if(sel) sel.value=info.tipo; }
+    if(info.tipo){ const sel=document.getElementById('pv-tipo'); if(sel&&info.tipo) sel.value=info.tipo; }
     if(info.cif){ const sd=document.getElementById('pv-tipo-doc'); if(sd) sd.value='CIF'; }
 
-    // Contar campos rellenados
-    const filled = Object.values(info).filter(v=>v&&v.trim()).length;
+    const filled = Object.entries(info).filter(([k,v])=>v&&v.toString().trim()&&k!=='tipo').length;
     if(filled > 0){
       toast('✅ ' + filled + ' datos encontrados para "' + nombre + '"', 'success');
     } else {
-      toast('No se encontraron datos para esta empresa. Rellena manualmente.', 'warning');
+      toast('No se encontraron datos para "' + nombre + '". Prueba con el nombre completo o razón social.', 'warning');
     }
 
   } catch(e){
-    toast('No se pudieron obtener datos: '+e.message, 'error');
+    toast('Error en la búsqueda: ' + e.message, 'error');
   } finally {
     if(btn){ btn.disabled=false; btn.textContent='✨ Buscar datos'; }
   }
 }
+
 
 // Cerrar sugerencias al hacer clic fuera
 document.addEventListener('click', e=>{
