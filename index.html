@@ -4729,8 +4729,15 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <option value="baja">Baja</option><option value="normal" selected>Normal</option><option value="alta">Alta</option><option value="urgente">Urgente</option>
         </select>
       </div>
-      <div class="form-group fg-full"><label class="form-label">Proyecto</label>
-        <select class="form-input" id="ag-proyecto"><option value="">Sin proyecto</option></select>
+      <div class="form-group"><label class="form-label">Cliente</label>
+        <select class="form-input" id="ag-cliente" onchange="agFiltrarProyectos()">
+          <option value="">— Todos los clientes —</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Proyecto</label>
+        <select class="form-input" id="ag-proyecto">
+          <option value="">— Sin proyecto —</option>
+        </select>
       </div>
       <div class="form-group fg-full"><label class="form-label">Notas</label><textarea class="form-input" id="ag-notas" rows="3" style="resize:vertical"></textarea></div>
       <div class="form-group fg-full" style="display:flex;align-items:center;gap:10px">
@@ -15470,6 +15477,34 @@ const AG_TIPOS = {
   'Pago':'💶','Recordatorio':'📌','Otro':'📋'
 };
 
+
+function agPoblarClientes(){
+  const cliSel = document.getElementById('ag-cliente');
+  const proySel = document.getElementById('ag-proyecto');
+  if(!cliSel || !proySel) return;
+
+  // Populate clients from CC cache
+  const clientes = [...(CC||[])].sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||'','es'));
+  cliSel.innerHTML = '<option value="">— Todos los clientes —</option>' +
+    clientes.map(c=>`<option value="${c.cliente_id||c.id}">${c.nombre}</option>`).join('');
+
+  // Populate all projects initially
+  agFiltrarProyectos();
+}
+
+function agFiltrarProyectos(){
+  const cliSel = document.getElementById('ag-cliente');
+  const proySel = document.getElementById('ag-proyecto');
+  if(!proySel) return;
+
+  const cliId = cliSel?.value || '';
+  const proyectos = [...(PC||[])].filter(p => !cliId || p.cliente_id === cliId)
+    .sort((a,b)=>a.proyecto_id.localeCompare(b.proyecto_id,'es',{numeric:true}));
+
+  proySel.innerHTML = '<option value="">— Sin proyecto —</option>' +
+    proyectos.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
+}
+
 async function loadAgenda(){
   const tbody = document.getElementById('ag-tbody');
   if(!tbody) return;
@@ -15479,12 +15514,7 @@ async function loadAgenda(){
     renderAgenda();
     actualizarBadgeAgenda();
     // Poblar proyecto en modal
-    const sel = document.getElementById('ag-proyecto');
-    if(sel){
-      if(!PC.length) PC = await sbGet('proyectos').catch(()=>[]);
-      sel.innerHTML = '<option value="">— Sin proyecto —</option>'+
-        [...PC].sort((a,b)=>a.proyecto_id.localeCompare(b.proyecto_id,'es',{numeric:true})).map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
-    }
+    agPoblarClientes();
   }catch(e){
     tbody.innerHTML=`<tr><td colspan="9" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;
   }
@@ -15586,7 +15616,7 @@ function openAgendaModal(){
   document.getElementById('ag-notas').value='';
   document.getElementById('ag-notif').checked=true;
   const sel=document.getElementById('ag-proyecto');
-  if(sel&&typeof PC!=='undefined')sel.innerHTML='<option value="">Sin proyecto</option>'+[...PC].sort((a,b)=>a.proyecto_id.localeCompare(b.proyecto_id,'es',{numeric:true})).map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
+  agPoblarClientes();
   openModal('m-agenda');
 }
 
@@ -15601,7 +15631,17 @@ function editAgenda(id){
   document.getElementById('ag-prioridad').value=a.prioridad||'normal';
   document.getElementById('ag-notas').value=a.notas||'';
   document.getElementById('ag-notif').checked=a.notificacion!==false;
+  agPoblarClientes();
+  // Set cliente if known (find from proyecto)
+  if(a.proyecto_id){
+    const proy = (PC||[]).find(p=>p.proyecto_id===a.proyecto_id);
+    if(proy){
+      const cliSel=document.getElementById('ag-cliente');
+      if(cliSel){ cliSel.value=proy.cliente_id||''; agFiltrarProyectos(); }
+    }
+  }
   if(document.getElementById('ag-proyecto')) document.getElementById('ag-proyecto').value=a.proyecto_id||'';
+
   openModal('m-agenda');
 }
 
