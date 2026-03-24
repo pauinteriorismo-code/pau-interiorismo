@@ -11247,11 +11247,27 @@ async function savePedido(){
     importe:      parseFloat(document.getElementById('ped-importe').value)||0,
     estado:       document.getElementById('ped-estado').value,
     observaciones:document.getElementById('ped-obs').value,
-    adjuntos: JSON.stringify(window._pedAdjuntos||[])
   };
+  // adjuntos stored separately (column may not exist yet — use try/catch)
+  const adjuntosJson = JSON.stringify(window._pedAdjuntos||[]);
   try{
-    if(id){ await sb('pedidos','PATCH',d,null,`?id=eq.${id}`); toast('Pedido actualizado ✅'); }
-    else  { await sbPost('pedidos',d); toast('Pedido registrado ✅'); }
+    let savedId = id;
+    if(id){
+      await sb('pedidos','PATCH',d,null,`?id=eq.${id}`);
+      toast('Pedido actualizado ✅');
+    } else {
+      const res = await sbPost('pedidos',d);
+      if(res && res[0] && res[0].id) savedId = res[0].id;
+      toast('Pedido registrado ✅');
+    }
+    // Save adjuntos in separate PATCH to handle missing column gracefully
+    if(savedId && adjuntosJson !== '[]'){
+      try{
+        await sb('pedidos','PATCH',{adjuntos: adjuntosJson},null,`?id=eq.${savedId}`);
+      } catch(eAdj){
+        console.warn('adjuntos column not available yet:', eAdj.message);
+      }
+    }
     document.getElementById('ped-id').value='';
     document.querySelector('#m-pedido .modal-title').textContent='📦 Nuevo pedido';
     window._pedAdjuntos=[];
