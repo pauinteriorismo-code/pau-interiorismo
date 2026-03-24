@@ -4690,7 +4690,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 
       <div class="form-group fg-full"><label class="form-label">Referencia / Descripción</label><input class="form-input" id="ped-ref" placeholder="Ej: Azulejo baño modelo X, Mueble cocina ref.123..."></div>
       <div class="form-group"><label class="form-label">Importe €</label><input class="form-input" id="ped-importe" type="number" step="0.01"></div>
-      <div class="form-group"><label class="form-label">Estado</label><select class="form-input" id="ped-estado"><option>Cancelado</option><option>Confirmado</option><option>En tránsito</option><option>Pagado</option><option>Pendiente</option><option>Recibido</option><option>Solicitado</option></select></div>
+      <div class="form-group"><label class="form-label">Estado</label><select class="form-input" id="ped-estado"><option>Cancelado</option><option selected>Confirmado</option><option>En tránsito</option><option>Pagado</option><option>Pendiente</option><option>Recibido</option><option>Solicitado</option></select></div>
       <div class="form-group fg-full"><label class="form-label">Observaciones</label><input class="form-input" id="ped-obs"></div>
     </div>
     <!-- Adjuntos PDF -->
@@ -5747,18 +5747,24 @@ function _autoSelectPedidoDoc(ped){
           proySel.value = ped.proyecto_id;
           filtrarPedidosPorProyecto();
         }
-        // 3. Pedido (after pedido list is populated)
+        // 3. Pedido
         setTimeout(()=>{
           const pedSel = document.getElementById('pd-pedido-sel');
           if(pedSel && ped.id){
-            // Options have value = p.id (UUID)
             pedSel.value = String(ped.id);
             if(pedSel.value) cargarPedidoEnDoc();
+            else {
+              // Option not found - populate all and retry
+              pedSel.innerHTML = '<option value="">— Pedido… —</option>'
+                + PedC.filter(p=>p.proyecto_id===ped.proyecto_id).map(p=>`<option value="${p.id}">${p.num_pedido||p.id}</option>`).join('');
+              pedSel.value = String(ped.id);
+              if(pedSel.value) cargarPedidoEnDoc();
+            }
           }
-        }, 200);
-      }, 200);
+        }, 300);
+      }, 300);
     } catch(e){ console.warn('Auto-select error:', e); }
-  }, 400); // wait for loaders
+  }, 800); // wait for loaders
 }
 
 function navTo(v){
@@ -10802,15 +10808,28 @@ async function loadHoras(){
 
 // Navega a Doc.Pedido y carga el pedido con ese ID
 function abrirDocPedido(pedidoId){
-  // Find the pedido data
   const ped = PedC.find(p=>String(p.id)===String(pedidoId));
-  // Store for auto-select after navTo
-  window._lastSavedPedido = ped ? {
-    id: ped.id,
-    cliente_id: ped.cliente_id,
-    proyecto_id: ped.proyecto_id
-  } : null;
+  if(!ped){ navTo('pedido_doc'); return; }
+  // Store for _autoSelectPedidoDoc in navTo
+  window._lastSavedPedido = { id: ped.id, cliente_id: ped.cliente_id, proyecto_id: ped.proyecto_id };
   navTo('pedido_doc');
+  // Also directly call initPedidoDoc and set value once done
+  setTimeout(()=>{
+    initPedidoDoc().then(()=>{
+      // Set client/project dropdowns
+      const cliSel = document.getElementById('filter-cliente-pedido_doc');
+      if(cliSel && ped.cliente_id){ cliSel.value = ped.cliente_id; cascadaDocPedido(); }
+      setTimeout(()=>{
+        const proySel = document.getElementById('filter-proyecto-pedido_doc');
+        if(proySel && ped.proyecto_id){ proySel.value = ped.proyecto_id; filtrarPedidosPorProyecto(); }
+        // pd-pedido-sel already has all pedidos from initPedidoDoc
+        setTimeout(()=>{
+          const pedSel = document.getElementById('pd-pedido-sel');
+          if(pedSel){ pedSel.value = String(ped.id); cargarPedidoEnDoc(); }
+        }, 100);
+      }, 100);
+    });
+  }, 100);
 }
 
 // Nuevo pedido en blanco
