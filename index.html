@@ -17840,6 +17840,10 @@ function catAbrir(fab){
   if(fab === 'saitra'){
     document.getElementById('cat-panel-saitra').classList.add('open');
     if(typeof initSaitraLinea === 'function') initSaitraLinea();
+    if(typeof saitraRefChange === 'function') saitraRefChange();
+    if(typeof saitraAccTipoChange === 'function') saitraAccTipoChange();
+    if(typeof saitraZocChange === 'function') saitraZocChange();
+    if(typeof saitraGolaChange === 'function') saitraGolaChange();
   } else if(fab === 'imex'){
     document.getElementById('cat-panel-imex').classList.add('open');
     ixFillSeries(); ixRender();
