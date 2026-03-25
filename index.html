@@ -3167,7 +3167,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <div id="ch-resumen" style="margin-left:auto;font-size:12px;color:var(--text-soft)"></div>
       </div>
       <!-- KPIs anuales -->
-      <div id="ch-kpis" style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px;display:none">
+      <div id="ch-kpis" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;display:none">
         <div style="background:#fff;border-radius:8px;padding:12px 14px;border:1px solid var(--border)">
           <div style="font-size:10px;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px">Días trabajados</div>
           <div id="ch-kpi-dias" style="font-size:20px;font-weight:800;color:var(--navy)">—</div>
@@ -3180,12 +3180,8 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <div style="font-size:10px;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px">Media horas/día</div>
           <div id="ch-kpi-media" style="font-size:20px;font-weight:800;color:var(--amber)">—</div>
         </div>
-        <div style="background:#e3f2fd;border-radius:8px;padding:12px 14px;border:1px solid #1e88e5">
-          <div style="font-size:10px;color:#1565c0;text-transform:uppercase;letter-spacing:.5px">🏖 Vacaciones</div>
-          <div id="ch-kpi-vacaciones" style="font-size:20px;font-weight:800;color:#1e88e5">—</div>
-        </div>
-        <div style="background:#fce4ec;border-radius:8px;padding:12px 14px;border:1px solid #e91e63">
-          <div style="font-size:10px;color:#880e4f;text-transform:uppercase;letter-spacing:.5px">🤒 Bajas / Ausencias</div>
+        <div style="background:#fff;border-radius:8px;padding:12px 14px;border:1px solid var(--border)">
+          <div style="font-size:10px;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px">Vacaciones / Bajas</div>
           <div id="ch-kpi-ausencias" style="font-size:20px;font-weight:800;color:var(--red)">—</div>
         </div>
       </div>
@@ -10950,13 +10946,19 @@ function renderPedidoLineas(){
   }
   tbody.innerHTML=window.pdLineas.map((l,i)=>`
     <tr style="border-bottom:1px solid #ddd">
-      <td style="padding:4px 6px;text-align:center;border-right:1px solid #ddd;width:64px;min-height:24px">
-        <input value="${l.cant}" oninput="window.pdLineas[${i}].cant=this.value" style="width:54px;text-align:center;font-size:12px;font-family:'Inter',Arial;border:none;outline:none;background:transparent;min-height:20px" placeholder="">
+      <td style="padding:4px 6px;text-align:center;border-right:1px solid #ddd;width:64px;vertical-align:top;padding-top:6px">
+        <input value="${l.cant}" oninput="window.pdLineas[${i}].cant=this.value" style="width:54px;text-align:center;font-size:12px;font-family:'Inter',Arial;border:none;outline:none;background:transparent" placeholder="">
       </td>
-      <td style="padding:4px 6px;min-height:24px">
-        <input value="${l.desc}" oninput="window.pdLineas[${i}].desc=this.value" style="width:100%;font-size:12px;font-family:'Inter',Arial;border:none;outline:none;background:transparent;min-height:20px" placeholder="">
+      <td style="padding:2px 6px">
+        <textarea oninput="window.pdLineas[${i}].desc=this.value;autoGrowPd(this)" style="width:100%;font-size:12px;font-family:'Inter',Arial;border:none;outline:none;background:transparent;resize:none;overflow:hidden;line-height:1.5;padding:2px 0;min-height:24px;display:block;white-space:pre-wrap;word-break:break-word" rows="1" placeholder="">${l.desc}</textarea>
       </td>
     </tr>`).join('');
+  // Ajustar altura de todas las textareas tras renderizar
+  tbody.querySelectorAll('textarea').forEach(ta => autoGrowPd(ta));
+}
+function autoGrowPd(el){
+  el.style.height='auto';
+  el.style.height=el.scrollHeight+'px';
 }
 function addPedidoLinea(){
   if(!window.pdLineas)window.pdLineas=[];
@@ -10995,10 +10997,11 @@ async function exportarPDF(elementId, nombreArchivo){
         // Convertir inputs y textareas a elementos de texto para mejor nitidez
         doc.querySelectorAll('input[type="text"],input:not([type]),input[type="date"],textarea').forEach(function(inp){
           if(inp.closest('.no-print')) return;
-          const span = doc.createElement('span');
+          const isTextarea = inp.tagName === 'TEXTAREA';
+          const span = doc.createElement(isTextarea ? 'div' : 'span');
           span.textContent = inp.value || inp.placeholder || '';
           span.style.cssText = window.getComputedStyle(inp).cssText;
-          span.style.display = 'inline-block';
+          span.style.display = isTextarea ? 'block' : 'inline-block';
           span.style.border = inp.style.border || 'none';
           span.style.background = inp.style.background || 'transparent';
           span.style.width = inp.offsetWidth + 'px';
@@ -11008,6 +11011,17 @@ async function exportarPDF(elementId, nombreArchivo){
           span.style.color = window.getComputedStyle(inp).color || '#1a1a2e';
           span.style.webkitFontSmoothing = 'antialiased';
           span.style.textRendering = 'optimizeLegibility';
+          if(isTextarea){
+            span.style.whiteSpace = 'pre-wrap';
+            span.style.wordBreak = 'break-word';
+            span.style.resize = 'none';
+            span.style.overflow = 'visible';
+            span.style.lineHeight = window.getComputedStyle(inp).lineHeight;
+            span.style.padding = '2px 0';
+            // Para que en PDF ocupe el mismo espacio visual que la textarea expandida
+            span.style.height = 'auto';
+            span.style.minHeight = inp.offsetHeight + 'px';
+          }
           inp.parentNode.replaceChild(span, inp);
         });
         // Suavizado global en el clon
@@ -11421,10 +11435,9 @@ async function loadControlHorario(){
       grid.innerHTML+=html;
     }
     // KPIs anuales
-    let vacaciones=0, ausencias=0;
+    let ausencias=0;
     Object.values(horasByFecha).forEach(r=>{
-      if(r.tipo==='Vacaciones') vacaciones++;
-      else if(['Enfermedad','Baja médica','Fallecimiento familiar','Asuntos personales','Permiso','Formación','Otros'].includes(r.tipo)) ausencias++;
+      if(['Vacaciones','Enfermedad','Baja médica','Fallecimiento familiar'].includes(r.tipo)) ausencias++;
     });
     const media = diasTrab>0 ? (totalHoras/diasTrab).toFixed(1) : 0;
     const kpisEl = document.getElementById('ch-kpis');
@@ -11432,7 +11445,6 @@ async function loadControlHorario(){
     document.getElementById('ch-kpi-dias').textContent = diasTrab+' días';
     document.getElementById('ch-kpi-horas').textContent = totalHoras+'h';
     document.getElementById('ch-kpi-media').textContent = media+'h';
-    document.getElementById('ch-kpi-vacaciones').textContent = vacaciones+' días';
     document.getElementById('ch-kpi-ausencias').textContent = ausencias+' días';
     document.getElementById('ch-resumen').textContent=`${diasTrab} días · ${totalHoras}h totales`;
   }catch(e){grid.innerHTML=`<div style="color:var(--red);padding:20px;grid-column:1/-1">Error: ${e.message}. Asegúrate de haber ejecutado el SQL de nuevas tablas.</div>`;}
