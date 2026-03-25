@@ -1824,7 +1824,10 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <input type="number" class="form-input" id="s-margen" value="70" min="0" max="200" style="width:65px" oninput="saitraRecalc()">
           <span style="font-size:12px;color:var(--text-soft)">%</span>
         </div>
-        <button class="btn btn-ghost btn-sm" onclick="saitraLimpiar()" style="margin-left:auto;color:var(--danger)">🗑 Limpiar todo</button>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:6px">
+          <span id="s-guardado-lbl" style="font-size:10px;color:var(--text-soft);font-style:italic"></span>
+          <button class="btn btn-ghost btn-sm" onclick="saitraLimpiar()" style="color:var(--danger)">🗑 Limpiar</button>
+        </div>
       </div>
 
       <!-- ⚙️ CONFIGURACIÓN GLOBAL DE LA COCINA -->
@@ -9996,6 +9999,7 @@ function saitraAddIncremento(){
 function initSaitra(){
   saitraFrenteChange();
   saitraIncCalc();
+  saitraRestaurar();
   const sel = document.getElementById('s-proyecto');
   if(sel){
     if(!PC || !PC.length){
@@ -10253,6 +10257,88 @@ function saitraRenderTabla(){
   }).join('');
 }
 
+// ─── PERSISTENCIA SAITRA (localStorage) ───
+const SAITRA_LS_KEY = 'pau_saitra_valoracion_v1';
+
+function saitraGuardar(){
+  try {
+    const ahora = Date.now();
+    const estado = {
+      lineas:  saitraLineas,
+      idCnt:   saitraIdCnt,
+      margen:  document.getElementById('s-margen')?.value || '70',
+      proyecto:document.getElementById('s-proyecto')?.value || '',
+      frente1: document.getElementById('s-frente-1')?.value || '',
+      frente2: document.getElementById('s-frente-2')?.value || '',
+      frente3: document.getElementById('s-frente-3')?.value || '',
+      frente4: document.getElementById('s-frente-4')?.value || '',
+      col1:    document.getElementById('s-col-1')?.value || '4',
+      col2:    document.getElementById('s-col-2')?.value || '',
+      col3:    document.getElementById('s-col-3')?.value || '',
+      col4:    document.getElementById('s-col-4')?.value || '',
+      casco:   document.getElementById('s-casco')?.value || '',
+      cajones: document.getElementById('s-cajones')?.value || '',
+      vitrina: document.getElementById('s-vitrina')?.value || '',
+      ts:      ahora
+    };
+    localStorage.setItem(SAITRA_LS_KEY, JSON.stringify(estado));
+    // Actualizar label de estado
+    const lbl = document.getElementById('s-guardado-lbl');
+    if(lbl && saitraLineas.length){
+      const hora = new Date(ahora).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+      lbl.textContent = '💾 guardado '+hora;
+    }
+  } catch(e){ console.warn('Saitra: no se pudo guardar en localStorage', e); }
+}
+
+function saitraRestaurar(){
+  try {
+    const raw = localStorage.getItem(SAITRA_LS_KEY);
+    if(!raw) return;
+    const est = JSON.parse(raw);
+    if(!est || !Array.isArray(est.lineas) || !est.lineas.length) return;
+
+    saitraLineas = est.lineas;
+    saitraIdCnt  = est.idCnt || saitraLineas.length;
+
+    // Restaurar campos UI tras un pequeño delay (DOM debe estar listo)
+    setTimeout(()=>{
+      const set = (id, val) => { const el = document.getElementById(id); if(el && val !== undefined) el.value = val; };
+      set('s-margen',   est.margen);
+      set('s-proyecto', est.proyecto);
+      set('s-frente-1', est.frente1);
+      set('s-frente-2', est.frente2);
+      set('s-frente-3', est.frente3);
+      set('s-frente-4', est.frente4);
+      set('s-col-1',    est.col1);
+      set('s-col-2',    est.col2);
+      set('s-col-3',    est.col3);
+      set('s-col-4',    est.col4);
+      set('s-casco',    est.casco);
+      set('s-cajones',  est.cajones);
+      set('s-vitrina',  est.vitrina);
+      // Disparar cambios para sincronizar tarifas/labels
+      saitraFrenteChange();
+      saitraRenderTabla();
+      saitraRecalc();
+      // Mostrar aviso de restauración
+      const n = saitraLineas.length;
+      const fecha = est.ts ? new Date(est.ts).toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '—';
+      toast('📂 Valoración restaurada: '+n+' partida'+(n!==1?'s':'')+' (guardada '+fecha+')','info');
+    }, 300);
+  } catch(e){ console.warn('Saitra: no se pudo restaurar', e); }
+}
+
+function saitraBorrarGuardado(){
+  if(!confirm('¿Borrar la valoración guardada en el navegador? Esto no afecta a presupuestos ya exportados.')) return;
+  localStorage.removeItem(SAITRA_LS_KEY);
+  saitraLineas = [];
+  saitraIdCnt  = 0;
+  saitraRenderTabla();
+  saitraRecalc();
+  toast('🗑 Valoración borrada del navegador');
+}
+
 function saitraRecalc(){
   const margen = parseFloat(document.getElementById('s-margen')?.value)||70;
   document.getElementById('s-tot-margen-lbl').textContent = margen;
@@ -10283,13 +10369,18 @@ function saitraRecalc(){
   saitraPuntosPreview();
   saitraAccTipoChange();
   saitraZocChange();
+  saitraGuardar();
 }
 
 function saitraLimpiar(){
-  if(saitraLineas.length && !confirm('¿Limpiar todas las partidas de la valoración actual?')) return;
+  if(saitraLineas.length && !confirm('¿Limpiar todas las partidas de la valoración actual?\n\nTambién se borrará del guardado automático.')) return;
   saitraLineas=[];
+  saitraIdCnt=0;
+  try{ localStorage.removeItem(SAITRA_LS_KEY); }catch(e){}
   saitraRenderTabla();
   saitraRecalc();
+  const lbl = document.getElementById('s-guardado-lbl');
+  if(lbl) lbl.textContent = '';
 }
 
 async function saitraExportarPresupuesto(){
