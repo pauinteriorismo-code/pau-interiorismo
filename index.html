@@ -1802,15 +1802,19 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
             <option value="">— Seleccionar —</option>
           </select>
         </div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <label style="font-size:12px;font-weight:600;color:var(--text-soft)">Col. tarifa:</label>
-          <select class="form-input" id="s-col" style="width:70px" onchange="saitraPuntosPreview()">
-            <option value="1">1</option><option value="2">2</option><option value="3">3</option>
-            <option value="4" selected>4</option><option value="5">5</option><option value="6">6</option>
-            <option value="7">7</option><option value="8">8</option><option value="9">9</option>
-            <option value="10">10</option>
-          </select>
-          <span style="font-size:11px;color:var(--text-soft)">(se fija automático con acabado)</span>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <span style="font-size:11px;font-weight:700;background:var(--copper);color:white;padding:2px 5px;border-radius:3px">M1</span>
+          <select class="form-input" id="s-col-1" style="width:50px" onchange="saitraPuntosPreview()"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4" selected>4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select>
+          <span id="s-col-1-lbl" style="font-size:10px;color:var(--copper);font-weight:600"></span>
+          <span style="font-size:11px;font-weight:700;background:#1565c0;color:white;padding:2px 5px;border-radius:3px;margin-left:8px">M2</span>
+          <select class="form-input" id="s-col-2" style="width:50px" onchange="saitraPuntosPreview()"><option value="">—</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select>
+          <span id="s-col-2-lbl" style="font-size:10px;color:#1565c0;font-weight:600"></span>
+          <span style="font-size:11px;font-weight:700;background:#2e7d32;color:white;padding:2px 5px;border-radius:3px;margin-left:8px">M3</span>
+          <select class="form-input" id="s-col-3" style="width:50px" onchange="saitraPuntosPreview()"><option value="">—</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select>
+          <span id="s-col-3-lbl" style="font-size:10px;color:#2e7d32;font-weight:600"></span>
+          <span style="font-size:11px;font-weight:700;background:#7b5ea7;color:white;padding:2px 5px;border-radius:3px;margin-left:8px">M4</span>
+          <select class="form-input" id="s-col-4" style="width:50px" onchange="saitraPuntosPreview()"><option value="">—</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select>
+          <span id="s-col-4-lbl" style="font-size:10px;color:#7b5ea7;font-weight:600"></span>
         </div>
         <div style="display:flex;align-items:center;gap:8px;background:#f0f9f0;padding:5px 10px;border-radius:6px;border:1px solid #c8e6c9">
           <span style="font-size:11px;color:#2e7d32">💰 Coste = Pts × 0,99€ · PVP = Coste × (1+margen%)</span>
@@ -1826,12 +1830,12 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <!-- ⚙️ CONFIGURACIÓN GLOBAL DE LA COCINA -->
       <div class="card" style="margin-bottom:14px;border-left:4px solid var(--copper)">
         <div style="padding:10px 14px 6px;font-size:11px;font-weight:700;text-transform:uppercase;color:var(--copper);letter-spacing:.06em">⚙️ Configuración de la cocina <span style="font-weight:400;font-size:10px;color:var(--text-soft);text-transform:none">(aplica a todos los módulos)</span></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;padding:10px 14px 14px">
+        <div style="display:grid;grid-template-columns:repeat(4,1fr) repeat(3,0.85fr);gap:8px;padding:10px 14px 14px">
 
           <!-- 1. ACABADO FRENTE -->
           <div>
             <label class="form-label">🎨 Acabado frente <span style="font-weight:400;color:var(--text-soft)">(fija tarifa)</span></label>
-            <select class="form-input" id="s-frente" onchange="saitraFrenteChange()">
+            <select class="form-input" id="s-frente-1" onchange="saitraFrenteChange()">
               <option value="">— Manual —</option>
 
               <optgroup label="━━ LAMINADOS ━━">
@@ -1916,7 +1920,230 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
             </select>
           </div>
 
-          <!-- 2. VITRINAS -->
+          <!-- 2-4. ACABADO FRENTE MODELOS 2-4 (opcionales) -->
+          <div>
+            <label class="form-label">🎨 <span style="color:#1565c0;font-weight:700">M2</span> Frente <span style="font-weight:400;color:var(--text-soft)">(opcional)</span></label>
+            <select class="form-input" id="s-frente-2" onchange="saitraFrenteChange()">              <option value="">— No usar —</option>
+              <optgroup label="━━ LAMINADOS ━━">
+                <option value="Kariba|1">Kariba · T.1</option>
+                <option value="Alice|1">Alice · T.1</option>
+                <option value="Nordik|1">Nordik · T.1</option>
+                <option value="Kleeia|1">Kleeia · T.1</option>
+                <option value="Atria|1">Atria · T.1</option>
+                <option value="Izar|2">Izar · T.2</option>
+                <option value="Lure|2">Lure · T.2</option>
+                <option value="Tubalu|3">Tubalu · T.3</option>
+                <option value="Narai Laminado|3">Narai Laminado · T.3</option>
+                <option value="Naos|4">Naos · T.4</option>
+              </optgroup>
+              <optgroup label="━━ ESTRATIFICADOS Y PET ━━">
+                <option value="Bora Blanco|2">Bora Blanco/Mate · T.2</option>
+                <option value="Bora Color|3">Bora Color · T.3</option>
+                <option value="Lunda|3">Lunda · T.3</option>
+                <option value="Morget Blanco|2">Morget Blanco Seda/Brillo · T.2</option>
+                <option value="Morget Color|3">Morget Colores Seda · T.3</option>
+                <option value="Morget Metal|4">Morget Metal · T.4</option>
+                <option value="Morget 45 Blanco|3">Morget 45 Blanco · T.3</option>
+                <option value="Morget 45 Color|4">Morget 45 Color · T.4</option>
+                <option value="Narai PET Blanco|3">Narai PET Blanco · T.3</option>
+                <option value="Narai PET Color|4">Narai PET Color (Ante/Gris) · T.4</option>
+                <option value="Alice Veta Vertical|2">Alice Veta Vertical · T.2</option>
+                <option value="Fénix|5">Fénix · T.5</option>
+                <option value="Fénix 45|6">Fénix 45 · T.6</option>
+              </optgroup>
+              <optgroup label="━━ MADERAS ━━">
+                <option value="Nemin Roble/Fresno|7">Nemin Roble/Fresno · T.7</option>
+                <option value="Nemin Nogal/Fumé|8">Nemin Nogal/Fumé · T.8</option>
+                <option value="Travis Roble|8">Travis Roble · T.8</option>
+                <option value="Belat|8">Belat Roble · T.8</option>
+                <option value="Smog|8">Smog Roble/Fresno · T.8</option>
+                <option value="Aore Roble|8">Aore Roble/Fresno · T.8</option>
+                <option value="Kara Roble|8">Kara Roble/Olmo · T.8</option>
+                <option value="Sayula Roble|8">Sayula Roble · T.8</option>
+                <option value="Deo|9">Deo Roble/Olmo · T.9</option>
+                <option value="Drinet Roble|9">Drinet Roble · T.9</option>
+                <option value="Tai Roble|9">Tai Roble · T.9</option>
+              </optgroup>
+              <optgroup label="━━ LACAS ━━">
+                <option value="Glass Blanco|3">Glass Blanco · T.3</option>
+                <option value="Glass Color|4">Glass Color · T.4</option>
+                <option value="Buran Blanco|4">Buran Blanco · T.4</option>
+                <option value="Buran Color|5">Buran Colores · T.5</option>
+                <option value="Calma Blanco|5">Calma Blanco · T.5</option>
+                <option value="Vega Blanco|5">Vega Blanco · T.5</option>
+                <option value="Inari Blanco|6">Inari Blanco · T.6</option>
+                <option value="Sismo Blanco|5">Sismo Blanco · T.5</option>
+              </optgroup>
+              <optgroup label="━━ LAMINADOS ━━">
+                <option value="Kariba|1">Kariba · T.1</option>
+                <option value="Alice|1">Alice · T.1</option>
+                <option value="Nordik|1">Nordik · T.1</option>
+                <option value="Kleeia|1">Kleeia · T.1</option>
+                <option value="Atria|1">Atria · T.1</option>
+                <option value="Izar|2">Izar · T.2</option>
+                <option value="Lure|2">Lure · T.2</option>
+                <option value="Tubalu|3">Tubalu · T.3</option>
+                <option value="Narai Laminado|3">Narai Laminado · T.3</option>
+                <option value="Naos|4">Naos · T.4</option>
+              </optgroup>
+              <optgroup label="━━ ESTRATIFICADOS Y PET ━━">
+                <option value="Bora Blanco|2">Bora Blanco/Mate · T.2</option>
+                <option value="Bora Color|3">Bora Color · T.3</option>
+                <option value="Lunda|3">Lunda · T.3</option>
+                <option value="Morget Blanco|2">Morget Blanco Seda/Brillo · T.2</option>
+                <option value="Morget Color|3">Morget Colores Seda · T.3</option>
+                <option value="Morget Metal|4">Morget Metal · T.4</option>
+                <option value="Morget 45 Blanco|3">Morget 45 Blanco · T.3</option>
+                <option value="Morget 45 Color|4">Morget 45 Color · T.4</option>
+                <option value="Narai PET Blanco|3">Narai PET Blanco · T.3</option>
+                <option value="Narai PET Color|4">Narai PET Color (Ante/Gris) · T.4</option>
+                <option value="Alice Veta Vertical|2">Alice Veta Vertical · T.2</option>
+                <option value="Fénix|5">Fénix · T.5</option>
+                <option value="Fénix 45|6">Fénix 45 · T.6</option>
+              </optgroup>
+              <optgroup label="━━ MADERAS ━━">
+                <option value="Nemin Roble/Fresno|7">Nemin Roble/Fresno · T.7</option>
+                <option value="Nemin Nogal/Fumé|8">Nemin Nogal/Fumé · T.8</option>
+                <option value="Travis Roble|8">Travis Roble · T.8</option>
+                <option value="Belat|8">Belat Roble · T.8</option>
+                <option value="Smog|8">Smog Roble/Fresno · T.8</option>
+                <option value="Aore Roble|8">Aore Roble/Fresno · T.8</option>
+                <option value="Kara Roble|8">Kara Roble/Olmo · T.8</option>
+                <option value="Sayula Roble|8">Sayula Roble · T.8</option>
+                <option value="Deo|9">Deo Roble/Olmo · T.9</option>
+                <option value="Drinet Roble|9">Drinet Roble · T.9</option>
+                <option value="Tai Roble|9">Tai Roble · T.9</option>
+              </optgroup>
+              <optgroup label="━━ LACAS ━━">
+                <option value="Glass Blanco|3">Glass Blanco · T.3</option>
+                <option value="Glass Color|4">Glass Color · T.4</option>
+                <option value="Buran Blanco|4">Buran Blanco · T.4</option>
+                <option value="Buran Color|5">Buran Colores · T.5</option>
+                <option value="Calma Blanco|5">Calma Blanco · T.5</option>
+                <option value="Vega Blanco|5">Vega Blanco · T.5</option>
+                <option value="Inari Blanco|6">Inari Blanco · T.6</option>
+                <option value="Sismo Blanco|5">Sismo Blanco · T.5</option>
+              </optgroup>
+            </select>
+          </div>
+
+          <!-- 3. ACABADO FRENTE MODELO 3 (opcional) -->
+          <div>
+            <label class="form-label">🎨 <span style="color:#2e7d32;font-weight:700">M3</span> Frente <span style="font-weight:400;color:var(--text-soft)">(opcional)</span></label>
+            <select class="form-input" id="s-frente-3" onchange="saitraFrenteChange()">
+              <option value="">— No usar —</option>
+              <optgroup label="━━ LAMINADOS ━━">
+                <option value="Kariba|1">Kariba · T.1</option>
+                <option value="Alice|1">Alice · T.1</option>
+                <option value="Nordik|1">Nordik · T.1</option>
+                <option value="Kleeia|1">Kleeia · T.1</option>
+                <option value="Atria|1">Atria · T.1</option>
+                <option value="Izar|2">Izar · T.2</option>
+                <option value="Lure|2">Lure · T.2</option>
+                <option value="Tubalu|3">Tubalu · T.3</option>
+                <option value="Narai Laminado|3">Narai Laminado · T.3</option>
+                <option value="Naos|4">Naos · T.4</option>
+              </optgroup>
+              <optgroup label="━━ ESTRATIFICADOS Y PET ━━">
+                <option value="Bora Blanco|2">Bora Blanco/Mate · T.2</option>
+                <option value="Bora Color|3">Bora Color · T.3</option>
+                <option value="Lunda|3">Lunda · T.3</option>
+                <option value="Morget Blanco|2">Morget Blanco Seda/Brillo · T.2</option>
+                <option value="Morget Color|3">Morget Colores Seda · T.3</option>
+                <option value="Morget Metal|4">Morget Metal · T.4</option>
+                <option value="Morget 45 Blanco|3">Morget 45 Blanco · T.3</option>
+                <option value="Morget 45 Color|4">Morget 45 Color · T.4</option>
+                <option value="Narai PET Blanco|3">Narai PET Blanco · T.3</option>
+                <option value="Narai PET Color|4">Narai PET Color (Ante/Gris) · T.4</option>
+                <option value="Alice Veta Vertical|2">Alice Veta Vertical · T.2</option>
+                <option value="Fénix|5">Fénix · T.5</option>
+                <option value="Fénix 45|6">Fénix 45 · T.6</option>
+              </optgroup>
+              <optgroup label="━━ MADERAS ━━">
+                <option value="Nemin Roble/Fresno|7">Nemin Roble/Fresno · T.7</option>
+                <option value="Nemin Nogal/Fumé|8">Nemin Nogal/Fumé · T.8</option>
+                <option value="Travis Roble|8">Travis Roble · T.8</option>
+                <option value="Belat|8">Belat Roble · T.8</option>
+                <option value="Smog|8">Smog Roble/Fresno · T.8</option>
+                <option value="Aore Roble|8">Aore Roble/Fresno · T.8</option>
+                <option value="Kara Roble|8">Kara Roble/Olmo · T.8</option>
+                <option value="Sayula Roble|8">Sayula Roble · T.8</option>
+                <option value="Deo|9">Deo Roble/Olmo · T.9</option>
+                <option value="Drinet Roble|9">Drinet Roble · T.9</option>
+                <option value="Tai Roble|9">Tai Roble · T.9</option>
+              </optgroup>
+              <optgroup label="━━ LACAS ━━">
+                <option value="Glass Blanco|3">Glass Blanco · T.3</option>
+                <option value="Glass Color|4">Glass Color · T.4</option>
+                <option value="Buran Blanco|4">Buran Blanco · T.4</option>
+                <option value="Buran Color|5">Buran Colores · T.5</option>
+                <option value="Calma Blanco|5">Calma Blanco · T.5</option>
+                <option value="Vega Blanco|5">Vega Blanco · T.5</option>
+                <option value="Inari Blanco|6">Inari Blanco · T.6</option>
+                <option value="Sismo Blanco|5">Sismo Blanco · T.5</option>
+              </optgroup>
+            </select>
+          </div>
+
+          <!-- 4. ACABADO FRENTE MODELO 4 (opcional) -->
+          <div>
+            <label class="form-label">🎨 <span style="color:#7b5ea7;font-weight:700">M4</span> Frente <span style="font-weight:400;color:var(--text-soft)">(opcional)</span></label>
+            <select class="form-input" id="s-frente-4" onchange="saitraFrenteChange()">
+              <option value="">— No usar —</option>
+              <optgroup label="━━ LAMINADOS ━━">
+                <option value="Kariba|1">Kariba · T.1</option>
+                <option value="Alice|1">Alice · T.1</option>
+                <option value="Nordik|1">Nordik · T.1</option>
+                <option value="Kleeia|1">Kleeia · T.1</option>
+                <option value="Atria|1">Atria · T.1</option>
+                <option value="Izar|2">Izar · T.2</option>
+                <option value="Lure|2">Lure · T.2</option>
+                <option value="Tubalu|3">Tubalu · T.3</option>
+                <option value="Narai Laminado|3">Narai Laminado · T.3</option>
+                <option value="Naos|4">Naos · T.4</option>
+              </optgroup>
+              <optgroup label="━━ ESTRATIFICADOS Y PET ━━">
+                <option value="Bora Blanco|2">Bora Blanco/Mate · T.2</option>
+                <option value="Bora Color|3">Bora Color · T.3</option>
+                <option value="Lunda|3">Lunda · T.3</option>
+                <option value="Morget Blanco|2">Morget Blanco Seda/Brillo · T.2</option>
+                <option value="Morget Color|3">Morget Colores Seda · T.3</option>
+                <option value="Morget Metal|4">Morget Metal · T.4</option>
+                <option value="Morget 45 Blanco|3">Morget 45 Blanco · T.3</option>
+                <option value="Morget 45 Color|4">Morget 45 Color · T.4</option>
+                <option value="Narai PET Blanco|3">Narai PET Blanco · T.3</option>
+                <option value="Narai PET Color|4">Narai PET Color (Ante/Gris) · T.4</option>
+                <option value="Alice Veta Vertical|2">Alice Veta Vertical · T.2</option>
+                <option value="Fénix|5">Fénix · T.5</option>
+                <option value="Fénix 45|6">Fénix 45 · T.6</option>
+              </optgroup>
+              <optgroup label="━━ MADERAS ━━">
+                <option value="Nemin Roble/Fresno|7">Nemin Roble/Fresno · T.7</option>
+                <option value="Nemin Nogal/Fumé|8">Nemin Nogal/Fumé · T.8</option>
+                <option value="Travis Roble|8">Travis Roble · T.8</option>
+                <option value="Belat|8">Belat Roble · T.8</option>
+                <option value="Smog|8">Smog Roble/Fresno · T.8</option>
+                <option value="Aore Roble|8">Aore Roble/Fresno · T.8</option>
+                <option value="Kara Roble|8">Kara Roble/Olmo · T.8</option>
+                <option value="Sayula Roble|8">Sayula Roble · T.8</option>
+                <option value="Deo|9">Deo Roble/Olmo · T.9</option>
+                <option value="Drinet Roble|9">Drinet Roble · T.9</option>
+                <option value="Tai Roble|9">Tai Roble · T.9</option>
+              </optgroup>
+              <optgroup label="━━ LACAS ━━">
+                <option value="Glass Blanco|3">Glass Blanco · T.3</option>
+                <option value="Glass Color|4">Glass Color · T.4</option>
+                <option value="Buran Blanco|4">Buran Blanco · T.4</option>
+                <option value="Buran Color|5">Buran Colores · T.5</option>
+                <option value="Calma Blanco|5">Calma Blanco · T.5</option>
+                <option value="Vega Blanco|5">Vega Blanco · T.5</option>
+                <option value="Inari Blanco|6">Inari Blanco · T.6</option>
+                <option value="Sismo Blanco|5">Sismo Blanco · T.5</option>
+              </optgroup>
+            </select>
+          </div>
+
+          <!-- 5. VITRINAS -->
           <div>
             <label class="form-label">🪟 Vitrinas</label>
             <select class="form-input" id="s-vitrina">
@@ -1961,45 +2188,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <div style="display:flex;flex-direction:column;gap:10px">
 
           <!-- MUEBLES DE LÍNEA (Colgantes, Sobrecolumnas, Sobreencimeras) -->
-          <div class="card" style="padding:14px;border-left:4px solid #1565c0">
-            <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#1565c0;margin-bottom:10px;letter-spacing:.05em">📐 Mueble de Línea (pts × 0,99€)</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
-              <div>
-                <label class="form-label">Tipo</label>
-                <select class="form-input" id="sl-tipo" onchange="saitraLineaTipoChange()"></select>
-              </div>
-              <div>
-                <label class="form-label">Acabado</label>
-                <select class="form-input" id="sl-acabado" onchange="saitraLineaPreview()">
-                  <option value="PET" selected>PET (Narai PET)</option>
-                  <option value="Laminado">Laminado</option>
-                  <option value="Estratificado">Estratificado</option>
-                  <option value="Laca">Laca</option>
-                  <option value="Madera">Madera</option>
-                </select>
-              </div>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr 70px;gap:8px;margin-bottom:8px">
-              <div>
-                <label class="form-label">Alto</label>
-                <select class="form-input" id="sl-alto" onchange="saitraLineaAltoChange()"></select>
-              </div>
-              <div>
-                <label class="form-label">Ancho</label>
-                <select class="form-input" id="sl-ancho" onchange="saitraLineaPreview()"></select>
-              </div>
-              <div>
-                <label class="form-label">Cant.</label>
-                <input type="number" class="form-input" id="sl-cant" value="1" min="1" max="99">
-              </div>
-            </div>
-            <div style="margin-bottom:8px">
-              <label class="form-label">Notas</label>
-              <input type="text" class="form-input" id="sl-notas" placeholder="Ej: con tirador, push…">
-            </div>
-            <div id="sl-preview" style="display:none;background:#f8f6f2;border-radius:6px;padding:8px 10px;font-size:11px;margin-bottom:8px"></div>
-            <button class="btn btn-primary btn-sm" style="width:100%;background:#1565c0;border:none" onclick="saitraLineaAdd()">＋ Añadir mueble de línea</button>
-          </div>
+          
 
           <!-- MÓDULOS POR PUNTOS -->
           <div class="card" style="padding:14px">
@@ -2273,11 +2462,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
                     <option value="PCBD221">PCBD221 · Columna botellero decorativo H.221/F.37-62</option>
                     <option value="PCTD221">PCTD221 · Columna terminal decorativo H.221/F.37-62</option>
                   </optgroup>
-                  <optgroup label="── INCREMENTOS ──">
-                    <option value="INC-RECORTE">Recorte de pilar</option>
-                    <option value="INC-ALTURA">Incremento altura columna</option>
-                    <option value="INC-OTROS">Otros incrementos</option>
-                  </optgroup>
+
                 </select>
               </div>
               <div>
@@ -2285,8 +2470,29 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
                 <select class="form-input" id="s-ancho" onchange="saitraPuntosPreview()"></select>
               </div>
             </div>
-                        <!-- Los acabados se configuran en el panel global arriba -->
-                        <div style="margin-top:8px;display:flex;gap:8px">
+                        <!-- Modelo y descripción adicional -->
+            <div style="margin-top:8px;display:flex;gap:8px;align-items:flex-end">
+              <div>
+                <label class="form-label">Modelo</label>
+                <div style="display:flex;gap:8px;padding:5px 7px;background:#f7f4ef;border-radius:6px;border:1px solid #e8e0d4;flex-wrap:wrap">
+                  <label style="display:flex;align-items:center;gap:3px;font-size:12px;cursor:pointer">
+                    <input type="radio" name="s-modelo" value="1" checked onchange="saitraPuntosPreview()">
+                    <span style="font-weight:700;color:var(--copper)">M1</span>
+                  </label>
+                  <label style="display:flex;align-items:center;gap:3px;font-size:12px;cursor:pointer">
+                    <input type="radio" name="s-modelo" value="2" onchange="saitraPuntosPreview()">
+                    <span style="font-weight:700;color:#1565c0">M2</span>
+                  </label>
+                  <label style="display:flex;align-items:center;gap:3px;font-size:12px;cursor:pointer">
+                    <input type="radio" name="s-modelo" value="3" onchange="saitraPuntosPreview()">
+                    <span style="font-weight:700;color:#2e7d32">M3</span>
+                  </label>
+                  <label style="display:flex;align-items:center;gap:3px;font-size:12px;cursor:pointer">
+                    <input type="radio" name="s-modelo" value="4" onchange="saitraPuntosPreview()">
+                    <span style="font-weight:700;color:#7b5ea7">M4</span>
+                  </label>
+                </div>
+              </div>
               <div style="flex:1">
                 <label class="form-label">Descripción adicional</label>
                 <input type="text" class="form-input" id="s-desc-mod" placeholder="ej. apertura, observación...">
@@ -2302,6 +2508,63 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
               <textarea class="form-input" id="s-notas-mod" rows="2" placeholder="ej. tirador vertical, apertura izquierda, mecanizado especial..." style="resize:vertical;font-size:11px"></textarea>
             </div>
             <button class="btn btn-primary btn-sm" style="margin-top:10px;width:100%" onclick="saitraAddModulo()">＋ Añadir módulo</button>
+          </div>
+
+          <!-- INCREMENTOS DE MUEBLE ESPECIAL -->
+          <div class="card" style="padding:14px;border-left:4px solid #7b5ea7">
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#7b5ea7;margin-bottom:10px;letter-spacing:.05em">⬆ Incremento (mueble especial)</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+              <div>
+                <label class="form-label">Tipo de mueble</label>
+                <select class="form-input" id="sinc-tipo" onchange="saitraIncCalc()">
+                  <option value="bases">Bases</option>
+                  <option value="colgantes">Colgantes</option>
+                  <option value="columnas">Columnas</option>
+                  <option value="sobreenc">Sobreenc./Sobrecol.</option>
+                </select>
+              </div>
+              <div>
+                <label class="form-label">Modelo</label>
+                <div style="display:flex;gap:8px;padding:5px 7px;background:#f7f4ef;border-radius:6px;border:1px solid #e8e0d4;flex-wrap:wrap">
+                  <label style="display:flex;align-items:center;gap:3px;font-size:12px;cursor:pointer">
+                    <input type="radio" name="sinc-modelo" value="1" checked>
+                    <span style="font-weight:700;color:var(--copper)">M1</span>
+                  </label>
+                  <label style="display:flex;align-items:center;gap:3px;font-size:12px;cursor:pointer">
+                    <input type="radio" name="sinc-modelo" value="2">
+                    <span style="font-weight:700;color:#1565c0">M2</span>
+                  </label>
+                  <label style="display:flex;align-items:center;gap:3px;font-size:12px;cursor:pointer">
+                    <input type="radio" name="sinc-modelo" value="3">
+                    <span style="font-weight:700;color:#2e7d32">M3</span>
+                  </label>
+                  <label style="display:flex;align-items:center;gap:3px;font-size:12px;cursor:pointer">
+                    <input type="radio" name="sinc-modelo" value="4">
+                    <span style="font-weight:700;color:#7b5ea7">M4</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div style="margin-bottom:8px">
+              <label class="form-label" style="margin-bottom:6px">Tipos de incremento <span style="font-weight:400;color:var(--text-soft)">(marca los que apliquen)</span></label>
+              <div id="sinc-checks" style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:11px"></div>
+            </div>
+            <div id="sinc-preview" style="display:none;background:#f3eef8;border-radius:6px;padding:8px 10px;font-size:11px;margin-bottom:8px;border:1px solid #d9c9ef"></div>
+            <div style="display:flex;gap:8px;margin-bottom:8px">
+              <div style="flex:1">
+                <label class="form-label">Descripción adicional</label>
+                <input type="text" class="form-input" id="sinc-desc" placeholder="ej. base 2G rincón 45cm especial">
+              </div>
+              <div style="width:60px">
+                <label class="form-label">Cant.</label>
+                <input type="number" class="form-input" id="sinc-cant" value="1" min="1" style="text-align:center">
+              </div>
+            </div>
+            <div style="margin-bottom:8px">
+              <label class="form-label">Notas</label>
+              <textarea class="form-input" id="sinc-notas" rows="2" style="resize:vertical;font-size:11px" placeholder="observaciones..."></textarea>
+            </div>
+            <button class="btn btn-primary btn-sm" style="margin-top:2px;width:100%;background:#7b5ea7;border:none" onclick="saitraAddIncremento()">＋ Añadir incremento</button>
           </div>
 
           <!-- ACCESORIOS POR PVP TARIFA -->
@@ -2485,6 +2748,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
               <table style="width:100%;border-collapse:collapse;font-size:12px">
                 <thead>
                   <tr style="background:#f7f4ef">
+                    <th style="background:#f7f4ef;color:#b87333;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4;text-align:center">Mod.</th>
                     <th style="background:#f7f4ef;color:#b87333;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 10px;border-bottom:1px solid #e8e0d4;text-align:left">Ref.</th>
                     <th style="background:#f7f4ef;color:#b87333;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 10px;border-bottom:1px solid #e8e0d4;text-align:left">Descripción</th>
                     <th style="background:#f7f4ef;color:#b87333;font-size:10px;font-weight:700;text-transform:uppercase;padding:8px 6px;border-bottom:1px solid #e8e0d4;text-align:center">Cant.</th>
@@ -2516,6 +2780,20 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
                 <div id="s-tot-venta" style="font-size:22px;font-weight:800;color:#2e7d32">0,00€</div>
               </div>
             </div>
+            <!-- Subtotales por modelo M1-M4 -->
+            <div id="s-tot-m1-row" style="margin-bottom:4px;padding:7px 12px;background:#fff8f0;border-radius:6px;border-left:3px solid var(--copper);font-size:12px">
+              <span style="font-weight:700;color:var(--copper)">M1</span> — PVP: <strong id="s-tot-m1">0,00€</strong>
+            </div>
+            <div id="s-tot-m2-row" style="display:none;margin-bottom:4px;padding:7px 12px;background:#f0f4ff;border-radius:6px;border-left:3px solid #1565c0;font-size:12px">
+              <span style="font-weight:700;color:#1565c0">M2</span> — PVP: <strong id="s-tot-m2">0,00€</strong>
+            </div>
+            <div id="s-tot-m3-row" style="display:none;margin-bottom:4px;padding:7px 12px;background:#f0fff4;border-radius:6px;border-left:3px solid #2e7d32;font-size:12px">
+              <span style="font-weight:700;color:#2e7d32">M3</span> — PVP: <strong id="s-tot-m3">0,00€</strong>
+            </div>
+            <div id="s-tot-m4-row" style="display:none;margin-bottom:4px;padding:7px 12px;background:#f5f0ff;border-radius:6px;border-left:3px solid #7b5ea7;font-size:12px">
+              <span style="font-weight:700;color:#7b5ea7">M4</span> — PVP: <strong id="s-tot-m4">0,00€</strong>
+            </div>
+
             <div style="padding:10px 12px;background:#fff3e0;border-radius:6px;border-left:3px solid #ff9800;font-size:11px;color:#e65100;margin-bottom:12px">
               🔒 El documento del cliente <strong>solo mostrará PVP</strong>. El coste es exclusivamente interno.
             </div>
@@ -5710,7 +5988,7 @@ const META={
   tarifario:{t:'Tarifario · Catálogo propio',b:''},
   cype:{t:'CYPE 2026 · 524 partidas',b:'Base de precios importada de tu Excel'},
   catalogos:{t:'Catálogos de Precios',b:'Saitra · IMEX · Campoaras — selecciona fabricante para presupuestar'},
-  saitra:{t:'Valorador Saitra · Cocinas',b:'Puntos × 0,99€ = coste | Margen editable | Muebles de Línea integrados'},
+  saitra:{t:'Valorador Saitra · Cocinas',b:'Puntos × 0,99€ = coste | Dos modelos (M1+M2) | Incrementos automáticos'},
   imex:{t:'Griferías IMEX 2024 · Presupuestador',b:'Catálogo completo · +3% tarifa · Dto 40% · Margen ajustable'},
   compras:{t:'Compras',b:''},subcontratas:{t:'Subcontratas',b:''},
   horas:{t:'Control de horas',b:''},pedidos:{t:'Registro de pedidos',b:''},
@@ -9530,275 +9808,6 @@ const PUNTO_PP = 0.99; // precio punto estándar Saitra
 // Precios en PUNTOS · 5 acabados: Lam/Estrat/PET/Laca/Madera
 // Punto × 0,99€ = coste
 // ═══════════════════════════════════════════════════════════════
-const SAITRA_LINEA = {
-  'Colgantes': {
-    label: 'Colgantes', icon: '🪟',
-    alturas: {
-      '26': {
-        45: {Laminado:77, Estratificado:82, PET:89, Laca:101, Madera:108},
-        50: {Laminado:82, Estratificado:89, PET:95, Laca:107, Madera:114},
-        60: {Laminado:91, Estratificado:97, PET:104, Laca:118, Madera:126},
-        70: {Laminado:99, Estratificado:107, PET:114, Laca:129, Madera:138},
-        80: {Laminado:103, Estratificado:110, PET:118, Laca:133, Madera:143},
-        90: {Laminado:107, Estratificado:114, PET:123, Laca:138, Madera:148},
-        100: {Laminado:112, Estratificado:122, PET:129, Laca:146, Madera:157},
-        110: {Laminado:119, Estratificado:128, PET:136, Laca:154, Madera:165},
-        120: {Laminado:126, Estratificado:135, PET:144, Laca:164, Madera:176}
-      },
-      '39': {
-        25: {Laminado:60, Estratificado:63, PET:68, Laca:77, Madera:82},
-        30: {Laminado:63, Estratificado:68, PET:73, Laca:82, Madera:89},
-        35: {Laminado:67, Estratificado:71, PET:76, Laca:87, Madera:92},
-        40: {Laminado:68, Estratificado:73, PET:77, Laca:89, Madera:95},
-        45: {Laminado:78, Estratificado:85, PET:90, Laca:102, Madera:109},
-        50: {Laminado:84, Estratificado:90, PET:96, Laca:109, Madera:116},
-        60: {Laminado:96, Estratificado:103, PET:109, Laca:129, Madera:133},
-        70: {Laminado:102, Estratificado:109, PET:116, Laca:132, Madera:142},
-        80: {Laminado:116, Estratificado:125, PET:133, Laca:152, Madera:161},
-        90: {Laminado:129, Estratificado:137, PET:146, Laca:167, Madera:178},
-        100: {Laminado:194, Estratificado:206, PET:217, Laca:242, Madera:256}
-      },
-      '52': {
-        25: {Laminado:70, Estratificado:75, PET:80, Laca:91, Madera:98},
-        30: {Laminado:75, Estratificado:80, PET:87, Laca:98, Madera:104},
-        35: {Laminado:77, Estratificado:82, PET:89, Laca:101, Madera:108},
-        40: {Laminado:81, Estratificado:88, PET:94, Laca:105, Madera:112},
-        45: {Laminado:94, Estratificado:99, PET:107, Laca:122, Madera:130},
-        50: {Laminado:95, Estratificado:101, PET:108, Laca:123, Madera:131},
-        60: {Laminado:101, Estratificado:108, PET:115, Laca:131, Madera:139},
-        70: {Laminado:108, Estratificado:115, PET:123, Laca:138, Madera:148},
-        80: {Laminado:123, Estratificado:131, PET:139, Laca:158, Madera:167},
-        90: {Laminado:135, Estratificado:143, PET:153, Laca:173, Madera:185}
-      },
-      '65': {
-        25: {Laminado:71, Estratificado:76, PET:82, Laca:94, Madera:99},
-        30: {Laminado:81, Estratificado:88, PET:94, Laca:105, Madera:112},
-        35: {Laminado:84, Estratificado:90, PET:96, Laca:109, Madera:116},
-        40: {Laminado:88, Estratificado:94, PET:99, Laca:112, Madera:122},
-        45: {Laminado:98, Estratificado:105, PET:112, Laca:128, Madera:137},
-        50: {Laminado:101, Estratificado:108, PET:115, Laca:131, Madera:139},
-        60: {Laminado:103, Estratificado:110, PET:118, Laca:133, Madera:143},
-        70: {Laminado:132, Estratificado:142, PET:152, Laca:172, Madera:184},
-        80: {Laminado:135, Estratificado:144, PET:154, Laca:174, Madera:187},
-        90: {Laminado:137, Estratificado:146, PET:157, Laca:178, Madera:191},
-        100: {Laminado:169, Estratificado:179, PET:191, Laca:213, Madera:227}
-      },
-      '78': {
-        25: {Laminado:77, Estratificado:82, PET:89, Laca:101, Madera:108},
-        30: {Laminado:92, Estratificado:98, PET:105, Laca:120, Madera:129},
-        35: {Laminado:95, Estratificado:101, PET:108, Laca:123, Madera:131},
-        40: {Laminado:98, Estratificado:105, PET:112, Laca:128, Madera:137},
-        45: {Laminado:104, Estratificado:111, PET:119, Laca:136, Madera:144},
-        50: {Laminado:107, Estratificado:114, PET:123, Laca:138, Madera:148},
-        60: {Laminado:109, Estratificado:116, PET:125, Laca:142, Madera:152},
-        70: {Laminado:139, Estratificado:149, PET:160, Laca:180, Madera:194},
-        80: {Laminado:143, Estratificado:153, PET:164, Laca:186, Madera:199},
-        90: {Laminado:146, Estratificado:157, PET:169, Laca:191, Madera:204},
-        100: {Laminado:179, Estratificado:191, PET:202, Laca:228, Madera:242}
-      },
-      '91': {
-        25: {Laminado:82, Estratificado:89, PET:95, Laca:107, Madera:114},
-        30: {Laminado:103, Estratificado:110, PET:118, Laca:133, Madera:143},
-        35: {Laminado:105, Estratificado:112, PET:122, Laca:137, Madera:146},
-        40: {Laminado:108, Estratificado:115, PET:124, Laca:140, Madera:151},
-        45: {Laminado:109, Estratificado:116, PET:125, Laca:142, Madera:152},
-        50: {Laminado:111, Estratificado:119, PET:128, Laca:144, Madera:156},
-        60: {Laminado:115, Estratificado:124, PET:132, Laca:149, Madera:160},
-        70: {Laminado:148, Estratificado:159, PET:170, Laca:192, Madera:206},
-        80: {Laminado:152, Estratificado:163, PET:173, Laca:197, Madera:211},
-        90: {Laminado:156, Estratificado:166, PET:178, Laca:201, Madera:215},
-        100: {Laminado:190, Estratificado:201, PET:213, Laca:240, Madera:256}
-      },
-    }
-  },
-  'Sobrecolumnas': {
-    label: 'Sobrecolumnas', icon: '🔲',
-    alturas: {
-      '39': {
-        25: {Laminado:77, Estratificado:81, PET:90, Laca:103, Madera:124},
-        30: {Laminado:81, Estratificado:87, PET:97, Laca:110, Madera:134},
-        35: {Laminado:86, Estratificado:90, PET:102, Laca:113, Madera:139},
-        40: {Laminado:87, Estratificado:93, PET:103, Laca:117, Madera:140},
-        45: {Laminado:98, Estratificado:105, PET:118, Laca:133, Madera:162},
-        50: {Laminado:104, Estratificado:111, PET:125, Laca:141, Madera:170},
-        60: {Laminado:118, Estratificado:126, PET:141, Laca:160, Madera:194},
-        70: {Laminado:130, Estratificado:138, PET:155, Laca:175, Madera:210},
-        80: {Laminado:146, Estratificado:156, PET:175, Laca:196, Madera:229},
-        90: {Laminado:160, Estratificado:170, PET:192, Laca:216, Madera:262},
-        100: {Laminado:194, Estratificado:206, PET:229, Laca:256, Madera:305}
-      },
-      '52': {
-        25: {Laminado:89, Estratificado:95, PET:105, Laca:120, Madera:145},
-        30: {Laminado:95, Estratificado:101, PET:112, Laca:127, Madera:155},
-        35: {Laminado:97, Estratificado:103, PET:117, Laca:132, Madera:159},
-        40: {Laminado:102, Estratificado:109, PET:120, Laca:137, Madera:166},
-        45: {Laminado:116, Estratificado:122, PET:137, Laca:157, Madera:189},
-        50: {Laminado:117, Estratificado:124, PET:140, Laca:158, Madera:191},
-        60: {Laminado:124, Estratificado:132, PET:148, Laca:167, Madera:203},
-        70: {Laminado:137, Estratificado:145, PET:162, Laca:182, Madera:217},
-        80: {Laminado:153, Estratificado:163, PET:182, Laca:203, Madera:235},
-        90: {Laminado:167, Estratificado:177, PET:199, Laca:223, Madera:268},
-        100: {Laminado:201, Estratificado:212, PET:235, Laca:263, Madera:312}
-      },
-      '65': {
-        25: {Laminado:90, Estratificado:96, PET:109, Laca:122, Madera:147},
-        30: {Laminado:102, Estratificado:109, PET:120, Laca:137, Madera:166},
-        35: {Laminado:104, Estratificado:111, PET:125, Laca:141, Madera:170},
-        40: {Laminado:109, Estratificado:116, PET:129, Laca:147, Madera:179},
-        45: {Laminado:120, Estratificado:129, PET:144, Laca:165, Madera:198},
-        50: {Laminado:124, Estratificado:132, PET:148, Laca:167, Madera:203},
-        60: {Laminado:126, Estratificado:134, PET:151, Laca:172, Madera:209},
-        70: {Laminado:164, Estratificado:175, PET:195, Laca:222, Madera:270},
-        80: {Laminado:167, Estratificado:178, PET:200, Laca:225, Madera:273},
-        90: {Laminado:170, Estratificado:180, PET:202, Laca:230, Madera:278},
-        100: {Laminado:206, Estratificado:217, PET:241, Laca:271, Madera:324}
-      },
-      '78': {
-        25: {Laminado:97, Estratificado:103, PET:117, Laca:132, Madera:159},
-        30: {Laminado:113, Estratificado:120, PET:136, Laca:155, Madera:187},
-        35: {Laminado:117, Estratificado:124, PET:140, Laca:158, Madera:191},
-        40: {Laminado:120, Estratificado:129, PET:144, Laca:165, Madera:198},
-        45: {Laminado:127, Estratificado:136, PET:152, Laca:173, Madera:210},
-        50: {Laminado:131, Estratificado:139, PET:157, Laca:177, Madera:215},
-        60: {Laminado:133, Estratificado:141, PET:159, Laca:181, Madera:219},
-        70: {Laminado:172, Estratificado:184, PET:207, Laca:234, Madera:284},
-        80: {Laminado:177, Estratificado:187, PET:210, Laca:239, Madera:289},
-        90: {Laminado:180, Estratificado:192, PET:216, Laca:245, Madera:296},
-        100: {Laminado:217, Estratificado:230, PET:256, Laca:288, Madera:345}
-      },
-    }
-  },
-  'Sobreencimeras': {
-    label: 'Sobreencimeras', icon: '🔳',
-    alturas: {
-      '114 (1p)': {
-        60: {Laminado:191, Estratificado:205, PET:232, Laca:264, Madera:323}
-      },
-      '114 (horno)': {
-        60: {Laminado:181, Estratificado:193, PET:216, Laca:245, Madera:295}
-      },
-      '114 (2p)': {
-        60: {Laminado:257, Estratificado:275, PET:313, Laca:358, Madera:440}
-      },
-      '127 (1p)': {
-        60: {Laminado:201, Estratificado:215, PET:242, Laca:274, Madera:333}
-      },
-      '127 (horno)': {
-        60: {Laminado:199, Estratificado:210, PET:237, Laca:271, Madera:323}
-      },
-      '127 (2p)': {
-        60: {Laminado:270, Estratificado:288, PET:326, Laca:371, Madera:453}
-      },
-      '140 (1p)': {
-        60: {Laminado:211, Estratificado:225, PET:252, Laca:284, Madera:343}
-      },
-      '140 (horno)': {
-        60: {Laminado:208, Estratificado:222, PET:249, Laca:281, Madera:340}
-      },
-      '140 (2p)': {
-        60: {Laminado:283, Estratificado:301, PET:339, Laca:384, Madera:466}
-      },
-    }
-  }
-};
-
-// Acabados de línea → columna de datos
-const LINEA_ACABADOS = ['Laminado','Estratificado','PET','Laca','Madera'];
-// Acabado por defecto (Narai PET = PET)
-const LINEA_ACABADO_DEF = 'PET';
-
-let saitraLineaSelTipo  = 'Colgantes';
-let saitraLineaSelAlto  = '';
-let saitraLineaSelAcab  = LINEA_ACABADO_DEF;
-
-function initSaitraLinea(){
-  const selTipo = document.getElementById('sl-tipo');
-  if(selTipo){
-    selTipo.innerHTML = Object.entries(SAITRA_LINEA)
-      .map(([k,v])=>`<option value="${k}">${v.icon} ${v.label}</option>`).join('');
-    selTipo.value = saitraLineaSelTipo;
-  }
-  const selAcab = document.getElementById('sl-acabado');
-  if(selAcab){
-    selAcab.innerHTML = LINEA_ACABADOS.map(a=>
-      `<option value="${a}" ${a===LINEA_ACABADO_DEF?'selected':''}>${a}</option>`).join('');
-  }
-  saitraLineaTipoChange();
-}
-
-function saitraLineaTipoChange(){
-  const tipo = document.getElementById('sl-tipo')?.value;
-  if(!tipo || !SAITRA_LINEA[tipo]) return;
-  const alturas = Object.keys(SAITRA_LINEA[tipo].alturas);
-  const selAlto = document.getElementById('sl-alto');
-  if(selAlto){
-    selAlto.innerHTML = alturas.map(a=>`<option value="${a}">H. ${a} cm</option>`).join('');
-    selAlto.value = alturas[0];
-  }
-  saitraLineaAltoChange();
-}
-
-function saitraLineaAltoChange(){
-  const tipo  = document.getElementById('sl-tipo')?.value;
-  const alto  = document.getElementById('sl-alto')?.value;
-  if(!tipo||!alto||!SAITRA_LINEA[tipo]?.alturas[alto]) return;
-  const anchos = Object.keys(SAITRA_LINEA[tipo].alturas[alto]).map(Number).sort((a,b)=>a-b);
-  const selAncho = document.getElementById('sl-ancho');
-  if(selAncho){
-    selAncho.innerHTML = anchos.map(a=>`<option value="${a}">${a} cm</option>`).join('');
-  }
-  saitraLineaPreview();
-}
-
-function saitraLineaPreview(){
-  const tipo   = document.getElementById('sl-tipo')?.value;
-  const alto   = document.getElementById('sl-alto')?.value;
-  const ancho  = parseInt(document.getElementById('sl-ancho')?.value)||0;
-  const acabado= document.getElementById('sl-acabado')?.value || LINEA_ACABADO_DEF;
-  const margen = parseFloat(document.getElementById('s-margen')?.value)||70;
-  const prev   = document.getElementById('sl-preview');
-  if(!tipo||!alto||!ancho||!SAITRA_LINEA[tipo]?.alturas[alto]?.[ancho]){
-    if(prev) prev.style.display='none'; return;
-  }
-  const pts    = SAITRA_LINEA[tipo].alturas[alto][ancho][acabado];
-  if(!pts){ if(prev) prev.style.display='none'; return; }
-  const coste  = saitraCalcCoste(pts, PUNTO_PP);
-  const pvp    = saitraCalcPvp(coste, margen);
-  if(prev){
-    prev.style.display='block';
-    prev.innerHTML =
-      `<span style="color:var(--text-soft)">${pts} pts × 0,99€ =</span> <strong style="color:var(--navy)">${fmtES(coste)}€ coste</strong><br>` +
-      `<span style="color:var(--text-soft)">+ ${margen}% margen =</span> <strong style="color:#2e7d32;font-size:13px">${fmtES(pvp)}€ PVP cliente</strong>`;
-  }
-}
-
-function saitraLineaAdd(){
-  const tipo   = document.getElementById('sl-tipo')?.value;
-  const alto   = document.getElementById('sl-alto')?.value;
-  const ancho  = parseInt(document.getElementById('sl-ancho')?.value)||0;
-  const acabado= document.getElementById('sl-acabado')?.value || LINEA_ACABADO_DEF;
-  const margen = parseFloat(document.getElementById('s-margen')?.value)||70;
-  const cant   = parseInt(document.getElementById('sl-cant')?.value)||1;
-  const notas  = document.getElementById('sl-notas')?.value?.trim()||'';
-  if(!tipo||!alto||!ancho){ toast('Completa tipo, alto y ancho','error'); return; }
-  const pts = SAITRA_LINEA[tipo].alturas[alto]?.[ancho]?.[acabado];
-  if(!pts){ toast('Combinación no disponible','error'); return; }
-  const costeU = saitraCalcCoste(pts, PUNTO_PP);
-  const pvpU   = saitraCalcPvp(costeU, margen);
-  const desc   = `${SAITRA_LINEA[tipo].label} H.${alto}cm A.${ancho}cm · ${acabado}`;
-  saitraLineas.push({
-    id:++saitraIdCnt, tipo:'modulo', ref: tipo.substring(0,4).toUpperCase(),
-    desc: desc, notas,
-    cant, puntos:pts,
-    costeUnit:costeU, costeTotal:costeU*cant,
-    pvpUnit:pvpU, pvpTotal:pvpU*cant
-  });
-  if(document.getElementById('sl-notas')) document.getElementById('sl-notas').value='';
-  if(document.getElementById('sl-cant')) document.getElementById('sl-cant').value='1';
-  saitraRenderTabla();
-  saitraRecalc();
-  toast(`✅ ${desc} ×${cant} · PVP: ${fmtES((pvpU*cant))}€`);
-}
 
 let saitraLineas = [];
 let saitraIdCnt  = 0;
@@ -9841,37 +9850,152 @@ const TARIFA_A_LINEA_ACABADO = {
 };
 
 function saitraFrenteChange(){
-  const frenteVal = document.getElementById('s-frente')?.value || '';
-  const colSel    = document.getElementById('s-col');
-  const acabadoSel= document.getElementById('sl-acabado');
-  if(!colSel) return;
-  if(frenteVal){
-    const parts  = frenteVal.split('|');
-    const nombre = parts[0];
-    const tarifa = parseInt(parts[1]) || null;
-    if(tarifa){
-      colSel.value    = tarifa;
-      colSel.disabled = true;
-      colSel.style.opacity = '0.6';
-      colSel.title    = `Fijado por acabado frente`;
-      // Sincronizar sl-acabado con la categoría del frente
-      if(acabadoSel){
-        const lineaAcab = TARIFA_A_LINEA_ACABADO[tarifa] || LINEA_ACABADO_DEF;
-        acabadoSel.value = lineaAcab;
+  // Actualizar tarifa y label para cada modelo M1-M4
+  ['1','2','3','4'].forEach(n => {
+    const sel    = document.getElementById('s-frente-'+n);
+    const colSel = document.getElementById('s-col-'+n);
+    const lblEl  = document.getElementById('s-col-'+n+'-lbl');
+    if(!sel || !colSel) return;
+    const val = sel.value || '';
+    if(val){
+      const parts  = val.split('|');
+      const nombre = parts[0];
+      const tarifa = parseInt(parts[1]) || null;
+      if(tarifa){
+        colSel.value = tarifa; colSel.disabled = true; colSel.style.opacity = '0.6';
+        if(lblEl) lblEl.textContent = nombre.length > 14 ? nombre.substring(0,12)+'…' : nombre;
+      }
+    } else {
+      colSel.disabled = false; colSel.style.opacity = '1';
+      if(lblEl) lblEl.textContent = '';
+      // Si se quita un modelo > M1 y el radio apuntaba a ese modelo, volver a M1
+      if(n !== '1'){
+        const r = document.querySelector('input[name="s-modelo"][value="'+n+'"]:checked');
+        if(r){ const r1 = document.querySelector('input[name="s-modelo"][value="1"]'); if(r1) r1.checked = true; }
       }
     }
-  } else {
-    colSel.disabled = false;
-    colSel.style.opacity = '1';
-    colSel.title = '';
-    if(acabadoSel) acabadoSel.value = LINEA_ACABADO_DEF;
-  }
-  saitraLineaPreview();
+  });
   saitraPuntosPreview();
 }
 
+// ─── TABLA INCREMENTOS SAITRA ───
+const SAITRA_INC_TABLA = {
+  bases:    { alto:23, fondo:27, ancho:'sup', rec_pilar:36, rec_viga:null, falseo:71, chaflan:71, plantilla:71 },
+  colgantes:{ alto:'sup', fondo:27, ancho:'sup', rec_pilar:36, rec_viga:36, falseo:71, chaflan:71, plantilla:71 },
+  columnas: { alto:'sup', fondo:27, ancho:'sup', rec_pilar:53, rec_viga:53, falseo:89, chaflan:89, plantilla:89 },
+  sobreenc: { alto:'sup', fondo:27, ancho:'sup', rec_pilar:44, rec_viga:44, falseo:80, chaflan:80, plantilla:80 }
+};
+const SAITRA_INC_LABELS = {
+  alto:       { label:'Alto', nota:'inmediato superior' },
+  fondo:      { label:'Fondo', nota:'+27 pts' },
+  ancho:      { label:'Ancho', nota:'inmediato superior' },
+  rec_pilar:  { label:'Recorte pilar', nota:'' },
+  rec_viga:   { label:'Recorte viga', nota:'' },
+  falseo:     { label:'Falseo', nota:'' },
+  chaflan:    { label:'Chaflán', nota:'' },
+  plantilla:  { label:'Según plantilla', nota:'' }
+};
+
+function saitraIncCalc(){
+  const tipo = document.getElementById('sinc-tipo')?.value || 'bases';
+  const tabla = SAITRA_INC_TABLA[tipo] || SAITRA_INC_TABLA.bases;
+  const cont  = document.getElementById('sinc-checks');
+  if(!cont) return;
+
+  // Renderizar checkboxes dinámicos
+  const filas = Object.entries(tabla).filter(([k,v])=>v!==null).map(([k,v])=>{
+    const info  = SAITRA_INC_LABELS[k] || {label:k, nota:''};
+    const valor = typeof v === 'number' ? '+'+v+' pts' : '(inmediato superior)';
+    const nota  = typeof v === 'number' ? '' : ' · regla de 3 si no existe';
+    return '<label style="display:flex;align-items:center;gap:5px;padding:4px 6px;background:#faf8ff;border-radius:4px;border:1px solid #e8dff8;cursor:pointer">'
+      +'<input type="checkbox" name="sinc-check" value="'+k+'" onchange="saitraIncPreview()">'
+      +'<span style="flex:1"><strong>'+info.label+'</strong></span>'
+      +'<span style="color:#7b5ea7;font-weight:700;font-size:11px">'+valor+'</span>'
+      +'</label>';
+  });
+  cont.innerHTML = filas.join('');
+  saitraIncPreview();
+}
+
+function saitraIncPreview(){
+  const tipo    = document.getElementById('sinc-tipo')?.value || 'bases';
+  const tabla   = SAITRA_INC_TABLA[tipo] || SAITRA_INC_TABLA.bases;
+  const checks  = [...document.querySelectorAll('input[name="sinc-check"]:checked')].map(c=>c.value);
+  const margen  = parseFloat(document.getElementById('s-margen')?.value)||70;
+  const prev    = document.getElementById('sinc-preview');
+  if(!prev) return;
+
+  if(!checks.length){ prev.style.display='none'; return; }
+
+  let ptsTotal = 0;
+  const lineas = [];
+  checks.forEach(k=>{
+    const v = tabla[k];
+    const info = SAITRA_INC_LABELS[k] || {label:k};
+    if(typeof v === 'number'){
+      ptsTotal += v;
+      lineas.push(info.label+': +'+v+' pts');
+    } else {
+      lineas.push(info.label+': inmediato superior (a calcular)');
+    }
+  });
+
+  const coste = saitraCalcCoste(ptsTotal, PUNTO_PP);
+  const pvp   = saitraCalcPvp(coste, margen);
+  prev.style.display = 'block';
+  prev.innerHTML =
+    '<div style="margin-bottom:4px">'+lineas.join(' · ')+'</div>'
+    +'<span style="color:#7b5ea7;font-weight:700">'+ptsTotal+' pts × 0,99€ =</span> <strong>'+fmtES(coste)+'€ coste</strong>'
+    +' → <strong style="color:#2e7d32">'+fmtES(pvp)+'€ PVP</strong>';
+}
+
+function saitraAddIncremento(){
+  const tipo    = document.getElementById('sinc-tipo')?.value || 'bases';
+  const tabla   = SAITRA_INC_TABLA[tipo];
+  const modelo  = document.querySelector('input[name="sinc-modelo"]:checked')?.value || '1';
+  const checks  = [...document.querySelectorAll('input[name="sinc-check"]:checked')].map(c=>c.value);
+  const margen  = parseFloat(document.getElementById('s-margen')?.value)||70;
+  const cant    = parseInt(document.getElementById('sinc-cant')?.value)||1;
+  const descExtra = document.getElementById('sinc-desc')?.value.trim()||'';
+  const notas   = document.getElementById('sinc-notas')?.value.trim()||'';
+  if(!checks.length){ toast('Selecciona al menos un incremento','error'); return; }
+
+  let ptsTotal = 0;
+  const partes = [];
+  checks.forEach(k=>{
+    const v = tabla[k];
+    const info = SAITRA_INC_LABELS[k]||{label:k};
+    if(typeof v === 'number'){ ptsTotal += v; partes.push(info.label+' +'+v+'pts'); }
+    else { partes.push(info.label+' (sup.)'); }
+  });
+
+  if(!ptsTotal){ toast('Los incrementos seleccionados son "inmediato superior" — introduce los puntos manualmente como módulo','warn'); return; }
+
+  const tipoLabels = {bases:'Base',colgantes:'Colgante',columnas:'Columna',sobreenc:'Sobreenct./Sobrecol.'};
+  const costeU = saitraCalcCoste(ptsTotal, PUNTO_PP);
+  const pvpU   = saitraCalcPvp(costeU, margen);
+  const desc   = 'Incremento '+tipoLabels[tipo]+' ('+partes.join(', ')+')'+(descExtra?' · '+descExtra:'');
+
+  saitraLineas.push({
+    id:++saitraIdCnt, tipo:'incremento', ref:'INC', modelo,
+    desc, notas, cant, puntos:ptsTotal,
+    costeUnit:costeU, costeTotal:costeU*cant,
+    pvpUnit:pvpU, pvpTotal:pvpU*cant
+  });
+  // Reset
+  document.querySelectorAll('input[name="sinc-check"]').forEach(c=>c.checked=false);
+  if(document.getElementById('sinc-desc')) document.getElementById('sinc-desc').value='';
+  if(document.getElementById('sinc-notas')) document.getElementById('sinc-notas').value='';
+  if(document.getElementById('sinc-cant')) document.getElementById('sinc-cant').value='1';
+  if(document.getElementById('sinc-preview')) document.getElementById('sinc-preview').style.display='none';
+  saitraRenderTabla();
+  saitraRecalc();
+  toast('✅ [M'+modelo+'] Incremento '+ptsTotal+'pts · PVP: '+fmtES(pvpU)+'€');
+}
+
 function initSaitra(){
-  initSaitraLinea();
+  saitraFrenteChange();
+  saitraIncCalc();
   const sel = document.getElementById('s-proyecto');
   if(sel){
     if(!PC || !PC.length){
@@ -9912,21 +10036,23 @@ function saitraRefChange(){
 }
 
 function saitraPuntosPreview(){
-  const ref   = document.getElementById('s-ref')?.value;
-  const ancho = document.getElementById('s-ancho')?.value || '';
-  const col   = parseInt(document.getElementById('s-col')?.value)||1;
-  const margen= parseFloat(document.getElementById('s-margen')?.value)||0;
-  const prev  = document.getElementById('s-puntos-preview');
+  const ref    = document.getElementById('s-ref')?.value;
+  const ancho  = document.getElementById('s-ancho')?.value || '';
+  const modSel = document.querySelector('input[name="s-modelo"]:checked')?.value || '1';
+  const colId  = 's-col-' + modSel;
+  const col    = parseInt(document.getElementById(colId)?.value)||1;
+  const margen = parseFloat(document.getElementById('s-margen')?.value)||0;
+  const prev   = document.getElementById('s-puntos-preview');
   if(!ref||!ancho||!SAITRA_MOD[ref]){if(prev)prev.style.display='none';return;}
-  // anchoKey: numérico si es número puro, string si contiene 'x' (ej: '90x90')
   const anchoKey = /^\d+x\d+$/.test(ancho) ? ancho : parseInt(ancho);
   const pts = SAITRA_MOD[ref].anchos[anchoKey]?.[col-1];
   if(!pts){if(prev)prev.style.display='none';return;}
   const coste = saitraCalcCoste(pts, PUNTO_PP);
   const pvp   = saitraCalcPvp(coste, margen);
+  const mColor = modSel==='1' ? 'var(--copper)' : '#1565c0';
   prev.style.display='block';
   prev.innerHTML =
-    `<span style="color:var(--text-soft)">${pts} pts × 0,99€ =</span> <strong style="color:var(--navy)">${fmtES(coste)}€ coste</strong><br>` +
+    `<span style="font-weight:700;color:${mColor}">M${modSel}</span> · <span style="color:var(--text-soft)">${pts} pts × 0,99€ =</span> <strong style="color:var(--navy)">${fmtES(coste)}€ coste</strong><br>` +
     `<span style="color:var(--text-soft)">+ ${margen}% margen =</span> <strong style="color:#2e7d32;font-size:13px">${fmtES(pvp)}€ PVP cliente</strong>`;
 }
 
@@ -9962,12 +10088,12 @@ function saitraZocChange(){
 function saitraAddModulo(){
   const ref    = document.getElementById('s-ref')?.value;
   const ancho  = document.getElementById('s-ancho')?.value || '';
-  const col    = parseInt(document.getElementById('s-col')?.value)||1;
+  const modelo = document.querySelector('input[name="s-modelo"]:checked')?.value || '1';
+  const col    = parseInt(document.getElementById('s-col-'+modelo)?.value)||1;
   const margen = parseFloat(document.getElementById('s-margen')?.value)||70;
   const cant   = parseInt(document.getElementById('s-cant-mod')?.value)||1;
   const extra  = document.getElementById('s-desc-mod')?.value.trim()||'';
   if(!ref||!ancho||!SAITRA_MOD[ref]){toast('Selecciona referencia y ancho','error');return;}
-  // anchoKey: numérico si es número puro, string si contiene 'x' (ej: '90x90')
   const anchoKey = /^\d+x\d+$/.test(ancho) ? ancho : parseInt(ancho);
   const pts    = SAITRA_MOD[ref].anchos[anchoKey]?.[col-1];
   if(!pts){toast('Combinación no disponible en tarifa','error');return;}
@@ -9976,22 +10102,22 @@ function saitraAddModulo(){
   const pvpU   = saitraCalcPvp(costeU, margen);
   const anchoLabel = String(ancho).replace('x','×');
 
-  // Leer acabados del panel global
-  const frenteVal    = document.getElementById('s-frente')?.value || '';
+  // Leer acabados del panel global para el modelo elegido
+  const frenteVal    = document.getElementById('s-frente-'+modelo)?.value || '';
   const frenteNombre = frenteVal ? frenteVal.split('|')[0] : '';
   const casco        = document.getElementById('s-casco')?.value || '';
   const cajones      = document.getElementById('s-cajones')?.value || '';
   const vitrina      = document.getElementById('s-vitrina')?.value || '';
 
   const acabadosParts = [];
-  if(frenteNombre) acabadosParts.push(`Frente: ${frenteNombre}`);
-  if(casco)        acabadosParts.push(`Casco: ${casco}`);
-  if(cajones)      acabadosParts.push(`Cajón: ${cajones}`);
-  if(vitrina)      acabadosParts.push(`Vitrina: ${vitrina}`);
-  const acabadosTag = acabadosParts.length ? ` [${acabadosParts.join(' · ')}]` : '';
+  if(frenteNombre) acabadosParts.push('Frente: '+frenteNombre);
+  if(casco)        acabadosParts.push('Casco: '+casco);
+  if(cajones)      acabadosParts.push('Cajón: '+cajones);
+  if(vitrina)      acabadosParts.push('Vitrina: '+vitrina);
+  const acabadosTag = acabadosParts.length ? ' ['+acabadosParts.join(' · ')+']' : '';
 
   saitraLineas.push({
-    id:++saitraIdCnt, tipo:'modulo', ref,
+    id:++saitraIdCnt, tipo:'modulo', ref, modelo,
     desc: mod.label+' '+anchoLabel+'cm'+acabadosTag+(extra?' · '+extra:''),
     notas: document.getElementById('s-notas-mod')?.value.trim()||'',
     cant, puntos:pts,
@@ -10001,10 +10127,9 @@ function saitraAddModulo(){
   document.getElementById('s-desc-mod').value='';
   document.getElementById('s-notas-mod').value='';
   document.getElementById('s-cant-mod').value='1';
-  // NO limpiamos los acabados — lo normal es añadir varios módulos con el mismo acabado
   saitraRenderTabla();
   saitraRecalc();
-  toast(`✅ ${ref} ${anchoLabel}cm · Coste: ${fmtES(costeU)}€ · PVP: ${fmtES(pvpU)}€`);
+  toast('✅ [M'+modelo+'] '+ref+' '+anchoLabel+'cm · Coste: '+fmtES(costeU)+'€ · PVP: '+fmtES(pvpU)+'€');
 }
 
 function saitraAddAccesorio(){
@@ -10105,22 +10230,26 @@ function saitraRenderTabla(){
   const countEl = document.getElementById('s-items-count');
   if(!tbody) return;
   if(!saitraLineas.length){
-    tbody.innerHTML='<tr><td colspan="6" style="padding:30px;text-align:center;color:var(--text-soft);font-size:13px">Añade módulos desde el panel izquierdo</td></tr>';
+    tbody.innerHTML='<tr><td colspan="7" style="padding:30px;text-align:center;color:var(--text-soft);font-size:13px">Añade módulos desde el panel izquierdo</td></tr>';
     if(countEl) countEl.textContent='0 partidas';
     return;
   }
-  if(countEl) countEl.textContent=`${saitraLineas.length} partida${saitraLineas.length!==1?'s':''}`;
-  const iconos = {modulo:'📦', accesorio:'🔧', zocalo:'⬇', gola:'↔'};
+  if(countEl) countEl.textContent=saitraLineas.length+' partida'+(saitraLineas.length!==1?'s':'');
+  const iconos = {modulo:'📦', accesorio:'🔧', zocalo:'⬇', gola:'↔', incremento:'⬆'};
   tbody.innerHTML = saitraLineas.map((l,i)=>{
     const bg = i%2===0?'white':'#fdfcfa';
-    return `<tr style="background:${bg};border-bottom:1px solid #f0ece5">
-      <td style="padding:7px 10px;font-weight:700;color:var(--navy);font-size:11px">${iconos[l.tipo]||''} ${l.ref}</td>
-      <td style="padding:7px 10px;font-size:12px">${escH(l.desc)}${l.notas?`<br><span style="font-size:10px;color:var(--text-soft);font-style:italic">📝 ${escH(l.notas)}</span>`:''}</td>
-      <td style="padding:7px 6px;text-align:center;font-size:12px">${l.cant}</td>
-      <td style="padding:7px 6px;text-align:right;font-size:11px;color:var(--text-soft)">${fmtES(l.costeTotal)}€</td>
-      <td style="padding:7px 6px;text-align:right;font-weight:700;color:#2e7d32;font-size:12px">${fmtES(l.pvpTotal)}€</td>
-      <td style="padding:7px 6px;text-align:center"><button class="btn btn-ghost btn-icon btn-sm" onclick="saitraEliminarLinea(${l.id})" style="color:var(--danger)">🗑</button></td>
-    </tr>`;
+    const mColors = {'1':'var(--copper)','2':'#1565c0','3':'#2e7d32','4':'#7b5ea7'};
+    const mNum = l.modelo || '1';
+    const mLabel = '<span style="font-size:9px;font-weight:700;background:'+( mColors[mNum]||'var(--copper)' )+';color:white;padding:1px 4px;border-radius:2px">M'+mNum+'</span>';
+    return '<tr style="background:'+bg+';border-bottom:1px solid #f0ece5">'
+      +'<td style="padding:7px 6px;text-align:center">'+mLabel+'</td>'
+      +'<td style="padding:7px 10px;font-weight:700;color:var(--navy);font-size:11px">'+(iconos[l.tipo]||'')+' '+l.ref+'</td>'
+      +'<td style="padding:7px 10px;font-size:12px">'+escH(l.desc)+(l.notas?'<br><span style="font-size:10px;color:var(--text-soft);font-style:italic">📝 '+escH(l.notas)+'</span>':'')+'</td>'
+      +'<td style="padding:7px 6px;text-align:center;font-size:12px">'+l.cant+'</td>'
+      +'<td style="padding:7px 6px;text-align:right;font-size:11px;color:var(--text-soft)">'+fmtES(l.costeTotal)+'€</td>'
+      +'<td style="padding:7px 6px;text-align:right;font-weight:700;color:#2e7d32;font-size:12px">'+fmtES(l.pvpTotal)+'€</td>'
+      +'<td style="padding:7px 6px;text-align:center"><button class="btn btn-ghost btn-icon btn-sm" onclick="saitraEliminarLinea('+l.id+')" style="color:var(--danger)">🗑</button></td>'
+      +'</tr>';
   }).join('');
 }
 
@@ -10128,23 +10257,30 @@ function saitraRecalc(){
   const margen = parseFloat(document.getElementById('s-margen')?.value)||70;
   document.getElementById('s-tot-margen-lbl').textContent = margen;
   let totalCoste=0, totalPvp=0;
-  // Recalcular pvp de cada línea con el margen actual
+  const pvpMx = {'1':0,'2':0,'3':0,'4':0};
   saitraLineas.forEach(l=>{
     l.pvpUnit   = saitraCalcPvp(l.costeUnit, margen);
     l.pvpTotal  = l.pvpUnit * l.cant;
     totalCoste += l.costeTotal;
     totalPvp   += l.pvpTotal;
+    const m = l.modelo || '1';
+    if(pvpMx[m] !== undefined) pvpMx[m] += l.pvpTotal;
+    else pvpMx['1'] += l.pvpTotal;
   });
-  // Re-render la tabla para reflejar nuevos precios
   saitraRenderTabla();
   const margenEur = totalPvp - totalCoste;
   const fmtE = v => v.toFixed(2).replace('.',',')+'€';
   document.getElementById('s-tot-coste').textContent  = fmtE(totalCoste);
   document.getElementById('s-tot-margen-eur').textContent = fmtE(margenEur);
   document.getElementById('s-tot-venta').textContent  = fmtE(totalPvp);
-  // Refrescar previews con nuevo margen
+  // Subtotales M1-M4: mostrar solo los modelos con importe
+  ['1','2','3','4'].forEach(n => {
+    const el  = document.getElementById('s-tot-m'+n);
+    const row = document.getElementById('s-tot-m'+n+'-row');
+    if(el) el.textContent = fmtE(pvpMx[n]);
+    if(row) row.style.display = (n==='1' || pvpMx[n] > 0) ? '' : 'none';
+  });
   saitraPuntosPreview();
-  saitraLineaPreview();
   saitraAccTipoChange();
   saitraZocChange();
 }
@@ -10238,7 +10374,9 @@ function saitraImprimir(){
   if(!saitraLineas.length){toast('No hay partidas para imprimir','error');return;}
   const margen = parseFloat(document.getElementById('s-margen')?.value)||0;
   const proy   = document.getElementById('s-proyecto')?.value||'—';
-  const col    = document.getElementById('s-col')?.value||'—';
+  const col1   = document.getElementById('s-col-1')?.value||'—';
+  const col2   = document.getElementById('s-col-2')?.value||'';
+  const col    = col2 ? 'M1:T'+col1+'/M2:T'+col2 : 'T'+col1;
   let totalPvp = saitraLineas.reduce((s,l)=>s+l.pvpTotal,0);
   const fmtE   = v => fmtES(Number(v))+'€';
   // Documento cliente: SOLO PVP, sin costes ni puntos ni descuentos
@@ -17843,7 +17981,7 @@ function catAbrir(fab){
 
   if(fab === 'saitra'){
     document.getElementById('cat-panel-saitra').classList.add('open');
-    if(typeof initSaitraLinea === 'function') initSaitraLinea();
+    // Saitra linea eliminada
     if(typeof saitraRefChange === 'function') saitraRefChange();
     if(typeof saitraAccTipoChange === 'function') saitraAccTipoChange();
     if(typeof saitraZocChange === 'function') saitraZocChange();
