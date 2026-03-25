@@ -1503,7 +1503,6 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <select class="form-input" style="width:190px;flex-shrink:0" id="filter-cliente-presupuesto" onchange="cascadaClienteProyecto(&#39;presupuesto&#39;)"><option value="">👤 Cliente…</option><option value="CLI-H015">4F Fernando</option><option value="CLI-H014">4G daniel Dominguez</option><option value="CLI-H018">Amparo Forner Pastor</option><option value="CLI-H026">Ana María Palau Sastre</option><option value="CLI-H031">Belinda</option><option value="CLI-H004">CARMELO RODRIGUEZ VILA</option><option value="CLI-H032">Daniel palma gallardo</option><option value="CLI-H003">DESIRE NAVARRO MARI</option><option value="CLI-033">Estudi Encis SL</option><option value="CLI-H009">FERNANDO JOSE SAN GERMAN IBORRA</option><option value="CLI-H029">Francisco Navarro Garcia</option><option value="CLI-H019">Jose Antonio Martos Ortiz</option><option value="CLI-H013">Jose Manuel Garcia Seller Nº 7 Pta 4</option><option value="CLI-H030">Jose Manuel Pinzón Valbuena</option><option value="CLI-H007">Juanmi</option><option value="CLI-H012">Júlia Fabregat Mestre</option><option value="CLI-H028">Lara Blasco - Lara Blasco Iborra</option><option value="CLI-H027">Laura Doria Gomez</option><option value="CLI-H021">MERCEDES HIGUERAS GOMEZ</option><option value="CLI-H024">MICHELL BENITO</option><option value="CLI-H022">Miguel cocina</option><option value="CLI-001">Miguel Zaragozá Garzón</option><option value="CLI-H023">Miguel Zaragozá Garzón</option><option value="CLI-H002">Mª PAU BRAVO JOSE</option><option value="CLI-H005">PATRI</option><option value="CLI-H020">Rafael Francés Llàcer</option><option value="CLI-H010">REME IBORRA GIL</option><option value="CLI-H001">ROSA CHANZA SOLER</option><option value="CLI-H016">Sara Muñoz Abella</option><option value="CLI-H011">TONI TATAY DAVID</option><option value="CLI-H025">URKO Y FRANCESC</option><option value="CLI-H008">VICENT MARI SERRA</option><option value="CLI-034">Vicenta Baixauli Hernandez</option><option value="CLI-002">Vicenta Folch Gil</option><option value="CLI-H006">Vicenta Folch Gil</option><option value="CLI-H017">Yasmina Cabezuelo Alaminos</option></select>
         <select class="form-input" style="width:220px" id="pres-proyecto-sel" onchange="presProyChanged()"><option value="">📁 Proyecto…</option><option value="PRY-001">PRY-001 · Mobiliario de cocina</option><option value="PRY-002">PRY-002 · Rehabilitación lateral fachada</option><option value="PRY-003">PRY-003 · Pavimento/revestimiento vivienda.</option><option value="PRY-004">PRY-004 · Rehabilitación estudio</option><option value="PRY-005">PRY-005 · Trabajos en terraza</option></select>
         <select class="form-input" style="width:auto;min-width:75px" id="pres-version-sel" onchange="loadPresupuesto()"><option value="v1">v1</option><option value="v2">v2</option><option value="v3">v3</option><option value="v4">v4</option><option value="v5">v5</option><option value="v6">v6</option><option value="v7">v7</option><option value="v8">v8</option></select>
-        <button class="btn btn-ghost btn-sm no-print" onclick="renombrarVersion()" title="Renombrar esta versión del presupuesto" style="font-size:11px;padding:4px 8px">✏️ Nombre</button>
         <button class="btn btn-ghost btn-sm no-print" onclick="eliminarVersionPresupuesto()" title="Eliminar todas las lineas de esta version" style="color:var(--red);border-color:var(--red);font-size:11px;padding:4px 8px">🗑 Versión</button>
         <button class="btn btn-primary" onclick="addLineaPresupuesto()">＋ Línea</button>
         <button class="btn btn-ghost" onclick="addCapituloPresupuesto()">＋ Capítulo</button>
@@ -7706,54 +7705,6 @@ async function initPresupuesto(){
     }
   }
 }
-// ── Nombres personalizados de versiones ──────────────────────────────
-// Almacenados en localStorage: clave = "pres_vernames_PRY-037"
-// Valor = JSON {v1:"Oferta inicial", v2:"Revisión cliente", ...}
-
-function _verNamesKey(proyId) {
-  return 'pres_vernames_' + (proyId || '');
-}
-function getVerNames(proyId) {
-  try { return JSON.parse(localStorage.getItem(_verNamesKey(proyId)) || '{}'); }
-  catch(e) { return {}; }
-}
-function getVerName(proyId, ver) {
-  return getVerNames(proyId)[ver] || '';
-}
-function setVerName(proyId, ver, nombre) {
-  const names = getVerNames(proyId);
-  if(nombre) names[ver] = nombre;
-  else delete names[ver];
-  localStorage.setItem(_verNamesKey(proyId), JSON.stringify(names));
-}
-// Refresca las labels del selector con nombres personalizados
-function _refreshVerNamesInSel(proyId, verSel) {
-  if(!verSel) return;
-  const names = getVerNames(proyId);
-  Array.from(verSel.options).forEach(opt => {
-    if(opt.disabled) return;
-    // Solo opciones v1-v8
-    if(/^v\d+$/.test(opt.value)) {
-      const n = names[opt.value];
-      opt.textContent = n ? opt.value + ' · ' + n : opt.value;
-    }
-  });
-}
-// Abre prompt para renombrar la versión activa
-function renombrarVersion() {
-  const proy = document.getElementById('pres-proyecto-sel')?.value;
-  const ver  = document.getElementById('pres-version-sel')?.value;
-  if(!proy || !ver) { toast('Selecciona proyecto y versión primero', 'error'); return; }
-  if(!/^v\d+$/.test(ver)) { toast('Solo se pueden renombrar versiones v1–v8', 'error'); return; }
-  const actual = getVerName(proy, ver);
-  const nuevo = window.prompt(`Nombre para ${ver} del proyecto ${proy}:\n(Deja vacío para quitar el nombre)`, actual);
-  if(nuevo === null) return; // Cancelado
-  setVerName(proy, ver, nuevo.trim());
-  _refreshVerNamesInSel(proy, document.getElementById('pres-version-sel'));
-  _refreshVerNamesInSel(proy, document.getElementById('pf-version-sel'));
-  toast(nuevo.trim() ? `✅ ${ver} renombrado como "${nuevo.trim()}"` : `${ver} sin nombre personalizado`);
-}
-
 // When project changes, reload units into version selector
 // Shared: load units into any version selector
 async function _loadUnitsIntoSelector(proyId, verSel){
@@ -7777,20 +7728,14 @@ async function _loadUnitsIntoSelector(proyId, verSel){
       });
     }
   } catch(e){}
-  // Aplicar nombres personalizados de versiones
-  _refreshVerNamesInSel(proyId, verSel);
   for(let o of verSel.options){ if(o.value === curVer){ verSel.value = curVer; break; } }
 }
 
 async function presProyChanged(){
-  const proyId = document.getElementById('pres-proyecto-sel').value;
   await _loadUnitsIntoSelector(
-    proyId,
+    document.getElementById('pres-proyecto-sel').value,
     document.getElementById('pres-version-sel')
   );
-  // Refrescar también el selector de Presupuesto Final si está visible
-  const pfSel = document.getElementById('pf-version-sel');
-  if(pfSel) _refreshVerNamesInSel(proyId, pfSel);
   loadPresupuesto();
 }
 
@@ -9535,20 +9480,20 @@ const SAITRA_LINEA = {
     label: 'Bases y Bases Gola',
     icon: '🗄',
     alturas: {'70/78/84': {
-      15:  {Laminado:14,  Estratificado:32, PET:30, Laca:52,  Madera:60},
-      20:  {Laminado:16,  Estratificado:34, PET:32, Laca:56,  Madera:62},
-      25:  {Laminado:18,  Estratificado:36, PET:34, Laca:58,  Madera:64},
-      30:  {Laminado:20,  Estratificado:38, PET:36, Laca:60,  Madera:66},
-      35:  {Laminado:22,  Estratificado:40, PET:38, Laca:62,  Madera:68},
-      40:  {Laminado:24,  Estratificado:42, PET:40, Laca:64,  Madera:70},
-      45:  {Laminado:26,  Estratificado:44, PET:42, Laca:66,  Madera:72},
-      50:  {Laminado:28,  Estratificado:46, PET:44, Laca:68,  Madera:74},
-      60:  {Laminado:30,  Estratificado:50, PET:48, Laca:72,  Madera:78},
-      70:  {Laminado:32,  Estratificado:54, PET:52, Laca:76,  Madera:82},
-      80:  {Laminado:34,  Estratificado:58, PET:56, Laca:80,  Madera:86},
-      90:  {Laminado:36,  Estratificado:62, PET:60, Laca:84,  Madera:90},
-      100: {Laminado:38,  Estratificado:66, PET:64, Laca:88,  Madera:94},
-      120: {Laminado:50,  Estratificado:80, PET:78, Laca:102, Madera:108}
+      15:  {Laminado:14, Estratificado:30, PET:32, Laca:52, Madera:60},
+      20:  {Laminado:16, Estratificado:32, PET:34, Laca:56, Madera:62},
+      25:  {Laminado:18, Estratificado:34, PET:36, Laca:58, Madera:64},
+      30:  {Laminado:20, Estratificado:36, PET:38, Laca:60, Madera:66},
+      35:  {Laminado:22, Estratificado:38, PET:40, Laca:62, Madera:68},
+      40:  {Laminado:24, Estratificado:40, PET:42, Laca:64, Madera:70},
+      45:  {Laminado:26, Estratificado:42, PET:44, Laca:66, Madera:72},
+      50:  {Laminado:28, Estratificado:44, PET:46, Laca:68, Madera:74},
+      60:  {Laminado:30, Estratificado:48, PET:50, Laca:72, Madera:78},
+      70:  {Laminado:32, Estratificado:52, PET:54, Laca:76, Madera:82},
+      80:  {Laminado:34, Estratificado:56, PET:58, Laca:80, Madera:86},
+      90:  {Laminado:36, Estratificado:60, PET:62, Laca:84, Madera:90},
+      100: {Laminado:38, Estratificado:64, PET:66, Laca:88, Madera:94},
+      120: {Laminado:50, Estratificado:78, PET:80, Laca:102, Madera:108}
     }}
   },
   'Colgantes': {
@@ -9556,52 +9501,52 @@ const SAITRA_LINEA = {
     icon: '🪟',
     alturas: {
       '26/28/39/42': {
-        30:  {Laminado:12, Estratificado:30, PET:28, Laca:52, Madera:58},
-        40:  {Laminado:14, Estratificado:32, PET:30, Laca:54, Madera:60},
-        50:  {Laminado:16, Estratificado:34, PET:32, Laca:56, Madera:62},
-        60:  {Laminado:18, Estratificado:36, PET:34, Laca:58, Madera:64},
-        70:  {Laminado:20, Estratificado:38, PET:36, Laca:60, Madera:66},
-        80:  {Laminado:22, Estratificado:40, PET:38, Laca:62, Madera:68},
-        90:  {Laminado:24, Estratificado:42, PET:40, Laca:64, Madera:70},
-        100: {Laminado:26, Estratificado:44, PET:42, Laca:66, Madera:72},
-        110: {Laminado:28, Estratificado:46, PET:44, Laca:68, Madera:74},
-        120: {Laminado:30, Estratificado:48, PET:46, Laca:70, Madera:76}
+        30:  {Laminado:12, Estratificado:28, PET:30, Laca:52, Madera:58},
+        40:  {Laminado:14, Estratificado:30, PET:32, Laca:54, Madera:60},
+        50:  {Laminado:16, Estratificado:32, PET:34, Laca:56, Madera:62},
+        60:  {Laminado:18, Estratificado:34, PET:36, Laca:58, Madera:64},
+        70:  {Laminado:20, Estratificado:36, PET:38, Laca:60, Madera:66},
+        80:  {Laminado:22, Estratificado:38, PET:40, Laca:62, Madera:68},
+        90:  {Laminado:24, Estratificado:40, PET:42, Laca:64, Madera:70},
+        100: {Laminado:26, Estratificado:42, PET:44, Laca:66, Madera:72},
+        110: {Laminado:28, Estratificado:44, PET:46, Laca:68, Madera:74},
+        120: {Laminado:30, Estratificado:46, PET:48, Laca:70, Madera:76}
       },
       '52/56': {
-        30:  {Laminado:14, Estratificado:32, PET:30, Laca:54, Madera:60},
-        40:  {Laminado:16, Estratificado:34, PET:32, Laca:56, Madera:62},
-        50:  {Laminado:18, Estratificado:36, PET:34, Laca:58, Madera:64},
-        60:  {Laminado:20, Estratificado:38, PET:36, Laca:60, Madera:66},
-        70:  {Laminado:22, Estratificado:40, PET:38, Laca:62, Madera:68},
-        80:  {Laminado:24, Estratificado:42, PET:40, Laca:64, Madera:70},
-        90:  {Laminado:26, Estratificado:44, PET:42, Laca:66, Madera:72},
-        100: {Laminado:28, Estratificado:46, PET:44, Laca:68, Madera:74},
-        110: {Laminado:30, Estratificado:48, PET:46, Laca:70, Madera:76},
-        120: {Laminado:32, Estratificado:50, PET:48, Laca:72, Madera:78}
+        30:  {Laminado:14, Estratificado:30, PET:32, Laca:54, Madera:60},
+        40:  {Laminado:16, Estratificado:32, PET:34, Laca:56, Madera:62},
+        50:  {Laminado:18, Estratificado:34, PET:36, Laca:58, Madera:64},
+        60:  {Laminado:20, Estratificado:36, PET:38, Laca:60, Madera:66},
+        70:  {Laminado:22, Estratificado:38, PET:40, Laca:62, Madera:68},
+        80:  {Laminado:24, Estratificado:40, PET:42, Laca:64, Madera:70},
+        90:  {Laminado:26, Estratificado:42, PET:44, Laca:66, Madera:72},
+        100: {Laminado:28, Estratificado:44, PET:46, Laca:68, Madera:74},
+        110: {Laminado:30, Estratificado:46, PET:48, Laca:70, Madera:76},
+        120: {Laminado:32, Estratificado:48, PET:50, Laca:72, Madera:78}
       },
       '70/78': {
-        30:  {Laminado:18, Estratificado:36, PET:34, Laca:58, Madera:64},
-        40:  {Laminado:20, Estratificado:38, PET:36, Laca:60, Madera:66},
-        50:  {Laminado:22, Estratificado:40, PET:38, Laca:62, Madera:68},
-        60:  {Laminado:24, Estratificado:42, PET:40, Laca:64, Madera:70},
-        70:  {Laminado:26, Estratificado:44, PET:42, Laca:66, Madera:72},
-        80:  {Laminado:28, Estratificado:46, PET:44, Laca:68, Madera:74},
-        90:  {Laminado:30, Estratificado:48, PET:46, Laca:70, Madera:76},
-        100: {Laminado:32, Estratificado:50, PET:48, Laca:72, Madera:78},
-        110: {Laminado:34, Estratificado:52, PET:50, Laca:74, Madera:80},
-        120: {Laminado:36, Estratificado:54, PET:52, Laca:76, Madera:82}
+        30:  {Laminado:18, Estratificado:34, PET:36, Laca:58, Madera:64},
+        40:  {Laminado:20, Estratificado:36, PET:38, Laca:60, Madera:66},
+        50:  {Laminado:22, Estratificado:38, PET:40, Laca:62, Madera:68},
+        60:  {Laminado:24, Estratificado:40, PET:42, Laca:64, Madera:70},
+        70:  {Laminado:26, Estratificado:42, PET:44, Laca:66, Madera:72},
+        80:  {Laminado:28, Estratificado:44, PET:46, Laca:68, Madera:74},
+        90:  {Laminado:30, Estratificado:46, PET:48, Laca:70, Madera:76},
+        100: {Laminado:32, Estratificado:48, PET:50, Laca:72, Madera:78},
+        110: {Laminado:34, Estratificado:50, PET:52, Laca:74, Madera:80},
+        120: {Laminado:36, Estratificado:52, PET:54, Laca:76, Madera:82}
       },
       '84/91/98': {
-        30:  {Laminado:18, Estratificado:36, PET:34, Laca:58, Madera:64},
-        40:  {Laminado:20, Estratificado:38, PET:36, Laca:60, Madera:66},
-        50:  {Laminado:22, Estratificado:40, PET:38, Laca:62, Madera:68},
-        60:  {Laminado:24, Estratificado:42, PET:40, Laca:64, Madera:70},
-        70:  {Laminado:26, Estratificado:44, PET:42, Laca:66, Madera:72},
-        80:  {Laminado:28, Estratificado:46, PET:44, Laca:68, Madera:74},
-        90:  {Laminado:30, Estratificado:48, PET:46, Laca:70, Madera:76},
-        100: {Laminado:32, Estratificado:50, PET:48, Laca:72, Madera:78},
-        110: {Laminado:34, Estratificado:52, PET:50, Laca:74, Madera:80},
-        120: {Laminado:36, Estratificado:54, PET:52, Laca:76, Madera:82}
+        30:  {Laminado:18, Estratificado:34, PET:36, Laca:58, Madera:64},
+        40:  {Laminado:20, Estratificado:36, PET:38, Laca:60, Madera:66},
+        50:  {Laminado:22, Estratificado:38, PET:40, Laca:62, Madera:68},
+        60:  {Laminado:24, Estratificado:40, PET:42, Laca:64, Madera:70},
+        70:  {Laminado:26, Estratificado:42, PET:44, Laca:66, Madera:72},
+        80:  {Laminado:28, Estratificado:44, PET:46, Laca:68, Madera:74},
+        90:  {Laminado:30, Estratificado:46, PET:48, Laca:70, Madera:76},
+        100: {Laminado:32, Estratificado:48, PET:50, Laca:72, Madera:78},
+        110: {Laminado:34, Estratificado:50, PET:52, Laca:74, Madera:80},
+        120: {Laminado:36, Estratificado:52, PET:54, Laca:76, Madera:82}
       }
     }
   },
@@ -9610,69 +9555,69 @@ const SAITRA_LINEA = {
     icon: '🏛',
     alturas: {
       '143': {
-        25:  {Laminado:27, Estratificado:48, PET:46, Laca:73,  Madera:81},
-        30:  {Laminado:29, Estratificado:50, PET:48, Laca:75,  Madera:83},
-        35:  {Laminado:31, Estratificado:52, PET:50, Laca:77,  Madera:85},
-        40:  {Laminado:33, Estratificado:54, PET:52, Laca:79,  Madera:87},
-        45:  {Laminado:35, Estratificado:56, PET:54, Laca:81,  Madera:89},
-        50:  {Laminado:37, Estratificado:58, PET:56, Laca:83,  Madera:91},
-        60:  {Laminado:41, Estratificado:62, PET:60, Laca:87,  Madera:95},
-        70:  {Laminado:45, Estratificado:66, PET:64, Laca:91,  Madera:99},
-        80:  {Laminado:49, Estratificado:70, PET:68, Laca:95,  Madera:103},
-        90:  {Laminado:53, Estratificado:74, PET:72, Laca:99,  Madera:107},
-        120: {Laminado:61, Estratificado:82, PET:80, Laca:107, Madera:115}
+        25:  {Laminado:27, Estratificado:46, PET:48, Laca:73, Madera:81},
+        30:  {Laminado:29, Estratificado:48, PET:50, Laca:75, Madera:83},
+        35:  {Laminado:31, Estratificado:50, PET:52, Laca:77, Madera:85},
+        40:  {Laminado:33, Estratificado:52, PET:54, Laca:79, Madera:87},
+        45:  {Laminado:35, Estratificado:54, PET:56, Laca:81, Madera:89},
+        50:  {Laminado:37, Estratificado:56, PET:58, Laca:83, Madera:91},
+        60:  {Laminado:41, Estratificado:60, PET:62, Laca:87, Madera:95},
+        70:  {Laminado:45, Estratificado:64, PET:66, Laca:91, Madera:99},
+        80:  {Laminado:49, Estratificado:68, PET:70, Laca:95, Madera:103},
+        90:  {Laminado:53, Estratificado:72, PET:74, Laca:99, Madera:107},
+        120: {Laminado:61, Estratificado:80, PET:82, Laca:107, Madera:115}
       },
       '195': {
-        25:  {Laminado:39, Estratificado:60, PET:58, Laca:91,  Madera:99},
-        30:  {Laminado:41, Estratificado:62, PET:60, Laca:93,  Madera:101},
-        35:  {Laminado:43, Estratificado:64, PET:62, Laca:95,  Madera:103},
-        40:  {Laminado:45, Estratificado:66, PET:64, Laca:97,  Madera:105},
-        45:  {Laminado:47, Estratificado:68, PET:66, Laca:99,  Madera:107},
-        50:  {Laminado:49, Estratificado:70, PET:68, Laca:101, Madera:109},
-        60:  {Laminado:53, Estratificado:74, PET:72, Laca:105, Madera:113},
-        70:  {Laminado:57, Estratificado:78, PET:76, Laca:109, Madera:117},
-        80:  {Laminado:61, Estratificado:82, PET:80, Laca:113, Madera:121},
-        90:  {Laminado:65, Estratificado:86, PET:84, Laca:117, Madera:125},
-        120: {Laminado:73, Estratificado:94, PET:92, Laca:125, Madera:133}
+        25:  {Laminado:39, Estratificado:58, PET:60, Laca:91, Madera:99},
+        30:  {Laminado:41, Estratificado:60, PET:62, Laca:93, Madera:101},
+        35:  {Laminado:43, Estratificado:62, PET:64, Laca:95, Madera:103},
+        40:  {Laminado:45, Estratificado:64, PET:66, Laca:97, Madera:105},
+        45:  {Laminado:47, Estratificado:66, PET:68, Laca:99, Madera:107},
+        50:  {Laminado:49, Estratificado:68, PET:70, Laca:101, Madera:109},
+        60:  {Laminado:53, Estratificado:72, PET:74, Laca:105, Madera:113},
+        70:  {Laminado:57, Estratificado:76, PET:78, Laca:109, Madera:117},
+        80:  {Laminado:61, Estratificado:80, PET:82, Laca:113, Madera:121},
+        90:  {Laminado:65, Estratificado:84, PET:86, Laca:117, Madera:125},
+        120: {Laminado:73, Estratificado:92, PET:94, Laca:125, Madera:133}
       },
       '206/208': {
-        25:  {Laminado:41, Estratificado:62, PET:60, Laca:94,  Madera:102},
-        30:  {Laminado:43, Estratificado:64, PET:62, Laca:96,  Madera:104},
-        35:  {Laminado:45, Estratificado:66, PET:64, Laca:98,  Madera:106},
-        40:  {Laminado:47, Estratificado:68, PET:66, Laca:100, Madera:108},
-        45:  {Laminado:49, Estratificado:70, PET:68, Laca:102, Madera:110},
-        50:  {Laminado:51, Estratificado:72, PET:70, Laca:104, Madera:112},
-        60:  {Laminado:55, Estratificado:76, PET:74, Laca:108, Madera:116},
-        70:  {Laminado:59, Estratificado:80, PET:78, Laca:112, Madera:120},
-        80:  {Laminado:63, Estratificado:84, PET:82, Laca:116, Madera:124},
-        90:  {Laminado:67, Estratificado:88, PET:86, Laca:120, Madera:128},
-        120: {Laminado:75, Estratificado:96, PET:94, Laca:128, Madera:136}
+        25:  {Laminado:41, Estratificado:60, PET:62, Laca:94, Madera:102},
+        30:  {Laminado:43, Estratificado:62, PET:64, Laca:96, Madera:104},
+        35:  {Laminado:45, Estratificado:64, PET:66, Laca:98, Madera:106},
+        40:  {Laminado:47, Estratificado:66, PET:68, Laca:100, Madera:108},
+        45:  {Laminado:49, Estratificado:68, PET:70, Laca:102, Madera:110},
+        50:  {Laminado:51, Estratificado:70, PET:72, Laca:104, Madera:112},
+        60:  {Laminado:55, Estratificado:74, PET:76, Laca:108, Madera:116},
+        70:  {Laminado:59, Estratificado:78, PET:80, Laca:112, Madera:120},
+        80:  {Laminado:63, Estratificado:82, PET:84, Laca:116, Madera:124},
+        90:  {Laminado:67, Estratificado:86, PET:88, Laca:120, Madera:128},
+        120: {Laminado:75, Estratificado:94, PET:96, Laca:128, Madera:136}
       },
       '220/221': {
-        25:  {Laminado:43, Estratificado:64, PET:62, Laca:97,  Madera:105},
-        30:  {Laminado:45, Estratificado:66, PET:64, Laca:99,  Madera:107},
-        35:  {Laminado:47, Estratificado:68, PET:66, Laca:101, Madera:109},
-        40:  {Laminado:49, Estratificado:70, PET:68, Laca:103, Madera:111},
-        45:  {Laminado:51, Estratificado:72, PET:70, Laca:105, Madera:113},
-        50:  {Laminado:53, Estratificado:74, PET:72, Laca:107, Madera:115},
-        60:  {Laminado:57, Estratificado:78, PET:76, Laca:111, Madera:119},
-        70:  {Laminado:61, Estratificado:82, PET:80, Laca:115, Madera:123},
-        80:  {Laminado:65, Estratificado:86, PET:84, Laca:119, Madera:127},
-        90:  {Laminado:69, Estratificado:90, PET:88, Laca:123, Madera:131},
-        120: {Laminado:77, Estratificado:98, PET:96, Laca:131, Madera:139}
+        25:  {Laminado:43, Estratificado:62, PET:64, Laca:97, Madera:105},
+        30:  {Laminado:45, Estratificado:64, PET:66, Laca:99, Madera:107},
+        35:  {Laminado:47, Estratificado:66, PET:68, Laca:101, Madera:109},
+        40:  {Laminado:49, Estratificado:68, PET:70, Laca:103, Madera:111},
+        45:  {Laminado:51, Estratificado:70, PET:72, Laca:105, Madera:113},
+        50:  {Laminado:53, Estratificado:72, PET:74, Laca:107, Madera:115},
+        60:  {Laminado:57, Estratificado:76, PET:78, Laca:111, Madera:119},
+        70:  {Laminado:61, Estratificado:80, PET:82, Laca:115, Madera:123},
+        80:  {Laminado:65, Estratificado:84, PET:86, Laca:119, Madera:127},
+        90:  {Laminado:69, Estratificado:88, PET:90, Laca:123, Madera:131},
+        120: {Laminado:77, Estratificado:96, PET:98, Laca:131, Madera:139}
       },
       '234': {
-        25:  {Laminado:45, Estratificado:67, PET:65, Laca:101, Madera:109},
-        30:  {Laminado:47, Estratificado:69, PET:67, Laca:103, Madera:111},
-        35:  {Laminado:49, Estratificado:71, PET:69, Laca:105, Madera:113},
-        40:  {Laminado:51, Estratificado:73, PET:71, Laca:107, Madera:115},
-        45:  {Laminado:53, Estratificado:75, PET:73, Laca:109, Madera:117},
-        50:  {Laminado:55, Estratificado:77, PET:75, Laca:111, Madera:119},
-        60:  {Laminado:59, Estratificado:81, PET:79, Laca:115, Madera:123},
-        70:  {Laminado:63, Estratificado:85, PET:83, Laca:119, Madera:127},
-        80:  {Laminado:67, Estratificado:89, PET:87, Laca:123, Madera:131},
-        90:  {Laminado:71, Estratificado:93, PET:91, Laca:127, Madera:135},
-        120: {Laminado:79, Estratificado:101, PET:99, Laca:135, Madera:143}
+        25:  {Laminado:45, Estratificado:65, PET:67, Laca:101, Madera:109},
+        30:  {Laminado:47, Estratificado:67, PET:69, Laca:103, Madera:111},
+        35:  {Laminado:49, Estratificado:69, PET:71, Laca:105, Madera:113},
+        40:  {Laminado:51, Estratificado:71, PET:73, Laca:107, Madera:115},
+        45:  {Laminado:53, Estratificado:73, PET:75, Laca:109, Madera:117},
+        50:  {Laminado:55, Estratificado:75, PET:77, Laca:111, Madera:119},
+        60:  {Laminado:59, Estratificado:79, PET:81, Laca:115, Madera:123},
+        70:  {Laminado:63, Estratificado:83, PET:85, Laca:119, Madera:127},
+        80:  {Laminado:67, Estratificado:87, PET:89, Laca:123, Madera:131},
+        90:  {Laminado:71, Estratificado:91, PET:93, Laca:127, Madera:135},
+        120: {Laminado:79, Estratificado:99, PET:101, Laca:135, Madera:143}
       }
     }
   },
@@ -9681,52 +9626,52 @@ const SAITRA_LINEA = {
     icon: '🗂',
     alturas: {
       '39/42': {
-        30:  {Laminado:15, Estratificado:33, PET:31, Laca:55, Madera:61},
-        40:  {Laminado:17, Estratificado:35, PET:33, Laca:57, Madera:63},
-        50:  {Laminado:19, Estratificado:37, PET:35, Laca:59, Madera:65},
-        60:  {Laminado:21, Estratificado:39, PET:37, Laca:61, Madera:67},
-        70:  {Laminado:23, Estratificado:41, PET:39, Laca:63, Madera:69},
-        80:  {Laminado:25, Estratificado:43, PET:41, Laca:65, Madera:71},
-        90:  {Laminado:27, Estratificado:45, PET:43, Laca:67, Madera:73},
-        100: {Laminado:29, Estratificado:47, PET:45, Laca:69, Madera:75},
-        110: {Laminado:31, Estratificado:49, PET:47, Laca:71, Madera:77},
-        120: {Laminado:33, Estratificado:51, PET:49, Laca:73, Madera:79}
+        30:  {Laminado:15, Estratificado:31, PET:33, Laca:55, Madera:61},
+        40:  {Laminado:17, Estratificado:33, PET:35, Laca:57, Madera:63},
+        50:  {Laminado:19, Estratificado:35, PET:37, Laca:59, Madera:65},
+        60:  {Laminado:21, Estratificado:37, PET:39, Laca:61, Madera:67},
+        70:  {Laminado:23, Estratificado:39, PET:41, Laca:63, Madera:69},
+        80:  {Laminado:25, Estratificado:41, PET:43, Laca:65, Madera:71},
+        90:  {Laminado:27, Estratificado:43, PET:45, Laca:67, Madera:73},
+        100: {Laminado:29, Estratificado:45, PET:47, Laca:69, Madera:75},
+        110: {Laminado:31, Estratificado:47, PET:49, Laca:71, Madera:77},
+        120: {Laminado:33, Estratificado:49, PET:51, Laca:73, Madera:79}
       },
       '52/56': {
-        30:  {Laminado:17, Estratificado:35, PET:33, Laca:57, Madera:63},
-        40:  {Laminado:19, Estratificado:37, PET:35, Laca:59, Madera:65},
-        50:  {Laminado:21, Estratificado:39, PET:37, Laca:61, Madera:67},
-        60:  {Laminado:23, Estratificado:41, PET:39, Laca:63, Madera:69},
-        70:  {Laminado:25, Estratificado:43, PET:41, Laca:65, Madera:71},
-        80:  {Laminado:27, Estratificado:45, PET:43, Laca:67, Madera:73},
-        90:  {Laminado:29, Estratificado:47, PET:45, Laca:69, Madera:75},
-        100: {Laminado:31, Estratificado:49, PET:47, Laca:71, Madera:77},
-        110: {Laminado:33, Estratificado:51, PET:49, Laca:73, Madera:79},
-        120: {Laminado:35, Estratificado:53, PET:51, Laca:75, Madera:81}
+        30:  {Laminado:17, Estratificado:33, PET:35, Laca:57, Madera:63},
+        40:  {Laminado:19, Estratificado:35, PET:37, Laca:59, Madera:65},
+        50:  {Laminado:21, Estratificado:37, PET:39, Laca:61, Madera:67},
+        60:  {Laminado:23, Estratificado:39, PET:41, Laca:63, Madera:69},
+        70:  {Laminado:25, Estratificado:41, PET:43, Laca:65, Madera:71},
+        80:  {Laminado:27, Estratificado:43, PET:45, Laca:67, Madera:73},
+        90:  {Laminado:29, Estratificado:45, PET:47, Laca:69, Madera:75},
+        100: {Laminado:31, Estratificado:47, PET:49, Laca:71, Madera:77},
+        110: {Laminado:33, Estratificado:49, PET:51, Laca:73, Madera:79},
+        120: {Laminado:35, Estratificado:51, PET:53, Laca:75, Madera:81}
       },
       '65/70': {
-        30:  {Laminado:20, Estratificado:38, PET:36, Laca:60, Madera:66},
-        40:  {Laminado:22, Estratificado:40, PET:38, Laca:62, Madera:68},
-        50:  {Laminado:24, Estratificado:42, PET:40, Laca:64, Madera:70},
-        60:  {Laminado:26, Estratificado:44, PET:42, Laca:66, Madera:72},
-        70:  {Laminado:28, Estratificado:46, PET:44, Laca:68, Madera:74},
-        80:  {Laminado:30, Estratificado:48, PET:46, Laca:70, Madera:76},
-        90:  {Laminado:32, Estratificado:50, PET:48, Laca:72, Madera:78},
-        100: {Laminado:34, Estratificado:52, PET:50, Laca:74, Madera:80},
-        110: {Laminado:36, Estratificado:54, PET:52, Laca:76, Madera:82},
-        120: {Laminado:38, Estratificado:56, PET:54, Laca:78, Madera:84}
+        30:  {Laminado:20, Estratificado:36, PET:38, Laca:60, Madera:66},
+        40:  {Laminado:22, Estratificado:38, PET:40, Laca:62, Madera:68},
+        50:  {Laminado:24, Estratificado:40, PET:42, Laca:64, Madera:70},
+        60:  {Laminado:26, Estratificado:42, PET:44, Laca:66, Madera:72},
+        70:  {Laminado:28, Estratificado:44, PET:46, Laca:68, Madera:74},
+        80:  {Laminado:30, Estratificado:46, PET:48, Laca:70, Madera:76},
+        90:  {Laminado:32, Estratificado:48, PET:50, Laca:72, Madera:78},
+        100: {Laminado:34, Estratificado:50, PET:52, Laca:74, Madera:80},
+        110: {Laminado:36, Estratificado:52, PET:54, Laca:76, Madera:82},
+        120: {Laminado:38, Estratificado:54, PET:56, Laca:78, Madera:84}
       },
       '78/74': {
-        30:  {Laminado:24, Estratificado:42, PET:40, Laca:64, Madera:70},
-        40:  {Laminado:26, Estratificado:44, PET:42, Laca:66, Madera:72},
-        50:  {Laminado:28, Estratificado:46, PET:44, Laca:68, Madera:74},
-        60:  {Laminado:30, Estratificado:48, PET:46, Laca:70, Madera:76},
-        70:  {Laminado:32, Estratificado:50, PET:48, Laca:72, Madera:78},
-        80:  {Laminado:34, Estratificado:52, PET:50, Laca:74, Madera:80},
-        90:  {Laminado:36, Estratificado:54, PET:52, Laca:76, Madera:82},
-        100: {Laminado:38, Estratificado:56, PET:54, Laca:78, Madera:84},
-        110: {Laminado:40, Estratificado:58, PET:56, Laca:80, Madera:86},
-        120: {Laminado:42, Estratificado:60, PET:58, Laca:82, Madera:88}
+        30:  {Laminado:24, Estratificado:40, PET:42, Laca:64, Madera:70},
+        40:  {Laminado:26, Estratificado:42, PET:44, Laca:66, Madera:72},
+        50:  {Laminado:28, Estratificado:44, PET:46, Laca:68, Madera:74},
+        60:  {Laminado:30, Estratificado:46, PET:48, Laca:70, Madera:76},
+        70:  {Laminado:32, Estratificado:48, PET:50, Laca:72, Madera:78},
+        80:  {Laminado:34, Estratificado:50, PET:52, Laca:74, Madera:80},
+        90:  {Laminado:36, Estratificado:52, PET:54, Laca:76, Madera:82},
+        100: {Laminado:38, Estratificado:54, PET:56, Laca:78, Madera:84},
+        110: {Laminado:40, Estratificado:56, PET:58, Laca:80, Madera:86},
+        120: {Laminado:42, Estratificado:58, PET:60, Laca:82, Madera:88}
       }
     }
   },
@@ -9735,19 +9680,19 @@ const SAITRA_LINEA = {
     icon: '🟦',
     alturas: {
       '114/119': {
-        60:  {Laminado:40, Estratificado:60, PET:58, Laca:85,  Madera:97},
-        90:  {Laminado:52, Estratificado:72, PET:70, Laca:97,  Madera:109},
-        120: {Laminado:64, Estratificado:84, PET:82, Laca:109, Madera:121}
+        60:  {Laminado:40, Estratificado:58, PET:60, Laca:85, Madera:97},
+        90:  {Laminado:52, Estratificado:70, PET:72, Laca:97, Madera:109},
+        120: {Laminado:64, Estratificado:82, PET:84, Laca:109, Madera:121}
       },
       '127/133': {
-        60:  {Laminado:43, Estratificado:63, PET:61, Laca:88,  Madera:100},
-        90:  {Laminado:55, Estratificado:77, PET:75, Laca:100, Madera:112},
-        120: {Laminado:67, Estratificado:89, PET:87, Laca:112, Madera:124}
+        60:  {Laminado:43, Estratificado:61, PET:63, Laca:88, Madera:100},
+        90:  {Laminado:55, Estratificado:75, PET:77, Laca:100, Madera:112},
+        120: {Laminado:67, Estratificado:87, PET:89, Laca:112, Madera:124}
       },
       '140/147': {
-        60:  {Laminado:45, Estratificado:65, PET:63, Laca:90,  Madera:102},
-        90:  {Laminado:57, Estratificado:79, PET:77, Laca:102, Madera:114},
-        120: {Laminado:69, Estratificado:91, PET:89, Laca:114, Madera:126}
+        60:  {Laminado:45, Estratificado:63, PET:65, Laca:90, Madera:102},
+        90:  {Laminado:57, Estratificado:77, PET:79, Laca:102, Madera:114},
+        120: {Laminado:69, Estratificado:89, PET:91, Laca:114, Madera:126}
       }
     }
   }
@@ -9858,30 +9803,66 @@ let saitraIdCnt  = 0;
 function saitraCalcCoste(puntos, pp){ return puntos * pp; }
 function saitraCalcPvpAccesorio(pvpTarifa, dto){ return pvpTarifa * (1 - dto/100); }
 function saitraCalcPvp(coste, margen){ return coste * (1 + margen/100); }
-const ACABADOS_TARIFA = { 'Narai PET': 4, 'Morguet': 4, 'Morguet 45': 4 };
-
-function saitraAcabadoChange(){
-  // Legacy - redirige a frenteChange
-  saitraFrenteChange();
-}
+// Mapeo frente → categoría de acabado para muebles de línea
+const FRENTE_ACABADO_MAP = {
+  // T.1 — Laminados básicos
+  'Kariba':1,'Alice':1,'Nordik':1,'Kleeia':1,'Atria':1,
+  // T.2 — Estratificados blancos
+  'Izar':2,'Lure':2,'Bora Blanco':2,'Morget Blanco':2,
+  // T.3 — PET blanco / Estratificado color / Laminado superior
+  'Tubalu':3,'Narai Laminado':3,'Bora Color':3,'Lunda':3,
+  'Morget Color':3,'Morget 45 Blanco':3,'Narai PET Blanco':3,'Glass Blanco':3,
+  // T.4 — PET color / Estratificado premium / Lacas básicas
+  'Naos':4,'Morget Metal':4,'Morget 45 Color':4,'Narai PET Color':4,
+  'Glass Color':4,'Buran Blanco':4,
+  // T.5-T.6 — Lacas
+  'Fénix':5,'Buran Color':5,'Buran 45/65 Blanco':5,'Calma Blanco':5,
+  'Vega Blanco':5,'Sera Blanco':5,'Sismo Blanco':5,
+  'Fénix 45':6,'Buran 45/65 Color':6,'Calma Color':6,'Vega Color':6,
+  'Inari Blanco':6,'Sismo Color':6,'Roa Blanco':6,'Rose Blanco':6,'Roxen Blanco':6,
+  // T.7 — Madera básica / Laca alta
+  'Nemin Roble/Fresno':7,'Inari Color':7,'Roa Color':7,'Roxen Color':7,'Erie Blanco':7,
+  // T.8-T.10 — Maderas / Lacas especiales
+  'Nemin Nogal/Fumé':8,'Travis Roble':8,'Belat':8,'Smog':8,'Aore Roble':8,
+  'Kara Roble':8,'Sayula Roble':8,'Halo':8,'Erie Color':8,
+  'Arifi Blanco Seda':8,'Saima Blanco':8,
+  'Travis Lacado':9,'Aore Lacado':9,'Kara Lacado':9,'Sayula Nogal':9,
+  'Deo':9,'Drinet Roble':9,'Tai Roble':9,'Nasim':9,'Arifi Blanco Brillo':9,
+  'Drinet Lacado':10,'Tai Lacado':10,'Arifi Color Brillo':10
+};
+// Qué LINEA_ACABADO corresponde a cada tarifa
+const TARIFA_A_LINEA_ACABADO = {
+  1:'Laminado', 2:'Estratificado', 3:'PET', 4:'PET',
+  5:'Laca', 6:'Laca', 7:'Laca', 8:'Madera', 9:'Madera', 10:'Madera'
+};
 
 function saitraFrenteChange(){
   const frenteVal = document.getElementById('s-frente')?.value || '';
   const colSel    = document.getElementById('s-col');
+  const acabadoSel= document.getElementById('sl-acabado');
   if(!colSel) return;
   if(frenteVal){
-    const tarifa = parseInt(frenteVal.split('|')[1]) || null;
+    const parts  = frenteVal.split('|');
+    const nombre = parts[0];
+    const tarifa = parseInt(parts[1]) || null;
     if(tarifa){
-      colSel.value   = tarifa;
+      colSel.value    = tarifa;
       colSel.disabled = true;
       colSel.style.opacity = '0.6';
-      colSel.title   = `Fijado por acabado frente`;
+      colSel.title    = `Fijado por acabado frente`;
+      // Sincronizar sl-acabado con la categoría del frente
+      if(acabadoSel){
+        const lineaAcab = TARIFA_A_LINEA_ACABADO[tarifa] || LINEA_ACABADO_DEF;
+        acabadoSel.value = lineaAcab;
+      }
     }
   } else {
     colSel.disabled = false;
     colSel.style.opacity = '1';
     colSel.title = '';
+    if(acabadoSel) acabadoSel.value = LINEA_ACABADO_DEF;
   }
+  saitraLineaPreview();
   saitraPuntosPreview();
 }
 
