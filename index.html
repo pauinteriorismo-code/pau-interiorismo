@@ -2570,6 +2570,57 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
             <button class="btn btn-primary btn-sm" style="margin-top:2px;width:100%;background:#7b5ea7;border:none" onclick="saitraAddIncremento()">＋ Añadir incremento</button>
           </div>
 
+          <!-- COMPLEMENTOS -->
+          <div class="card" style="padding:14px;border-left:4px solid #00796b">
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#00796b;margin-bottom:10px;letter-spacing:.05em">🪟 Complemento (pts × 0,99€)</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+              <div>
+                <label class="form-label">Modelo</label>
+                <div style="display:flex;gap:8px;padding:5px 7px;background:#f7f4ef;border-radius:6px;border:1px solid #e8e0d4;flex-wrap:wrap">
+                  <label style="display:flex;align-items:center;gap:3px;font-size:12px;cursor:pointer"><input type="radio" name="scomp-modelo" value="1" checked><span style="font-weight:700;color:var(--copper)">M1</span></label>
+                  <label style="display:flex;align-items:center;gap:3px;font-size:12px;cursor:pointer"><input type="radio" name="scomp-modelo" value="2"><span style="font-weight:700;color:#1565c0">M2</span></label>
+                  <label style="display:flex;align-items:center;gap:3px;font-size:12px;cursor:pointer"><input type="radio" name="scomp-modelo" value="3"><span style="font-weight:700;color:#2e7d32">M3</span></label>
+                  <label style="display:flex;align-items:center;gap:3px;font-size:12px;cursor:pointer"><input type="radio" name="scomp-modelo" value="4"><span style="font-weight:700;color:#7b5ea7">M4</span></label>
+                </div>
+              </div>
+              <div>
+                <label class="form-label">Grupo</label>
+                <select class="form-input" id="scomp-grupo" onchange="saitraCompGrupoChange()">
+                  <option value="FRENTES">Frentes y Puertas</option>
+                  <option value="COSTADOS">Costados</option>
+                  <option value="REGLETAS">Regletas</option>
+                  <option value="ESTANTES">Estantes</option>
+                </select>
+              </div>
+            </div>
+            <div style="margin-bottom:8px">
+              <label class="form-label">Referencia</label>
+              <select class="form-input" id="scomp-ref" onchange="saitraCompRefChange()"></select>
+            </div>
+            <div id="scomp-dim-row" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+              <div id="scomp-dim1-wrap">
+                <label class="form-label" id="scomp-dim1-lbl">Alto/Rango</label>
+                <select class="form-input" id="scomp-dim1" onchange="saitraCompPreview()"></select>
+              </div>
+              <div id="scomp-dim2-wrap" style="display:none">
+                <label class="form-label" id="scomp-dim2-lbl">—</label>
+                <select class="form-input" id="scomp-dim2" onchange="saitraCompPreview()"></select>
+              </div>
+            </div>
+            <div id="scomp-preview" style="display:none;background:#e0f2f1;border-radius:6px;padding:8px 10px;font-size:11px;margin-bottom:8px;border:1px solid #b2dfdb"></div>
+            <div style="display:flex;gap:8px;margin-bottom:8px">
+              <div style="flex:1">
+                <label class="form-label">Descripción adicional</label>
+                <input type="text" class="form-input" id="scomp-desc" placeholder="ej. costado derecha, puerta abatible...">
+              </div>
+              <div style="width:60px">
+                <label class="form-label">Cant.</label>
+                <input type="number" class="form-input" id="scomp-cant" value="1" min="1" style="text-align:center">
+              </div>
+            </div>
+            <button class="btn btn-primary btn-sm" style="margin-top:2px;width:100%;background:#00796b;border:none" onclick="saitraAddComplemento()">＋ Añadir complemento</button>
+          </div>
+
           <!-- ACCESORIOS POR PVP TARIFA -->
           <div class="card" style="padding:14px">
             <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--copper);margin-bottom:10px;letter-spacing:.05em">🔧 Accesorio (PVP tarifa)</div>
@@ -9687,6 +9738,271 @@ const SAITRA_MOD = {
     30:[290,372,495,542,713,728,769,791,813,836]}},
 
 };
+// ─── COMPLEMENTOS SAITRA ───────────────────────────────────────
+const SAITRA_COMP = {
+
+  // ── FRENTES Y PUERTAS ─────────────────────────────────────────
+  'F_13':  { label:'Frente H.13/14cm',    grupo:'FRENTES', tipo:'ancho',
+    anchos:{30:[14,15,16,18,19,20,28,33,36,40],40:[15,16,18,19,19,25,30,35,44,48],
+            45:[15,16,18,19,24,26,31,36,48,50],50:[16,18,19,24,25,28,34,39,51,55],
+            60:[16,18,23,25,26,30,36,40,61,65],70:[18,19,24,28,28,31,39,43,68,70],
+            80:[19,20,24,28,33,35,41,45,76,81],90:[20,23,25,31,36,39,44,50,83,86],
+           100:[23,24,26,33,39,40,48,55,89,93],120:[28,31,34,35,41,48,56,59,98,101]}},
+
+  'P_26':  { label:'Puerta H.26/28cm',    grupo:'FRENTES', tipo:'ancho',
+    anchos:{30:[18,19,23,24,33,34,36,43,53,69],40:[19,20,24,26,36,40,43,50,65,80],
+            45:[19,20,24,26,39,43,49,53,69,85],50:[23,24,25,30,40,44,55,60,80,99],
+            60:[28,30,31,34,41,49,58,68,85,103]}},
+
+  'P_39':  { label:'Puerta H.39/42cm',    grupo:'FRENTES', tipo:'ancho',
+    anchos:{30:[20,23,24,25,35,39,44,50,68,70],40:[25,26,30,33,40,44,50,53,84,89],
+            45:[25,26,30,33,41,48,53,59,93,98],50:[30,31,34,35,43,49,56,65,101,106],
+            60:[33,34,36,41,44,53,68,76,118,124],70:[36,39,40,48,55,68,78,90,126,133],
+            80:[41,43,45,53,61,76,90,101,133,139],90:[45,48,50,59,69,86,100,114,145,153],
+           100:[53,55,56,65,80,95,110,126,161,169],120:[59,60,64,73,100,115,133,150,176,185]}},
+
+  'PV_39': { label:'Puerta vitrina H.39/42cm', grupo:'FRENTES', tipo:'ancho',
+    anchos:{30:[39,45,48,51,61,65,69,75,90,94],40:[45,53,56,58,65,68,70,78,109,115],
+            45:[45,53,56,58,66,69,73,84,118,124],50:[50,59,61,64,68,73,75,89,125,131],
+            60:[58,68,73,74,75,80,85,101,143,150]}},
+
+  'P_52':  { label:'Puerta H.52cm',        grupo:'FRENTES', tipo:'ancho',
+    anchos:{30:[23,24,26,30,36,41,49,53,68,73],40:[24,26,31,36,44,51,61,68,86,91],
+            45:[24,26,31,41,50,58,69,75,95,100],50:[24,26,34,45,56,64,78,84,105,110],
+            60:[25,30,43,55,69,75,91,99,118,124],70:[33,36,49,68,76,83,103,114,135,141],
+            80:[43,49,53,75,83,93,110,126,159,166],90:[53,59,65,81,89,105,124,140,178,186],
+           100:[64,68,73,99,105,116,136,161,198,206],120:[75,78,81,105,114,140,165,184,236,249]}},
+
+  'PV_52': { label:'Puerta vitrina H.52cm', grupo:'FRENTES', tipo:'ancho',
+    anchos:{30:[48,51,55,58,61,66,70,83,91,99],40:[60,65,75,78,81,86,94,106,118,126],
+            45:[65,68,75,80,83,94,101,111,126,135],50:[70,75,78,85,91,103,110,126,136,145],
+            60:[75,81,86,100,103,119,128,139,153,165]}},
+
+  'P_56':  { label:'Puerta H.56cm',        grupo:'FRENTES', tipo:'ancho',
+    anchos:{30:[25,26,28,32,38,43,51,55,70,75],40:[26,28,33,38,46,53,63,70,88,93],
+            45:[26,28,33,43,52,60,71,77,97,102],50:[26,28,36,47,58,66,80,86,107,112],
+            60:[27,32,45,57,71,77,93,101,120,126],70:[35,38,51,70,78,85,105,116,137,143],
+            80:[45,51,55,77,85,95,112,128,161,168],90:[55,61,58,83,91,107,126,142,180,188],
+           100:[66,70,75,101,107,118,138,163,200,208],120:[77,80,83,107,116,142,167,186,238,251]}},
+
+  'PV_56': { label:'Puerta vitrina H.56cm', grupo:'FRENTES', tipo:'ancho',
+    anchos:{30:[52,55,59,62,65,70,74,87,95,103],40:[64,69,79,82,85,90,98,110,122,130],
+            45:[69,72,79,84,87,98,105,115,130,139],50:[74,79,82,89,95,107,114,130,140,149],
+            60:[79,85,90,104,107,123,132,143,157,169]}},
+
+  'P_65':  { label:'Puerta H.65cm',        grupo:'FRENTES', tipo:'ancho',
+    anchos:{30:[28,29,31,38,46,51,54,61,84,88],40:[29,31,34,46,54,64,69,78,103,109],
+            45:[29,33,37,51,63,71,77,84,112,118],50:[31,36,39,54,68,78,86,94,122,128],
+            60:[33,38,47,63,79,78,106,113,143,151],70:[73,77,81,87,93,101,117,129,167,173],
+            80:[77,81,88,93,104,113,133,147,189,198],90:[83,88,96,98,118,128,148,167,213,223],
+           100:[92,94,98,117,129,142,164,184,237,248],120:[94,98,106,134,154,168,197,219,283,297]}},
+
+  'PV_65': { label:'Puerta vitrina H.65cm', grupo:'FRENTES', tipo:'ancho',
+    anchos:{30:[65,70,80,82,92,100,105,114,116,122],40:[81,89,96,104,120,124,134,137,140,147],
+            45:[91,100,109,116,129,129,146,149,151,159],50:[105,114,125,131,141,146,156,159,162,170],
+            60:[124,134,142,149,166,170,176,180,182,190]}},
+
+  'P_70':  { label:'Puerta H.70cm',        grupo:'FRENTES', tipo:'ancho',
+    anchos:{30:[31,32,34,41,49,54,57,64,87,91],40:[32,34,37,49,57,67,72,81,106,112],
+            45:[32,36,40,54,66,74,80,87,115,121],50:[34,39,42,57,71,81,89,97,125,131],
+            60:[36,41,50,66,82,81,109,116,146,154]}},
+
+  'PV_70': { label:'Puerta vitrina H.70cm', grupo:'FRENTES', tipo:'ancho',
+    anchos:{30:[71,76,86,88,98,106,111,120,122,128],40:[87,95,102,110,126,130,140,143,146,153],
+            45:[97,106,115,122,135,135,152,155,157,165],50:[111,120,131,137,147,152,162,165,168,176],
+            60:[130,140,148,155,172,176,182,186,188,196]}},
+
+  'P_78':  { label:'Puerta H.78cm',        grupo:'FRENTES', tipo:'ancho',
+    anchos:{30:[35,41,45,54,58,66,73,79,88,91],40:[38,45,49,63,66,86,94,103,108,114],
+            45:[38,45,53,66,74,96,103,111,119,124],50:[39,46,55,71,81,110,119,128,136,144],
+            60:[40,48,60,80,100,119,138,148,160,166]}},
+
+  'PV_78': { label:'Puerta vitrina H.78cm', grupo:'FRENTES', tipo:'ancho',
+    anchos:{30:[81,89,93,103,115,124,143,149,159,164],40:[100,108,115,124,133,149,161,170,176,183],
+            45:[108,116,125,135,149,160,175,184,191,201],50:[123,133,141,150,166,180,194,205,211,226],
+            60:[134,148,158,169,183,191,200,206,220,235]}},
+
+  'P_84':  { label:'Puerta H.84cm',        grupo:'FRENTES', tipo:'ancho',
+    anchos:{30:[39,45,49,58,62,70,77,83,92,95],40:[42,49,53,67,70,90,98,107,112,118],
+            45:[42,49,57,70,78,100,107,115,123,128],50:[43,50,59,75,85,114,123,132,140,148],
+            60:[44,52,64,84,104,123,142,152,164,170]}},
+
+  'P_91':  { label:'Puerta H.91cm',        grupo:'FRENTES', tipo:'ancho',
+    anchos:{30:[42,49,53,62,66,74,81,87,96,99],40:[46,53,57,71,74,94,102,111,116,122],
+            45:[46,53,61,74,82,104,111,119,127,132],50:[47,54,63,79,89,118,127,136,144,152],
+            60:[48,56,68,88,108,127,146,156,168,174]}},
+
+  'PV_91': { label:'Puerta vitrina H.91cm', grupo:'FRENTES', tipo:'ancho',
+    anchos:{30:[94,102,106,116,128,137,156,162,172,177],40:[113,121,128,137,146,162,174,183,189,196],
+            45:[121,129,138,148,162,173,188,197,204,214],50:[136,146,154,163,179,193,207,218,224,239],
+            60:[147,161,171,182,196,204,213,219,233,248]}},
+
+  'PV_98': { label:'Puerta vitrina H.98cm', grupo:'FRENTES', tipo:'ancho',
+    anchos:{30:[99,107,111,121,133,142,161,167,177,182],40:[118,126,133,142,151,167,179,188,194,201],
+            45:[126,134,143,153,167,178,193,202,209,219],50:[141,151,159,168,184,198,212,223,229,244],
+            60:[152,166,176,187,201,209,218,224,238,253]}},
+
+  'P_130': { label:'Puerta H.130cm',       grupo:'FRENTES', tipo:'ancho',
+    anchos:{30:[51,58,62,71,75,83,90,96,105,108],40:[55,62,66,80,83,103,111,120,125,131],
+            45:[55,62,70,83,91,113,120,128,136,141],50:[56,63,72,88,98,127,136,145,153,161],
+            60:[57,65,77,97,117,136,155,165,177,183]}},
+
+  'P_143': { label:'Puerta H.143cm',       grupo:'FRENTES', tipo:'ancho',
+    anchos:{30:[56,63,67,76,80,88,95,101,110,113],40:[60,67,71,85,88,108,116,125,130,136],
+            45:[60,67,75,88,96,118,125,133,141,146],50:[61,68,77,93,103,132,141,150,158,166],
+            60:[62,70,82,102,122,141,160,170,182,188]}},
+
+  'PV_143':{ label:'Puerta vitrina H.143cm',grupo:'FRENTES', tipo:'ancho',
+    anchos:{30:[130,136,144,151,161,176,189,203,215,240],40:[155,161,169,176,185,208,228,244,260,301],
+            45:[161,169,176,194,209,225,250,268,285,331],50:[169,176,184,208,233,250,273,289,309,361],
+            60:[206,214,219,236,255,283,290,308,326,343]}},
+
+  'PV_156':{ label:'Puerta vitrina H.156/158cm',grupo:'FRENTES', tipo:'ancho',
+    anchos:{30:[155,161,169,176,186,201,214,228,240,265],40:[180,186,194,201,210,233,253,269,285,326],
+            45:[186,194,201,219,234,250,275,293,310,356],50:[194,201,209,233,258,275,298,314,334,386],
+            60:[231,239,244,261,280,308,315,333,351,368]}},
+
+  'P_159': { label:'Puerta H.159/195cm',   grupo:'FRENTES', tipo:'ancho',
+    anchos:{30:[73,80,100,126,131,141,151,159,171,176],40:[77,84,105,138,142,169,180,192,198,207],
+            45:[77,84,110,142,153,182,192,203,213,220],50:[78,85,113,149,162,201,213,225,236,247],
+            60:[79,87,119,161,188,213,239,252,269,277]}},
+
+  'P_196': { label:'Puerta H.196/234cm',   grupo:'FRENTES', tipo:'ancho',
+    anchos:{30:[85,92,115,142,147,158,167,176,188,192],40:[89,96,120,154,158,185,196,208,215,223],
+            45:[89,96,125,155,169,198,208,219,230,236],50:[90,97,127,165,178,217,230,242,252,263],
+            60:[91,99,133,177,204,230,255,269,285,293]}},
+
+  'P_235': { label:'Puerta H.235/260cm',   grupo:'FRENTES', tipo:'ancho',
+    anchos:{30:[97,104,130,158,163,174,184,192,204,208],40:[101,108,134,170,174,201,212,224,231,239],
+            45:[101,108,140,174,185,215,224,235,246,252],50:[102,109,141,181,194,234,246,258,269,279],
+            60:[103,111,147,193,220,246,271,285,301,309]}},
+
+  // ── COSTADOS ──────────────────────────────────────────────────
+  'C_35':  { label:'Costado F.35,5/37,5cm', grupo:'COSTADOS', tipo:'alto',
+    altos:{26:[15,16,19,20,31,34,43,55,74,78],39:[18,19,20,23,33,35,45,58,76,81],
+           52:[19,20,24,26,35,39,49,60,80,84],65:[24,25,28,31,39,41,51,64,83,86],
+           78:[28,30,31,39,43,45,53,66,91,95],91:[30,31,36,44,48,50,56,69,94,99],
+          117:[33,34,49,51,53,61,65,85,109,115],130:[35,39,50,55,64,73,80,99,134,140],
+          143:[39,41,55,64,66,75,83,101,136,144],148:[44,55,66,69,99,115,128,140,191,200],
+          158:[45,56,70,78,105,124,134,148,198,208],198:[45,58,73,94,124,144,158,178,215,226],
+          208:[48,60,74,100,130,150,164,185,218,230],211:[48,60,74,101,130,153,166,189,224,235],
+          221:[50,64,80,108,135,160,173,195,225,236],224:[50,64,80,109,136,164,175,199,231,243],
+          234:[58,68,84,115,141,169,181,206,234,245],242:[66,73,89,121,146,174,187,213,238,249]}},
+
+  'C_60':  { label:'Costado F.60,5/62,5cm', grupo:'COSTADOS', tipo:'alto',
+    altos:{52:[20,26,33,51,64,66,74,93,95,100],65:[25,31,40,56,66,69,80,114,116,123],
+           78:[31,39,49,60,70,89,91,119,143,150],88:[34,43,53,65,89,99,114,135,150,158],
+           91:[34,43,53,65,89,99,114,135,150,158],117:[45,58,69,74,94,118,124,145,160,168],
+          130:[48,58,70,76,95,120,126,148,164,170],143:[50,64,74,80,99,123,130,150,166,175],
+          148:[51,65,78,81,116,135,150,165,225,235],158:[53,66,83,91,123,145,158,174,233,244],
+          198:[55,68,85,110,145,169,185,209,265,278],208:[56,70,86,118,151,176,193,218,273,285],
+          211:[56,70,86,119,153,180,195,220,275,289],221:[59,74,93,126,159,189,203,230,277,293],
+          224:[59,74,93,128,160,191,206,234,280,297],234:[68,80,99,135,166,199,214,243,284,301],
+          242:[76,87,106,142,173,207,222,252,287,305]}},
+
+  'C_80':  { label:'Costado F.80cm',        grupo:'COSTADOS', tipo:'alto',
+    altos:{52:[26,35,43,68,84,88,98,122,126,132],65:[33,41,53,74,88,91,106,150,154,162],
+           78:[41,51,64,79,93,117,121,157,188,198],88:[45,56,69,86,117,131,150,179,198,208],
+           91:[45,56,69,86,117,131,150,179,198,208],117:[60,76,91,98,124,155,164,192,212,221],
+          130:[63,76,93,101,126,159,167,195,217,225],143:[66,84,98,106,131,162,172,198,220,231],
+          148:[68,86,102,107,154,179,198,218,298,311],158:[69,88,109,121,162,192,208,230,307,322],
+          198:[73,89,112,145,192,223,245,276,350,367],208:[74,93,114,155,200,233,255,288,360,377],
+          211:[78,93,114,157,202,238,258,291,364,382],221:[78,98,122,167,210,250,268,304,366,387],
+          224:[78,98,122,169,212,253,273,309,370,393],234:[89,106,131,179,220,263,283,321,376,398],
+          242:[100,115,140,188,229,274,294,333,380,403],252:[111,126,151,199,237,283,303,344,391,413],
+          262:[123,134,159,210,245,295,312,351,400,428],272:[138,149,167,219,256,304,323,360,409,434],
+          282:[149,160,178,228,264,313,331,369,417,442],292:[157,168,186,236,275,322,340,378,426,456]}},
+
+  'C_100': { label:'Costado F.100cm',       grupo:'COSTADOS', tipo:'alto',
+    altos:{52:[33,43,54,85,105,110,122,153,157,165],65:[41,52,66,93,110,114,132,188,192,202],
+           78:[52,64,81,99,116,147,151,196,236,248],88:[56,70,87,107,147,163,188,223,248,260],
+           91:[56,70,87,107,147,163,188,223,248,260],117:[74,95,114,122,155,194,205,240,264,277],
+          130:[79,95,116,126,157,198,209,244,271,281],143:[83,105,122,132,163,202,215,248,275,289],
+          148:[85,107,128,134,192,223,248,273,372,388],158:[87,110,136,151,202,240,260,287,384,403],
+          198:[91,112,140,182,240,279,306,345,438,459],208:[93,116,143,194,250,291,318,360,450,471],
+          211:[93,116,143,196,252,298,322,364,455,477],221:[97,122,153,209,262,312,335,380,458,484],
+          224:[97,122,153,211,264,316,341,386,463,491],234:[112,132,163,223,275,329,353,401,469,498],
+          242:[126,144,175,235,286,342,367,417,474,504],252:[139,158,189,249,296,354,379,430,489,516],
+          262:[154,168,199,263,306,369,390,439,500,535],272:[173,186,209,274,320,380,404,450,511,543],
+          282:[186,200,223,285,330,391,414,461,521,553],292:[196,210,233,295,344,403,425,473,533,570]}},
+
+  'C_120': { label:'Costado F.120cm',       grupo:'COSTADOS', tipo:'alto',
+    altos:{52:[41,54,67,106,132,137,152,191,196,207],65:[52,65,83,116,137,142,165,235,240,253],
+           78:[65,80,101,124,145,183,189,245,294,310],88:[70,88,108,134,183,204,235,279,310,325],
+           91:[70,88,108,134,183,204,235,279,310,325],117:[93,119,142,152,194,243,256,300,331,346],
+          130:[98,119,145,158,196,248,261,305,338,351],143:[103,132,152,165,204,253,269,310,343,362],
+          148:[106,134,160,168,240,279,310,341,465,486],158:[108,137,170,189,253,300,325,359,480,504],
+          198:[114,139,176,227,300,349,382,431,548,573],208:[116,145,178,243,313,364,398,449,563,589],
+          211:[116,145,178,245,315,372,403,455,568,597],221:[121,152,191,261,328,390,418,475,572,605],
+          224:[121,152,191,263,331,395,426,483,579,614],234:[139,165,204,279,343,411,442,501,587,622],
+          242:[157,180,219,293,357,428,459,521,593,630],252:[173,197,236,311,370,442,473,538,611,645],
+          262:[192,209,248,328,383,461,488,548,625,669],272:[216,233,261,342,400,475,505,563,639,678],
+          282:[233,250,278,356,413,489,517,577,652,691],292:[245,263,291,369,430,503,531,591,666,713]}},
+
+  'C78':   { label:'Costado H.78cm (ancho)',  grupo:'COSTADOS', tipo:'ancho',
+    anchos:{75:[36,44,58,69,105,119,135,144,161,170],100:[45,60,75,91,135,155,173,190,219,230],
+           120:[55,69,84,110,165,190,214,235,261,276]}},
+
+  'C84':   { label:'Costado H.84/88cm (ancho)',grupo:'COSTADOS', tipo:'ancho',
+    anchos:{75:[44,50,65,76,111,165,175,184,191,208],100:[53,68,83,99,143,195,206,215,226,239],
+           120:[61,76,91,118,173,226,250,260,270,284]}},
+
+  'C94':   { label:'Costado H.94/98cm (ancho)',grupo:'COSTADOS', tipo:'ancho',
+    anchos:{75:[45,60,75,86,123,175,185,194,206,216],100:[53,75,98,109,153,206,218,228,236,249],
+           125:[66,89,110,128,183,241,260,268,281,295]}},
+
+  'CM2':   { label:'Costado por m²',           grupo:'COSTADOS', tipo:'m2',
+    pts:[64,90,116,131,184,248,261,274,284,299]},
+
+  // ── REGLETAS ──────────────────────────────────────────────────
+  'R_10':  { label:'Regleta F.10cm',           grupo:'REGLETAS', tipo:'rango',
+    rangos:{'26-52':[19,20,25,26,28,36,45,60,75,80],'53-78':[20,23,26,28,30,45,56,69,89,93],
+            '79-104':[23,25,30,33,35,55,66,76,101,108],'105-130':[24,26,33,39,41,66,80,86,115,120],
+            '131-160':[25,28,35,41,48,74,89,93,126,133],'161-198':[26,30,40,44,56,83,95,100,140,148],
+            '199-221':[28,31,43,45,61,90,101,108,153,160],'221-242':[30,34,45,49,66,98,108,116,165,174]}},
+
+  'RAN_7': { label:'Regleta ángulo 7×7cm',    grupo:'REGLETAS', tipo:'alto',
+    altos:{65:[31,34,44,50,59,69,74,86,103,108],78:[33,35,45,53,61,73,78,91,108,114],
+           91:[34,36,49,56,65,76,83,95,114,119]}},
+
+  'CR':    { label:'Contrarregleta F.10cm',   grupo:'REGLETAS', tipo:'cr',
+    rangos:{'26-52':{16:12,19:14,multi:35},'53-78':{16:13,19:15,multi:38},
+            '79-104':{16:16,19:18,multi:45},'105-130':{16:17,19:19,multi:48},
+            '131-160':{16:18,19:20,multi:50},'161-198':{16:19,19:21,multi:53},
+            '199-221':{16:20,19:22,multi:55},'222-242':{16:22,19:24,multi:60}}},
+
+  // ── ESTANTES ──────────────────────────────────────────────────
+  'EB':    { label:'Estante base (16/19/multi)',grupo:'ESTANTES', tipo:'estante',
+    anchos:{20:{16:6,19:7,multi:18},25:{16:6,19:7,multi:18},30:{16:8,19:9,multi:23},
+            35:{16:8,19:9,multi:23},40:{16:9,19:10,multi:25},45:{16:9,19:10,multi:25},
+            50:{16:10,19:11,multi:28},60:{16:10,19:11,multi:28},70:{16:11,19:12,multi:30},
+            80:{16:11,19:12,multi:30},90:{16:12,19:13,multi:33},100:{16:12,19:13,multi:33},
+           110:{16:14,19:15,multi:38},120:{16:14,19:15,multi:38}}},
+
+  'EC':    { label:'Estante colgante (16/19/multi)',grupo:'ESTANTES', tipo:'estante',
+    anchos:{20:{16:4,19:5,multi:13},25:{16:4,19:5,multi:13},30:{16:6,19:7,multi:18},
+            35:{16:6,19:7,multi:18},40:{16:7,19:8,multi:20},45:{16:7,19:8,multi:20},
+            50:{16:8,19:9,multi:23},60:{16:8,19:9,multi:23},70:{16:9,19:10,multi:25},
+            80:{16:9,19:10,multi:25},90:{16:10,19:12,multi:30},100:{16:10,19:12,multi:30},
+           110:{16:12,19:14,multi:35},120:{16:12,19:14,multi:35}}},
+
+  'EBR':   { label:'Estante base rincón',      grupo:'ESTANTES', tipo:'estante',
+    anchos:{'90x90':{16:44,19:53,multi:133},'95x95':{16:46,19:57,multi:143}}},
+
+  'ECR':   { label:'Estante colgante rincón',  grupo:'ESTANTES', tipo:'estante',
+    anchos:{'60x60':{16:32,19:38,multi:95},'65x65':{16:33,19:39,multi:98}}},
+
+  'EBC':   { label:'Estante base cristal',     grupo:'ESTANTES', tipo:'cristal',
+    anchos:{40:{transp:31,gris:38},45:{transp:34,gris:40},50:{transp:39,gris:44},
+            60:{transp:44,gris:52},70:{transp:48,gris:62},80:{transp:50,gris:70},
+            90:{transp:55,gris:76},100:{transp:60,gris:86},120:{transp:70,gris:100}}},
+
+  'ECC':   { label:'Estante colgante cristal', grupo:'ESTANTES', tipo:'cristal',
+    anchos:{40:{transp:20,gris:25},45:{transp:24,gris:28},50:{transp:25,gris:31},
+            60:{transp:28,gris:35},70:{transp:33,gris:42},80:{transp:35,gris:47},
+            90:{transp:40,gris:52},100:{transp:44,gris:58},120:{transp:48,gris:71}}}
+};
+
 const SAITRA_ZOC = {
   'ZPVCAL-8':  { label:'Zócalo PVC Aluminio A.8',           pts:[28,15] },
   'ZPVCAL-10': { label:'Zócalo PVC Aluminio A.10',          pts:[30,16] },
@@ -9881,6 +10197,150 @@ function saitraFrenteChange(){
   saitraPuntosPreview();
 }
 
+
+// ─── FUNCIONES COMPLEMENTOS ────────────────────────────────────
+function saitraCompGrupoChange(){
+  const grupo = document.getElementById('scomp-grupo')?.value || 'FRENTES';
+  const selRef = document.getElementById('scomp-ref');
+  if(!selRef) return;
+  const entries = Object.entries(SAITRA_COMP).filter(([k,v]) => v.grupo === grupo);
+  selRef.innerHTML = entries.map(([k,v]) => `<option value="${k}">${v.label}</option>`).join('');
+  saitraCompRefChange();
+}
+
+function saitraCompRefChange(){
+  const ref = document.getElementById('scomp-ref')?.value;
+  if(!ref || !SAITRA_COMP[ref]) return;
+  const comp = SAITRA_COMP[ref];
+  const dim1 = document.getElementById('scomp-dim1');
+  const dim2 = document.getElementById('scomp-dim2');
+  const lbl1 = document.getElementById('scomp-dim1-lbl');
+  const lbl2 = document.getElementById('scomp-dim2-lbl');
+  const w2   = document.getElementById('scomp-dim2-wrap');
+
+  if(!dim1) return;
+
+  // Configurar selectores según el tipo
+  if(comp.tipo === 'ancho'){
+    lbl1.textContent = 'Ancho (cm)';
+    dim1.innerHTML = Object.keys(comp.anchos).map(a=>`<option value="${a}">${a} cm</option>`).join('');
+    w2.style.display = 'none';
+  } else if(comp.tipo === 'alto'){
+    lbl1.textContent = 'Alto (cm)';
+    dim1.innerHTML = Object.keys(comp.altos).map(a=>`<option value="${a}">${a} cm</option>`).join('');
+    w2.style.display = 'none';
+  } else if(comp.tipo === 'rango'){
+    lbl1.textContent = 'Rango alto';
+    dim1.innerHTML = Object.keys(comp.rangos).map(r=>`<option value="${r}">H. ${r} cm</option>`).join('');
+    w2.style.display = 'none';
+  } else if(comp.tipo === 'cr'){
+    lbl1.textContent = 'Rango alto';
+    dim1.innerHTML = Object.keys(comp.rangos).map(r=>`<option value="${r}">H. ${r} cm</option>`).join('');
+    lbl2.textContent = 'Material';
+    dim2.innerHTML = '<option value="16">16 mm</option><option value="19">19 mm</option><option value="multi">Multicapas</option>';
+    w2.style.display = '';
+  } else if(comp.tipo === 'estante'){
+    lbl1.textContent = 'Ancho (cm)';
+    dim1.innerHTML = Object.keys(comp.anchos).map(a=>`<option value="${a}">${a} cm</option>`).join('');
+    lbl2.textContent = 'Material';
+    dim2.innerHTML = '<option value="16">16 mm</option><option value="19">19 mm</option><option value="multi">Multicapas</option>';
+    w2.style.display = '';
+  } else if(comp.tipo === 'cristal'){
+    lbl1.textContent = 'Ancho (cm)';
+    dim1.innerHTML = Object.keys(comp.anchos).map(a=>`<option value="${a}">${a} cm</option>`).join('');
+    lbl2.textContent = 'Cristal';
+    dim2.innerHTML = '<option value="transp">Transparente/Al ácido</option><option value="gris">Parsol gris/bronce/dark</option>';
+    w2.style.display = '';
+  } else if(comp.tipo === 'm2'){
+    lbl1.textContent = 'Dimensión';
+    dim1.innerHTML = '<option value="m2">Precio por m²</option>';
+    w2.style.display = 'none';
+  }
+  saitraCompPreview();
+}
+
+function saitraCompPreview(){
+  const ref    = document.getElementById('scomp-ref')?.value;
+  const dim1v  = document.getElementById('scomp-dim1')?.value;
+  const dim2v  = document.getElementById('scomp-dim2')?.value;
+  const col    = (() => {
+    const modelo = document.querySelector('input[name="scomp-modelo"]:checked')?.value || '1';
+    return parseInt(document.getElementById('s-col-'+modelo)?.value)||1;
+  })();
+  const margen = parseFloat(document.getElementById('s-margen')?.value)||70;
+  const prev   = document.getElementById('scomp-preview');
+  if(!prev || !ref || !SAITRA_COMP[ref]) return;
+
+  const comp = SAITRA_COMP[ref];
+  let pts = null;
+
+  if(comp.tipo === 'ancho') pts = comp.anchos[parseInt(dim1v)]?.[col-1];
+  else if(comp.tipo === 'alto') pts = comp.altos[parseInt(dim1v)]?.[col-1];
+  else if(comp.tipo === 'rango') pts = comp.rangos[dim1v]?.[col-1];
+  else if(comp.tipo === 'cr'){
+    const mat = dim2v || '16';
+    pts = comp.rangos[dim1v]?.[mat];
+  } else if(comp.tipo === 'estante'){
+    const mat = dim2v || '16';
+    pts = comp.anchos[dim1v]?.[mat] ?? comp.anchos[parseInt(dim1v)]?.[mat];
+  } else if(comp.tipo === 'cristal'){
+    const tp = dim2v || 'transp';
+    pts = comp.anchos[parseInt(dim1v)]?.[tp];
+  } else if(comp.tipo === 'm2'){
+    pts = comp.pts[col-1];
+  }
+
+  if(!pts){ prev.style.display='none'; return; }
+
+  const coste = saitraCalcCoste(pts, PUNTO_PP);
+  const pvp   = saitraCalcPvp(coste, margen);
+  prev.style.display = 'block';
+  prev.innerHTML =
+    `<span style="color:#00796b;font-weight:700">${pts} pts × 0,99€ =</span> <strong style="color:var(--navy)">${fmtES(coste)}€ coste</strong><br>` +
+    `<span style="color:var(--text-soft)">+ ${margen}% margen =</span> <strong style="color:#2e7d32;font-size:13px">${fmtES(pvp)}€ PVP cliente</strong>`;
+}
+
+function saitraAddComplemento(){
+  const ref    = document.getElementById('scomp-ref')?.value;
+  const dim1v  = document.getElementById('scomp-dim1')?.value;
+  const dim2v  = document.getElementById('scomp-dim2')?.value;
+  const modelo = document.querySelector('input[name="scomp-modelo"]:checked')?.value || '1';
+  const col    = parseInt(document.getElementById('s-col-'+modelo)?.value)||1;
+  const margen = parseFloat(document.getElementById('s-margen')?.value)||70;
+  const cant   = parseInt(document.getElementById('scomp-cant')?.value)||1;
+  const extra  = document.getElementById('scomp-desc')?.value.trim()||'';
+  if(!ref || !SAITRA_COMP[ref]){ toast('Selecciona una referencia','error'); return; }
+
+  const comp = SAITRA_COMP[ref];
+  let pts = null, dimDesc = '';
+
+  if(comp.tipo === 'ancho'){ pts = comp.anchos[parseInt(dim1v)]?.[col-1]; dimDesc = 'A.'+dim1v+'cm'; }
+  else if(comp.tipo === 'alto'){ pts = comp.altos[parseInt(dim1v)]?.[col-1]; dimDesc = 'H.'+dim1v+'cm'; }
+  else if(comp.tipo === 'rango'){ pts = comp.rangos[dim1v]?.[col-1]; dimDesc = 'H.'+dim1v+'cm'; }
+  else if(comp.tipo === 'cr'){ const m=dim2v||'16'; pts=comp.rangos[dim1v]?.[m]; dimDesc='H.'+dim1v+'cm '+m+'mm'; }
+  else if(comp.tipo === 'estante'){ const m=dim2v||'16'; pts=comp.anchos[dim1v]?.[m]??comp.anchos[parseInt(dim1v)]?.[m]; dimDesc='A.'+dim1v+'cm '+m+'mm'; }
+  else if(comp.tipo === 'cristal'){ const t=dim2v||'transp'; pts=comp.anchos[parseInt(dim1v)]?.[t]; dimDesc='A.'+dim1v+'cm '+(t==='transp'?'Transp.':'Gris/Parsol'); }
+  else if(comp.tipo === 'm2'){ pts=comp.pts[col-1]; dimDesc='m²'; }
+
+  if(!pts){ toast('Combinación no disponible en esta tarifa','error'); return; }
+
+  const costeU = saitraCalcCoste(pts, PUNTO_PP);
+  const pvpU   = saitraCalcPvp(costeU, margen);
+  const desc   = comp.label+' '+dimDesc+(extra?' · '+extra:'');
+
+  saitraLineas.push({
+    id:++saitraIdCnt, tipo:'complemento', ref, modelo,
+    desc, notas:'', cant, puntos:pts,
+    costeUnit:costeU, costeTotal:costeU*cant,
+    pvpUnit:pvpU, pvpTotal:pvpU*cant
+  });
+  if(document.getElementById('scomp-desc')) document.getElementById('scomp-desc').value='';
+  if(document.getElementById('scomp-cant')) document.getElementById('scomp-cant').value='1';
+  saitraRenderTabla();
+  saitraRecalc();
+  toast('✅ [M'+modelo+'] '+comp.label+' '+dimDesc+' · PVP: '+fmtES(pvpU)+'€');
+}
+
 // ─── TABLA INCREMENTOS SAITRA ───
 const SAITRA_INC_TABLA = {
   bases:    { alto:23, fondo:27, ancho:'sup', rec_pilar:36, rec_viga:null, falseo:71, chaflan:71, plantilla:71 },
@@ -9999,6 +10459,7 @@ function saitraAddIncremento(){
 function initSaitra(){
   saitraFrenteChange();
   saitraIncCalc();
+  saitraCompGrupoChange();
   saitraRestaurar();
   const sel = document.getElementById('s-proyecto');
   if(sel){
