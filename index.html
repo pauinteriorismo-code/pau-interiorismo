@@ -16313,12 +16313,40 @@ async function loadAgenda(){
   tbody.innerHTML = '<tr><td colspan="9" class="loading">Cargando…</td></tr>';
   try{
     AgC = await sbGet('agenda','?order=fecha.asc,hora.asc');
+    // Auto-borrar completados con más de 15 días
+    await agLimpiarCompletadosViejos();
     renderAgenda();
     actualizarBadgeAgenda();
     // Poblar proyecto en modal
     agPoblarClientes();
   }catch(e){
     tbody.innerHTML=`<tr><td colspan="9" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;
+  }
+}
+
+async function agLimpiarCompletadosViejos(){
+  try{
+    const limite = new Date();
+    limite.setDate(limite.getDate() - 15);
+    const limiteStr = limite.toISOString().split('T')[0];
+    // Buscar completados con fecha <= hace 15 días
+    const viejos = AgC.filter(a =>
+      a.estado === 'Completado' &&
+      a.fecha && a.fecha <= limiteStr
+    );
+    if(!viejos.length) return;
+    // Borrar cada uno silenciosamente
+    for(const a of viejos){
+      await sb('agenda','DELETE',null,null,`?id=eq.${a.id}`);
+    }
+    // Refrescar la lista local
+    AgC = AgC.filter(a => !viejos.find(v => v.id === a.id));
+    if(viejos.length > 0){
+      toast(`🗑 ${viejos.length} aviso${viejos.length!==1?'s':''} completado${viejos.length!==1?'s':''} eliminado${viejos.length!==1?'s':''} automáticamente (> 15 días)`, 'info');
+    }
+  }catch(e){
+    // Silencioso — no interrumpir la carga
+    console.warn('agLimpiarCompletadosViejos:', e.message);
   }
 }
 
@@ -16381,7 +16409,14 @@ function renderAgenda(){
   tbody.innerHTML = items.map(a => {
     const esVencido = a.fecha < hoy && a.estado !== 'Completado';
     const esHoy = a.fecha === hoy;
-    const rowStyle = esVencido ? 'background:#fff5f5' : esHoy ? 'background:#fffbf0' : '';
+    const esCompletado = a.estado === 'Completado';
+    const rowStyle = esCompletado
+      ? 'background:#f0faf2;opacity:0.75'
+      : esVencido
+        ? 'background:#fde8e8;border-left:3px solid #e53935'
+        : esHoy
+          ? 'background:#fff8e1;border-left:3px solid #f9a825'
+          : 'border-left:3px solid transparent';
     const prioBadge = a.prioridad==='alta'?'<span class="badge b-red">Alta</span>':
                       a.prioridad==='baja'?'<span class="badge b-gray">Baja</span>':
                       '<span class="badge b-blue">Normal</span>';
