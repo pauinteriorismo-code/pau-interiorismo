@@ -2853,7 +2853,10 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
             </div>
             <div style="display:flex;gap:8px;justify-content:flex-end">
               <button class="btn btn-ghost btn-sm" onclick="saitraImprimir()" style="border:1px solid #2e7d32;color:#2e7d32;font-weight:700">🖨 Generar documento cliente</button>
-              <button class="btn btn-primary btn-sm" onclick="saitraExportarPresupuesto()" style="background:var(--copper);border:none;font-weight:700">📤 Exportar al presupuesto</button>
+              <div style="display:flex;align-items:center;gap:6px">
+            <select class="form-input" id="s-version-exp" style="width:60px;font-size:11px"><option value="v1">v1</option><option value="v2">v2</option><option value="v3">v3</option><option value="v4">v4</option><option value="v5">v5</option><option value="v6">v6</option><option value="v7">v7</option><option value="v8">v8</option></select>
+            <button class="btn btn-primary btn-sm" onclick="saitraExportarPresupuesto()" style="background:var(--copper);border:none;font-weight:700">📤 Exportar al presupuesto</button>
+          </div>
             </div>
           </div>
 
@@ -3316,9 +3319,14 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
             <option>IBER. CUARZO</option>
           </select>
         </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <label style="font-size:12px;font-weight:600;color:var(--text-soft)">Versión:</label>
+          <select class="form-input" id="ms-version" style="width:65px"><option value="v1">v1</option><option value="v2">v2</option><option value="v3">v3</option><option value="v4">v4</option><option value="v5">v5</option><option value="v6">v6</option><option value="v7">v7</option><option value="v8">v8</option></select>
+        </div>
         <div class="search-wrap" style="flex:1;min-width:140px"><span class="search-icon">🔍</span>
           <input class="form-input" id="ms-buscar" placeholder="Buscar material…" oninput="msRenderCatalogo()">
         </div>
+        <span id="ms-guardado-lbl" style="font-size:10px;color:var(--text-soft);font-style:italic;white-space:nowrap"></span>
       </div>
       <div style="display:flex;gap:2px;margin-bottom:10px;background:var(--bg-main);border-radius:8px;padding:2px;border:1px solid var(--border)">
         <button class="btn btn-sm ms-tab active" id="ms-tab-cat" onclick="msSetTab('cat')" style="flex:1;border-radius:6px;background:var(--copper);color:#fff">◆ Catálogo</button>
@@ -10849,7 +10857,8 @@ async function saitraExportarPresupuesto(){
   const proy = document.getElementById('s-proyecto')?.value;
   if(!proy){ toast('Selecciona un proyecto primero','error'); return; }
 
-  const verRaw = prompt('¿A qué versión del presupuesto exportar? (1, 2 o 3)', '1');
+  const verSelEl = document.getElementById('s-version-exp');
+  const verRaw = verSelEl ? verSelEl.value : (prompt('¿A qué versión del presupuesto exportar? (1-8)', '1')||'1');
   if(!verRaw) return;
   const ver = verRaw.startsWith('v') ? verRaw : 'v'+verRaw;
 
@@ -19445,6 +19454,7 @@ function msInit(){
     PC.forEach(p => { sel.innerHTML += '<option value="'+p.proyecto_id+'">'+p.proyecto_id+' · '+(p.nombre||'')+'</option>'; });
   }
   msRenderCatalogo(); msRenderExtras(); msRenderValoracion(); msRenderPromos(); msUpdateTotals();
+  msRestaurar();
 }
 
 function msPvp(coste){ const m=parseFloat(document.getElementById('ms-margen')?.value)||35; return coste*(1+m/100); }
@@ -19515,18 +19525,18 @@ function msAddMat(id){
   if(esp===20&&!m.cb20){toast('Material no disponible en 20mm','warning');return;}
   const cb=(esp===20&&m.cb20)?m.cb20:m.cb, ca=(esp===20&&m.ca20)?m.ca20:m.ca;
   msLineas.push({tipo:'mat',ref:m.id,nombre:m.nombre,marca:m.marca,esp:esp,ml:0,m2:0,costeBanc:cb,costeAplac:ca});
-  msUpdateTotals(); toast(m.nombre+' añadido','success');
+  msUpdateTotals(); msGuardar(); toast(m.nombre+' añadido','success');
   const badge=document.getElementById('ms-val-badge');if(badge){badge.style.display='inline';badge.textContent=msLineas.length;}
 }
 
 function msAddExt(id){
   const e=MS_EXTRAS.find(x=>x.id===id); if(!e) return;
   msLineas.push({tipo:'ext',ref:e.id,nombre:e.n,u:e.u,cant:1,costeUd:e.c});
-  msUpdateTotals(); toast(e.n+' añadido','success');
+  msUpdateTotals(); msGuardar(); toast(e.n+' añadido','success');
   const badge=document.getElementById('ms-val-badge');if(badge){badge.style.display='inline';badge.textContent=msLineas.length;}
 }
 
-function msDelLinea(i){msLineas.splice(i,1);msRenderValoracion();msUpdateTotals();}
+function msDelLinea(i){msLineas.splice(i,1);msRenderValoracion();msUpdateTotals();msGuardar();}
 
 function msRenderValoracion(){
   if(!msLineas.length){document.getElementById('ms-content-val').innerHTML='<div style="text-align:center;padding:40px;color:var(--text-soft)"><div style="font-size:32px;margin-bottom:8px">📋</div>Valoración vacía — selecciona materiales o extras</div>';return;}
@@ -19553,7 +19563,7 @@ function msRenderValoracion(){
   document.getElementById('ms-content-val').innerHTML=html;
 }
 
-function msUpdLinea(i,field,val){if(!msLineas[i])return;msLineas[i][field]=parseFloat(val)||0;msRenderValoracion();msUpdateTotals();}
+function msUpdLinea(i,field,val){if(!msLineas[i])return;msLineas[i][field]=parseFloat(val)||0;msRenderValoracion();msUpdateTotals();msGuardar();}
 
 function msUpdateTotals(){
   let tc=0;
@@ -19564,7 +19574,7 @@ function msUpdateTotals(){
   const badge=document.getElementById('ms-val-badge');if(badge){badge.textContent=msLineas.length;badge.style.display=msLineas.length?'inline':'none';}
 }
 
-function msLimpiar(){if(msLineas.length&&!confirm('¿Vaciar toda la valoración?'))return;msLineas=[];msRenderValoracion();msUpdateTotals();}
+function msLimpiar(){if(msLineas.length&&!confirm('¿Vaciar toda la valoración?\n\nTambién se borrará el guardado automático.'))return;msLineas=[];try{localStorage.removeItem(MS_LS_KEY);}catch(e){}const lbl=document.getElementById('ms-guardado-lbl');if(lbl)lbl.textContent='';msRenderValoracion();msUpdateTotals();}
 
 function msRenderPromos(){
   let html='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--copper)">Promociones</div><button class="btn btn-primary btn-sm" onclick="msAddPromo()">＋ Nueva promoción</button></div>';
@@ -19583,29 +19593,165 @@ function msAddPromo(){const n=prompt('Nombre de la promoción:');if(!n)return;co
 function msTogglePromo(i){const w=msPromos[i].activa;msPromos.forEach(p=>p.activa=false);if(!w)msPromos[i].activa=true;msPromoActiva=msPromos[i].activa?msPromos[i]:null;msRenderPromos();msUpdateTotals();}
 function msDelPromo(i){msPromos.splice(i,1);msPromoActiva=null;msRenderPromos();msUpdateTotals();}
 
+const MS_LS_KEY = 'pau_marmoles_valoracion_v1';
+
+function msGuardar(){
+  try{
+    const estado = {
+      lineas: msLineas,
+      proyecto: document.getElementById('ms-proyecto')?.value||'',
+      version: document.getElementById('ms-version')?.value||'v1',
+      margen: document.getElementById('ms-margen')?.value||'35',
+      espesor: document.getElementById('ms-espesor')?.value||'12',
+      ts: Date.now()
+    };
+    localStorage.setItem(MS_LS_KEY, JSON.stringify(estado));
+    const lbl = document.getElementById('ms-guardado-lbl');
+    if(lbl && msLineas.length){
+      const hora = new Date(estado.ts).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+      lbl.textContent = '💾 guardado '+hora;
+    }
+  }catch(e){}
+}
+
+function msRestaurar(){
+  try{
+    const raw = localStorage.getItem(MS_LS_KEY);
+    if(!raw) return;
+    const est = JSON.parse(raw);
+    if(!est || !Array.isArray(est.lineas) || !est.lineas.length) return;
+    msLineas = est.lineas;
+    setTimeout(()=>{
+      const set=(id,v)=>{const el=document.getElementById(id);if(el&&v!==undefined)el.value=v;};
+      set('ms-proyecto', est.proyecto);
+      set('ms-version',  est.version);
+      set('ms-margen',   est.margen);
+      set('ms-espesor',  est.espesor);
+      msRenderValoracion(); msUpdateTotals();
+      const n = msLineas.length;
+      const fecha = est.ts ? new Date(est.ts).toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '—';
+      toast('📂 Valoración mármoles restaurada: '+n+' línea'+(n!==1?'s':'')+' ('+fecha+')','info');
+    }, 300);
+  }catch(e){}
+}
+
 async function msExportarPresupuesto(){
-  if(!msLineas.length){toast('Valoración vacía','warning');return;}
-  const pryId=document.getElementById('ms-proyecto')?.value;
-  if(!pryId){toast('Selecciona un proyecto','warning');return;}
-  let count=0;
-  for(const l of msLineas){
-    if(l.tipo==='mat'){
-      if(l.ml>0){
-        await sbPost('presupuesto_lineas',{proyecto_id:pryId,partida:'Encimera',descripcion:'Bancada '+l.nombre+' '+l.marca+' '+l.esp+'mm',unidad:'ML',cantidad:l.ml,precio_coste:l.costeBanc,precio_venta:parseFloat(msPvp(l.costeBanc).toFixed(2)),proveedor:'Mármoles Santamaría'});
-        count++;
-      }
-      if(l.m2>0){
-        await sbPost('presupuesto_lineas',{proyecto_id:pryId,partida:'Encimera',descripcion:'Aplacado '+l.nombre+' '+l.marca+' '+l.esp+'mm',unidad:'M2',cantidad:l.m2,precio_coste:l.costeAplac,precio_venta:parseFloat(msPvp(l.costeAplac).toFixed(2)),proveedor:'Mármoles Santamaría'});
-        count++;
-      }
-    } else {
-      if((l.cant||0)>0){
-        await sbPost('presupuesto_lineas',{proyecto_id:pryId,partida:'Encimera',descripcion:l.nombre,unidad:l.u,cantidad:l.cant,precio_coste:l.costeUd,precio_venta:parseFloat(msPvp(l.costeUd).toFixed(2)),proveedor:'Mármoles Santamaría'});
-        count++;
+  if(!msLineas.length){ toast('Valoración vacía — añade materiales primero','warning'); return; }
+  const pryId = document.getElementById('ms-proyecto')?.value;
+  if(!pryId){ toast('Selecciona un proyecto en la parte superior','warning'); return; }
+  const ver = document.getElementById('ms-version')?.value || 'v1';
+  const margen = parseFloat(document.getElementById('ms-margen')?.value)||35;
+
+  // Calcular líneas con valores > 0
+  const lineasValidas = msLineas.filter(l =>
+    l.tipo==='mat' ? (l.ml>0 || l.m2>0) : (l.cant||0)>0
+  );
+  if(!lineasValidas.length){
+    toast('Introduce ml, m² o cantidades en la pestaña Valoración primero','warning');
+    msSetTab('val'); return;
+  }
+
+  const totalPvp = lineasValidas.reduce((s,l)=>{
+    if(l.tipo==='mat') return s + msPvp(l.costeBanc)*(l.ml||0) + msPvp(l.costeAplac)*(l.m2||0);
+    return s + msPvp(l.costeUd)*(l.cant||0);
+  },0);
+
+  if(!confirm(
+    'Se añadirán al presupuesto "'+pryId+'" '+ver+':
+
+'+
+    '📄 Capítulo "Encimeras y Aplacados"
+'+
+    '📄 '+lineasValidas.length+' líneas · Total PVP: '+fmtES(totalPvp)+'€
+
+¿Confirmar?'
+  )) return;
+
+  try{
+    toast('Exportando...','info');
+
+    // Obtener orden actual
+    let ordenBase = 0;
+    try{
+      const existing = await sbGet('presupuesto_lineas',
+        '?proyecto_id=eq.'+pryId+'&version=eq.'+ver+'&order=orden.desc&limit=1');
+      if(existing && existing.length) ordenBase = existing[0].orden || 0;
+    }catch(e){ ordenBase = 0; }
+
+    // Crear capítulo
+    await sbPost('presupuesto_lineas',{
+      proyecto_id: pryId, version: ver,
+      descripcion: 'Encimeras y Aplacados — Mármoles Santamaría',
+      es_capitulo: true, orden: ordenBase+1,
+      cantidad: 0, precio_base: 0, precio_venta: 0, subtotal: 0
+    });
+
+    let idx = 0;
+    for(const l of lineasValidas){
+      if(l.tipo==='mat'){
+        if(l.ml>0){
+          const pvpU = msPvp(l.costeBanc);
+          await sbPost('presupuesto_lineas',{
+            proyecto_id: pryId, version: ver,
+            descripcion: 'Bancada '+l.nombre+' '+l.marca+' '+l.esp+'mm',
+            unidad: 'ML', cantidad: parseFloat(l.ml.toFixed(2)),
+            precio_base: parseFloat(l.costeBanc.toFixed(4)),
+            margen_pct: parseFloat(margen.toFixed(2)),
+            ci_gg_bi_pct: 0,
+            precio_venta: parseFloat(pvpU.toFixed(4)),
+            subtotal: parseFloat((pvpU*l.ml).toFixed(4)),
+            iva_pct: '21%', es_capitulo: false,
+            orden: ordenBase+2+(idx++)
+          });
+        }
+        if(l.m2>0){
+          const pvpU = msPvp(l.costeAplac);
+          await sbPost('presupuesto_lineas',{
+            proyecto_id: pryId, version: ver,
+            descripcion: 'Aplacado '+l.nombre+' '+l.marca+' '+l.esp+'mm',
+            unidad: 'M²', cantidad: parseFloat(l.m2.toFixed(2)),
+            precio_base: parseFloat(l.costeAplac.toFixed(4)),
+            margen_pct: parseFloat(margen.toFixed(2)),
+            ci_gg_bi_pct: 0,
+            precio_venta: parseFloat(pvpU.toFixed(4)),
+            subtotal: parseFloat((pvpU*l.m2).toFixed(4)),
+            iva_pct: '21%', es_capitulo: false,
+            orden: ordenBase+2+(idx++)
+          });
+        }
+      } else {
+        const cant = l.cant||0;
+        const pvpU = msPvp(l.costeUd);
+        await sbPost('presupuesto_lineas',{
+          proyecto_id: pryId, version: ver,
+          descripcion: l.nombre,
+          unidad: l.u||'Ud', cantidad: cant,
+          precio_base: parseFloat(l.costeUd.toFixed(4)),
+          margen_pct: parseFloat(margen.toFixed(2)),
+          ci_gg_bi_pct: 0,
+          precio_venta: parseFloat(pvpU.toFixed(4)),
+          subtotal: parseFloat((pvpU*cant).toFixed(4)),
+          iva_pct: '21%', es_capitulo: false,
+          orden: ordenBase+2+(idx++)
+        });
       }
     }
+
+    toast('✅ '+idx+' líneas exportadas al presupuesto '+pryId+' '+ver);
+    setTimeout(()=>{
+      document.querySelector('[data-view="presupuesto"]')?.click();
+      setTimeout(()=>{
+        const ps=document.getElementById('pres-proyecto-sel');
+        const vs=document.getElementById('pres-version-sel');
+        if(ps) ps.value=pryId;
+        if(vs) vs.value=ver;
+        if(ps) loadPresupuesto();
+      },400);
+    },800);
+  }catch(e){
+    toast('Error al exportar: '+e.message,'error');
+    console.error(e);
   }
-  toast(count+' líneas exportadas al presupuesto','success');
 }
 
 
