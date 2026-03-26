@@ -695,7 +695,7 @@ body.rol-oficina [data-view="configuracion"] { display: none !important; }
     <div class="nav-label">Sistema</div>
     <div class="nav-item" data-view="pres_final" onclick="navTo('pres_final')"><span class="ni">📄</span><span>Presupuesto final</span></div>
     <div class="nav-item" data-view="contrato" onclick="navTo('contrato')"><span class="ni">📝</span><span>Contrato</span></div>
-    <div class="nav-item" data-view="pedido_doc" onclick="navTo('pedido_doc')"><span class="ni">📋</span><span>Doc. Pedido</span></div>
+
     <div class="nav-item" data-view="listas" onclick="navTo('listas')"><span class="ni">🗂</span><span>Listas</span></div>
     <div class="nav-item" data-view="configuracion" onclick="navTo('configuracion')"><span class="ni">⚙️</span><span>Configuración</span></div>
   </div>
@@ -11700,13 +11700,14 @@ function renderPedidoLineas(){
   }
   tbody.innerHTML=window.pdLineas.map((l,i)=>`
     <tr style="border-bottom:1px solid #ddd">
-      <td style="padding:4px 6px;text-align:center;border-right:1px solid #ddd;width:64px;min-height:24px">
+      <td style="padding:4px 6px;text-align:center;border-right:1px solid #ddd;width:64px;vertical-align:top">
         <input value="${l.cant}" oninput="window.pdLineas[${i}].cant=this.value" style="width:54px;text-align:center;font-size:12px;font-family:'Inter',Arial;border:none;outline:none;background:transparent;min-height:20px" placeholder="">
       </td>
-      <td style="padding:4px 6px;min-height:24px">
-        <input value="${l.desc}" oninput="window.pdLineas[${i}].desc=this.value" style="width:100%;font-size:12px;font-family:'Inter',Arial;border:none;outline:none;background:transparent;min-height:20px" placeholder="">
+      <td style="padding:4px 6px;vertical-align:top">
+        <textarea oninput="window.pdLineas[${i}].desc=this.value;this.style.height='auto';this.style.height=this.scrollHeight+'px'" style="width:100%;font-size:12px;font-family:'Inter',Arial;border:none;outline:none;background:transparent;resize:none;overflow:hidden;min-height:20px;height:auto;display:block;box-sizing:border-box;word-wrap:break-word;white-space:pre-wrap;line-height:1.4" placeholder="">${l.desc}</textarea>
       </td>
     </tr>`).join('');
+  setTimeout(()=>{ document.querySelectorAll('#pd-lineas-body textarea').forEach(ta=>{ta.style.height='auto';ta.style.height=ta.scrollHeight+'px';});}, 0);
 }
 function addPedidoLinea(){
   if(!window.pdLineas)window.pdLineas=[];
