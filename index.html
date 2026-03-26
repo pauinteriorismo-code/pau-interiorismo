@@ -1730,7 +1730,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           </div>
           <div class="cat-card" data-cat="imex" onclick="catAbrir('imex')">
             <div class="cat-card-icon">🚿</div>
-            <div class="cat-card-name">IMEX</div>
+            <div class="cat-card-name">IMEX</div><div style="font-size:10px;color:var(--text-soft);margin-top:2px">Griferías baño &amp; cocina</div>
             <div class="cat-card-desc">Griferías baño &amp; cocina · Dto 40%</div>
           </div>
           <div class="cat-card" data-cat="fregaderos" onclick="catAbrir('fregaderos')">
@@ -1740,27 +1740,27 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           </div>
           <div class="cat-card" data-cat="campoaras" onclick="catAbrir('campoaras')">
             <div class="cat-card-icon">🛁</div>
-            <div class="cat-card-name">Campoaras</div>
+            <div class="cat-card-name">Campoaras</div><div style="font-size:10px;color:var(--text-soft);margin-top:2px">Mueble de baño</div>
             <div class="cat-card-desc">Muebles de baño · Series AQUA &amp; DROP</div>
           </div>
           <div class="cat-card" data-cat="lavabos" onclick="catAbrir('lavabos')">
             <div class="cat-card-icon">🪠</div>
-            <div class="cat-card-name">Lavabos</div>
+            <div class="cat-card-name">Lavabos</div><div style="font-size:10px;color:var(--text-soft);margin-top:2px">Colección lavabos</div>
             <div class="cat-card-desc">Catálogo de lavabos · Editable</div>
           </div>
           <div class="cat-card" data-cat="genexia" onclick="catAbrir('genexia')">
             <div class="cat-card-icon">🪞</div>
-            <div class="cat-card-name">Genexia</div>
+            <div class="cat-card-name">Genexia</div><div style="font-size:10px;color:var(--text-soft);margin-top:2px">Espejos &amp; diseño baño</div>
             <div class="cat-card-desc">Espejos LED · PVP directo · Dto 40%</div>
           </div>
           <div class="cat-card" data-cat="roca" onclick="catAbrir('roca')">
             <div class="cat-card-icon">🔵</div>
-            <div class="cat-card-name">Roca</div>
+            <div class="cat-card-name">Roca</div><div style="font-size:10px;color:var(--text-soft);margin-top:2px">Sanitarios</div>
             <div class="cat-card-desc">Sanitarios serie ONA · Dto 40%</div>
           </div>
           <div class="cat-card" data-cat="mamparas" onclick="catAbrir('mamparas')">
             <div class="cat-card-icon">🚿</div>
-            <div class="cat-card-name">Mámparas</div>
+            <div class="cat-card-name">Mámparas</div><div style="font-size:10px;color:var(--text-soft);margin-top:2px">Deyban</div>
             <div class="cat-card-desc">Deyban · Venecia · Riaza · Dto 40%</div>
           </div>
           <div class="cat-card" data-cat="visek" onclick="catAbrir('visek')">
@@ -18581,6 +18581,46 @@ document.addEventListener('DOMContentLoaded', ()=>{
 // ═══════════════════════════════════════════════════════════════
 let catActual = null;
 
+// ─── Identidad visual de cada catálogo dentro del panel IMEX ─────────────────
+const _IX_ID = {
+  imex:       { title:'🚿 IMEX — Griferías',                desc:'Baño y Cocina · Ixia Regal · Tarifa +3% · Dto 40%',              tabs:['bano','cocina'] },
+  campoaras:  { title:'🛁 Campoaras — Mueble de Baño',      desc:'Catálogo completo · Dto 36% · Margen ajustable',                 tabs:['campoaras'] },
+  fregaderos: { title:"🪣 Plados · D'Aqua — Fregaderos",    desc:'Tarifa oficial · Margen ajustable',                              tabs:['fregaderos'] },
+  lavabos:    { title:'🪠 Lavabos',                          desc:'Colección completa · Dto 40% · Margen ajustable',                tabs:['lavabos'] },
+  genexia:    { title:'🪞 Genexia — Espejos y Baño Design', desc:'Tarifa oficial · Margen ajustable',                              tabs:['genexia'] },
+  mamparas:   { title:'🚿 Mámparas — Deyban',               desc:'Tarifa oficial · Margen ajustable',                              tabs:['mamparas'] },
+  roca:       { title:'🔵 Roca — Sanitarios',               desc:'Tarifa oficial · Margen ajustable',                              tabs:['roca'] },
+};
+
+const _ALL_IX_TABS = ['bano','cocina','campoaras','fregaderos','lavabos','genexia','mamparas','roca'];
+
+function _ixAbrirConIdentidad(fab){
+  const cfg = _IX_ID[fab] || _IX_ID.imex;
+
+  // 1. Título y descripción del header del panel
+  const titleEl = document.getElementById('cat-imex-title');
+  const descEl  = document.getElementById('cat-imex-desc');
+  if(titleEl) titleEl.textContent = cfg.title;
+  if(descEl)  descEl.textContent  = cfg.desc;
+
+  // 2. Mostrar solo los tabs relevantes; ocultar el resto
+  const tabsRow = document.querySelector('.imex-tabs');
+  if(tabsRow){
+    if(cfg.tabs.length === 1){
+      // Un solo proveedor independiente → ocultar toda la barra de tabs
+      tabsRow.style.display = 'none';
+    } else {
+      // IMEX propio → mostrar solo sus dos tabs
+      tabsRow.style.display = '';
+      _ALL_IX_TABS.forEach(t => {
+        const btn = document.getElementById('ix-tab-'+t);
+        if(!btn) return;
+        btn.style.display = cfg.tabs.includes(t) ? '' : 'none';
+      });
+    }
+  }
+}
+
 function catAbrir(fab){
   catActual = fab;
   // Ocultar selector y cerrar todos los paneles antes de abrir
@@ -18599,24 +18639,31 @@ function catAbrir(fab){
     if(typeof saitraGolaChange === 'function') saitraGolaChange();
   } else if(fab === 'imex'){
     document.getElementById('cat-panel-imex').classList.add('open');
+    _ixAbrirConIdentidad('imex');
     ixFillSeries(); ixRender();
   } else if(fab === 'fregaderos'){
     document.getElementById('cat-panel-imex').classList.add('open');
+    _ixAbrirConIdentidad('fregaderos');
     ixSetTab('fregaderos');
   } else if(fab === 'campoaras'){
     document.getElementById('cat-panel-imex').classList.add('open');
+    _ixAbrirConIdentidad('campoaras');
     ixSetTab('campoaras');
   } else if(fab === 'lavabos'){
     document.getElementById('cat-panel-imex').classList.add('open');
+    _ixAbrirConIdentidad('lavabos');
     ixSetTab('lavabos');
   } else if(fab === 'genexia'){
     document.getElementById('cat-panel-imex').classList.add('open');
+    _ixAbrirConIdentidad('genexia');
     ixSetTab('genexia');
   } else if(fab === 'mamparas'){
     document.getElementById('cat-panel-imex').classList.add('open');
+    _ixAbrirConIdentidad('mamparas');
     ixSetTab('mamparas');
   } else if(fab === 'roca'){
     document.getElementById('cat-panel-imex').classList.add('open');
+    _ixAbrirConIdentidad('roca');
     ixSetTab('roca');
   } else if(fab === 'electrodom'){
     document.getElementById('cat-panel-electrodom').classList.add('open');
