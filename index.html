@@ -844,7 +844,7 @@ if(window.MutationObserver){
         <button class="btn btn-ghost no-print" onclick="pfExportarPDF()">⬇️ PDF</button>
         <button class="btn btn-ghost no-print" onclick="window.print()">🖨️ Imprimir</button>
       </div>
-      <div id="pf-doc" style="background:white;max-width:800px;margin:0 auto;padding:24px 40px 16px 40px;border:1px solid var(--border);border-radius:var(--radius);font-family:'Inter','Segoe UI',Arial,sans-serif;font-size:12px">
+      <div id="pf-doc" style="background:white;max-width:794px;width:794px;margin:0 auto;padding:20mm 20mm 12mm 20mm;border:1px solid var(--border);border-radius:var(--radius);font-family:'Inter','Segoe UI',Arial,sans-serif;font-size:12px">
         <!-- Cabecera empresa -->
         <div class="doc-repeat-header" style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:24px;padding-bottom:12px;border-bottom:2px solid #b87333">
           <div>
@@ -942,7 +942,7 @@ if(window.MutationObserver){
         <button class="btn btn-ghost no-print" onclick="window.print()">🖨️ Imprimir</button>
         <button class="btn btn-primary no-print" id="ct-btn-pdf" onclick="ctGuardarPDF()">📥 Guardar PDF</button>
       </div>
-      <div id="ct-doc" style="background:white;max-width:800px;margin:0 auto;padding:32px 40px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;line-height:1.7;font-family:'Inter','Segoe UI',Arial,sans-serif">
+      <div id="ct-doc" style="background:white;max-width:794px;width:794px;margin:0 auto;padding:20mm 20mm;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;line-height:1.7;font-family:'Inter','Segoe UI',Arial,sans-serif">
         <!-- Cabecera empresa - repeat en todas las páginas -->
         <div class="doc-repeat-header" style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;padding-bottom:14px;border-bottom:2px solid #b87333">
           <div>
@@ -1018,7 +1018,7 @@ if(window.MutationObserver){
         <button class="btn btn-ghost btn-sm" onclick="nuevoPedidoDoc()">＋ Nuevo</button>
       </div>
       <!-- DOCUMENTO PEDIDO EDITABLE + IMPRIMIBLE -->
-      <div id="pd-doc" style="background:white;max-width:720px;margin:0 auto;padding:32px 40px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;font-family:'Inter','Segoe UI',Arial,sans-serif">
+      <div id="pd-doc" style="background:white;max-width:794px;width:794px;margin:0 auto;padding:20mm 20mm;border:1px solid var(--border);border-radius:var(--radius);font-size:11px;font-family:'Inter','Segoe UI',Arial,sans-serif;box-sizing:border-box">
         <!-- CABECERA -->
         <div class="doc-repeat-header" style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;padding-bottom:14px;border-bottom:2px solid #b87333">
           <div>
@@ -11704,10 +11704,10 @@ function renderPedidoLineas(){
         <input value="${l.cant}" oninput="window.pdLineas[${i}].cant=this.value" style="width:54px;text-align:center;font-size:12px;font-family:'Inter',Arial;border:none;outline:none;background:transparent;min-height:20px" placeholder="">
       </td>
       <td style="padding:4px 6px;vertical-align:top">
-        <textarea oninput="window.pdLineas[${i}].desc=this.value;this.style.height='auto';this.style.height=this.scrollHeight+'px'" style="width:100%;font-size:12px;font-family:'Inter',Arial;border:none;outline:none;background:transparent;resize:none;overflow:hidden;min-height:20px;height:auto;display:block;box-sizing:border-box;word-wrap:break-word;white-space:pre-wrap;line-height:1.4" placeholder="">${l.desc}</textarea>
+        <textarea rows="1" oninput="window.pdLineas[${i}].desc=this.value;this.style.height='1px';this.style.height=(this.scrollHeight)+'px'" style="width:100%;font-size:12px;font-family:'Inter',Arial;border:none;outline:none;background:transparent;resize:none;overflow:hidden;height:20px;display:block;box-sizing:border-box;word-wrap:break-word;white-space:pre-wrap;line-height:1.5;padding:1px 0">${l.desc}</textarea>
       </td>
     </tr>`).join('');
-  setTimeout(()=>{ document.querySelectorAll('#pd-lineas-body textarea').forEach(ta=>{ta.style.height='auto';ta.style.height=ta.scrollHeight+'px';});}, 0);
+  setTimeout(()=>{ document.querySelectorAll('#pd-lineas-body textarea').forEach(ta=>{ta.style.height='1px';ta.style.height=ta.scrollHeight+'px';});}, 0);
 }
 function addPedidoLinea(){
   if(!window.pdLineas)window.pdLineas=[];
