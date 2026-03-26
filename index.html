@@ -19657,14 +19657,9 @@ async function msExportarPresupuesto(){
   },0);
 
   if(!confirm(
-    'Se añadirán al presupuesto "'+pryId+'" '+ver+':
-
-'+
-    '📄 Capítulo "Encimeras y Aplacados"
-'+
-    '📄 '+lineasValidas.length+' líneas · Total PVP: '+fmtES(totalPvp)+'€
-
-¿Confirmar?'
+    `Se añadirán al presupuesto "${pryId}" ${ver}:\n\n` +
+    `📄 Capítulo "Encimeras y Aplacados"\n` +
+    `📄 ${lineasValidas.length} líneas · Total PVP: ${fmtES(totalPvp)}€\n\n¿Confirmar?`
   )) return;
 
   try{
