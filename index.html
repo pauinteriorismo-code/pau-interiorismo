@@ -662,6 +662,7 @@ body.rol-oficina [data-view="configuracion"] { display: none !important; }
     <div class="nav-label">Principal</div>
     <div class="nav-item active" data-view="gerencia" onclick="navTo('gerencia')"><span class="ni">🏠</span><span>Gerencia</span></div>
     <div class="nav-item" data-view="agenda" onclick="navTo('agenda')"><span class="ni">🔔</span><span>Agenda</span><span class="nav-badge" id="agenda-badge" style="display:none"></span></div>
+    <div class="nav-item" data-view="planning" onclick="navTo('planning')"><span class="ni">🗓</span><span>Planning</span></div>
     <div class="nav-item" data-view="clientes" onclick="navTo('clientes')"><span class="ni">🤝</span><span>Clientes</span></div>
     <div class="nav-item" data-view="proyectos" onclick="navTo('proyectos')"><span class="ni">📁</span><span>Proyectos</span></div>
   </div>
@@ -679,7 +680,6 @@ body.rol-oficina [data-view="configuracion"] { display: none !important; }
     <div class="nav-item" data-view="subcontratas" onclick="navTo('subcontratas')"><span class="ni">👷</span><span>Subcontratas</span></div>
     <div class="nav-item" data-view="horas" onclick="navTo('horas')"><span class="ni">⏱</span><span>Horas</span></div>
     <div class="nav-item" data-view="albaranes" onclick="navTo('albaranes')"><span class="ni">📋</span><span>Albaranes</span></div><div class="nav-item" data-view="pedidos" onclick="navTo('pedidos')"><span class="ni">📦</span><span>Pedidos</span></div>
-    <div class="nav-item" data-view="planning" onclick="navTo('planning')"><span class="ni">🗓</span><span>Planning</span></div>
     <div class="nav-item" data-view="control_horario" onclick="navTo('control_horario')"><span class="ni">📅</span><span>Control horario</span></div>
     <div class="nav-item" data-view="proveedores" onclick="navTo('proveedores')"><span class="ni">🏭</span><span>Proveedores</span></div>
   </div>
@@ -3418,8 +3418,8 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           </div>
           <div class="table-wrap">
             <table><thead><tr>
-              <th>Tarea</th><th>Proyecto</th><th>Trabajadores</th>
-              <th>Inicio</th><th>Fin</th><th>Horas est.</th><th>Prioridad</th><th>Estado</th><th></th>
+              <th>Tarea</th><th>Proyecto</th><th>Encargado</th><th>Trabajadores</th>
+              <th>Inicio</th><th>Fin</th><th>Horas est.</th><th>Estado</th><th></th>
             </tr></thead>
             <tbody id="pl-lista-tbody"></tbody>
             </table>
@@ -3438,18 +3438,26 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <div style="flex:1;overflow-y:auto;padding:16px 20px">
           <input type="hidden" id="pl-id">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+            <!-- Título -->
             <div class="form-group fg-full" style="grid-column:1/-1;margin:0">
               <label class="form-label">Título / Descripción de la tarea *</label>
-              <input class="form-input" id="pl-titulo" placeholder="Ej: Instalación carpintería cocina...">
+              <input class="form-input" id="pl-titulo" placeholder="Ej: Alicatar baño cocina principal...">
+            </div>
+            <!-- Cliente → Proyecto (cascada) -->
+            <div class="form-group" style="margin:0">
+              <label class="form-label">Cliente</label>
+              <select class="form-input" id="pl-cliente" onchange="plCascadaProyecto()"><option value="">👤 Cliente…</option><option value="CLI-H015">4F Fernando</option><option value="CLI-H014">4G daniel Dominguez</option><option value="CLI-H018">Amparo Forner Pastor</option><option value="CLI-H026">Ana María Palau Sastre</option><option value="CLI-H031">Belinda</option><option value="CLI-H004">CARMELO RODRIGUEZ VILA</option><option value="CLI-H032">Daniel palma gallardo</option><option value="CLI-H003">DESIRE NAVARRO MARI</option><option value="CLI-033">Estudi Encis SL</option><option value="CLI-H009">FERNANDO JOSE SAN GERMAN IBORRA</option><option value="CLI-H029">Francisco Navarro Garcia</option><option value="CLI-H019">Jose Antonio Martos Ortiz</option><option value="CLI-H013">Jose Manuel Garcia Seller Nº 7 Pta 4</option><option value="CLI-H030">Jose Manuel Pinzón Valbuena</option><option value="CLI-H007">Juanmi</option><option value="CLI-H012">Júlia Fabregat Mestre</option><option value="CLI-H028">Lara Blasco - Lara Blasco Iborra</option><option value="CLI-H027">Laura Doria Gomez</option><option value="CLI-H021">MERCEDES HIGUERAS GOMEZ</option><option value="CLI-H024">MICHELL BENITO</option><option value="CLI-H022">Miguel cocina</option><option value="CLI-001">Miguel Zaragozá Garzón</option><option value="CLI-H023">Miguel Zaragozá Garzón</option><option value="CLI-H002">Mª PAU BRAVO JOSE</option><option value="CLI-H005">PATRI</option><option value="CLI-H020">Rafael Francés Llàcer</option><option value="CLI-H010">REME IBORRA GIL</option><option value="CLI-H001">ROSA CHANZA SOLER</option><option value="CLI-H016">Sara Muñoz Abella</option><option value="CLI-H011">TONI TATAY DAVID</option><option value="CLI-H025">URKO Y FRANCESC</option><option value="CLI-H008">VICENT MARI SERRA</option><option value="CLI-034">Vicenta Baixauli Hernandez</option><option value="CLI-002">Vicenta Folch Gil</option><option value="CLI-H006">Vicenta Folch Gil</option><option value="CLI-H017">Yasmina Cabezuelo Alaminos</option></select>
             </div>
             <div class="form-group" style="margin:0">
               <label class="form-label">Proyecto</label>
-              <select class="form-input" id="pl-proyecto"><option value="">— Sin proyecto —</option></select>
+              <select class="form-input" id="pl-proyecto"><option value="">— Selecciona cliente primero —</option></select>
             </div>
-            <div class="form-group" style="margin:0">
+            <!-- Partida -->
+            <div class="form-group fg-full" style="grid-column:1/-1;margin:0">
               <label class="form-label">Partida / Tipo de trabajo</label>
-              <input class="form-input" id="pl-partida" placeholder="Ej: Carpintería, Fontanería, Pintura...">
+              <input class="form-input" id="pl-partida" placeholder="Ej: Alicatado, Carpintería, Fontanería, Pintura...">
             </div>
+            <!-- Fechas -->
             <div class="form-group" style="margin:0">
               <label class="form-label">Fecha inicio *</label>
               <input type="date" class="form-input" id="pl-fecha-ini">
@@ -3458,6 +3466,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
               <label class="form-label">Fecha fin *</label>
               <input type="date" class="form-input" id="pl-fecha-fin">
             </div>
+            <!-- Horas -->
             <div class="form-group" style="margin:0">
               <label class="form-label">Horas estimadas</label>
               <input type="number" class="form-input" id="pl-horas-est" min="0" step="0.5" placeholder="0">
@@ -3466,11 +3475,12 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
               <label class="form-label">Horas reales</label>
               <input type="number" class="form-input" id="pl-horas-real" min="0" step="0.5" placeholder="0">
             </div>
+            <!-- Prioridad / Estado -->
             <div class="form-group" style="margin:0">
               <label class="form-label">Prioridad</label>
               <select class="form-input" id="pl-prioridad">
                 <option value="normal">Normal</option>
-                <option value="alta">Alta</option>
+                <option value="alta">🔴 Alta</option>
                 <option value="baja">Baja</option>
               </select>
             </div>
@@ -3484,13 +3494,22 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
               </select>
             </div>
           </div>
-          <!-- Trabajadores -->
-          <div class="form-group" style="margin-bottom:12px">
-            <label class="form-label">Trabajadores asignados</label>
-            <div id="pl-trabajadores-check" style="display:flex;flex-wrap:wrap;gap:8px;padding:10px;background:var(--bg-main);border-radius:var(--radius);border:1px solid var(--border)">
-              <!-- Se rellena dinámicamente -->
+
+          <!-- Jefe de tarea + Trabajadores -->
+          <div style="background:var(--bg-main);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:12px">
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-soft);margin-bottom:10px">👷 Asignación de personal</div>
+            <div class="form-group" style="margin-bottom:10px">
+              <label class="form-label">Encargado / Jefe de tarea</label>
+              <select class="form-input" id="pl-jefe"><option value="">— Sin encargado —</option></select>
+            </div>
+            <div class="form-group" style="margin:0">
+              <label class="form-label">Trabajadores asignados <span style="font-weight:400;color:var(--text-soft)">(selección múltiple)</span></label>
+              <div id="pl-trabajadores-check" style="display:flex;flex-wrap:wrap;gap:8px;padding:8px;background:var(--bg-card);border-radius:var(--radius-sm);border:1px solid var(--border);min-height:40px">
+                <!-- Se rellena dinámicamente -->
+              </div>
             </div>
           </div>
+
           <!-- Notas -->
           <div class="form-group" style="margin-bottom:12px">
             <label class="form-label">Notas / Instrucciones</label>
@@ -12283,9 +12302,9 @@ function plRenderSemana(){
       const chips = tareasDia.map(t=>{
         const col = PL_COLORES[t.estado] || PL_COLORES['Pendiente'];
         const esAlta = t.prioridad === 'alta';
-        return `<div onclick="plEditarTarea('${t.id}')" style="background:${col.bg};border-left:3px solid ${esAlta?'#7c3aed':col.border};border-radius:3px;padding:3px 6px;margin-bottom:3px;cursor:pointer;font-size:10px;line-height:1.35;transition:opacity .15s" title="${t.titulo}">
-          ${esAlta?'🔴 ':''}
-          <div style="font-weight:700;color:${col.text};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100px">${t.titulo}</div>
+        const esJefe = t.jefe_tarea === trab;
+        return `<div onclick="plEditarTarea('${t.id}')" style="background:${col.bg};border-left:3px solid ${esAlta?'#7c3aed':col.border};border-radius:3px;padding:3px 6px;margin-bottom:3px;cursor:pointer;font-size:10px;line-height:1.35;transition:opacity .15s" title="${t.titulo}${t.jefe_tarea?' · Encargado: '+t.jefe_tarea:''}">
+          <div style="font-weight:700;color:${col.text};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:106px">${esAlta?'🔴 ':''}${esJefe?'⭐ ':''}${t.titulo}</div>
           ${t.proyecto_nombre ? `<div style="color:#6b7280;font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.proyecto_nombre}</div>` : ''}
         </div>`;
       }).join('');
@@ -12335,6 +12354,7 @@ function plRenderLista(){
     return `<tr onclick="plEditarTarea('${t.id}')" style="cursor:pointer">
       <td><b style="color:${esAlta?'#7c3aed':''}">${esAlta?'🔴 ':''}${t.titulo}</b>${t.partida?`<br><span style="font-size:10px;color:var(--text-soft)">${t.partida}</span>`:''}</td>
       <td style="font-size:11px">${t.proyecto_nombre||'—'}</td>
+      <td style="font-size:11px">${t.jefe_tarea ? `<span style="font-weight:700;color:var(--navy)">⭐ ${t.jefe_tarea}</span>` : '<span style="color:var(--text-soft)">—</span>'}</td>
       <td style="font-size:11px">${trabs.map(tr=>`<span style="background:var(--bg-main);border:1px solid var(--border);border-radius:10px;padding:1px 6px;font-size:10px">${tr}</span>`).join(' ')}</td>
       <td style="white-space:nowrap;font-size:11px">${t.fecha_ini||'—'}</td>
       <td style="white-space:nowrap;font-size:11px">${t.fecha_fin||'—'}</td>
@@ -12369,13 +12389,34 @@ function plSetTab(tab){
 // ── Trabajadores checkboxes ───────────────────────────────────
 function plRenderTrabajadoresCheck(seleccionados){
   const cont = document.getElementById('pl-trabajadores-check');
-  if(!cont) return;
-  const trabajadores = plGetTrabajadores();
-  cont.innerHTML = trabajadores.map(t=>`
-    <label style="display:flex;align-items:center;gap:5px;padding:5px 10px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;font-size:12px;user-select:none">
-      <input type="checkbox" value="${t}" ${seleccionados.includes(t)?'checked':''} style="accent-color:var(--navy)">
-      👷 ${t}
-    </label>`).join('');
+  if(cont){
+    const trabajadores = plGetTrabajadores();
+    cont.innerHTML = trabajadores.map(t=>`
+      <label style="display:flex;align-items:center;gap:5px;padding:5px 10px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;font-size:12px;user-select:none;transition:border-color .15s">
+        <input type="checkbox" value="${t}" ${seleccionados.includes(t)?'checked':''} style="accent-color:var(--navy)">
+        👷 ${t}
+      </label>`).join('');
+  }
+  // Rellenar selector de jefe de tarea
+  const selJefe = document.getElementById('pl-jefe');
+  if(selJefe){
+    const trabajadores = plGetTrabajadores();
+    const jefeActual = selJefe.dataset.jefeActual || '';
+    selJefe.innerHTML = '<option value="">— Sin encargado —</option>' +
+      trabajadores.map(t=>`<option value="${t}" ${t===jefeActual?'selected':''}>${t}</option>`).join('');
+  }
+}
+
+// Cascada cliente → proyecto en el modal planning
+function plCascadaProyecto(){
+  const clienteId = document.getElementById('pl-cliente')?.value || '';
+  const selProy = document.getElementById('pl-proyecto');
+  if(!selProy) return;
+  const proyectosFiltrados = clienteId
+    ? (PC||[]).filter(p=>p.cliente_id===clienteId)
+    : (PC||[]);
+  selProy.innerHTML = `<option value="">${clienteId ? '📁 Proyecto…' : '— Selecciona cliente primero —'}</option>`
+    + proyectosFiltrados.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
 }
 
 // ── Modal nueva tarea ─────────────────────────────────────────
@@ -12395,14 +12436,26 @@ function plAbrirModal(id){
   document.getElementById('pl-estado').value     = t?.estado || 'Pendiente';
   document.getElementById('pl-notas').value      = t?.notas || '';
 
-  // Proyecto
-  const selProy = document.getElementById('pl-proyecto');
-  if(selProy && t?.proyecto_id) selProy.value = t.proyecto_id;
-  else if(selProy) selProy.value = '';
+  // Cliente → Proyecto en cascada
+  const selCli = document.getElementById('pl-cliente');
+  if(selCli){
+    selCli.value = t?.cliente_id || '';
+    plCascadaProyecto(); // puebla proyectos filtrados
+    // Esperar al siguiente tick para asignar el proyecto seleccionado
+    setTimeout(()=>{
+      const selProy = document.getElementById('pl-proyecto');
+      if(selProy && t?.proyecto_id) selProy.value = t.proyecto_id;
+    }, 30);
+  }
 
-  // Trabajadores
+  // Trabajadores seleccionados
   const trabsSel = t ? (Array.isArray(t.trabajadores) ? t.trabajadores : (t.trabajadores ? JSON.parse(t.trabajadores) : [])) : [];
+  // Marcar jefe actual en dataset para que plRenderTrabajadoresCheck lo use
+  const selJefe = document.getElementById('pl-jefe');
+  if(selJefe) selJefe.dataset.jefeActual = t?.jefe_tarea || '';
   plRenderTrabajadoresCheck(trabsSel);
+  // Restaurar jefe tras render
+  if(selJefe && t?.jefe_tarea) selJefe.value = t.jefe_tarea;
 
   openModal('m-planning');
   setTimeout(()=>document.getElementById('pl-titulo').focus(), 150);
@@ -12428,19 +12481,29 @@ async function plGuardarTarea(){
   const proyectoId = selProy?.value || null;
   const proyectoNombre = selProy?.selectedOptions[0]?.text?.replace(/^[^·]*·\s*/,'') || null;
 
+  // Recoger jefe de tarea
+  const jefeTarea = document.getElementById('pl-jefe')?.value || null;
+  // Recoger cliente
+  const selCli = document.getElementById('pl-cliente');
+  const clienteId = selCli?.value || null;
+  const clienteNombre = selCli?.selectedOptions[0]?.text || null;
+
   const payload = {
     titulo,
-    partida:       document.getElementById('pl-partida').value.trim() || null,
-    proyecto_id:   proyectoId,
-    proyecto_nombre: proyectoNombre,
-    fecha_ini:     fechaIni,
-    fecha_fin:     fechaFin,
-    horas_est:     parseFloat(document.getElementById('pl-horas-est').value) || null,
-    horas_real:    parseFloat(document.getElementById('pl-horas-real').value) || null,
-    prioridad:     document.getElementById('pl-prioridad').value,
-    estado:        document.getElementById('pl-estado').value,
-    notas:         document.getElementById('pl-notas').value.trim() || null,
-    trabajadores:  trabajadores,
+    partida:          document.getElementById('pl-partida').value.trim() || null,
+    proyecto_id:      proyectoId,
+    proyecto_nombre:  proyectoNombre,
+    cliente_id:       clienteId,
+    cliente_nombre:   clienteNombre,
+    fecha_ini:        fechaIni,
+    fecha_fin:        fechaFin,
+    horas_est:        parseFloat(document.getElementById('pl-horas-est').value) || null,
+    horas_real:       parseFloat(document.getElementById('pl-horas-real').value) || null,
+    prioridad:        document.getElementById('pl-prioridad').value,
+    estado:           document.getElementById('pl-estado').value,
+    notas:            document.getElementById('pl-notas').value.trim() || null,
+    trabajadores:     trabajadores,
+    jefe_tarea:       jefeTarea,
   };
 
   const id = document.getElementById('pl-id').value;
