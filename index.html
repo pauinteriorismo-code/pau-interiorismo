@@ -3502,7 +3502,12 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
             <div id="pl-asig-body" style="display:none;padding:0 12px 12px">
               <div class="form-group" style="margin-bottom:10px">
                 <label class="form-label">Encargado / Jefe de tarea</label>
-                <select class="form-input" id="pl-jefe" onchange="plActualizarBadge()"><option value="">— Sin encargado —</option></select>
+                <select class="form-input" id="pl-jefe" onchange="plActualizarBadge()">
+                <option value="">— Sin encargado —</option>
+                <option value="Jose">Jose</option>
+                <option value="Pau">Pau</option>
+                <option value="Sergi">Sergi</option>
+              </select>
               </div>
               <div class="form-group" style="margin:0">
                 <label class="form-label">Trabajadores asignados <span style="font-weight:400;color:var(--text-soft)">(selección múltiple)</span></label>
@@ -12156,9 +12161,14 @@ const PL_COLORES = {
   'Cancelado':  { bg:'#fee2e2', border:'#ef4444', text:'#7f1d1d' },
 };
 
+// Encargados fijos: las 3 FILAS del planning
+const PL_ENCARGADOS = ['Jose','Pau','Sergi'];
+
+function plGetEncargados(){ return PL_ENCARGADOS; }
+
 function plGetTrabajadores(){
-  // Usar la lista global TRABAJADORES que viene de Supabase/configuracion
-  return (typeof TRABAJADORES !== 'undefined' && TRABAJADORES.length) ? TRABAJADORES : ['Jose','Pau','Sergi'];
+  // Checkboxes del modal: usa la lista global de Supabase/configuracion
+  return (typeof TRABAJADORES !== 'undefined' && TRABAJADORES.length) ? TRABAJADORES : PL_ENCARGADOS;
 }
 
 // ── Carga ─────────────────────────────────────────────────────
@@ -12170,11 +12180,7 @@ async function loadPlanning(){
 }
 
 function plRellenarFiltroTrabajadores(){
-  const sel = document.getElementById('pl-filtro-trab');
-  if(!sel) return;
-  const t = plGetTrabajadores();
-  sel.innerHTML = '<option value="">👷 Todos los trabajadores</option>' +
-    t.map(x=>`<option value="${x}">${x}</option>`).join('');
+  // El select ya tiene Jose/Pau/Sergi hardcodeados en el HTML — no hace falta rellenarlo
 }
 
 async function plCargarProyectosSelector(){
@@ -12243,107 +12249,102 @@ function plRenderMes(){
   document.getElementById('pl-semana-label').textContent =
     `${inicio.toLocaleDateString('es-ES',opts)} – ${fin.toLocaleDateString('es-ES',opts)} ${inicio.getFullYear()}`;
 
-  const trabajadores = plGetTrabajadores();
-  const filtroProy   = document.getElementById('pl-filtro-proy')?.value||'';
-  const filtroTrab   = document.getElementById('pl-filtro-trab')?.value||'';
-  const isoInicio    = plFmtISO(inicio);
-  const isoFin       = plFmtISO(fin);
-  const hoyISO       = plFmtISO(new Date());
-  const trabFiltrados= filtroTrab?[filtroTrab]:trabajadores;
+  const encargados  = plGetEncargados(); // Solo Jose, Pau, Sergi
+  const filtroProy  = document.getElementById('pl-filtro-proy')?.value||'';
+  const filtroTrab  = document.getElementById('pl-filtro-trab')?.value||'';
+  const isoInicio   = plFmtISO(inicio);
+  const isoFin      = plFmtISO(fin);
+  const hoyISO      = plFmtISO(new Date());
+  // Filas = encargados (o uno solo si hay filtro)
+  const filasEnc    = filtroTrab ? [filtroTrab] : encargados;
 
-  // Tareas del periodo
+  // 5 días laborables × 4 semanas (sin sáb/dom)
+  const semanas = [];
+  for(let s=0;s<4;s++){
+    const sem=[];
+    for(let d=0;d<5;d++){
+      const dia=new Date(inicio); dia.setDate(inicio.getDate()+s*7+d); sem.push(dia);
+    }
+    semanas.push(sem);
+  }
+
+  // Tareas del periodo — filtrar por encargado (jefe_tarea)
   const tareasPeriodo = plTareas.filter(t=>{
     if(t.fecha_fin<isoInicio||t.fecha_ini>isoFin) return false;
     if(filtroProy && t.proyecto_id!==filtroProy) return false;
-    if(filtroTrab && !t.trabajadores.includes(filtroTrab)) return false;
+    if(filtroTrab && t.jefe_tarea!==filtroTrab) return false;
     return true;
   });
 
   const cont = document.getElementById('pl-semanas-container');
   cont.innerHTML = '';
 
-  // Calcular altura disponible: ~(ventana - topbar - searchbar - leyenda) / 4
-  const altoDisp = Math.max(window.innerHeight - 180, 400);
+  const altoDisp = Math.max(window.innerHeight - 185, 400);
   const altoPorSemana = Math.floor(altoDisp / 4);
 
-  // Generar 4 bloques, uno por semana
   for(let s=0;s<4;s++){
-    // Días de esta semana
-    const dias = [];
-    for(let d=0;d<7;d++){
-      const dia = new Date(inicio);
-      dia.setDate(inicio.getDate() + s*7 + d);
-      dias.push(dia);
-    }
-    const lun = dias[0]; const dom = dias[6];
-    const semLabel = `SEM ${s+1} · ${lun.toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'short'})} – ${dom.toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'short'})}`;
+    const dias = semanas[s];
+    const lun=dias[0]; const vie=dias[4];
+    const semLabel=`SEM ${s+1} · ${lun.toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'short'})} – ${vie.toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'short'})}`;
 
-    // Construir tabla de esta semana
-    const thead = `<thead><tr>
-      <th style="padding:5px 10px;background:var(--navy);color:#fff;font-size:9px;font-weight:700;letter-spacing:.05em;width:120px;min-width:120px;position:sticky;left:0;z-index:3;text-align:left">
+    const thead=`<thead><tr>
+      <th style="padding:6px 12px;background:var(--navy);color:#fff;font-size:9px;font-weight:700;letter-spacing:.05em;width:110px;min-width:110px;position:sticky;left:0;z-index:3;text-align:left;vertical-align:middle">
         <span style="color:#93c5fd">${semLabel}</span>
       </th>
       ${dias.map(d=>{
         const iso=plFmtISO(d);
         const esHoy=iso===hoyISO;
-        const esFS=d.getDay()===0||d.getDay()===6;
-        return `<th style="padding:4px 6px;background:${esHoy?'#b87333':esFS?'#2a3550':'var(--navy)'};color:${esFS&&!esHoy?'#6b7fa8':'#fff'};font-size:10px;text-align:center;font-weight:600;white-space:nowrap">
-          <div>${d.toLocaleDateString('es-ES',{weekday:'short'}).replace('.','').toUpperCase()}</div>
-          <div style="font-size:9px;opacity:.8">${d.getDate()}/${d.getMonth()+1}</div>
+        return `<th style="padding:5px 8px;background:${esHoy?'#b87333':'var(--navy)'};color:#fff;font-size:10px;text-align:center;font-weight:600;white-space:nowrap">
+          <div>${d.toLocaleDateString('es-ES',{weekday:'long'}).replace(/^\w/,c=>c.toUpperCase())}</div>
+          <div style="font-size:9px;opacity:.75;font-weight:400">${d.getDate()}/${d.getMonth()+1}</div>
         </th>`;
       }).join('')}
     </tr></thead>`;
 
-    const filas = trabFiltrados.map(trab=>{
-      const celdas = dias.map(d=>{
+    const filas=filasEnc.map(enc=>{
+      const celdas=dias.map(d=>{
         const iso=plFmtISO(d);
         const esHoy=iso===hoyISO;
-        const esFS=d.getDay()===0||d.getDay()===6;
-        const bgCelda=esHoy?'#fff8f3':esFS?'var(--bg-main)':'var(--bg-card)';
-
-        const tDia=tareasPeriodo.filter(t=>
-          t.trabajadores.includes(trab) && t.fecha_ini<=iso && t.fecha_fin>=iso
-        );
+        // Tareas donde este encargado es el jefe
+        const tDia=tareasPeriodo.filter(t=>t.jefe_tarea===enc && t.fecha_ini<=iso && t.fecha_fin>=iso);
         const chips=tDia.map(t=>{
           const col=PL_COLORES[t.estado]||PL_COLORES['Pendiente'];
           const esAlta=t.prioridad==='alta';
-          const esJefe=t.jefe_tarea===trab;
-          const trabsMostrar=t.trabajadores.filter(w=>w!==t.jefe_tarea);
+          const trabs=t.trabajadores.filter(w=>w!==enc);
           return `<div onclick="plEditarTarea('${t.id}')"
-            title="📌 ${t.titulo}${t.jefe_tarea?'\nEncargado: '+t.jefe_tarea:''}${t.trabajadores.length?'\nTrabajadores: '+t.trabajadores.join(', '):''}"
-            style="background:${col.bg};border-left:3px solid ${esAlta?'#7c3aed':col.border};border-radius:3px;padding:3px 6px;margin-bottom:2px;cursor:pointer;font-size:10px;line-height:1.4">
-            <div style="font-weight:700;color:${col.text};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-              ${esAlta?'🔴 ':''}${esJefe?'⭐ ':''}${t.titulo}
+            title="📌 ${t.titulo}${t.partida?' · '+t.partida:''}${trabs.length?'\n👷 '+trabs.join(', '):''}"
+            style="background:${col.bg};border-left:3px solid ${esAlta?'#7c3aed':col.border};border-radius:3px;padding:3px 8px;margin-bottom:2px;cursor:pointer;font-size:10px;line-height:1.45">
+            <div style="font-weight:700;color:${col.text};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+              ${esAlta?'🔴 ':''}${t.titulo}
             </div>
-            ${t.jefe_tarea||t.trabajadores.length?`<div style="color:#6b7280;font-size:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-              ${t.jefe_tarea?'⭐'+t.jefe_tarea:''}${trabsMostrar.length?' · '+trabsMostrar.join(', '):''}
-            </div>`:''}
+            ${trabs.length?`<div style="color:#6b7280;font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">👷 ${trabs.join(', ')}</div>`:''}
+            ${t.proyecto_nombre?`<div style="color:#9ca3af;font-size:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.proyecto_nombre}</div>`:''}
           </div>`;
         }).join('');
-        return `<td style="padding:3px 4px;background:${bgCelda};border:1px solid var(--border);vertical-align:top;min-width:0">
-          ${chips||''}
+        return `<td style="padding:3px 4px;background:${esHoy?'#fff8f3':'var(--bg-card)'};border:1px solid var(--border);vertical-align:top;min-width:0">
+          ${chips}
         </td>`;
       }).join('');
 
       return `<tr>
-        <td style="padding:5px 10px;font-weight:600;font-size:11px;color:var(--navy);background:var(--bg-card);border:1px solid var(--border);position:sticky;left:0;z-index:2;white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis">
-          👷 ${trab}
-        </td>
-        ${celdas}
+        <td style="padding:6px 12px;font-weight:700;font-size:12px;color:var(--navy);background:var(--bg-card);border:1px solid var(--border);position:sticky;left:0;z-index:2;white-space:nowrap">
+          ${enc}
+        </td>${celdas}
       </tr>`;
     }).join('');
 
-    const bloque = document.createElement('div');
-    bloque.style.cssText = `flex:1;overflow:hidden;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden`;
-    bloque.innerHTML = `<div style="overflow-x:auto;overflow-y:auto;max-height:${altoPorSemana}px">
-      <table style="width:100%;border-collapse:collapse;font-size:11px;table-layout:fixed">
+    const bloque=document.createElement('div');
+    bloque.style.cssText='overflow:hidden;border:1px solid var(--border);border-radius:var(--radius)';
+    bloque.innerHTML=`<div style="overflow-x:auto;overflow-y:auto;max-height:${altoPorSemana}px">
+      <table style="width:100%;border-collapse:collapse;font-size:11px;table-layout:auto">
         ${thead}
-        <tbody>${filas||`<tr><td colspan="8" style="text-align:center;padding:12px;color:var(--text-soft);font-size:11px">Sin tareas esta semana</td></tr>`}</tbody>
+        <tbody>${filas}</tbody>
       </table>
     </div>`;
     cont.appendChild(bloque);
   }
 }
+
 
 // ── Vista Lista ───────────────────────────────────────────────
 function plRenderLista(){
@@ -12354,11 +12355,12 @@ function plRenderLista(){
   let tareas = plTareas.filter(t=>{
     if(filtroProy && t.proyecto_id!==filtroProy) return false;
     if(filtroEstado && t.estado!==filtroEstado) return false;
-    if(filtroTrab && !t.trabajadores.includes(filtroTrab)) return false;
+    if(filtroTrab && t.jefe_tarea!==filtroTrab) return false;
     return true;
   });
 
   const tbody = document.getElementById('pl-lista-tbody');
+  if(!tbody) return;
   if(!tareas.length){
     tbody.innerHTML=`<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-soft)">No hay tareas. Pulsa <b>+ Nueva tarea</b> para crear la primera.</td></tr>`;
     return;
@@ -12366,11 +12368,12 @@ function plRenderLista(){
   tbody.innerHTML = tareas.map(t=>{
     const col = PL_COLORES[t.estado]||PL_COLORES['Pendiente'];
     const esAlta = t.prioridad==='alta';
+    const trabs  = t.trabajadores||[];
     return `<tr onclick="plEditarTarea('${t.id}')" style="cursor:pointer">
       <td><b style="color:${esAlta?'#7c3aed':''}">${esAlta?'🔴 ':''}${t.titulo}</b>${t.partida?`<br><span style="font-size:10px;color:var(--text-soft)">${t.partida}</span>`:''}</td>
       <td style="font-size:11px">${t.proyecto_nombre||'—'}</td>
       <td style="font-size:11px">${t.jefe_tarea?`<span style="font-weight:700;color:var(--navy)">⭐ ${t.jefe_tarea}</span>`:'<span style="color:var(--text-soft)">—</span>'}</td>
-      <td style="font-size:11px">${t.trabajadores.map(tr=>`<span style="background:var(--bg-main);border:1px solid var(--border);border-radius:10px;padding:1px 5px;font-size:10px">${tr}</span>`).join(' ')}</td>
+      <td style="font-size:11px">${trabs.map(tr=>`<span style="background:var(--bg-main);border:1px solid var(--border);border-radius:10px;padding:1px 5px;font-size:10px">${tr}</span>`).join(' ')}</td>
       <td style="white-space:nowrap;font-size:11px">${t.fecha_ini||'—'}</td>
       <td style="white-space:nowrap;font-size:11px">${t.fecha_fin||'—'}</td>
       <td style="text-align:center;font-size:11px">${t.horas_est||'—'}</td>
@@ -12382,12 +12385,12 @@ function plRenderLista(){
   }).join('');
 }
 
-// ── Navegación ────────────────────────────────────────────────
+// ── Navegación ─────────────────────────────────────────────────
 function plSemanaAnterior(){ plMesOffset--; plRender(); }
 function plSemanaSiguiente(){ plMesOffset++; plRender(); }
 function plIrHoy(){ plMesOffset=0; plRender(); }
 
-// ── Tabs ──────────────────────────────────────────────────────
+// ── Tabs ────────────────────────────────────────────────────────
 function plSetTab(tab){
   plTabActiva=tab;
   document.getElementById('pl-view-semana').style.display=tab==='mes'?'':'none';
@@ -12399,29 +12402,6 @@ function plSetTab(tab){
   });
   plRender();
 }
-
-// ── Trabajadores checkboxes (modal) ───────────────────────────
-function plRenderTrabajadoresCheck(seleccionados){
-  const cont=document.getElementById('pl-trabajadores-check');
-  if(cont){
-    const trabajadores=plGetTrabajadores();
-    cont.innerHTML=trabajadores.map(t=>`
-      <label style="display:flex;align-items:center;gap:5px;padding:5px 10px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;font-size:12px;user-select:none">
-        <input type="checkbox" value="${t}" ${seleccionados.includes(t)?'checked':''} style="accent-color:var(--navy)">
-        👷 ${t}
-      </label>`).join('');
-  }
-  // Selector jefe
-  const selJefe=document.getElementById('pl-jefe');
-  if(selJefe){
-    const trabajadores=plGetTrabajadores();
-    const jefeActual=selJefe.dataset.jefeActual||'';
-    selJefe.innerHTML='<option value="">— Sin encargado —</option>'+
-      trabajadores.map(t=>`<option value="${t}" ${t===jefeActual?'selected':''}>${t}</option>`).join('');
-  }
-}
-
-// Cascada cliente → proyecto en modal planning
 
 // ── Toggle asignación de personal (modal) ─────────────────────
 function plToggleAsignacion(){
@@ -12466,6 +12446,19 @@ function plAbrirAsignacionSiTiene(jefe, trabsSel){
       cb.addEventListener('change', plActualizarBadge);
     });
   }, 50);
+}
+
+function plRenderTrabajadoresCheck(seleccionados){
+  const cont=document.getElementById('pl-trabajadores-check');
+  if(cont){
+    const trabs=plGetTrabajadores();
+    cont.innerHTML=trabs.map(t=>`<label style="display:flex;align-items:center;gap:5px;padding:5px 10px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;font-size:12px;user-select:none">
+        <input type="checkbox" value="${t}" ${seleccionados.includes(t)?'checked':''} style="accent-color:var(--navy)" onchange="plActualizarBadge()">
+        👷 ${t}</label>`).join('');
+  }
+  // Selector jefe hardcodeado: solo restaurar valor
+  const selJefe=document.getElementById('pl-jefe');
+  if(selJefe&&selJefe.dataset.jefeActual) selJefe.value=selJefe.dataset.jefeActual;
 }
 
 function plCascadaProyecto(){
