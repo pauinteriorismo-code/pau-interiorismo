@@ -12244,7 +12244,13 @@ function plGetInicioMes(offset){
   return lunes;
 }
 
-function plFmtISO(d){ return d.toISOString().slice(0,10); }
+function plFmtISO(d){
+  // Usar fecha LOCAL (no UTC) para evitar desfase horario en España (UTC+1/+2)
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
 function plFmtDiaSemana(d){ return d.toLocaleDateString('es-ES',{weekday:'short'}); }
 function plFmtDiaNum(d){ return d.toLocaleDateString('es-ES',{day:'numeric',month:'short'}); }
 
@@ -12538,7 +12544,7 @@ function plAbrirModal(id){
   document.getElementById('pl-id').value=id||'';
   document.getElementById('pl-modal-title').textContent=id?'✏️ Editar tarea':'🗓 Nueva tarea';
 
-  const hoy=new Date().toISOString().slice(0,10);
+  const hoy=plFmtISO(new Date()); // fecha local, no UTC
   const t=id?plTareas.find(x=>x.id===id):null;
   document.getElementById('pl-titulo').value    =t?.titulo||'';
   document.getElementById('pl-partida').value   =t?.partida||'';
