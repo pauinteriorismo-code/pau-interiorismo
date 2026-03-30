@@ -3386,20 +3386,16 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       </div>
 
       <!-- VISTA SEMANA -->
-      <div id="pl-view-semana">
-        <div style="overflow-x:auto;margin-top:4px">
-          <table id="pl-tabla-semana" style="width:100%;border-collapse:collapse;min-width:780px;font-size:12px">
-            <thead id="pl-thead"></thead>
-            <tbody id="pl-tbody"></tbody>
-          </table>
-        </div>
+      <div id="pl-view-semana" style="display:flex;flex-direction:column;gap:0;margin-top:4px">
+        <!-- 4 semanas se renderizan aquí dinámicamente como 4 bloques -->
+        <div id="pl-semanas-container" style="display:flex;flex-direction:column;gap:2px"></div>
         <!-- Leyenda estados -->
-        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;padding:6px 10px;background:var(--bg-card);border-radius:var(--radius);border:1px solid var(--border);font-size:11px">
-          <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#3b82f6;display:inline-block"></span>Pendiente</span>
-          <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#f59e0b;display:inline-block"></span>En curso</span>
-          <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#10b981;display:inline-block"></span>Completado</span>
-          <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#ef4444;display:inline-block"></span>Cancelado</span>
-          <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#7c3aed;display:inline-block"></span>Alta prioridad</span>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:6px;padding:5px 10px;background:var(--bg-card);border-radius:var(--radius);border:1px solid var(--border);font-size:10px;flex-shrink:0">
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:9px;height:9px;border-radius:2px;background:#3b82f6;display:inline-block"></span>Pendiente</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:9px;height:9px;border-radius:2px;background:#f59e0b;display:inline-block"></span>En curso</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:9px;height:9px;border-radius:2px;background:#10b981;display:inline-block"></span>Completado</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:9px;height:9px;border-radius:2px;background:#ef4444;display:inline-block"></span>Cancelado</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:9px;height:9px;border-radius:2px;background:#7c3aed;display:inline-block"></span>Alta prioridad</span>
         </div>
       </div>
 
@@ -3495,17 +3491,24 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
             </div>
           </div>
 
-          <!-- Jefe de tarea + Trabajadores -->
-          <div style="background:var(--bg-main);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:12px">
-            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-soft);margin-bottom:10px">👷 Asignación de personal</div>
-            <div class="form-group" style="margin-bottom:10px">
-              <label class="form-label">Encargado / Jefe de tarea</label>
-              <select class="form-input" id="pl-jefe"><option value="">— Sin encargado —</option></select>
-            </div>
-            <div class="form-group" style="margin:0">
-              <label class="form-label">Trabajadores asignados <span style="font-weight:400;color:var(--text-soft)">(selección múltiple)</span></label>
-              <div id="pl-trabajadores-check" style="display:flex;flex-wrap:wrap;gap:8px;padding:8px;background:var(--bg-card);border-radius:var(--radius-sm);border:1px solid var(--border);min-height:40px">
-                <!-- Se rellena dinámicamente -->
+          <!-- Jefe de tarea + Trabajadores (colapsable) -->
+          <div style="background:var(--bg-main);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden">
+            <button type="button" onclick="plToggleAsignacion()" id="pl-asig-toggle"
+              style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:none;border:none;cursor:pointer;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-soft)">
+              <span>👷 Asignación de personal</span>
+              <span id="pl-asig-badge" style="font-size:10px;background:var(--navy);color:#fff;border-radius:10px;padding:1px 7px;display:none"></span>
+              <span id="pl-asig-arrow" style="font-size:14px;transition:transform .2s">▼</span>
+            </button>
+            <div id="pl-asig-body" style="display:none;padding:0 12px 12px">
+              <div class="form-group" style="margin-bottom:10px">
+                <label class="form-label">Encargado / Jefe de tarea</label>
+                <select class="form-input" id="pl-jefe" onchange="plActualizarBadge()"><option value="">— Sin encargado —</option></select>
+              </div>
+              <div class="form-group" style="margin:0">
+                <label class="form-label">Trabajadores asignados <span style="font-weight:400;color:var(--text-soft)">(selección múltiple)</span></label>
+                <div id="pl-trabajadores-check" style="display:flex;flex-wrap:wrap;gap:8px;padding:8px;background:var(--bg-card);border-radius:var(--radius-sm);border:1px solid var(--border);min-height:36px">
+                  <!-- Se rellena dinámicamente -->
+                </div>
               </div>
             </div>
           </div>
@@ -12234,100 +12237,111 @@ function plFmtDiaNum(d){ return d.toLocaleDateString('es-ES',{day:'numeric',mont
 
 function plRenderMes(){
   const inicio = plGetInicioMes(plMesOffset);
-  // 28 días = 4 semanas
   const fin = new Date(inicio); fin.setDate(inicio.getDate()+27);
 
-  // Label del periodo
-  const opts = {day:'numeric',month:'long'};
+  const opts={day:'numeric',month:'long'};
   document.getElementById('pl-semana-label').textContent =
     `${inicio.toLocaleDateString('es-ES',opts)} – ${fin.toLocaleDateString('es-ES',opts)} ${inicio.getFullYear()}`;
 
-  // Generar array de 28 días agrupados en 4 semanas
-  const semanas = [];
-  for(let s=0;s<4;s++){
-    const sem = [];
-    for(let d=0;d<7;d++){
-      const dia = new Date(inicio);
-      dia.setDate(inicio.getDate() + s*7 + d);
-      sem.push(dia);
-    }
-    semanas.push(sem);
-  }
-
   const trabajadores = plGetTrabajadores();
-  const filtroProy = document.getElementById('pl-filtro-proy')?.value||'';
-  const filtroTrab = document.getElementById('pl-filtro-trab')?.value||'';
-  const isoInicio = plFmtISO(inicio);
-  const isoFin    = plFmtISO(fin);
+  const filtroProy   = document.getElementById('pl-filtro-proy')?.value||'';
+  const filtroTrab   = document.getElementById('pl-filtro-trab')?.value||'';
+  const isoInicio    = plFmtISO(inicio);
+  const isoFin       = plFmtISO(fin);
+  const hoyISO       = plFmtISO(new Date());
+  const trabFiltrados= filtroTrab?[filtroTrab]:trabajadores;
 
   // Tareas del periodo
-  let tareasPeriodo = plTareas.filter(t=>{
-    if(t.fecha_fin < isoInicio || t.fecha_ini > isoFin) return false;
-    if(filtroProy && t.proyecto_id !== filtroProy) return false;
+  const tareasPeriodo = plTareas.filter(t=>{
+    if(t.fecha_fin<isoInicio||t.fecha_ini>isoFin) return false;
+    if(filtroProy && t.proyecto_id!==filtroProy) return false;
     if(filtroTrab && !t.trabajadores.includes(filtroTrab)) return false;
     return true;
   });
 
-  const hoyISO = plFmtISO(new Date());
-  const trabFiltrados = filtroTrab ? [filtroTrab] : trabajadores;
+  const cont = document.getElementById('pl-semanas-container');
+  cont.innerHTML = '';
 
-  // thead: TRABAJADOR + 7 días de cada semana (header de cada semana)
-  const thead = document.getElementById('pl-thead');
-  // Construir encabezado: columna trabajador + 7 cols de días × 4 semanas (separadas)
-  // Usamos tabla con colspan para las semanas
-  thead.innerHTML = `
-    <tr>
-      <th rowspan="2" style="padding:7px 10px;background:var(--navy);color:#fff;font-size:10px;font-weight:700;letter-spacing:.05em;width:100px;position:sticky;left:0;z-index:5;vertical-align:middle">TRABAJADOR</th>
-      ${semanas.map((sem,si)=>{
-        const lun = sem[0]; const dom = sem[6];
-        const label = `${lun.getDate()}/${lun.getMonth()+1} – ${dom.getDate()}/${dom.getMonth()+1}`;
-        return `<th colspan="7" style="padding:4px;background:#1a2744;color:#ccd6f6;font-size:9px;font-weight:700;text-align:center;border-left:2px solid #3b82f6;letter-spacing:.05em">SEM ${si+1} · ${label}</th>`;
-      }).join('')}
-    </tr>
-    <tr>
-      ${semanas.map(sem=>sem.map(d=>{
-        const iso = plFmtISO(d);
-        const esHoy = iso===hoyISO;
-        const esFS  = d.getDay()===0||d.getDay()===6;
-        return `<th style="padding:3px 2px;background:${esHoy?'#b87333':esFS?'#2a3550':'var(--navy)'};color:${esFS&&!esHoy?'#6b7fa8':'#fff'};font-size:8px;text-align:center;border-left:${d.getDay()===1?'2px solid #3b82f6':'1px solid #243158'};min-width:36px;max-width:52px">
-          <div style="font-weight:700">${plFmtDiaSemana(d).toUpperCase().replace('.','')}</div>
-          <div style="opacity:.8">${d.getDate()}</div>
+  // Calcular altura disponible: ~(ventana - topbar - searchbar - leyenda) / 4
+  const altoDisp = Math.max(window.innerHeight - 180, 400);
+  const altoPorSemana = Math.floor(altoDisp / 4);
+
+  // Generar 4 bloques, uno por semana
+  for(let s=0;s<4;s++){
+    // Días de esta semana
+    const dias = [];
+    for(let d=0;d<7;d++){
+      const dia = new Date(inicio);
+      dia.setDate(inicio.getDate() + s*7 + d);
+      dias.push(dia);
+    }
+    const lun = dias[0]; const dom = dias[6];
+    const semLabel = `SEM ${s+1} · ${lun.toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'short'})} – ${dom.toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'short'})}`;
+
+    // Construir tabla de esta semana
+    const thead = `<thead><tr>
+      <th style="padding:5px 10px;background:var(--navy);color:#fff;font-size:9px;font-weight:700;letter-spacing:.05em;width:120px;min-width:120px;position:sticky;left:0;z-index:3;text-align:left">
+        <span style="color:#93c5fd">${semLabel}</span>
+      </th>
+      ${dias.map(d=>{
+        const iso=plFmtISO(d);
+        const esHoy=iso===hoyISO;
+        const esFS=d.getDay()===0||d.getDay()===6;
+        return `<th style="padding:4px 6px;background:${esHoy?'#b87333':esFS?'#2a3550':'var(--navy)'};color:${esFS&&!esHoy?'#6b7fa8':'#fff'};font-size:10px;text-align:center;font-weight:600;white-space:nowrap">
+          <div>${d.toLocaleDateString('es-ES',{weekday:'short'}).replace('.','').toUpperCase()}</div>
+          <div style="font-size:9px;opacity:.8">${d.getDate()}/${d.getMonth()+1}</div>
         </th>`;
-      }).join('')).join('')}
-    </tr>`;
+      }).join('')}
+    </tr></thead>`;
 
-  // tbody: una fila por trabajador
-  const tbody = document.getElementById('pl-tbody');
-  tbody.innerHTML = trabFiltrados.map(trab=>{
-    const celdas = semanas.map(sem=>sem.map(d=>{
-      const iso = plFmtISO(d);
-      const esHoy = iso===hoyISO;
-      const esFS  = d.getDay()===0||d.getDay()===6;
-      const bgCelda = esHoy?'#fff8f3':esFS?'var(--bg-main)':'var(--bg-card)';
-      const bLeft   = d.getDay()===1?'2px solid #3b82f6':'1px solid var(--border)';
+    const filas = trabFiltrados.map(trab=>{
+      const celdas = dias.map(d=>{
+        const iso=plFmtISO(d);
+        const esHoy=iso===hoyISO;
+        const esFS=d.getDay()===0||d.getDay()===6;
+        const bgCelda=esHoy?'#fff8f3':esFS?'var(--bg-main)':'var(--bg-card)';
 
-      const tDia = tareasPeriodo.filter(t=>
-        t.trabajadores.includes(trab) && t.fecha_ini<=iso && t.fecha_fin>=iso
-      );
-      const chips = tDia.map(t=>{
-        const col = PL_COLORES[t.estado]||PL_COLORES['Pendiente'];
-        const esAlta = t.prioridad==='alta';
-        const esJefe = t.jefe_tarea===trab;
-        return `<div onclick="plEditarTarea('${t.id}')" title="${t.titulo}${t.jefe_tarea?' · Enc: '+t.jefe_tarea:''}" style="background:${col.bg};border-left:2px solid ${esAlta?'#7c3aed':col.border};border-radius:2px;padding:1px 3px;margin-bottom:1px;cursor:pointer;font-size:8px;line-height:1.3;overflow:hidden">
-          <div style="font-weight:700;color:${col.text};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:44px">${esAlta?'🔴':''}${esJefe?'⭐':''}${t.titulo}</div>
-        </div>`;
+        const tDia=tareasPeriodo.filter(t=>
+          t.trabajadores.includes(trab) && t.fecha_ini<=iso && t.fecha_fin>=iso
+        );
+        const chips=tDia.map(t=>{
+          const col=PL_COLORES[t.estado]||PL_COLORES['Pendiente'];
+          const esAlta=t.prioridad==='alta';
+          const esJefe=t.jefe_tarea===trab;
+          const trabsMostrar=t.trabajadores.filter(w=>w!==t.jefe_tarea);
+          return `<div onclick="plEditarTarea('${t.id}')"
+            title="📌 ${t.titulo}${t.jefe_tarea?'\nEncargado: '+t.jefe_tarea:''}${t.trabajadores.length?'\nTrabajadores: '+t.trabajadores.join(', '):''}"
+            style="background:${col.bg};border-left:3px solid ${esAlta?'#7c3aed':col.border};border-radius:3px;padding:3px 6px;margin-bottom:2px;cursor:pointer;font-size:10px;line-height:1.4">
+            <div style="font-weight:700;color:${col.text};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+              ${esAlta?'🔴 ':''}${esJefe?'⭐ ':''}${t.titulo}
+            </div>
+            ${t.jefe_tarea||t.trabajadores.length?`<div style="color:#6b7280;font-size:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+              ${t.jefe_tarea?'⭐'+t.jefe_tarea:''}${trabsMostrar.length?' · '+trabsMostrar.join(', '):''}
+            </div>`:''}
+          </div>`;
+        }).join('');
+        return `<td style="padding:3px 4px;background:${bgCelda};border:1px solid var(--border);vertical-align:top;min-width:0">
+          ${chips||''}
+        </td>`;
       }).join('');
-      return `<td style="padding:2px 2px;background:${bgCelda};border-bottom:1px solid var(--border);border-left:${bLeft};vertical-align:top;min-width:36px;max-width:52px;height:28px">${chips}</td>`;
-    }).join('')).join('');
 
-    return `<tr>
-      <td style="padding:5px 10px;font-weight:700;font-size:11px;color:var(--navy);background:var(--bg-card);border-bottom:1px solid var(--border);position:sticky;left:0;z-index:2;white-space:nowrap">👷 ${trab}</td>
-      ${celdas}
-    </tr>`;
-  }).join('');
+      return `<tr>
+        <td style="padding:5px 10px;font-weight:600;font-size:11px;color:var(--navy);background:var(--bg-card);border:1px solid var(--border);position:sticky;left:0;z-index:2;white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis">
+          👷 ${trab}
+        </td>
+        ${celdas}
+      </tr>`;
+    }).join('');
 
-  if(!trabFiltrados.length){
-    tbody.innerHTML=`<tr><td colspan="29" style="text-align:center;padding:30px;color:var(--text-soft)">No hay trabajadores configurados en Listas</td></tr>`;
+    const bloque = document.createElement('div');
+    bloque.style.cssText = `flex:1;overflow:hidden;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden`;
+    bloque.innerHTML = `<div style="overflow-x:auto;overflow-y:auto;max-height:${altoPorSemana}px">
+      <table style="width:100%;border-collapse:collapse;font-size:11px;table-layout:fixed">
+        ${thead}
+        <tbody>${filas||`<tr><td colspan="8" style="text-align:center;padding:12px;color:var(--text-soft);font-size:11px">Sin tareas esta semana</td></tr>`}</tbody>
+      </table>
+    </div>`;
+    cont.appendChild(bloque);
   }
 }
 
@@ -12408,6 +12422,52 @@ function plRenderTrabajadoresCheck(seleccionados){
 }
 
 // Cascada cliente → proyecto en modal planning
+
+// ── Toggle asignación de personal (modal) ─────────────────────
+function plToggleAsignacion(){
+  const body  = document.getElementById('pl-asig-body');
+  const arrow = document.getElementById('pl-asig-arrow');
+  if(!body) return;
+  const open = body.style.display === 'block';
+  body.style.display  = open ? 'none'  : 'block';
+  arrow.style.transform = open ? '' : 'rotate(180deg)';
+}
+
+function plActualizarBadge(){
+  const badge   = document.getElementById('pl-asig-badge');
+  if(!badge) return;
+  const jefe    = document.getElementById('pl-jefe')?.value||'';
+  const checks  = document.querySelectorAll('#pl-trabajadores-check input[type=checkbox]:checked');
+  const total   = checks.length + (jefe?1:0);
+  if(total > 0){
+    badge.textContent  = total + (total===1?' persona':' personas');
+    badge.style.display = '';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+function plAbrirAsignacionSiTiene(jefe, trabsSel){
+  const body  = document.getElementById('pl-asig-body');
+  const arrow = document.getElementById('pl-asig-arrow');
+  const badge = document.getElementById('pl-asig-badge');
+  if(!body) return;
+  const tieneAsignacion = jefe || trabsSel.length > 0;
+  body.style.display    = tieneAsignacion ? 'block' : 'none';
+  if(arrow) arrow.style.transform = tieneAsignacion ? 'rotate(180deg)' : '';
+  if(badge){
+    const total = trabsSel.length + (jefe?1:0);
+    badge.textContent   = total>0 ? total+(total===1?' persona':' personas') : '';
+    badge.style.display = total>0 ? '' : 'none';
+  }
+  // Sincronizar checkboxes con badge al cambiar
+  setTimeout(()=>{
+    document.querySelectorAll('#pl-trabajadores-check input[type=checkbox]').forEach(cb=>{
+      cb.addEventListener('change', plActualizarBadge);
+    });
+  }, 50);
+}
+
 function plCascadaProyecto(){
   const clienteId=document.getElementById('pl-cliente')?.value||'';
   const selProy=document.getElementById('pl-proyecto');
@@ -12451,6 +12511,9 @@ function plAbrirModal(id){
   const trabsSel=t?_plParseTrabajadores(t.trabajadores):[];
   plRenderTrabajadoresCheck(trabsSel);
   if(selJefe&&t?.jefe_tarea) setTimeout(()=>{ selJefe.value=t.jefe_tarea; },10);
+
+  // Abrir sección asignación solo si ya tiene datos
+  plAbrirAsignacionSiTiene(t?.jefe_tarea||'', trabsSel);
 
   openModal('m-planning');
   setTimeout(()=>document.getElementById('pl-titulo').focus(),150);
