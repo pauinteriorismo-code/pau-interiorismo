@@ -717,8 +717,8 @@ body.rol-oficina [data-view="configuracion"] { display: none !important; }
       <span class="mnav-badge" id="mnav-agenda-badge" style="display:none"></span>
       <span>Agenda</span>
     </div>
-    <div class="mnav-item" id="mnav-horas" onclick="mnavTo('horas')">
-      <span class="mnav-icon">⏱</span><span>Horas</span>
+    <div class="mnav-item" id="mnav-planning" onclick="mnavTo('planning')">
+      <span class="mnav-icon">🗓</span><span>Planning</span>
     </div>
     <div class="mnav-item" id="mnav-presupuesto" onclick="mnavTo('presupuesto')">
       <span class="mnav-icon">💰</span><span>Presupuestos</span>
@@ -740,6 +740,7 @@ body.rol-oficina [data-view="configuracion"] { display: none !important; }
     <button class="drawer-close" onclick="closeMobileDrawer()">×</button>
   </div>
   <div class="drawer-section">Principal</div>
+  <div class="drawer-item" onclick="mnavTo('planning');closeMobileDrawer()"><span class="di">🗓</span>Planning</div>
   <div class="drawer-item" onclick="mnavTo('clientes');closeMobileDrawer()"><span class="di">🤝</span>Clientes</div>
   <div class="drawer-item" onclick="mnavTo('proyectos');closeMobileDrawer()"><span class="di">📁</span>Proyectos</div>
   <div class="drawer-item" onclick="mnavTo('control_horario');closeMobileDrawer()"><span class="di">📅</span>Control horario</div>
@@ -749,6 +750,7 @@ body.rol-oficina [data-view="configuracion"] { display: none !important; }
   <div class="drawer-item" onclick="mnavTo('cype');closeMobileDrawer()"><span class="di">📐</span>CYPE 2026</div>
   <div class="drawer-item" onclick="mnavTo('catalogos');closeMobileDrawer()"><span class="di">📚</span>Catálogos</div>
   <div class="drawer-section">Ejecución</div>
+  <div class="drawer-item" onclick="mnavTo('horas');closeMobileDrawer()"><span class="di">⏱</span>Horas</div>
   <div class="drawer-item" onclick="mnavTo('compras');closeMobileDrawer()"><span class="di">🛒</span>Compras</div>
   <div class="drawer-item" onclick="mnavTo('pedidos');closeMobileDrawer()"><span class="di">📦</span>Pedidos</div>
   <div class="drawer-item" onclick="mnavTo('subcontratas');closeMobileDrawer()"><span class="di">👷</span>Subcontratas</div>
@@ -3374,8 +3376,11 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <select class="form-input" style="width:190px" id="pl-filtro-proy" onchange="plRender()">
           <option value="">📁 Todos los proyectos</option>
         </select>
-        <select class="form-input" style="width:160px" id="pl-filtro-trab" onchange="plRender()">
-          <option value="">👷 Todos los trabajadores</option>
+        <select class="form-input" style="width:210px" id="pl-filtro-trab" onchange="plRender()">
+          <option value="">👷 Todos los encargados</option>
+          <option value="Jose">Jose</option>
+          <option value="Pau">Pau</option>
+          <option value="Sergi">Sergi</option>
         </select>
         <!-- Tabs vista -->
         <div style="display:flex;gap:2px;background:var(--bg-main);border:1px solid var(--border);border-radius:var(--radius);padding:2px;margin-left:auto">
