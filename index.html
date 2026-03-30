@@ -3379,7 +3379,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         </select>
         <!-- Tabs vista -->
         <div style="display:flex;gap:2px;background:var(--bg-main);border:1px solid var(--border);border-radius:var(--radius);padding:2px;margin-left:auto">
-          <button class="btn btn-sm pl-tab-btn active" id="pl-tab-semana" onclick="plSetTab('semana')" style="border-radius:4px;background:var(--navy);color:#fff;font-size:11px">🗓 Semana</button>
+          <button class="btn btn-sm pl-tab-btn active" id="pl-tab-mes" onclick="plSetTab('mes')" style="border-radius:4px;background:var(--navy);color:#fff;font-size:11px">🗓 4 Semanas</button>
           <button class="btn btn-sm pl-tab-btn" id="pl-tab-lista" onclick="plSetTab('lista')" style="border-radius:4px;font-size:11px">☰ Lista</button>
         </div>
         <button class="btn btn-primary" onclick="plAbrirModal()" style="background:var(--navy)">＋ Nueva tarea</button>
@@ -6199,9 +6199,9 @@ async function sb(table,method='GET',body=null,id=null,extra=''){
   }
 }
 const sbGet=(t,e='')=>sb(t,'GET',null,null,e);
-const sbPost=(t,d)=>sb(t,'POST',d);
-const sbPatch=(t,id,d)=>sb(t,'PATCH',d,id);
-const sbDelete=(t,id)=>sb(t,'DELETE',null,id);
+const sbPost=(t,d,e='')=>sb(t,'POST',d,null,e);
+const sbPatch=(t,id,d,e='')=>sb(t,'PATCH',d,id,e);
+const sbDelete=(t,id,e='')=>sb(t,'DELETE',null,id,e);
 
 // ═══════════════════════════════════════════
 // NAV
@@ -12143,223 +12143,223 @@ async function saveHora(){
 // ═══════════════════════════════════════════════════════════════
 
 let plTareas = [];
-let plTabActiva = 'semana';
-let plSemanaOffset = 0; // 0 = semana actual
+let plTabActiva = 'mes';
+let plMesOffset = 0; // 0 = mes actual (semana del lunes más cercano)
 
-// Colores por estado
 const PL_COLORES = {
   'Pendiente':  { bg:'#dbeafe', border:'#3b82f6', text:'#1e3a8a' },
   'En curso':   { bg:'#fef3c7', border:'#f59e0b', text:'#78350f' },
   'Completado': { bg:'#d1fae5', border:'#10b981', text:'#064e3b' },
   'Cancelado':  { bg:'#fee2e2', border:'#ef4444', text:'#7f1d1d' },
 };
-const PL_PRIORIDAD_COLOR = { alta:'#7c3aed', normal:'', baja:'#9ca3af' };
 
-// Trabajadores de la empresa (sincroniza con los de la app)
 function plGetTrabajadores(){
-  // Intentar leer de Supabase users; fallback a lista fija
-  return window._plTrabajadores || ['Jose','Pau','Sergi'];
+  // Usar la lista global TRABAJADORES que viene de Supabase/configuracion
+  return (typeof TRABAJADORES !== 'undefined' && TRABAJADORES.length) ? TRABAJADORES : ['Jose','Pau','Sergi'];
 }
 
-// ── Carga inicial ─────────────────────────────────────────────
+// ── Carga ─────────────────────────────────────────────────────
 async function loadPlanning(){
-  await plCargarTrabajadores();
   await plCargarProyectosSelector();
   await plCargarTareas();
+  plRellenarFiltroTrabajadores();
   plRender();
 }
 
-async function plCargarTrabajadores(){
-  try{
-    const r = await sb.from('usuarios').select('nombre').order('nombre');
-    if(r.data && r.data.length){
-      window._plTrabajadores = r.data.map(u=>u.nombre).filter(Boolean);
-    }
-  } catch(e){}
-  // Rellenar selector filtro
+function plRellenarFiltroTrabajadores(){
   const sel = document.getElementById('pl-filtro-trab');
-  if(sel){
-    const trabajadores = plGetTrabajadores();
-    sel.innerHTML = '<option value="">👷 Todos los trabajadores</option>' +
-      trabajadores.map(t=>`<option value="${t}">${t}</option>`).join('');
-  }
-  // Rellenar checkboxes del modal
-  plRenderTrabajadoresCheck([]);
+  if(!sel) return;
+  const t = plGetTrabajadores();
+  sel.innerHTML = '<option value="">👷 Todos los trabajadores</option>' +
+    t.map(x=>`<option value="${x}">${x}</option>`).join('');
 }
 
 async function plCargarProyectosSelector(){
   try{
-    const r = await sb.from('proyectos').select('id,nombre,codigo').order('nombre');
-    const proyectos = r.data || [];
-    ['pl-filtro-proy','pl-proyecto'].forEach(id=>{
+    const proyectos = await sbGet('proyectos','?select=id,nombre,codigo&order=nombre');
+    ['pl-filtro-proy'].forEach(id=>{
       const el = document.getElementById(id);
       if(!el) return;
-      const prefix = id === 'pl-filtro-proy' ? '<option value="">📁 Todos los proyectos</option>' : '<option value="">— Sin proyecto —</option>';
-      el.innerHTML = prefix + proyectos.map(p=>`<option value="${p.id}">${p.codigo ? p.codigo+' · ' : ''}${p.nombre}</option>`).join('');
+      el.innerHTML = '<option value="">📁 Todos los proyectos</option>' +
+        proyectos.map(p=>`<option value="${p.id}">${p.codigo?p.codigo+' · ':''}${p.nombre}</option>`).join('');
     });
   } catch(e){ console.warn('plCargarProyectos',e); }
 }
 
 async function plCargarTareas(){
   try{
-    const r = await sb.from('planning_tareas').select('*').order('fecha_ini');
-    plTareas = r.data || [];
+    const data = await sbGet('planning_tareas','?order=fecha_ini.asc');
+    // Normalizar campo trabajadores (puede venir como string JSON o array postgres)
+    plTareas = (data||[]).map(t=>({
+      ...t,
+      trabajadores: _plParseTrabajadores(t.trabajadores)
+    }));
   } catch(e){
-    console.warn('planning_tareas no existe todavía',e);
+    console.warn('planning_tareas',e);
     plTareas = [];
   }
 }
 
+function _plParseTrabajadores(val){
+  if(!val) return [];
+  if(Array.isArray(val)) return val;
+  if(typeof val === 'string'){
+    // formato postgres array: {Jose,Pau} o JSON ["Jose","Pau"]
+    if(val.startsWith('{')) return val.replace(/[{}]/g,'').split(',').map(s=>s.trim()).filter(Boolean);
+    try{ return JSON.parse(val); }catch(e){ return val.split(',').map(s=>s.trim()).filter(Boolean); }
+  }
+  return [];
+}
+
 // ── Render principal ──────────────────────────────────────────
 function plRender(){
-  if(plTabActiva === 'semana') plRenderSemana();
+  if(plTabActiva==='mes') plRenderMes();
   else plRenderLista();
 }
 
-// ── Semana actual ─────────────────────────────────────────────
-function plGetLunes(offset){
+// ── Vista Mes (4 semanas) ─────────────────────────────────────
+function plGetInicioMes(offset){
+  // Calculamos el lunes de la semana actual + offset*4 semanas
   const hoy = new Date();
-  const dia = hoy.getDay() || 7; // lunes=1..domingo=7
+  const dia = hoy.getDay() || 7;
   const lunes = new Date(hoy);
-  lunes.setDate(hoy.getDate() - dia + 1 + offset * 7);
+  lunes.setDate(hoy.getDate() - dia + 1 + offset * 28);
   lunes.setHours(0,0,0,0);
   return lunes;
 }
 
-function plFmtDia(d){
-  return d.toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'short'});
-}
+function plFmtISO(d){ return d.toISOString().slice(0,10); }
+function plFmtDiaSemana(d){ return d.toLocaleDateString('es-ES',{weekday:'short'}); }
+function plFmtDiaNum(d){ return d.toLocaleDateString('es-ES',{day:'numeric',month:'short'}); }
 
-function plFmtISO(d){
-  return d.toISOString().slice(0,10);
-}
+function plRenderMes(){
+  const inicio = plGetInicioMes(plMesOffset);
+  // 28 días = 4 semanas
+  const fin = new Date(inicio); fin.setDate(inicio.getDate()+27);
 
-// ── Vista Semana ──────────────────────────────────────────────
-function plRenderSemana(){
-  const lunes = plGetLunes(plSemanaOffset);
-  // Label semana
-  const viernes = new Date(lunes); viernes.setDate(lunes.getDate()+4);
-  const sabado  = new Date(lunes); sabado.setDate(lunes.getDate()+5);
-  const domingo = new Date(lunes); domingo.setDate(lunes.getDate()+6);
+  // Label del periodo
   const opts = {day:'numeric',month:'long'};
   document.getElementById('pl-semana-label').textContent =
-    `${lunes.toLocaleDateString('es-ES',opts)} – ${domingo.toLocaleDateString('es-ES',opts)} ${lunes.getFullYear()}`;
+    `${inicio.toLocaleDateString('es-ES',opts)} – ${fin.toLocaleDateString('es-ES',opts)} ${inicio.getFullYear()}`;
 
-  // Días de la semana (lun→dom)
-  const dias = [];
-  for(let i=0;i<7;i++){
-    const d = new Date(lunes); d.setDate(lunes.getDate()+i);
-    dias.push(d);
+  // Generar array de 28 días agrupados en 4 semanas
+  const semanas = [];
+  for(let s=0;s<4;s++){
+    const sem = [];
+    for(let d=0;d<7;d++){
+      const dia = new Date(inicio);
+      dia.setDate(inicio.getDate() + s*7 + d);
+      sem.push(dia);
+    }
+    semanas.push(sem);
   }
 
   const trabajadores = plGetTrabajadores();
-  const filtroProy   = document.getElementById('pl-filtro-proy')?.value || '';
-  const filtroTrab   = document.getElementById('pl-filtro-trab')?.value || '';
+  const filtroProy = document.getElementById('pl-filtro-proy')?.value||'';
+  const filtroTrab = document.getElementById('pl-filtro-trab')?.value||'';
+  const isoInicio = plFmtISO(inicio);
+  const isoFin    = plFmtISO(fin);
 
-  // Filtrar tareas de esta semana
-  const semIni = plFmtISO(lunes);
-  const semFin = plFmtISO(domingo);
-  let tareasSemana = plTareas.filter(t=>{
-    const solapaIni = t.fecha_fin >= semIni;
-    const solapaFin = t.fecha_ini <= semFin;
-    if(!solapaIni || !solapaFin) return false;
+  // Tareas del periodo
+  let tareasPeriodo = plTareas.filter(t=>{
+    if(t.fecha_fin < isoInicio || t.fecha_ini > isoFin) return false;
     if(filtroProy && t.proyecto_id !== filtroProy) return false;
-    if(filtroTrab){
-      const trabs = Array.isArray(t.trabajadores) ? t.trabajadores : (t.trabajadores ? JSON.parse(t.trabajadores) : []);
-      if(!trabs.includes(filtroTrab)) return false;
-    }
+    if(filtroTrab && !t.trabajadores.includes(filtroTrab)) return false;
     return true;
   });
 
-  // Thead
-  const thead = document.getElementById('pl-thead');
-  const hoy = plFmtISO(new Date());
-  thead.innerHTML = `<tr>
-    <th style="padding:8px 12px;background:var(--navy);color:#fff;font-size:11px;font-weight:700;letter-spacing:.05em;width:110px;position:sticky;left:0;z-index:3">TRABAJADOR</th>
-    ${dias.map(d=>{
-      const iso = plFmtISO(d);
-      const esHoy = iso === hoy;
-      const esFinSemana = d.getDay()===0||d.getDay()===6;
-      return `<th style="padding:8px 6px;background:${esHoy?'#b87333':esFinSemana?'#2a3550':' var(--navy)'};color:#fff;font-size:10px;text-align:center;min-width:110px;font-weight:600;letter-spacing:.04em">${plFmtDia(d).toUpperCase()}</th>`;
-    }).join('')}
-  </tr>`;
-
-  // Tbody — una fila por trabajador
-  const tbody = document.getElementById('pl-tbody');
+  const hoyISO = plFmtISO(new Date());
   const trabFiltrados = filtroTrab ? [filtroTrab] : trabajadores;
 
+  // thead: TRABAJADOR + 7 días de cada semana (header de cada semana)
+  const thead = document.getElementById('pl-thead');
+  // Construir encabezado: columna trabajador + 7 cols de días × 4 semanas (separadas)
+  // Usamos tabla con colspan para las semanas
+  thead.innerHTML = `
+    <tr>
+      <th rowspan="2" style="padding:7px 10px;background:var(--navy);color:#fff;font-size:10px;font-weight:700;letter-spacing:.05em;width:100px;position:sticky;left:0;z-index:5;vertical-align:middle">TRABAJADOR</th>
+      ${semanas.map((sem,si)=>{
+        const lun = sem[0]; const dom = sem[6];
+        const label = `${lun.getDate()}/${lun.getMonth()+1} – ${dom.getDate()}/${dom.getMonth()+1}`;
+        return `<th colspan="7" style="padding:4px;background:#1a2744;color:#ccd6f6;font-size:9px;font-weight:700;text-align:center;border-left:2px solid #3b82f6;letter-spacing:.05em">SEM ${si+1} · ${label}</th>`;
+      }).join('')}
+    </tr>
+    <tr>
+      ${semanas.map(sem=>sem.map(d=>{
+        const iso = plFmtISO(d);
+        const esHoy = iso===hoyISO;
+        const esFS  = d.getDay()===0||d.getDay()===6;
+        return `<th style="padding:3px 2px;background:${esHoy?'#b87333':esFS?'#2a3550':'var(--navy)'};color:${esFS&&!esHoy?'#6b7fa8':'#fff'};font-size:8px;text-align:center;border-left:${d.getDay()===1?'2px solid #3b82f6':'1px solid #243158'};min-width:36px;max-width:52px">
+          <div style="font-weight:700">${plFmtDiaSemana(d).toUpperCase().replace('.','')}</div>
+          <div style="opacity:.8">${d.getDate()}</div>
+        </th>`;
+      }).join('')).join('')}
+    </tr>`;
+
+  // tbody: una fila por trabajador
+  const tbody = document.getElementById('pl-tbody');
   tbody.innerHTML = trabFiltrados.map(trab=>{
-    const celdasDia = dias.map(d=>{
+    const celdas = semanas.map(sem=>sem.map(d=>{
       const iso = plFmtISO(d);
-      const esHoy = iso === hoy;
-      const esFinSemana = d.getDay()===0||d.getDay()===6;
-      const bgCelda = esHoy ? '#fff8f3' : esFinSemana ? 'var(--bg-main)' : 'var(--bg-card)';
-      // Tareas que incluyen a este trabajador en este día
-      const tareasDia = tareasSemana.filter(t=>{
-        const trabs = Array.isArray(t.trabajadores) ? t.trabajadores : (t.trabajadores ? JSON.parse(t.trabajadores) : []);
-        return trabs.includes(trab) && t.fecha_ini <= iso && t.fecha_fin >= iso;
-      });
-      const chips = tareasDia.map(t=>{
-        const col = PL_COLORES[t.estado] || PL_COLORES['Pendiente'];
-        const esAlta = t.prioridad === 'alta';
-        const esJefe = t.jefe_tarea === trab;
-        return `<div onclick="plEditarTarea('${t.id}')" style="background:${col.bg};border-left:3px solid ${esAlta?'#7c3aed':col.border};border-radius:3px;padding:3px 6px;margin-bottom:3px;cursor:pointer;font-size:10px;line-height:1.35;transition:opacity .15s" title="${t.titulo}${t.jefe_tarea?' · Encargado: '+t.jefe_tarea:''}">
-          <div style="font-weight:700;color:${col.text};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:106px">${esAlta?'🔴 ':''}${esJefe?'⭐ ':''}${t.titulo}</div>
-          ${t.proyecto_nombre ? `<div style="color:#6b7280;font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.proyecto_nombre}</div>` : ''}
+      const esHoy = iso===hoyISO;
+      const esFS  = d.getDay()===0||d.getDay()===6;
+      const bgCelda = esHoy?'#fff8f3':esFS?'var(--bg-main)':'var(--bg-card)';
+      const bLeft   = d.getDay()===1?'2px solid #3b82f6':'1px solid var(--border)';
+
+      const tDia = tareasPeriodo.filter(t=>
+        t.trabajadores.includes(trab) && t.fecha_ini<=iso && t.fecha_fin>=iso
+      );
+      const chips = tDia.map(t=>{
+        const col = PL_COLORES[t.estado]||PL_COLORES['Pendiente'];
+        const esAlta = t.prioridad==='alta';
+        const esJefe = t.jefe_tarea===trab;
+        return `<div onclick="plEditarTarea('${t.id}')" title="${t.titulo}${t.jefe_tarea?' · Enc: '+t.jefe_tarea:''}" style="background:${col.bg};border-left:2px solid ${esAlta?'#7c3aed':col.border};border-radius:2px;padding:1px 3px;margin-bottom:1px;cursor:pointer;font-size:8px;line-height:1.3;overflow:hidden">
+          <div style="font-weight:700;color:${col.text};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:44px">${esAlta?'🔴':''}${esJefe?'⭐':''}${t.titulo}</div>
         </div>`;
       }).join('');
-      return `<td style="padding:4px 5px;background:${bgCelda};border:1px solid var(--border);vertical-align:top;min-width:110px;max-width:130px">
-        ${chips || `<div style="height:28px"></div>`}
-      </td>`;
-    }).join('');
+      return `<td style="padding:2px 2px;background:${bgCelda};border-bottom:1px solid var(--border);border-left:${bLeft};vertical-align:top;min-width:36px;max-width:52px;height:28px">${chips}</td>`;
+    }).join('')).join('');
 
     return `<tr>
-      <td style="padding:6px 12px;font-weight:700;font-size:12px;color:var(--navy);background:var(--bg-card);border:1px solid var(--border);position:sticky;left:0;z-index:2;white-space:nowrap">👷 ${trab}</td>
-      ${celdasDia}
+      <td style="padding:5px 10px;font-weight:700;font-size:11px;color:var(--navy);background:var(--bg-card);border-bottom:1px solid var(--border);position:sticky;left:0;z-index:2;white-space:nowrap">👷 ${trab}</td>
+      ${celdas}
     </tr>`;
   }).join('');
 
-  // Si no hay trabajadores
   if(!trabFiltrados.length){
-    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-soft)">No hay trabajadores configurados</td></tr>`;
+    tbody.innerHTML=`<tr><td colspan="29" style="text-align:center;padding:30px;color:var(--text-soft)">No hay trabajadores configurados en Listas</td></tr>`;
   }
 }
 
 // ── Vista Lista ───────────────────────────────────────────────
 function plRenderLista(){
-  const filtroProy   = document.getElementById('pl-filtro-proy')?.value || '';
-  const filtroTrab   = document.getElementById('pl-filtro-trab')?.value || '';
-  const filtroEstado = document.getElementById('pl-filtro-estado')?.value || '';
+  const filtroProy   = document.getElementById('pl-filtro-proy')?.value||'';
+  const filtroTrab   = document.getElementById('pl-filtro-trab')?.value||'';
+  const filtroEstado = document.getElementById('pl-filtro-estado')?.value||'';
 
   let tareas = plTareas.filter(t=>{
-    if(filtroProy && t.proyecto_id !== filtroProy) return false;
-    if(filtroEstado && t.estado !== filtroEstado) return false;
-    if(filtroTrab){
-      const trabs = Array.isArray(t.trabajadores) ? t.trabajadores : (t.trabajadores ? JSON.parse(t.trabajadores) : []);
-      if(!trabs.includes(filtroTrab)) return false;
-    }
+    if(filtroProy && t.proyecto_id!==filtroProy) return false;
+    if(filtroEstado && t.estado!==filtroEstado) return false;
+    if(filtroTrab && !t.trabajadores.includes(filtroTrab)) return false;
     return true;
   });
 
   const tbody = document.getElementById('pl-lista-tbody');
   if(!tareas.length){
-    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-soft)">No hay tareas. Pulsa <b>+ Nueva tarea</b> para crear la primera.</td></tr>`;
+    tbody.innerHTML=`<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-soft)">No hay tareas. Pulsa <b>+ Nueva tarea</b> para crear la primera.</td></tr>`;
     return;
   }
-
   tbody.innerHTML = tareas.map(t=>{
-    const col = PL_COLORES[t.estado] || PL_COLORES['Pendiente'];
-    const trabs = Array.isArray(t.trabajadores) ? t.trabajadores : (t.trabajadores ? JSON.parse(t.trabajadores) : []);
-    const esAlta = t.prioridad === 'alta';
+    const col = PL_COLORES[t.estado]||PL_COLORES['Pendiente'];
+    const esAlta = t.prioridad==='alta';
     return `<tr onclick="plEditarTarea('${t.id}')" style="cursor:pointer">
       <td><b style="color:${esAlta?'#7c3aed':''}">${esAlta?'🔴 ':''}${t.titulo}</b>${t.partida?`<br><span style="font-size:10px;color:var(--text-soft)">${t.partida}</span>`:''}</td>
       <td style="font-size:11px">${t.proyecto_nombre||'—'}</td>
-      <td style="font-size:11px">${t.jefe_tarea ? `<span style="font-weight:700;color:var(--navy)">⭐ ${t.jefe_tarea}</span>` : '<span style="color:var(--text-soft)">—</span>'}</td>
-      <td style="font-size:11px">${trabs.map(tr=>`<span style="background:var(--bg-main);border:1px solid var(--border);border-radius:10px;padding:1px 6px;font-size:10px">${tr}</span>`).join(' ')}</td>
+      <td style="font-size:11px">${t.jefe_tarea?`<span style="font-weight:700;color:var(--navy)">⭐ ${t.jefe_tarea}</span>`:'<span style="color:var(--text-soft)">—</span>'}</td>
+      <td style="font-size:11px">${t.trabajadores.map(tr=>`<span style="background:var(--bg-main);border:1px solid var(--border);border-radius:10px;padding:1px 5px;font-size:10px">${tr}</span>`).join(' ')}</td>
       <td style="white-space:nowrap;font-size:11px">${t.fecha_ini||'—'}</td>
       <td style="white-space:nowrap;font-size:11px">${t.fecha_fin||'—'}</td>
       <td style="text-align:center;font-size:11px">${t.horas_est||'—'}</td>
-      <td style="text-align:center"><span style="font-size:10px;font-weight:700;color:${esAlta?'#7c3aed':t.prioridad==='baja'?'#9ca3af':'#374151'}">${(t.prioridad||'normal').charAt(0).toUpperCase()+(t.prioridad||'normal').slice(1)}</span></td>
       <td><span style="background:${col.bg};color:${col.text};border:1px solid ${col.border};border-radius:10px;padding:2px 8px;font-size:10px;font-weight:700;white-space:nowrap">${t.estado||'—'}</span></td>
       <td onclick="event.stopPropagation()">
         <button class="btn btn-ghost btn-sm" onclick="plEliminarTarea('${t.id}')" style="color:var(--red);font-size:12px;padding:2px 6px" title="Eliminar">🗑</button>
@@ -12368,159 +12368,151 @@ function plRenderLista(){
   }).join('');
 }
 
-// ── Navegación semana ─────────────────────────────────────────
-function plSemanaAnterior(){ plSemanaOffset--; plRenderSemana(); }
-function plSemanaSiguiente(){ plSemanaOffset++; plRenderSemana(); }
-function plIrHoy(){ plSemanaOffset=0; plRenderSemana(); }
+// ── Navegación ────────────────────────────────────────────────
+function plSemanaAnterior(){ plMesOffset--; plRender(); }
+function plSemanaSiguiente(){ plMesOffset++; plRender(); }
+function plIrHoy(){ plMesOffset=0; plRender(); }
 
 // ── Tabs ──────────────────────────────────────────────────────
 function plSetTab(tab){
-  plTabActiva = tab;
-  document.getElementById('pl-view-semana').style.display = tab==='semana' ? '' : 'none';
-  document.getElementById('pl-view-lista').style.display  = tab==='lista'  ? '' : 'none';
+  plTabActiva=tab;
+  document.getElementById('pl-view-semana').style.display=tab==='mes'?'':'none';
+  document.getElementById('pl-view-lista').style.display=tab==='lista'?'':'none';
   document.querySelectorAll('.pl-tab-btn').forEach(b=>{
-    const activo = b.id === 'pl-tab-'+tab;
-    b.style.background = activo ? 'var(--navy)' : '';
-    b.style.color = activo ? '#fff' : '';
+    const activo=b.id==='pl-tab-'+tab;
+    b.style.background=activo?'var(--navy)':'';
+    b.style.color=activo?'#fff':'';
   });
   plRender();
 }
 
-// ── Trabajadores checkboxes ───────────────────────────────────
+// ── Trabajadores checkboxes (modal) ───────────────────────────
 function plRenderTrabajadoresCheck(seleccionados){
-  const cont = document.getElementById('pl-trabajadores-check');
+  const cont=document.getElementById('pl-trabajadores-check');
   if(cont){
-    const trabajadores = plGetTrabajadores();
-    cont.innerHTML = trabajadores.map(t=>`
-      <label style="display:flex;align-items:center;gap:5px;padding:5px 10px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;font-size:12px;user-select:none;transition:border-color .15s">
+    const trabajadores=plGetTrabajadores();
+    cont.innerHTML=trabajadores.map(t=>`
+      <label style="display:flex;align-items:center;gap:5px;padding:5px 10px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;font-size:12px;user-select:none">
         <input type="checkbox" value="${t}" ${seleccionados.includes(t)?'checked':''} style="accent-color:var(--navy)">
         👷 ${t}
       </label>`).join('');
   }
-  // Rellenar selector de jefe de tarea
-  const selJefe = document.getElementById('pl-jefe');
+  // Selector jefe
+  const selJefe=document.getElementById('pl-jefe');
   if(selJefe){
-    const trabajadores = plGetTrabajadores();
-    const jefeActual = selJefe.dataset.jefeActual || '';
-    selJefe.innerHTML = '<option value="">— Sin encargado —</option>' +
+    const trabajadores=plGetTrabajadores();
+    const jefeActual=selJefe.dataset.jefeActual||'';
+    selJefe.innerHTML='<option value="">— Sin encargado —</option>'+
       trabajadores.map(t=>`<option value="${t}" ${t===jefeActual?'selected':''}>${t}</option>`).join('');
   }
 }
 
-// Cascada cliente → proyecto en el modal planning
+// Cascada cliente → proyecto en modal planning
 function plCascadaProyecto(){
-  const clienteId = document.getElementById('pl-cliente')?.value || '';
-  const selProy = document.getElementById('pl-proyecto');
+  const clienteId=document.getElementById('pl-cliente')?.value||'';
+  const selProy=document.getElementById('pl-proyecto');
   if(!selProy) return;
-  const proyectosFiltrados = clienteId
-    ? (PC||[]).filter(p=>p.cliente_id===clienteId)
-    : (PC||[]);
-  selProy.innerHTML = `<option value="">${clienteId ? '📁 Proyecto…' : '— Selecciona cliente primero —'}</option>`
-    + proyectosFiltrados.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
+  const proyectosFiltrados=clienteId?(PC||[]).filter(p=>p.cliente_id===clienteId):(PC||[]);
+  selProy.innerHTML=`<option value="">${clienteId?'📁 Proyecto…':'— Selecciona cliente primero —'}</option>`
+    +proyectosFiltrados.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
 }
 
-// ── Modal nueva tarea ─────────────────────────────────────────
+// ── Abrir modal ───────────────────────────────────────────────
 function plAbrirModal(id){
-  document.getElementById('pl-id').value = id||'';
-  document.getElementById('pl-modal-title').textContent = id ? '✏️ Editar tarea' : '🗓 Nueva tarea';
+  document.getElementById('pl-id').value=id||'';
+  document.getElementById('pl-modal-title').textContent=id?'✏️ Editar tarea':'🗓 Nueva tarea';
 
-  const hoy = new Date().toISOString().slice(0,10);
-  const t = id ? plTareas.find(x=>x.id===id) : null;
-  document.getElementById('pl-titulo').value     = t?.titulo || '';
-  document.getElementById('pl-partida').value    = t?.partida || '';
-  document.getElementById('pl-fecha-ini').value  = t?.fecha_ini || hoy;
-  document.getElementById('pl-fecha-fin').value  = t?.fecha_fin || hoy;
-  document.getElementById('pl-horas-est').value  = t?.horas_est || '';
-  document.getElementById('pl-horas-real').value = t?.horas_real || '';
-  document.getElementById('pl-prioridad').value  = t?.prioridad || 'normal';
-  document.getElementById('pl-estado').value     = t?.estado || 'Pendiente';
-  document.getElementById('pl-notas').value      = t?.notas || '';
+  const hoy=new Date().toISOString().slice(0,10);
+  const t=id?plTareas.find(x=>x.id===id):null;
+  document.getElementById('pl-titulo').value    =t?.titulo||'';
+  document.getElementById('pl-partida').value   =t?.partida||'';
+  document.getElementById('pl-fecha-ini').value =t?.fecha_ini||hoy;
+  document.getElementById('pl-fecha-fin').value =t?.fecha_fin||hoy;
+  document.getElementById('pl-horas-est').value =t?.horas_est||'';
+  document.getElementById('pl-horas-real').value=t?.horas_real||'';
+  document.getElementById('pl-prioridad').value =t?.prioridad||'normal';
+  document.getElementById('pl-estado').value    =t?.estado||'Pendiente';
+  document.getElementById('pl-notas').value     =t?.notas||'';
 
-  // Cliente → Proyecto en cascada
-  const selCli = document.getElementById('pl-cliente');
+  // Cliente → Proyecto
+  const selCli=document.getElementById('pl-cliente');
   if(selCli){
-    selCli.value = t?.cliente_id || '';
-    plCascadaProyecto(); // puebla proyectos filtrados
-    // Esperar al siguiente tick para asignar el proyecto seleccionado
+    selCli.value=t?.cliente_id||'';
+    plCascadaProyecto();
     setTimeout(()=>{
-      const selProy = document.getElementById('pl-proyecto');
-      if(selProy && t?.proyecto_id) selProy.value = t.proyecto_id;
-    }, 30);
+      const sp=document.getElementById('pl-proyecto');
+      if(sp&&t?.proyecto_id) sp.value=t.proyecto_id;
+    },30);
   }
 
-  // Trabajadores seleccionados
-  const trabsSel = t ? (Array.isArray(t.trabajadores) ? t.trabajadores : (t.trabajadores ? JSON.parse(t.trabajadores) : [])) : [];
-  // Marcar jefe actual en dataset para que plRenderTrabajadoresCheck lo use
-  const selJefe = document.getElementById('pl-jefe');
-  if(selJefe) selJefe.dataset.jefeActual = t?.jefe_tarea || '';
+  // Jefe y trabajadores
+  const selJefe=document.getElementById('pl-jefe');
+  if(selJefe) selJefe.dataset.jefeActual=t?.jefe_tarea||'';
+  const trabsSel=t?_plParseTrabajadores(t.trabajadores):[];
   plRenderTrabajadoresCheck(trabsSel);
-  // Restaurar jefe tras render
-  if(selJefe && t?.jefe_tarea) selJefe.value = t.jefe_tarea;
+  if(selJefe&&t?.jefe_tarea) setTimeout(()=>{ selJefe.value=t.jefe_tarea; },10);
 
   openModal('m-planning');
-  setTimeout(()=>document.getElementById('pl-titulo').focus(), 150);
+  setTimeout(()=>document.getElementById('pl-titulo').focus(),150);
 }
-
 function plEditarTarea(id){ plAbrirModal(id); }
 
 // ── Guardar ───────────────────────────────────────────────────
 async function plGuardarTarea(){
-  const titulo = document.getElementById('pl-titulo').value.trim();
+  const titulo=document.getElementById('pl-titulo').value.trim();
   if(!titulo){ toast('Escribe un título para la tarea','warn'); return; }
-  const fechaIni = document.getElementById('pl-fecha-ini').value;
-  const fechaFin = document.getElementById('pl-fecha-fin').value;
+  const fechaIni=document.getElementById('pl-fecha-ini').value;
+  const fechaFin=document.getElementById('pl-fecha-fin').value;
   if(!fechaIni||!fechaFin){ toast('Indica fecha de inicio y fin','warn'); return; }
-  if(fechaFin < fechaIni){ toast('La fecha fin no puede ser anterior al inicio','warn'); return; }
+  if(fechaFin<fechaIni){ toast('La fecha fin no puede ser anterior al inicio','warn'); return; }
 
-  // Recoger trabajadores seleccionados
-  const checks = document.querySelectorAll('#pl-trabajadores-check input[type=checkbox]:checked');
-  const trabajadores = Array.from(checks).map(c=>c.value);
+  const checks=document.querySelectorAll('#pl-trabajadores-check input[type=checkbox]:checked');
+  const trabajadores=Array.from(checks).map(c=>c.value);
+  const jefeTarea=document.getElementById('pl-jefe')?.value||null;
 
-  // Recoger nombre proyecto
-  const selProy = document.getElementById('pl-proyecto');
-  const proyectoId = selProy?.value || null;
-  const proyectoNombre = selProy?.selectedOptions[0]?.text?.replace(/^[^·]*·\s*/,'') || null;
+  const selCli=document.getElementById('pl-cliente');
+  const clienteId=selCli?.value||null;
+  const clienteNombre=selCli?.value?(selCli.selectedOptions[0]?.text||null):null;
 
-  // Recoger jefe de tarea
-  const jefeTarea = document.getElementById('pl-jefe')?.value || null;
-  // Recoger cliente
-  const selCli = document.getElementById('pl-cliente');
-  const clienteId = selCli?.value || null;
-  const clienteNombre = selCli?.selectedOptions[0]?.text || null;
+  const selProy=document.getElementById('pl-proyecto');
+  const proyectoId=selProy?.value||null;
+  const proyectoNombre=proyectoId?(selProy.selectedOptions[0]?.text?.replace(/^[^·]*·\s*/,'')||null):null;
 
-  const payload = {
+  // Para Supabase: enviar array como JSON (se guardará como text[])
+  const payload={
     titulo,
-    partida:          document.getElementById('pl-partida').value.trim() || null,
-    proyecto_id:      proyectoId,
-    proyecto_nombre:  proyectoNombre,
-    cliente_id:       clienteId,
-    cliente_nombre:   clienteNombre,
-    fecha_ini:        fechaIni,
-    fecha_fin:        fechaFin,
-    horas_est:        parseFloat(document.getElementById('pl-horas-est').value) || null,
-    horas_real:       parseFloat(document.getElementById('pl-horas-real').value) || null,
-    prioridad:        document.getElementById('pl-prioridad').value,
-    estado:           document.getElementById('pl-estado').value,
-    notas:            document.getElementById('pl-notas').value.trim() || null,
-    trabajadores:     trabajadores,
-    jefe_tarea:       jefeTarea,
+    partida:         document.getElementById('pl-partida').value.trim()||null,
+    proyecto_id:     proyectoId,
+    proyecto_nombre: proyectoNombre,
+    cliente_id:      clienteId,
+    cliente_nombre:  clienteNombre,
+    fecha_ini:       fechaIni,
+    fecha_fin:       fechaFin,
+    horas_est:       parseFloat(document.getElementById('pl-horas-est').value)||null,
+    horas_real:      parseFloat(document.getElementById('pl-horas-real').value)||null,
+    prioridad:       document.getElementById('pl-prioridad').value,
+    estado:          document.getElementById('pl-estado').value,
+    notas:           document.getElementById('pl-notas').value.trim()||null,
+    trabajadores:    trabajadores,
+    jefe_tarea:      jefeTarea,
   };
 
-  const id = document.getElementById('pl-id').value;
+  const id=document.getElementById('pl-id').value;
   try{
     if(id){
-      await sb.from('planning_tareas').update(payload).eq('id',id);
-      const idx = plTareas.findIndex(t=>t.id===id);
-      if(idx>=0) plTareas[idx] = {...plTareas[idx],...payload};
+      await sbPatch('planning_tareas',null,payload,`?id=eq.${id}`);
+      const idx=plTareas.findIndex(t=>t.id===id);
+      if(idx>=0) plTareas[idx]={...plTareas[idx],...payload,trabajadores};
       toast('Tarea actualizada ✓');
     } else {
-      const r = await sb.from('planning_tareas').insert(payload).select().single();
-      plTareas.push(r.data);
+      const data=await sbPost('planning_tareas',payload);
+      const nueva=Array.isArray(data)?data[0]:data;
+      if(nueva) plTareas.push({...nueva,trabajadores});
       toast('Tarea creada ✓');
     }
     closeModal('m-planning');
     plRender();
-  } catch(e){
+  }catch(e){
     console.error(e);
     toast('Error al guardar: '+e.message,'error');
   }
@@ -12530,11 +12522,11 @@ async function plGuardarTarea(){
 async function plEliminarTarea(id){
   if(!confirm('¿Eliminar esta tarea del planning?')) return;
   try{
-    await sb.from('planning_tareas').delete().eq('id',id);
-    plTareas = plTareas.filter(t=>t.id!==id);
+    await sbDelete('planning_tareas',null,`?id=eq.${id}`);
+    plTareas=plTareas.filter(t=>t.id!==id);
     plRender();
     toast('Tarea eliminada');
-  } catch(e){ toast('Error al eliminar','error'); }
+  }catch(e){ toast('Error al eliminar: '+e.message,'error'); }
 }
 
 async function loadPedidos(){
