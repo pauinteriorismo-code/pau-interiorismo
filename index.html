@@ -694,7 +694,7 @@ body.rol-oficina [data-view="configuracion"] { display: none !important; }
   </div>
   <div class="nav-section">
     <div class="nav-label">Sistema</div>
-    <div class="nav-item" data-view="pres_final" onclick="navTo('pres_final')"><span class="ni">📄</span><span>Presupuesto final</span></div>
+
     <div class="nav-item" data-view="contrato" onclick="navTo('contrato')"><span class="ni">📝</span><span>Contrato</span></div>
 
     <div class="nav-item" data-view="listas" onclick="navTo('listas')"><span class="ni">🗂</span><span>Listas</span></div>
@@ -761,7 +761,7 @@ body.rol-oficina [data-view="configuracion"] { display: none !important; }
   <div class="drawer-item" onclick="mnavTo('rentabilidad');closeMobileDrawer()"><span class="di">📈</span>Rentabilidad</div>
   <div class="drawer-item" onclick="mnavTo('contabilidad');closeMobileDrawer()"><span class="di">📊</span>Contabilidad</div>
   <div class="drawer-section">Sistema</div>
-  <div class="drawer-item" onclick="mnavTo('pres_final');closeMobileDrawer()"><span class="di">📄</span>Presupuesto final</div>
+
   <div class="drawer-item" onclick="mnavTo('contrato');closeMobileDrawer()"><span class="di">📝</span>Contrato</div>
   <div class="drawer-item" onclick="mnavTo('configuracion');closeMobileDrawer()"><span class="di">⚙️</span>Configuración</div>
   <div class="drawer-item" onclick="window.open('ayuda.html','_blank');closeMobileDrawer()"><span class="di">❓</span>Centro de Ayuda</div>
@@ -1520,6 +1520,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <button class="btn btn-ghost no-print" onclick="convertirPresupuestoAFactura()" style="background:#e8f5ee;color:var(--green);border-color:#b8dfc8;font-weight:600" title="Crear factura de venta a partir de este presupuesto">🧾 Crear factura</button><button class="btn btn-ghost no-print" onclick="exportarPresupuestoPDF()">⬇️ PDF</button>
         <button class="btn btn-ghost no-print" onclick="window.print()">🖨️ Imprimir</button>
         <button class="btn btn-ghost no-print" onclick="abrirImportarPDF()" style="background:#e8f0f8;color:#1a5276;border-color:#aac8e8;font-weight:600" title="Importar presupuesto desde PDF">📥 Importar PDF</button>
+        <button class="btn btn-ghost no-print" onclick="irPresupuestoFinal()" style="background:#f0faf2;color:#166534;border-color:#86efac;font-weight:700;border-left:2px solid #166534" title="Ver documento final para el cliente">📄 Doc. Final</button>
         <div id="pres-total-lbl" style="margin-left:auto;font-size:13px;font-weight:700;color:var(--navy)"></div>
         <div class="ci-toggle" id="ci-toggle-btn" onclick="toggleCI()" title="Activar/desactivar CI+GG+BI en partidas nuevas">
           <div class="ci-dot"></div>
@@ -6671,6 +6672,41 @@ function updatePresActivo(){
   if(PRES_ACTIVO.proyectoId) sessionStorage.setItem('pres_activo_proy', PRES_ACTIVO.proyectoId);
   if(PRES_ACTIVO.version) sessionStorage.setItem('pres_activo_ver', PRES_ACTIVO.version);
   if(PRES_ACTIVO.clienteId) sessionStorage.setItem('pres_activo_cli', PRES_ACTIVO.clienteId);
+}
+
+
+// ── Ir al Presupuesto Final desde la barra del presupuesto ────
+function irPresupuestoFinal(){
+  // Leer contexto actual del presupuesto
+  const clienteId = PRES_ACTIVO.clienteId || document.getElementById('filter-cliente-presupuesto')?.value || '';
+  const proyectoId = PRES_ACTIVO.proyectoId || document.getElementById('pres-proyecto-sel')?.value || '';
+  const version    = PRES_ACTIVO.version    || document.getElementById('pres-version-sel')?.value  || 'v1';
+
+  if(!proyectoId){
+    toast('Selecciona primero un proyecto en el presupuesto','warn');
+    return;
+  }
+
+  // Navegar a pres_final
+  navTo('pres_final');
+
+  // Después de cargar la vista, sincronizar cliente/proyecto/versión
+  setTimeout(()=>{
+    // Cliente
+    if(clienteId){
+      const pfCli = document.getElementById('filter-cliente-pres_final');
+      if(pfCli){ pfCli.value = clienteId; cascadaModulo('pres_final','pf-proyecto-sel',null); }
+    }
+    // Proyecto y versión (dar tiempo a que la cascada pueble los proyectos)
+    setTimeout(()=>{
+      const pfProy = document.getElementById('pf-proyecto-sel');
+      if(pfProy) pfProy.value = proyectoId;
+      const pfVer = document.getElementById('pf-version-sel');
+      if(pfVer){ pfVer.value = version; updateVersionLabels(proyectoId, pfVer); }
+      // Cargar el presupuesto final con estos datos
+      if(typeof loadPf === 'function') loadPf();
+    }, 150);
+  }, 100);
 }
 
 function syncPresContext(){
