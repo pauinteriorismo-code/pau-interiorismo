@@ -6705,9 +6705,8 @@ function irPresupuestoFinal(){
       const pfProy = document.getElementById('pf-proyecto-sel');
       if(pfProy) pfProy.value = proyectoId;
       const pfVer = document.getElementById('pf-version-sel');
-      if(pfVer){ pfVer.value = version; updateVersionLabels(proyectoId, pfVer); }
-      // Cargar el presupuesto final con estos datos
-      if(typeof loadPf === 'function') loadPf();
+      if(pfVer){ pfVer.value = version; _loadUnitsIntoSelector(proyectoId, pfVer).then(()=>{ if(typeof loadPf === 'function') loadPf(); }); }
+      else { if(typeof loadPf === 'function') loadPf(); }
     }, 150);
   }, 100);
 }
@@ -6751,8 +6750,7 @@ function syncPresContext(){
     setTimeout(()=>{
       const pfProy = document.getElementById('pf-proyecto-sel');
       if(pfProy) pfProy.value = proyectoId;
-      const pfVer = document.getElementById('pf-version-sel');
-      if(pfVer){ pfVer.value = version; updateVersionLabels(proyectoId, pfVer); }
+      _syncVer('pf-version-sel');
     },100);
   }
 }
