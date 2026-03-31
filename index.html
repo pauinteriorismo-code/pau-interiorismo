@@ -8244,7 +8244,7 @@ async function saveProyecto(){
   try{if(id){await sbPatch('proyectos',id,d);toast('Proyecto actualizado ✅');}else{d.proyecto_id=genId('PRY',PC,'proyecto_id');await sbPost('proyectos',d);toast('Proyecto creado ✅');crearCarpetasDrive(d.proyecto_id,nombre);}closeModal('m-proyecto');document.getElementById('p-id').value='';loadProyectos();populateSelects();}catch(e){toast('Error: '+e.message,'error');}
 }
 
-const DRIVE_SCRIPT_URL='https://script.google.com/macros/s/AKfycbyFpe_Q2aUW8guOiMh9S1mUjFvZKncOm4Fbjq0gaH0I2VCUFThSGquFARoxlrN850NW6Q/exec';
+const DRIVE_SCRIPT_URL='https://script.google.com/macros/s/AKfycbxsSebGjLyu0VecIKtBMk7adJ_8ki4j_y8Xb62IDVgPWV7DY5ZkX1kdSM88bKPU4nln4g/exec';
 
 async function crearCarpetasDrive(proyId, nombre){
   const carpeta=proyId+' '+nombre;
