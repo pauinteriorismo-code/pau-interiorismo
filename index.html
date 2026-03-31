@@ -8239,7 +8239,18 @@ async function saveProyecto(){
   const nombre=document.getElementById('p-nombre').value.trim();if(!nombre){toast('El nombre es obligatorio','error');return;}
   const id=document.getElementById('p-id').value;
   const d={cliente_id:document.getElementById('p-cliente').value||null,nombre,tipo:document.getElementById('p-tipo').value,estado:document.getElementById('p-estado').value,responsable:document.getElementById('p-resp').value,fecha_inicio:document.getElementById('p-fecha').value||null,direccion_obra:document.getElementById('p-dir').value,notas:document.getElementById('p-notas').value,carpeta_drive:document.getElementById('p-drive').value||null,tipo_unidades:document.getElementById('p-tipo-unidades').value.trim()||null};
-  try{if(id){await sbPatch('proyectos',id,d);toast('Proyecto actualizado ✅');}else{d.proyecto_id=genId('PRY',PC,'proyecto_id');await sbPost('proyectos',d);toast('Proyecto creado ✅');}closeModal('m-proyecto');document.getElementById('p-id').value='';loadProyectos();populateSelects();}catch(e){toast('Error: '+e.message,'error');}
+  try{if(id){await sbPatch('proyectos',id,d);toast('Proyecto actualizado ✅');}else{d.proyecto_id=genId('PRY',PC,'proyecto_id');await sbPost('proyectos',d);toast('Proyecto creado ✅');crearCarpetasDrive(d.proyecto_id,nombre);}closeModal('m-proyecto');document.getElementById('p-id').value='';loadProyectos();populateSelects();}catch(e){toast('Error: '+e.message,'error');}
+}
+
+async function crearCarpetasDrive(proyId, nombre){
+  const DRIVE_URL='https://script.google.com/macros/s/AKfycbxa9rFt509Jo3xJXSLYPdKPm1BKc9NQ3pvFuCUUFrzqxo_RGYmvHhXzD6akZR6sa3wLtA/exec';
+  const carpeta=proyId+' '+nombre;
+  try{
+    await fetch(DRIVE_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({nombre:carpeta})});
+    setTimeout(()=>toast('📁 Carpetas Drive creadas: '+carpeta),1500);
+  }catch(e){
+    console.warn('Drive:',e);
+  }
 }
 
 // ═══════════════════════════════════════════
