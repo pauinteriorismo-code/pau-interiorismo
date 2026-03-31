@@ -24294,27 +24294,56 @@ async function edExportarPresupuesto(){
   const pryId=document.getElementById('ed-proyecto')?.value;
   if(!pryId){toast('Selecciona un proyecto primero','warning');return}
   if(!edValoracion.length){toast('Valoración vacía','warning');return}
+  const ver=document.getElementById('ed-version')?.value||'v1';
+  const margen=parseFloat(document.getElementById('ed-margen')?.value)||35;
+
+  // Obtener orden actual para añadir al final
+  let ordenBase=0;
+  try{
+    const existing=await sbGet('presupuesto_lineas',`?proyecto_id=eq.${pryId}&version=eq.${ver}&order=orden.desc&limit=1`);
+    if(existing&&existing.length) ordenBase=existing[0].orden||0;
+  }catch(e){ordenBase=0;}
+
   let ok=0;
-  for(const p of edValoracion){
+  // Crear capítulo Electrodomésticos
+  try{
+    await sbPost('presupuesto_lineas',{
+      proyecto_id:pryId, version:ver,
+      descripcion:'Electrodomésticos',
+      es_capitulo:true,
+      partida:'Electrodomésticos',
+      orden:ordenBase+1,
+      cantidad:0, precio_base:0, precio_venta:0, subtotal:0
+    });
+  }catch(e){console.error(e)}
+
+  for(let i=0;i<edValoracion.length;i++){
+    const p=edValoracion[i];
     const pr=edCalcPrecio(p);
     const desc=p.nombre+(p.color?' · '+p.color:'')+(p.instIncluida?' (instal. incluida)':p.instalacion?' (incl. instal. '+p.instalacion+'€)':'');
-    const pvpVenta=parseFloat((pr.pvpSinIva+(p.instalacion||0)).toFixed(2));
+    const pvpVenta=parseFloat((pr.pvpSinIva+(p.instalacion||0)).toFixed(4));
+    const costeBase=parseFloat(pr.coste.toFixed(4));
     try{
       await sbPost('presupuesto_lineas',{
-        proyecto_id:pryId,
-        version:document.getElementById('ed-version')?.value||'v1',
-        partida:'Electrodomésticos',
-        descripcion:(p.marca==='Cata'?'Cata':'Balay')+' '+p.ref+' — '+desc,
-        unidad:'Ud',
-        cantidad:1,
-        precio_coste:parseFloat(pr.coste.toFixed(2)),
-        precio_venta:pvpVenta,
-        proveedor:p.marca==='Cata'?'Mundobaño':'Balay'
+        proyecto_id:  pryId,
+        version:      ver,
+        partida:      'Electrodomésticos',
+        descripcion:  (p.marca==='Cata'?'Cata':'Balay')+' '+p.ref+' — '+desc,
+        unidad:       'Ud',
+        cantidad:     1,
+        precio_base:  costeBase,
+        margen_pct:   parseFloat(margen.toFixed(2)),
+        ci_gg_bi_pct: 0,
+        precio_venta: pvpVenta,
+        subtotal:     pvpVenta,
+        iva_pct:      '21%',
+        es_capitulo:  false,
+        orden:        ordenBase+2+i
       });
       ok++;
     }catch(e){console.error(e)}
   }
-  toast(ok+' líneas exportadas al presupuesto','success');
+  toast('✅ '+ok+' líneas exportadas al presupuesto','success');
 }
 
 function edCargarProyectos(){
