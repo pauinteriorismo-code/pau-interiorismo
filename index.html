@@ -8278,7 +8278,15 @@ async function subirPDFaDrive(elementId, nombreArchivo, proyId, subCarpeta){
   if(!el){toast('Elemento no encontrado','error');return;}
   toast('☁️ Preparando para Drive…');
   const opt={margin:[10,10,15,10],image:{type:'jpeg',quality:1.0},
-    html2canvas:{scale:2,useCORS:true,letterRendering:true,allowTaint:false,imageTimeout:0},
+    html2canvas:{scale:2,useCORS:true,letterRendering:true,allowTaint:false,imageTimeout:0,
+      onclone:function(doc){
+        // Ocultar elementos no imprimibles (barras de formato, botones, etc.)
+        doc.querySelectorAll('.no-print,[data-noprint]').forEach(function(el){el.style.display='none';});
+        // Limpiar borde discontinuo del campo observaciones
+        var obs=doc.getElementById('pf-obs');
+        if(obs){obs.style.border='none';obs.style.outline='none';}
+      }
+    },
     jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}};
   try{
     const base64=await html2pdf().set(opt).from(el).output('datauristring');
