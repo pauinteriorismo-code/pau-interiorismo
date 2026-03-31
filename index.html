@@ -845,6 +845,7 @@ if(window.MutationObserver){
         <button class="btn btn-ghost no-print" onclick="abrirEnviarEmail('presupuesto')">📧 Enviar</button>
         <button id="pf-btn-enviado" class="btn btn-ghost no-print" onclick="pfMarcarEnviado()" title="Marcar como enviado al cliente">📤</button>
         <button class="btn btn-ghost no-print" onclick="pfExportarPDF()">⬇️ PDF</button>
+        <button class="btn btn-ghost no-print" onclick="subirPresupuestoDrive()" title="Subir a Google Drive">☁️ Drive</button>
         <button class="btn btn-ghost no-print" onclick="window.print()">🖨️ Imprimir</button>
       </div>
       <div id="pf-doc" style="background:white;max-width:794px;width:794px;margin:0 auto;padding:20mm 20mm 12mm 20mm;border:1px solid var(--border);border-radius:var(--radius);font-family:'Inter','Segoe UI',Arial,sans-serif;font-size:12px">
@@ -1519,7 +1520,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <button class="btn btn-ghost btn-sm no-print" onclick="abrirModalPlantillas()" title="Cargar plantilla de capítulos" style="font-size:11px">📋 Plantillas</button>
           <button class="btn btn-ghost btn-sm no-print" onclick="guardarPlantilla()" title="Guardar presupuesto actual como plantilla" style="font-size:11px">💾 Guardar plantilla</button>
         </div>
-        <button class="btn btn-ghost no-print" onclick="convertirPresupuestoAFactura()" style="background:#e8f5ee;color:var(--green);border-color:#b8dfc8;font-weight:600" title="Crear factura de venta a partir de este presupuesto">🧾 Crear factura</button><button class="btn btn-ghost no-print" onclick="exportarPresupuestoPDF()">⬇️ PDF</button><button class="btn btn-ghost no-print" onclick="subirPresupuestoDrive()" title="Subir presupuesto a Google Drive">☁️ Drive</button>
+        <button class="btn btn-ghost no-print" onclick="convertirPresupuestoAFactura()" style="background:#e8f5ee;color:var(--green);border-color:#b8dfc8;font-weight:600" title="Crear factura de venta a partir de este presupuesto">🧾 Crear factura</button><button class="btn btn-ghost no-print" onclick="exportarPresupuestoPDF()">⬇️ PDF</button>
         <button class="btn btn-ghost no-print" onclick="window.print()">🖨️ Imprimir</button>
         <button class="btn btn-ghost no-print" onclick="abrirImportarPDF()" style="background:#e8f0f8;color:#1a5276;border-color:#aac8e8;font-weight:600" title="Importar presupuesto desde PDF">📥 Importar PDF</button>
         <button class="btn btn-ghost no-print" onclick="irPresupuestoFinal()" style="background:#f0faf2;color:#166534;border-color:#86efac;font-weight:700;border-left:2px solid #166534" title="Ver documento final para el cliente">📄 Doc. Final</button>
