@@ -944,6 +944,7 @@ if(window.MutationObserver){
         <select class="form-input" style="width:180px" id="ct-pres-sel"><option value="">Presupuesto vinculado…</option></select>
         <button class="btn btn-ghost no-print" onclick="window.print()">🖨️ Imprimir</button>
         <button class="btn btn-primary no-print" id="ct-btn-pdf" onclick="ctGuardarPDF()">📥 Guardar PDF</button>
+        <button class="btn btn-ghost no-print" onclick="subirContratoDrive()" title="Subir contrato a Google Drive">☁️ Drive</button>
       </div>
       <div id="ct-doc" style="background:white;max-width:794px;width:794px;margin:0 auto;padding:20mm 20mm;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;line-height:1.7;font-family:'Inter','Segoe UI',Arial,sans-serif">
         <!-- Cabecera empresa - repeat en todas las páginas -->
@@ -1017,6 +1018,7 @@ if(window.MutationObserver){
         <button class="btn btn-ghost" onclick="abrirVistaPrevia('pd-doc','Doc. Pedido')">👁 Vista previa</button>
         <button class="btn btn-ghost no-print" onclick="abrirEnviarEmail('pedido')">📧 Enviar</button>
         <button class="btn btn-primary" onclick="exportarPDF(&#39;pd-doc&#39;, (document.getElementById(&#39;pd-num-input&#39;)?.value||&#39;pedido&#39;)+&#39;.pdf&#39;)">⬇️ PDF</button>
+        <button class="btn btn-ghost" onclick="subirDocPedidoDrive()" title="Subir pedido a Google Drive">☁️ Drive</button>
         <button class="btn btn-ghost" onclick="window.print()">🖨️ Imprimir</button>
         <button class="btn btn-ghost btn-sm" onclick="nuevoPedidoDoc()">＋ Nuevo</button>
       </div>
@@ -1517,7 +1519,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <button class="btn btn-ghost btn-sm no-print" onclick="abrirModalPlantillas()" title="Cargar plantilla de capítulos" style="font-size:11px">📋 Plantillas</button>
           <button class="btn btn-ghost btn-sm no-print" onclick="guardarPlantilla()" title="Guardar presupuesto actual como plantilla" style="font-size:11px">💾 Guardar plantilla</button>
         </div>
-        <button class="btn btn-ghost no-print" onclick="convertirPresupuestoAFactura()" style="background:#e8f5ee;color:var(--green);border-color:#b8dfc8;font-weight:600" title="Crear factura de venta a partir de este presupuesto">🧾 Crear factura</button><button class="btn btn-ghost no-print" onclick="exportarPresupuestoPDF()">⬇️ PDF</button>
+        <button class="btn btn-ghost no-print" onclick="convertirPresupuestoAFactura()" style="background:#e8f5ee;color:var(--green);border-color:#b8dfc8;font-weight:600" title="Crear factura de venta a partir de este presupuesto">🧾 Crear factura</button><button class="btn btn-ghost no-print" onclick="exportarPresupuestoPDF()">⬇️ PDF</button><button class="btn btn-ghost no-print" onclick="subirPresupuestoDrive()" title="Subir presupuesto a Google Drive">☁️ Drive</button>
         <button class="btn btn-ghost no-print" onclick="window.print()">🖨️ Imprimir</button>
         <button class="btn btn-ghost no-print" onclick="abrirImportarPDF()" style="background:#e8f0f8;color:#1a5276;border-color:#aac8e8;font-weight:600" title="Importar presupuesto desde PDF">📥 Importar PDF</button>
         <button class="btn btn-ghost no-print" onclick="irPresupuestoFinal()" style="background:#f0faf2;color:#166534;border-color:#86efac;font-weight:700;border-left:2px solid #166534" title="Ver documento final para el cliente">📄 Doc. Final</button>
@@ -8242,15 +8244,141 @@ async function saveProyecto(){
   try{if(id){await sbPatch('proyectos',id,d);toast('Proyecto actualizado ✅');}else{d.proyecto_id=genId('PRY',PC,'proyecto_id');await sbPost('proyectos',d);toast('Proyecto creado ✅');crearCarpetasDrive(d.proyecto_id,nombre);}closeModal('m-proyecto');document.getElementById('p-id').value='';loadProyectos();populateSelects();}catch(e){toast('Error: '+e.message,'error');}
 }
 
+const DRIVE_SCRIPT_URL='https://script.google.com/macros/s/AKfycbyFpe_Q2aUW8guOiMh9S1mUjFvZKncOm4Fbjq0gaH0I2VCUFThSGquFARoxlrN850NW6Q/exec';
+
 async function crearCarpetasDrive(proyId, nombre){
-  const DRIVE_URL='https://script.google.com/macros/s/AKfycbxa9rFt509Jo3xJXSLYPdKPm1BKc9NQ3pvFuCUUFrzqxo_RGYmvHhXzD6akZR6sa3wLtA/exec';
   const carpeta=proyId+' '+nombre;
   try{
-    await fetch(DRIVE_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({nombre:carpeta})});
-    setTimeout(()=>toast('📁 Carpetas Drive creadas: '+carpeta),1500);
+    const r=await fetch(DRIVE_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({nombre:carpeta})});
+    const json=await r.json().catch(()=>({}));
+    if(json.ok && json.url){
+      const p=PC.find(x=>x.proyecto_id===proyId);
+      if(p){await sbPatch('proyectos',p.id,{carpeta_drive:json.url});p.carpeta_drive=json.url;}
+      setTimeout(()=>toast('📁 Carpetas Drive creadas ✅'),1500);
+    }else{
+      setTimeout(()=>toast('📁 Carpetas Drive creadas: '+carpeta),1500);
+    }
   }catch(e){
     console.warn('Drive:',e);
   }
+}
+
+function _driveFolderId(proyId){
+  const p=(PC||[]).find(x=>x.proyecto_id===proyId);
+  const url=p?.carpeta_drive||'';
+  const m=url.match(/folders\/([a-zA-Z0-9_-]+)/);
+  return m?m[1]:null;
+}
+
+async function subirPDFaDrive(elementId, nombreArchivo, proyId, subCarpeta){
+  const folderId=_driveFolderId(proyId);
+  if(!folderId){toast('Sin carpeta Drive para este proyecto. Abre el expediente y añade el enlace de Drive.','error');return;}
+  const el=(typeof elementId==='string')?document.getElementById(elementId):elementId;
+  if(!el){toast('Elemento no encontrado','error');return;}
+  toast('☁️ Preparando para Drive…');
+  const opt={margin:[10,10,15,10],image:{type:'jpeg',quality:1.0},
+    html2canvas:{scale:2,useCORS:true,letterRendering:true,allowTaint:false,imageTimeout:0},
+    jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}};
+  try{
+    const base64=await html2pdf().set(opt).from(el).output('datauristring');
+    const res=await fetch(DRIVE_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify({action:'uploadFile',fileData:base64,fileName:nombreArchivo,mimeType:'application/pdf',folderId,subCarpeta:subCarpeta||null})});
+    const json=await res.json().catch(()=>({}));
+    if(json.ok){toast('☁️ Subido a Drive ✅');}
+    else{toast('Error Drive: '+(json.error||'desconocido'),'error');}
+  }catch(e){toast('Error: '+e.message,'error');}
+}
+
+async function subirAlbaranDrive(id){
+  const data=await sbGet('albaranes',`?id=eq.${id}`);
+  const alb=data[0];if(!alb)return;
+  const folderId=_driveFolderId(alb.proyecto_id);
+  if(!folderId){toast('Sin carpeta Drive para este proyecto','error');return;}
+  const cfg=await getCfg();
+  const p=(PC||[]).find(x=>x.proyecto_id===alb.proyecto_id)||{};
+  const lineas=typeof alb.lineas==='string'?JSON.parse(alb.lineas||'[]'):(alb.lineas||[]);
+  const jsPDF=window.jspdf?.jsPDF;
+  if(!jsPDF){toast('jsPDF no disponible','error');return;}
+  toast('☁️ Preparando albarán para Drive…');
+  const pdf=new jsPDF('p','mm','a4');
+  const pW=210,mX=14;let y=14;
+  try{pdf.addImage(PAU_LOGO,'PNG',mX,y,50,25);}catch{}
+  pdf.setFontSize(9);pdf.setTextColor(100);
+  pdf.text(cfg.razon_social||'PAU INTERIORISMO S.L.',mX+54,y+4);
+  pdf.text(cfg.direccion||'',mX+54,y+8);
+  pdf.text(`CIF: ${cfg.cif||''}  ·  Tel: ${cfg.telefono||''}`,mX+54,y+12);
+  pdf.setFontSize(14);pdf.setTextColor(30,60,100);pdf.setFont(undefined,'bold');
+  pdf.text('ALBARÁN DE ENTREGA',pW-mX,y+5,{align:'right'});
+  pdf.setFontSize(10);pdf.setTextColor(100);pdf.setFont(undefined,'normal');
+  pdf.text(`Nº ${alb.num_albaran||'—'}  ·  ${alb.fecha||''}`,pW-mX,y+12,{align:'right'});
+  y+=22;pdf.setDrawColor(184,115,51);pdf.setLineWidth(0.5);pdf.line(mX,y,pW-mX,y);y+=5;
+  pdf.setFontSize(9);pdf.setTextColor(50);
+  pdf.text(`Cliente: ${p.cliente_id||'—'}`,mX,y);y+=5;
+  pdf.text(`Proyecto: ${alb.proyecto_id} · ${p.nombre||''}`,mX,y);y+=5;
+  pdf.text(`Dirección de entrega: ${alb.direccion_entrega||p.direccion_obra||'—'}`,mX,y);y+=7;
+  pdf.setFillColor(30,60,100);pdf.setTextColor(255);pdf.setFontSize(8);pdf.setFont(undefined,'bold');
+  pdf.rect(mX,y,pW-2*mX,6,'F');
+  const cols=[mX+1,105,130,148,165,185];
+  ['Descripción','Referencia','Unidad','Cantidad','Estado',''].forEach((h,i)=>pdf.text(h,cols[i],y+4));
+  y+=7;pdf.setFont(undefined,'normal');pdf.setTextColor(40);
+  lineas.forEach((l,idx)=>{
+    if(y>265){pdf.addPage();y=20;}
+    const bg=idx%2===0?[248,250,253]:[255,255,255];
+    pdf.setFillColor(...bg);pdf.rect(mX,y,pW-2*mX,5.5,'F');
+    const desc=(l.descripcion||'').length>55?(l.descripcion||'').substring(0,52)+'…':(l.descripcion||'');
+    pdf.setTextColor(40);pdf.text(desc,cols[0],y+4);
+    pdf.text(l.referencia||'',cols[1],y+4);
+    pdf.text(l.unidad||'',cols[2],y+4);
+    pdf.text(String(l.cantidad||1),cols[3],y+4);
+    const ec=l.estado==='Entregado'?[16,185,129]:l.estado==='Incidencia'?[239,68,68]:[100,100,100];
+    pdf.setTextColor(...ec);pdf.setFont(undefined,'bold');
+    pdf.text(l.estado||'',cols[4],y+4);
+    pdf.setTextColor(40);pdf.setFont(undefined,'normal');y+=5.5;
+  });
+  y+=8;pdf.setDrawColor(200);pdf.setLineWidth(0.3);pdf.line(mX,y,pW-mX,y);y+=6;
+  if(alb.observaciones){pdf.setFontSize(8);pdf.setTextColor(80);pdf.text(`Observaciones: ${alb.observaciones}`,mX,y);y+=8;}
+  pdf.setFontSize(8);pdf.setTextColor(100);
+  pdf.text(`Total artículos: ${lineas.length} líneas  ·  Estado: ${alb.estado||'Borrador'}`,mX,y);y+=14;
+  const sigY=Math.max(y,240);
+  pdf.line(mX,sigY,mX+65,sigY);pdf.text('Firma y sello empresa',mX,sigY+5);
+  pdf.line(pW-mX-65,sigY,pW-mX,sigY);pdf.text('Conforme cliente / fecha recepción',pW-mX-65,sigY+5);
+  const base64=pdf.output('datauristring');
+  const fileName=`Albaran_${alb.num_albaran||id}_${alb.fecha||''}.pdf`;
+  try{
+    const res=await fetch(DRIVE_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify({action:'uploadFile',fileData:base64,fileName,mimeType:'application/pdf',folderId,subCarpeta:null})});
+    const json=await res.json().catch(()=>({}));
+    if(json.ok){toast('☁️ Albarán subido a Drive ✅');}
+    else{toast('Error Drive: '+(json.error||'desconocido'),'error');}
+  }catch(e){toast('Error: '+e.message,'error');}
+}
+
+async function subirDocPedidoDrive(){
+  const pedId=document.getElementById('pd-pedido-sel')?.value;
+  const ped=(PedC||[]).find(p=>String(p.id)===String(pedId));
+  const proyId=ped?.proyecto_id;
+  if(!proyId){toast('Selecciona un pedido primero','error');return;}
+  const nombre=(document.getElementById('pd-num-input')?.value||'pedido')+'.pdf';
+  await subirPDFaDrive('pd-doc',nombre,proyId,null);
+}
+
+async function subirPresupuestoDrive(){
+  await loadPresupuestoFinal();
+  await new Promise(r=>setTimeout(r,400));
+  const proy=document.getElementById('pf-proyecto-sel')?.value||'PRES';
+  const ver=document.getElementById('pf-version-sel')?.value||'v1';
+  const nombre=`${proy}-${ver}_Presupuesto.pdf`;
+  await subirPDFaDrive('pf-doc',nombre,proy,'04 Presupuestos');
+}
+
+async function subirContratoDrive(){
+  const proy=document.getElementById('ct-proyecto-sel')?.value;
+  if(!proy){toast('Selecciona un proyecto primero','error');return;}
+  const _cp=(PC||[]).find(x=>x.proyecto_id===proy)||{};
+  const _cc=(CC||[]).find(x=>x.cliente_id===_cp.cliente_id)||{};
+  const _cn=_safeNombre(_cc.nombre||'');
+  const nombre='Contrato_'+proy+(_cn?'_'+_cn:'')+'_PAU.pdf';
+  await subirPDFaDrive('ct-doc',nombre,proy,'05 Contratos');
 }
 
 // ═══════════════════════════════════════════
@@ -25775,6 +25903,7 @@ async function loadAlbaranes() {
         ${_badgeEnviado('albaran',a.id)}
         <button class="btn btn-ghost btn-sm" onclick="editarAlbaran('${a.id}')">✏️</button>
         <button class="btn btn-ghost btn-sm" onclick="exportarAlbaranPDF('${a.id}')">⬇️ PDF</button>
+        <button class="btn btn-ghost btn-sm" onclick="subirAlbaranDrive('${a.id}')" title="Subir a Google Drive">☁️</button>
         <button class="btn btn-danger btn-sm" onclick="eliminarAlbaran('${a.id}')">🗑</button>
       </td>
     </tr>`;
