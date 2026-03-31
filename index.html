@@ -6716,12 +6716,12 @@ function syncPresContext(){
   const {clienteId, proyectoId, version} = PRES_ACTIVO;
   if(!proyectoId) return;
 
-  // Helper: asigna valor + aplica nombres de versión a un selector
+  // Helper: asigna valor + aplica nombres de versión + carga viviendas/unidades
   function _syncVer(selId){
     const sel = document.getElementById(selId);
     if(!sel) return;
-    sel.value = version;
-    updateVersionLabels(proyectoId, sel);
+    sel.value = version; // fijar versión ANTES de cargar unidades (así _loadUnitsIntoSelector la restaura)
+    _loadUnitsIntoSelector(proyectoId, sel);
   }
 
   // 1. Catálogos IMEX sidebar
