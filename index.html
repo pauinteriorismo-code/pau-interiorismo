@@ -8275,17 +8275,49 @@ async function subirPDFaDrive(elementId, nombreArchivo, proyId, subCarpeta){
   const el=(typeof elementId==='string')?document.getElementById(elementId):elementId;
   if(!el){toast('Elemento no encontrado','error');return;}
   toast('☁️ Preparando para Drive…');
-  const opt={margin:[10,10,15,10],image:{type:'jpeg',quality:1.0},
-    html2canvas:{scale:2,useCORS:true,letterRendering:true,allowTaint:false,imageTimeout:0,
+  const opt={
+    margin:[10,10,15,10],
+    image:{type:'jpeg',quality:1.0},
+    pagebreak:{
+      mode:['css','legacy'],
+      avoid:['tr','thead','tfoot','.cap-row','.capitulo-row']
+    },
+    html2canvas:{
+      scale:3,
+      useCORS:true,
+      letterRendering:true,
+      allowTaint:false,
+      imageTimeout:0,
       onclone:function(doc){
-        // Ocultar elementos no imprimibles (barras de formato, botones, etc.)
+        // Ocultar elementos no imprimibles
         doc.querySelectorAll('.no-print,[data-noprint]').forEach(function(el){el.style.display='none';});
         // Limpiar borde discontinuo del campo observaciones
         var obs=doc.getElementById('pf-obs');
         if(obs){obs.style.border='none';obs.style.outline='none';}
+        // Evitar que las filas se corten entre páginas
+        doc.querySelectorAll('tr,thead,tfoot').forEach(function(el){
+          el.style.pageBreakInside='avoid';
+          el.style.breakInside='avoid';
+        });
+        // Repetir cabecera de columnas en cada página clonando el thead
+        doc.querySelectorAll('table').forEach(function(tbl){
+          var thead=tbl.querySelector('thead');
+          if(!thead||!thead.rows.length) return;
+          // Aplicar display:table-header-group para que se repita en cada hoja
+          thead.style.display='table-header-group';
+        });
+        // Ajustar el ancho del documento al A4 imprimible
+        var docEl=doc.getElementById(typeof elementId==='string'?elementId:(el.id||''));
+        if(docEl){
+          docEl.style.width='794px';
+          docEl.style.maxWidth='794px';
+          docEl.style.padding='12mm 15mm 12mm 15mm';
+          docEl.style.boxSizing='border-box';
+        }
       }
     },
-    jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}};
+    jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
+  };
   try{
     const base64=await html2pdf().set(opt).from(el).output('datauristring');
     const res=await fetch(DRIVE_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
