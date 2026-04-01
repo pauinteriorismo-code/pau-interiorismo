@@ -11058,30 +11058,22 @@ let _saitraIATarifa  = 3;
 let _saitraIAMargen  = 70;
 let _saitraIAChatHist = [];  // historial de mensajes para la API
 
-const SAITRA_IA_CATALOGO = `
-MUEBLES BAJOS H.78 fondo 60cm:
-- PBP: Base 1 puerta → anchos: [15,20,25,30,35,40,45,50,60]
-- PB2P: Base 2 puertas → anchos: [70,80,90,100]
-- PB2G: Base 2 gavetas → anchos: [40,45,50,60,70,80,90,100,120]
-- PB2GC: Base 2 gavetas+1 cajón interior (cacerolero/especiero) → anchos: [40,45,50,60,70,80,90,100,120]
-- PB3G: Base 3 gavetas → anchos: [40,45,50,60,70,80,90,100,120]
-- PBFP: Base fregadero 1 puerta → anchos: [45,50,60,80,90,100,120]
-- PBF2G: Base fregadero 2 gavetas → anchos: [70,80,90,100,120]
-- PBF2P: Base fregadero 2 puertas → anchos: [70,80,90,100,120]
-- PBLG: Base lavavajillas 1 gaveta H.26 → anchos: [45,60]
-- PBPL2G: Base bajo placa 2 gavetas → anchos: [40,45,50,60,70,80,90,100,120]
-- PBPL2GC: Base bajo placa 2 gavetas+1 cajón → anchos: [40,45,50,60,70,80,90,100,120]
-- PBPE: Base puerta extraíble → anchos: [45,50,60]
-MUEBLES ALTOS H.78 fondo 35cm:
-- PCP78: Colgante 1 puerta H.78 → anchos: [25,30,35,40,45,50,60]
-- PC2P78: Colgante 2 puertas H.78 → anchos: [70,80,90,100]
-- PC2PP78: Colgante 2 puertas plegables H.78 → anchos: [60,70,80,90,100,110,120]
-- PCMP78: Colgante microondas 1P H.78 → anchos: [60]
-- PCCEP-h61-60: Hueco campana extensible H.61/L.60 → anchos: [60]
-- PCCEP-h61-90: Hueco campana extensible H.61/L.90 → anchos: [90]
-- PCSA26: Sobrefrigo abatible 1P H.26 → anchos: [60,90]
-- PCSA39: Sobrefrigo abatible 1P H.39 → anchos: [60,90]
-REGLA CRÍTICA: Si el ancho medido NO existe, usar el INMEDIATO SUPERIOR disponible.`;
+// Genera el catálogo completo dinámicamente desde SAITRA_MOD (siempre sincronizado)
+function _saitraIAGenerarCatalogo(){
+  const grupos = {};
+  Object.entries(SAITRA_MOD).forEach(([ref, def]) => {
+    if(!def.anchos || def.grupo === 'INCREMENTOS') return;
+    if(!grupos[def.grupo]) grupos[def.grupo] = [];
+    const anchos = Object.keys(def.anchos).join(',');
+    grupos[def.grupo].push(`  ${ref} (${def.label}) [${anchos}]`);
+  });
+  const lines = [];
+  Object.entries(grupos).forEach(([grupo, refs]) => {
+    lines.push(`\n${grupo}:`);
+    refs.forEach(r => lines.push(r));
+  });
+  return lines.join('\n');
+}
 
 function saitraAbrirLeerPlano(){
   _saitraIAFile = null;
@@ -11219,20 +11211,32 @@ async function saitraIAAnalizar(){
     const isPdf = _saitraIAFile.type === 'application/pdf';
     const mediaType = isPdf ? 'application/pdf' : _saitraIAFile.type;
 
-    const prompt = `Analiza este plano de cocina y extrae TODOS los módulos de muebles visibles con sus medidas.
-${SAITRA_IA_CATALOGO}
-LÓGICA DE SELECCIÓN:
-- "Mod. 1 pta" alto ≤60cm → PCP78; alto >60cm → PC2PP78
-- "Mod. 2 ptas" alto → PC2PP78 o PC2P78
-- Campana → PCCEP-h61-60 o PCCEP-h61-90
-- Frigo/frigorífico → PCSA26 o PCSA39 (sobrefrigo)
-- fregadero bajo → PBF2G o PBFP
-- lavavajillas/lavav bajo → PBLG
-- cacerolero/cajón interior/cub pvc → PB2GC
-- bajo 1 puerta ≤60 → PBP; bajo 2 puertas ≥70 → PB2P
+    const catalog = _saitraIAGenerarCatalogo();
 
-Devuelve ÚNICAMENTE este JSON (sin markdown, sin backticks):
-{"modulos":[{"ref":"PCP78","ancho":60,"cant":1,"nota":"texto del plano","tipo":"alto"}],"observaciones":"dudas o vacío"}`;
+    const prompt = `Eres un técnico experto en el catálogo de muebles de cocina Saitra. Analiza el plano y genera la lista de módulos usando EXCLUSIVAMENTE las referencias del catálogo oficial que te proporciono.
+
+CATÁLOGO OFICIAL SAITRA (solo puedes usar estas refs):
+${catalog}
+
+REGLAS ABSOLUTAS:
+1. La columna "ref" SIEMPRE debe ser una clave exacta del catálogo (ej: PCP78, PBF2G, PBLG). NUNCA inventes refs.
+2. La columna "ancho" SIEMPRE debe ser un número que exista en los anchos disponibles de esa ref. Si el ancho del plano no existe, usa el INMEDIATO SUPERIOR disponible de esa ref.
+3. Si un elemento del plano NO tiene referencia válida en el catálogo (ej: costados, rellenos, encimeras, zócalos, tiradores), NO lo incluyas en "modulos" — menciónalo en "observaciones".
+4. Identifica el tipo por posición en el plano: altos = colgantes (PC*, PCSA*, PCCEP*); bajos = bases (PB*).
+
+GUÍA DE IDENTIFICACIÓN:
+- "Mod. 1 pta" alto ≤60cm → PCP78; 60-120cm → PC2PP78
+- "Mod. 2 ptas" alto → PC2P78 (70-100) o PC2PP78 (60-120) plegables
+- Campana/hueco campana 60 → PCCEP-h61-60; 90cm → PCCEP-h61-90
+- Frigo/sobrefrigo H.26 → PCSA26; H.39 → PCSA39
+- Lavavajillas/lavav → PBLG (H.26, anchos 45 o 60)
+- Fregadero 1P bajo → PBFP; fregadero 2G bajo → PBF2G; fregadero 2P bajo → PBF2P
+- Cacerolero/especiero/cajón interior → PB2GC o PB2GCI
+- Base 1P bajo ≤60 → PBP; Base 2P bajo ≥70 → PB2P
+- Bajo placa/vitro → PBPL2G, PBPL2GC, PBPLHF, PBPLHG2
+
+Responde ÚNICAMENTE con este JSON (sin markdown, sin backticks, sin texto adicional):
+{"modulos":[{"ref":"PCP78","ancho":60,"cant":1,"nota":"Mod. 1 pta — texto exacto del plano","tipo":"alto"}],"observaciones":"Lista de elementos NO incluidos (costados, rellenos, encimera, etc.) con sus medidas del plano"}`;
 
     const userContent = isPdf
       ? [{ type:'document', source:{type:'base64',media_type:'application/pdf',data:base64} }, {type:'text',text:prompt}]
@@ -11307,23 +11311,25 @@ async function saitraIAChatEnviar(){
   document.getElementById('saitra-ia-chat-btn').disabled = true;
 
   try {
-    // Construir prompt de corrección con la lista actual
+    const catalog = _saitraIAGenerarCatalogo();
     const listaActual = _saitraIAModulos.map((m,i) =>
-      `${i+1}. [${m.valido?'✓':'✗'}] ref:${m.ref} ancho:${m.ancho}cm cant:${m.cant||1} nota:"${m.nota||''}"`
+      `${i+1}. ref:${m.ref} ancho:${m.ancho}cm cant:${m.cant||1} nota:"${m.nota||''}"`
     ).join('\n');
 
-    const correctionPrompt = `Lista actual de módulos detectados:
+    const correctionPrompt = `Eres un técnico experto en el catálogo Saitra. Lista actual de módulos:
 ${listaActual}
 
-El usuario solicita: "${msg}"
+El usuario pide: "${msg}"
 
-Aplica el cambio solicitado respetando el catálogo Saitra y la regla del inmediato superior.
-${SAITRA_IA_CATALOGO}
+REGLAS ABSOLUTAS:
+1. Solo puedes usar refs del catálogo oficial Saitra (extracto):
+${catalog}
+2. Si el ancho no existe en la ref elegida, usa el inmediato superior disponible.
+3. Si pide algo sin ref válida (costado, relleno, encimera, zócalo…), aplica el cambio posible a los módulos existentes y menciónalo en "observaciones".
 
-Devuelve ÚNICAMENTE JSON con la lista actualizada y una respuesta breve:
-{"modulos":[{"ref":"...","ancho":0,"cant":1,"nota":"...","tipo":"alto|bajo"}],"respuesta":"Texto explicando qué has cambiado"}`;
+Devuelve ÚNICAMENTE JSON (sin markdown, sin backticks):
+{"modulos":[{"ref":"...","ancho":0,"cant":1,"nota":"...","tipo":"alto|bajo"}],"respuesta":"Texto corto explicando el cambio","observaciones":"elementos sin ref o vacío"}`;
 
-    // Añadir al historial y enviar
     _saitraIAChatHist.push({ role:'user', content: correctionPrompt });
 
     const resp = await fetch('https://api.anthropic.com/v1/messages', {
