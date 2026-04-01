@@ -12396,6 +12396,20 @@ function plGetTrabajadores(){
 
 // ── Carga ─────────────────────────────────────────────────────
 async function loadPlanning(){
+  // En móvil (iOS Safari) usar vista Lista para evitar crash de memoria con la tabla de 4 semanas
+  const _isMobilePl = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
+  if(_isMobilePl && plTabActiva === 'mes'){
+    plTabActiva = 'lista';
+    const vSem = document.getElementById('pl-view-semana');
+    const vLis = document.getElementById('pl-view-lista');
+    if(vSem) vSem.style.display = 'none';
+    if(vLis) vLis.style.display = '';
+    document.querySelectorAll('.pl-tab-btn').forEach(b=>{
+      const activo = b.id === 'pl-tab-lista';
+      b.style.background = activo ? 'var(--navy)' : '';
+      b.style.color = activo ? '#fff' : '';
+    });
+  }
   try{
     await plCargarProyectosSelector();
   }catch(e){ console.warn('planning proyectos:',e); }
