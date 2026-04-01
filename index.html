@@ -1834,7 +1834,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <div style="margin-left:auto;display:flex;align-items:center;gap:6px">
           <span id="s-guardado-lbl" style="font-size:10px;color:var(--text-soft);font-style:italic"></span>
           <button class="btn btn-ghost btn-sm" onclick="saitraLimpiar()" style="color:var(--danger)">🗑 Limpiar</button>
-          <button class="btn btn-sm" onclick="saitraAbrirLeerPlano()" style="background:linear-gradient(135deg,#1565c0,#0d47a1);color:white;border:none;font-weight:700;display:flex;align-items:center;gap:5px">📐 Leer plano con IA</button>
+          <button class="btn btn-sm" onclick="saitraAbrirLeerPlano()" style="background:linear-gradient(135deg,#1565c0,#0d47a1);color:white;border:none;font-weight:700;display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:4px">📐 Leer plano con IA</button>
         </div>
       </div>
 
@@ -2799,22 +2799,18 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         </div>
 
         <!-- ─── PANEL DERECHO: TABLA + TOTALES ─── -->
-        <div id="saitra-col-derecha" style="display:flex;flex-direction:column;gap:10px;position:relative">
+        <div id="saitra-col-derecha" style="display:flex;flex-direction:column;gap:10px">
 
-          <!-- Panel IA inline (dentro de la columna derecha) -->
+          <!-- IA PANEL (inline en col. derecha) -->
           <div id="saitra-ia-wrap" style="display:none;flex-direction:column;gap:12px;background:var(--bg);border-radius:8px;border:1px solid #90caf9;padding:16px">
-
-            <!-- CABECERA -->
             <div style="display:flex;align-items:center;gap:10px;padding-bottom:12px;border-bottom:1px solid var(--border)">
               <button class="cat-back" onclick="saitraIACerrar()" style="font-size:11px">← Valorador</button>
               <span style="font-size:13px;font-weight:700;color:var(--navy)">📐 Leer plano con IA</span>
               <span id="saitra-ia-paso-lbl" style="margin-left:auto;font-size:10px;background:#e3f2fd;color:#1565c0;padding:2px 8px;border-radius:10px;font-weight:600">Paso 1 de 2 — Subir plano</span>
             </div>
-
-            <!-- PASO 1: SUBIDA -->
             <div id="saitra-ia-step1">
               <div style="background:#e3f2fd;border:1px solid #90caf9;border-radius:6px;padding:9px 12px;font-size:11px;color:#0d47a1;margin-bottom:12px">
-                <strong>📌 Cómo funciona:</strong> Sube el plano acotado (JPG, PNG o PDF). La IA identificará los módulos y los cotejará con el catálogo Saitra.
+                <strong>📌 Cómo funciona:</strong> Sube el plano acotado (JPG, PNG o PDF). La IA identifica los módulos y los coteja con el catálogo Saitra.
               </div>
               <div id="saitra-ia-dropzone" onclick="document.getElementById('saitra-ia-input').click()"
                 style="border:2px dashed #90caf9;border-radius:8px;padding:28px;text-align:center;cursor:pointer;background:#f8fbff;transition:background .2s;margin-bottom:12px"
@@ -2849,48 +2845,33 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
                 <button class="btn btn-primary btn-sm" id="saitra-ia-btn-analizar" onclick="saitraIAAnalizar()" style="background:linear-gradient(135deg,#1565c0,#0d47a1);border:none;font-weight:700;font-size:11px" disabled>🔍 Analizar plano</button>
               </div>
             </div>
-
-            <!-- PASO 2: REVISIÓN + CHAT -->
             <div id="saitra-ia-step2" style="display:none">
-              <div style="font-size:11px;color:var(--text-soft);margin-bottom:8px">
-                Marca/desmarca módulos y usa el <strong>chat para corregirlos</strong> antes de confirmar.
-              </div>
-              <div id="saitra-ia-lista" style="border:1px solid var(--border);border-radius:6px;margin-bottom:8px;overflow:hidden;max-height:280px;overflow-y:auto"></div>
+              <div style="font-size:11px;color:var(--text-soft);margin-bottom:8px">Marca/desmarca módulos y usa el <strong>chat para corregirlos</strong> antes de confirmar.</div>
+              <div id="saitra-ia-lista" style="border:1px solid var(--border);border-radius:6px;margin-bottom:8px;overflow:hidden;max-height:300px;overflow-y:auto"></div>
               <div id="saitra-ia-obs" style="display:none;padding:8px 10px;background:#fff8e1;border-radius:6px;border:1px solid #ffe082;font-size:10px;color:#b45309;margin-bottom:8px"></div>
               <div id="saitra-ia-resumen" style="padding:8px 12px;background:#f0f9f0;border-radius:6px;border:1px solid #c8e6c9;font-size:12px;font-weight:700;color:#2e7d32;display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"></div>
-
-              <!-- CHAT DE REFINAMIENTO -->
               <div style="border:1px solid #90caf9;border-radius:8px;overflow:hidden;margin-bottom:12px">
                 <div style="background:linear-gradient(135deg,#1565c0,#0d47a1);color:white;padding:7px 12px;font-size:11px;font-weight:700;display:flex;align-items:center;gap:6px">
-                  💬 Chat de refinamiento
-                  <span style="font-weight:400;font-size:10px;opacity:.85">— Corrige, añade o elimina módulos</span>
+                  💬 Chat de refinamiento <span style="font-weight:400;font-size:10px;opacity:.85">— Corrige, añade o elimina módulos</span>
                 </div>
                 <div id="saitra-ia-chat-hist" style="min-height:60px;max-height:160px;overflow-y:auto;padding:10px;background:#f8fbff;font-size:11px;display:flex;flex-direction:column;gap:6px">
-                  <div id="saitra-ia-chat-hint" style="color:#888;font-size:10px;text-align:center;padding:8px 0">
-                    💡 <em>"El fregadero debería ser de 90cm"</em> · <em>"Quita el módulo 3"</em>
-                  </div>
+                  <div id="saitra-ia-chat-hint" style="color:#888;font-size:10px;text-align:center;padding:8px 0">💡 <em>"El fregadero debería ser de 90cm"</em> · <em>"Quita el módulo 3"</em></div>
                 </div>
                 <div style="display:flex;gap:0;border-top:1px solid #90caf9">
                   <textarea id="saitra-ia-chat-input" placeholder="Escribe tu corrección…" rows="2"
                     style="flex:1;border:none;padding:8px 10px;font-size:11px;resize:none;font-family:inherit;background:#fff;outline:none"
                     onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();saitraIAChatEnviar()}"></textarea>
                   <button onclick="saitraIAChatEnviar()" id="saitra-ia-chat-btn"
-                    style="background:linear-gradient(135deg,#1565c0,#0d47a1);color:white;border:none;padding:0 14px;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap">
-                    ↑
-                  </button>
+                    style="background:linear-gradient(135deg,#1565c0,#0d47a1);color:white;border:none;padding:0 14px;font-weight:700;font-size:13px;cursor:pointer">↑</button>
                 </div>
-                <div id="saitra-ia-chat-pensando" style="display:none;padding:6px 12px;font-size:10px;color:#1565c0;background:#e3f2fd;border-top:1px solid #90caf9">
-                  ⚙️ Procesando corrección…
-                </div>
+                <div id="saitra-ia-chat-pensando" style="display:none;padding:6px 12px;font-size:10px;color:#1565c0;background:#e3f2fd;border-top:1px solid #90caf9">⚙️ Procesando…</div>
               </div>
-
               <div style="display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap">
                 <button class="btn btn-ghost btn-sm" onclick="saitraIACerrar()" style="font-size:11px">Cancelar</button>
                 <button class="btn btn-ghost btn-sm" onclick="saitraIAVolverPaso1()" style="border-color:var(--copper);color:var(--copper);font-size:11px">← Cambiar plano</button>
                 <button class="btn btn-primary btn-sm" onclick="saitraIAConfirmar()" style="background:#2e7d32;border:none;font-weight:700;font-size:11px">＋ Añadir al valorador</button>
               </div>
             </div>
-
           </div><!-- /saitra-ia-wrap -->
 
           <!-- Contenido normal: tabla + totales -->
@@ -2963,8 +2944,98 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
             </div>
           </div>
 
-        </div>
+        </div><!-- /saitra-col-contenido -->
+        </div><!-- /saitra-col-derecha -->
       </div>
+    </div>
+
+    <!-- ═══ INTERIORISMO ═══ -->
+
+    <!-- ═══ GRIFERÍAS IMEX ═══ -->
+
+      <!-- PANEL: IMEX -->
+      <div class="cat-panel" id="cat-panel-imex">
+        <div class="cat-header">
+          <button class="cat-back" onclick="catVolver()">← Catálogos</button>
+          <span class="cat-header-title" id="cat-imex-title">🚿 IMEX — Griferías</span>
+          <span class="cat-header-desc" id="cat-imex-desc">Tarifa +3% · Dto 40% · Margen ajustable</span>
+        </div>
+      <!-- Estilos propios del presupuestador IMEX -->
+      <style>
+        .imex-layout{display:grid;grid-template-columns:1fr 360px;height:calc(100vh - 56px - 36px);gap:0;margin:-18px -20px}
+        .imex-cat{background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+        .imex-cat-top{padding:12px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
+        .imex-tabs{display:flex;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;margin-bottom:9px}
+        .imex-tab{flex:1;padding:6px;font-size:12px;font-weight:600;border:none;cursor:pointer;background:var(--sand);color:var(--text-soft);transition:all .15s}
+        .imex-tab.active{background:var(--navy);color:#fff}
+        .imex-filters{display:flex;gap:7px}
+        .imex-s-wrap{position:relative;flex:1}
+        .imex-s-wrap input{width:100%;padding:6px 28px 6px 9px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;color:var(--text);outline:none;transition:border .15s}
+        .imex-s-wrap input:focus{border-color:var(--navy-light)}
+        .imex-s-ico{position:absolute;right:8px;top:50%;transform:translateY(-50%);opacity:.35;font-size:12px;pointer-events:none}
+        select.imex-sel{padding:6px 7px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:11px;background:var(--white);outline:none;min-width:120px;max-width:140px;color:var(--text)}
+        .imex-info{font-size:10px;color:var(--text-soft);background:var(--blue-light);padding:4px 9px;border-radius:3px;margin-top:8px;line-height:1.5}
+        .imex-info b{color:var(--navy)}
+        .imex-stats{display:flex;align-items:center;padding:5px 14px;background:var(--blue-light);border-bottom:1px solid var(--border);font-size:11px;color:var(--navy-light);flex-shrink:0}
+        .imex-stats b{color:var(--navy)}
+        .imex-tbl-wrap{flex:1;overflow-y:auto}
+        .imex-tbl{width:100%;border-collapse:collapse;font-size:12px}
+        .imex-tbl thead th{background:var(--navy);color:#fff;padding:7px 10px;text-align:left;font-size:10px;font-weight:600;letter-spacing:.05em;white-space:nowrap;position:sticky;top:0;z-index:2}
+        .imex-tbl tbody tr{border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s}
+        .imex-tbl tbody tr:hover{background:var(--blue-light)}
+        .imex-tbl tbody tr.ix-added{background:#edf7ed}
+        .imex-tbl td{padding:5px 10px;vertical-align:middle}
+        .ix-serie span{display:inline-block;background:var(--sand);color:var(--navy-mid);font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;letter-spacing:.03em;white-space:nowrap}
+        .ix-ref{font-family:"Courier New",monospace;font-size:10px;color:var(--text-soft);white-space:nowrap}
+        .ix-pvp{text-align:right;white-space:nowrap;font-weight:600;color:var(--navy)}
+        .ix-cst{text-align:right;white-space:nowrap;font-size:11px;color:var(--text-soft)}
+        .ix-btn-td{text-align:center;width:34px}
+        .ix-btn{width:24px;height:24px;border-radius:50%;background:var(--navy-mid);color:#fff;border:none;font-size:15px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .15s;font-weight:700}
+        .ix-btn:hover{background:var(--copper);transform:scale(1.1)}
+        .ix-btn.on{background:var(--green)}
+        .ix-nor{padding:30px;text-align:center;color:var(--text-soft);font-size:13px;display:none}
+        .imex-bud{background:var(--cream);display:flex;flex-direction:column;overflow:hidden}
+        .imex-bud-top{padding:12px 14px;border-bottom:1px solid var(--border);background:var(--white);flex-shrink:0}
+        .ix-mrg-row{display:flex;align-items:center;gap:7px;margin-top:8px}
+        .ix-mrg-lbl{font-size:11px;color:var(--text-soft);font-weight:500}
+        input.ix-mrg{width:58px;padding:5px 7px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-weight:700;color:var(--navy);text-align:center;outline:none}
+        .ix-mrg-pct{font-size:12px;color:var(--text-soft)}
+        .ix-mrg-note{margin-left:auto;font-size:10px;background:var(--sand);color:var(--text-soft);padding:2px 8px;border-radius:10px}
+        .imex-bud-scroll{flex:1;overflow-y:auto;padding:9px 11px}
+        .ix-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--text-soft);text-align:center;gap:7px}
+        .ix-empty .ico{font-size:32px;opacity:.25}
+        .ix-empty p{font-size:12px}
+        .ix-empty small{font-size:10px;opacity:.6}
+        .ix-bl{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 11px;margin-bottom:7px;transition:box-shadow .15s}
+        .ix-bl:hover{box-shadow:var(--shadow)}
+        .ix-bl-a{display:flex;align-items:flex-start;gap:7px;margin-bottom:5px}
+        .ix-bl-ref{font-family:"Courier New",monospace;font-size:10px;color:var(--text-soft);background:var(--sand);padding:2px 5px;border-radius:3px;white-space:nowrap;flex-shrink:0}
+        .ix-bl-desc{font-size:11px;flex:1;line-height:1.35}
+        .ix-bl-del{background:none;border:none;color:var(--text-soft);cursor:pointer;font-size:12px;padding:0;opacity:.4;transition:opacity .15s;flex-shrink:0}
+        .ix-bl-del:hover{opacity:1;color:var(--red)}
+        .ix-bl-b{display:flex;align-items:center;gap:5px}
+        .ix-cant-w{display:flex;align-items:center;gap:3px}
+        .ix-cbtn{width:19px;height:19px;border-radius:3px;border:1px solid var(--border);background:var(--sand);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--navy);font-weight:700;padding:0;transition:all .1s}
+        .ix-cbtn:hover{background:var(--navy);color:#fff;border-color:var(--navy)}
+        input.ix-cant{width:30px;text-align:center;font-size:12px;font-weight:700;border:1px solid var(--border);border-radius:3px;padding:2px 0;background:var(--white);outline:none;color:var(--navy)}
+        .ix-sp{flex:1}
+        .ix-bl-cst{font-size:10px;color:var(--text-soft)}
+        .ix-bl-pvp{font-size:13px;font-weight:700;color:var(--green)}
+        .imex-foot{padding:12px 14px;border-top:1px solid var(--border);background:var(--white);flex-shrink:0}
+        .ix-tot-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px}
+        .ix-tot{background:var(--sand);border-radius:var(--radius-sm);padding:8px 10px}
+        .ix-tot-lbl{font-size:10px;color:var(--text-soft);font-weight:500;text-transform:uppercase;letter-spacing:.05em}
+        .ix-tot-val{font-size:15px;font-weight:700;color:var(--navy);margin-top:1px}
+        .ix-tot.hi .ix-tot-val{color:var(--green)}
+        .ix-tot.mrg{background:var(--copper-light);grid-column:1/-1}
+        .ix-tot.mrg .ix-tot-val{color:var(--copper)}
+        .ix-btn-exp{width:100%;padding:8px;background:var(--navy);color:#fff;border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:700;cursor:pointer;transition:background .15s;display:flex;align-items:center;justify-content:center;gap:5px}
+        .ix-btn-exp:hover{background:var(--copper)}
+        .ix-btn-clr{width:100%;padding:6px;background:transparent;color:var(--text-soft);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:11px;cursor:pointer;margin-top:5px;transition:all .15s}
+        .ix-btn-clr:hover{border-color:var(--red);color:var(--red)}
+      </style>
+
+      <div class="imex-layout">
         <!-- CATÁLOGO -->
         <div class="imex-cat">
           <div class="imex-cat-top">
@@ -11049,36 +11120,28 @@ function saitraAddModulo(){
 }
 
 // ═══════════════════════════════════════════════════════════════
-// LEER PLANO CON IA — Saitra (v2: inline panel + chat)
+// LEER PLANO CON IA — Saitra (columna derecha, con chat y edición inline)
 // ═══════════════════════════════════════════════════════════════
 
 let _saitraIAFile    = null;
-let _saitraIAModulos = [];   // módulos actuales (se actualizan con el chat)
+let _saitraIAModulos = [];
 let _saitraIATarifa  = 3;
 let _saitraIAMargen  = 70;
-let _saitraIAChatHist = [];  // historial de mensajes para la API
+let _saitraIAChatHist = [];
 
-// Genera el catálogo completo dinámicamente desde SAITRA_MOD (siempre sincronizado)
 function _saitraIAGenerarCatalogo(){
   const grupos = {};
   Object.entries(SAITRA_MOD).forEach(([ref, def]) => {
     if(!def.anchos || def.grupo === 'INCREMENTOS') return;
     if(!grupos[def.grupo]) grupos[def.grupo] = [];
     const anchos = Object.keys(def.anchos).join(',');
-    grupos[def.grupo].push(`  ${ref} (${def.label}) [${anchos}]`);
+    grupos[def.grupo].push('  ' + ref + ' (' + def.label + ') [' + anchos + ']');
   });
-  const lines = [];
-  Object.entries(grupos).forEach(([grupo, refs]) => {
-    lines.push(`\n${grupo}:`);
-    refs.forEach(r => lines.push(r));
-  });
-  return lines.join('\n');
+  return Object.entries(grupos).map(([g,refs]) => '\n' + g + ':\n' + refs.join('\n')).join('');
 }
 
 function saitraAbrirLeerPlano(){
-  _saitraIAFile = null;
-  _saitraIAModulos = [];
-  _saitraIAChatHist = [];
+  _saitraIAFile = null; _saitraIAModulos = []; _saitraIAChatHist = [];
   document.getElementById('saitra-ia-nombre').textContent = '';
   document.getElementById('saitra-ia-btn-analizar').disabled = true;
   document.getElementById('saitra-ia-analizando').style.display = 'none';
@@ -11104,8 +11167,7 @@ function saitraIAVolverPaso1(){
 }
 
 function saitraIAArchivoSel(input){
-  const file = input.files[0];
-  if(!file) return;
+  const file = input.files[0]; if(!file) return;
   _saitraIAFile = file;
   document.getElementById('saitra-ia-nombre').textContent = '📄 ' + file.name + ' (' + (file.size/1024).toFixed(0) + ' KB)';
   document.getElementById('saitra-ia-btn-analizar').disabled = false;
@@ -11114,507 +11176,289 @@ function saitraIAArchivoSel(input){
 function saitraIAOnDrop(e){
   e.preventDefault();
   document.getElementById('saitra-ia-dropzone').style.background = '#f8fbff';
-  const file = e.dataTransfer.files[0];
-  if(!file) return;
+  const file = e.dataTransfer.files[0]; if(!file) return;
   _saitraIAFile = file;
   document.getElementById('saitra-ia-nombre').textContent = '📄 ' + file.name + ' (' + (file.size/1024).toFixed(0) + ' KB)';
   document.getElementById('saitra-ia-btn-analizar').disabled = false;
 }
 
 function _saitraIAParseJSON(raw){
-  let parsed, ok = false;
-  try { parsed = JSON.parse(raw.trim()); ok = true; } catch(e){}
-  if(!ok){
-    const t = raw.trim();
-    const f1 = t.indexOf('{');
-    if(f1 !== -1){
-      let depth=0, end=-1;
-      for(let i=f1;i<t.length;i++){
-        if(t[i]==='{') depth++;
-        else if(t[i]==='}'){depth--;if(depth===0){end=i;break;}}
-      }
-      if(end!==-1){ try{parsed=JSON.parse(t.slice(f1,end+1));ok=true;}catch(e){} }
-    }
-  }
-  return ok ? parsed : null;
+  let p, ok=false;
+  try{p=JSON.parse(raw.trim());ok=true;}catch(e){}
+  if(!ok){const t=raw.trim();const f1=t.indexOf('{');if(f1!==-1){let d=0,end=-1;for(let i=f1;i<t.length;i++){if(t[i]==='{')d++;else if(t[i]==='}'){d--;if(d===0){end=i;break;}}}if(end!==-1){try{p=JSON.parse(t.slice(f1,end+1));ok=true;}catch(e){}}}}
+  return ok?p:null;
 }
 
 function _saitraIACalcularModulos(lista, tarifaIdx, margen){
   return lista.map((m, idx) => {
     const modDef = SAITRA_MOD[m.ref];
-    if(!modDef) return { ...m, error: 'Ref "' + m.ref + '" no existe en catálogo', valido: false, idx };
-
+    if(!modDef) return { ...m, error:'Ref "'+m.ref+'" no existe en catálogo', valido:false, idx };
     const anchoSolicitado = parseInt(m.ancho);
-    const anchosDisp = Object.keys(modDef.anchos)
-      .map(k => /^\d+x\d+$/.test(k) ? k : parseInt(k))
-      .filter(k => typeof k === 'number')
-      .sort((a,b) => a-b);
-
-    if(!anchosDisp.length) return { ...m, error: 'Sin anchos disponibles en ' + m.ref, valido: false, idx };
-
-    const anchoMax = anchosDisp[anchosDisp.length - 1];
-    const anchoMin = anchosDisp[0];
-    let pts, anchoUsado, metodo = 'exacto';
-
-    if(modDef.anchos[anchoSolicitado]) {
-      // Ancho exacto disponible
-      anchoUsado = anchoSolicitado;
-      pts = modDef.anchos[anchoSolicitado][tarifaIdx];
-
+    const anchosDisp = Object.keys(modDef.anchos).map(k=>/^\d+x\d+$/.test(k)?k:parseInt(k)).filter(k=>typeof k==='number').sort((a,b)=>a-b);
+    if(!anchosDisp.length) return { ...m, error:'Sin anchos en '+m.ref, valido:false, idx };
+    const anchoMax = anchosDisp[anchosDisp.length-1];
+    let pts, anchoUsado, metodo='exacto';
+    if(modDef.anchos[anchoSolicitado]){
+      anchoUsado=anchoSolicitado; pts=modDef.anchos[anchoSolicitado][tarifaIdx];
     } else {
-      // Buscar inmediato superior
-      const superior = anchosDisp.find(a => a > anchoSolicitado);
-
-      if(superior) {
-        // Inmediato superior existe → usar directamente
-        anchoUsado = superior;
-        pts = modDef.anchos[superior][tarifaIdx];
-        metodo = 'superior';
-      } else {
-        // No hay superior → regla de 3 desde el máximo disponible
-        const ptsMax = modDef.anchos[anchoMax][tarifaIdx];
-        pts = Math.round(ptsMax * anchoSolicitado / anchoMax);
-        anchoUsado = anchoMax;
-        metodo = 'regla3';
-      }
+      const superior = anchosDisp.find(a=>a>anchoSolicitado);
+      if(superior){ anchoUsado=superior; pts=modDef.anchos[superior][tarifaIdx]; metodo='superior'; }
+      else { pts=Math.round(modDef.anchos[anchoMax][tarifaIdx]*anchoSolicitado/anchoMax); anchoUsado=anchoMax; metodo='regla3'; }
     }
-
-    const costeU = pts * 0.99;
-    const pvpU   = costeU * (1 + margen/100);
-    const notaMetodo = metodo === 'superior'
-      ? ` [→ ${anchoUsado}cm]`
-      : metodo === 'regla3'
-      ? ` [R3: ${anchoMax}cm×${anchoSolicitado}/${anchoMax}=${pts}pts]`
-      : '';
-
-    return {
-      ...m, valido: true, idx, puntos: pts, tarifaIdx, margen,
-      anchoUsado, metodo, notaMetodo,
-      costeUnit: costeU, pvpUnit: pvpU,
-      costeTotal: costeU * (m.cant||1), pvpTotal: pvpU * (m.cant||1),
-      label: modDef.label
-    };
+    const costeU=pts*0.99, pvpU=costeU*(1+margen/100);
+    return { ...m, valido:true, idx, puntos:pts, tarifaIdx, margen, anchoUsado, metodo,
+      costeUnit:costeU, pvpUnit:pvpU, costeTotal:costeU*(m.cant||1), pvpTotal:pvpU*(m.cant||1), label:modDef.label };
   });
 }
 
 function _saitraIARenderLista(){
   const lista = document.getElementById('saitra-ia-lista');
+  const refsOpts = Object.entries(SAITRA_MOD).filter(([,d])=>d.grupo!=='INCREMENTOS')
+    .map(([ref,d])=>'<option value="'+ref+'">'+ref+' — '+d.label+'</option>').join('');
 
-  // Construir el selector de refs para el dropdown de edición
-  const refsOpts = Object.entries(SAITRA_MOD)
-    .filter(([,d]) => d.grupo !== 'INCREMENTOS')
-    .map(([ref, d]) => `<option value="${ref}">${ref} — ${d.label}</option>`)
-    .join('');
-
-  lista.innerHTML = _saitraIAModulos.map((m, i) => {
-    const bg = i % 2 === 0 ? '#fff' : '#fafafa';
-
+  lista.innerHTML = _saitraIAModulos.map((m,i) => {
+    const bg = i%2===0?'#fff':'#fafafa';
     if(!m.valido){
-      return `<div id="saitraIArow-${m.idx}" style="border-bottom:1px solid #ffe082;background:#fff8e1">
-        <div id="saitraIAview-${m.idx}" style="display:flex;align-items:center;gap:8px;padding:7px 10px">
-          <div style="flex:1;font-size:11px;color:#b45309">
-            ⚠️ <strong>${m.ref} ${m.ancho}cm</strong> — ${m.error}
-          </div>
-          <button onclick="_saitraIAToggleEdit(${m.idx})"
-            style="background:#fff3e0;border:1px solid #ffcc80;border-radius:4px;color:#e65100;cursor:pointer;font-size:11px;padding:3px 7px;flex-shrink:0"
-            title="Editar y corregir">✏️ Corregir</button>
-          <button onclick="_saitraIAEliminar(${m.idx})"
-            style="background:none;border:none;color:#ccc;cursor:pointer;font-size:14px;padding:0 2px;flex-shrink:0" title="Eliminar">✕</button>
-        </div>
-        <div id="saitraIAedit-${m.idx}" style="display:none;padding:10px 12px;background:#fff8e1;border-top:1px solid #ffe082">
-          <div style="display:grid;grid-template-columns:1fr 80px 60px;gap:8px;margin-bottom:8px">
-            <div>
-              <label style="font-size:10px;font-weight:700;color:#b45309;display:block;margin-bottom:3px">REFERENCIA</label>
-              <select id="saitraIAedit-ref-${m.idx}" onchange="_saitraIAEditRefChange(${m.idx})"
-                style="width:100%;font-size:11px;padding:4px 6px;border:1px solid #ffcc80;border-radius:4px;font-family:inherit">
-                ${refsOpts.replace(`value="${m.ref}"`, `value="${m.ref}" selected`)}
-              </select>
-            </div>
-            <div>
-              <label style="font-size:10px;font-weight:700;color:#b45309;display:block;margin-bottom:3px">ANCHO</label>
-              <select id="saitraIAedit-ancho-${m.idx}"
-                style="width:100%;font-size:11px;padding:4px 6px;border:1px solid #ffcc80;border-radius:4px;font-family:inherit">
-                ${SAITRA_MOD[m.ref] ? Object.keys(SAITRA_MOD[m.ref].anchos).map(a=>`<option value="${a}">${a}cm</option>`).join('') : `<option value="${m.ancho}">${m.ancho}cm</option>`}
-              </select>
-            </div>
-            <div>
-              <label style="font-size:10px;font-weight:700;color:#b45309;display:block;margin-bottom:3px">CANT.</label>
-              <input type="number" id="saitraIAedit-cant-${m.idx}" value="${m.cant||1}" min="1" max="99"
-                style="width:100%;font-size:11px;padding:4px 6px;border:1px solid #ffcc80;border-radius:4px;text-align:center">
-            </div>
-          </div>
-          <div style="margin-bottom:8px">
-            <label style="font-size:10px;font-weight:700;color:#b45309;display:block;margin-bottom:3px">NOTA</label>
-            <input type="text" id="saitraIAedit-nota-${m.idx}" value="${(m.nota||'').replace(/"/g,'&quot;')}" placeholder="descripción adicional…"
-              style="width:100%;font-size:11px;padding:4px 6px;border:1px solid #ffcc80;border-radius:4px;box-sizing:border-box">
-          </div>
-          <div style="display:flex;gap:8px;justify-content:flex-end">
-            <button onclick="_saitraIAToggleEdit(${m.idx})"
-              style="font-size:11px;padding:4px 10px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer">Cancelar</button>
-            <button onclick="_saitraIAGuardarEdit(${m.idx})"
-              style="font-size:11px;padding:4px 12px;background:#e65100;color:white;border:none;border-radius:4px;cursor:pointer;font-weight:700">✓ Aplicar</button>
-          </div>
-        </div>
-      </div>`;
+      const anchosOpts2 = SAITRA_MOD[m.ref]
+        ? Object.keys(SAITRA_MOD[m.ref].anchos).map(a=>'<option value="'+a+'">'+a+'cm</option>').join('')
+        : '<option value="'+m.ancho+'">'+m.ancho+'cm</option>';
+      return '<div id="saitraIArow-'+m.idx+'" style="border-bottom:1px solid #ffe082;background:#fff8e1">'
+        +'<div id="saitraIAview-'+m.idx+'" style="display:flex;align-items:center;gap:8px;padding:7px 10px">'
+        +'<div style="flex:1;font-size:11px;color:#b45309">⚠️ <strong>'+m.ref+' '+m.ancho+'cm</strong> — '+m.error+'</div>'
+        +'<button onclick="_saitraIAToggleEdit('+m.idx+')" style="background:#fff3e0;border:1px solid #ffcc80;border-radius:4px;color:#e65100;cursor:pointer;font-size:11px;padding:3px 7px;flex-shrink:0">✏️ Corregir</button>'
+        +'<button onclick="_saitraIAEliminar('+m.idx+')" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:14px;padding:0 2px">✕</button>'
+        +'</div>'
+        +'<div id="saitraIAedit-'+m.idx+'" style="display:none;padding:10px 12px;background:#fff8e1;border-top:1px solid #ffe082">'
+        +'<div style="display:grid;grid-template-columns:1fr 80px 60px;gap:8px;margin-bottom:8px">'
+        +'<div><label style="font-size:10px;font-weight:700;color:#b45309;display:block;margin-bottom:3px">REF</label>'
+        +'<select id="saitraIAedit-ref-'+m.idx+'" onchange="_saitraIAEditRefChange('+m.idx+')" style="width:100%;font-size:11px;padding:4px 6px;border:1px solid #ffcc80;border-radius:4px;font-family:inherit">'+refsOpts.replace('value="'+m.ref+'"','value="'+m.ref+'" selected')+'</select></div>'
+        +'<div><label style="font-size:10px;font-weight:700;color:#b45309;display:block;margin-bottom:3px">ANCHO</label>'
+        +'<select id="saitraIAedit-ancho-'+m.idx+'" style="width:100%;font-size:11px;padding:4px 6px;border:1px solid #ffcc80;border-radius:4px;font-family:inherit">'+anchosOpts2+'</select></div>'
+        +'<div><label style="font-size:10px;font-weight:700;color:#b45309;display:block;margin-bottom:3px">CANT.</label>'
+        +'<input type="number" id="saitraIAedit-cant-'+m.idx+'" value="'+(m.cant||1)+'" min="1" max="99" style="width:100%;font-size:11px;padding:4px 6px;border:1px solid #ffcc80;border-radius:4px;text-align:center"></div>'
+        +'</div>'
+        +'<div style="margin-bottom:8px"><label style="font-size:10px;font-weight:700;color:#b45309;display:block;margin-bottom:3px">NOTA</label>'
+        +'<input type="text" id="saitraIAedit-nota-'+m.idx+'" value="'+(m.nota||'').replace(/"/g,"&quot;")+'" placeholder="descripción adicional…" style="width:100%;font-size:11px;padding:4px 6px;border:1px solid #ffcc80;border-radius:4px;box-sizing:border-box"></div>'
+        +'<div style="display:flex;gap:8px;justify-content:flex-end">'
+        +'<button onclick="_saitraIAToggleEdit('+m.idx+')" style="font-size:11px;padding:4px 10px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer">Cancelar</button>'
+        +'<button onclick="_saitraIAGuardarEdit('+m.idx+')" style="font-size:11px;padding:4px 12px;background:#e65100;color:white;border:none;border-radius:4px;cursor:pointer;font-weight:700">✓ Aplicar</button>'
+        +'</div></div></div>';
     }
-
-    // Badge método de cálculo
-    let metodoBadge = '';
-    if(m.metodo === 'superior')
-      metodoBadge = `<span style="font-size:9px;background:#fff3e0;color:#e65100;padding:1px 5px;border-radius:8px;border:1px solid #ffcc80">→${m.anchoUsado}cm</span>`;
-    else if(m.metodo === 'regla3')
-      metodoBadge = `<span style="font-size:9px;background:#e8f5e9;color:#2e7d32;padding:1px 5px;border-radius:8px;border:1px solid #a5d6a7">R×3/${m.anchoUsado}cm</span>`;
-
-    // Anchos disponibles para la ref actual
-    const anchosRef = m.valido && SAITRA_MOD[m.ref]
-      ? Object.keys(SAITRA_MOD[m.ref].anchos).map(a => parseInt(a)||a).sort((a,b)=>a-b)
-      : [];
-    const anchosOpts = anchosRef.map(a => `<option value="${a}"${a==m.ancho||a==m.anchoUsado?'':''} ${parseInt(m.ancho)===a?'selected':''}>${a}cm</option>`).join('');
-
-    return `
-    <div id="saitraIArow-${m.idx}" style="border-bottom:1px solid var(--border);background:${bg}">
-      <!-- FILA RESUMEN (vista normal) -->
-      <div id="saitraIAview-${m.idx}" style="display:flex;align-items:center;gap:8px;padding:7px 10px">
-        <input type="checkbox" id="saitraIAchk-${m.idx}" checked style="width:14px;height:14px;flex-shrink:0;cursor:pointer">
-        <div style="flex:1;min-width:0">
-          <div style="font-size:11px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:5px;flex-wrap:wrap">
-            <span style="font-family:monospace;background:#f0f0f0;padding:1px 5px;border-radius:3px;color:#1565c0">${m.ref}</span>
-            <span>${m.ancho}cm</span>
-            ${m.cant>1?`<span style="color:#888;font-weight:400">×${m.cant}</span>`:''}
-            ${metodoBadge}
-          </div>
-          <div style="font-size:10px;color:var(--text-soft);margin-top:1px">${m.label}${m.nota?' · '+m.nota:''}</div>
-        </div>
-        <div style="text-align:right;flex-shrink:0;font-size:11px">
-          <div style="font-weight:700;color:#2e7d32">${fmtES(m.pvpTotal)}€</div>
-          <div style="color:var(--text-soft);font-size:10px">${m.puntos}pts</div>
-        </div>
-        <button onclick="_saitraIAToggleEdit(${m.idx})"
-          style="background:#e3f2fd;border:1px solid #90caf9;border-radius:4px;color:#1565c0;cursor:pointer;font-size:11px;padding:3px 7px;white-space:nowrap;flex-shrink:0"
-          title="Editar línea">✏️</button>
-        <button onclick="_saitraIAEliminar(${m.idx})"
-          style="background:none;border:none;color:#ccc;cursor:pointer;font-size:14px;padding:0 2px;flex-shrink:0" title="Eliminar">✕</button>
-      </div>
-      <!-- FILA EDICIÓN (oculta por defecto) -->
-      <div id="saitraIAedit-${m.idx}" style="display:none;padding:10px 12px;background:#f0f7ff;border-top:1px solid #c5e0fb">
-        <div style="display:grid;grid-template-columns:1fr 80px 60px;gap:8px;margin-bottom:8px">
-          <div>
-            <label style="font-size:10px;font-weight:700;color:var(--text-soft);display:block;margin-bottom:3px">REFERENCIA</label>
-            <select id="saitraIAedit-ref-${m.idx}" onchange="_saitraIAEditRefChange(${m.idx})"
-              style="width:100%;font-size:11px;padding:4px 6px;border:1px solid #90caf9;border-radius:4px;font-family:inherit">
-              ${refsOpts.replace(`value="${m.ref}"`, `value="${m.ref}" selected`)}
-            </select>
-          </div>
-          <div>
-            <label style="font-size:10px;font-weight:700;color:var(--text-soft);display:block;margin-bottom:3px">ANCHO</label>
-            <select id="saitraIAedit-ancho-${m.idx}"
-              style="width:100%;font-size:11px;padding:4px 6px;border:1px solid #90caf9;border-radius:4px;font-family:inherit">
-              ${anchosOpts}
-            </select>
-          </div>
-          <div>
-            <label style="font-size:10px;font-weight:700;color:var(--text-soft);display:block;margin-bottom:3px">CANT.</label>
-            <input type="number" id="saitraIAedit-cant-${m.idx}" value="${m.cant||1}" min="1" max="99"
-              style="width:100%;font-size:11px;padding:4px 6px;border:1px solid #90caf9;border-radius:4px;text-align:center">
-          </div>
-        </div>
-        <div style="margin-bottom:8px">
-          <label style="font-size:10px;font-weight:700;color:var(--text-soft);display:block;margin-bottom:3px">NOTA / DESCRIPCIÓN ADICIONAL</label>
-          <input type="text" id="saitraIAedit-nota-${m.idx}" value="${(m.nota||'').replace(/"/g,'&quot;')}" placeholder="ej. esquinero derecha, bajo horno…"
-            style="width:100%;font-size:11px;padding:4px 6px;border:1px solid #90caf9;border-radius:4px;box-sizing:border-box">
-        </div>
-        <div style="display:flex;gap:8px;justify-content:flex-end">
-          <button onclick="_saitraIAToggleEdit(${m.idx})"
-            style="font-size:11px;padding:4px 10px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer">Cancelar</button>
-          <button onclick="_saitraIAGuardarEdit(${m.idx})"
-            style="font-size:11px;padding:4px 12px;background:#1565c0;color:white;border:none;border-radius:4px;cursor:pointer;font-weight:700">✓ Aplicar</button>
-        </div>
-      </div>
-    </div>`;
+    let badge='';
+    if(m.metodo==='superior') badge='<span style="font-size:9px;background:#fff3e0;color:#e65100;padding:1px 5px;border-radius:8px;border:1px solid #ffcc80">→'+m.anchoUsado+'cm</span>';
+    else if(m.metodo==='regla3') badge='<span style="font-size:9px;background:#e8f5e9;color:#2e7d32;padding:1px 5px;border-radius:8px;border:1px solid #a5d6a7">R×3/'+m.anchoUsado+'cm</span>';
+    const anchosRef = SAITRA_MOD[m.ref]?Object.keys(SAITRA_MOD[m.ref].anchos).map(a=>parseInt(a)||a).sort((a,b)=>a-b):[];
+    const anchosOpts = anchosRef.map(a=>'<option value="'+a+'"'+(parseInt(m.ancho)===a?' selected':'')+'>'+a+'cm</option>').join('');
+    return '<div id="saitraIArow-'+m.idx+'" style="border-bottom:1px solid var(--border);background:'+bg+'">'
+      +'<div id="saitraIAview-'+m.idx+'" style="display:flex;align-items:center;gap:8px;padding:7px 10px">'
+      +'<input type="checkbox" id="saitraIAchk-'+m.idx+'" checked style="width:14px;height:14px;flex-shrink:0;cursor:pointer">'
+      +'<div style="flex:1;min-width:0">'
+      +'<div style="font-size:11px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:5px;flex-wrap:wrap">'
+      +'<span style="font-family:monospace;background:#f0f0f0;padding:1px 5px;border-radius:3px;color:#1565c0">'+m.ref+'</span>'
+      +'<span>'+m.ancho+'cm</span>'+(m.cant>1?'<span style="color:#888;font-weight:400">×'+m.cant+'</span>':'')+badge+'</div>'
+      +'<div style="font-size:10px;color:var(--text-soft);margin-top:1px">'+m.label+(m.nota?' · '+m.nota:'')+'</div>'
+      +'</div>'
+      +'<div style="text-align:right;flex-shrink:0;font-size:11px">'
+      +'<div style="font-weight:700;color:#2e7d32">'+fmtES(m.pvpTotal)+'€</div>'
+      +'<div style="color:var(--text-soft);font-size:10px">'+m.puntos+'pts</div></div>'
+      +'<button onclick="_saitraIAToggleEdit('+m.idx+')" style="background:#e3f2fd;border:1px solid #90caf9;border-radius:4px;color:#1565c0;cursor:pointer;font-size:11px;padding:3px 7px;white-space:nowrap;flex-shrink:0" title="Editar">✏️</button>'
+      +'<button onclick="_saitraIAEliminar('+m.idx+')" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:14px;padding:0 2px;flex-shrink:0">✕</button>'
+      +'</div>'
+      +'<div id="saitraIAedit-'+m.idx+'" style="display:none;padding:10px 12px;background:#f0f7ff;border-top:1px solid #c5e0fb">'
+      +'<div style="display:grid;grid-template-columns:1fr 80px 60px;gap:8px;margin-bottom:8px">'
+      +'<div><label style="font-size:10px;font-weight:700;color:var(--text-soft);display:block;margin-bottom:3px">REFERENCIA</label>'
+      +'<select id="saitraIAedit-ref-'+m.idx+'" onchange="_saitraIAEditRefChange('+m.idx+')" style="width:100%;font-size:11px;padding:4px 6px;border:1px solid #90caf9;border-radius:4px;font-family:inherit">'+refsOpts.replace('value="'+m.ref+'"','value="'+m.ref+'" selected')+'</select></div>'
+      +'<div><label style="font-size:10px;font-weight:700;color:var(--text-soft);display:block;margin-bottom:3px">ANCHO</label>'
+      +'<select id="saitraIAedit-ancho-'+m.idx+'" style="width:100%;font-size:11px;padding:4px 6px;border:1px solid #90caf9;border-radius:4px;font-family:inherit">'+anchosOpts+'</select></div>'
+      +'<div><label style="font-size:10px;font-weight:700;color:var(--text-soft);display:block;margin-bottom:3px">CANT.</label>'
+      +'<input type="number" id="saitraIAedit-cant-'+m.idx+'" value="'+(m.cant||1)+'" min="1" max="99" style="width:100%;font-size:11px;padding:4px 6px;border:1px solid #90caf9;border-radius:4px;text-align:center"></div>'
+      +'</div>'
+      +'<div style="margin-bottom:8px"><label style="font-size:10px;font-weight:700;color:var(--text-soft);display:block;margin-bottom:3px">NOTA</label>'
+      +'<input type="text" id="saitraIAedit-nota-'+m.idx+'" value="'+(m.nota||'').replace(/"/g,"&quot;")+'" placeholder="ej. esquinero derecha, bajo horno…" style="width:100%;font-size:11px;padding:4px 6px;border:1px solid #90caf9;border-radius:4px;box-sizing:border-box"></div>'
+      +'<div style="display:flex;gap:8px;justify-content:flex-end">'
+      +'<button onclick="_saitraIAToggleEdit('+m.idx+')" style="font-size:11px;padding:4px 10px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer">Cancelar</button>'
+      +'<button onclick="_saitraIAGuardarEdit('+m.idx+')" style="font-size:11px;padding:4px 12px;background:#1565c0;color:white;border:none;border-radius:4px;cursor:pointer;font-weight:700">✓ Aplicar</button>'
+      +'</div></div></div>';
   }).join('');
 
-  // Botón añadir módulo manual al final
-  lista.innerHTML += `<div style="padding:6px 10px;background:#f7f4ef;border-top:1px solid var(--border);text-align:center">
-    <button onclick="_saitraIAañadirManual()"
-      style="font-size:11px;background:none;border:1px dashed #90caf9;color:#1565c0;border-radius:4px;padding:4px 14px;cursor:pointer;width:100%">＋ Añadir módulo manualmente</button>
-  </div>`;
+  lista.innerHTML += '<div style="padding:6px 10px;background:#f7f4ef;border-top:1px solid var(--border);text-align:center">'
+    +'<button onclick="_saitraIAañadirManual()" style="font-size:11px;background:none;border:1px dashed #90caf9;color:#1565c0;border-radius:4px;padding:4px 14px;cursor:pointer;width:100%">＋ Añadir módulo manualmente</button></div>';
 
   // Auto-abrir edición en líneas inválidas
-  _saitraIAModulos.filter(m => !m.valido).forEach(m => {
-    setTimeout(() => {
-      const edit = document.getElementById('saitraIAedit-' + m.idx);
-      const view = document.getElementById('saitraIAview-' + m.idx);
-      if(edit && edit.style.display === 'none'){ edit.style.display='block'; if(view) view.style.opacity='0.5'; }
-    }, 30);
+  _saitraIAModulos.filter(m=>!m.valido).forEach(m=>{
+    setTimeout(()=>{
+      const ed=document.getElementById('saitraIAedit-'+m.idx);
+      const vw=document.getElementById('saitraIAview-'+m.idx);
+      if(ed&&ed.style.display==='none'){ed.style.display='block';if(vw)vw.style.opacity='0.6';}
+    },30);
   });
-
   _saitraIAActualizarResumen();
 }
 
 function _saitraIAActualizarResumen(){
-  const validos = _saitraIAModulos.filter(m => m.valido);
-  const totalPvp   = validos.reduce((s,m) => s + m.pvpTotal,  0);
-  const totalCoste = validos.reduce((s,m) => s + m.costeTotal,0);
-  document.getElementById('saitra-ia-resumen').innerHTML =
-    `<span>${validos.length} módulo${validos.length!==1?'s':''} válido${validos.length!==1?'s':''}</span>
-     <span>Coste: <strong>${fmtES(totalCoste)}€</strong> · PVP: <strong>${fmtES(totalPvp)}€</strong></span>`;
+  const validos=_saitraIAModulos.filter(m=>m.valido);
+  const tp=validos.reduce((s,m)=>s+m.pvpTotal,0), tc=validos.reduce((s,m)=>s+m.costeTotal,0);
+  document.getElementById('saitra-ia-resumen').innerHTML=
+    '<span>'+validos.length+' módulo'+(validos.length!==1?'s':'')+' válido'+(validos.length!==1?'s':'')+'</span>'
+    +'<span>Coste: <strong>'+fmtES(tc)+'€</strong> · PVP: <strong>'+fmtES(tp)+'€</strong></span>';
 }
 
 function _saitraIAToggleEdit(idx){
-  const view = document.getElementById('saitraIAview-' + idx);
-  const edit = document.getElementById('saitraIAedit-' + idx);
-  const isOpen = edit.style.display !== 'none';
-  edit.style.display = isOpen ? 'none' : 'block';
-  view.style.opacity = isOpen ? '1' : '0.5';
+  const view=document.getElementById('saitraIAview-'+idx);
+  const edit=document.getElementById('saitraIAedit-'+idx);
+  const isOpen=edit.style.display!=='none';
+  edit.style.display=isOpen?'none':'block';
+  view.style.opacity=isOpen?'1':'0.5';
 }
 
 function _saitraIAEditRefChange(idx){
-  const newRef = document.getElementById('saitraIAedit-ref-' + idx).value;
-  const anchoSel = document.getElementById('saitraIAedit-ancho-' + idx);
-  const modDef = SAITRA_MOD[newRef];
-  if(!modDef) return;
-  const anchos = Object.keys(modDef.anchos).map(a => parseInt(a)||a).sort((a,b)=>a-b);
-  anchoSel.innerHTML = anchos.map(a => `<option value="${a}">${a}cm</option>`).join('');
+  const newRef=document.getElementById('saitraIAedit-ref-'+idx).value;
+  const sel=document.getElementById('saitraIAedit-ancho-'+idx);
+  const modDef=SAITRA_MOD[newRef]; if(!modDef) return;
+  const anchos=Object.keys(modDef.anchos).map(a=>parseInt(a)||a).sort((a,b)=>a-b);
+  sel.innerHTML=anchos.map(a=>'<option value="'+a+'">'+a+'cm</option>').join('');
 }
 
 function _saitraIAGuardarEdit(idx){
-  const newRef  = document.getElementById('saitraIAedit-ref-'  + idx).value;
-  const newAncho= parseInt(document.getElementById('saitraIAedit-ancho-'+ idx).value);
-  const newCant = parseInt(document.getElementById('saitraIAedit-cant-' + idx).value)||1;
-  const newNota = document.getElementById('saitraIAedit-nota-' + idx).value.trim();
-
-  // Recalcular con los nuevos valores
-  const updated = _saitraIACalcularModulos(
-    [{ ref: newRef, ancho: newAncho, cant: newCant, nota: newNota, tipo: _saitraIAModulos.find(m=>m.idx===idx)?.tipo||'bajo' }],
-    _saitraIATarifa, _saitraIAMargen
-  )[0];
-  updated.idx = idx;
-
-  const pos = _saitraIAModulos.findIndex(m => m.idx === idx);
-  if(pos !== -1) _saitraIAModulos[pos] = updated;
-
+  const newRef=document.getElementById('saitraIAedit-ref-'+idx).value;
+  const newAncho=parseInt(document.getElementById('saitraIAedit-ancho-'+idx).value);
+  const newCant=parseInt(document.getElementById('saitraIAedit-cant-'+idx).value)||1;
+  const newNota=document.getElementById('saitraIAedit-nota-'+idx).value.trim();
+  const tipo=_saitraIAModulos.find(m=>m.idx===idx)?.tipo||'bajo';
+  const updated=_saitraIACalcularModulos([{ref:newRef,ancho:newAncho,cant:newCant,nota:newNota,tipo}],_saitraIATarifa,_saitraIAMargen)[0];
+  updated.idx=idx;
+  const pos=_saitraIAModulos.findIndex(m=>m.idx===idx);
+  if(pos!==-1) _saitraIAModulos[pos]=updated;
   _saitraIARenderLista();
-  // Reabrir el panel de edición si hubo error
   if(!updated.valido) _saitraIAToggleEdit(idx);
 }
 
 function _saitraIAEliminar(idx){
-  _saitraIAModulos = _saitraIAModulos.filter(m => m.idx !== idx);
+  _saitraIAModulos=_saitraIAModulos.filter(m=>m.idx!==idx);
   _saitraIARenderLista();
 }
 
 function _saitraIAañadirManual(){
-  // Añadir una línea vacía editable al final
-  const newIdx = (_saitraIAModulos.reduce((mx,m) => Math.max(mx,m.idx), 0)) + 1;
-  _saitraIAModulos.push({ idx: newIdx, ref:'PBP', ancho:60, cant:1, nota:'', tipo:'bajo', valido:false, error:'Nueva línea — selecciona ref y ancho' });
+  const newIdx=(_saitraIAModulos.reduce((mx,m)=>Math.max(mx,m.idx),0))+1;
+  _saitraIAModulos.push({idx:newIdx,ref:'PBP',ancho:60,cant:1,nota:'',tipo:'bajo',valido:false,error:'Nueva línea — selecciona ref y ancho'});
   _saitraIARenderLista();
-  // Abrir edición de la nueva línea
-  setTimeout(() => _saitraIAToggleEdit(newIdx), 50);
+  setTimeout(()=>_saitraIAToggleEdit(newIdx),50);
 }
 
 async function saitraIAAnalizar(){
-  if(!_saitraIAFile){ toast('Selecciona un archivo primero','error'); return; }
-  const key = window._ANTHROPIC_KEY || '';
-  if(!key){ toast('Configura tu API Key de Anthropic en Ajustes','error'); return; }
-
-  _saitraIATarifa = parseInt(document.getElementById('saitra-ia-tarifa').value) || 3;
-  _saitraIAMargen = parseFloat(document.getElementById('saitra-ia-margen').value) || 70;
-
-  document.getElementById('saitra-ia-analizando').style.display = 'block';
-  document.getElementById('saitra-ia-btn-analizar').disabled = true;
-
+  if(!_saitraIAFile){toast('Selecciona un archivo primero','error');return;}
+  const key=window._ANTHROPIC_KEY||'';
+  if(!key){toast('Configura tu API Key de Anthropic en Ajustes','error');return;}
+  _saitraIATarifa=parseInt(document.getElementById('saitra-ia-tarifa').value)||3;
+  _saitraIAMargen=parseFloat(document.getElementById('saitra-ia-margen').value)||70;
+  document.getElementById('saitra-ia-analizando').style.display='block';
+  document.getElementById('saitra-ia-btn-analizar').disabled=true;
   try {
-    const base64 = await new Promise((res, rej) => {
-      const r = new FileReader();
-      r.onload = () => res(r.result.split(',')[1]);
-      r.onerror = () => rej(new Error('Error leyendo el archivo'));
-      r.readAsDataURL(_saitraIAFile);
-    });
-
-    const isPdf = _saitraIAFile.type === 'application/pdf';
-    const mediaType = isPdf ? 'application/pdf' : _saitraIAFile.type;
-
-    const catalog = _saitraIAGenerarCatalogo();
-
-    const prompt = `Eres un técnico experto en el catálogo de muebles de cocina Saitra. Analiza el plano y genera la lista de módulos usando EXCLUSIVAMENTE las referencias del catálogo oficial que te proporciono.
-
-CATÁLOGO OFICIAL SAITRA (solo puedes usar estas refs):
-${catalog}
-
-REGLAS ABSOLUTAS:
-1. La columna "ref" SIEMPRE debe ser una clave exacta del catálogo (ej: PCP78, PBF2G, PBLG). NUNCA inventes refs.
-2. La columna "ancho" SIEMPRE debe ser un número que exista en los anchos disponibles de esa ref. Si el ancho del plano no existe, usa el INMEDIATO SUPERIOR disponible de esa ref.
-3. Si un elemento del plano NO tiene referencia válida en el catálogo (ej: costados, rellenos, encimeras, zócalos, tiradores), NO lo incluyas en "modulos" — menciónalo en "observaciones".
-4. Identifica el tipo por posición en el plano: altos = colgantes (PC*, PCSA*, PCCEP*); bajos = bases (PB*).
-
-GUÍA DE IDENTIFICACIÓN:
-- "Mod. 1 pta" alto ≤60cm → PCP78; 60-120cm → PC2PP78
-- "Mod. 2 ptas" alto → PC2P78 (70-100) o PC2PP78 (60-120) plegables
-- Campana/hueco campana 60 → PCCEP-h61-60; 90cm → PCCEP-h61-90
-- Frigo/sobrefrigo H.26 → PCSA26; H.39 → PCSA39
-- Lavavajillas/lavav → PBLG (H.26, anchos 45 o 60)
-- Fregadero 1P bajo → PBFP; fregadero 2G bajo → PBF2G; fregadero 2P bajo → PBF2P
-- Cacerolero/especiero/cajón interior → PB2GC o PB2GCI
-- Base 1P bajo ≤60 → PBP; Base 2P bajo ≥70 → PB2P
-- Bajo placa/vitro → PBPL2G, PBPL2GC, PBPLHF, PBPLHG2
-
-Responde ÚNICAMENTE con este JSON (sin markdown, sin backticks, sin texto adicional):
-{"modulos":[{"ref":"PCP78","ancho":60,"cant":1,"nota":"Mod. 1 pta — texto exacto del plano","tipo":"alto"}],"observaciones":"Lista de elementos NO incluidos (costados, rellenos, encimera, etc.) con sus medidas del plano"}`;
-
-    const userContent = isPdf
-      ? [{ type:'document', source:{type:'base64',media_type:'application/pdf',data:base64} }, {type:'text',text:prompt}]
-      : [{ type:'image',    source:{type:'base64',media_type:mediaType,data:base64} },          {type:'text',text:prompt}];
-
-    // Guardar el mensaje inicial en el historial de chat (con imagen)
-    _saitraIAChatHist = [{ role:'user', content: userContent }];
-
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method:'POST',
+    const base64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=()=>rej(new Error('Error leyendo archivo'));r.readAsDataURL(_saitraIAFile);});
+    const isPdf=_saitraIAFile.type==='application/pdf';
+    const mediaType=isPdf?'application/pdf':_saitraIAFile.type;
+    const catalog=_saitraIAGenerarCatalogo();
+    const prompt='Eres un técnico experto en el catálogo Saitra. Analiza el plano y genera la lista de módulos usando EXCLUSIVAMENTE las referencias del catálogo oficial.\n\nCATÁLOGO OFICIAL SAITRA:\n'+catalog+'\n\nREGLAS ABSOLUTAS:\n1. "ref" siempre debe ser una clave exacta del catálogo. NUNCA inventes refs.\n2. "ancho" debe existir en los anchos de esa ref. Si no existe, usa el INMEDIATO SUPERIOR disponible.\n3. Si hay elementos sin ref válida (costados, rellenos, encimeras, zócalos), NO los incluyas en "modulos" — menciónalos en "observaciones".\n\nGUÍA:\n- "Mod. 1 pta" alto ≤60cm → PCP78; 60-120cm → PC2PP78\n- "Mod. 2 ptas" alto → PC2P78 o PC2PP78 plegables\n- Campana 60cm → PCCEP-h61-60; 90cm → PCCEP-h61-90\n- Frigo/sobrefrigo H.26 → PCSA26; H.39 → PCSA39\n- Lavavajillas → PBLG\n- Fregadero 1P → PBFP; fregadero 2G → PBF2G; fregadero 2P → PBF2P\n- Cacerolero/cajón interior → PB2GC\n- Base 1P ≤60 → PBP; Base 2P ≥70 → PB2P\n- Bajo placa → PBPL2G, PBPL2GC, PBPLHF, PBPLHG2\n\nResponde ÚNICAMENTE con JSON (sin markdown, sin backticks):\n{"modulos":[{"ref":"PCP78","ancho":60,"cant":1,"nota":"texto del plano","tipo":"alto"}],"observaciones":"elementos NO incluidos con sus medidas"}';
+    const userContent=isPdf
+      ?[{type:'document',source:{type:'base64',media_type:'application/pdf',data:base64}},{type:'text',text:prompt}]
+      :[{type:'image',source:{type:'base64',media_type:mediaType,data:base64}},{type:'text',text:prompt}];
+    _saitraIAChatHist=[{role:'user',content:userContent}];
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
       headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:4000,
-        system:'Eres un experto en catálogos de muebles de cocina Saitra. Responde ÚNICAMENTE con JSON válido puro, sin markdown, sin backticks.',
-        messages: _saitraIAChatHist })
-    });
-    if(!resp.ok){ let m='Error API '+resp.status; try{const e=await resp.json();m=e?.error?.message||m;}catch(e){} throw new Error(m); }
-
-    const data = await resp.json();
-    const raw = data.content.filter(b=>b.type==='text').map(b=>b.text).join('');
-
-    // Añadir respuesta al historial (solo texto para futuros turnos)
-    _saitraIAChatHist.push({ role:'assistant', content: raw });
-
-    const parsed = _saitraIAParseJSON(raw);
-    if(!parsed?.modulos?.length) throw new Error('La IA no devolvió módulos válidos. Respuesta: ' + raw.slice(0,200));
-
-    _saitraIAModulos = _saitraIACalcularModulos(parsed.modulos, _saitraIATarifa, _saitraIAMargen);
-
-    // Mostrar observaciones
-    const obs = document.getElementById('saitra-ia-obs');
-    if(parsed.observaciones){
-      obs.style.display = 'block';
-      obs.innerHTML = '<strong>📌 Observaciones de la IA:</strong> ' + parsed.observaciones;
-    } else { obs.style.display = 'none'; }
-
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:4000,
+        system:'Eres un experto en catálogos Saitra. Responde ÚNICAMENTE con JSON válido puro, sin markdown, sin backticks.',
+        messages:_saitraIAChatHist})});
+    if(!resp.ok){let m='Error API '+resp.status;try{const e=await resp.json();m=e?.error?.message||m;}catch(e){}throw new Error(m);}
+    const data=await resp.json();
+    const raw=data.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+    _saitraIAChatHist.push({role:'assistant',content:raw});
+    const parsed=_saitraIAParseJSON(raw);
+    if(!parsed?.modulos?.length) throw new Error('La IA no devolvió módulos válidos. Respuesta: '+raw.slice(0,200));
+    _saitraIAModulos=_saitraIACalcularModulos(parsed.modulos,_saitraIATarifa,_saitraIAMargen);
+    const obs=document.getElementById('saitra-ia-obs');
+    if(parsed.observaciones){obs.style.display='block';obs.innerHTML='<strong>📌 Observaciones:</strong> '+parsed.observaciones;}
+    else obs.style.display='none';
     _saitraIARenderLista();
-    document.getElementById('saitra-ia-step1').style.display = 'none';
-    document.getElementById('saitra-ia-step2').style.display = 'block';
-    document.getElementById('saitra-ia-paso-lbl').textContent = 'Paso 2 de 2 — Revisión y ajuste';
-
+    document.getElementById('saitra-ia-step1').style.display='none';
+    document.getElementById('saitra-ia-step2').style.display='block';
+    document.getElementById('saitra-ia-paso-lbl').textContent='Paso 2 de 2 — Revisión y ajuste';
   } catch(err){
-    document.getElementById('saitra-ia-analizando').style.display = 'none';
-    document.getElementById('saitra-ia-btn-analizar').disabled = false;
-    toast('Error al analizar plano: ' + err.message, 'error');
+    document.getElementById('saitra-ia-analizando').style.display='none';
+    document.getElementById('saitra-ia-btn-analizar').disabled=false;
+    toast('Error al analizar plano: '+err.message,'error');
   }
 }
 
-function _saitraIAChatAddMsg(role, text){
-  const hist = document.getElementById('saitra-ia-chat-hist');
-  const hint = document.getElementById('saitra-ia-chat-hint');
+function _saitraIAChatAddMsg(role,text){
+  const hist=document.getElementById('saitra-ia-chat-hist');
+  const hint=document.getElementById('saitra-ia-chat-hint');
   if(hint) hint.remove();
-  const isUser = role === 'user';
-  const div = document.createElement('div');
-  div.style.cssText = `align-self:${isUser?'flex-end':'flex-start'};max-width:85%;padding:7px 11px;border-radius:10px;font-size:12px;line-height:1.4;`
-    + (isUser ? 'background:#1565c0;color:white;border-radius:10px 10px 2px 10px'
-               : 'background:#e8f5e9;color:#1b5e20;border-radius:10px 10px 10px 2px;border:1px solid #c8e6c9');
-  div.textContent = text;
+  const div=document.createElement('div');
+  const isUser=role==='user';
+  div.style.cssText='align-self:'+(isUser?'flex-end':'flex-start')+';max-width:85%;padding:7px 11px;border-radius:10px;font-size:11px;line-height:1.4;'
+    +(isUser?'background:#1565c0;color:white;border-radius:10px 10px 2px 10px':'background:#e8f5e9;color:#1b5e20;border-radius:10px 10px 10px 2px;border:1px solid #c8e6c9');
+  div.textContent=text;
   hist.appendChild(div);
-  hist.scrollTop = hist.scrollHeight;
+  hist.scrollTop=hist.scrollHeight;
 }
 
 async function saitraIAChatEnviar(){
-  const input = document.getElementById('saitra-ia-chat-input');
-  const msg = input.value.trim();
-  if(!msg) return;
-  const key = window._ANTHROPIC_KEY || '';
-  if(!key){ toast('Configura tu API Key de Anthropic en Ajustes','error'); return; }
-
-  input.value = '';
-  _saitraIAChatAddMsg('user', msg);
-  document.getElementById('saitra-ia-chat-pensando').style.display = 'block';
-  document.getElementById('saitra-ia-chat-btn').disabled = true;
-
+  const input=document.getElementById('saitra-ia-chat-input');
+  const msg=input.value.trim(); if(!msg) return;
+  const key=window._ANTHROPIC_KEY||'';
+  if(!key){toast('Configura tu API Key de Anthropic en Ajustes','error');return;}
+  input.value='';
+  _saitraIAChatAddMsg('user',msg);
+  document.getElementById('saitra-ia-chat-pensando').style.display='block';
+  document.getElementById('saitra-ia-chat-btn').disabled=true;
   try {
-    const catalog = _saitraIAGenerarCatalogo();
-    const listaActual = _saitraIAModulos.map((m,i) =>
-      `${i+1}. ref:${m.ref} ancho:${m.ancho}cm cant:${m.cant||1} nota:"${m.nota||''}"`
-    ).join('\n');
-
-    const correctionPrompt = `Eres un técnico experto en el catálogo Saitra. Lista actual de módulos:
-${listaActual}
-
-El usuario pide: "${msg}"
-
-REGLAS ABSOLUTAS:
-1. Solo puedes usar refs del catálogo oficial Saitra (extracto):
-${catalog}
-2. Si el ancho no existe en la ref elegida, usa el inmediato superior disponible.
-3. Si pide algo sin ref válida (costado, relleno, encimera, zócalo…), aplica el cambio posible a los módulos existentes y menciónalo en "observaciones".
-
-Devuelve ÚNICAMENTE JSON (sin markdown, sin backticks):
-{"modulos":[{"ref":"...","ancho":0,"cant":1,"nota":"...","tipo":"alto|bajo"}],"respuesta":"Texto corto explicando el cambio","observaciones":"elementos sin ref o vacío"}`;
-
-    _saitraIAChatHist.push({ role:'user', content: correctionPrompt });
-
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method:'POST',
+    const catalog=_saitraIAGenerarCatalogo();
+    const listaActual=_saitraIAModulos.map((m,i)=>(i+1)+'. ref:'+m.ref+' ancho:'+m.ancho+'cm cant:'+(m.cant||1)+' nota:"'+(m.nota||'')+'"').join('\n');
+    const corrPrompt='Lista actual:\n'+listaActual+'\n\nUsuario pide: "'+msg+'"\n\nREGLAS: Solo refs del catálogo Saitra. Si ancho no existe, usa inmediato superior. Si pide algo sin ref (costado, encimera…), menciónalo en observaciones.\n\nCATÁLOGO:\n'+catalog+'\n\nDevuelve ÚNICAMENTE JSON:\n{"modulos":[{"ref":"...","ancho":0,"cant":1,"nota":"...","tipo":"alto|bajo"}],"respuesta":"explicación breve","observaciones":"o vacío"}';
+    _saitraIAChatHist.push({role:'user',content:corrPrompt});
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
       headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:3000,
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:3000,
         system:'Eres un experto en catálogos Saitra. Responde ÚNICAMENTE con JSON válido puro, sin markdown, sin backticks.',
-        messages: _saitraIAChatHist })
-    });
-    if(!resp.ok){ let m='Error API '+resp.status; try{const e=await resp.json();m=e?.error?.message||m;}catch(e){} throw new Error(m); }
-
-    const data = await resp.json();
-    const raw = data.content.filter(b=>b.type==='text').map(b=>b.text).join('');
-    _saitraIAChatHist.push({ role:'assistant', content: raw });
-
-    const parsed = _saitraIAParseJSON(raw);
+        messages:_saitraIAChatHist})});
+    if(!resp.ok){let m='Error API '+resp.status;try{const e=await resp.json();m=e?.error?.message||m;}catch(e){}throw new Error(m);}
+    const data=await resp.json();
+    const raw=data.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+    _saitraIAChatHist.push({role:'assistant',content:raw});
+    const parsed=_saitraIAParseJSON(raw);
     if(!parsed?.modulos) throw new Error('Respuesta no válida');
-
-    _saitraIAModulos = _saitraIACalcularModulos(parsed.modulos, _saitraIATarifa, _saitraIAMargen);
+    _saitraIAModulos=_saitraIACalcularModulos(parsed.modulos,_saitraIATarifa,_saitraIAMargen);
     _saitraIARenderLista();
-
-    const respText = parsed.respuesta || '✅ Lista actualizada';
-    _saitraIAChatAddMsg('ia', respText);
-
-    // Actualizar observaciones si hay cambios notables
-    if(parsed.observaciones !== undefined){
-      const obs = document.getElementById('saitra-ia-obs');
-      if(parsed.observaciones){ obs.style.display='block'; obs.innerHTML='<strong>📌</strong> '+parsed.observaciones; }
-      else obs.style.display='none';
-    }
-
+    _saitraIAChatAddMsg('ia',parsed.respuesta||'✅ Lista actualizada');
+    const obs=document.getElementById('saitra-ia-obs');
+    if(parsed.observaciones!==undefined){if(parsed.observaciones){obs.style.display='block';obs.innerHTML='<strong>📌</strong> '+parsed.observaciones;}else obs.style.display='none';}
   } catch(err){
-    _saitraIAChatAddMsg('ia', '⚠️ Error: ' + err.message);
+    _saitraIAChatAddMsg('ia','⚠️ Error: '+err.message);
   } finally {
-    document.getElementById('saitra-ia-chat-pensando').style.display = 'none';
-    document.getElementById('saitra-ia-chat-btn').disabled = false;
+    document.getElementById('saitra-ia-chat-pensando').style.display='none';
+    document.getElementById('saitra-ia-chat-btn').disabled=false;
     document.getElementById('saitra-ia-chat-input').focus();
   }
 }
 
 function saitraIAConfirmar(){
-  let añadidos = 0;
-  _saitraIAModulos.forEach(m => {
+  let n=0;
+  _saitraIAModulos.forEach(m=>{
     if(!m.valido) return;
-    const chk = document.getElementById('saitraIAchk-' + m.idx);
-    if(!chk || !chk.checked) return;
-    const cant = m.cant || 1;
-    saitraLineas.push({
-      id: ++saitraIdCnt, tipo:'modulo', ref:m.ref, modelo:'1',
-      desc: m.label + ' ' + m.ancho + 'cm' + (m.nota?' · '+m.nota:'') + ' [IA]',
-      notas:'', cant, puntos:m.puntos,
-      costeUnit:m.costeUnit, costeTotal:m.costeUnit*cant,
-      pvpUnit:m.pvpUnit,     pvpTotal:m.pvpUnit*cant
-    });
-    añadidos++;
+    const chk=document.getElementById('saitraIAchk-'+m.idx);
+    if(!chk||!chk.checked) return;
+    const cant=m.cant||1;
+    saitraLineas.push({id:++saitraIdCnt,tipo:'modulo',ref:m.ref,modelo:'1',
+      desc:m.label+' '+m.ancho+'cm'+(m.nota?' · '+m.nota:'')+' [IA]',
+      notas:'',cant,puntos:m.puntos,costeUnit:m.costeUnit,costeTotal:m.costeUnit*cant,pvpUnit:m.pvpUnit,pvpTotal:m.pvpUnit*cant});
+    n++;
   });
-  document.getElementById('saitra-ia-wrap').style.display = 'none';
-  document.getElementById('saitra-col-contenido').style.display = 'flex';
-  saitraRenderTabla();
-  saitraRecalc();
-  toast('✅ ' + añadidos + ' módulos añadidos desde el plano [IA]');
+  document.getElementById('saitra-ia-wrap').style.display='none';
+  document.getElementById('saitra-col-contenido').style.display='flex';
+  saitraRenderTabla(); saitraRecalc();
+  toast('✅ '+n+' módulos añadidos desde el plano [IA]');
 }
+
 
 function saitraAddAccesorio(){
   const tipo   = document.getElementById('s-acc-tipo')?.value;
