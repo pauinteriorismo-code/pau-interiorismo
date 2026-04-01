@@ -3641,6 +3641,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="form-group" style="margin:0;min-width:130px"><label class="form-label">Estado</label>
         <select class="form-input" id="alb-estado"><option>Borrador</option><option>Entregado</option><option>Firmado</option><option>Incidencia</option></select></div>
       <div class="form-group" style="margin:0;flex:1;min-width:200px"><label class="form-label">Dirección de entrega</label><input class="form-input" id="alb-dir" placeholder="C/ Dirección obra…"></div>
+      <div class="form-group" style="margin:0;min-width:200px"><label class="form-label">Subcontrata / Proveedor</label><input class="form-input" id="alb-proveedor" placeholder="Nombre empresa o autónomo…"></div>
     </div>
     <div style="padding:6px 18px;border-bottom:1px solid var(--border);flex-shrink:0">
       <label class="form-label" style="margin-bottom:4px;display:block">Observaciones</label>
@@ -8404,10 +8405,11 @@ async function subirAlbaranDrive(id){
   pdf.line(mX,sigY,mX+65,sigY);pdf.text('Firma y sello empresa',mX,sigY+5);
   pdf.line(pW-mX-65,sigY,pW-mX,sigY);pdf.text('Conforme cliente / fecha recepción',pW-mX-65,sigY+5);
   const base64=pdf.output('datauristring');
-  const fileName=`Albaran_${alb.num_albaran||id}_${alb.fecha||''}.pdf`;
+  const _prov=_safeNombre(alb.proveedor||'');
+  const fileName=`Albaran_${alb.num_albaran||id}_${alb.fecha||''}${_prov?'_'+_prov:''}.pdf`;
   try{
     const res=await fetch(DRIVE_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
-      body:JSON.stringify({action:'uploadFile',fileData:base64,fileName,mimeType:'application/pdf',folderId,subCarpeta:null})});
+      body:JSON.stringify({action:'uploadFile',fileData:base64,fileName,mimeType:'application/pdf',folderId,subCarpeta:'06 Subcontratas'})});
     const json=await res.json().catch(()=>({}));
     if(json.ok){toast('☁️ Albarán subido a Drive ✅');}
     else{toast('Error Drive: '+(json.error||'desconocido'),'error');}
@@ -8419,8 +8421,10 @@ async function subirDocPedidoDrive(){
   const ped=(PedC||[]).find(p=>String(p.id)===String(pedId));
   const proyId=ped?.proyecto_id;
   if(!proyId){toast('Selecciona un pedido primero','error');return;}
-  const nombre=(document.getElementById('pd-num-input')?.value||'pedido')+'.pdf';
-  await subirPDFaDrive('pd-doc',nombre,proyId,null);
+  const _numPed=document.getElementById('pd-num-input')?.value||'pedido';
+  const _provPed=_safeNombre(ped?.proveedor||'');
+  const nombre=_numPed+(_provPed?'_'+_provPed:'')+'.pdf';
+  await subirPDFaDrive('pd-doc',nombre,proyId,'06 Subcontratas');
 }
 
 async function subirPresupuestoDrive(){
@@ -26015,6 +26019,7 @@ async function nuevoAlbaran() {
   document.getElementById('alb-estado').value = 'Borrador';
   document.getElementById('alb-dir').value = p.direccion_obra || '';
   document.getElementById('alb-obs').value = '';
+  document.getElementById('alb-proveedor').value = '';
   document.getElementById('alb-lineas-tbody').innerHTML = '';
   addAlbLinea();
   openModal('m-albaran');
@@ -26031,6 +26036,7 @@ async function editarAlbaran(id) {
   document.getElementById('alb-estado').value = alb.estado || 'Borrador';
   document.getElementById('alb-dir').value = alb.direccion_entrega || '';
   document.getElementById('alb-obs').value = alb.observaciones || '';
+  document.getElementById('alb-proveedor').value = alb.proveedor || '';
   const lineas = typeof alb.lineas === 'string' ? JSON.parse(alb.lineas || '[]') : (alb.lineas || []);
   const tbody = document.getElementById('alb-lineas-tbody');
   tbody.innerHTML = '';
@@ -26098,6 +26104,7 @@ async function guardarAlbaran() {
     estado: document.getElementById('alb-estado').value,
     direccion_entrega: document.getElementById('alb-dir').value,
     observaciones: document.getElementById('alb-obs').value,
+    proveedor: document.getElementById('alb-proveedor')?.value?.trim() || null,
     lineas: JSON.stringify(lineas)
   };
   try {
@@ -26194,7 +26201,8 @@ async function exportarAlbaranPDF(id) {
   pdf.line(pW-mX-65,sigY,pW-mX,sigY);
   pdf.text('Conforme cliente / fecha recepción',pW-mX-65,sigY+5);
 
-  pdf.save(`Albaran_${alb.num_albaran||id}_${alb.fecha||''}.pdf`);
+  const _provLocal=_safeNombre(alb.proveedor||'');
+  pdf.save(`Albaran_${alb.num_albaran||id}_${alb.fecha||''}${_provLocal?'_'+_provLocal:''}.pdf`);
   toast('PDF generado ✅');
 }
 
@@ -26339,6 +26347,7 @@ async function guardarAlbaranYPDF() {
     estado: document.getElementById('alb-estado').value,
     direccion_entrega: document.getElementById('alb-dir').value,
     observaciones: document.getElementById('alb-obs').value,
+    proveedor: document.getElementById('alb-proveedor')?.value?.trim() || null,
     lineas: JSON.stringify(lineas)
   };
   try {
