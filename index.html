@@ -513,7 +513,7 @@ tbody td{padding:7px 10px;vertical-align:middle}
 .cat-card-icon{font-size:32px;margin-bottom:8px;line-height:1}
 .cat-card-name{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:4px}
 .cat-card-desc{font-size:11px;color:var(--text-soft);line-height:1.4}
-.cat-panel{display:none;position:relative}
+.cat-panel{display:none}
 .cat-panel.open{display:block}
 .cat-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;
   padding-bottom:12px;border-bottom:2px solid var(--border)}
@@ -2799,7 +2799,102 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         </div>
 
         <!-- ─── PANEL DERECHO: TABLA + TOTALES ─── -->
-        <div style="display:flex;flex-direction:column;gap:10px">
+        <div id="saitra-col-derecha" style="display:flex;flex-direction:column;gap:10px;position:relative">
+
+          <!-- Panel IA inline (dentro de la columna derecha) -->
+          <div id="saitra-ia-wrap" style="display:none;flex-direction:column;gap:12px;background:var(--bg);border-radius:8px;border:1px solid #90caf9;padding:16px">
+
+            <!-- CABECERA -->
+            <div style="display:flex;align-items:center;gap:10px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+              <button class="cat-back" onclick="saitraIACerrar()" style="font-size:11px">← Valorador</button>
+              <span style="font-size:13px;font-weight:700;color:var(--navy)">📐 Leer plano con IA</span>
+              <span id="saitra-ia-paso-lbl" style="margin-left:auto;font-size:10px;background:#e3f2fd;color:#1565c0;padding:2px 8px;border-radius:10px;font-weight:600">Paso 1 de 2 — Subir plano</span>
+            </div>
+
+            <!-- PASO 1: SUBIDA -->
+            <div id="saitra-ia-step1">
+              <div style="background:#e3f2fd;border:1px solid #90caf9;border-radius:6px;padding:9px 12px;font-size:11px;color:#0d47a1;margin-bottom:12px">
+                <strong>📌 Cómo funciona:</strong> Sube el plano acotado (JPG, PNG o PDF). La IA identificará los módulos y los cotejará con el catálogo Saitra.
+              </div>
+              <div id="saitra-ia-dropzone" onclick="document.getElementById('saitra-ia-input').click()"
+                style="border:2px dashed #90caf9;border-radius:8px;padding:28px;text-align:center;cursor:pointer;background:#f8fbff;transition:background .2s;margin-bottom:12px"
+                ondragover="event.preventDefault();this.style.background='#dceeff'"
+                ondragleave="this.style.background='#f8fbff'"
+                ondrop="saitraIAOnDrop(event)">
+                <div style="font-size:30px;margin-bottom:8px">📂</div>
+                <div style="font-size:13px;font-weight:700;color:#1565c0">Haz clic o arrastra aquí</div>
+                <div style="font-size:11px;color:#888;margin-top:4px">JPG · PNG · PDF</div>
+                <div id="saitra-ia-nombre" style="font-size:11px;color:#2e7d32;margin-top:8px;font-weight:600"></div>
+              </div>
+              <input type="file" id="saitra-ia-input" accept="image/jpeg,image/png,application/pdf" style="display:none" onchange="saitraIAArchivoSel(this)">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px;padding:8px 12px;background:#f7f4ef;border-radius:6px;font-size:11px">
+                <label style="font-weight:600;color:var(--text-soft)">Tarifa:</label>
+                <select class="form-input" id="saitra-ia-tarifa" style="width:160px;font-size:11px">
+                  <option value="3">T4 — Narai PET (defecto)</option>
+                  <option value="0">Tarifa 1</option><option value="1">Tarifa 2</option><option value="2">Tarifa 3</option>
+                  <option value="4">Tarifa 5</option><option value="5">Tarifa 6</option><option value="6">Tarifa 7</option>
+                  <option value="7">Tarifa 8</option><option value="8">Tarifa 9</option><option value="9">Tarifa 10</option>
+                </select>
+                <label style="font-weight:600;color:var(--text-soft)">Margen:</label>
+                <input type="number" class="form-input" id="saitra-ia-margen" value="70" min="0" max="200" style="width:55px;font-size:11px">
+                <span style="color:var(--text-soft)">%</span>
+              </div>
+              <div id="saitra-ia-analizando" style="display:none;text-align:center;padding:16px;font-size:12px;color:#1565c0">
+                <div style="font-size:24px;animation:spin 1.2s linear infinite;display:inline-block">⚙️</div>
+                <div style="margin-top:6px;font-weight:600">Analizando el plano con IA…</div>
+                <div style="font-size:10px;color:#888;margin-top:3px">Identificando módulos y cotejando con el catálogo</div>
+              </div>
+              <div style="display:flex;justify-content:flex-end;gap:8px">
+                <button class="btn btn-ghost btn-sm" onclick="saitraIACerrar()" style="font-size:11px">Cancelar</button>
+                <button class="btn btn-primary btn-sm" id="saitra-ia-btn-analizar" onclick="saitraIAAnalizar()" style="background:linear-gradient(135deg,#1565c0,#0d47a1);border:none;font-weight:700;font-size:11px" disabled>🔍 Analizar plano</button>
+              </div>
+            </div>
+
+            <!-- PASO 2: REVISIÓN + CHAT -->
+            <div id="saitra-ia-step2" style="display:none">
+              <div style="font-size:11px;color:var(--text-soft);margin-bottom:8px">
+                Marca/desmarca módulos y usa el <strong>chat para corregirlos</strong> antes de confirmar.
+              </div>
+              <div id="saitra-ia-lista" style="border:1px solid var(--border);border-radius:6px;margin-bottom:8px;overflow:hidden;max-height:280px;overflow-y:auto"></div>
+              <div id="saitra-ia-obs" style="display:none;padding:8px 10px;background:#fff8e1;border-radius:6px;border:1px solid #ffe082;font-size:10px;color:#b45309;margin-bottom:8px"></div>
+              <div id="saitra-ia-resumen" style="padding:8px 12px;background:#f0f9f0;border-radius:6px;border:1px solid #c8e6c9;font-size:12px;font-weight:700;color:#2e7d32;display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"></div>
+
+              <!-- CHAT DE REFINAMIENTO -->
+              <div style="border:1px solid #90caf9;border-radius:8px;overflow:hidden;margin-bottom:12px">
+                <div style="background:linear-gradient(135deg,#1565c0,#0d47a1);color:white;padding:7px 12px;font-size:11px;font-weight:700;display:flex;align-items:center;gap:6px">
+                  💬 Chat de refinamiento
+                  <span style="font-weight:400;font-size:10px;opacity:.85">— Corrige, añade o elimina módulos</span>
+                </div>
+                <div id="saitra-ia-chat-hist" style="min-height:60px;max-height:160px;overflow-y:auto;padding:10px;background:#f8fbff;font-size:11px;display:flex;flex-direction:column;gap:6px">
+                  <div id="saitra-ia-chat-hint" style="color:#888;font-size:10px;text-align:center;padding:8px 0">
+                    💡 <em>"El fregadero debería ser de 90cm"</em> · <em>"Quita el módulo 3"</em>
+                  </div>
+                </div>
+                <div style="display:flex;gap:0;border-top:1px solid #90caf9">
+                  <textarea id="saitra-ia-chat-input" placeholder="Escribe tu corrección…" rows="2"
+                    style="flex:1;border:none;padding:8px 10px;font-size:11px;resize:none;font-family:inherit;background:#fff;outline:none"
+                    onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();saitraIAChatEnviar()}"></textarea>
+                  <button onclick="saitraIAChatEnviar()" id="saitra-ia-chat-btn"
+                    style="background:linear-gradient(135deg,#1565c0,#0d47a1);color:white;border:none;padding:0 14px;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap">
+                    ↑
+                  </button>
+                </div>
+                <div id="saitra-ia-chat-pensando" style="display:none;padding:6px 12px;font-size:10px;color:#1565c0;background:#e3f2fd;border-top:1px solid #90caf9">
+                  ⚙️ Procesando corrección…
+                </div>
+              </div>
+
+              <div style="display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap">
+                <button class="btn btn-ghost btn-sm" onclick="saitraIACerrar()" style="font-size:11px">Cancelar</button>
+                <button class="btn btn-ghost btn-sm" onclick="saitraIAVolverPaso1()" style="border-color:var(--copper);color:var(--copper);font-size:11px">← Cambiar plano</button>
+                <button class="btn btn-primary btn-sm" onclick="saitraIAConfirmar()" style="background:#2e7d32;border:none;font-weight:700;font-size:11px">＋ Añadir al valorador</button>
+              </div>
+            </div>
+
+          </div><!-- /saitra-ia-wrap -->
+
+          <!-- Contenido normal: tabla + totales -->
+          <div id="saitra-col-contenido" style="display:flex;flex-direction:column;gap:10px">
 
           <div class="card" style="padding:0;overflow:hidden">
             <div style="padding:12px 16px;background:var(--navy);color:#fff;display:flex;justify-content:space-between;align-items:center">
@@ -2870,187 +2965,6 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 
         </div>
       </div>
-
-      <!-- ════════════════════════════════════════════════════════ -->
-      <!-- PANEL INLINE: LEER PLANO CON IA (scoped dentro Saitra)  -->
-      <!-- ════════════════════════════════════════════════════════ -->
-      <div id="saitra-ia-wrap" style="display:none;position:absolute;inset:0;background:var(--bg);z-index:20;overflow-y:auto;border-radius:inherit;padding:16px 18px">
-
-        <!-- CABECERA -->
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)">
-          <button class="cat-back" onclick="saitraIACerrar()">← Volver al valorador</button>
-          <span style="font-size:14px;font-weight:700;color:var(--navy)">📐 Leer plano con IA</span>
-          <span id="saitra-ia-paso-lbl" style="margin-left:auto;font-size:11px;background:#e3f2fd;color:#1565c0;padding:2px 8px;border-radius:10px;font-weight:600">Paso 1 de 2 — Subir plano</span>
-        </div>
-
-        <!-- PASO 1: SUBIDA -->
-        <div id="saitra-ia-step1">
-          <div style="background:#e3f2fd;border:1px solid #90caf9;border-radius:6px;padding:10px 14px;font-size:12px;color:#0d47a1;margin-bottom:16px">
-            <strong>📌 Cómo funciona:</strong> Sube el plano acotado de la cocina (JPG, PNG o PDF). La IA identificará los módulos, los cotejará con el catálogo Saitra y te los presentará para revisar y ajustar antes de añadirlos al valorador.
-          </div>
-          <div id="saitra-ia-dropzone" onclick="document.getElementById(&apos;saitra-ia-input&apos;).click()"
-            style="border:2px dashed #90caf9;border-radius:8px;padding:36px;text-align:center;cursor:pointer;background:#f8fbff;transition:background .2s;margin-bottom:16px"
-            ondragover="event.preventDefault();this.style.background=&apos;#dceeff&apos;"
-            ondragleave="this.style.background=&apos;#f8fbff&apos;"
-            ondrop="saitraIAOnDrop(event)">
-            <div style="font-size:36px;margin-bottom:10px">📂</div>
-            <div style="font-size:14px;font-weight:700;color:#1565c0">Haz clic o arrastra el plano aquí</div>
-            <div style="font-size:11px;color:#888;margin-top:6px">JPG · PNG · PDF — máx. 20 MB</div>
-            <div id="saitra-ia-nombre" style="font-size:12px;color:#2e7d32;margin-top:10px;font-weight:600"></div>
-          </div>
-          <input type="file" id="saitra-ia-input" accept="image/jpeg,image/png,application/pdf" style="display:none" onchange="saitraIAArchivoSel(this)">
-          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px;padding:10px 14px;background:#f7f4ef;border-radius:6px">
-            <label style="font-size:12px;font-weight:600;color:var(--text-soft)">Tarifa:</label>
-            <select class="form-input" id="saitra-ia-tarifa" style="width:180px;font-size:12px">
-              <option value="3">Tarifa 4 — Narai PET (por defecto)</option>
-              <option value="0">Tarifa 1</option><option value="1">Tarifa 2</option><option value="2">Tarifa 3</option>
-              <option value="4">Tarifa 5</option><option value="5">Tarifa 6</option><option value="6">Tarifa 7</option>
-              <option value="7">Tarifa 8</option><option value="8">Tarifa 9</option><option value="9">Tarifa 10</option>
-            </select>
-            <label style="font-size:12px;font-weight:600;color:var(--text-soft)">Margen:</label>
-            <input type="number" class="form-input" id="saitra-ia-margen" value="70" min="0" max="200" style="width:60px;font-size:12px">
-            <span style="font-size:12px;color:var(--text-soft)">%</span>
-          </div>
-          <div id="saitra-ia-analizando" style="display:none;text-align:center;padding:20px;font-size:13px;color:#1565c0">
-            <div style="font-size:28px;animation:spin 1.2s linear infinite;display:inline-block">⚙️</div>
-            <div style="margin-top:8px;font-weight:600">Analizando el plano con IA…</div>
-            <div style="font-size:11px;color:#888;margin-top:4px">Identificando módulos y cotejando con el catálogo Saitra</div>
-          </div>
-          <div style="display:flex;justify-content:flex-end;gap:10px">
-            <button class="btn btn-ghost btn-sm" onclick="saitraIACerrar()">Cancelar</button>
-            <button class="btn btn-primary btn-sm" id="saitra-ia-btn-analizar" onclick="saitraIAAnalizar()" style="background:linear-gradient(135deg,#1565c0,#0d47a1);border:none;font-weight:700" disabled>🔍 Analizar plano</button>
-          </div>
-        </div>
-
-        <!-- PASO 2: REVISIÓN + CHAT -->
-        <div id="saitra-ia-step2" style="display:none">
-          <div style="font-size:12px;color:var(--text-soft);margin-bottom:10px">
-            Revisa los módulos detectados. Marca/desmarca los que quieras incluir y usa el <strong>chat de abajo para corregir, añadir o eliminar módulos</strong> antes de confirmar.
-          </div>
-          <div id="saitra-ia-lista" style="border:1px solid var(--border);border-radius:6px;margin-bottom:10px;overflow:hidden"></div>
-          <div id="saitra-ia-obs" style="display:none;padding:10px 12px;background:#fff8e1;border-radius:6px;border:1px solid #ffe082;font-size:11px;color:#b45309;margin-bottom:10px"></div>
-          <div id="saitra-ia-resumen" style="padding:10px 14px;background:#f0f9f0;border-radius:6px;border:1px solid #c8e6c9;font-size:13px;font-weight:700;color:#2e7d32;display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"></div>
-          <!-- CHAT DE REFINAMIENTO -->
-          <div style="border:1px solid #90caf9;border-radius:8px;overflow:hidden;margin-bottom:16px">
-            <div style="background:linear-gradient(135deg,#1565c0,#0d47a1);color:white;padding:9px 14px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:8px">
-              💬 Chat de refinamiento
-              <span style="font-weight:400;font-size:11px;opacity:.85">— Corrige, añade o elimina módulos antes de confirmar</span>
-            </div>
-            <div id="saitra-ia-chat-hist" style="min-height:80px;max-height:220px;overflow-y:auto;padding:12px;background:#f8fbff;font-size:12px;display:flex;flex-direction:column;gap:8px">
-              <div id="saitra-ia-chat-hint" style="color:#888;font-size:11px;text-align:center;padding:10px 0">
-                💡 Ejemplos: <em>"El fregadero debería ser de 90cm"</em> · <em>"Añade un módulo escuadra 60x60"</em> · <em>"Quita el módulo 3"</em>
-              </div>
-            </div>
-            <div style="display:flex;gap:0;border-top:1px solid #90caf9">
-              <textarea id="saitra-ia-chat-input" placeholder="Escribe aquí tu corrección o pregunta…" rows="2"
-                style="flex:1;border:none;padding:10px 12px;font-size:12px;resize:none;font-family:inherit;background:#fff;outline:none"
-                onkeydown="if(event.key===&apos;Enter&apos;&&!event.shiftKey){event.preventDefault();saitraIAChatEnviar()}"></textarea>
-              <button onclick="saitraIAChatEnviar()" id="saitra-ia-chat-btn"
-                style="background:linear-gradient(135deg,#1565c0,#0d47a1);color:white;border:none;padding:0 18px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap">
-                ↑ Enviar
-              </button>
-            </div>
-            <div id="saitra-ia-chat-pensando" style="display:none;padding:8px 14px;font-size:11px;color:#1565c0;background:#e3f2fd;border-top:1px solid #90caf9">
-              ⚙️ La IA está procesando tu corrección…
-            </div>
-          </div>
-          <div style="display:flex;justify-content:flex-end;gap:10px">
-            <button class="btn btn-ghost btn-sm" onclick="saitraIACerrar()">Cancelar</button>
-            <button class="btn btn-ghost btn-sm" onclick="saitraIAVolverPaso1()" style="border-color:var(--copper);color:var(--copper)">← Cambiar plano</button>
-            <button class="btn btn-primary btn-sm" onclick="saitraIAConfirmar()" style="background:#2e7d32;border:none;font-weight:700">+ Añadir seleccionados al valorador</button>
-          </div>
-        </div>
-
-      </div><!-- /saitra-ia-wrap -->
-    </div>
-
-    <!-- ═══ INTERIORISMO ═══ -->
-
-    <!-- ═══ GRIFERÍAS IMEX ═══ -->
-
-      <!-- PANEL: IMEX -->
-      <div class="cat-panel" id="cat-panel-imex">
-        <div class="cat-header">
-          <button class="cat-back" onclick="catVolver()">← Catálogos</button>
-          <span class="cat-header-title" id="cat-imex-title">🚿 IMEX — Griferías</span>
-          <span class="cat-header-desc" id="cat-imex-desc">Tarifa +3% · Dto 40% · Margen ajustable</span>
-        </div>
-      <!-- Estilos propios del presupuestador IMEX -->
-      <style>
-        .imex-layout{display:grid;grid-template-columns:1fr 360px;height:calc(100vh - 56px - 36px);gap:0;margin:-18px -20px}
-        .imex-cat{background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
-        .imex-cat-top{padding:12px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
-        .imex-tabs{display:flex;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;margin-bottom:9px}
-        .imex-tab{flex:1;padding:6px;font-size:12px;font-weight:600;border:none;cursor:pointer;background:var(--sand);color:var(--text-soft);transition:all .15s}
-        .imex-tab.active{background:var(--navy);color:#fff}
-        .imex-filters{display:flex;gap:7px}
-        .imex-s-wrap{position:relative;flex:1}
-        .imex-s-wrap input{width:100%;padding:6px 28px 6px 9px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;color:var(--text);outline:none;transition:border .15s}
-        .imex-s-wrap input:focus{border-color:var(--navy-light)}
-        .imex-s-ico{position:absolute;right:8px;top:50%;transform:translateY(-50%);opacity:.35;font-size:12px;pointer-events:none}
-        select.imex-sel{padding:6px 7px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:11px;background:var(--white);outline:none;min-width:120px;max-width:140px;color:var(--text)}
-        .imex-info{font-size:10px;color:var(--text-soft);background:var(--blue-light);padding:4px 9px;border-radius:3px;margin-top:8px;line-height:1.5}
-        .imex-info b{color:var(--navy)}
-        .imex-stats{display:flex;align-items:center;padding:5px 14px;background:var(--blue-light);border-bottom:1px solid var(--border);font-size:11px;color:var(--navy-light);flex-shrink:0}
-        .imex-stats b{color:var(--navy)}
-        .imex-tbl-wrap{flex:1;overflow-y:auto}
-        .imex-tbl{width:100%;border-collapse:collapse;font-size:12px}
-        .imex-tbl thead th{background:var(--navy);color:#fff;padding:7px 10px;text-align:left;font-size:10px;font-weight:600;letter-spacing:.05em;white-space:nowrap;position:sticky;top:0;z-index:2}
-        .imex-tbl tbody tr{border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s}
-        .imex-tbl tbody tr:hover{background:var(--blue-light)}
-        .imex-tbl tbody tr.ix-added{background:#edf7ed}
-        .imex-tbl td{padding:5px 10px;vertical-align:middle}
-        .ix-serie span{display:inline-block;background:var(--sand);color:var(--navy-mid);font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;letter-spacing:.03em;white-space:nowrap}
-        .ix-ref{font-family:"Courier New",monospace;font-size:10px;color:var(--text-soft);white-space:nowrap}
-        .ix-pvp{text-align:right;white-space:nowrap;font-weight:600;color:var(--navy)}
-        .ix-cst{text-align:right;white-space:nowrap;font-size:11px;color:var(--text-soft)}
-        .ix-btn-td{text-align:center;width:34px}
-        .ix-btn{width:24px;height:24px;border-radius:50%;background:var(--navy-mid);color:#fff;border:none;font-size:15px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .15s;font-weight:700}
-        .ix-btn:hover{background:var(--copper);transform:scale(1.1)}
-        .ix-btn.on{background:var(--green)}
-        .ix-nor{padding:30px;text-align:center;color:var(--text-soft);font-size:13px;display:none}
-        .imex-bud{background:var(--cream);display:flex;flex-direction:column;overflow:hidden}
-        .imex-bud-top{padding:12px 14px;border-bottom:1px solid var(--border);background:var(--white);flex-shrink:0}
-        .ix-mrg-row{display:flex;align-items:center;gap:7px;margin-top:8px}
-        .ix-mrg-lbl{font-size:11px;color:var(--text-soft);font-weight:500}
-        input.ix-mrg{width:58px;padding:5px 7px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-weight:700;color:var(--navy);text-align:center;outline:none}
-        .ix-mrg-pct{font-size:12px;color:var(--text-soft)}
-        .ix-mrg-note{margin-left:auto;font-size:10px;background:var(--sand);color:var(--text-soft);padding:2px 8px;border-radius:10px}
-        .imex-bud-scroll{flex:1;overflow-y:auto;padding:9px 11px}
-        .ix-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--text-soft);text-align:center;gap:7px}
-        .ix-empty .ico{font-size:32px;opacity:.25}
-        .ix-empty p{font-size:12px}
-        .ix-empty small{font-size:10px;opacity:.6}
-        .ix-bl{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 11px;margin-bottom:7px;transition:box-shadow .15s}
-        .ix-bl:hover{box-shadow:var(--shadow)}
-        .ix-bl-a{display:flex;align-items:flex-start;gap:7px;margin-bottom:5px}
-        .ix-bl-ref{font-family:"Courier New",monospace;font-size:10px;color:var(--text-soft);background:var(--sand);padding:2px 5px;border-radius:3px;white-space:nowrap;flex-shrink:0}
-        .ix-bl-desc{font-size:11px;flex:1;line-height:1.35}
-        .ix-bl-del{background:none;border:none;color:var(--text-soft);cursor:pointer;font-size:12px;padding:0;opacity:.4;transition:opacity .15s;flex-shrink:0}
-        .ix-bl-del:hover{opacity:1;color:var(--red)}
-        .ix-bl-b{display:flex;align-items:center;gap:5px}
-        .ix-cant-w{display:flex;align-items:center;gap:3px}
-        .ix-cbtn{width:19px;height:19px;border-radius:3px;border:1px solid var(--border);background:var(--sand);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--navy);font-weight:700;padding:0;transition:all .1s}
-        .ix-cbtn:hover{background:var(--navy);color:#fff;border-color:var(--navy)}
-        input.ix-cant{width:30px;text-align:center;font-size:12px;font-weight:700;border:1px solid var(--border);border-radius:3px;padding:2px 0;background:var(--white);outline:none;color:var(--navy)}
-        .ix-sp{flex:1}
-        .ix-bl-cst{font-size:10px;color:var(--text-soft)}
-        .ix-bl-pvp{font-size:13px;font-weight:700;color:var(--green)}
-        .imex-foot{padding:12px 14px;border-top:1px solid var(--border);background:var(--white);flex-shrink:0}
-        .ix-tot-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px}
-        .ix-tot{background:var(--sand);border-radius:var(--radius-sm);padding:8px 10px}
-        .ix-tot-lbl{font-size:10px;color:var(--text-soft);font-weight:500;text-transform:uppercase;letter-spacing:.05em}
-        .ix-tot-val{font-size:15px;font-weight:700;color:var(--navy);margin-top:1px}
-        .ix-tot.hi .ix-tot-val{color:var(--green)}
-        .ix-tot.mrg{background:var(--copper-light);grid-column:1/-1}
-        .ix-tot.mrg .ix-tot-val{color:var(--copper)}
-        .ix-btn-exp{width:100%;padding:8px;background:var(--navy);color:#fff;border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:700;cursor:pointer;transition:background .15s;display:flex;align-items:center;justify-content:center;gap:5px}
-        .ix-btn-exp:hover{background:var(--copper)}
-        .ix-btn-clr{width:100%;padding:6px;background:transparent;color:var(--text-soft);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:11px;cursor:pointer;margin-top:5px;transition:all .15s}
-        .ix-btn-clr:hover{border-color:var(--red);color:var(--red)}
-      </style>
-
-      <div class="imex-layout">
         <!-- CATÁLOGO -->
         <div class="imex-cat">
           <div class="imex-cat-top">
@@ -11181,12 +11095,14 @@ function saitraAbrirLeerPlano(){
   document.getElementById('saitra-ia-step2').style.display = 'none';
   document.getElementById('saitra-ia-paso-lbl').textContent = 'Paso 1 de 2 — Subir plano';
   document.getElementById('saitra-ia-chat-hist').innerHTML =
-    '<div id="saitra-ia-chat-hint" style="color:#888;font-size:11px;text-align:center;padding:10px 0">💡 Ejemplos: <em>"El fregadero debería ser de 90cm"</em> · <em>"Añade un módulo escuadra 60x60"</em> · <em>"Quita el módulo 3"</em></div>';
-  document.getElementById('saitra-ia-wrap').style.display = 'block';
+    '<div id="saitra-ia-chat-hint" style="color:#888;font-size:10px;text-align:center;padding:8px 0">💡 <em>"El fregadero debería ser de 90cm"</em> · <em>"Quita el módulo 3"</em></div>';
+  document.getElementById('saitra-ia-wrap').style.display = 'flex';
+  document.getElementById('saitra-col-contenido').style.display = 'none';
 }
 
 function saitraIACerrar(){
   document.getElementById('saitra-ia-wrap').style.display = 'none';
+  document.getElementById('saitra-col-contenido').style.display = 'flex';
 }
 
 function saitraIAVolverPaso1(){
@@ -11464,7 +11380,8 @@ function saitraIAConfirmar(){
     });
     añadidos++;
   });
-  saitraIACerrar();
+  document.getElementById('saitra-ia-wrap').style.display = 'none';
+  document.getElementById('saitra-col-contenido').style.display = 'flex';
   saitraRenderTabla();
   saitraRecalc();
   toast('✅ ' + añadidos + ' módulos añadidos desde el plano [IA]');
