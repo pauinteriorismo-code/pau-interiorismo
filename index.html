@@ -5504,7 +5504,6 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     <div style="display:flex;gap:8px">
     <button class="btn btn-ghost" onclick="closeModal(&#39;m-factura&#39;)">Cancelar</button>
     <button class="btn btn-ghost" onclick="previsualizarFactura()" style="border:1px solid var(--border)">👁 Vista previa</button>
-    <button class="btn btn-ghost" onclick="subirFacturaDrive()" title="Subir a Google Drive (carpeta 08 Facturas)" style="border:1px solid var(--border)">☁️ Drive</button>
     <button class="btn btn-primary" onclick="saveFactura()">💾 Guardar</button>
     </div>
   </div>
@@ -5720,10 +5719,14 @@ async function loadPfObs(){
 
 function pfVistaPrevia(){ const _cn=_safeNombre(document.getElementById('pf-cliente-nombre')?.textContent||''); const _proy=document.getElementById('pf-proyecto-sel')?.value||'PRES'; const _ver=document.getElementById('pf-version-sel')?.value||'v1'; const _fn=_cn?`${_proy}-${_ver}_${_cn}`:`${_proy}-${_ver}`; abrirVistaPrevia('pf-doc','Presupuesto',true,_fn); }
 
-function abrirVistaPrevia(docId, titulo, autoPrint=false, filename=null){
+function abrirVistaPrevia(docId, titulo, autoPrint=false, filename=null, driveOpts=null){
   const doc = (typeof docId==='string') ? document.getElementById(docId) : docId;
   if(!doc){ toast('Documento no encontrado','error'); return; }
   const w = window.open('','_blank','width=980,height=820');
+  // Botón Drive: solo si se pasan opciones de Drive
+  const driveBtn = driveOpts
+    ? `<button class="btn-drive" onclick="window._vpSubirDrive()">&#9749; Drive</button>`
+    : '';
   w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
   <title>${filename || titulo}</title>
   <style>
@@ -5741,6 +5744,7 @@ function abrirVistaPrevia(docId, titulo, autoPrint=false, filename=null){
       font-size:13px;font-weight:600}
     .btn-close{background:#c0c0c0;color:#1e2d3d}
     .btn-print{background:#b87333;color:white}
+    .btn-drive{background:#1a73e8;color:white}
     .toolbar-info{color:#aaa;font-size:11px;margin-left:6px;flex:1}
     .wrap{margin-top:52px;padding:20px;display:flex;justify-content:center}
     .doc{background:white;width:820px;padding:32px 40px;
@@ -5777,10 +5781,12 @@ function abrirVistaPrevia(docId, titulo, autoPrint=false, filename=null){
       }
     }
   </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   </head><body>
   <div class="toolbar">
     <button class="btn-close" onclick="window.close()">&#10005; Cerrar</button>
     <button class="btn-print" onclick="window.print()">&#128438; Imprimir / Guardar PDF</button>
+    ${driveBtn}
     <span class="toolbar-info">Usar "Imprimir &rarr; Destino: Guardar como PDF"</span>
   </div>
   <div class="wrap"><div class="doc" id="vp-doc">${doc.innerHTML}</div></div>
@@ -5797,7 +5803,8 @@ function abrirVistaPrevia(docId, titulo, autoPrint=false, filename=null){
       }
       if(autoPrint){ setTimeout(function(){ window.print(); }, 600); }
     });
-  \u003c/script>\n  
+  </script>
+  
 
 <script>
 // ── PWA: Registrar Service Worker ──
@@ -5819,8 +5826,40 @@ if('serviceWorker' in navigator){
 \u003c/script>
 
 
-</body></html>`);
+</body></html>\`);
   w.document.close();
+
+  // Inyectar función Drive en la ventana si hay opciones
+  if(driveOpts && driveOpts.folderId){
+    const _folderId = driveOpts.folderId;
+    const _subCarpeta = driveOpts.subCarpeta||'';
+    const _nombre = (filename||titulo||'documento')+'.pdf';
+    const _driveUrl = window.DRIVE_SCRIPT_URL||'';
+    w._vpSubirDrive = async function(){
+      const btn = w.document.querySelector('.btn-drive');
+      if(btn){btn.disabled=true;btn.textContent='Subiendo...';}
+      try{
+        const docEl = w.document.getElementById('vp-doc');
+        if(!docEl){w.alert('Error: documento no encontrado');return;}
+        const opt={
+          margin:[10,10,15,10],
+          image:{type:'jpeg',quality:1.0},
+          pagebreak:{mode:['css','legacy'],avoid:['tr','thead','tfoot']},
+          html2canvas:{scale:3,useCORS:true,letterRendering:true,allowTaint:false,imageTimeout:0,
+            onclone:function(doc){doc.querySelectorAll('tr,thead,tfoot').forEach(function(el){el.style.pageBreakInside='avoid';el.style.breakInside='avoid';});}
+          },
+          jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
+        };
+        if(!w.html2pdf){w.alert('Cargando librerías, espera unos segundos e inténtalo de nuevo');return;}
+        const base64=await w.html2pdf().set(opt).from(docEl).output('datauristring');
+        const res=await fetch(_driveUrl,{method:'POST',headers:{'Content-Type':'text/plain'},
+          body:JSON.stringify({action:'uploadFile',fileData:base64,fileName:_nombre,mimeType:'application/pdf',folderId:_folderId,subCarpeta:_subCarpeta||null})});
+        const json=await res.json().catch(()=>({}));
+        if(json.ok){if(btn)btn.textContent='✅ Subido';toast('☁️ Factura subida a Drive ✅','success');}
+        else{w.alert('Error Drive: '+(json.error||'desconocido'));if(btn){btn.textContent='☁️ Drive';btn.disabled=false;}}
+      }catch(e){w.alert('Error: '+e.message);if(btn){btn.textContent='☁️ Drive';btn.disabled=false;}}
+    };
+  }
 }
 
 async function pfExportarPDF(){
@@ -14199,7 +14238,11 @@ function previsualizarFactura(){
   const _tb = facDocEl.querySelector('.toolbar');
   if(_tb) _tb.remove();
   const _fn = d.num ? 'Factura_' + d.num.replace(/[^a-zA-Z0-9_-]/g,'_') + '_' + _safeNombre(d.contra||'') + '_PAU' : 'Factura';
-  abrirVistaPrevia('fac-preview-doc', 'Factura', false, _fn);
+  // Preparar opciones Drive si hay proyecto
+  const _proyDrive = document.getElementById('f-proyecto')?.value || '';
+  const _folderId = _proyDrive ? _driveFolderId(_proyDrive) : null;
+  const _driveOpts = _folderId ? {folderId:_folderId, subCarpeta:'08 Facturas'} : null;
+  abrirVistaPrevia('fac-preview-doc', 'Factura', false, _fn, _driveOpts);
 }
 
 
