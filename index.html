@@ -5504,6 +5504,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     <div style="display:flex;gap:8px">
     <button class="btn btn-ghost" onclick="closeModal(&#39;m-factura&#39;)">Cancelar</button>
     <button class="btn btn-ghost" onclick="previsualizarFactura()" style="border:1px solid var(--border)">👁 Vista previa</button>
+    <button class="btn btn-ghost" onclick="subirFacturaDrive()" title="Subir a Google Drive (carpeta 08 Facturas)" style="border:1px solid var(--border)">☁️ Drive</button>
     <button class="btn btn-primary" onclick="saveFactura()">💾 Guardar</button>
     </div>
   </div>
@@ -8410,6 +8411,30 @@ async function subirPresupuestoDrive(){
   const ver=document.getElementById('pf-version-sel')?.value||'v1';
   const nombre=`${proy}-${ver}_Presupuesto.pdf`;
   await subirPDFaDrive('pf-doc',nombre,proy,'04 Presupuestos');
+}
+
+async function subirFacturaDrive(){
+  const d = _buildFacturaPDF();
+  if(!d || !d.num || d.num==='BORRADOR'){ toast('Introduce el Nº de factura primero','warning'); return; }
+  const proyId = document.getElementById('f-proyecto')?.value || '';
+  if(!proyId){ toast('Selecciona un proyecto primero','warning'); return; }
+
+  // Renderizar fac-preview-doc sin abrir ventana:
+  // Interceptamos abrirVistaPrevia temporalmente para evitar que abra una pestaña nueva
+  const _origAbrir = window.abrirVistaPrevia;
+  window.abrirVistaPrevia = function(){ /* no-op durante Drive export */ };
+  previsualizarFactura();
+  window.abrirVistaPrevia = _origAbrir;
+
+  // Pequeña espera para que el DOM se actualice
+  await new Promise(r=>setTimeout(r,100));
+
+  const facDocEl = document.getElementById('fac-preview-doc');
+  if(!facDocEl){ toast('Error preparando el documento','error'); return; }
+
+  const _cn = _safeNombre(d.contra||'');
+  const nombre = 'Factura_' + d.num.replace(/[^a-zA-Z0-9_-]/g,'_') + (_cn?'_'+_cn:'') + '_PAU.pdf';
+  await subirPDFaDrive(facDocEl, nombre, proyId, '08 Facturas');
 }
 
 async function subirContratoDrive(){
