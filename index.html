@@ -12645,7 +12645,18 @@ function plRenderLista(){
 // ── Navegación ─────────────────────────────────────────────────
 function plSemanaAnterior(){ plMesOffset--; plRender(); }
 function plSemanaSiguiente(){ plMesOffset++; plRender(); }
-function plIrHoy(){ plMesOffset=0; plRender(); }
+function plIrHoy(){
+  // Si el offset ya era 0, forzar re-render igualmente
+  plMesOffset=0;
+  // Cambiar a vista 4 Semanas si estamos en Lista
+  if(plTabActiva!=='mes') plSetTab('mes');
+  else plRender();
+  // Scroll hasta hoy: esperar al render y buscar la celda resaltada
+  setTimeout(()=>{
+    const hoyEl = document.querySelector('#pl-semanas-container th[style*="#b87333"]');
+    if(hoyEl) hoyEl.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+  }, 150);
+}
 
 // ── Tabs ────────────────────────────────────────────────────────
 function plSetTab(tab){
