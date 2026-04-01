@@ -13707,7 +13707,7 @@ async function convertirPresupuestoAFactura(){
   const nuevasLineas = Object.values(grupos).map(g => {
     const desc = g.lineas.length === 1
       ? g.lineas[0]
-      : `Trabajos según presupuesto ${proyId}-${ver} (${g.iva === 'Exento' || g.iva === '0' ? 'Exento' : g.iva + ' IVA'})`;
+      : `Trabajos según presupuesto ${proyId}-${ver}`;
     return {
       desc: desc,
       ud: 'Ud',
