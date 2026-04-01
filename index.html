@@ -5723,10 +5723,6 @@ function abrirVistaPrevia(docId, titulo, autoPrint=false, filename=null, driveOp
   const doc = (typeof docId==='string') ? document.getElementById(docId) : docId;
   if(!doc){ toast('Documento no encontrado','error'); return; }
   const w = window.open('','_blank','width=980,height=820');
-  // Botón Drive: solo si se pasan opciones de Drive
-  const driveBtn = driveOpts
-    ? `<button class="btn-drive" onclick="window._vpSubirDrive()">&#9749; Drive</button>`
-    : '';
   w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
   <title>${filename || titulo}</title>
   <style>
@@ -5744,7 +5740,6 @@ function abrirVistaPrevia(docId, titulo, autoPrint=false, filename=null, driveOp
       font-size:13px;font-weight:600}
     .btn-close{background:#c0c0c0;color:#1e2d3d}
     .btn-print{background:#b87333;color:white}
-    .btn-drive{background:#1a73e8;color:white}
     .toolbar-info{color:#aaa;font-size:11px;margin-left:6px;flex:1}
     .wrap{margin-top:52px;padding:20px;display:flex;justify-content:center}
     .doc{background:white;width:820px;padding:32px 40px;
@@ -5781,12 +5776,10 @@ function abrirVistaPrevia(docId, titulo, autoPrint=false, filename=null, driveOp
       }
     }
   </style>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   </head><body>
   <div class="toolbar">
     <button class="btn-close" onclick="window.close()">&#10005; Cerrar</button>
     <button class="btn-print" onclick="window.print()">&#128438; Imprimir / Guardar PDF</button>
-    ${driveBtn}
     <span class="toolbar-info">Usar "Imprimir &rarr; Destino: Guardar como PDF"</span>
   </div>
   <div class="wrap"><div class="doc" id="vp-doc">${doc.innerHTML}</div></div>
@@ -5803,10 +5796,9 @@ function abrirVistaPrevia(docId, titulo, autoPrint=false, filename=null, driveOp
       }
       if(autoPrint){ setTimeout(function(){ window.print(); }, 600); }
     });
-  </script>
-  
+  \u003c/script>\n  
 
-<script>
+\u003cscript>
 // ── PWA: Registrar Service Worker ──
 if('serviceWorker' in navigator){
   window.addEventListener('load', ()=>{
@@ -5826,39 +5818,33 @@ if('serviceWorker' in navigator){
 \u003c/script>
 
 
-</body></html>\`);
+</body></html>`);
   w.document.close();
-
-  // Inyectar función Drive en la ventana si hay opciones
+  // Inyectar botón Drive via DOM (sin tocar el template literal)
   if(driveOpts && driveOpts.folderId){
-    const _folderId = driveOpts.folderId;
-    const _subCarpeta = driveOpts.subCarpeta||'';
-    const _nombre = (filename||titulo||'documento')+'.pdf';
-    const _driveUrl = window.DRIVE_SCRIPT_URL||'';
-    w._vpSubirDrive = async function(){
-      const btn = w.document.querySelector('.btn-drive');
-      if(btn){btn.disabled=true;btn.textContent='Subiendo...';}
-      try{
-        const docEl = w.document.getElementById('vp-doc');
-        if(!docEl){w.alert('Error: documento no encontrado');return;}
-        const opt={
-          margin:[10,10,15,10],
-          image:{type:'jpeg',quality:1.0},
-          pagebreak:{mode:['css','legacy'],avoid:['tr','thead','tfoot']},
-          html2canvas:{scale:3,useCORS:true,letterRendering:true,allowTaint:false,imageTimeout:0,
-            onclone:function(doc){doc.querySelectorAll('tr,thead,tfoot').forEach(function(el){el.style.pageBreakInside='avoid';el.style.breakInside='avoid';});}
-          },
-          jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
+    const _fi=driveOpts.folderId, _sc=driveOpts.subCarpeta||'', _nom=(filename||titulo||'documento')+'.pdf', _du=window.DRIVE_SCRIPT_URL||'', _h2p=window.html2pdf;
+    setTimeout(function(){
+      const tb=w.document.querySelector('.toolbar'), pb=w.document.querySelector('.btn-print');
+      if(tb&&pb){
+        const btn=w.document.createElement('button');
+        btn.textContent='☁️ Drive';
+        btn.style.cssText='padding:8px 16px;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;background:#1a73e8;color:white';
+        btn.onclick=async function(){
+          btn.disabled=true;btn.textContent='Subiendo...';
+          try{
+            const docEl=w.document.getElementById('vp-doc');
+            if(!docEl||!_h2p){w.alert('Error: documento o librería no disponible');btn.disabled=false;btn.textContent='☁️ Drive';return;}
+            const opt={margin:[10,10,15,10],image:{type:'jpeg',quality:1.0},pagebreak:{mode:['css','legacy'],avoid:['tr','thead','tfoot']},html2canvas:{scale:3,useCORS:true,letterRendering:true,allowTaint:false,imageTimeout:0,onclone:function(d){d.querySelectorAll('tr,thead,tfoot').forEach(function(el){el.style.pageBreakInside='avoid';el.style.breakInside='avoid';});}},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}};
+            const b64=await _h2p().set(opt).from(docEl).output('datauristring');
+            const res=await fetch(_du,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'uploadFile',fileData:b64,fileName:_nom,mimeType:'application/pdf',folderId:_fi,subCarpeta:_sc||null})});
+            const json=await res.json().catch(()=>({}));
+            if(json.ok){btn.textContent='✅ Subido';toast('☁️ Subido a Drive ✅','success');}
+            else{w.alert('Error Drive: '+(json.error||'desconocido'));btn.textContent='☁️ Drive';btn.disabled=false;}
+          }catch(e){w.alert('Error: '+e.message);btn.textContent='☁️ Drive';btn.disabled=false;}
         };
-        if(!w.html2pdf){w.alert('Cargando librerías, espera unos segundos e inténtalo de nuevo');return;}
-        const base64=await w.html2pdf().set(opt).from(docEl).output('datauristring');
-        const res=await fetch(_driveUrl,{method:'POST',headers:{'Content-Type':'text/plain'},
-          body:JSON.stringify({action:'uploadFile',fileData:base64,fileName:_nombre,mimeType:'application/pdf',folderId:_folderId,subCarpeta:_subCarpeta||null})});
-        const json=await res.json().catch(()=>({}));
-        if(json.ok){if(btn)btn.textContent='✅ Subido';toast('☁️ Factura subida a Drive ✅','success');}
-        else{w.alert('Error Drive: '+(json.error||'desconocido'));if(btn){btn.textContent='☁️ Drive';btn.disabled=false;}}
-      }catch(e){w.alert('Error: '+e.message);if(btn){btn.textContent='☁️ Drive';btn.disabled=false;}}
-    };
+        pb.after(btn);
+      }
+    },400);
   }
 }
 
@@ -8331,24 +8317,18 @@ async function subirPDFaDrive(elementId, nombreArchivo, proyId, subCarpeta){
       allowTaint:false,
       imageTimeout:0,
       onclone:function(doc){
-        // Ocultar elementos no imprimibles
         doc.querySelectorAll('.no-print,[data-noprint]').forEach(function(el){el.style.display='none';});
-        // Limpiar borde discontinuo del campo observaciones
         var obs=doc.getElementById('pf-obs');
         if(obs){obs.style.border='none';obs.style.outline='none';}
-        // Evitar que las filas se corten entre páginas
         doc.querySelectorAll('tr,thead,tfoot').forEach(function(el){
           el.style.pageBreakInside='avoid';
           el.style.breakInside='avoid';
         });
-        // Repetir cabecera de columnas en cada página clonando el thead
         doc.querySelectorAll('table').forEach(function(tbl){
           var thead=tbl.querySelector('thead');
           if(!thead||!thead.rows.length) return;
-          // Aplicar display:table-header-group para que se repita en cada hoja
           thead.style.display='table-header-group';
         });
-        // Ajustar el ancho del documento al A4 imprimible
         var docEl=doc.getElementById(typeof elementId==='string'?elementId:(el.id||''));
         if(docEl){
           docEl.style.width='794px';
@@ -8450,30 +8430,6 @@ async function subirPresupuestoDrive(){
   const ver=document.getElementById('pf-version-sel')?.value||'v1';
   const nombre=`${proy}-${ver}_Presupuesto.pdf`;
   await subirPDFaDrive('pf-doc',nombre,proy,'04 Presupuestos');
-}
-
-async function subirFacturaDrive(){
-  const d = _buildFacturaPDF();
-  if(!d || !d.num || d.num==='BORRADOR'){ toast('Introduce el Nº de factura primero','warning'); return; }
-  const proyId = document.getElementById('f-proyecto')?.value || '';
-  if(!proyId){ toast('Selecciona un proyecto primero','warning'); return; }
-
-  // Renderizar fac-preview-doc sin abrir ventana:
-  // Interceptamos abrirVistaPrevia temporalmente para evitar que abra una pestaña nueva
-  const _origAbrir = window.abrirVistaPrevia;
-  window.abrirVistaPrevia = function(){ /* no-op durante Drive export */ };
-  previsualizarFactura();
-  window.abrirVistaPrevia = _origAbrir;
-
-  // Pequeña espera para que el DOM se actualice
-  await new Promise(r=>setTimeout(r,100));
-
-  const facDocEl = document.getElementById('fac-preview-doc');
-  if(!facDocEl){ toast('Error preparando el documento','error'); return; }
-
-  const _cn = _safeNombre(d.contra||'');
-  const nombre = 'Factura_' + d.num.replace(/[^a-zA-Z0-9_-]/g,'_') + (_cn?'_'+_cn:'') + '_PAU.pdf';
-  await subirPDFaDrive(facDocEl, nombre, proyId, '08 Facturas');
 }
 
 async function subirContratoDrive(){
@@ -12460,20 +12416,6 @@ function plGetTrabajadores(){
 
 // ── Carga ─────────────────────────────────────────────────────
 async function loadPlanning(){
-  // En móvil (iOS Safari) usar vista Lista para evitar crash de memoria con la tabla de 4 semanas
-  const _isMobilePl = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
-  if(_isMobilePl && plTabActiva === 'mes'){
-    plTabActiva = 'lista';
-    const vSem = document.getElementById('pl-view-semana');
-    const vLis = document.getElementById('pl-view-lista');
-    if(vSem) vSem.style.display = 'none';
-    if(vLis) vLis.style.display = '';
-    document.querySelectorAll('.pl-tab-btn').forEach(b=>{
-      const activo = b.id === 'pl-tab-lista';
-      b.style.background = activo ? 'var(--navy)' : '';
-      b.style.color = activo ? '#fff' : '';
-    });
-  }
   try{
     await plCargarProyectosSelector();
   }catch(e){ console.warn('planning proyectos:',e); }
@@ -12710,12 +12652,9 @@ function plRenderLista(){
 function plSemanaAnterior(){ plMesOffset--; plRender(); }
 function plSemanaSiguiente(){ plMesOffset++; plRender(); }
 function plIrHoy(){
-  // Si el offset ya era 0, forzar re-render igualmente
   plMesOffset=0;
-  // Cambiar a vista 4 Semanas si estamos en Lista
   if(plTabActiva!=='mes') plSetTab('mes');
   else plRender();
-  // Scroll hasta hoy: esperar al render y buscar la celda resaltada
   setTimeout(()=>{
     const hoyEl = document.querySelector('#pl-semanas-container th[style*="#b87333"]');
     if(hoyEl) hoyEl.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
@@ -14238,7 +14177,6 @@ function previsualizarFactura(){
   const _tb = facDocEl.querySelector('.toolbar');
   if(_tb) _tb.remove();
   const _fn = d.num ? 'Factura_' + d.num.replace(/[^a-zA-Z0-9_-]/g,'_') + '_' + _safeNombre(d.contra||'') + '_PAU' : 'Factura';
-  // Preparar opciones Drive si hay proyecto
   const _proyDrive = document.getElementById('f-proyecto')?.value || '';
   const _folderId = _proyDrive ? _driveFolderId(_proyDrive) : null;
   const _driveOpts = _folderId ? {folderId:_folderId, subCarpeta:'08 Facturas'} : null;
@@ -24429,16 +24367,12 @@ async function edExportarPresupuesto(){
   if(!edValoracion.length){toast('Valoración vacía','warning');return}
   const ver=document.getElementById('ed-version')?.value||'v1';
   const margen=parseFloat(document.getElementById('ed-margen')?.value)||35;
-
-  // Obtener orden actual para añadir al final
   let ordenBase=0;
   try{
     const existing=await sbGet('presupuesto_lineas',`?proyecto_id=eq.${pryId}&version=eq.${ver}&order=orden.desc&limit=1`);
     if(existing&&existing.length) ordenBase=existing[0].orden||0;
   }catch(e){ordenBase=0;}
-
   let ok=0;
-  // Crear capítulo Electrodomésticos
   try{
     await sbPost('presupuesto_lineas',{
       proyecto_id:pryId, version:ver,
@@ -24449,7 +24383,6 @@ async function edExportarPresupuesto(){
       cantidad:0, precio_base:0, precio_venta:0, subtotal:0
     });
   }catch(e){console.error(e)}
-
   for(let i=0;i<edValoracion.length;i++){
     const p=edValoracion[i];
     const pr=edCalcPrecio(p);
@@ -24458,20 +24391,12 @@ async function edExportarPresupuesto(){
     const costeBase=parseFloat(pr.coste.toFixed(4));
     try{
       await sbPost('presupuesto_lineas',{
-        proyecto_id:  pryId,
-        version:      ver,
-        partida:      'Electrodomésticos',
-        descripcion:  (p.marca==='Cata'?'Cata':'Balay')+' '+p.ref+' — '+desc,
-        unidad:       'Ud',
-        cantidad:     1,
-        precio_base:  costeBase,
-        margen_pct:   parseFloat(margen.toFixed(2)),
-        ci_gg_bi_pct: 0,
-        precio_venta: pvpVenta,
-        subtotal:     pvpVenta,
-        iva_pct:      '21%',
-        es_capitulo:  false,
-        orden:        ordenBase+2+i
+        proyecto_id:pryId, version:ver, partida:'Electrodomésticos',
+        descripcion:(p.marca==='Cata'?'Cata':'Balay')+' '+p.ref+' — '+desc,
+        unidad:'Ud', cantidad:1, precio_base:costeBase,
+        margen_pct:parseFloat(margen.toFixed(2)), ci_gg_bi_pct:0,
+        precio_venta:pvpVenta, subtotal:pvpVenta, iva_pct:'21%',
+        es_capitulo:false, orden:ordenBase+2+i
       });
       ok++;
     }catch(e){console.error(e)}
@@ -24680,7 +24605,7 @@ function pdfViewerDescargar(){
   document.body.removeChild(a);
 }
 
-</script>
+\u003c/script>
 <script>
 // PAU_LOGO loaded from element below
 
