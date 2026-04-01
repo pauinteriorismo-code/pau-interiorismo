@@ -6082,7 +6082,8 @@ const USER_PERMS = {
 };
 
 function getCurrentUser(){
-  return sessionStorage.getItem('pau-user') || localStorage.getItem('pau-auth-user') || 'jose';
+  // localStorage tiene prioridad — persiste en iOS Safari al recargar la página
+  return localStorage.getItem('pau-auth-user') || sessionStorage.getItem('pau-user') || 'jose';
 }
 function getUserPerms(){
   return USER_PERMS[getCurrentUser()] || USER_PERMS.jose;
@@ -6204,7 +6205,8 @@ async function sb(table,method='GET',body=null,id=null,extra=''){
   const opts={method,headers,mode:'cors',credentials:'omit'};
   if(needsBody) opts.body=JSON.stringify(body);
   const ctrl=new AbortController();
-  const tid=setTimeout(()=>ctrl.abort(),20000);
+  const isMobile=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  const tid=setTimeout(()=>ctrl.abort(),isMobile?30000:20000);
   opts.signal=ctrl.signal;
   try{
     const r=await fetch(url,opts);
@@ -12394,10 +12396,16 @@ function plGetTrabajadores(){
 
 // ── Carga ─────────────────────────────────────────────────────
 async function loadPlanning(){
-  await plCargarProyectosSelector();
-  await plCargarTareas();
+  try{
+    await plCargarProyectosSelector();
+  }catch(e){ console.warn('planning proyectos:',e); }
+  try{
+    await plCargarTareas();
+  }catch(e){ console.warn('planning tareas:',e); plTareas=[]; }
   plRellenarFiltroTrabajadores();
-  plRender();
+  try{
+    plRender();
+  }catch(e){ console.warn('planning render:',e); toast('Error renderizando planning','error'); }
 }
 
 function plRellenarFiltroTrabajadores(){
@@ -12406,12 +12414,12 @@ function plRellenarFiltroTrabajadores(){
 
 async function plCargarProyectosSelector(){
   try{
-    const proyectos = await sbGet('proyectos','?select=id,nombre,codigo&order=nombre');
+    const proyectos = await sbGet('proyectos','?select=proyecto_id,nombre&order=nombre');
     ['pl-filtro-proy'].forEach(id=>{
       const el = document.getElementById(id);
       if(!el) return;
       el.innerHTML = '<option value="">📁 Todos los proyectos</option>' +
-        proyectos.map(p=>`<option value="${p.id}">${p.codigo?p.codigo+' · ':''}${p.nombre}</option>`).join('');
+        proyectos.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
     });
   } catch(e){ console.warn('plCargarProyectos',e); }
 }
