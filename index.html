@@ -11199,44 +11199,166 @@ function _saitraIACalcularModulos(lista, tarifaIdx, margen){
 
 function _saitraIARenderLista(){
   const lista = document.getElementById('saitra-ia-lista');
+
+  // Construir el selector de refs para el dropdown de edición
+  const refsOpts = Object.entries(SAITRA_MOD)
+    .filter(([,d]) => d.grupo !== 'INCREMENTOS')
+    .map(([ref, d]) => `<option value="${ref}">${ref} — ${d.label}</option>`)
+    .join('');
+
   lista.innerHTML = _saitraIAModulos.map((m, i) => {
     const bg = i % 2 === 0 ? '#fff' : '#fafafa';
+
     if(!m.valido){
-      return `<div style="padding:8px 12px;background:#fff8e1;border-bottom:1px solid #ffe082;font-size:11px;color:#b45309">
-        ⚠️ <strong>${m.ref} ${m.ancho}cm</strong> — ${m.error}
+      return `<div style="padding:8px 12px;background:#fff8e1;border-bottom:1px solid #ffe082;font-size:11px;color:#b45309;display:flex;align-items:center;justify-content:space-between">
+        <span>⚠️ <strong>${m.ref} ${m.ancho}cm</strong> — ${m.error}</span>
+        <button onclick="_saitraIAEliminar(${m.idx})" style="background:none;border:none;color:#b45309;cursor:pointer;font-size:14px;padding:0 4px" title="Eliminar">🗑</button>
       </div>`;
     }
-    // Badge del método de cálculo
+
+    // Badge método de cálculo
     let metodoBadge = '';
-    if(m.metodo === 'superior'){
-      metodoBadge = `<span style="font-size:9px;background:#fff3e0;color:#e65100;padding:1px 5px;border-radius:8px;border:1px solid #ffcc80;white-space:nowrap">→ ${m.anchoUsado}cm</span>`;
-    } else if(m.metodo === 'regla3'){
-      metodoBadge = `<span style="font-size:9px;background:#e8f5e9;color:#2e7d32;padding:1px 5px;border-radius:8px;border:1px solid #a5d6a7;white-space:nowrap">R×3 base ${m.anchoUsado}cm</span>`;
-    }
-    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:${bg};border-bottom:1px solid var(--border)">
-      <input type="checkbox" id="saitraIAchk-${m.idx}" checked style="width:15px;height:15px;flex-shrink:0;cursor:pointer">
-      <div style="flex:1;min-width:0">
-        <div style="font-size:12px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-          ${m.label} · <span style="color:#1565c0">${m.ancho}cm</span>
-          ${m.cant>1?`<span style="color:#888;font-weight:400">×${m.cant}</span>`:''}
-          ${metodoBadge}
+    if(m.metodo === 'superior')
+      metodoBadge = `<span style="font-size:9px;background:#fff3e0;color:#e65100;padding:1px 5px;border-radius:8px;border:1px solid #ffcc80">→${m.anchoUsado}cm</span>`;
+    else if(m.metodo === 'regla3')
+      metodoBadge = `<span style="font-size:9px;background:#e8f5e9;color:#2e7d32;padding:1px 5px;border-radius:8px;border:1px solid #a5d6a7">R×3/${m.anchoUsado}cm</span>`;
+
+    // Anchos disponibles para la ref actual
+    const anchosRef = m.valido && SAITRA_MOD[m.ref]
+      ? Object.keys(SAITRA_MOD[m.ref].anchos).map(a => parseInt(a)||a).sort((a,b)=>a-b)
+      : [];
+    const anchosOpts = anchosRef.map(a => `<option value="${a}"${a==m.ancho||a==m.anchoUsado?'':''} ${parseInt(m.ancho)===a?'selected':''}>${a}cm</option>`).join('');
+
+    return `
+    <div id="saitraIArow-${m.idx}" style="border-bottom:1px solid var(--border);background:${bg}">
+      <!-- FILA RESUMEN (vista normal) -->
+      <div id="saitraIAview-${m.idx}" style="display:flex;align-items:center;gap:8px;padding:7px 10px">
+        <input type="checkbox" id="saitraIAchk-${m.idx}" checked style="width:14px;height:14px;flex-shrink:0;cursor:pointer">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:11px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:5px;flex-wrap:wrap">
+            <span style="font-family:monospace;background:#f0f0f0;padding:1px 5px;border-radius:3px;color:#1565c0">${m.ref}</span>
+            <span>${m.ancho}cm</span>
+            ${m.cant>1?`<span style="color:#888;font-weight:400">×${m.cant}</span>`:''}
+            ${metodoBadge}
+          </div>
+          <div style="font-size:10px;color:var(--text-soft);margin-top:1px">${m.label}${m.nota?' · '+m.nota:''}</div>
         </div>
-        <div style="font-size:10px;color:var(--text-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.nota||''}</div>
+        <div style="text-align:right;flex-shrink:0;font-size:11px">
+          <div style="font-weight:700;color:#2e7d32">${fmtES(m.pvpTotal)}€</div>
+          <div style="color:var(--text-soft);font-size:10px">${m.puntos}pts</div>
+        </div>
+        <button onclick="_saitraIAToggleEdit(${m.idx})"
+          style="background:#e3f2fd;border:1px solid #90caf9;border-radius:4px;color:#1565c0;cursor:pointer;font-size:11px;padding:3px 7px;white-space:nowrap;flex-shrink:0"
+          title="Editar línea">✏️</button>
+        <button onclick="_saitraIAEliminar(${m.idx})"
+          style="background:none;border:none;color:#ccc;cursor:pointer;font-size:14px;padding:0 2px;flex-shrink:0" title="Eliminar">✕</button>
       </div>
-      <div style="text-align:right;white-space:nowrap;flex-shrink:0">
-        <div style="font-size:10px;color:var(--text-soft)">T${m.tarifaIdx+1} · ${m.puntos}pts</div>
-        <div style="font-size:12px;font-weight:700;color:#2e7d32">PVP: ${fmtES(m.pvpTotal)}€</div>
-        <div style="font-size:10px;color:var(--text-soft)">Coste: ${fmtES(m.costeTotal)}€</div>
+      <!-- FILA EDICIÓN (oculta por defecto) -->
+      <div id="saitraIAedit-${m.idx}" style="display:none;padding:10px 12px;background:#f0f7ff;border-top:1px solid #c5e0fb">
+        <div style="display:grid;grid-template-columns:1fr 80px 60px;gap:8px;margin-bottom:8px">
+          <div>
+            <label style="font-size:10px;font-weight:700;color:var(--text-soft);display:block;margin-bottom:3px">REFERENCIA</label>
+            <select id="saitraIAedit-ref-${m.idx}" onchange="_saitraIAEditRefChange(${m.idx})"
+              style="width:100%;font-size:11px;padding:4px 6px;border:1px solid #90caf9;border-radius:4px;font-family:inherit">
+              ${refsOpts.replace(`value="${m.ref}"`, `value="${m.ref}" selected`)}
+            </select>
+          </div>
+          <div>
+            <label style="font-size:10px;font-weight:700;color:var(--text-soft);display:block;margin-bottom:3px">ANCHO</label>
+            <select id="saitraIAedit-ancho-${m.idx}"
+              style="width:100%;font-size:11px;padding:4px 6px;border:1px solid #90caf9;border-radius:4px;font-family:inherit">
+              ${anchosOpts}
+            </select>
+          </div>
+          <div>
+            <label style="font-size:10px;font-weight:700;color:var(--text-soft);display:block;margin-bottom:3px">CANT.</label>
+            <input type="number" id="saitraIAedit-cant-${m.idx}" value="${m.cant||1}" min="1" max="99"
+              style="width:100%;font-size:11px;padding:4px 6px;border:1px solid #90caf9;border-radius:4px;text-align:center">
+          </div>
+        </div>
+        <div style="margin-bottom:8px">
+          <label style="font-size:10px;font-weight:700;color:var(--text-soft);display:block;margin-bottom:3px">NOTA / DESCRIPCIÓN ADICIONAL</label>
+          <input type="text" id="saitraIAedit-nota-${m.idx}" value="${(m.nota||'').replace(/"/g,'&quot;')}" placeholder="ej. esquinero derecha, bajo horno…"
+            style="width:100%;font-size:11px;padding:4px 6px;border:1px solid #90caf9;border-radius:4px;box-sizing:border-box">
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button onclick="_saitraIAToggleEdit(${m.idx})"
+            style="font-size:11px;padding:4px 10px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer">Cancelar</button>
+          <button onclick="_saitraIAGuardarEdit(${m.idx})"
+            style="font-size:11px;padding:4px 12px;background:#1565c0;color:white;border:none;border-radius:4px;cursor:pointer;font-weight:700">✓ Aplicar</button>
+        </div>
       </div>
     </div>`;
   }).join('');
 
+  // Botón añadir módulo manual al final
+  lista.innerHTML += `<div style="padding:6px 10px;background:#f7f4ef;border-top:1px solid var(--border);text-align:center">
+    <button onclick="_saitraIAañadirManual()"
+      style="font-size:11px;background:none;border:1px dashed #90caf9;color:#1565c0;border-radius:4px;padding:4px 14px;cursor:pointer;width:100%">＋ Añadir módulo manualmente</button>
+  </div>`;
+
+  _saitraIAActualizarResumen();
+}
+
+function _saitraIAActualizarResumen(){
   const validos = _saitraIAModulos.filter(m => m.valido);
   const totalPvp   = validos.reduce((s,m) => s + m.pvpTotal,  0);
   const totalCoste = validos.reduce((s,m) => s + m.costeTotal,0);
   document.getElementById('saitra-ia-resumen').innerHTML =
     `<span>${validos.length} módulo${validos.length!==1?'s':''} válido${validos.length!==1?'s':''}</span>
      <span>Coste: <strong>${fmtES(totalCoste)}€</strong> · PVP: <strong>${fmtES(totalPvp)}€</strong></span>`;
+}
+
+function _saitraIAToggleEdit(idx){
+  const view = document.getElementById('saitraIAview-' + idx);
+  const edit = document.getElementById('saitraIAedit-' + idx);
+  const isOpen = edit.style.display !== 'none';
+  edit.style.display = isOpen ? 'none' : 'block';
+  view.style.opacity = isOpen ? '1' : '0.5';
+}
+
+function _saitraIAEditRefChange(idx){
+  const newRef = document.getElementById('saitraIAedit-ref-' + idx).value;
+  const anchoSel = document.getElementById('saitraIAedit-ancho-' + idx);
+  const modDef = SAITRA_MOD[newRef];
+  if(!modDef) return;
+  const anchos = Object.keys(modDef.anchos).map(a => parseInt(a)||a).sort((a,b)=>a-b);
+  anchoSel.innerHTML = anchos.map(a => `<option value="${a}">${a}cm</option>`).join('');
+}
+
+function _saitraIAGuardarEdit(idx){
+  const newRef  = document.getElementById('saitraIAedit-ref-'  + idx).value;
+  const newAncho= parseInt(document.getElementById('saitraIAedit-ancho-'+ idx).value);
+  const newCant = parseInt(document.getElementById('saitraIAedit-cant-' + idx).value)||1;
+  const newNota = document.getElementById('saitraIAedit-nota-' + idx).value.trim();
+
+  // Recalcular con los nuevos valores
+  const updated = _saitraIACalcularModulos(
+    [{ ref: newRef, ancho: newAncho, cant: newCant, nota: newNota, tipo: _saitraIAModulos.find(m=>m.idx===idx)?.tipo||'bajo' }],
+    _saitraIATarifa, _saitraIAMargen
+  )[0];
+  updated.idx = idx;
+
+  const pos = _saitraIAModulos.findIndex(m => m.idx === idx);
+  if(pos !== -1) _saitraIAModulos[pos] = updated;
+
+  _saitraIARenderLista();
+  // Reabrir el panel de edición si hubo error
+  if(!updated.valido) _saitraIAToggleEdit(idx);
+}
+
+function _saitraIAEliminar(idx){
+  _saitraIAModulos = _saitraIAModulos.filter(m => m.idx !== idx);
+  _saitraIARenderLista();
+}
+
+function _saitraIAañadirManual(){
+  // Añadir una línea vacía editable al final
+  const newIdx = (_saitraIAModulos.reduce((mx,m) => Math.max(mx,m.idx), 0)) + 1;
+  _saitraIAModulos.push({ idx: newIdx, ref:'PBP', ancho:60, cant:1, nota:'', tipo:'bajo', valido:false, error:'Nueva línea — selecciona ref y ancho' });
+  _saitraIARenderLista();
+  // Abrir edición de la nueva línea
+  setTimeout(() => _saitraIAToggleEdit(newIdx), 50);
 }
 
 async function saitraIAAnalizar(){
