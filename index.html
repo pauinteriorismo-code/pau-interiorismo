@@ -11236,13 +11236,15 @@ function _saitraIARenderLista(){
         +'<button onclick="_saitraIAEliminar('+m.idx+')" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:14px;padding:0 2px">✕</button>'
         +'</div>'
         +'<div id="saitraIAedit-'+m.idx+'" style="display:none;padding:10px 12px;background:#fff8e1;border-top:1px solid #ffe082">'
-        +'<div style="display:grid;grid-template-columns:1fr 80px 60px;gap:8px;margin-bottom:8px">'
+        +'<div style="display:grid;grid-template-columns:1fr 80px 60px 70px;gap:8px;margin-bottom:8px">'
         +'<div><label style="font-size:10px;font-weight:700;color:#b45309;display:block;margin-bottom:3px">REF</label>'
         +'<select id="saitraIAedit-ref-'+m.idx+'" onchange="_saitraIAEditRefChange('+m.idx+')" style="width:100%;font-size:11px;padding:4px 6px;border:1px solid #ffcc80;border-radius:4px;font-family:inherit">'+refsOpts.replace('value="'+m.ref+'"','value="'+m.ref+'" selected')+'</select></div>'
         +'<div><label style="font-size:10px;font-weight:700;color:#b45309;display:block;margin-bottom:3px">ANCHO</label>'
         +'<select id="saitraIAedit-ancho-'+m.idx+'" style="width:100%;font-size:11px;padding:4px 6px;border:1px solid #ffcc80;border-radius:4px;font-family:inherit">'+anchosOpts2+'</select></div>'
         +'<div><label style="font-size:10px;font-weight:700;color:#b45309;display:block;margin-bottom:3px">CANT.</label>'
         +'<input type="number" id="saitraIAedit-cant-'+m.idx+'" value="'+(m.cant||1)+'" min="1" max="99" style="width:100%;font-size:11px;padding:4px 6px;border:1px solid #ffcc80;border-radius:4px;text-align:center"></div>'
+        +'<div><label style="font-size:10px;font-weight:700;color:#b45309;display:block;margin-bottom:3px">PUNTOS</label>'
+        +'<input type="number" id="saitraIAedit-pts-'+m.idx+'" value="'+(m.puntos||'')+'" min="0" placeholder="manual" style="width:100%;font-size:11px;padding:4px 6px;border:1px solid #ffcc80;border-radius:4px;text-align:center"></div>'
         +'</div>'
         +'<div style="margin-bottom:8px"><label style="font-size:10px;font-weight:700;color:#b45309;display:block;margin-bottom:3px">NOTA</label>'
         +'<input type="text" id="saitraIAedit-nota-'+m.idx+'" value="'+(m.nota||'').replace(/"/g,"&quot;")+'" placeholder="descripción adicional…" style="width:100%;font-size:11px;padding:4px 6px;border:1px solid #ffcc80;border-radius:4px;box-sizing:border-box"></div>'
@@ -11252,7 +11254,8 @@ function _saitraIARenderLista(){
         +'</div></div></div>';
     }
     let badge='';
-    if(m.metodo==='superior') badge='<span style="font-size:9px;background:#fff3e0;color:#e65100;padding:1px 5px;border-radius:8px;border:1px solid #ffcc80">→'+m.anchoUsado+'cm</span>';
+    if(m.metodo==='manual') badge='<span style="font-size:9px;background:#e3f2fd;color:#1565c0;padding:1px 5px;border-radius:8px;border:1px solid #90caf9">✎ '+m.puntos+'pts</span>';
+    else if(m.metodo==='superior') badge='<span style="font-size:9px;background:#fff3e0;color:#e65100;padding:1px 5px;border-radius:8px;border:1px solid #ffcc80">→'+m.anchoUsado+'cm</span>';
     else if(m.metodo==='regla3') badge='<span style="font-size:9px;background:#e8f5e9;color:#2e7d32;padding:1px 5px;border-radius:8px;border:1px solid #a5d6a7">R×3/'+m.anchoUsado+'cm</span>';
     const anchosRef = SAITRA_MOD[m.ref]?Object.keys(SAITRA_MOD[m.ref].anchos).map(a=>parseInt(a)||a).sort((a,b)=>a-b):[];
     const anchosOpts = anchosRef.map(a=>'<option value="'+a+'"'+(parseInt(m.ancho)===a?' selected':'')+'>'+a+'cm</option>').join('');
@@ -11272,13 +11275,15 @@ function _saitraIARenderLista(){
       +'<button onclick="_saitraIAEliminar('+m.idx+')" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:14px;padding:0 2px;flex-shrink:0">✕</button>'
       +'</div>'
       +'<div id="saitraIAedit-'+m.idx+'" style="display:none;padding:10px 12px;background:#f0f7ff;border-top:1px solid #c5e0fb">'
-      +'<div style="display:grid;grid-template-columns:1fr 80px 60px;gap:8px;margin-bottom:8px">'
+      +'<div style="display:grid;grid-template-columns:1fr 80px 60px 70px;gap:8px;margin-bottom:8px">'
       +'<div><label style="font-size:10px;font-weight:700;color:var(--text-soft);display:block;margin-bottom:3px">REFERENCIA</label>'
       +'<select id="saitraIAedit-ref-'+m.idx+'" onchange="_saitraIAEditRefChange('+m.idx+')" style="width:100%;font-size:11px;padding:4px 6px;border:1px solid #90caf9;border-radius:4px;font-family:inherit">'+refsOpts.replace('value="'+m.ref+'"','value="'+m.ref+'" selected')+'</select></div>'
       +'<div><label style="font-size:10px;font-weight:700;color:var(--text-soft);display:block;margin-bottom:3px">ANCHO</label>'
       +'<select id="saitraIAedit-ancho-'+m.idx+'" style="width:100%;font-size:11px;padding:4px 6px;border:1px solid #90caf9;border-radius:4px;font-family:inherit">'+anchosOpts+'</select></div>'
       +'<div><label style="font-size:10px;font-weight:700;color:var(--text-soft);display:block;margin-bottom:3px">CANT.</label>'
       +'<input type="number" id="saitraIAedit-cant-'+m.idx+'" value="'+(m.cant||1)+'" min="1" max="99" style="width:100%;font-size:11px;padding:4px 6px;border:1px solid #90caf9;border-radius:4px;text-align:center"></div>'
+      +'<div><label style="font-size:10px;font-weight:700;color:var(--text-soft);display:block;margin-bottom:3px">PUNTOS</label>'
+      +'<input type="number" id="saitraIAedit-pts-'+m.idx+'" value="'+(m.puntos||'')+'" min="0" placeholder="manual" style="width:100%;font-size:11px;padding:4px 6px;border:1px solid #90caf9;border-radius:4px;text-align:center"></div>'
       +'</div>'
       +'<div style="margin-bottom:8px"><label style="font-size:10px;font-weight:700;color:var(--text-soft);display:block;margin-bottom:3px">NOTA</label>'
       +'<input type="text" id="saitraIAedit-nota-'+m.idx+'" value="'+(m.nota||'').replace(/"/g,"&quot;")+'" placeholder="ej. esquinero derecha, bajo horno…" style="width:100%;font-size:11px;padding:4px 6px;border:1px solid #90caf9;border-radius:4px;box-sizing:border-box"></div>'
@@ -11328,12 +11333,23 @@ function _saitraIAEditRefChange(idx){
 
 function _saitraIAGuardarEdit(idx){
   const newRef=document.getElementById('saitraIAedit-ref-'+idx).value;
-  const newAncho=parseInt(document.getElementById('saitraIAedit-ancho-'+idx).value);
+  const newAncho=parseInt(document.getElementById('saitraIAedit-ancho-'+idx).value)||0;
   const newCant=parseInt(document.getElementById('saitraIAedit-cant-'+idx).value)||1;
   const newNota=document.getElementById('saitraIAedit-nota-'+idx).value.trim();
+  const manualPts=parseFloat(document.getElementById('saitraIAedit-pts-'+idx).value)||0;
   const tipo=_saitraIAModulos.find(m=>m.idx===idx)?.tipo||'bajo';
-  const updated=_saitraIACalcularModulos([{ref:newRef,ancho:newAncho,cant:newCant,nota:newNota,tipo}],_saitraIATarifa,_saitraIAMargen)[0];
-  updated.idx=idx;
+  let updated;
+  if(manualPts>0){
+    const costeU=manualPts*0.99, pvpU=costeU*(1+_saitraIAMargen/100);
+    const modDef=SAITRA_MOD[newRef];
+    updated={ref:newRef,ancho:newAncho,cant:newCant,nota:newNota,tipo,
+      valido:true,idx,puntos:manualPts,tarifaIdx:_saitraIATarifa,margen:_saitraIAMargen,
+      anchoUsado:newAncho,metodo:'manual',costeUnit:costeU,pvpUnit:pvpU,
+      costeTotal:costeU*newCant,pvpTotal:pvpU*newCant,label:modDef?modDef.label:(newRef+' (manual)')};
+  } else {
+    updated=_saitraIACalcularModulos([{ref:newRef,ancho:newAncho,cant:newCant,nota:newNota,tipo}],_saitraIATarifa,_saitraIAMargen)[0];
+    updated.idx=idx;
+  }
   const pos=_saitraIAModulos.findIndex(m=>m.idx===idx);
   if(pos!==-1) _saitraIAModulos[pos]=updated;
   _saitraIARenderLista();
