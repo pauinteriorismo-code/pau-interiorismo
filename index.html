@@ -517,8 +517,9 @@ tbody td{padding:7px 10px;vertical-align:middle}
 .cat-panel.open{display:block}
 #cat-panel-saitra.open{display:flex;flex-direction:column;height:calc(100vh - 56px - 36px);overflow:hidden}
 #cat-panel-saitra .cat-header{flex-shrink:0}
-#cat-panel-saitra>#saitra-grid{flex:1;min-height:0;align-items:stretch}
-#saitra-col-derecha{min-height:0}
+#cat-panel-saitra>#saitra-grid{flex:1;min-height:0;align-items:stretch;overflow:hidden}
+#saitra-grid>div:first-child{overflow-y:auto;min-height:0}
+#saitra-col-derecha{min-height:0;overflow-y:auto}
 #saitra-col-contenido{flex:1;min-height:0;display:flex!important;flex-direction:column!important}
 #saitra-col-contenido>.card:first-child{flex:1;min-height:0;display:flex;flex-direction:column}
 #saitra-col-contenido>.card:first-child>div:last-child{flex:1;min-height:0;overflow-y:auto}
@@ -2200,7 +2201,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         </div>
       </div>
 
-      <div id="saitra-grid" style="display:grid;grid-template-columns:340px 1fr;gap:14px">
+      <div id="saitra-grid" style="display:grid;grid-template-columns:340px 1fr;grid-template-rows:1fr;gap:14px">
 
         <!-- ─── PANEL IZQUIERDO ─── -->
         <div style="display:flex;flex-direction:column;gap:10px;overflow-y:auto;min-height:0">
