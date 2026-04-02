@@ -517,11 +517,10 @@ tbody td{padding:7px 10px;vertical-align:middle}
 .cat-panel.open{display:block}
 #cat-panel-saitra.open{display:flex;flex-direction:column;height:calc(100vh - 56px - 36px);overflow:hidden}
 #cat-panel-saitra .cat-header{flex-shrink:0}
-#cat-panel-saitra>#saitra-grid{flex:1;min-height:0;align-items:stretch;overflow:hidden}
-#saitra-grid>div:first-child{overflow-y:auto;min-height:0}
-#saitra-col-derecha{min-height:0;overflow-y:auto}
-#saitra-col-contenido{flex:1;min-height:0;display:flex!important;flex-direction:column!important}
-#saitra-col-contenido>.card:first-child{flex:1;min-height:0;display:flex;flex-direction:column}
+#cat-panel-saitra>#saitra-grid{flex:1;min-height:0;overflow:hidden}
+#saitra-grid>div{min-height:0;max-height:100%;overflow-y:auto}
+#saitra-col-contenido{display:flex!important;flex-direction:column!important;min-height:0;max-height:100%}
+#saitra-col-contenido>.card:first-child{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
 #saitra-col-contenido>.card:first-child>div:last-child{flex:1;min-height:0;overflow-y:auto}
 .cat-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;
   padding-bottom:12px;border-bottom:2px solid var(--border)}
@@ -2209,10 +2208,10 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         </div>
       </div>
 
-      <div id="saitra-grid" style="display:grid;grid-template-columns:340px 1fr;grid-template-rows:1fr;gap:14px">
+      <div id="saitra-grid" style="display:grid;grid-template-columns:400px 1fr;grid-template-rows:1fr;gap:14px">
 
         <!-- ─── PANEL IZQUIERDO ─── -->
-        <div style="display:flex;flex-direction:column;gap:10px;overflow-y:auto;min-height:0">
+        <div style="display:flex;flex-direction:column;gap:10px">
 
           <!-- MUEBLES DE LÍNEA (Colgantes, Sobrecolumnas, Sobreencimeras) -->
           
@@ -2221,10 +2220,10 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <div class="card" style="padding:14px">
             <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--copper);margin-bottom:10px;letter-spacing:.05em">📦 Módulo (puntos × 0,99€)</div>
             <div id="s-mod-info" style="font-size:11px;color:var(--copper);font-weight:600;margin-bottom:6px;min-height:14px"></div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div style="display:flex;flex-direction:column;gap:8px">
               <div>
                 <label class="form-label">Referencia</label>
-                <select class="form-input" id="s-ref" onchange="saitraRefChange()">
+                <select class="form-input" id="s-ref" onchange="saitraRefChange()" style="width:100%;font-size:11px">
                   <optgroup label="── BASES H.78 F.60 ──">
                     <option value="PBP">PBP · Base 1 puerta</option>
                     <option value="PB2P">PB2P · Base 2 puertas</option>
@@ -2492,41 +2491,28 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 
                 </select>
               </div>
-              <div>
-                <label class="form-label">Ancho (cm)</label>
-                <select class="form-input" id="s-ancho" onchange="saitraPuntosPreview()"></select>
-              </div>
-            </div>
-                        <!-- Modelo y descripción adicional -->
-            <div style="margin-top:8px;display:flex;gap:8px;align-items:flex-end">
-              <div>
-                <label class="form-label">Modelo</label>
-                <div style="display:flex;gap:8px;padding:5px 7px;background:#f7f4ef;border-radius:6px;border:1px solid #e8e0d4;flex-wrap:wrap">
-                  <label style="display:flex;align-items:center;gap:3px;font-size:12px;cursor:pointer">
-                    <input type="radio" name="s-modelo" value="1" checked onchange="saitraPuntosPreview()">
-                    <span style="font-weight:700;color:var(--copper)">M1</span>
-                  </label>
-                  <label style="display:flex;align-items:center;gap:3px;font-size:12px;cursor:pointer">
-                    <input type="radio" name="s-modelo" value="2" onchange="saitraPuntosPreview()">
-                    <span style="font-weight:700;color:#1565c0">M2</span>
-                  </label>
-                  <label style="display:flex;align-items:center;gap:3px;font-size:12px;cursor:pointer">
-                    <input type="radio" name="s-modelo" value="3" onchange="saitraPuntosPreview()">
-                    <span style="font-weight:700;color:#2e7d32">M3</span>
-                  </label>
-                  <label style="display:flex;align-items:center;gap:3px;font-size:12px;cursor:pointer">
-                    <input type="radio" name="s-modelo" value="4" onchange="saitraPuntosPreview()">
-                    <span style="font-weight:700;color:#7b5ea7">M4</span>
-                  </label>
+              <div style="display:flex;gap:8px;align-items:flex-end">
+                <div style="width:90px">
+                  <label class="form-label">Ancho</label>
+                  <select class="form-input" id="s-ancho" onchange="saitraPuntosPreview()" style="width:100%"></select>
+                </div>
+                <div>
+                  <label class="form-label">Modelo</label>
+                  <div style="display:flex;gap:6px;padding:4px 6px;background:#f7f4ef;border-radius:6px;border:1px solid #e8e0d4">
+                    <label style="display:flex;align-items:center;gap:2px;font-size:11px;cursor:pointer"><input type="radio" name="s-modelo" value="1" checked onchange="saitraPuntosPreview()"><span style="font-weight:700;color:var(--copper)">M1</span></label>
+                    <label style="display:flex;align-items:center;gap:2px;font-size:11px;cursor:pointer"><input type="radio" name="s-modelo" value="2" onchange="saitraPuntosPreview()"><span style="font-weight:700;color:#1565c0">M2</span></label>
+                    <label style="display:flex;align-items:center;gap:2px;font-size:11px;cursor:pointer"><input type="radio" name="s-modelo" value="3" onchange="saitraPuntosPreview()"><span style="font-weight:700;color:#2e7d32">M3</span></label>
+                    <label style="display:flex;align-items:center;gap:2px;font-size:11px;cursor:pointer"><input type="radio" name="s-modelo" value="4" onchange="saitraPuntosPreview()"><span style="font-weight:700;color:#7b5ea7">M4</span></label>
+                  </div>
+                </div>
+                <div style="width:50px">
+                  <label class="form-label">Cant.</label>
+                  <input type="number" class="form-input" id="s-cant-mod" value="1" min="1" style="text-align:center">
                 </div>
               </div>
-              <div style="flex:1">
+              <div>
                 <label class="form-label">Descripción adicional</label>
-                <input type="text" class="form-input" id="s-desc-mod" placeholder="ej. apertura, observación...">
-              </div>
-              <div style="width:60px">
-                <label class="form-label">Cant.</label>
-                <input type="number" class="form-input" id="s-cant-mod" value="1" min="1" style="text-align:center">
+                <input type="text" class="form-input" id="s-desc-mod" placeholder="ej. apertura, observación..." style="width:100%">
               </div>
             </div>
             <div id="s-puntos-preview" style="margin-top:8px;padding:8px 10px;background:var(--sand);border-radius:6px;font-size:11px;display:none;line-height:1.8"></div>
@@ -2648,10 +2634,10 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <!-- ACCESORIOS POR PVP TARIFA -->
           <div class="card" style="padding:14px">
             <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--copper);margin-bottom:10px;letter-spacing:.05em">🔧 Accesorio (PVP tarifa)</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div style="display:flex;flex-direction:column;gap:8px">
               <div>
                 <label class="form-label">Tipo</label>
-                <select class="form-input" id="s-acc-tipo" onchange="saitraAccTipoChange()">
+                <select class="form-input" id="s-acc-tipo" onchange="saitraAccTipoChange()" style="width:100%">
                   <optgroup label="── CUBERTEROS ──">
                     <option value="CUBMN-60">CUBMN 60cm · Nogal</option>
                     <option value="CUBMN-90">CUBMN 90cm · Nogal</option>
@@ -2689,10 +2675,10 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <!-- ZÓCALOS POR PUNTOS -->
           <div class="card" style="padding:14px">
             <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--copper);margin-bottom:10px;letter-spacing:.05em">⬇ Zócalo (puntos × 0,99€)</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div style="display:flex;flex-direction:column;gap:8px">
               <div>
                 <label class="form-label">Referencia</label>
-                <select class="form-input" id="s-zoc-ref" onchange="saitraZocChange()">
+                <select class="form-input" id="s-zoc-ref" onchange="saitraZocChange()" style="width:100%">
                   <option value="ZPVCAL-8">ZPVCAL Alto 8 · PVC Alu</option>
                   <option value="ZPVCAL-10">ZPVCAL Alto 10 · PVC Alu</option>
                   <option value="ZPVCAL-12">ZPVCAL Alto 12 · PVC Alu</option>
@@ -2730,10 +2716,10 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <!-- PERFILES GOLA -->
           <div class="card" style="padding:14px;margin-top:10px">
             <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--copper);margin-bottom:10px;letter-spacing:.05em">↔ Perfil Gola / Lineales (puntos × 0,99€)</div>
-            <div style="display:grid;grid-template-columns:1fr 80px auto;gap:8px;align-items:end">
+            <div style="display:flex;flex-direction:column;gap:8px">
               <div>
                 <label class="form-label">Referencia</label>
-                <select class="form-input" id="s-gola-ref" style="font-size:11px" onchange="saitraGolaChange()">
+                <select class="form-input" id="s-gola-ref" style="font-size:11px;width:100%" onchange="saitraGolaChange()">
                   <optgroup label="── GOLA H.SIMPLE ──">
                     <option value="PHSA">PHSA · Alu 400cm — 44 pts</option>
                     <option value="O5PHSA">O5PHSA · Alu 200cm — 23 pts</option>
@@ -2803,11 +2789,13 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
                   </optgroup>
                 </select>
               </div>
-              <div>
-                <label class="form-label">Uds.</label>
-                <input type="number" class="form-input" id="s-gola-qty" value="1" min="1" oninput="saitraGolaChange()">
+              <div style="display:flex;gap:8px;align-items:flex-end">
+                <div style="width:70px">
+                  <label class="form-label">Uds.</label>
+                  <input type="number" class="form-input" id="s-gola-qty" value="1" min="1" oninput="saitraGolaChange()">
+                </div>
+                <button class="btn btn-primary" style="white-space:nowrap;height:36px;flex:1" onclick="saitraAddGola()">＋ Añadir</button>
               </div>
-              <button class="btn btn-primary" style="white-space:nowrap;height:36px" onclick="saitraAddGola()">＋ Añadir</button>
             </div>
             <div id="s-gola-preview" style="margin-top:8px;padding:8px 10px;background:var(--sand);border-radius:6px;font-size:11px;line-height:1.8"></div>
           </div>
