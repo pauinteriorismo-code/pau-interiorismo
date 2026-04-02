@@ -517,7 +517,6 @@ tbody td{padding:7px 10px;vertical-align:middle}
 .cat-panel.open{display:block}
 #cat-panel-saitra.open{display:flex;flex-direction:column;height:calc(100vh - 56px - 36px);overflow:hidden}
 #cat-panel-saitra .cat-header{flex-shrink:0}
-.content:has(#cat-panel-saitra.open){overflow:hidden}
 #saitra-col-contenido{display:flex!important;flex-direction:column!important;min-height:0}
 #saitra-col-contenido>.card:first-child{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
 #saitra-col-contenido>.card:first-child>div:last-child{flex:1;min-height:0;overflow-y:auto}
@@ -2210,7 +2209,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div id="saitra-grid" style="display:grid;grid-template-columns:400px 1fr;grid-template-rows:1fr;gap:14px;flex:1;min-height:0;overflow:hidden">
 
         <!-- ─── PANEL IZQUIERDO ─── -->
-        <div id="saitra-col-izquierda" style="display:flex;flex-direction:column;gap:10px;overflow-y:auto;height:0;min-height:100%;scrollbar-width:thin">
+        <div id="saitra-col-izquierda" style="display:flex;flex-direction:column;gap:10px;scrollbar-width:thin">
 
           <!-- MUEBLES DE LÍNEA (Colgantes, Sobrecolumnas, Sobreencimeras) -->
           
@@ -2802,7 +2801,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         </div>
 
         <!-- ─── PANEL DERECHO: TABLA + TOTALES ─── -->
-        <div id="saitra-col-derecha" style="display:flex;flex-direction:column;gap:10px;overflow-y:auto;height:0;min-height:100%">
+        <div id="saitra-col-derecha" style="display:flex;flex-direction:column;gap:10px">
 
           <!-- IA PANEL (inline en col. derecha) -->
           <div id="saitra-ia-wrap" style="display:none;flex-direction:column;gap:12px;background:var(--bg);border-radius:8px;border:1px solid #90caf9;padding:16px">
@@ -20238,6 +20237,16 @@ function catAbrir(fab){
     if(typeof saitraAccTipoChange === 'function') saitraAccTipoChange();
     if(typeof saitraZocChange === 'function') saitraZocChange();
     if(typeof saitraGolaChange === 'function') saitraGolaChange();
+    // Calcular altura del panel izquierdo para scroll
+    setTimeout(()=>{
+      const grid = document.getElementById('saitra-grid');
+      const col = document.getElementById('saitra-col-izquierda');
+      if(grid && col){
+        const h = grid.getBoundingClientRect().height;
+        col.style.maxHeight = h + 'px';
+        col.style.overflowY = 'auto';
+      }
+    }, 50);
   } else if(fab === 'imex'){
     document.getElementById('cat-panel-imex').classList.add('open');
     _ixAbrirConIdentidad('imex');
