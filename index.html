@@ -6415,10 +6415,11 @@ function navTo(v){
     setTimeout(()=>_autoSelectPedidoDoc(window._lastSavedPedido), 150);
     window._lastSavedPedido = null; // consume it
   }
-  // Close any open catalog panels
+  // Close any open catalog panels and restore scroll
   document.querySelectorAll('.cat-panel').forEach(p=>p.classList.remove('open'));
   const catSel=document.getElementById('cat-selector'); if(catSel) catSel.style.display='block';
   catActual=null;
+  const _cnt=document.querySelector('.content');if(_cnt)_cnt.style.overflow='';
   // Highlight active nav item
   document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
   document.querySelector(`[data-view="${v}"]`)?.classList.add('active');
