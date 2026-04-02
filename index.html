@@ -11261,6 +11261,78 @@ function _saitraIARenderLista(){
         +'<button onclick="_saitraIAGuardarEdit('+m.idx+')" style="font-size:11px;padding:4px 12px;background:#6a1b9a;color:white;border:none;border-radius:4px;cursor:pointer;font-weight:700">✓ Valorar</button>'
         +'</div></div></div>';
     }
+    if(!m.valido && m.esAccesorio){
+      // ─── ACCESORIO ───
+      const accOpts=Object.entries(SAITRA_ACC).map(([ref,d])=>'<option value="'+ref+'"'+(m.ref===ref?' selected':'')+'>'+ref+' — '+d.label+'</option>').join('');
+      return '<div id="saitraIArow-'+m.idx+'" style="border-bottom:1px solid #ffcc80;background:#fff3e0">'
+        +'<div id="saitraIAview-'+m.idx+'" style="display:flex;align-items:center;gap:8px;padding:7px 10px">'
+        +'<div style="flex:1;font-size:11px;color:#e65100">🔧 <strong>'+(m.nota||'Accesorio')+'</strong>'+(m.cant>1?' ×'+m.cant:'')+'</div>'
+        +'<button onclick="_saitraIAToggleEdit('+m.idx+')" style="background:#fff3e0;border:1px solid #ffcc80;border-radius:4px;color:#e65100;cursor:pointer;font-size:11px;padding:3px 7px;flex-shrink:0">✏️ Seleccionar</button>'
+        +'<button onclick="_saitraIAEliminar('+m.idx+')" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:14px;padding:0 2px">✕</button>'
+        +'</div>'
+        +'<div id="saitraIAedit-'+m.idx+'" style="display:none;padding:10px 12px;background:#fff3e0;border-top:1px solid #ffcc80">'
+        +'<div style="display:grid;grid-template-columns:1fr 60px;gap:8px;margin-bottom:8px">'
+        +'<div><label style="font-size:10px;font-weight:700;color:#e65100;display:block;margin-bottom:3px">ACCESORIO</label>'
+        +'<select id="saitraIAedit-ref-'+m.idx+'" style="width:100%;font-size:11px;padding:4px 6px;border:1px solid #ffcc80;border-radius:4px;font-family:inherit">'+accOpts+'</select></div>'
+        +'<div><label style="font-size:10px;font-weight:700;color:#e65100;display:block;margin-bottom:3px">CANT.</label>'
+        +'<input type="number" id="saitraIAedit-cant-'+m.idx+'" value="'+(m.cant||1)+'" min="1" max="99" style="width:100%;font-size:11px;padding:4px 6px;border:1px solid #ffcc80;border-radius:4px;text-align:center"></div>'
+        +'</div>'
+        +'<input type="hidden" id="saitraIAedit-ancho-'+m.idx+'" value="0">'
+        +'<input type="hidden" id="saitraIAedit-nota-'+m.idx+'" value="">'
+        +'<input type="hidden" id="saitraIAedit-pts-'+m.idx+'" value="0">'
+        +'<div style="display:flex;gap:8px;justify-content:flex-end">'
+        +'<button onclick="_saitraIAToggleEdit('+m.idx+')" style="font-size:11px;padding:4px 10px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer">Cancelar</button>'
+        +'<button onclick="_saitraIAGuardarAccZocGola('+m.idx+',\'acc\')" style="font-size:11px;padding:4px 12px;background:#e65100;color:white;border:none;border-radius:4px;cursor:pointer;font-weight:700">✓ Añadir</button>'
+        +'</div></div></div>';
+    }
+    if(!m.valido && m.esZocalo){
+      // ─── ZÓCALO ───
+      const zocOpts=Object.entries(SAITRA_ZOC).map(([ref,d])=>'<option value="'+ref+'"'+(m.ref===ref?' selected':'')+'>'+ref+' — '+d.label+'</option>').join('');
+      return '<div id="saitraIArow-'+m.idx+'" style="border-bottom:1px solid #a5d6a7;background:#e8f5e9">'
+        +'<div id="saitraIAview-'+m.idx+'" style="display:flex;align-items:center;gap:8px;padding:7px 10px">'
+        +'<div style="flex:1;font-size:11px;color:#2e7d32">⬇ <strong>'+(m.nota||'Zócalo')+'</strong>'+(m.cant>1?' ×'+m.cant:'')+'</div>'
+        +'<button onclick="_saitraIAToggleEdit('+m.idx+')" style="background:#e8f5e9;border:1px solid #a5d6a7;border-radius:4px;color:#2e7d32;cursor:pointer;font-size:11px;padding:3px 7px;flex-shrink:0">✏️ Seleccionar</button>'
+        +'<button onclick="_saitraIAEliminar('+m.idx+')" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:14px;padding:0 2px">✕</button>'
+        +'</div>'
+        +'<div id="saitraIAedit-'+m.idx+'" style="display:none;padding:10px 12px;background:#e8f5e9;border-top:1px solid #a5d6a7">'
+        +'<div style="display:grid;grid-template-columns:1fr 60px;gap:8px;margin-bottom:8px">'
+        +'<div><label style="font-size:10px;font-weight:700;color:#2e7d32;display:block;margin-bottom:3px">ZÓCALO</label>'
+        +'<select id="saitraIAedit-ref-'+m.idx+'" style="width:100%;font-size:11px;padding:4px 6px;border:1px solid #a5d6a7;border-radius:4px;font-family:inherit">'+zocOpts+'</select></div>'
+        +'<div><label style="font-size:10px;font-weight:700;color:#2e7d32;display:block;margin-bottom:3px">CANT.</label>'
+        +'<input type="number" id="saitraIAedit-cant-'+m.idx+'" value="'+(m.cant||1)+'" min="1" max="99" style="width:100%;font-size:11px;padding:4px 6px;border:1px solid #a5d6a7;border-radius:4px;text-align:center"></div>'
+        +'</div>'
+        +'<input type="hidden" id="saitraIAedit-ancho-'+m.idx+'" value="0">'
+        +'<input type="hidden" id="saitraIAedit-nota-'+m.idx+'" value="">'
+        +'<input type="hidden" id="saitraIAedit-pts-'+m.idx+'" value="0">'
+        +'<div style="display:flex;gap:8px;justify-content:flex-end">'
+        +'<button onclick="_saitraIAToggleEdit('+m.idx+')" style="font-size:11px;padding:4px 10px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer">Cancelar</button>'
+        +'<button onclick="_saitraIAGuardarAccZocGola('+m.idx+',\'zoc\')" style="font-size:11px;padding:4px 12px;background:#2e7d32;color:white;border:none;border-radius:4px;cursor:pointer;font-weight:700">✓ Añadir</button>'
+        +'</div></div></div>';
+    }
+    if(!m.valido && m.esGola){
+      // ─── PERFIL GOLA ───
+      const golaOpts=Object.entries(SAITRA_GOLA).map(([ref,d])=>'<option value="'+ref+'"'+(m.ref===ref?' selected':'')+'>'+ref+' — '+d.label+'</option>').join('');
+      return '<div id="saitraIArow-'+m.idx+'" style="border-bottom:1px solid #ef9a9a;background:#ffebee">'
+        +'<div id="saitraIAview-'+m.idx+'" style="display:flex;align-items:center;gap:8px;padding:7px 10px">'
+        +'<div style="flex:1;font-size:11px;color:#c62828">↔ <strong>'+(m.nota||'Perfil Gola')+'</strong>'+(m.cant>1?' ×'+m.cant:'')+'</div>'
+        +'<button onclick="_saitraIAToggleEdit('+m.idx+')" style="background:#ffebee;border:1px solid #ef9a9a;border-radius:4px;color:#c62828;cursor:pointer;font-size:11px;padding:3px 7px;flex-shrink:0">✏️ Seleccionar</button>'
+        +'<button onclick="_saitraIAEliminar('+m.idx+')" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:14px;padding:0 2px">✕</button>'
+        +'</div>'
+        +'<div id="saitraIAedit-'+m.idx+'" style="display:none;padding:10px 12px;background:#ffebee;border-top:1px solid #ef9a9a">'
+        +'<div style="display:grid;grid-template-columns:1fr 60px;gap:8px;margin-bottom:8px">'
+        +'<div><label style="font-size:10px;font-weight:700;color:#c62828;display:block;margin-bottom:3px">PERFIL GOLA</label>'
+        +'<select id="saitraIAedit-ref-'+m.idx+'" style="width:100%;font-size:11px;padding:4px 6px;border:1px solid #ef9a9a;border-radius:4px;font-family:inherit">'+golaOpts+'</select></div>'
+        +'<div><label style="font-size:10px;font-weight:700;color:#c62828;display:block;margin-bottom:3px">CANT.</label>'
+        +'<input type="number" id="saitraIAedit-cant-'+m.idx+'" value="'+(m.cant||1)+'" min="1" max="99" style="width:100%;font-size:11px;padding:4px 6px;border:1px solid #ef9a9a;border-radius:4px;text-align:center"></div>'
+        +'</div>'
+        +'<input type="hidden" id="saitraIAedit-ancho-'+m.idx+'" value="0">'
+        +'<input type="hidden" id="saitraIAedit-nota-'+m.idx+'" value="">'
+        +'<input type="hidden" id="saitraIAedit-pts-'+m.idx+'" value="0">'
+        +'<div style="display:flex;gap:8px;justify-content:flex-end">'
+        +'<button onclick="_saitraIAToggleEdit('+m.idx+')" style="font-size:11px;padding:4px 10px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer">Cancelar</button>'
+        +'<button onclick="_saitraIAGuardarAccZocGola('+m.idx+',\'gola\')" style="font-size:11px;padding:4px 12px;background:#c62828;color:white;border:none;border-radius:4px;cursor:pointer;font-weight:700">✓ Añadir</button>'
+        +'</div></div></div>';
+    }
     if(!m.valido){
       // ─── MÓDULO INVÁLIDO (ref no encontrada en catálogo) ───
       const anchosOpts2 = SAITRA_MOD[m.ref]
@@ -11330,8 +11402,16 @@ function _saitraIARenderLista(){
       +'</div></div></div>';
   }).join('');
 
-  lista.innerHTML += '<div style="padding:6px 10px;background:#f7f4ef;border-top:1px solid var(--border);text-align:center">'
-    +'<button onclick="_saitraIAañadirManual()" style="font-size:11px;background:none;border:1px dashed #90caf9;color:#1565c0;border-radius:4px;padding:4px 14px;cursor:pointer;width:100%">＋ Añadir módulo manualmente</button></div>';
+  lista.innerHTML += '<div style="padding:8px 10px;background:#f7f4ef;border-top:1px solid var(--border)">'
+    +'<div style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--text-soft);margin-bottom:5px;letter-spacing:.05em">＋ Añadir manualmente</div>'
+    +'<div style="display:flex;gap:4px;flex-wrap:wrap">'
+    +'<button onclick="_saitraIAañadirManual(\'modulo\')" style="font-size:10px;background:none;border:1px dashed #90caf9;color:#1565c0;border-radius:4px;padding:3px 8px;cursor:pointer">📦 Módulo</button>'
+    +'<button onclick="_saitraIAañadirManual(\'incremento\')" style="font-size:10px;background:none;border:1px dashed #b39ddb;color:#6a1b9a;border-radius:4px;padding:3px 8px;cursor:pointer">⬆ Incremento</button>'
+    +'<button onclick="_saitraIAañadirManual(\'accesorio\')" style="font-size:10px;background:none;border:1px dashed #ffcc80;color:#e65100;border-radius:4px;padding:3px 8px;cursor:pointer">🔧 Accesorio</button>'
+    +'<button onclick="_saitraIAañadirManual(\'zocalo\')" style="font-size:10px;background:none;border:1px dashed #a5d6a7;color:#2e7d32;border-radius:4px;padding:3px 8px;cursor:pointer">⬇ Zócalo</button>'
+    +'<button onclick="_saitraIAañadirManual(\'gola\')" style="font-size:10px;background:none;border:1px dashed #ef9a9a;color:#c62828;border-radius:4px;padding:3px 8px;cursor:pointer">↔ Perfil Gola</button>'
+    +'<button onclick="_saitraIAañadirManual(\'extra\')" style="font-size:10px;background:none;border:1px dashed #b0bec5;color:#546e7a;border-radius:4px;padding:3px 8px;cursor:pointer">🏷️ Otro producto</button>'
+    +'</div></div>';
 
   // Auto-abrir edición en líneas inválidas
   _saitraIAModulos.filter(m=>!m.valido).forEach(m=>{
@@ -11366,6 +11446,32 @@ function _saitraIAEditRefChange(idx){
   const modDef=SAITRA_MOD[newRef]; if(!modDef) return;
   const anchos=Object.keys(modDef.anchos).map(a=>parseInt(a)||a).sort((a,b)=>a-b);
   sel.innerHTML=anchos.map(a=>'<option value="'+a+'">'+a+'cm</option>').join('');
+}
+
+function _saitraIAGuardarAccZocGola(idx, tipo){
+  const ref=document.getElementById('saitraIAedit-ref-'+idx).value;
+  const cant=parseInt(document.getElementById('saitraIAedit-cant-'+idx).value)||1;
+  const pos=_saitraIAModulos.findIndex(m=>m.idx===idx);
+  if(pos===-1) return;
+  let label, pts, costeU, pvpU;
+  if(tipo==='acc'){
+    const acc=SAITRA_ACC[ref]; if(!acc){toast('Accesorio no encontrado','error');return;}
+    label=acc.label; pvpU=acc.pvp; costeU=pvpU;
+    pts=Math.round(pvpU/0.99);
+  } else if(tipo==='zoc'){
+    const z=SAITRA_ZOC[ref]; if(!z){toast('Zócalo no encontrado','error');return;}
+    label=z.label; pts=z.pts[0];
+    costeU=pts*0.99; pvpU=costeU*(1+_saitraIAMargen/100);
+  } else if(tipo==='gola'){
+    const g=SAITRA_GOLA[ref]; if(!g){toast('Perfil gola no encontrado','error');return;}
+    label=g.label; pts=g.pts[0];
+    costeU=pts*0.99; pvpU=costeU*(1+_saitraIAMargen/100);
+  }
+  _saitraIAModulos[pos]={ref,ancho:0,cant,nota:label,tipo:'extra',
+    valido:true,idx,puntos:pts,tarifaIdx:_saitraIATarifa,margen:_saitraIAMargen,
+    anchoUsado:0,metodo:'manual',costeUnit:costeU,pvpUnit:pvpU,
+    costeTotal:costeU*cant,pvpTotal:pvpU*cant,label};
+  _saitraIARenderLista();
 }
 
 function _saitraIAGuardarEdit(idx){
@@ -11404,9 +11510,21 @@ function _saitraIAEliminar(idx){
   _saitraIARenderLista();
 }
 
-function _saitraIAañadirManual(){
+function _saitraIAañadirManual(tipoAdd){
   const newIdx=(_saitraIAModulos.reduce((mx,m)=>Math.max(mx,m.idx),0))+1;
-  _saitraIAModulos.push({idx:newIdx,ref:'PBP',ancho:60,cant:1,nota:'',tipo:'bajo',valido:false,error:'Nueva línea — selecciona ref y ancho'});
+  if(tipoAdd==='modulo'){
+    _saitraIAModulos.push({idx:newIdx,ref:'PBP',ancho:60,cant:1,nota:'',tipo:'bajo',valido:false,error:'Selecciona ref y ancho'});
+  } else if(tipoAdd==='incremento'){
+    _saitraIAModulos.push({idx:newIdx,ref:'EXTRA',ancho:0,cant:1,nota:'Incremento',tipo:'extra',esExtra:true,valido:false,error:'Introduce los puntos del incremento'});
+  } else if(tipoAdd==='accesorio'){
+    _saitraIAModulos.push({idx:newIdx,ref:'ACC',ancho:0,cant:1,nota:'',tipo:'extra',esAccesorio:true,valido:false,error:'Selecciona accesorio'});
+  } else if(tipoAdd==='zocalo'){
+    _saitraIAModulos.push({idx:newIdx,ref:'ZOC',ancho:0,cant:1,nota:'',tipo:'extra',esZocalo:true,valido:false,error:'Selecciona zócalo'});
+  } else if(tipoAdd==='gola'){
+    _saitraIAModulos.push({idx:newIdx,ref:'GOLA',ancho:0,cant:1,nota:'',tipo:'extra',esGola:true,valido:false,error:'Selecciona perfil gola'});
+  } else {
+    _saitraIAModulos.push({idx:newIdx,ref:'EXTRA',ancho:0,cant:1,nota:'',tipo:'extra',esExtra:true,valido:false,error:'Introduce descripción y puntos'});
+  }
   _saitraIARenderLista();
   setTimeout(()=>_saitraIAToggleEdit(newIdx),50);
 }
