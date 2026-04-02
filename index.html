@@ -517,6 +517,7 @@ tbody td{padding:7px 10px;vertical-align:middle}
 .cat-panel.open{display:block}
 #cat-panel-saitra.open{display:flex;flex-direction:column;height:calc(100vh - 56px - 36px);overflow:hidden}
 #cat-panel-saitra .cat-header{flex-shrink:0}
+.content:has(#cat-panel-saitra.open){overflow:hidden}
 #saitra-col-contenido{display:flex!important;flex-direction:column!important;min-height:0}
 #saitra-col-contenido>.card:first-child{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
 #saitra-col-contenido>.card:first-child>div:last-child{flex:1;min-height:0;overflow-y:auto}
@@ -20226,6 +20227,10 @@ function catAbrir(fab){
   const activeCard = document.querySelector(`.cat-card[data-cat="${fab}"]`);
   if(activeCard) activeCard.classList.add('active');
 
+  // Bloquear scroll de .content cuando Saitra está abierto
+  const contentEl = document.querySelector('.content');
+  if(contentEl) contentEl.style.overflow = (fab === 'saitra') ? 'hidden' : '';
+
   if(fab === 'saitra'){
     document.getElementById('cat-panel-saitra').classList.add('open');
     // Saitra linea eliminada
@@ -20765,6 +20770,8 @@ function catVolver(){
   document.querySelectorAll('.cat-panel').forEach(p => p.classList.remove('open'));
   document.querySelectorAll('.cat-card[data-cat]').forEach(c => c.classList.remove('active'));
   document.getElementById('cat-selector').style.display = 'block';
+  const contentEl = document.querySelector('.content');
+  if(contentEl) contentEl.style.overflow = '';
   document.getElementById('tb-title').textContent = 'Catálogos de Precios';
   document.getElementById('tb-bc').textContent = 'Saitra · IMEX · Campoaras — selecciona fabricante para presupuestar';
 }
