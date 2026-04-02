@@ -11218,6 +11218,18 @@ function _saitraIACalcularModulos(lista, tarifaIdx, margen){
   });
 }
 
+function _saitraIAAddExtras(extras){
+  const baseIdx=(_saitraIAModulos.reduce((mx,m)=>Math.max(mx,m.idx),0))+1;
+  extras.forEach((ex,i)=>{
+    _saitraIAModulos.push({
+      idx:baseIdx+i, ref:'EXTRA', ancho:0, cant:ex.cant||1,
+      nota:ex.desc+(ex.medidas?' — '+ex.medidas:''), tipo:'extra',
+      valido:false, esExtra:true,
+      error:'Producto sin ref — introduce los puntos de la tarifa para valorar'
+    });
+  });
+}
+
 function _saitraIARenderLista(){
   const lista = document.getElementById('saitra-ia-lista');
   const refsOpts = Object.entries(SAITRA_MOD).filter(([,d])=>d.grupo!=='INCREMENTOS')
@@ -11225,7 +11237,32 @@ function _saitraIARenderLista(){
 
   lista.innerHTML = _saitraIAModulos.map((m,i) => {
     const bg = i%2===0?'#fff':'#fafafa';
+    if(!m.valido && m.esExtra){
+      // ─── EXTRA: producto sin ref en catálogo (costado, regleta, zócalo…) ───
+      return '<div id="saitraIArow-'+m.idx+'" style="border-bottom:1px solid #b39ddb;background:#f3e5f5">'
+        +'<div id="saitraIAview-'+m.idx+'" style="display:flex;align-items:center;gap:8px;padding:7px 10px">'
+        +'<div style="flex:1;font-size:11px;color:#6a1b9a">🏷️ <strong>'+(m.nota||m.ref)+'</strong>'+(m.cant>1?' ×'+m.cant:'')+'</div>'
+        +'<button onclick="_saitraIAToggleEdit('+m.idx+')" style="background:#ede7f6;border:1px solid #b39ddb;border-radius:4px;color:#6a1b9a;cursor:pointer;font-size:11px;padding:3px 7px;flex-shrink:0">✏️ Valorar</button>'
+        +'<button onclick="_saitraIAEliminar('+m.idx+')" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:14px;padding:0 2px">✕</button>'
+        +'</div>'
+        +'<div id="saitraIAedit-'+m.idx+'" style="display:none;padding:10px 12px;background:#ede7f6;border-top:1px solid #b39ddb">'
+        +'<div style="display:grid;grid-template-columns:1fr 60px 70px;gap:8px;margin-bottom:8px">'
+        +'<div><label style="font-size:10px;font-weight:700;color:#6a1b9a;display:block;margin-bottom:3px">DESCRIPCIÓN</label>'
+        +'<input type="text" id="saitraIAedit-nota-'+m.idx+'" value="'+(m.nota||'').replace(/"/g,"&quot;")+'" style="width:100%;font-size:11px;padding:4px 6px;border:1px solid #b39ddb;border-radius:4px;box-sizing:border-box"></div>'
+        +'<div><label style="font-size:10px;font-weight:700;color:#6a1b9a;display:block;margin-bottom:3px">CANT.</label>'
+        +'<input type="number" id="saitraIAedit-cant-'+m.idx+'" value="'+(m.cant||1)+'" min="1" max="99" style="width:100%;font-size:11px;padding:4px 6px;border:1px solid #b39ddb;border-radius:4px;text-align:center"></div>'
+        +'<div><label style="font-size:10px;font-weight:700;color:#6a1b9a;display:block;margin-bottom:3px">PUNTOS</label>'
+        +'<input type="number" id="saitraIAedit-pts-'+m.idx+'" value="'+(m.puntos||'')+'" min="0" placeholder="tarifa" style="width:100%;font-size:11px;padding:4px 6px;border:1px solid #b39ddb;border-radius:4px;text-align:center;font-weight:700"></div>'
+        +'</div>'
+        +'<input type="hidden" id="saitraIAedit-ref-'+m.idx+'" value="EXTRA">'
+        +'<input type="hidden" id="saitraIAedit-ancho-'+m.idx+'" value="0">'
+        +'<div style="display:flex;gap:8px;justify-content:flex-end">'
+        +'<button onclick="_saitraIAToggleEdit('+m.idx+')" style="font-size:11px;padding:4px 10px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer">Cancelar</button>'
+        +'<button onclick="_saitraIAGuardarEdit('+m.idx+')" style="font-size:11px;padding:4px 12px;background:#6a1b9a;color:white;border:none;border-radius:4px;cursor:pointer;font-weight:700">✓ Valorar</button>'
+        +'</div></div></div>';
+    }
     if(!m.valido){
+      // ─── MÓDULO INVÁLIDO (ref no encontrada en catálogo) ───
       const anchosOpts2 = SAITRA_MOD[m.ref]
         ? Object.keys(SAITRA_MOD[m.ref].anchos).map(a=>'<option value="'+a+'">'+a+'cm</option>').join('')
         : '<option value="'+m.ancho+'">'+m.ancho+'cm</option>';
@@ -11337,15 +11374,21 @@ function _saitraIAGuardarEdit(idx){
   const newCant=parseInt(document.getElementById('saitraIAedit-cant-'+idx).value)||1;
   const newNota=document.getElementById('saitraIAedit-nota-'+idx).value.trim();
   const manualPts=parseFloat(document.getElementById('saitraIAedit-pts-'+idx).value)||0;
-  const tipo=_saitraIAModulos.find(m=>m.idx===idx)?.tipo||'bajo';
+  const prev=_saitraIAModulos.find(m=>m.idx===idx);
+  const tipo=prev?.tipo||'bajo';
+  const esExtra=prev?.esExtra||false;
   let updated;
   if(manualPts>0){
     const costeU=manualPts*0.99, pvpU=costeU*(1+_saitraIAMargen/100);
     const modDef=SAITRA_MOD[newRef];
-    updated={ref:newRef,ancho:newAncho,cant:newCant,nota:newNota,tipo,
+    const label=esExtra?newNota:(modDef?modDef.label:(newRef+' (manual)'));
+    updated={ref:newRef,ancho:newAncho,cant:newCant,nota:newNota,tipo,esExtra,
       valido:true,idx,puntos:manualPts,tarifaIdx:_saitraIATarifa,margen:_saitraIAMargen,
       anchoUsado:newAncho,metodo:'manual',costeUnit:costeU,pvpUnit:pvpU,
-      costeTotal:costeU*newCant,pvpTotal:pvpU*newCant,label:modDef?modDef.label:(newRef+' (manual)')};
+      costeTotal:costeU*newCant,pvpTotal:pvpU*newCant,label};
+  } else if(esExtra){
+    updated={ref:'EXTRA',ancho:0,cant:newCant,nota:newNota,tipo:'extra',esExtra:true,
+      valido:false,idx,error:'Introduce los puntos de la tarifa para valorar'};
   } else {
     updated=_saitraIACalcularModulos([{ref:newRef,ancho:newAncho,cant:newCant,nota:newNota,tipo}],_saitraIATarifa,_saitraIAMargen)[0];
     updated.idx=idx;
@@ -11381,7 +11424,7 @@ async function saitraIAAnalizar(){
     const isPdf=_saitraIAFile.type==='application/pdf';
     const mediaType=isPdf?'application/pdf':_saitraIAFile.type;
     const catalog=_saitraIAGenerarCatalogo();
-    const prompt='Eres un técnico experto en el catálogo Saitra. Analiza el plano y genera la lista de módulos usando EXCLUSIVAMENTE las referencias del catálogo oficial.\n\nCATÁLOGO OFICIAL SAITRA:\n'+catalog+'\n\nREGLAS ABSOLUTAS:\n1. "ref" siempre debe ser una clave exacta del catálogo. NUNCA inventes refs.\n2. "ancho" debe existir en los anchos de esa ref. Si no existe, usa el INMEDIATO SUPERIOR disponible.\n3. Si hay elementos sin ref válida (costados, rellenos, encimeras, zócalos), NO los incluyas en "modulos" — menciónalos en "observaciones".\n\nLETRAS DE ANOTACIÓN EN EL PLANO (MUY IMPORTANTE):\nLos planos de Saitra usan letras junto a cada módulo para indicar accesorios/elementos asociados:\n- C = Costado (panel lateral visto)\n- R = Regleta (tira de relleno / tapajuntas)\n- P = Puerta\nCuando veas estas letras (C, R, P) junto a un módulo, DEBES incluirlas en el campo "nota" de ese módulo indicando posición si es posible. Ejemplos: "C izq.", "R der.", "C izq. + R der.", "2C", "P".\nSi aparecen otras anotaciones o letras en el plano, inclúyelas también en "nota".\n\nGUÍA:\n- "Mod. 1 pta" alto ≤60cm → PCP78; 60-120cm → PC2PP78\n- "Mod. 2 ptas" alto → PC2P78 o PC2PP78 plegables\n- Campana 60cm → PCCEP-h61-60; 90cm → PCCEP-h61-90\n- Frigo/sobrefrigo H.26 → PCSA26; H.39 → PCSA39\n- Lavavajillas → PBLG\n- Fregadero 1P → PBFP; fregadero 2G → PBF2G; fregadero 2P → PBF2P\n- Cacerolero/cajón interior → PB2GC\n- Base 1P ≤60 → PBP; Base 2P ≥70 → PB2P\n- Bajo placa → PBPL2G, PBPL2GC, PBPLHF, PBPLHG2\n\nResponde ÚNICAMENTE con JSON (sin markdown, sin backticks):\n{"modulos":[{"ref":"PCP78","ancho":60,"cant":1,"nota":"C izq., R der.","tipo":"alto"}],"observaciones":"elementos NO incluidos con sus medidas"}';
+    const prompt='Eres un técnico experto en el catálogo Saitra. Analiza el plano y genera la lista de módulos usando EXCLUSIVAMENTE las referencias del catálogo oficial.\n\nCATÁLOGO OFICIAL SAITRA:\n'+catalog+'\n\nREGLAS ABSOLUTAS:\n1. "ref" siempre debe ser una clave exacta del catálogo. NUNCA inventes refs.\n2. "ancho" debe existir en los anchos de esa ref. Si no existe, usa el INMEDIATO SUPERIOR disponible.\n3. Si hay elementos sin ref válida pero que son PRODUCTOS VALORABLES (costados, regletas, zócalos, tiradores, etc.), inclúyelos en "extras".\n4. Si hay anotaciones informativas que NO son productos (acabado, tarifa, color casco, notas generales), ponlas en "observaciones".\n\nLETRAS DE ANOTACIÓN EN EL PLANO (MUY IMPORTANTE):\nLos planos de Saitra usan letras junto a cada módulo para indicar accesorios/elementos asociados:\n- C = Costado (panel lateral visto)\n- R = Regleta (tira de relleno / tapajuntas)\n- P = Puerta\nCuando veas estas letras (C, R, P) junto a un módulo, DEBES incluirlas en el campo "nota" de ese módulo indicando posición si es posible. Ejemplos: "C izq.", "R der.", "C izq. + R der.", "2C", "P".\nSi aparecen otras anotaciones o letras en el plano, inclúyelas también en "nota".\n\nGUÍA:\n- "Mod. 1 pta" alto ≤60cm → PCP78; 60-120cm → PC2PP78\n- "Mod. 2 ptas" alto → PC2P78 o PC2PP78 plegables\n- Campana 60cm → PCCEP-h61-60; 90cm → PCCEP-h61-90\n- Frigo/sobrefrigo H.26 → PCSA26; H.39 → PCSA39\n- Lavavajillas → PBLG\n- Fregadero 1P → PBFP; fregadero 2G → PBF2G; fregadero 2P → PBF2P\n- Cacerolero/cajón interior → PB2GC\n- Base 1P ≤60 → PBP; Base 2P ≥70 → PB2P\n- Bajo placa → PBPL2G, PBPL2GC, PBPLHF, PBPLHG2\n\nResponde ÚNICAMENTE con JSON (sin markdown, sin backticks):\n{"modulos":[{"ref":"PCP78","ancho":60,"cant":1,"nota":"C izq., R der.","tipo":"alto"}],"extras":[{"desc":"Costado C 62,5x88","cant":1,"medidas":"62,5x88"},{"desc":"Zócalo alto 10cm / 4m","cant":1,"medidas":"10cm/4m"},{"desc":"Regleta R 79","cant":1,"medidas":"79cm"}],"observaciones":"notas informativas: acabado, tarifa, color casco, etc."}';
     const userContent=isPdf
       ?[{type:'document',source:{type:'base64',media_type:'application/pdf',data:base64}},{type:'text',text:prompt}]
       :[{type:'image',source:{type:'base64',media_type:mediaType,data:base64}},{type:'text',text:prompt}];
@@ -11396,8 +11439,9 @@ async function saitraIAAnalizar(){
     const raw=data.content.filter(b=>b.type==='text').map(b=>b.text).join('');
     _saitraIAChatHist.push({role:'assistant',content:raw});
     const parsed=_saitraIAParseJSON(raw);
-    if(!parsed?.modulos?.length) throw new Error('La IA no devolvió módulos válidos. Respuesta: '+raw.slice(0,200));
-    _saitraIAModulos=_saitraIACalcularModulos(parsed.modulos,_saitraIATarifa,_saitraIAMargen);
+    if(!parsed?.modulos?.length && !parsed?.extras?.length) throw new Error('La IA no devolvió módulos válidos. Respuesta: '+raw.slice(0,200));
+    _saitraIAModulos=_saitraIACalcularModulos(parsed.modulos||[],_saitraIATarifa,_saitraIAMargen);
+    if(parsed.extras?.length) _saitraIAAddExtras(parsed.extras);
     const obs=document.getElementById('saitra-ia-obs');
     if(parsed.observaciones){obs.style.display='block';obs.innerHTML='<strong>📌 Observaciones:</strong> '+parsed.observaciones;}
     else obs.style.display='none';
@@ -11437,7 +11481,7 @@ async function saitraIAChatEnviar(){
   try {
     const catalog=_saitraIAGenerarCatalogo();
     const listaActual=_saitraIAModulos.map((m,i)=>(i+1)+'. ref:'+m.ref+' ancho:'+m.ancho+'cm cant:'+(m.cant||1)+' nota:"'+(m.nota||'')+'"').join('\n');
-    const corrPrompt='Lista actual:\n'+listaActual+'\n\nUsuario pide: "'+msg+'"\n\nREGLAS: Solo refs del catálogo Saitra. Si ancho no existe, usa inmediato superior. Si pide algo sin ref (costado, encimera…), menciónalo en observaciones.\nLETRAS DE ANOTACIÓN: C=Costado, R=Regleta, P=Puerta. Inclúyelas en "nota" de cada módulo indicando posición (ej. "C izq., R der.").\n\nCATÁLOGO:\n'+catalog+'\n\nDevuelve ÚNICAMENTE JSON:\n{"modulos":[{"ref":"...","ancho":0,"cant":1,"nota":"C izq., R der.","tipo":"alto|bajo"}],"respuesta":"explicación breve","observaciones":"o vacío"}';
+    const corrPrompt='Lista actual:\n'+listaActual+'\n\nUsuario pide: "'+msg+'"\n\nREGLAS: Solo refs del catálogo Saitra. Si ancho no existe, usa inmediato superior. Productos sin ref en catálogo (costados, regletas, zócalos…) van en "extras". Notas informativas (acabado, tarifa, color…) van en "observaciones".\nLETRAS DE ANOTACIÓN: C=Costado, R=Regleta, P=Puerta. Inclúyelas en "nota" de cada módulo indicando posición (ej. "C izq., R der.").\n\nCATÁLOGO:\n'+catalog+'\n\nDevuelve ÚNICAMENTE JSON:\n{"modulos":[{"ref":"...","ancho":0,"cant":1,"nota":"...","tipo":"alto|bajo"}],"extras":[{"desc":"...","cant":1,"medidas":"..."}],"respuesta":"explicación breve","observaciones":"notas informativas"}';
     _saitraIAChatHist.push({role:'user',content:corrPrompt});
     const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
       headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
@@ -11451,6 +11495,7 @@ async function saitraIAChatEnviar(){
     const parsed=_saitraIAParseJSON(raw);
     if(!parsed?.modulos) throw new Error('Respuesta no válida');
     _saitraIAModulos=_saitraIACalcularModulos(parsed.modulos,_saitraIATarifa,_saitraIAMargen);
+    if(parsed.extras?.length) _saitraIAAddExtras(parsed.extras);
     _saitraIARenderLista();
     _saitraIAChatAddMsg('ia',parsed.respuesta||'✅ Lista actualizada');
     const obs=document.getElementById('saitra-ia-obs');
