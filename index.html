@@ -11096,23 +11096,9 @@ function saitraAddModulo(){
   const pvpU   = saitraCalcPvp(costeU, margen);
   const anchoLabel = String(ancho).replace('x','×');
 
-  // Leer acabados del panel global para el modelo elegido
-  const frenteVal    = document.getElementById('s-frente-'+modelo)?.value || '';
-  const frenteNombre = frenteVal ? frenteVal.split('|')[0] : '';
-  const casco        = document.getElementById('s-casco')?.value || '';
-  const cajones      = document.getElementById('s-cajones')?.value || '';
-  const vitrina      = document.getElementById('s-vitrina')?.value || '';
-
-  const acabadosParts = [];
-  if(frenteNombre) acabadosParts.push('Frente: '+frenteNombre);
-  if(casco)        acabadosParts.push('Casco: '+casco);
-  if(cajones)      acabadosParts.push('Cajón: '+cajones);
-  if(vitrina)      acabadosParts.push('Vitrina: '+vitrina);
-  const acabadosTag = acabadosParts.length ? ' ['+acabadosParts.join(' · ')+']' : '';
-
   saitraLineas.push({
     id:++saitraIdCnt, tipo:'modulo', ref, modelo,
-    desc: mod.label+' '+anchoLabel+'cm'+acabadosTag+(extra?' · '+extra:''),
+    desc: mod.label+' '+anchoLabel+'cm'+(extra?' · '+extra:''),
     notas: document.getElementById('s-notas-mod')?.value.trim()||'',
     cant, puntos:pts,
     costeUnit:costeU, costeTotal:costeU*cant,
@@ -11923,6 +11909,20 @@ async function saitraExportarPresupuesto(){
       if(existing && existing.length) ordenBase = existing[0].orden || 0;
     }catch(e){ ordenBase = 0; }
 
+    // Recoger acabados configurados (una sola vez para la cabecera)
+    const acabParts = [];
+    const _m1frente = document.getElementById('s-frente-1')?.value||'';
+    if(_m1frente) acabParts.push('Frente: '+_m1frente.split('|')[0]);
+    const _casco = document.getElementById('s-casco')?.value||'';
+    if(_casco) acabParts.push('Casco: '+_casco);
+    const _cajones = document.getElementById('s-cajones')?.value||'';
+    if(_cajones) acabParts.push('Cajón: '+_cajones);
+    const _vitrina = document.getElementById('s-vitrina')?.value||'';
+    if(_vitrina) acabParts.push('Vitrina: '+_vitrina);
+    const _cascoInt = document.getElementById('s-casco-int')?.value||'';
+    if(_cascoInt) acabParts.push('Interior casco: '+_cascoInt);
+    const acabadosDesc = acabParts.length ? acabParts.join(' · ') : '';
+
     // Crear capítulo
     await sbPost('presupuesto_lineas',{
       proyecto_id: proy, version: ver,
@@ -11931,6 +11931,21 @@ async function saitraExportarPresupuesto(){
       orden: ordenBase + 1,
       cantidad: 0, precio_base: 0, precio_venta: 0, subtotal: 0
     });
+
+    // Línea de acabados/características (sin precio, solo informativa)
+    let offsetExtra = 0;
+    if(acabadosDesc){
+      await sbPost('presupuesto_lineas',{
+        proyecto_id: proy, version: ver,
+        descripcion: 'Acabados: '+acabadosDesc,
+        unidad: '',
+        cantidad: 0, precio_base: 0, margen_pct: 0, ci_gg_bi_pct: 0,
+        precio_venta: 0, subtotal: 0, iva_pct: '21%',
+        es_capitulo: false,
+        orden: ordenBase + 2
+      });
+      offsetExtra = 1;
+    }
 
     // Insertar cada línea
     for(let i=0; i<saitraLineas.length; i++){
@@ -11948,7 +11963,7 @@ async function saitraExportarPresupuesto(){
         subtotal:     parseFloat(l.pvpTotal.toFixed(4)),
         iva_pct:      '21%',
         es_capitulo:  false,
-        orden:        ordenBase + 2 + i
+        orden:        ordenBase + 2 + offsetExtra + i
       });
     }
 
@@ -11981,6 +11996,21 @@ function saitraImprimir(){
   const col    = col2 ? 'M1:T'+col1+'/M2:T'+col2 : 'T'+col1;
   let totalPvp = saitraLineas.reduce((s,l)=>s+l.pvpTotal,0);
   const fmtE   = v => fmtES(Number(v))+'€';
+
+  // Acabados para cabecera
+  const _impAcab = [];
+  const _impFrente = document.getElementById('s-frente-1')?.value||'';
+  if(_impFrente) _impAcab.push('Frente: '+_impFrente.split('|')[0]);
+  const _impCasco = document.getElementById('s-casco')?.value||'';
+  if(_impCasco) _impAcab.push('Casco: '+_impCasco);
+  const _impCajones = document.getElementById('s-cajones')?.value||'';
+  if(_impCajones) _impAcab.push('Cajón: '+_impCajones);
+  const _impVitrina = document.getElementById('s-vitrina')?.value||'';
+  if(_impVitrina) _impAcab.push('Vitrina: '+_impVitrina);
+  const _impCascoInt = document.getElementById('s-casco-int')?.value||'';
+  if(_impCascoInt) _impAcab.push('Interior casco: '+_impCascoInt);
+  const acabadosHtml = _impAcab.length ? '<div style="background:#f7f4ef;border-left:3px solid #b87333;padding:8px 14px;margin-bottom:16px;font-size:11px;color:#4a3728"><strong>Acabados:</strong> '+_impAcab.join(' &nbsp;·&nbsp; ')+'</div>' : '';
+
   // Documento cliente: SOLO PVP, sin costes ni puntos ni descuentos
   const filas  = saitraLineas.map((l,i)=>`
     <tr style="${i%2===0?'':'background:#fdfcfa'}">
@@ -12021,6 +12051,7 @@ function saitraImprimir(){
       </div>
       <div style="text-align:right;font-size:11px;color:#888">PAU INTERIORISMO S.L.<br>CIF: B-56909641</div>
     </div>
+    ${acabadosHtml}
     <table>
       <thead><tr>
         <th style="width:80px">Ref.</th>
