@@ -515,6 +515,13 @@ tbody td{padding:7px 10px;vertical-align:middle}
 .cat-card-desc{font-size:11px;color:var(--text-soft);line-height:1.4}
 .cat-panel{display:none}
 .cat-panel.open{display:block}
+#cat-panel-saitra.open{display:flex;flex-direction:column;height:calc(100vh - 56px - 36px);overflow:hidden}
+#cat-panel-saitra .cat-header{flex-shrink:0}
+#cat-panel-saitra>#saitra-grid{flex:1;min-height:0;align-items:stretch}
+#saitra-col-derecha{min-height:0}
+#saitra-col-contenido{flex:1;min-height:0;display:flex!important;flex-direction:column!important}
+#saitra-col-contenido>.card:first-child{flex:1;min-height:0;display:flex;flex-direction:column}
+#saitra-col-contenido>.card:first-child>div:last-child{flex:1;min-height:0;overflow-y:auto}
 .cat-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;
   padding-bottom:12px;border-bottom:2px solid var(--border)}
 .cat-back{background:none;border:1px solid var(--border);border-radius:var(--radius-sm);
@@ -1802,7 +1809,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         </div>
 
       <!-- TOOLBAR SUPERIOR -->
-      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px;flex-shrink:0">
         <div style="display:flex;align-items:center;gap:8px">
           <label style="font-size:12px;font-weight:600;color:var(--text-soft)">Proyecto:</label>
           <select class="form-input" id="s-proyecto" style="width:200px">
@@ -1839,7 +1846,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       </div>
 
       <!-- ⚙️ CONFIGURACIÓN GLOBAL DE LA COCINA -->
-      <div class="card" style="margin-bottom:14px;border-left:4px solid var(--copper)">
+      <div class="card" style="margin-bottom:14px;border-left:4px solid var(--copper);flex-shrink:0">
         <div style="padding:10px 14px 6px;font-size:11px;font-weight:700;text-transform:uppercase;color:var(--copper);letter-spacing:.06em">⚙️ Configuración de la cocina <span style="font-weight:400;font-size:10px;color:var(--text-soft);text-transform:none">(aplica a todos los módulos)</span></div>
         <div style="display:grid;grid-template-columns:repeat(4,1fr) repeat(3,0.85fr);gap:8px;padding:10px 14px 14px">
 
@@ -2193,10 +2200,10 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         </div>
       </div>
 
-      <div style="display:grid;grid-template-columns:340px 1fr;gap:14px;align-items:start">
+      <div id="saitra-grid" style="display:grid;grid-template-columns:340px 1fr;gap:14px">
 
         <!-- ─── PANEL IZQUIERDO ─── -->
-        <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;flex-direction:column;gap:10px;overflow-y:auto;min-height:0">
 
           <!-- MUEBLES DE LÍNEA (Colgantes, Sobrecolumnas, Sobreencimeras) -->
           
