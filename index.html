@@ -1839,6 +1839,14 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <input type="number" class="form-input" id="s-margen" value="70" min="0" max="200" style="width:65px" oninput="saitraRecalc()">
           <span style="font-size:12px;color:var(--text-soft)">%</span>
         </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <label style="font-size:12px;font-weight:600;color:var(--text-soft)">IVA:</label>
+          <select class="form-input" id="s-iva-global" style="width:70px" onchange="saitraRecalc()">
+            <option value="21">21%</option>
+            <option value="10">10%</option>
+            <option value="0">0%</option>
+          </select>
+        </div>
         <div style="margin-left:auto;display:flex;align-items:center;gap:6px">
           <span id="s-guardado-lbl" style="font-size:10px;color:var(--text-soft);font-style:italic"></span>
           <button class="btn btn-ghost btn-sm" onclick="saitraLimpiar()" style="color:var(--danger)">🗑 Limpiar</button>
@@ -2925,6 +2933,10 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
                 <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#388e3c;margin-bottom:4px">PVP CLIENTE (<span id="s-tot-margen-lbl">70</span>%)</div>
                 <div id="s-tot-venta" style="font-size:22px;font-weight:800;color:#2e7d32">0,00€</div>
               </div>
+            </div>
+            <div id="s-tot-iva-row" style="display:flex;justify-content:flex-end;gap:16px;align-items:center;margin-bottom:14px;padding:10px 14px;background:#f0f4ff;border-radius:8px;border:1px solid #c5cae9">
+              <span style="font-size:12px;color:var(--text-mid)">IVA (<span id="s-tot-iva-pct">21</span>%): <strong id="s-tot-iva-eur">0,00€</strong></span>
+              <span style="font-size:14px;font-weight:800;color:var(--navy)">TOTAL CON IVA: <span id="s-tot-con-iva" style="font-size:18px;color:#1565c0">0,00€</span></span>
             </div>
             <!-- Subtotales por modelo M1-M4 -->
             <div id="s-tot-m1-row" style="margin-bottom:4px;padding:7px 12px;background:#fff8f0;border-radius:6px;border-left:3px solid var(--copper);font-size:12px">
@@ -11622,7 +11634,7 @@ function saitraIAConfirmar(){
     if(!chk||!chk.checked) return;
     const cant=m.cant||1;
     saitraLineas.push({id:++saitraIdCnt,tipo:'modulo',ref:m.ref,modelo:'1',
-      desc:m.label+' '+m.ancho+'cm'+(m.nota?' · '+m.nota:'')+' [IA]',
+      desc:m.label+' '+m.ancho+'cm'+(m.nota?' · '+m.nota:''),
       notas:'',cant,puntos:m.puntos,costeUnit:m.costeUnit,costeTotal:m.costeUnit*cant,pvpUnit:m.pvpUnit,pvpTotal:m.pvpUnit*cant});
     n++;
   });
@@ -11853,9 +11865,15 @@ function saitraRecalc(){
   saitraRenderTabla();
   const margenEur = totalPvp - totalCoste;
   const fmtE = v => v.toFixed(2).replace('.',',')+'€';
+  const ivaPct = parseFloat(document.getElementById('s-iva-global')?.value)||21;
+  const ivaEur = totalPvp * ivaPct / 100;
+  const totalConIva = totalPvp + ivaEur;
   document.getElementById('s-tot-coste').textContent  = fmtE(totalCoste);
   document.getElementById('s-tot-margen-eur').textContent = fmtE(margenEur);
   document.getElementById('s-tot-venta').textContent  = fmtE(totalPvp);
+  document.getElementById('s-tot-iva-pct').textContent = ivaPct;
+  document.getElementById('s-tot-iva-eur').textContent = fmtE(ivaEur);
+  document.getElementById('s-tot-con-iva').textContent = fmtE(totalConIva);
   // Subtotales M1-M4: mostrar solo los modelos con importe
   ['1','2','3','4'].forEach(n => {
     const el  = document.getElementById('s-tot-m'+n);
@@ -11891,6 +11909,7 @@ async function saitraExportarPresupuesto(){
   const ver = verRaw.startsWith('v') ? verRaw : 'v'+verRaw;
 
   const margen   = parseFloat(document.getElementById('s-margen')?.value)||0;
+  const ivaGlobal = (document.getElementById('s-iva-global')?.value||'21')+'%';
   const totalPvp = saitraLineas.reduce((s,l)=>s+l.pvpTotal, 0);
 
   if(!confirm(
@@ -11941,7 +11960,7 @@ async function saitraExportarPresupuesto(){
         descripcion: 'Acabados: '+acabadosDesc,
         unidad: '',
         cantidad: 0, precio_base: 0, margen_pct: 0, ci_gg_bi_pct: 0,
-        precio_venta: 0, subtotal: 0, iva_pct: '21%',
+        precio_venta: 0, subtotal: 0, iva_pct: ivaGlobal,
         es_capitulo: false,
         orden: ordenBase + 2
       });
@@ -11962,7 +11981,7 @@ async function saitraExportarPresupuesto(){
         ci_gg_bi_pct: 0,
         precio_venta: parseFloat(l.pvpUnit.toFixed(4)),
         subtotal:     parseFloat(l.pvpTotal.toFixed(4)),
-        iva_pct:      '21%',
+        iva_pct:      ivaGlobal,
         es_capitulo:  false,
         orden:        ordenBase + 2 + offsetExtra + i
       });
@@ -12011,6 +12030,9 @@ function saitraImprimir(){
   const _impCascoInt = document.getElementById('s-casco-int')?.value||'';
   if(_impCascoInt) _impAcab.push('Interior casco: '+_impCascoInt);
   const acabadosHtml = _impAcab.length ? '<div style="background:#f7f4ef;border-left:3px solid #b87333;padding:8px 14px;margin-bottom:16px;font-size:11px;color:#4a3728"><strong>Acabados:</strong> '+_impAcab.join(' &nbsp;·&nbsp; ')+'</div>' : '';
+  const _impIvaPct = parseFloat(document.getElementById('s-iva-global')?.value)||21;
+  const _impIvaEur = totalPvp * _impIvaPct / 100;
+  const _impTotalConIva = totalPvp + _impIvaEur;
 
   // Documento cliente: SOLO PVP, sin costes ni puntos ni descuentos
   const filas  = saitraLineas.map((l,i)=>`
@@ -12062,11 +12084,12 @@ function saitraImprimir(){
       </tr></thead>
       <tbody>${filas}</tbody>
     </table>
-    <div class="total-box">
-      <span>TOTAL</span>
-      <span class="total-val">${fmtE(totalPvp)}</span>
+    <div class="total-box" style="flex-direction:column;gap:6px;align-items:flex-end">
+      <div style="display:flex;gap:20px;align-items:center"><span style="font-size:12px">Base imponible</span><span style="font-size:16px;font-weight:700">${fmtE(totalPvp)}</span></div>
+      <div style="display:flex;gap:20px;align-items:center"><span style="font-size:12px">IVA ${_impIvaPct}%</span><span style="font-size:14px;font-weight:600">${fmtE(_impIvaEur)}</span></div>
+      <div style="display:flex;gap:20px;align-items:center;border-top:2px solid #b87333;padding-top:6px"><span style="font-size:13px;font-weight:700">TOTAL</span><span class="total-val">${fmtE(_impTotalConIva)}</span></div>
     </div>
-    <div class="nota">* Precios sin IVA. IVA aplicable según normativa vigente. Presupuesto válido 30 días desde su emisión.</div>
+    <div class="nota">Presupuesto válido 30 días desde su emisión.</div>
   </div>
 </body></html>`;
 
