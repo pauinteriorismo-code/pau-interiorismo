@@ -26002,21 +26002,34 @@ async function guardarCertificacionPartidas(){
   // 1) crear certificación
   let certNueva;
   try{
-    const payloadCert = {
-      proyecto_id: proyId,
-      fecha,
-      estado: 'Borrador',
-      base_imponible: base,
-      iva_pct: ivaPctNum,
-      notas,
-      num_cert: numCert
-    };
-    try{
-      certNueva = await sbPost('certificaciones', payloadCert);
-    }catch(e1){
-      // Reintento minimalista por si alguna columna no existe en este esquema
-      const minPayload = { proyecto_id: proyId, fecha, estado:'Borrador', base_imponible: base, num_cert: numCert };
-      certNueva = await sbPost('certificaciones', minPayload);
+    // Probar varios nombres de columna para el importe (esquemas distintos)
+    const colsBase = ['base_imponible','importe_base','importe','base','total'];
+    let lastErr = null;
+    for(const col of colsBase){
+      const payloadCert = {
+        proyecto_id: proyId,
+        fecha,
+        estado: 'Borrador',
+        [col]: base,
+        iva_pct: ivaPctNum,
+        notas,
+        num_cert: numCert
+      };
+      try{
+        certNueva = await sbPost('certificaciones', payloadCert);
+        lastErr = null;
+        break;
+      }catch(e1){
+        lastErr = e1;
+        // Si el error no es por columna inexistente, no probamos más
+        if(!/column|schema cache|PGRST204/i.test(e1.message||'')) break;
+      }
+    }
+    if(lastErr){
+      // Último intento: payload mínimo sin iva_pct/notas
+      try{
+        certNueva = await sbPost('certificaciones', { proyecto_id: proyId, fecha, estado:'Borrador', base_imponible: base, num_cert: numCert });
+      }catch(e2){ throw lastErr; }
     }
   }catch(e){ toast('Error creando certificación: '+e.message,'error'); return; }
   const certId = Array.isArray(certNueva)?certNueva[0]?.id:certNueva?.id;
