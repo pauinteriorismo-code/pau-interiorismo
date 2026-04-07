@@ -25881,7 +25881,11 @@ function cpRender(){
       <td style="padding:6px 8px;text-align:right;font-family:monospace">${cantP}</td>`;
     if(modo==='pro') html += `<td style="padding:6px 8px;text-align:right;font-family:monospace;color:#b87333">${ya>0?ya.toFixed(2):'—'}</td>`;
     if(modo==='pro'){
-      html += `<td style="padding:6px 8px;text-align:right"><input type="number" min="0" max="${restante}" step="0.00001" value="${cantInput}" ${disabled} oninput="cpSetCant('${l.id}',this.value)" style="width:75px;text-align:right;padding:3px 5px;border:1px solid var(--border);border-radius:4px;font-family:monospace;font-size:12px"></td>`;
+      html += `<td style="padding:6px 8px;text-align:right;white-space:nowrap">
+        <input type="number" min="0" max="${restante}" step="0.00001" value="${cantInput}" ${disabled} oninput="cpSetCant('${l.id}',this.value)" style="width:75px;text-align:right;padding:3px 5px;border:1px solid var(--border);border-radius:4px;font-family:monospace;font-size:12px" title="Cantidad a certificar">
+        <input type="number" min="0" max="1" step="0.00001" placeholder="×" id="cp-lf-${l.id}" ${disabled} style="width:60px;text-align:right;padding:3px 5px;border:1px solid #cfd9e6;border-radius:4px;font-family:monospace;font-size:11px;margin-left:4px;background:#f4f8fc" title="Factor 0-1 sobre el restante">
+        <button class="btn btn-ghost btn-sm" ${disabled} style="padding:2px 6px;font-size:10px;margin-left:2px" onclick="cpAplicarFactorLinea('${l.id}')" title="Aplicar factor">✓</button>
+      </td>`;
     } else {
       html += `<td style="padding:6px 8px;text-align:right;font-family:monospace">${(Number(cantInput)||0)}</td>`;
     }
@@ -25922,6 +25926,19 @@ function cpMarcarTodas(){
     const restante = Math.max(0, (Number(l.cantidad)||0)-ya);
     _cpState.sel[l.id] = restante>0;
   });
+  cpRender();
+}
+function cpAplicarFactorLinea(id){
+  const inp = document.getElementById('cp-lf-'+id);
+  let f = Number(inp?.value)||0;
+  if(f<0) f=0; if(f>1) f=1;
+  const l = _cpState.lineas.find(x=>String(x.id)===String(id));
+  if(!l) return;
+  const ya = _cpState.yaCert[id]||0;
+  const restante = Math.max(0, (Number(l.cantidad)||0)-ya);
+  if(restante<=0){ toast('Esta partida no tiene cantidad pendiente','error'); return; }
+  _cpState.cant[id] = Math.round(restante*f*100000)/100000;
+  _cpState.sel[id] = (_cpState.cant[id]>0);
   cpRender();
 }
 function cpAplicarPctCapitulo(capIdx){
