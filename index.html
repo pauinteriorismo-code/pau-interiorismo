@@ -26534,8 +26534,16 @@ function generarCertPDFContenido({ proy, p, cli, cfg, fecha, notas, base, iva, i
   pdf.setFontSize(7); pdf.setTextColor(160);
   pdf.text(
     `${cfg.razon_social||'PAU INTERIORISMO S.L.'}  ·  CIF ${cfg.cif||''}  ·  ${cfg.email||'presupuestos@pauinteriorismo.es'}  ·  ${cfg.telefono||''}`,
-    pW/2, 290, {align:'center'}
+    pW/2, 286, {align:'center'}
   );
+  if(cfg.pie_iban || cfg.pie_banco){
+    pdf.setTextColor(80); pdf.setFont(undefined,'bold');
+    const partes = [];
+    if(cfg.pie_iban)  partes.push(`Cuenta: ${cfg.pie_iban}`);
+    if(cfg.pie_banco) partes.push(`Banco: ${cfg.pie_banco}`);
+    pdf.text(partes.join('  ·  '), pW/2, 291, {align:'center'});
+    pdf.setFont(undefined,'normal');
+  }
 
   pdf.save(`Certificacion_${proy}_${numCert||'borrador'}.pdf`);
   toast('PDF generado ✅');
