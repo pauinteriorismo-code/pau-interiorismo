@@ -26437,7 +26437,7 @@ function generarCertPDFContenido({ proy, p, cli, cfg, fecha, notas, base, iva, i
   y += 4;
 
   // Cuadro de certificación (alto dinámico según si hay presBase o no)
-  const boxH = presBase>0 ? 60 : 48;
+  const boxH = presBase>0 ? 72 : 48;
   pdf.setFillColor(240,244,250); pdf.roundedRect(mX, y, pW-2*mX, boxH, 2, 2, 'F');
   pdf.setFont(undefined,'bold'); pdf.setFontSize(10); pdf.setTextColor(30,60,100);
   pdf.text('RESUMEN DE CERTIFICACIÓN', mX+5, y+7);
@@ -26462,6 +26462,15 @@ function generarCertPDFContenido({ proy, p, cli, cfg, fecha, notas, base, iva, i
   pdf.text(`${(pct||0).toFixed(2)}%`, col2, yr);
   pdf.setFont(undefined,'normal'); pdf.setTextColor(60);
   yr += 6;
+
+  if(presBase > 0){
+    const pctPend = Math.max(0, 100 - (pctAnt||0) - (pct||0));
+    pdf.text('% pendiente por certificar:', col1, yr);
+    pdf.setFont(undefined,'bold'); pdf.setTextColor(184,115,51);
+    pdf.text(`${pctPend.toFixed(2)}%`, col2, yr);
+    pdf.setFont(undefined,'normal'); pdf.setTextColor(60);
+    yr += 6;
+  }
 
   pdf.setDrawColor(200,210,230); pdf.setLineWidth(0.3); pdf.line(col1, yr-2, pW-mX-5, yr-2); yr += 2;
 
