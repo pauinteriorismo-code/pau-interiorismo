@@ -26002,24 +26002,17 @@ async function guardarCertificacionPartidas(){
   // 1) crear certificación
   let certNueva;
   try{
+    // Esquema real de certificaciones: id, proyecto_id, numero, factura_id, modo, fecha, notas
+    // El importe/IVA se reconstruyen desde certificacion_lineas
+    const notasFull = `${notas?notas+' · ':''}IVA ${ivaPctNum}% · Base ${base.toFixed(2)}€`;
     const payloadCert = {
       proyecto_id: proyId,
       fecha,
-      estado: 'Borrador',
-      base_imponible: base,
-      iva_pct: ivaPctNum,
-      notas,
-      num_cert: numCert
+      numero: numCert,
+      modo,
+      notas: notasFull
     };
-    try{
-      certNueva = await sbPost('certificaciones', payloadCert);
-    }catch(e1){
-      // Si Supabase devuelve PGRST204 es que el caché de esquema está obsoleto
-      if(/PGRST204|schema cache/i.test(e1.message||'')){
-        toast('Caché de esquema obsoleto en Supabase. Ve a Settings → API → Reload schema cache','error');
-      }
-      throw e1;
-    }
+    certNueva = await sbPost('certificaciones', payloadCert);
   }catch(e){ toast('Error creando certificación: '+e.message,'error'); return; }
   const certId = Array.isArray(certNueva)?certNueva[0]?.id:certNueva?.id;
   if(!certId){ toast('No se obtuvo ID de la certificación','error'); return; }
