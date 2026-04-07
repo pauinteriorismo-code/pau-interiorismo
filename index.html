@@ -26002,18 +26002,22 @@ async function guardarCertificacionPartidas(){
   // 1) crear certificación
   let certNueva;
   try{
-    certNueva = await sbPost('certificaciones', {
+    const payloadCert = {
       proyecto_id: proyId,
       fecha,
       estado: 'Borrador',
       base_imponible: base,
       iva_pct: ivaPctNum,
-      pct: pctEsta,
       notas,
-      num_cert: numCert,
-      modo,
-      numero: numCert
-    });
+      num_cert: numCert
+    };
+    try{
+      certNueva = await sbPost('certificaciones', payloadCert);
+    }catch(e1){
+      // Reintento minimalista por si alguna columna no existe en este esquema
+      const minPayload = { proyecto_id: proyId, fecha, estado:'Borrador', base_imponible: base, num_cert: numCert };
+      certNueva = await sbPost('certificaciones', minPayload);
+    }
   }catch(e){ toast('Error creando certificación: '+e.message,'error'); return; }
   const certId = Array.isArray(certNueva)?certNueva[0]?.id:certNueva?.id;
   if(!certId){ toast('No se obtuvo ID de la certificación','error'); return; }
