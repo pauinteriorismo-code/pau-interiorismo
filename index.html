@@ -1533,6 +1533,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <button class="btn btn-ghost btn-sm no-print" onclick="abrirModalPlantillas()" title="Cargar plantilla de capítulos" style="font-size:11px">📋 Plantillas</button>
           <button class="btn btn-ghost btn-sm no-print" onclick="guardarPlantilla()" title="Guardar presupuesto actual como plantilla" style="font-size:11px">💾 Guardar plantilla</button>
         </div>
+        <button class="btn btn-ghost no-print" onclick="abrirCertificarPartidas()" style="background:#fff4e5;color:#b87333;border-color:#e8b87a;font-weight:600" title="Generar certificación a partir de las partidas seleccionadas/terminadas">🏗️ Certificar</button>
         <button class="btn btn-ghost no-print" onclick="convertirPresupuestoAFactura()" style="background:#e8f5ee;color:var(--green);border-color:#b8dfc8;font-weight:600" title="Crear factura de venta a partir de este presupuesto">🧾 Crear factura</button><button class="btn btn-ghost no-print" onclick="exportarPresupuestoPDF()">⬇️ PDF</button>
         <button class="btn btn-ghost no-print" onclick="window.print()">🖨️ Imprimir</button>
         <button class="btn btn-ghost no-print" onclick="abrirImportarPDF()" style="background:#e8f0f8;color:#1a5276;border-color:#aac8e8;font-weight:600" title="Importar presupuesto desde PDF">📥 Importar PDF</button>
@@ -4049,6 +4050,43 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
   </div>
 </div>
 
+<!-- ═══ MODAL CERTIFICAR PARTIDAS (Simple / Pro) ═══ -->
+<div class="overlay" id="m-cert-partidas" onclick="if(event.target===this)closeModal('m-cert-partidas')">
+  <div class="modal" style="width:min(1100px,98vw);max-height:94vh;display:flex;flex-direction:column">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title" id="cp-title">🏗️ Certificar partidas</div>
+        <div id="cp-sub" style="font-size:11px;color:var(--text-soft);margin-top:2px"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal('m-cert-partidas')">×</button>
+    </div>
+    <div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+      <div class="form-group" style="margin:0;width:140px"><label class="form-label">Fecha</label><input type="date" class="form-input" id="cp-fecha"></div>
+      <div class="form-group" style="margin:0;width:110px"><label class="form-label">Nº cert.</label><input class="form-input" id="cp-num" placeholder="Auto"></div>
+      <div class="form-group" style="margin:0;width:90px"><label class="form-label">IVA</label><select class="form-input" id="cp-iva"><option value="21">21%</option><option value="10">10%</option><option value="0">Exento</option></select></div>
+      <div class="form-group" style="margin:0;flex:1;min-width:200px"><label class="form-label">Concepto / Notas</label><input class="form-input" id="cp-notas" placeholder="Ej: Avance de marzo 2026"></div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-ghost btn-sm" onclick="cpMarcarTerminadas()" title="Marcar las partidas en estado 🟡 Terminada">🟡 Solo terminadas</button>
+        <button class="btn btn-ghost btn-sm" onclick="cpMarcarTodas()" title="Marcar todas">✓ Todas</button>
+        <button class="btn btn-ghost btn-sm" onclick="cpDesmarcarTodas()" title="Desmarcar">✗ Ninguna</button>
+      </div>
+    </div>
+    <div id="cp-body" style="flex:1;overflow:auto;padding:0">
+      <!-- inyectado por JS según modo simple/pro -->
+    </div>
+    <div id="cp-resumen" style="border-top:1px solid var(--border);padding:12px 18px;background:#fafafa;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;text-align:center">
+      <div><div style="font-size:10px;color:var(--text-soft)">PARTIDAS SELECC.</div><div style="font-size:16px;font-weight:800;color:var(--navy)" id="cp-r-n">0</div></div>
+      <div><div style="font-size:10px;color:var(--text-soft)">BASE</div><div style="font-size:16px;font-weight:800;color:var(--navy)" id="cp-r-base">0,00 €</div></div>
+      <div><div style="font-size:10px;color:var(--text-soft)">IVA</div><div style="font-size:16px;font-weight:800;color:var(--text-mid)" id="cp-r-iva">0,00 €</div></div>
+      <div><div style="font-size:10px;color:var(--text-soft)">TOTAL</div><div style="font-size:16px;font-weight:800;color:var(--green)" id="cp-r-total">0,00 €</div></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('m-cert-partidas')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarCertificacionPartidas()">💾 Guardar certificación</button>
+    </div>
+  </div>
+</div>
+
 <div class="view" id="view-facturas">
 <div id="fac-informe-wrap" style="display:none;position:absolute;left:-9999px;top:0;width:297mm"></div>
 
@@ -4556,6 +4594,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="form-group fg-full"><label class="form-label">Dirección de obra</label><input class="form-input" id="p-dir"></div>
       <div class="form-group fg-full"><label class="form-label">📂 Carpeta Google Drive</label><input class="form-input" id="p-drive" placeholder="https://drive.google.com/drive/folders/..."></div>
       <div class="form-group"><label class="form-label">🏷 Tipo de unidades</label><input class="form-input" id="p-tipo-unidades" placeholder="Viviendas, Trabajos, Locales..."></div>
+      <div class="form-group"><label class="form-label">🏗️ Modo certificación</label><select class="form-input" id="p-modo-cert"><option value="simple">🟢 Simple (mobiliario, reformas pequeñas)</option><option value="pro">🔵 Profesional (obra grande, certs parciales)</option></select></div>
       <div class="form-group fg-full"><label class="form-label">Notas</label><textarea class="form-input" id="p-notas" rows="2"></textarea></div>
     </div>
   </div>
@@ -8366,11 +8405,11 @@ async function loadProyectos(){
     filtrarProyectosPorCliente();
   }catch(e){tb.innerHTML=`<tr><td colspan="8" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
 }
-function editProyecto(id){const p=PC.find(x=>x.id===id);if(!p)return;document.getElementById('m-proyecto-title').textContent='Editar proyecto';document.getElementById('p-id').value=p.id;document.getElementById('p-nombre').value=p.nombre||'';document.getElementById('p-cliente').value=p.cliente_id||'';document.getElementById('p-tipo').value=p.tipo||'Obra nueva';document.getElementById('p-estado').value=p.estado||'Nuevo lead';document.getElementById('p-resp').value=p.responsable||'Jose Asins';document.getElementById('p-fecha').value=p.fecha_inicio||'';document.getElementById('p-dir').value=p.direccion_obra||'';document.getElementById('p-notas').value=p.notas||'';document.getElementById('p-drive').value=p.carpeta_drive||'';document.getElementById('p-tipo-unidades').value=p.tipo_unidades||'';openModal('m-proyecto');}
+function editProyecto(id){const p=PC.find(x=>x.id===id);if(!p)return;document.getElementById('m-proyecto-title').textContent='Editar proyecto';document.getElementById('p-id').value=p.id;document.getElementById('p-nombre').value=p.nombre||'';document.getElementById('p-cliente').value=p.cliente_id||'';document.getElementById('p-tipo').value=p.tipo||'Obra nueva';document.getElementById('p-estado').value=p.estado||'Nuevo lead';document.getElementById('p-resp').value=p.responsable||'Jose Asins';document.getElementById('p-fecha').value=p.fecha_inicio||'';document.getElementById('p-dir').value=p.direccion_obra||'';document.getElementById('p-notas').value=p.notas||'';document.getElementById('p-drive').value=p.carpeta_drive||'';document.getElementById('p-tipo-unidades').value=p.tipo_unidades||'';const _mc=document.getElementById('p-modo-cert');if(_mc)_mc.value=p.modo_certificacion||'simple';openModal('m-proyecto');}
 async function saveProyecto(){
   const nombre=document.getElementById('p-nombre').value.trim();if(!nombre){toast('El nombre es obligatorio','error');return;}
   const id=document.getElementById('p-id').value;
-  const d={cliente_id:document.getElementById('p-cliente').value||null,nombre,tipo:document.getElementById('p-tipo').value,estado:document.getElementById('p-estado').value,responsable:document.getElementById('p-resp').value,fecha_inicio:document.getElementById('p-fecha').value||null,direccion_obra:document.getElementById('p-dir').value,notas:document.getElementById('p-notas').value,carpeta_drive:document.getElementById('p-drive').value||null,tipo_unidades:document.getElementById('p-tipo-unidades').value.trim()||null};
+  const d={cliente_id:document.getElementById('p-cliente').value||null,nombre,tipo:document.getElementById('p-tipo').value,estado:document.getElementById('p-estado').value,responsable:document.getElementById('p-resp').value,fecha_inicio:document.getElementById('p-fecha').value||null,direccion_obra:document.getElementById('p-dir').value,notas:document.getElementById('p-notas').value,carpeta_drive:document.getElementById('p-drive').value||null,tipo_unidades:document.getElementById('p-tipo-unidades').value.trim()||null,modo_certificacion:document.getElementById('p-modo-cert')?.value||'simple'};
   try{if(id){await sbPatch('proyectos',id,d);toast('Proyecto actualizado ✅');}else{d.proyecto_id=genId('PRY',PC,'proyecto_id');await sbPost('proyectos',d);toast('Proyecto creado ✅');crearCarpetasDrive(d.proyecto_id,nombre);}closeModal('m-proyecto');document.getElementById('p-id').value='';loadProyectos();populateSelects();}catch(e){toast('Error: '+e.message,'error');}
 }
 
@@ -25690,10 +25729,315 @@ async function loadCertificaciones() {
       <td style="white-space:nowrap">
         <button class="btn btn-ghost btn-sm" onclick="editarCertificacion('${c.id}')" title="Editar">✏️</button>
         <button class="btn btn-ghost btn-sm" onclick="exportarCertPDFById('${c.id}')" title="PDF">⬇️</button>
+        <button class="btn btn-ghost btn-sm" onclick="convertirCertAFactura('${c.id}')" title="Convertir a factura" style="background:#e8f5ee;color:var(--green)">🧾</button>
         <button class="btn btn-danger btn-sm" onclick="eliminarCertificacion('${c.id}')" title="Eliminar">🗑</button>
       </td>
     </tr>`;
   }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CERTIFICACIÓN POR PARTIDAS (Simple / Profesional)
+// ═══════════════════════════════════════════════════════════════
+let _cpState = { proyId:null, ver:null, modo:'simple', lineas:[], yaCert:{}, sel:{}, cant:{} };
+
+async function abrirCertificarPartidas(){
+  const proyId = document.getElementById('pres-proyecto-sel')?.value;
+  const ver    = document.getElementById('pres-version-sel')?.value || 'v1';
+  if(!proyId){ toast('Selecciona un proyecto primero','error'); return; }
+  const proy = (PC||[]).find(p=>p.proyecto_id===proyId);
+  if(!proy){ toast('Proyecto no encontrado','error'); return; }
+  const cli = (CC||[]).find(c=>c.cliente_id===proy.cliente_id);
+  const modo = proy.modo_certificacion||'simple';
+  _cpState = { proyId, ver, modo, lineas:[], yaCert:{}, sel:{}, cant:{}, proy, cli };
+  // Cargar líneas (con capítulos para mostrar agrupado)
+  let lineas=[];
+  try{ lineas = await sbGet('presupuesto_lineas', `?proyecto_id=eq.${proyId}&version=eq.${ver}&order=orden.asc`); }
+  catch(e){ toast('Error cargando partidas: '+e.message,'error'); return; }
+  _cpState.lineas = lineas;
+  // Cargar certificaciones previas del proyecto y sus líneas para calcular cantidades ya certificadas
+  let prevCerts=[], prevLineas=[];
+  try{ prevCerts = await sbGet('certificaciones', `?proyecto_id=eq.${proyId}`); }catch(e){}
+  if(prevCerts.length){
+    const ids = prevCerts.map(c=>c.id).join(',');
+    try{ prevLineas = await sbGet('certificacion_lineas', `?certificacion_id=in.(${ids})`); }catch(e){}
+  }
+  const yaCert={}; // linea_id -> cantidad acumulada
+  prevLineas.forEach(pl=>{ if(pl.linea_id){ yaCert[pl.linea_id] = (yaCert[pl.linea_id]||0) + (Number(pl.cantidad_certificada)||0); }});
+  _cpState.yaCert = yaCert;
+  // Inicializar selección por defecto
+  lineas.forEach(l=>{
+    if(l.es_capitulo) return;
+    const ya = yaCert[l.id]||0;
+    const restante = Math.max(0, (Number(l.cantidad)||0) - ya);
+    if(modo==='simple'){
+      // Simple: pre-marcadas las terminadas con resto > 0
+      _cpState.sel[l.id] = (l.estado_cert==='terminada' && restante>0);
+      _cpState.cant[l.id] = restante;
+    } else {
+      // Pro: nada pre-marcado, cantidad por defecto = restante completo
+      _cpState.sel[l.id] = false;
+      _cpState.cant[l.id] = restante;
+    }
+  });
+  // Pre-rellenar campos
+  document.getElementById('cp-fecha').value = new Date().toISOString().split('T')[0];
+  document.getElementById('cp-iva').value = '21';
+  document.getElementById('cp-notas').value = '';
+  document.getElementById('cp-num').value = '';
+  document.getElementById('cp-title').textContent = modo==='pro'
+    ? '🔵 Certificación profesional (parcial / por avance)'
+    : '🟢 Certificación simple';
+  document.getElementById('cp-sub').textContent = `${proyId} · ${proy.nombre||''} · ${cli?.nombre||''} · versión ${ver}`;
+  cpRender();
+  openModal('m-cert-partidas');
+}
+
+function cpRender(){
+  const body = document.getElementById('cp-body');
+  const { lineas, yaCert, sel, cant, modo } = _cpState;
+  if(!lineas.length){ body.innerHTML='<div style="padding:30px;text-align:center;color:var(--text-soft)">Sin partidas en este presupuesto</div>'; cpRecalc(); return; }
+  let html = '<table style="width:100%;border-collapse:collapse;font-size:12px">';
+  html += '<thead><tr style="background:#f7f4ef;position:sticky;top:0;z-index:5">'
+       + '<th style="padding:7px 8px;text-align:left;width:30px"></th>'
+       + '<th style="padding:7px 8px;text-align:left">Descripción</th>'
+       + '<th style="padding:7px 8px;text-align:right;width:80px">Cant. presup.</th>';
+  if(modo==='pro') html += '<th style="padding:7px 8px;text-align:right;width:80px">Ya cert.</th>';
+  html += '<th style="padding:7px 8px;text-align:right;width:90px">'+(modo==='pro'?'A certificar':'Cantidad')+'</th>'
+       + '<th style="padding:7px 8px;text-align:right;width:90px">P. venta</th>';
+  if(modo==='pro') html += '<th style="padding:7px 8px;text-align:right;width:60px">% avance</th>';
+  html += '<th style="padding:7px 8px;text-align:right;width:100px">Subtotal</th>';
+  html += '</tr></thead><tbody>';
+  lineas.forEach(l=>{
+    if(l.es_capitulo){
+      html += `<tr style="background:#fbf8f3"><td colspan="${modo==='pro'?7:5}" style="padding:6px 8px;font-weight:700;color:#4a3728;border-top:2px solid #b87333">📁 ${l.descripcion||''}</td></tr>`;
+      return;
+    }
+    const ya = yaCert[l.id]||0;
+    const cantP = Number(l.cantidad)||0;
+    const restante = Math.max(0, cantP - ya);
+    const pv = Number(l.precio_venta)||0;
+    const ci = Number(l.ci_gg_bi_pct)||0;
+    const pvFinal = ci>0 ? pv*(1+ci/100) : pv;
+    const checked = sel[l.id] ? 'checked' : '';
+    const disabled = restante<=0 ? 'disabled' : '';
+    const cantInput = cant[l.id]!=null ? cant[l.id] : restante;
+    const subtotal = (Number(cantInput)||0) * pvFinal;
+    const pctAv = cantP>0 ? ((ya+(Number(cantInput)||0))/cantP*100) : 0;
+    const rowOp = restante<=0 ? 'opacity:.45' : '';
+    html += `<tr style="border-bottom:1px solid #f0ebe4;${rowOp}">
+      <td style="padding:6px 8px"><input type="checkbox" ${checked} ${disabled} onchange="cpToggle('${l.id}',this.checked)"></td>
+      <td style="padding:6px 8px">${l.descripcion||'—'}${restante<=0?' <span style="font-size:10px;color:var(--green);font-weight:700">✓ Completada</span>':''}</td>
+      <td style="padding:6px 8px;text-align:right;font-family:monospace">${cantP}</td>`;
+    if(modo==='pro') html += `<td style="padding:6px 8px;text-align:right;font-family:monospace;color:#b87333">${ya>0?ya.toFixed(2):'—'}</td>`;
+    if(modo==='pro'){
+      html += `<td style="padding:6px 8px;text-align:right"><input type="number" min="0" max="${restante}" step="0.01" value="${cantInput}" ${disabled} oninput="cpSetCant('${l.id}',this.value)" style="width:75px;text-align:right;padding:3px 5px;border:1px solid var(--border);border-radius:4px;font-family:monospace;font-size:12px"></td>`;
+    } else {
+      html += `<td style="padding:6px 8px;text-align:right;font-family:monospace">${restante}</td>`;
+    }
+    html += `<td style="padding:6px 8px;text-align:right;font-family:monospace">${fmt(pvFinal)}</td>`;
+    if(modo==='pro') html += `<td style="padding:6px 8px;text-align:right;font-family:monospace;font-weight:700;color:${pctAv>=100?'#2e7d32':pctAv>0?'#b87333':'#999'}">${pctAv.toFixed(0)}%</td>`;
+    html += `<td style="padding:6px 8px;text-align:right;font-family:monospace;font-weight:700;color:var(--navy)">${fmt(subtotal)}</td>`;
+    html += `</tr>`;
+  });
+  html += '</tbody></table>';
+  body.innerHTML = html;
+  cpRecalc();
+}
+
+function cpToggle(id, val){ _cpState.sel[id]=val; cpRecalc(); }
+function cpSetCant(id, val){
+  const v = Math.max(0, Number(val)||0);
+  const l = _cpState.lineas.find(x=>String(x.id)===String(id));
+  if(!l) return;
+  const ya = _cpState.yaCert[id]||0;
+  const restante = Math.max(0, (Number(l.cantidad)||0) - ya);
+  _cpState.cant[id] = Math.min(v, restante);
+  if(_cpState.cant[id]>0 && !_cpState.sel[id]) _cpState.sel[id]=true;
+  cpRecalc();
+}
+function cpMarcarTerminadas(){
+  _cpState.lineas.forEach(l=>{
+    if(l.es_capitulo) return;
+    const ya = _cpState.yaCert[l.id]||0;
+    const restante = Math.max(0, (Number(l.cantidad)||0)-ya);
+    _cpState.sel[l.id] = (l.estado_cert==='terminada' && restante>0);
+  });
+  cpRender();
+}
+function cpMarcarTodas(){
+  _cpState.lineas.forEach(l=>{
+    if(l.es_capitulo) return;
+    const ya = _cpState.yaCert[l.id]||0;
+    const restante = Math.max(0, (Number(l.cantidad)||0)-ya);
+    _cpState.sel[l.id] = restante>0;
+  });
+  cpRender();
+}
+function cpDesmarcarTodas(){
+  Object.keys(_cpState.sel).forEach(k=>_cpState.sel[k]=false);
+  cpRender();
+}
+function cpRecalc(){
+  let n=0, base=0;
+  _cpState.lineas.forEach(l=>{
+    if(l.es_capitulo || !_cpState.sel[l.id]) return;
+    const c = Number(_cpState.cant[l.id])||0;
+    if(c<=0) return;
+    n++;
+    const pv = Number(l.precio_venta)||0;
+    const ci = Number(l.ci_gg_bi_pct)||0;
+    const pvFinal = ci>0?pv*(1+ci/100):pv;
+    base += c*pvFinal;
+  });
+  const ivaPctNum = Number(document.getElementById('cp-iva').value)||0;
+  const iva = base*ivaPctNum/100;
+  document.getElementById('cp-r-n').textContent = n;
+  document.getElementById('cp-r-base').textContent = fmt(base);
+  document.getElementById('cp-r-iva').textContent = fmt(iva);
+  document.getElementById('cp-r-total').textContent = fmt(base+iva);
+}
+document.addEventListener('change',e=>{ if(e.target && e.target.id==='cp-iva') cpRecalc(); });
+
+async function guardarCertificacionPartidas(){
+  const { proyId, ver, modo, lineas, sel, cant } = _cpState;
+  const seleccionadas = lineas.filter(l => !l.es_capitulo && sel[l.id] && (Number(cant[l.id])||0)>0);
+  if(!seleccionadas.length){ toast('Selecciona al menos una partida con cantidad > 0','error'); return; }
+  const fecha = document.getElementById('cp-fecha').value || new Date().toISOString().split('T')[0];
+  const ivaPctNum = Number(document.getElementById('cp-iva').value)||0;
+  const ivaTxt = ivaPctNum===0 ? 'Exento' : (ivaPctNum+'%');
+  const notas = document.getElementById('cp-notas').value.trim();
+  let numCert = document.getElementById('cp-num').value.trim();
+  if(!numCert){
+    try{
+      const previas = await sbGet('certificaciones', `?proyecto_id=eq.${proyId}`);
+      numCert = 'C-'+String((previas||[]).length+1).padStart(3,'0');
+    }catch(e){ numCert='C-001'; }
+  }
+  // Calcular base
+  let base = 0;
+  seleccionadas.forEach(l=>{
+    const c = Number(cant[l.id])||0;
+    const pv = Number(l.precio_venta)||0;
+    const ci = Number(l.ci_gg_bi_pct)||0;
+    base += c*(ci>0?pv*(1+ci/100):pv);
+  });
+  base = Math.round(base*100)/100;
+  // Calcular % de la cert respecto al presupuesto total
+  let presBase=0;
+  lineas.forEach(l=>{
+    if(l.es_capitulo) return;
+    const pv=Number(l.precio_venta)||0, ci=Number(l.ci_gg_bi_pct)||0;
+    presBase += (Number(l.cantidad)||0)*(ci>0?pv*(1+ci/100):pv);
+  });
+  const pctEsta = presBase>0 ? Math.round((base/presBase)*1000)/10 : 0;
+  // 1) crear certificación
+  let certNueva;
+  try{
+    certNueva = await sbPost('certificaciones', {
+      proyecto_id: proyId,
+      fecha,
+      estado: 'Borrador',
+      base_imponible: base,
+      iva_pct: ivaPctNum,
+      pct: pctEsta,
+      notas,
+      num_cert: numCert,
+      modo,
+      numero: numCert
+    });
+  }catch(e){ toast('Error creando certificación: '+e.message,'error'); return; }
+  const certId = Array.isArray(certNueva)?certNueva[0]?.id:certNueva?.id;
+  if(!certId){ toast('No se obtuvo ID de la certificación','error'); return; }
+  // 2) crear líneas
+  let okLineas=0, errLineas=0;
+  for(const l of seleccionadas){
+    const c = Number(cant[l.id])||0;
+    const pv = Number(l.precio_venta)||0;
+    const ci = Number(l.ci_gg_bi_pct)||0;
+    const pvFinal = ci>0?pv*(1+ci/100):pv;
+    try{
+      await sbPost('certificacion_lineas', {
+        certificacion_id: certId,
+        linea_id: l.id,
+        descripcion: l.descripcion,
+        unidad: l.unidad,
+        cantidad_presupuestada: Number(l.cantidad)||0,
+        cantidad_certificada: c,
+        precio_venta: pvFinal,
+        subtotal: Math.round(c*pvFinal*100)/100,
+        pct_avance: (Number(l.cantidad)||0)>0 ? Math.round(((( _cpState.yaCert[l.id]||0)+c)/(Number(l.cantidad)||1))*1000)/10 : 0,
+        iva_pct: ivaTxt,
+        es_capitulo: false,
+        orden: l.orden||0
+      });
+      okLineas++;
+    }catch(e){ console.warn('cert linea:',e.message); errLineas++; }
+  }
+  // 3) actualizar estado_cert de las partidas
+  for(const l of seleccionadas){
+    const c = Number(cant[l.id])||0;
+    const ya = _cpState.yaCert[l.id]||0;
+    const totalCertif = ya + c;
+    const cantP = Number(l.cantidad)||0;
+    const nuevoEstado = totalCertif >= cantP - 0.001 ? 'certificada' : 'terminada';
+    try{ await sbPatch('presupuesto_lineas', l.id, { estado_cert: nuevoEstado }); }catch(e){}
+  }
+  toast(`✅ Certificación ${numCert} creada (${okLineas} partidas · ${fmt(base)})${errLineas?` · ${errLineas} errores`:''}`);
+  closeModal('m-cert-partidas');
+  // Refrescar presupuesto si está visible
+  try{ if(typeof loadPresupuesto==='function') await loadPresupuesto(); }catch(e){}
+}
+
+// ═══ Convertir certificación a factura ═══
+async function convertirCertAFactura(certId){
+  if(!certId) return;
+  let cert, lineas=[];
+  try{
+    const r = await sbGet('certificaciones', `?id=eq.${certId}`);
+    cert = r && r[0];
+    lineas = await sbGet('certificacion_lineas', `?certificacion_id=eq.${certId}&order=orden.asc`);
+  }catch(e){ toast('Error cargando cert: '+e.message,'error'); return; }
+  if(!cert){ toast('Cert no encontrada','error'); return; }
+  const proy = (PC||[]).find(p=>p.proyecto_id===cert.proyecto_id);
+  const clienteId = proy?.cliente_id || '';
+  const modo = cert.modo || proy?.modo_certificacion || 'simple';
+  // Construir _facLineas
+  let nuevasLineas = [];
+  const ivaTxt = cert.iva_pct===0 || cert.iva_pct==='0' ? 'Exento' : ((cert.iva_pct||21)+'%');
+  if(modo==='pro' && lineas.length){
+    // Pro: una línea de factura por cada partida
+    nuevasLineas = lineas.map(l=>({
+      desc: l.descripcion || '—',
+      ud: l.unidad || 'Ud',
+      cantidad: Number(l.cantidad_certificada)||0,
+      precio: Number(l.precio_venta)||0,
+      iva: ivaTxt
+    }));
+  } else {
+    // Simple: una sola línea con el concepto
+    nuevasLineas = [{
+      desc: cert.notas || `Certificación ${cert.num_cert||cert.numero||''} — ${proy?.nombre||cert.proyecto_id}`,
+      ud: 'Ud',
+      cantidad: 1,
+      precio: Number(cert.base_imponible)||0,
+      iva: ivaTxt
+    }];
+  }
+  // Abrir modal factura
+  abrirNuevaFactura('Venta');
+  await new Promise(r=>setTimeout(r,80));
+  const fCli = document.getElementById('f-cliente');
+  if(fCli && clienteId){ fCli.value=clienteId; fCli.dispatchEvent(new Event('change')); await new Promise(r=>setTimeout(r,120)); }
+  const fProy = document.getElementById('f-proyecto');
+  if(fProy) fProy.value = cert.proyecto_id;
+  const fConcepto = document.getElementById('f-concepto');
+  if(fConcepto) fConcepto.value = `Certificación ${cert.num_cert||cert.numero||''} — ${proy?.nombre||cert.proyecto_id}`;
+  _facLineas = nuevasLineas;
+  if(typeof renderFacLineas==='function') renderFacLineas();
+  // Marcar la cert con el flag (factura_id se rellenará al guardar la factura — por ahora dejamos un flag)
+  try{ await sbPatch('certificaciones', cert.id, { estado: 'Emitida' }); }catch(e){}
+  toast(`✅ Factura preparada desde ${cert.num_cert||'cert'} — revisa y guarda`);
 }
 
 // Cascada: cliente → proyectos
