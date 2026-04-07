@@ -26002,8 +26002,7 @@ async function guardarCertificacionPartidas(){
   // 1) crear certificación
   let certNueva;
   try{
-    // Construir un payload base e ir reduciendo si Supabase rechaza columnas
-    const fieldsAll = {
+    const payloadCert = {
       proyecto_id: proyId,
       fecha,
       estado: 'Borrador',
@@ -26012,33 +26011,14 @@ async function guardarCertificacionPartidas(){
       notas,
       num_cert: numCert
     };
-    const colVariants = ['base_imponible','importe_base','importe','base','total','importe_total'];
-    let lastErr = null, payloadFinal = null;
-    for(const col of colVariants){
-      const payload = {...fieldsAll};
-      delete payload.base_imponible;
-      payload[col] = base;
-      // Ir quitando opcionales si estos también molestan
-      const tryVariant = async(p)=>{
-        certNueva = await sbPost('certificaciones', p);
-      };
-      try{ await tryVariant(payload); lastErr=null; payloadFinal=payload; break; }
-      catch(e1){
-        lastErr = e1;
-        console.error('[cert] intento col='+col+' falló:', e1.message);
-        // Si la queja es por una columna distinta a la del importe, intentar quitarla
-        const m = (e1.message||'').match(/'([a-z_]+)'/);
-        if(m && m[1] !== col){
-          const p2 = {...payload};
-          delete p2[m[1]];
-          try{ await tryVariant(p2); lastErr=null; payloadFinal=p2; break; }
-          catch(e2){ lastErr=e2; console.error('[cert] reintento sin '+m[1]+' falló:', e2.message); }
-        }
+    try{
+      certNueva = await sbPost('certificaciones', payloadCert);
+    }catch(e1){
+      // Si Supabase devuelve PGRST204 es que el caché de esquema está obsoleto
+      if(/PGRST204|schema cache/i.test(e1.message||'')){
+        toast('Caché de esquema obsoleto en Supabase. Ve a Settings → API → Reload schema cache','error');
       }
-    }
-    if(lastErr){
-      console.error('[cert] payload final probado:', payloadFinal);
-      throw lastErr;
+      throw e1;
     }
   }catch(e){ toast('Error creando certificación: '+e.message,'error'); return; }
   const certId = Array.isArray(certNueva)?certNueva[0]?.id:certNueva?.id;
