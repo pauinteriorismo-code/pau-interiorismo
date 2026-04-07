@@ -1521,6 +1521,13 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <button class="btn btn-primary" onclick="addLineaPresupuesto()">＋ Línea</button>
         <button class="btn btn-ghost" onclick="addCapituloPresupuesto()">＋ Capítulo</button>
         <button class="btn btn-ghost" id="btn-comparativa" style="display:none" onclick="abrirComparativa()">⚖️ Comparar</button>
+        <select class="form-input" id="pres-filtro-estado" onchange="setPresFiltroEstado(this.value)" title="Filtrar por estado de certificación" style="width:auto;min-width:135px;font-size:11px;padding:4px 6px">
+          <option value="todos">🔎 Todos los estados</option>
+          <option value="pendiente">⚪ Pendientes</option>
+          <option value="ejecucion">🔵 En ejecución</option>
+          <option value="terminada">🟡 Terminadas</option>
+          <option value="certificada">🟢 Certificadas</option>
+        </select>
         <!-- Plantillas -->
         <div style="display:flex;gap:4px;border-left:1px solid var(--border);padding-left:8px;margin-left:2px">
           <button class="btn btn-ghost btn-sm no-print" onclick="abrirModalPlantillas()" title="Cargar plantilla de capítulos" style="font-size:11px">📋 Plantillas</button>
@@ -8682,12 +8689,74 @@ async function loadPresupuesto(){
     renderPresupuesto();
   }catch(e){tbody.innerHTML=`<tr><td colspan="11" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
 }
+// ═══ Estados de certificación de partidas ═══
+const ESTADOS_CERT = {
+  pendiente:  {lbl:'⚪', txt:'Pendiente',    rowBg:'',         badgeBg:'#eceae4', color:'#7a6a55'},
+  ejecucion:  {lbl:'🔵', txt:'En ejecución', rowBg:'#f4f9fd',  badgeBg:'#dbeafe', color:'#1565c0'},
+  terminada:  {lbl:'🟡', txt:'Terminada',    rowBg:'#fffbef',  badgeBg:'#fef3c7', color:'#b8860b'},
+  certificada:{lbl:'🟢', txt:'Certificada',  rowBg:'#f1faf3',  badgeBg:'#dcfce7', color:'#2e7d32'}
+};
+const ORDEN_ESTADOS=['pendiente','ejecucion','terminada','certificada'];
+let PresFiltroEstado = sessionStorage.getItem('pres_filtro_estado')||'todos';
+
+function setPresFiltroEstado(v){ PresFiltroEstado=v; sessionStorage.setItem('pres_filtro_estado',v); renderPresupuesto(); }
+
+async function cyclePresEstado(id, ev){
+  if(ev){ ev.stopPropagation(); ev.preventDefault(); }
+  const l = PresC.find(x=>String(x.id)===String(id));
+  if(!l) return;
+  const cur = l.estado_cert || 'pendiente';
+  const next = ORDEN_ESTADOS[(ORDEN_ESTADOS.indexOf(cur)+1) % ORDEN_ESTADOS.length];
+  l.estado_cert = next; // optimista
+  renderPresupuesto();
+  try{ await sbPatch('presupuesto_lineas', id, {estado_cert: next}); }
+  catch(e){ toast('Error guardando estado: '+e.message,'error'); l.estado_cert=cur; renderPresupuesto(); }
+}
+
 function renderPresupuesto(){
   const tbody=document.getElementById('pres-tbody');
   if(!PresC.length){tbody.innerHTML=`<tr><td colspan="11"><div class="empty"><div class="empty-icon">💰</div><div class="empty-text">Presupuesto vacío</div><button class="btn btn-ghost" onclick="addCapituloPresupuesto()">＋ Capítulo</button></div></td></tr>`;document.getElementById('pres-resumen').style.display='none';return;}
   let totBase=0,totCI=0,totVenta=0;
+  // Pre-pass: agrupar líneas por capítulo para calcular % certificado
+  const capStats = {}; // capId -> {sub, cert, p, e, t, c, n}
+  let _curCap=null;
+  PresC.forEach(l=>{
+    if(l.es_capitulo){ _curCap=l.id; capStats[_curCap]={sub:0,cert:0,p:0,e:0,t:0,c:0,n:0}; return; }
+    if(!_curCap) return;
+    const _pv=l.precio_venta||0,_ci=l.ci_gg_bi_pct||0;
+    const _sub=(l.cantidad||0)*_pv, _subCI=_ci>0?_sub*(1+_ci/100):_sub;
+    const st=l.estado_cert||'pendiente';
+    const s=capStats[_curCap]; s.sub+=_subCI; s.n++;
+    if(st==='certificada'){ s.cert+=_subCI; s.c++; }
+    else if(st==='terminada') s.t++;
+    else if(st==='ejecucion') s.e++;
+    else s.p++;
+  });
+  const filtro = PresFiltroEstado||'todos';
+  let _curCapRender=null;
   tbody.innerHTML=PresC.map((l,i)=>{
-    if(l.es_capitulo)return`<tr style="background:#f7f4ef"><td colspan="10" style="padding:9px 10px;font-weight:700;font-size:12px;color:#4a3728;border-bottom:2px solid #b87333">${l.descripcion}</td><td></td><td style="white-space:nowrap"><button class="btn btn-icon btn-sm" style="background:#e8f0e8;border:none;color:#2d6a2d;margin-right:4px" onclick="editCapitulo('${l.id}','${l.descripcion.replace(/'/g,"\\'")}')">✏️</button><button class="btn btn-icon btn-sm" style="background:#e8e0d4;border:none;color:#4a3728" onclick="confirmDelete('presupuesto_lineas','${l.id}','${l.descripcion.replace(/'/g,"\\'")}')">🗑</button></td></tr>`;
+    if(l.es_capitulo){
+      _curCapRender=l.id;
+      const s=capStats[l.id]||{sub:0,cert:0,p:0,e:0,t:0,c:0,n:0};
+      const pct = s.sub>0 ? Math.round((s.cert/s.sub)*1000)/10 : 0;
+      const barColor = pct>=100?'#2e7d32':pct>=50?'#b8860b':pct>0?'#1565c0':'#cfc8ba';
+      const infoCap = s.n>0
+        ? `<div style="display:flex;align-items:center;gap:8px;margin-top:5px;font-weight:500;font-size:10px;color:#6b5a44">
+             <div style="flex:0 0 110px;height:7px;background:#e8e0d4;border-radius:4px;overflow:hidden">
+               <div style="width:${Math.min(100,pct)}%;height:100%;background:${barColor};transition:width .3s"></div>
+             </div>
+             <span style="font-weight:700;color:${barColor}">${pct.toFixed(1)}% certificado</span>
+             <span style="color:#998877">·</span>
+             <span title="Pendientes">⚪${s.p}</span>
+             <span title="En ejecución">🔵${s.e}</span>
+             <span title="Terminadas">🟡${s.t}</span>
+             <span title="Certificadas">🟢${s.c}</span>
+             <span style="color:#998877">·</span>
+             <span>${fmt(s.cert)} / ${fmt(s.sub)}</span>
+           </div>`
+        : '';
+      return`<tr style="background:#f7f4ef"><td colspan="10" style="padding:9px 10px;font-weight:700;font-size:12px;color:#4a3728;border-bottom:2px solid #b87333">${l.descripcion}${infoCap}</td><td></td><td style="white-space:nowrap"><button class="btn btn-icon btn-sm" style="background:#e8f0e8;border:none;color:#2d6a2d;margin-right:4px" onclick="editCapitulo('${l.id}','${l.descripcion.replace(/'/g,"\\'")}')">✏️</button><button class="btn btn-icon btn-sm" style="background:#e8e0d4;border:none;color:#4a3728" onclick="confirmDelete('presupuesto_lineas','${l.id}','${l.descripcion.replace(/'/g,"\\'")}')">🗑</button></td></tr>`;
+    }
     const pv=l.precio_venta||0,ci=l.ci_gg_bi_pct||0,sub=(l.cantidad||0)*pv,subCI=ci>0?sub*(1+ci/100):sub;
     const ivaPctNum=ivaPct(l.iva_pct),ivaImporte=subCI*ivaPctNum/100;
     const esExento=(l.iva_pct==='Exento');
@@ -8696,8 +8765,15 @@ function renderPresupuesto(){
     let _pvSinDto=_mg>0?_pb*(1+_mg/100):_pb;if(_ciR>0)_pvSinDto=_pvSinDto*(1+_ciR/100);
     const _dto=(_pvSinDto>0.001&&pv<_pvSinDto-0.001)?Math.round((1-pv/_pvSinDto)*1000)/10:0;
     const dtoCell=_dto>0?`<span style="color:#c62828;font-weight:700">-${_dto.toFixed(1)}%</span>`:'—';
-    return`<tr data-search="${(l.descripcion||'').toLowerCase()}"><td style="color:var(--text-soft);font-size:11px">${i+1}</td><td><strong>${l.descripcion||'—'}</strong>${l.ref_cype?`<br><span style="font-size:9px;color:var(--text-soft)">${l.ref_cype}</span>`:''}</td><td style="text-align:center">${l.unidad||'—'}</td><td class="td-mono">${l.cantidad||0}</td><td class="td-mono">${fmt(l.precio_base)}</td><td class="td-mono" style="color:var(--green)">${l.margen_pct>0?fmtP(l.margen_pct):'—'}</td><td class="td-mono" style="color:var(--amber)">${ci>0?fmtP(ci):'—'}</td><td class="td-mono" style="color:#c62828;font-weight:700;text-align:center">${dtoCell}</td><td class="td-mono" style="font-weight:700">${fmt(pv)}</td><td class="td-mono" style="font-weight:700;color:var(--navy)">${fmt(subCI)}</td><td style="text-align:center;vertical-align:middle"><span class="badge b-gray">${l.iva_pct||'10%'}</span></td><td class="td-mono" style="font-weight:700;color:var(--copper)">${esExento?'<span style="color:var(--text-soft);font-size:10px">Exento</span>':fmt(subCI+ivaImporte)}</td><td><div class="td-actions"><button class="btn btn-ghost btn-icon btn-sm" onclick="editLineaPresupuesto('${l.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('presupuesto_lineas','${l.id}','${(l.descripcion||'').replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`;
+    const est = l.estado_cert||'pendiente';
+    if(filtro!=='todos' && filtro!==est) return '';
+    const ec = ESTADOS_CERT[est]||ESTADOS_CERT.pendiente;
+    const rowStyle = ec.rowBg?`background:${ec.rowBg};`:'';
+    const badge = `<span onclick="cyclePresEstado('${l.id}',event)" title="Click: cambiar estado (${ec.txt})" style="display:inline-block;cursor:pointer;user-select:none;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:700;background:${ec.badgeBg};color:${ec.color};margin-right:6px;vertical-align:middle">${ec.lbl} ${ec.txt}</span>`;
+    return`<tr data-search="${(l.descripcion||'').toLowerCase()}" style="${rowStyle}"><td style="color:var(--text-soft);font-size:11px">${i+1}</td><td>${badge}<strong>${l.descripcion||'—'}</strong>${l.ref_cype?`<br><span style="font-size:9px;color:var(--text-soft)">${l.ref_cype}</span>`:''}</td><td style="text-align:center">${l.unidad||'—'}</td><td class="td-mono">${l.cantidad||0}</td><td class="td-mono">${fmt(l.precio_base)}</td><td class="td-mono" style="color:var(--green)">${l.margen_pct>0?fmtP(l.margen_pct):'—'}</td><td class="td-mono" style="color:var(--amber)">${ci>0?fmtP(ci):'—'}</td><td class="td-mono" style="color:#c62828;font-weight:700;text-align:center">${dtoCell}</td><td class="td-mono" style="font-weight:700">${fmt(pv)}</td><td class="td-mono" style="font-weight:700;color:var(--navy)">${fmt(subCI)}</td><td style="text-align:center;vertical-align:middle"><span class="badge b-gray">${l.iva_pct||'10%'}</span></td><td class="td-mono" style="font-weight:700;color:var(--copper)">${esExento?'<span style="color:var(--text-soft);font-size:10px">Exento</span>':fmt(subCI+ivaImporte)}</td><td><div class="td-actions"><button class="btn btn-ghost btn-icon btn-sm" onclick="editLineaPresupuesto('${l.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('presupuesto_lineas','${l.id}','${(l.descripcion||'').replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`;
   }).join('');
+  // Sincronizar el valor del filtro en el select si existe
+  const _filtSel=document.getElementById('pres-filtro-estado'); if(_filtSel && _filtSel.value!==filtro) _filtSel.value=filtro;
   // Calcular IVA por tramos según el iva_pct de cada línea
   let ivaDesglose={};
   PresC.forEach(l=>{
