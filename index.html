@@ -26002,34 +26002,43 @@ async function guardarCertificacionPartidas(){
   // 1) crear certificación
   let certNueva;
   try{
-    // Probar varios nombres de columna para el importe (esquemas distintos)
-    const colsBase = ['base_imponible','importe_base','importe','base','total'];
-    let lastErr = null;
-    for(const col of colsBase){
-      const payloadCert = {
-        proyecto_id: proyId,
-        fecha,
-        estado: 'Borrador',
-        [col]: base,
-        iva_pct: ivaPctNum,
-        notas,
-        num_cert: numCert
+    // Construir un payload base e ir reduciendo si Supabase rechaza columnas
+    const fieldsAll = {
+      proyecto_id: proyId,
+      fecha,
+      estado: 'Borrador',
+      base_imponible: base,
+      iva_pct: ivaPctNum,
+      notas,
+      num_cert: numCert
+    };
+    const colVariants = ['base_imponible','importe_base','importe','base','total','importe_total'];
+    let lastErr = null, payloadFinal = null;
+    for(const col of colVariants){
+      const payload = {...fieldsAll};
+      delete payload.base_imponible;
+      payload[col] = base;
+      // Ir quitando opcionales si estos también molestan
+      const tryVariant = async(p)=>{
+        certNueva = await sbPost('certificaciones', p);
       };
-      try{
-        certNueva = await sbPost('certificaciones', payloadCert);
-        lastErr = null;
-        break;
-      }catch(e1){
+      try{ await tryVariant(payload); lastErr=null; payloadFinal=payload; break; }
+      catch(e1){
         lastErr = e1;
-        // Si el error no es por columna inexistente, no probamos más
-        if(!/column|schema cache|PGRST204/i.test(e1.message||'')) break;
+        console.error('[cert] intento col='+col+' falló:', e1.message);
+        // Si la queja es por una columna distinta a la del importe, intentar quitarla
+        const m = (e1.message||'').match(/'([a-z_]+)'/);
+        if(m && m[1] !== col){
+          const p2 = {...payload};
+          delete p2[m[1]];
+          try{ await tryVariant(p2); lastErr=null; payloadFinal=p2; break; }
+          catch(e2){ lastErr=e2; console.error('[cert] reintento sin '+m[1]+' falló:', e2.message); }
+        }
       }
     }
     if(lastErr){
-      // Último intento: payload mínimo sin iva_pct/notas
-      try{
-        certNueva = await sbPost('certificaciones', { proyecto_id: proyId, fecha, estado:'Borrador', base_imponible: base, num_cert: numCert });
-      }catch(e2){ throw lastErr; }
+      console.error('[cert] payload final probado:', payloadFinal);
+      throw lastErr;
     }
   }catch(e){ toast('Error creando certificación: '+e.message,'error'); return; }
   const certId = Array.isArray(certNueva)?certNueva[0]?.id:certNueva?.id;
