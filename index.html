@@ -23587,21 +23587,65 @@ async function duplicarCapituloCompleto(capId){
     loadPresupuesto();
   }catch(e){toast('Error: '+e.message,'error');}
 }
-// Patch renderPresupuesto to include duplicate button
+// Patch renderPresupuesto to include duplicate button + estados de certificación
 const _origRenderPres=renderPresupuesto;
 renderPresupuesto=function(){
   _origRenderPres();
   const tbody=document.getElementById('pres-tbody'); if(!tbody||!PresC.length) return;
-  const _capTotals={};let _curCapId=null;PresC.forEach(l=>{if(l.es_capitulo){_curCapId=l.id;_capTotals[_curCapId]=0;}else if(_curCapId){const _pv=l.precio_venta||0,_ci=l.ci_gg_bi_pct||0,_s=(l.cantidad||0)*_pv,_sCI=_ci>0?_s*(1+_ci/100):_s;_capTotals[_curCapId]+=_sCI;}});
+  // Pre-pass: subtotales y estadísticas de certificación por capítulo
+  const _capTotals={}; const _capStats={};
+  let _curCapId=null;
+  PresC.forEach(l=>{
+    if(l.es_capitulo){ _curCapId=l.id; _capTotals[_curCapId]=0; _capStats[_curCapId]={sub:0,cert:0,p:0,e:0,t:0,c:0,n:0}; return; }
+    if(!_curCapId) return;
+    const _pv=l.precio_venta||0,_ci=l.ci_gg_bi_pct||0,_s=(l.cantidad||0)*_pv,_sCI=_ci>0?_s*(1+_ci/100):_s;
+    _capTotals[_curCapId]+=_sCI;
+    const st=l.estado_cert||'pendiente';
+    const ss=_capStats[_curCapId]; ss.sub+=_sCI; ss.n++;
+    if(st==='certificada'){ ss.cert+=_sCI; ss.c++; }
+    else if(st==='terminada') ss.t++;
+    else if(st==='ejecucion') ss.e++;
+    else ss.p++;
+  });
+  const filtro = (typeof PresFiltroEstado!=='undefined' ? PresFiltroEstado : 'todos') || 'todos';
   tbody.innerHTML=PresC.map((l,i)=>{
-    if(l.es_capitulo){const _capSub=_capTotals[l.id]||0;const _showSub=l.partida&&l.partida.includes('Σ');return `<tr draggable="true" data-id="${l.id}" data-orden="${l.orden}" style="background:#f7f4ef"><td style="padding:4px 3px;cursor:grab;color:#bbb;text-align:center;font-size:14px;user-select:none" title="Arrastrar">⠿</td><td colspan="${ciActivo?10:9}" style="padding:9px 10px;font-weight:700;font-size:12px;color:#4a3728;border-bottom:2px solid #b87333">${l.descripcion}${_showSub&&_capSub>0?`<span style="float:right;font-size:12px;color:#b87333;font-weight:700">${fmt(_capSub)}</span>`:''}</td><td></td><td><div style="display:flex;gap:3px"><button class="btn btn-icon btn-sm" style="background:${_showSub?'#b87333':'#f0ebe4'};border:none;color:${_showSub?'#fff':'#8a7a6a'};font-size:11px;padding:3px 7px;font-weight:700" title="${_showSub?'Ocultar subtotal capítulo':'Mostrar subtotal capítulo'}" onclick="toggleCapSubtotal('${l.id}')">Σ</button><button class="btn btn-icon btn-sm" style="background:#e8f0e8;border:none;color:#2d6a2d;font-size:13px;padding:3px 8px" title="Editar capítulo" onclick="editCapitulo('${l.id}')" >✏️</button><button class="btn btn-icon btn-sm" style="background:#e8e0d4;border:none;color:#4a3728;font-size:10px;padding:3px 7px;white-space:nowrap" title="Duplicar capítulo completo" onclick="duplicarCapituloCompleto('${l.id}')">📋 Dup.</button><button class="btn btn-icon btn-sm" style="background:#fde8e8;border:none;color:#c62828" onclick="confirmDelete('presupuesto_lineas','${l.id}','${(l.descripcion||'').replace(/'/g,'')}')">🗑</button></div></td></tr>`;}
+    if(l.es_capitulo){
+      const _capSub=_capTotals[l.id]||0;
+      const _showSub=l.partida&&l.partida.includes('Σ');
+      const ss=_capStats[l.id]||{sub:0,cert:0,p:0,e:0,t:0,c:0,n:0};
+      const pct = ss.sub>0 ? Math.round((ss.cert/ss.sub)*1000)/10 : 0;
+      const barColor = pct>=100?'#2e7d32':pct>=50?'#b8860b':pct>0?'#1565c0':'#cfc8ba';
+      const infoCap = ss.n>0
+        ? `<div style="display:flex;align-items:center;gap:8px;margin-top:5px;font-weight:500;font-size:10px;color:#6b5a44;flex-wrap:wrap">
+             <div style="flex:0 0 110px;height:7px;background:#e8e0d4;border-radius:4px;overflow:hidden">
+               <div style="width:${Math.min(100,pct)}%;height:100%;background:${barColor};transition:width .3s"></div>
+             </div>
+             <span style="font-weight:700;color:${barColor}">${pct.toFixed(1)}% certificado</span>
+             <span style="color:#998877">·</span>
+             <span title="Pendientes">⚪${ss.p}</span>
+             <span title="En ejecución">🔵${ss.e}</span>
+             <span title="Terminadas">🟡${ss.t}</span>
+             <span title="Certificadas">🟢${ss.c}</span>
+             <span style="color:#998877">·</span>
+             <span>${fmt(ss.cert)} / ${fmt(ss.sub)}</span>
+           </div>`
+        : '';
+      return `<tr draggable="true" data-id="${l.id}" data-orden="${l.orden}" style="background:#f7f4ef"><td style="padding:4px 3px;cursor:grab;color:#bbb;text-align:center;font-size:14px;user-select:none" title="Arrastrar">⠿</td><td colspan="${ciActivo?10:9}" style="padding:9px 10px;font-weight:700;font-size:12px;color:#4a3728;border-bottom:2px solid #b87333">${l.descripcion}${_showSub&&_capSub>0?`<span style="float:right;font-size:12px;color:#b87333;font-weight:700">${fmt(_capSub)}</span>`:''}${infoCap}</td><td></td><td><div style="display:flex;gap:3px"><button class="btn btn-icon btn-sm" style="background:${_showSub?'#b87333':'#f0ebe4'};border:none;color:${_showSub?'#fff':'#8a7a6a'};font-size:11px;padding:3px 7px;font-weight:700" title="${_showSub?'Ocultar subtotal capítulo':'Mostrar subtotal capítulo'}" onclick="toggleCapSubtotal('${l.id}')">Σ</button><button class="btn btn-icon btn-sm" style="background:#e8f0e8;border:none;color:#2d6a2d;font-size:13px;padding:3px 8px" title="Editar capítulo" onclick="editCapitulo('${l.id}')" >✏️</button><button class="btn btn-icon btn-sm" style="background:#e8e0d4;border:none;color:#4a3728;font-size:10px;padding:3px 7px;white-space:nowrap" title="Duplicar capítulo completo" onclick="duplicarCapituloCompleto('${l.id}')">📋 Dup.</button><button class="btn btn-icon btn-sm" style="background:#fde8e8;border:none;color:#c62828" onclick="confirmDelete('presupuesto_lineas','${l.id}','${(l.descripcion||'').replace(/'/g,'')}')">🗑</button></div></td></tr>`;
+    }
     const pv=l.precio_venta||0,ci=l.ci_gg_bi_pct||0,sub=(l.cantidad||0)*pv,subCI=ci>0?sub*(1+ci/100):sub;
     const ivaPctNum=ivaPct(l.iva_pct),ivaImporte=subCI*ivaPctNum/100;
     const esExento=(l.iva_pct==='Exento');
-    return `<tr draggable="true" data-id="${l.id}" data-orden="${l.orden}" data-search="${(l.descripcion||'').toLowerCase()}"><td style="padding:4px 3px;cursor:grab;color:#bbb;text-align:center;font-size:14px;user-select:none" title="Arrastrar para reordenar">⠿</td><td style="color:var(--text-soft);font-size:11px">${i+1}</td><td><strong>${l.descripcion||'—'}</strong>${l.ref_cype?`<br><span style="font-size:9px;color:var(--text-soft)">${l.ref_cype}</span>`:''}</td><td style="text-align:center">${l.unidad||'—'}</td><td class="td-mono">${l.cantidad||0}</td><td class="td-mono">${fmt(l.precio_base)}</td><td class="td-mono" style="color:var(--green)">${l.margen_pct>0?fmtP(l.margen_pct):'—'}</td><td class="td-mono" style="color:var(--amber)">${ci>0?fmtP(ci):'—'}</td><td class="td-mono" style="font-weight:700">${fmt(pv)}</td><td class="td-mono" style="font-weight:700;color:var(--navy)">${fmt(subCI)}</td><td style="text-align:center;vertical-align:middle"><span class="badge b-gray">${l.iva_pct||'10%'}</span></td><td class="td-mono" style="font-weight:700;color:var(--copper)">${esExento?'<span style="color:var(--text-soft);font-size:10px">Exento</span>':fmt(subCI+ivaImporte)}</td><td><div class="td-actions"><button class="btn btn-ghost btn-icon btn-sm" title="Duplicar" onclick="duplicarLineaPresupuesto('${l.id}')">⧉</button><button class="btn btn-ghost btn-icon btn-sm" onclick="editLineaPresupuesto('${l.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('presupuesto_lineas','${l.id}','${(l.descripcion||'').replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`;
+    const est = l.estado_cert||'pendiente';
+    if(filtro!=='todos' && filtro!==est) return '';
+    const ec = (typeof ESTADOS_CERT!=='undefined' && ESTADOS_CERT[est]) ? ESTADOS_CERT[est] : {lbl:'⚪',txt:'Pendiente',rowBg:'',badgeBg:'#eceae4',color:'#7a6a55'};
+    const rowStyle = ec.rowBg?`background:${ec.rowBg};`:'';
+    const badge = `<span onclick="cyclePresEstado('${l.id}',event)" title="Click: cambiar estado (${ec.txt})" style="display:inline-block;cursor:pointer;user-select:none;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:700;background:${ec.badgeBg};color:${ec.color};margin-right:6px;vertical-align:middle">${ec.lbl} ${ec.txt}</span>`;
+    return `<tr draggable="true" data-id="${l.id}" data-orden="${l.orden}" data-search="${(l.descripcion||'').toLowerCase()}" style="${rowStyle}"><td style="padding:4px 3px;cursor:grab;color:#bbb;text-align:center;font-size:14px;user-select:none" title="Arrastrar para reordenar">⠿</td><td style="color:var(--text-soft);font-size:11px">${i+1}</td><td>${badge}<strong>${l.descripcion||'—'}</strong>${l.ref_cype?`<br><span style="font-size:9px;color:var(--text-soft)">${l.ref_cype}</span>`:''}</td><td style="text-align:center">${l.unidad||'—'}</td><td class="td-mono">${l.cantidad||0}</td><td class="td-mono">${fmt(l.precio_base)}</td><td class="td-mono" style="color:var(--green)">${l.margen_pct>0?fmtP(l.margen_pct):'—'}</td><td class="td-mono" style="color:var(--amber)">${ci>0?fmtP(ci):'—'}</td><td class="td-mono" style="font-weight:700">${fmt(pv)}</td><td class="td-mono" style="font-weight:700;color:var(--navy)">${fmt(subCI)}</td><td style="text-align:center;vertical-align:middle"><span class="badge b-gray">${l.iva_pct||'10%'}</span></td><td class="td-mono" style="font-weight:700;color:var(--copper)">${esExento?'<span style="color:var(--text-soft);font-size:10px">Exento</span>':fmt(subCI+ivaImporte)}</td><td><div class="td-actions"><button class="btn btn-ghost btn-icon btn-sm" title="Duplicar" onclick="duplicarLineaPresupuesto('${l.id}')">⧉</button><button class="btn btn-ghost btn-icon btn-sm" onclick="editLineaPresupuesto('${l.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('presupuesto_lineas','${l.id}','${(l.descripcion||'').replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`;
   }).join('');
   // Reaplica CI+GG+BI hide a los TDs nuevos
   tbody.querySelectorAll('td:nth-child(7)').forEach(td=>{ td.style.display = ciActivo ? '' : 'none'; });
+  // Sincronizar selector de filtro
+  const _filtSel=document.getElementById('pres-filtro-estado'); if(_filtSel && _filtSel.value!==filtro) _filtSel.value=filtro;
 };
 
 
