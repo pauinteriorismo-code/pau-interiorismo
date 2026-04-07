@@ -26372,8 +26372,12 @@ async function exportarCertPDFById(certId) {
 }
 
 async function getCfg() {
-  try { const r = await sbGet('configuracion','?limit=1'); return r[0]||{}; }
-  catch { return {}; }
+  try {
+    const r = await sbGet('configuracion');
+    const map = {};
+    (r||[]).forEach(d => { if(d && d.clave!=null) map[d.clave] = d.valor; });
+    return map;
+  } catch { return {}; }
 }
 
 function generarCertPDFContenido({ proy, p, cli, cfg, fecha, notas, base, iva, ivaPct, presBase, pct, numCert }) {
