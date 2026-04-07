@@ -4065,11 +4065,19 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="form-group" style="margin:0;width:110px"><label class="form-label">Nº cert.</label><input class="form-input" id="cp-num" placeholder="Auto"></div>
       <div class="form-group" style="margin:0;width:90px"><label class="form-label">IVA</label><select class="form-input" id="cp-iva"><option value="21">21%</option><option value="10">10%</option><option value="0">Exento</option></select></div>
       <div class="form-group" style="margin:0;flex:1;min-width:200px"><label class="form-label">Concepto / Notas</label><input class="form-input" id="cp-notas" placeholder="Ej: Avance de marzo 2026"></div>
-      <div style="display:flex;gap:6px">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
         <button class="btn btn-ghost btn-sm" onclick="cpMarcarTerminadas()" title="Marcar las partidas en estado 🟡 Terminada">🟡 Solo terminadas</button>
         <button class="btn btn-ghost btn-sm" onclick="cpMarcarTodas()" title="Marcar todas">✓ Todas</button>
         <button class="btn btn-ghost btn-sm" onclick="cpDesmarcarTodas()" title="Desmarcar">✗ Ninguna</button>
       </div>
+    </div>
+    <div id="cp-filtros-pro" style="display:none;padding:10px 18px;border-bottom:1px solid var(--border);background:#f4f8fc;gap:14px;flex-wrap:wrap;align-items:center;font-size:12px">
+      <strong style="color:#1e4d8b">⚙️ Filtros por estado:</strong>
+      <label style="display:flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" id="cp-flt-term" checked> 🟡 Terminadas (100%)</label>
+      <label style="display:flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" id="cp-flt-ejec"> 🔵 En ejecución al</label>
+      <input type="number" id="cp-flt-pct" min="0" max="100" step="1" value="50" style="width:60px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;text-align:right;font-family:monospace"> %
+      <button class="btn btn-primary btn-sm" onclick="cpAplicarFiltros()">⚙️ Aplicar filtros</button>
+      <span style="color:var(--text-soft);font-style:italic">Después puedes ajustar manualmente la cantidad de cada partida.</span>
     </div>
     <div id="cp-body" style="flex:1;overflow:auto;padding:0">
       <!-- inyectado por JS según modo simple/pro -->
@@ -25788,6 +25796,7 @@ async function abrirCertificarPartidas(){
   document.getElementById('cp-title').textContent = modo==='pro'
     ? '🔵 Certificación profesional (parcial / por avance)'
     : '🟢 Certificación simple';
+  document.getElementById('cp-filtros-pro').style.display = 'flex';
   document.getElementById('cp-sub').textContent = `${proyId} · ${proy.nombre||''} · ${cli?.nombre||''} · versión ${ver}`;
   cpRender();
   openModal('m-cert-partidas');
@@ -25833,7 +25842,7 @@ function cpRender(){
     if(modo==='pro'){
       html += `<td style="padding:6px 8px;text-align:right"><input type="number" min="0" max="${restante}" step="0.01" value="${cantInput}" ${disabled} oninput="cpSetCant('${l.id}',this.value)" style="width:75px;text-align:right;padding:3px 5px;border:1px solid var(--border);border-radius:4px;font-family:monospace;font-size:12px"></td>`;
     } else {
-      html += `<td style="padding:6px 8px;text-align:right;font-family:monospace">${restante}</td>`;
+      html += `<td style="padding:6px 8px;text-align:right;font-family:monospace">${(Number(cantInput)||0)}</td>`;
     }
     html += `<td style="padding:6px 8px;text-align:right;font-family:monospace">${fmt(pvFinal)}</td>`;
     if(modo==='pro') html += `<td style="padding:6px 8px;text-align:right;font-family:monospace;font-weight:700;color:${pctAv>=100?'#2e7d32':pctAv>0?'#b87333':'#999'}">${pctAv.toFixed(0)}%</td>`;
@@ -25873,6 +25882,35 @@ function cpMarcarTodas(){
     _cpState.sel[l.id] = restante>0;
   });
   cpRender();
+}
+function cpAplicarFiltros(){
+  const incTerm = document.getElementById('cp-flt-term').checked;
+  const incEjec = document.getElementById('cp-flt-ejec').checked;
+  let pct = Number(document.getElementById('cp-flt-pct').value)||0;
+  if(pct<0) pct=0; if(pct>100) pct=100;
+  let nT=0, nE=0;
+  _cpState.lineas.forEach(l=>{
+    if(l.es_capitulo) return;
+    const ya = _cpState.yaCert[l.id]||0;
+    const cantP = Number(l.cantidad)||0;
+    const restante = Math.max(0, cantP - ya);
+    if(restante<=0){ _cpState.sel[l.id]=false; return; }
+    const est = l.estado_cert || 'pendiente';
+    if(est==='terminada' && incTerm){
+      _cpState.sel[l.id]=true;
+      _cpState.cant[l.id]=restante;
+      nT++;
+    } else if(est==='ejecucion' && incEjec){
+      _cpState.sel[l.id]=true;
+      _cpState.cant[l.id]= Math.round(restante*pct)/100*1; // restante * pct/100
+      _cpState.cant[l.id]= Math.round(restante*(pct/100)*100)/100;
+      nE++;
+    } else {
+      _cpState.sel[l.id]=false;
+    }
+  });
+  cpRender();
+  toast(`Filtros aplicados: ${nT} terminadas + ${nE} en ejecución (${pct}%)`,'success');
 }
 function cpDesmarcarTodas(){
   Object.keys(_cpState.sel).forEach(k=>_cpState.sel[k]=false);
