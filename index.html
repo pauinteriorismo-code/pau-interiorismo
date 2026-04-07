@@ -25676,6 +25676,29 @@ async function loadCertificaciones() {
     document.getElementById('cert-btn-nueva').disabled = false;
     return;
   }
+  // Reconstruir base_imponible e iva_pct de cada certificación a partir de certificacion_lineas
+  if(certs.length){
+    try{
+      const ids = certs.map(c=>c.id).join(',');
+      const allLineas = await sbGet('certificacion_lineas', `?certificacion_id=in.(${ids})`);
+      const sumByCert = {};
+      const ivaByCert = {};
+      allLineas.forEach(l=>{
+        const cid = l.certificacion_id;
+        sumByCert[cid] = (sumByCert[cid]||0) + (Number(l.subtotal)||0);
+        if(ivaByCert[cid]==null && l.iva_pct!=null){
+          const m = String(l.iva_pct).match(/(\d+(?:\.\d+)?)/);
+          ivaByCert[cid] = m ? Number(m[1]) : 0;
+        }
+      });
+      certs.forEach(c=>{
+        if(c.base_imponible==null) c.base_imponible = Math.round((sumByCert[c.id]||0)*100)/100;
+        if(c.iva_pct==null)        c.iva_pct        = ivaByCert[c.id]!=null ? ivaByCert[c.id] : 21;
+        if(!c.estado)              c.estado         = 'Borrador';
+        if(!c.num_cert)            c.num_cert       = c.numero || '—';
+      });
+    }catch(e){ console.warn('No se pudieron leer certificacion_lineas:', e.message); }
+  }
   const totalCert  = certs.reduce((s,c) => s+(c.base_imponible||0), 0);
   const pdte       = presBase - totalCert;
   const pct        = presBase > 0 ? (totalCert / presBase * 100) : 0;
