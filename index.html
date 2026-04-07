@@ -26335,9 +26335,21 @@ async function exportarCertPDFById(certId) {
   const cfg = await getCfg();
   const p   = (PC||[]).find(px => px.proyecto_id === c.proyecto_id) || {};
   const cli = (CC||[]).find(cx => cx.cliente_id  === p.cliente_id) || {};
-  const base    = c.base_imponible || 0;
-  const ivaPct2 = c.iva_pct != null ? c.iva_pct : 21;
-  const iva     = base * ivaPct2 / 100;
+  // Reconstruir base/iva desde certificacion_lineas (la tabla certificaciones no los almacena)
+  let base = Number(c.base_imponible)||0;
+  let ivaPct2 = c.iva_pct != null ? Number(c.iva_pct) : null;
+  try{
+    const cl = await sbGet('certificacion_lineas', `?certificacion_id=eq.${certId}`);
+    if(cl.length){
+      base = Math.round(cl.reduce((s,l)=>s+(Number(l.subtotal)||0),0)*100)/100;
+      if(ivaPct2==null){
+        const m = String(cl[0].iva_pct||'').match(/(\d+(?:\.\d+)?)/);
+        ivaPct2 = m ? Number(m[1]) : 21;
+      }
+    }
+  }catch(e){ console.warn('cert lineas:',e.message); }
+  if(ivaPct2==null) ivaPct2 = 21;
+  const iva = base * ivaPct2 / 100;
 
   // Recalculate presBase for this project
   let presBase = 0;
@@ -26355,7 +26367,7 @@ async function exportarCertPDFById(certId) {
     fecha: c.fecha, notas: c.notas,
     base, iva, ivaPct: ivaPct2,
     presBase, pct: presBase > 0 ? base/presBase*100 : 0,
-    numCert: c.num_cert
+    numCert: c.num_cert || c.numero
   });
 }
 
@@ -26392,8 +26404,9 @@ function generarCertPDFContenido({ proy, p, cli, cfg, fecha, notas, base, iva, i
   if (notas) { pdf.text(`Concepto:  ${notas}`, mX, y); y += 5; }
   y += 4;
 
-  // Cuadro de certificación
-  pdf.setFillColor(240,244,250); pdf.roundedRect(mX, y, pW-2*mX, 44, 2, 2, 'F');
+  // Cuadro de certificación (alto dinámico según si hay presBase o no)
+  const boxH = presBase>0 ? 60 : 48;
+  pdf.setFillColor(240,244,250); pdf.roundedRect(mX, y, pW-2*mX, boxH, 2, 2, 'F');
   pdf.setFont(undefined,'bold'); pdf.setFontSize(10); pdf.setTextColor(30,60,100);
   pdf.text('RESUMEN DE CERTIFICACIÓN', mX+5, y+7);
   pdf.setFont(undefined,'normal'); pdf.setFontSize(9); pdf.setTextColor(60);
@@ -26433,7 +26446,7 @@ function generarCertPDFContenido({ proy, p, cli, cfg, fecha, notas, base, iva, i
   pdf.text('TOTAL CERTIFICACIÓN:', col1, yr);
   pdf.text(fmt(base+iva), col2, yr); yr += 4;
 
-  y = yr + 10;
+  y = y + boxH + 6;
 
   // Firma
   pdf.setDrawColor(150); pdf.setLineWidth(0.3);
