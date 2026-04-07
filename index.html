@@ -4736,6 +4736,9 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <div class="form-group" style="margin-bottom:6px"><label class="form-label">Proveedor</label>
           <select class="form-input" id="o1-prov"><option value="">Seleccionar…</option></select>
         </div>
+        <input type="file" id="o1-pdf-file" accept="application/pdf" style="display:none" onchange="cmpAnalizarPDFOferta(1,this)">
+        <button type="button" class="btn btn-ghost" style="width:100%;font-size:10px;padding:4px 6px;margin-bottom:4px" onclick="document.getElementById('o1-pdf-file').click()">📎 Subir PDF y analizar con IA</button>
+        <div id="o1-pdf-status" style="font-size:10px;color:var(--text-soft);margin-bottom:6px;min-height:12px"></div>
         <div id="o1-modo-pvp">
           <div class="form-group" style="margin-bottom:6px"><label class="form-label">PVP catálogo €</label>
             <input class="form-input" id="o1-pvp" type="number" step="0.01" placeholder="0.00" oninput="calcOferta(1)">
@@ -4779,6 +4782,9 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <div class="form-group" style="margin-bottom:6px"><label class="form-label">Proveedor</label>
           <select class="form-input" id="o2-prov"><option value="">Seleccionar…</option></select>
         </div>
+        <input type="file" id="o2-pdf-file" accept="application/pdf" style="display:none" onchange="cmpAnalizarPDFOferta(2,this)">
+        <button type="button" class="btn btn-ghost" style="width:100%;font-size:10px;padding:4px 6px;margin-bottom:4px" onclick="document.getElementById('o2-pdf-file').click()">📎 Subir PDF y analizar con IA</button>
+        <div id="o2-pdf-status" style="font-size:10px;color:var(--text-soft);margin-bottom:6px;min-height:12px"></div>
         <div id="o2-modo-pvp">
           <div class="form-group" style="margin-bottom:6px"><label class="form-label">PVP catálogo €</label>
             <input class="form-input" id="o2-pvp" type="number" step="0.01" placeholder="0.00" oninput="calcOferta(2)">
@@ -4822,6 +4828,9 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <div class="form-group" style="margin-bottom:6px"><label class="form-label">Proveedor</label>
           <select class="form-input" id="o3-prov"><option value="">Seleccionar…</option></select>
         </div>
+        <input type="file" id="o3-pdf-file" accept="application/pdf" style="display:none" onchange="cmpAnalizarPDFOferta(3,this)">
+        <button type="button" class="btn btn-ghost" style="width:100%;font-size:10px;padding:4px 6px;margin-bottom:4px" onclick="document.getElementById('o3-pdf-file').click()">📎 Subir PDF y analizar con IA</button>
+        <div id="o3-pdf-status" style="font-size:10px;color:var(--text-soft);margin-bottom:6px;min-height:12px"></div>
         <div id="o3-modo-pvp">
           <div class="form-group" style="margin-bottom:6px"><label class="form-label">PVP catálogo €</label>
             <input class="form-input" id="o3-pvp" type="number" step="0.01" placeholder="0.00" oninput="calcOferta(3)">
@@ -5619,11 +5628,11 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
   </div>
 </div>
 <!-- MODAL COMPARATIVA VERSIONES -->
-<div class="overlay" id="m-comparativa" style="display:none" onclick="if(event.target===this)closeModal(&#39;m-comparativa&#39;)">
+<div class="overlay" id="m-comparativa-versiones" style="display:none" onclick="if(event.target===this)closeModal(&#39;m-comparativa-versiones&#39;)">
   <div class="modal" style="max-width:920px;width:96%">
     <div class="modal-header">
       <div class="modal-title">⚖️ Comparativa de versiones de presupuesto</div>
-      <button class="modal-close" onclick="closeModal(&#39;m-comparativa&#39;)">✕</button>
+      <button class="modal-close" onclick="closeModal(&#39;m-comparativa-versiones&#39;)">✕</button>
     </div>
     <div class="modal-body" style="padding:16px">
       <div id="comp-kpis" class="kpi-grid" style="margin-bottom:16px;grid-template-columns:repeat(auto-fit,minmax(140px,1fr))"></div>
@@ -8995,6 +9004,105 @@ async function saveComparativa(){
   try{await sbPost('comparativa_ofertas',d);toast('Comparativa guardada ✅');closeModal('m-comparativa');loadComparativa();}catch(e){toast('Error: '+e.message,'error');}
 }
 
+// ── Análisis con IA del PDF de una oferta de comparativa ────────────────────
+async function cmpAnalizarPDFOferta(n, input){
+  const file = input.files[0]; if(!file) return;
+  const status = document.getElementById(`o${n}-pdf-status`);
+  status.innerHTML = '🤖 Analizando PDF con IA…';
+  status.style.color = 'var(--navy)';
+  try {
+    const base64 = await new Promise((res,rej)=>{
+      const r = new FileReader();
+      r.onload = () => res(r.result.split(',')[1]);
+      r.onerror = () => rej(new Error('Error leyendo el PDF'));
+      r.readAsDataURL(file);
+    });
+    const prompt = `RESPONDE SOLO CON JSON VÁLIDO. Sin markdown, sin backticks. Empieza con { y termina con }.
+
+Analiza esta oferta/presupuesto de un proveedor o subcontrata para una comparativa de ofertas. Devuelve SOLO este JSON:
+{"proveedor":"razón social del proveedor","pvp_catalogo":0.00,"descuento_pct":0,"precio_coste":0.00,"margen_pct":0,"notas":"plazo, condiciones, forma de pago, garantías (máx 120 caracteres)"}
+
+Reglas:
+- proveedor: nombre/razón social de quien emite la oferta.
+- pvp_catalogo: importe TOTAL antes de descuentos, sin IVA. Si no hay descuento, igual al total final.
+- descuento_pct: % de descuento aplicado (0 si no hay).
+- precio_coste: importe TOTAL final sin IVA (lo que se paga al proveedor).
+- margen_pct: 0 (lo añade el usuario).
+- notas: resumen breve de plazo de entrega, condiciones, forma de pago o garantías. Máx 120 caracteres en una sola línea.
+- Devuelve los campos numéricos como NÚMEROS, sin símbolo €, usando punto decimal.`;
+
+    const apiBody = {
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 1500,
+      system: 'Eres un extractor de datos. Responde ÚNICAMENTE con JSON válido puro, sin markdown, sin bloques de código, sin backticks. Empieza con { y termina con }.',
+      messages: [{ role:'user', content: [
+        { type:'document', source:{ type:'base64', media_type:'application/pdf', data: base64 } },
+        { type:'text', text: prompt }
+      ]}]
+    };
+
+    let resp;
+    for(let attempt=0; attempt<3; attempt++){
+      if(attempt>0) await new Promise(r=>setTimeout(r, attempt*4000));
+      resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method:'POST', headers: getAnthropicHeaders(), body: JSON.stringify(apiBody)
+      });
+      if(resp.status !== 429) break;
+    }
+    if(!resp.ok){
+      let msg = `Error API ${resp.status}`;
+      try { const eb = await resp.json(); msg = eb?.error?.message || msg; } catch(e){}
+      throw new Error(msg);
+    }
+    const data = await resp.json();
+    let txt = data?.content?.[0]?.text || '';
+    txt = txt.replace(/^```json\s*|```$/g,'').trim();
+    const i1 = txt.indexOf('{'), i2 = txt.lastIndexOf('}');
+    if(i1>=0 && i2>i1) txt = txt.slice(i1, i2+1);
+    const r = JSON.parse(txt);
+
+    // Proveedor: intentar match por nombre en el select
+    const sel = document.getElementById(`o${n}-prov`);
+    let provInfo = '';
+    if(sel && r.proveedor){
+      const target = r.proveedor.toLowerCase().trim();
+      let matched = false;
+      for(const opt of sel.options){
+        const ot = (opt.text||'').toLowerCase().trim();
+        if(!opt.value || !ot) continue;
+        if(ot.includes(target) || target.includes(ot)){
+          sel.value = opt.value; matched = true; break;
+        }
+      }
+      if(!matched) provInfo = ` · ⚠️ Proveedor "${r.proveedor}" no está en la lista, selecciónalo manualmente`;
+    }
+
+    const modo = document.querySelector('input[name="cmp-modo"]:checked')?.value || 'pvp';
+    if(modo === 'pvp'){
+      if(r.pvp_catalogo) document.getElementById(`o${n}-pvp`).value = r.pvp_catalogo;
+      else if(r.precio_coste) document.getElementById(`o${n}-pvp`).value = r.precio_coste;
+      if(r.descuento_pct != null) document.getElementById(`o${n}-dto`).value = r.descuento_pct;
+    } else {
+      if(r.precio_coste) document.getElementById(`o${n}-costebase`).value = r.precio_coste;
+      else if(r.pvp_catalogo) document.getElementById(`o${n}-costebase`).value = r.pvp_catalogo;
+      if(r.margen_pct != null) document.getElementById(`o${n}-mk`).value = r.margen_pct;
+    }
+    if(r.notas){
+      const notasEl = document.getElementById(`o${n}-notas`);
+      notasEl.value = (notasEl.value ? notasEl.value+' · ' : '') + r.notas;
+    }
+    if(typeof calcOferta === 'function') calcOferta(n);
+
+    status.innerHTML = `✅ ${file.name}${provInfo}`;
+    status.style.color = provInfo ? 'var(--amber)' : 'var(--green)';
+    toast('PDF analizado ✅');
+  } catch(e){
+    status.innerHTML = '❌ ' + e.message;
+    status.style.color = 'var(--red)';
+    toast('Error analizando PDF: '+e.message,'error');
+  }
+}
+
 // ═══════════════════════════════════════════
 // TARIFARIO
 // ═══════════════════════════════════════════
@@ -11529,7 +11637,7 @@ async function saitraIAAnalizar(){
     const isPdf=_saitraIAFile.type==='application/pdf';
     const mediaType=isPdf?'application/pdf':_saitraIAFile.type;
     const catalog=_saitraIAGenerarCatalogo();
-    const prompt='Eres un técnico experto en el catálogo Saitra. Analiza el plano y genera la lista de módulos usando EXCLUSIVAMENTE las referencias del catálogo oficial.\n\nCATÁLOGO OFICIAL SAITRA:\n'+catalog+'\n\nREGLAS ABSOLUTAS:\n1. "ref" siempre debe ser una clave exacta del catálogo. NUNCA inventes refs.\n2. "ancho" debe existir en los anchos de esa ref. Si no existe, usa el INMEDIATO SUPERIOR disponible.\n3. Si hay elementos sin ref válida pero que son PRODUCTOS VALORABLES (costados, regletas, zócalos, tiradores, etc.), inclúyelos en "extras".\n4. Si hay anotaciones informativas que NO son productos (acabado, tarifa, color casco, notas generales), ponlas en "observaciones".\n\nLETRAS DE ANOTACIÓN EN EL PLANO (MUY IMPORTANTE):\nLos planos de Saitra usan letras junto a cada módulo para indicar accesorios/elementos asociados:\n- C = Costado (panel lateral visto)\n- R = Regleta (tira de relleno / tapajuntas)\n- P = Puerta\nCuando veas estas letras (C, R, P) junto a un módulo, DEBES incluirlas en el campo "nota" de ese módulo indicando posición si es posible. Ejemplos: "C izq.", "R der.", "C izq. + R der.", "2C", "P".\nSi aparecen otras anotaciones o letras en el plano, inclúyelas también en "nota".\n\nGUÍA:\n- "Mod. 1 pta" alto ≤60cm → PCP78; 60-120cm → PC2PP78\n- "Mod. 2 ptas" alto → PC2P78 o PC2PP78 plegables\n- Campana 60cm → PCCEP-h61-60; 90cm → PCCEP-h61-90\n- Frigo/sobrefrigo H.26 → PCSA26; H.39 → PCSA39\n- Lavavajillas → PBLG\n- Fregadero 1P → PBFP; fregadero 2G → PBF2G; fregadero 2P → PBF2P\n- Cacerolero/cajón interior → PB2GC\n- Base 1P ≤60 → PBP; Base 2P ≥70 → PB2P\n- Bajo placa → PBPL2G, PBPL2GC, PBPLHF, PBPLHG2\n\nResponde ÚNICAMENTE con JSON (sin markdown, sin backticks):\n{"modulos":[{"ref":"PCP78","ancho":60,"cant":1,"nota":"C izq., R der.","tipo":"alto"}],"extras":[{"desc":"Costado C 62,5x88","cant":1,"medidas":"62,5x88"},{"desc":"Zócalo alto 10cm / 4m","cant":1,"medidas":"10cm/4m"},{"desc":"Regleta R 79","cant":1,"medidas":"79cm"}],"observaciones":"notas informativas: acabado, tarifa, color casco, etc."}';
+    const prompt='Eres un técnico experto en el catálogo Saitra. Analiza el plano y genera la lista de módulos usando EXCLUSIVAMENTE las referencias del catálogo oficial.\n\nCATÁLOGO OFICIAL SAITRA:\n'+catalog+'\n\nREGLAS ABSOLUTAS:\n1. "ref" siempre debe ser una clave exacta del catálogo. NUNCA inventes refs.\n2. "ancho" debe existir en los anchos de esa ref. Si no existe, usa el INMEDIATO SUPERIOR disponible.\n3. Si hay elementos sin ref válida pero que son PRODUCTOS VALORABLES (costados, regletas, zócalos, tiradores, etc.), inclúyelos en "extras".\n4. Si hay anotaciones informativas que NO son productos (acabado, tarifa, color casco, notas generales), ponlas en "observaciones".\n\nLETRAS DE ANOTACIÓN EN EL PLANO (MUY IMPORTANTE):\nLos planos de Saitra usan letras junto a cada módulo para indicar accesorios/elementos asociados:\n- C = Costado (panel lateral visto)\n- R = Regleta (tira de relleno / tapajuntas)\n- P = Puerta\nCuando veas estas letras (C, R, P) junto a un módulo, DEBES incluirlas en el campo "nota" de ese módulo indicando posición si es posible. Ejemplos: "C izq.", "R der.", "C izq. + R der.", "2C", "P".\nSi aparecen otras anotaciones o letras en el plano, inclúyelas también en "nota".\n\nGUÍA:\n- "Mod. 1 pta" alto ≤60cm → PCP78; 60-120cm → PC2PP78\n- "Mod. 2 ptas" alto → PC2P78 o PC2PP78 plegables\n- Campana 60cm → PCCEP-h61-60; 90cm → PCCEP-h61-90\n- Frigo/sobrefrigo H.26 → PCSA26; H.39 → PCSA39\n- Lavavajillas → PBLG\n- Fregadero 1P → PBFP; fregadero 2G → PBF2G; fregadero 2P → PBF2P\n- Cacerolero/cajón interior → PB2GC\n- Base 1P ≤60 → PBP; Base 2P ≥70 → PB2P\n- Bajo placa → PBPL2G, PBPL2GC, PBPLHF, PBPLHG2\n- Columna horno H.221 → PCH2P221; Columna horno+micro H.221 → PCHM2P221; Columna despensa H.221 → PCE2P221; Columna frigorífico H.221 → PCFPI221\n- Columna horno H.208 → PCH2P208; Columna horno+micro H.208 → PCHM2P208\n- Columna horno H.195 → PCH2P195; Columna horno+micro H.195 → PCHM2P195\n- Zócalo → ZOC\n\nIMPORTANTE SOBRE COLUMNAS Y ZÓCALOS:\nLas referencias de columnas (PCH2P221, PCHM2P221, PCE2P221, PCFPI221, PCH2P208, PCHM2P208, PCH2P195, PCHM2P195) y el zócalo (ZOC) suelen aparecer como etiquetas con flechas fuera del dibujo del módulo. Búscalas en los márgenes y laterales del plano.\n\nResponde ÚNICAMENTE con JSON (sin markdown, sin backticks):\n{"modulos":[{"ref":"PCP78","ancho":60,"cant":1,"nota":"C izq., R der.","tipo":"alto"}],"extras":[{"desc":"Costado C 62,5x88","cant":1,"medidas":"62,5x88"},{"desc":"Zócalo alto 10cm / 4m","cant":1,"medidas":"10cm/4m"},{"desc":"Regleta R 79","cant":1,"medidas":"79cm"}],"observaciones":"notas informativas: acabado, tarifa, color casco, etc."}';
     const userContent=isPdf
       ?[{type:'document',source:{type:'base64',media_type:'application/pdf',data:base64}},{type:'text',text:prompt}]
       :[{type:'image',source:{type:'base64',media_type:mediaType,data:base64}},{type:'text',text:prompt}];
@@ -15943,7 +16051,7 @@ async function calcularAlertas(){
 async function abrirComparativa(){
   const proy = document.getElementById('pres-proyecto-sel')?.value;
   if(!proy){ toast('Selecciona un proyecto primero','error'); return; }
-  openModal('m-comparativa');
+  openModal('m-comparativa-versiones');
   const thead = document.getElementById('comp-thead');
   const tbody = document.getElementById('comp-tbody');
   const kpis  = document.getElementById('comp-kpis');

@@ -1,5 +1,5 @@
-// PAU Interiorismo — Service Worker v1
-const CACHE = 'pau-v1';
+// PAU Interiorismo — Service Worker v2
+const CACHE = 'pau-v2';
 
 // Al instalar: cachear el HTML principal
 self.addEventListener('install', e => {
