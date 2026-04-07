@@ -25842,15 +25842,13 @@ function cpRender(){
   html += '</tr></thead><tbody>';
   lineas.forEach((l,idx)=>{
     if(l.es_capitulo){
-      // ¿hay partidas en ejecución dentro de este capítulo?
+      // ¿hay partidas con resto pendiente de certificar dentro de este capítulo?
       let tieneEjec = false;
       for(let j=idx+1; j<lineas.length; j++){
         const ll = lineas[j];
         if(ll.es_capitulo) break;
-        if((ll.estado_cert||'')==='ejecucion'){
-          const yaJ = yaCert[ll.id]||0;
-          if(((Number(ll.cantidad)||0)-yaJ)>0){ tieneEjec=true; break; }
-        }
+        const yaJ = yaCert[ll.id]||0;
+        if(((Number(ll.cantidad)||0)-yaJ)>0){ tieneEjec=true; break; }
       }
       const ctrlPct = tieneEjec
         ? `<span style="font-size:11px;font-weight:500;color:var(--text-soft)" title="Factor 0-1: 1=100%, 0,5=50%, 0,38478=38,478%">🔵 En ejecución ×</span>
@@ -25938,15 +25936,12 @@ function cpAplicarPctCapitulo(capIdx){
     const cantP = Number(l.cantidad)||0;
     const restante = Math.max(0, cantP - ya);
     if(restante<=0) continue;
-    const est = l.estado_cert || 'pendiente';
-    if(est==='ejecucion'){
-      _cpState.cant[l.id] = Math.round(restante*f*100000)/100000;
-      _cpState.sel[l.id] = (_cpState.cant[l.id]>0);
-      n++;
-    }
+    _cpState.cant[l.id] = Math.round(restante*f*100000)/100000;
+    _cpState.sel[l.id] = (_cpState.cant[l.id]>0);
+    n++;
   }
   cpRender();
-  toast(`${n} partidas en ejecución del capítulo · factor ${f} (${(f*100).toFixed(3)}%)`,'success');
+  toast(`${n} partidas del capítulo · factor ${f} (${(f*100).toFixed(3)}%)`,'success');
 }
 function cpAplicarFiltros(){
   const incTerm = document.getElementById('cp-flt-term').checked;
