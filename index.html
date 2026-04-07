@@ -4074,10 +4074,8 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     <div id="cp-filtros-pro" style="display:none;padding:10px 18px;border-bottom:1px solid var(--border);background:#f4f8fc;gap:14px;flex-wrap:wrap;align-items:center;font-size:12px">
       <strong style="color:#1e4d8b">⚙️ Filtros por estado:</strong>
       <label style="display:flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" id="cp-flt-term" checked> 🟡 Terminadas (100%)</label>
-      <label style="display:flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" id="cp-flt-ejec"> 🔵 En ejecución al</label>
-      <input type="number" id="cp-flt-pct" min="0" max="100" step="1" value="50" style="width:60px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;text-align:right;font-family:monospace"> %
-      <button class="btn btn-primary btn-sm" onclick="cpAplicarFiltros()">⚙️ Aplicar filtros</button>
-      <span style="color:var(--text-soft);font-style:italic">Después puedes ajustar manualmente la cantidad de cada partida.</span>
+      <button class="btn btn-primary btn-sm" onclick="cpAplicarFiltros()">⚙️ Aplicar</button>
+      <span style="color:var(--text-soft);font-style:italic">El % de las partidas en ejecución se ajusta desde cada capítulo.</span>
     </div>
     <div id="cp-body" style="flex:1;overflow:auto;padding:0">
       <!-- inyectado por JS según modo simple/pro -->
@@ -25819,12 +25817,25 @@ function cpRender(){
   html += '</tr></thead><tbody>';
   lineas.forEach((l,idx)=>{
     if(l.es_capitulo){
+      // ¿hay partidas en ejecución dentro de este capítulo?
+      let tieneEjec = false;
+      for(let j=idx+1; j<lineas.length; j++){
+        const ll = lineas[j];
+        if(ll.es_capitulo) break;
+        if((ll.estado_cert||'')==='ejecucion'){
+          const yaJ = yaCert[ll.id]||0;
+          if(((Number(ll.cantidad)||0)-yaJ)>0){ tieneEjec=true; break; }
+        }
+      }
+      const ctrlPct = tieneEjec
+        ? `<span style="font-size:11px;font-weight:500;color:var(--text-soft)">🔵 En ejecución al</span>
+           <input type="number" min="0" max="100" step="1" value="100" id="cp-cap-pct-${idx}" style="width:55px;padding:2px 5px;border:1px solid var(--border);border-radius:4px;text-align:right;font-family:monospace;font-size:11px"> %
+           <button class="btn btn-ghost btn-sm" style="padding:2px 8px;font-size:11px" onclick="cpAplicarPctCapitulo(${idx})" title="Aplicar % a las partidas en ejecución de este capítulo">Aplicar</button>`
+        : '';
       html += `<tr style="background:#fbf8f3"><td colspan="${modo==='pro'?7:5}" style="padding:6px 8px;font-weight:700;color:#4a3728;border-top:2px solid #b87333">
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
           <span style="flex:1">📁 ${l.descripcion||''}</span>
-          <span style="font-size:11px;font-weight:500;color:var(--text-soft)">🔵 En ejecución al</span>
-          <input type="number" min="0" max="100" step="1" value="100" id="cp-cap-pct-${idx}" style="width:55px;padding:2px 5px;border:1px solid var(--border);border-radius:4px;text-align:right;font-family:monospace;font-size:11px"> %
-          <button class="btn btn-ghost btn-sm" style="padding:2px 8px;font-size:11px" onclick="cpAplicarPctCapitulo(${idx})" title="Aplicar % a las partidas en ejecución de este capítulo">Aplicar</button>
+          ${ctrlPct}
         </div>
       </td></tr>`;
       return;
@@ -25914,10 +25925,7 @@ function cpAplicarPctCapitulo(capIdx){
 }
 function cpAplicarFiltros(){
   const incTerm = document.getElementById('cp-flt-term').checked;
-  const incEjec = document.getElementById('cp-flt-ejec').checked;
-  let pct = Number(document.getElementById('cp-flt-pct').value)||0;
-  if(pct<0) pct=0; if(pct>100) pct=100;
-  let nT=0, nE=0;
+  let nT=0;
   _cpState.lineas.forEach(l=>{
     if(l.es_capitulo) return;
     const ya = _cpState.yaCert[l.id]||0;
@@ -25929,17 +25937,10 @@ function cpAplicarFiltros(){
       _cpState.sel[l.id]=true;
       _cpState.cant[l.id]=restante;
       nT++;
-    } else if(est==='ejecucion' && incEjec){
-      _cpState.sel[l.id]=true;
-      _cpState.cant[l.id]= Math.round(restante*pct)/100*1; // restante * pct/100
-      _cpState.cant[l.id]= Math.round(restante*(pct/100)*100)/100;
-      nE++;
-    } else {
-      _cpState.sel[l.id]=false;
     }
   });
   cpRender();
-  toast(`Filtros aplicados: ${nT} terminadas + ${nE} en ejecución (${pct}%)`,'success');
+  toast(`${nT} partidas terminadas marcadas`,'success');
 }
 function cpDesmarcarTodas(){
   Object.keys(_cpState.sel).forEach(k=>_cpState.sel[k]=false);
