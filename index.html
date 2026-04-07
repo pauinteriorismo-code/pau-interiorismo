@@ -26337,8 +26337,10 @@ async function exportarCertPDFById(certId) {
   // Reconstruir base/iva desde certificacion_lineas (la tabla certificaciones no los almacena)
   let base = Number(c.base_imponible)||0;
   let ivaPct2 = c.iva_pct != null ? Number(c.iva_pct) : null;
+  let lineasCert = [];
   try{
-    const cl = await sbGet('certificacion_lineas', `?certificacion_id=eq.${certId}`);
+    const cl = await sbGet('certificacion_lineas', `?certificacion_id=eq.${certId}&order=orden.asc`);
+    lineasCert = cl||[];
     if(cl.length){
       base = Math.round(cl.reduce((s,l)=>s+(Number(l.subtotal)||0),0)*100)/100;
       if(ivaPct2==null){
@@ -26380,7 +26382,8 @@ async function exportarCertPDFById(certId) {
     base, iva, ivaPct: ivaPct2,
     presBase, pct: presBase > 0 ? base/presBase*100 : 0,
     pctAnt,
-    numCert: c.num_cert || c.numero
+    numCert: c.num_cert || c.numero,
+    lineasCert
   });
 }
 
@@ -26393,7 +26396,7 @@ async function getCfg() {
   } catch { return {}; }
 }
 
-function generarCertPDFContenido({ proy, p, cli, cfg, fecha, notas, base, iva, ivaPct, presBase, pct, pctAnt, numCert }) {
+function generarCertPDFContenido({ proy, p, cli, cfg, fecha, notas, base, iva, ivaPct, presBase, pct, pctAnt, numCert, lineasCert }) {
   const jsPDF = window.jspdf?.jsPDF;
   if (!jsPDF) { toast('jsPDF no disponible', 'error'); return; }
   const pdf = new jsPDF('p','mm','a4');
@@ -26415,7 +26418,7 @@ function generarCertPDFContenido({ proy, p, cli, cfg, fecha, notas, base, iva, i
 
   // Info proyecto/cliente
   pdf.setFontSize(9); pdf.setTextColor(50);
-  pdf.text(`Proyecto:  ${proy} · ${p.nombre||''}`, mX, y); y += 5;
+  pdf.text(`Proyecto:  ${p.nombre||''}`, mX, y); y += 5;
   pdf.text(`Cliente:   ${cli.nombre||p.cliente_id||'—'}`, mX, y); y += 5;
   pdf.text(`Dirección: ${p.direccion_obra||'—'}`, mX, y); y += 5;
   if (notas) { pdf.text(`Concepto:  ${notas}`, mX, y); y += 5; }
@@ -26463,6 +26466,40 @@ function generarCertPDFContenido({ proy, p, cli, cfg, fecha, notas, base, iva, i
   pdf.text(fmt(base+iva), col2, yr); yr += 4;
 
   y = y + boxH + 6;
+
+  // ── Detalle de partidas certificadas ──
+  if(lineasCert && lineasCert.length && pdf.autoTable){
+    pdf.setFont(undefined,'bold'); pdf.setFontSize(10); pdf.setTextColor(30,60,100);
+    pdf.text('PARTIDAS CERTIFICADAS', mX, y); y += 4;
+    const rows = lineasCert.map((l,i)=>[
+      i+1,
+      (l.descripcion||'').slice(0,80),
+      l.unidad||'',
+      (Number(l.cantidad_certificada)||0).toString().replace('.',','),
+      fmt(Number(l.precio_venta)||0),
+      fmt(Number(l.subtotal)||0)
+    ]);
+    pdf.autoTable({
+      startY: y,
+      head: [['#','Descripción','Ud.','Cant.','P. unit.','Subtotal']],
+      body: rows,
+      styles: { fontSize: 8, cellPadding: 1.6, textColor: 60, lineColor: [220,220,220], lineWidth: 0.1 },
+      headStyles: { fillColor: [240,244,250], textColor: [30,60,100], fontStyle: 'bold' },
+      columnStyles: {
+        0:{ halign:'right', cellWidth: 8 },
+        1:{ cellWidth: 95 },
+        2:{ halign:'center', cellWidth: 12 },
+        3:{ halign:'right', cellWidth: 16 },
+        4:{ halign:'right', cellWidth: 25 },
+        5:{ halign:'right', cellWidth: 26, fontStyle:'bold' }
+      },
+      margin: { left: mX, right: mX },
+      didDrawPage: ()=>{}
+    });
+    y = pdf.lastAutoTable.finalY + 6;
+    // Si quedan menos de 40mm hasta el pie, salto de página antes de la firma
+    if(y > 240){ pdf.addPage(); y = 20; }
+  }
 
   // Firma
   pdf.setDrawColor(150); pdf.setLineWidth(0.3);
