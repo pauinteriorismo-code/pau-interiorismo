@@ -25817,9 +25817,16 @@ function cpRender(){
   if(modo==='pro') html += '<th style="padding:7px 8px;text-align:right;width:60px">% avance</th>';
   html += '<th style="padding:7px 8px;text-align:right;width:100px">Subtotal</th>';
   html += '</tr></thead><tbody>';
-  lineas.forEach(l=>{
+  lineas.forEach((l,idx)=>{
     if(l.es_capitulo){
-      html += `<tr style="background:#fbf8f3"><td colspan="${modo==='pro'?7:5}" style="padding:6px 8px;font-weight:700;color:#4a3728;border-top:2px solid #b87333">📁 ${l.descripcion||''}</td></tr>`;
+      html += `<tr style="background:#fbf8f3"><td colspan="${modo==='pro'?7:5}" style="padding:6px 8px;font-weight:700;color:#4a3728;border-top:2px solid #b87333">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="flex:1">📁 ${l.descripcion||''}</span>
+          <span style="font-size:11px;font-weight:500;color:var(--text-soft)">🔵 En ejecución al</span>
+          <input type="number" min="0" max="100" step="1" value="100" id="cp-cap-pct-${idx}" style="width:55px;padding:2px 5px;border:1px solid var(--border);border-radius:4px;text-align:right;font-family:monospace;font-size:11px"> %
+          <button class="btn btn-ghost btn-sm" style="padding:2px 8px;font-size:11px" onclick="cpAplicarPctCapitulo(${idx})" title="Aplicar % a las partidas en ejecución de este capítulo">Aplicar</button>
+        </div>
+      </td></tr>`;
       return;
     }
     const ya = yaCert[l.id]||0;
@@ -25882,6 +25889,28 @@ function cpMarcarTodas(){
     _cpState.sel[l.id] = restante>0;
   });
   cpRender();
+}
+function cpAplicarPctCapitulo(capIdx){
+  const inp = document.getElementById('cp-cap-pct-'+capIdx);
+  let pct = Number(inp?.value)||0;
+  if(pct<0) pct=0; if(pct>100) pct=100;
+  let n=0;
+  for(let i=capIdx+1; i<_cpState.lineas.length; i++){
+    const l = _cpState.lineas[i];
+    if(l.es_capitulo) break;
+    const ya = _cpState.yaCert[l.id]||0;
+    const cantP = Number(l.cantidad)||0;
+    const restante = Math.max(0, cantP - ya);
+    if(restante<=0) continue;
+    const est = l.estado_cert || 'pendiente';
+    if(est==='ejecucion'){
+      _cpState.cant[l.id] = Math.round(restante*(pct/100)*100)/100;
+      _cpState.sel[l.id] = (_cpState.cant[l.id]>0);
+      n++;
+    }
+  }
+  cpRender();
+  toast(`${n} partidas en ejecución del capítulo ajustadas al ${pct}%`,'success');
 }
 function cpAplicarFiltros(){
   const incTerm = document.getElementById('cp-flt-term').checked;
