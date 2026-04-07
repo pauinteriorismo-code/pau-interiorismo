@@ -25829,7 +25829,7 @@ function cpRender(){
       }
       const ctrlPct = tieneEjec
         ? `<span style="font-size:11px;font-weight:500;color:var(--text-soft)">🔵 En ejecución al</span>
-           <input type="number" min="0" max="100" step="1" value="100" id="cp-cap-pct-${idx}" style="width:55px;padding:2px 5px;border:1px solid var(--border);border-radius:4px;text-align:right;font-family:monospace;font-size:11px"> %
+           <input type="number" min="0" max="100" step="0.00001" value="100" id="cp-cap-pct-${idx}" style="width:95px;padding:2px 5px;border:1px solid var(--border);border-radius:4px;text-align:right;font-family:monospace;font-size:11px"> %
            <button class="btn btn-ghost btn-sm" style="padding:2px 8px;font-size:11px" onclick="cpAplicarPctCapitulo(${idx})" title="Aplicar % a las partidas en ejecución de este capítulo">Aplicar</button>`
         : '';
       html += `<tr style="background:#fbf8f3"><td colspan="${modo==='pro'?7:5}" style="padding:6px 8px;font-weight:700;color:#4a3728;border-top:2px solid #b87333">
@@ -25858,7 +25858,7 @@ function cpRender(){
       <td style="padding:6px 8px;text-align:right;font-family:monospace">${cantP}</td>`;
     if(modo==='pro') html += `<td style="padding:6px 8px;text-align:right;font-family:monospace;color:#b87333">${ya>0?ya.toFixed(2):'—'}</td>`;
     if(modo==='pro'){
-      html += `<td style="padding:6px 8px;text-align:right"><input type="number" min="0" max="${restante}" step="0.01" value="${cantInput}" ${disabled} oninput="cpSetCant('${l.id}',this.value)" style="width:75px;text-align:right;padding:3px 5px;border:1px solid var(--border);border-radius:4px;font-family:monospace;font-size:12px"></td>`;
+      html += `<td style="padding:6px 8px;text-align:right"><input type="number" min="0" max="${restante}" step="0.00001" value="${cantInput}" ${disabled} oninput="cpSetCant('${l.id}',this.value)" style="width:75px;text-align:right;padding:3px 5px;border:1px solid var(--border);border-radius:4px;font-family:monospace;font-size:12px"></td>`;
     } else {
       html += `<td style="padding:6px 8px;text-align:right;font-family:monospace">${(Number(cantInput)||0)}</td>`;
     }
@@ -25915,7 +25915,7 @@ function cpAplicarPctCapitulo(capIdx){
     if(restante<=0) continue;
     const est = l.estado_cert || 'pendiente';
     if(est==='ejecucion'){
-      _cpState.cant[l.id] = Math.round(restante*(pct/100)*100)/100;
+      _cpState.cant[l.id] = Math.round(restante*(pct/100)*100000)/100000;
       _cpState.sel[l.id] = (_cpState.cant[l.id]>0);
       n++;
     }
