@@ -26029,13 +26029,12 @@ async function guardarCertificacionPartidas(){
   try{
     // Esquema real de certificaciones: id, proyecto_id, numero, factura_id, modo, fecha, notas
     // El importe/IVA se reconstruyen desde certificacion_lineas
-    const notasFull = `${notas?notas+' · ':''}IVA ${ivaPctNum}% · Base ${base.toFixed(2)}€`;
     const payloadCert = {
       proyecto_id: proyId,
       fecha,
       numero: numCert,
       modo,
-      notas: notasFull
+      notas: notas || ''
     };
     certNueva = await sbPost('certificaciones', payloadCert);
   }catch(e){ toast('Error creando certificación: '+e.message,'error'); return; }
@@ -26362,11 +26361,25 @@ async function exportarCertPDFById(certId) {
     },0);
   } catch(e){}
 
+  // Sumar certificaciones anteriores del mismo proyecto (excluyendo ésta)
+  let baseAnterior = 0;
+  try{
+    const certsProy = await sbGet('certificaciones', `?proyecto_id=eq.${c.proyecto_id}&order=created_at.asc`);
+    const previas = certsProy.filter(x => x.id !== c.id && new Date(x.created_at) < new Date(c.created_at));
+    if(previas.length){
+      const ids = previas.map(x=>x.id).join(',');
+      const lns = await sbGet('certificacion_lineas', `?certificacion_id=in.(${ids})`);
+      baseAnterior = lns.reduce((s,l)=>s+(Number(l.subtotal)||0),0);
+    }
+  }catch(e){}
+  const pctAnt = presBase>0 ? (baseAnterior/presBase*100) : 0;
+
   generarCertPDFContenido({
     proy: c.proyecto_id, p, cli, cfg,
     fecha: c.fecha, notas: c.notas,
     base, iva, ivaPct: ivaPct2,
     presBase, pct: presBase > 0 ? base/presBase*100 : 0,
+    pctAnt,
     numCert: c.num_cert || c.numero
   });
 }
@@ -26380,7 +26393,7 @@ async function getCfg() {
   } catch { return {}; }
 }
 
-function generarCertPDFContenido({ proy, p, cli, cfg, fecha, notas, base, iva, ivaPct, presBase, pct, numCert }) {
+function generarCertPDFContenido({ proy, p, cli, cfg, fecha, notas, base, iva, ivaPct, presBase, pct, pctAnt, numCert }) {
   const jsPDF = window.jspdf?.jsPDF;
   if (!jsPDF) { toast('jsPDF no disponible', 'error'); return; }
   const pdf = new jsPDF('p','mm','a4');
@@ -26425,8 +26438,7 @@ function generarCertPDFContenido({ proy, p, cli, cfg, fecha, notas, base, iva, i
     pdf.setFont(undefined,'normal');
     yr += 6;
     pdf.text('% certificado anteriormente:', col1, yr);
-    const pctAnt = presBase > 0 ? Math.max(0, ((presBase - base) / presBase * 100) - (pct||0)) : 0;
-    pdf.text(`${Math.max(0, (presBase > 0 ? ((presBase - base)/presBase*100) : 0) - (pct||0)).toFixed(1)}%`, col2, yr);
+    pdf.text(`${(pctAnt||0).toFixed(2)}%`, col2, yr);
     yr += 6;
   }
 
