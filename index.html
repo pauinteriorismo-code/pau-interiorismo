@@ -774,6 +774,15 @@ body.rol-oficina [data-view="configuracion"] { display: none !important; }
 </div>
 
 <script>
+// ═══ HANDLER GLOBAL DE ERRORES (evita cuelgues silenciosos en iOS Safari) ═══
+window.addEventListener('error', function(ev){
+  try{ console.error('[GlobalError]', ev.message, ev.filename+':'+ev.lineno); }catch(e){}
+  try{ if(typeof toast==='function') toast('⚠ '+(ev.message||'Error JS'), 'error'); }catch(e){}
+});
+window.addEventListener('unhandledrejection', function(ev){
+  try{ console.error('[UnhandledRejection]', ev.reason); }catch(e){}
+  try{ if(typeof toast==='function') toast('⚠ '+((ev.reason&&ev.reason.message)||'Promesa fallida'), 'error'); }catch(e){}
+});
 // ═══ MOBILE NAV HELPERS ═══
 function mnavTo(v){
   navTo(v);
@@ -18195,7 +18204,17 @@ async function agLimpiarCompletadosViejos(){
   }
 }
 
+// Escape seguro para usar dentro de un atributo HTML que contiene JS inline
+function _agEscJS(s){
+  return String(s==null?'':s)
+    .replace(/\\/g,'\\\\')
+    .replace(/'/g,"\\'")
+    .replace(/"/g,'&quot;')
+    .replace(/\r?\n/g,'\\n')
+    .replace(/\t/g,' ');
+}
 function renderAgenda(){
+  try{
   const tbody = document.getElementById('ag-tbody');
   if(!tbody) return;
   const filtro = document.getElementById('ag-filtro')?.value || 'todos';
@@ -18207,12 +18226,12 @@ function renderAgenda(){
   finSemana.setDate(ahora.getDate() + 7);
   const finSemanaStr = finSemana.toISOString().split('T')[0];
 
-  let items = [...AgC];
+  let items = [...(AgC||[])].filter(a => a && typeof a === 'object');
 
   // Filtrar
-  if(filtro === 'pendiente') items = items.filter(a => a.estado !== 'Completado' && a.fecha >= hoy);
+  if(filtro === 'pendiente') items = items.filter(a => a.estado !== 'Completado' && (a.fecha||'') >= hoy);
   else if(filtro === 'hoy') items = items.filter(a => a.fecha === hoy);
-  else if(filtro === 'esta_semana') items = items.filter(a => a.fecha >= hoy && a.fecha <= finSemanaStr);
+  else if(filtro === 'esta_semana') items = items.filter(a => (a.fecha||'') >= hoy && (a.fecha||'') <= finSemanaStr);
   else if(filtro === 'completado') items = items.filter(a => a.estado === 'Completado');
 
   // KPIs
@@ -18269,9 +18288,12 @@ function renderAgenda(){
                         esVencido?'<span class="badge b-red">⚠️ Vencido</span>':
                         esHoy?'<span class="badge b-amber">📅 Hoy</span>':
                         '<span class="badge b-gray">Pendiente</span>';
-    return `<tr style="${rowStyle}" data-search="${(a.descripcion+a.tipo+a.proyecto_id).toLowerCase()}">
+    const desc = a.descripcion||'—';
+    const notas = a.notas||'';
+    const search = ((a.descripcion||'')+(a.tipo||'')+(a.proyecto_id||'')).toLowerCase().replace(/"/g,'');
+    return `<tr style="${rowStyle}" data-search="${search}">
       <td style="font-size:18px;text-align:center">${AG_TIPOS[a.tipo]||'📋'}</td>
-      <td><strong>${a.descripcion||'—'}</strong>${a.notas?`<div style="font-size:11px;color:var(--text-soft)">${a.notas}</div>`:''}</td>
+      <td><strong>${desc}</strong>${notas?`<div style="font-size:11px;color:var(--text-soft)">${notas}</div>`:''}</td>
       <td class="td-mono">${fmtD(a.fecha)}</td>
       <td class="td-mono" style="font-weight:${a.hora?'700':'400'};color:${a.hora?'var(--navy)':'var(--text-soft)'}">${a.hora||'—'}</td>
       <td>${a.tipo||'—'}</td>
@@ -18280,12 +18302,17 @@ function renderAgenda(){
       <td>${estadoBadge}</td>
       <td><div class="td-actions">
         ${a.estado!=='Completado'?`<button class="btn btn-green btn-icon btn-sm" title="Completar" onclick="completarAgenda('${a.id}')">✅</button>`:''}
-        <button class="btn btn-ghost btn-icon btn-sm" title="Añadir al Calendario" onclick="abrirModalICS({desc:'${(a.descripcion||'').replace(/'/g,'\\\'').replace(/"/g,'&quot;')}',fecha:'${a.fecha||''}',hora:'${a.hora||''}',tipo:'${a.tipo||''}',prioridad:'${a.prioridad||'normal'}',proyecto_id:'${a.proyecto_id||''}',notas:'${(a.notas||'').replace(/'/g,'\\\'').replace(/"/g,'&quot;')}'})" style="color:#4285f4">📅</button>
+        <button class="btn btn-ghost btn-icon btn-sm" title="Añadir al Calendario" onclick="abrirModalICS({desc:'${_agEscJS(a.descripcion)}',fecha:'${a.fecha||''}',hora:'${a.hora||''}',tipo:'${_agEscJS(a.tipo)}',prioridad:'${a.prioridad||'normal'}',proyecto_id:'${_agEscJS(a.proyecto_id)}',notas:'${_agEscJS(a.notas)}'})" style="color:#4285f4">📅</button>
         <button class="btn btn-ghost btn-icon btn-sm" title="Editar" onclick="editAgenda('${a.id}')">✏️</button>
-        <button class="btn btn-danger btn-icon btn-sm" title="Eliminar" onclick="confirmDelete('agenda','${a.id}','${(a.descripcion||'').replace(/'/g,'')}')">🗑</button>
+        <button class="btn btn-danger btn-icon btn-sm" title="Eliminar" onclick="confirmDelete('agenda','${a.id}','${_agEscJS(a.descripcion)}')">🗑</button>
       </div></td>
     </tr>`;
   }).join('');
+  }catch(err){
+    console.error('renderAgenda error:', err);
+    const tb = document.getElementById('ag-tbody');
+    if(tb) tb.innerHTML = `<tr><td colspan="9" style="color:var(--red);text-align:center;padding:20px">Error al renderizar agenda: ${(err&&err.message)||err}<br><button class="btn btn-primary btn-sm" onclick="loadAgenda()" style="margin-top:8px">🔄 Reintentar</button></td></tr>`;
+  }
 }
 
 function openAgendaModal(){
