@@ -1,5 +1,5 @@
-// PAU Interiorismo — Service Worker v2
-const CACHE = 'pau-v2';
+// PAU Interiorismo — Service Worker v3
+const CACHE = 'pau-v3';
 
 // Al instalar: cachear el HTML principal
 self.addEventListener('install', e => {
@@ -17,21 +17,29 @@ self.addEventListener('activate', e => {
     )
   );
   self.clients.claim();
+  // Forzar recarga de todas las pestañas abiertas tras activar la nueva versión
+  self.clients.matchAll({ type: 'window' }).then(list => {
+    list.forEach(c => { try { c.navigate(c.url); } catch(_) {} });
+  });
 });
 
-// Fetch: primero red, si falla cachée (app disponible offline)
+// Fetch: network-first con timeout corto, fallback cache (app disponible offline)
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
-  // No cachear peticiones a Supabase
+  // No cachear peticiones a Supabase ni APIs
   if (e.request.url.includes('supabase.co')) return;
+  if (e.request.url.includes('/api/')) return;
   e.respondWith(
-    fetch(e.request)
-      .then(res => {
-        const clone = res.clone();
-        caches.open(CACHE).then(c => c.put(e.request, clone));
+    Promise.race([
+      fetch(e.request).then(res => {
+        if (res && res.ok) {
+          const clone = res.clone();
+          caches.open(CACHE).then(c => c.put(e.request, clone)).catch(()=>{});
+        }
         return res;
-      })
-      .catch(() => caches.match(e.request))
+      }),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 4000))
+    ]).catch(() => caches.match(e.request).then(r => r || fetch(e.request)))
   );
 });
 
