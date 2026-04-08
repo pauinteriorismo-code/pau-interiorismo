@@ -3980,11 +3980,12 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <th style="text-align:right">Base imp.</th>
           <th style="text-align:right">IVA</th>
           <th style="text-align:right">Total</th>
+          <th style="text-align:right;background:#eef5ff">Acumulado €</th>
           <th>Concepto</th>
           <th>Acciones</th>
         </tr></thead>
         <tbody id="cert-tbody">
-          <tr><td colspan="10"><div class="empty">
+          <tr><td colspan="11"><div class="empty">
             <div class="empty-icon">🏗️</div>
             <div class="empty-text">Selecciona un cliente y proyecto</div>
           </div></td></tr>
@@ -25801,12 +25802,13 @@ async function loadCertificaciones() {
     const msg = presBase > 0
       ? `Sin certificaciones. Presupuesto aprobado: <strong>${fmt(presBase)}</strong>`
       : 'Sin certificaciones. Pulsa "Nueva certificación" para comenzar.';
-    tbody.innerHTML = `<tr><td colspan="10"><div class="empty">
+    tbody.innerHTML = `<tr><td colspan="11"><div class="empty">
       <div class="empty-icon">📋</div><div class="empty-text">${msg}</div></div></td></tr>`;
     return;
   }
 
   let acumBase = 0;
+  let acumTotal = 0;
   tbody.innerHTML = certs.map(c => {
     acumBase += (c.base_imponible || 0);
     const pctEsta = presBase > 0 ? ((c.base_imponible||0) / presBase * 100) : 0;
@@ -25815,6 +25817,7 @@ async function loadCertificaciones() {
     const ivaPct = c.iva_pct != null ? c.iva_pct : 21;
     const iva   = (c.base_imponible||0) * ivaPct / 100;
     const total = (c.base_imponible||0) + iva;
+    acumTotal += total;
     return `<tr>
       <td class="td-mono" style="font-weight:700">${c.num_cert||'—'}</td>
       <td>${fmtD(c.fecha)}</td>
@@ -25824,6 +25827,7 @@ async function loadCertificaciones() {
       <td class="td-mono" style="text-align:right">${fmt(c.base_imponible)}</td>
       <td class="td-mono" style="text-align:right;color:var(--text-soft)">${fmt(iva)}</td>
       <td class="td-mono" style="text-align:right;font-weight:700">${fmt(total)}</td>
+      <td class="td-mono" style="text-align:right;font-weight:800;background:#eef5ff;color:var(--navy)" title="Total acumulado certificado hasta esta certificación (IVA incluido)">${fmt(acumTotal)}</td>
       <td style="font-size:11px;color:var(--text-soft);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.notas||'—'}</td>
       <td style="white-space:nowrap">
         <button class="btn btn-ghost btn-sm" onclick="editarCertificacion('${c.id}')" title="Editar">✏️</button>
@@ -26560,7 +26564,7 @@ async function exportarCertPDFById(certId, agrupado) {
     fecha: c.fecha, notas: c.notas,
     base, iva, ivaPct: ivaPct2,
     presBase, pct: presBase > 0 ? base/presBase*100 : 0,
-    pctAnt,
+    pctAnt, baseAnterior,
     numCert: c.num_cert || c.numero,
     lineasCert,
     agrupado: !!agrupado,
@@ -26577,7 +26581,8 @@ async function getCfg() {
   } catch { return {}; }
 }
 
-function generarCertPDFContenido({ proy, p, cli, cfg, fecha, notas, base, iva, ivaPct, presBase, pct, pctAnt, numCert, lineasCert, agrupado, capMap }) {
+function generarCertPDFContenido({ proy, p, cli, cfg, fecha, notas, base, iva, ivaPct, presBase, pct, pctAnt, baseAnterior, numCert, lineasCert, agrupado, capMap }) {
+  baseAnterior = Number(baseAnterior)||0;
   const jsPDF = window.jspdf?.jsPDF;
   if (!jsPDF) { toast('jsPDF no disponible', 'error'); return; }
   const pdf = new jsPDF('p','mm','a4');
@@ -26606,7 +26611,8 @@ function generarCertPDFContenido({ proy, p, cli, cfg, fecha, notas, base, iva, i
   y += 4;
 
   // Cuadro de certificación (alto dinámico según si hay presBase o no)
-  const boxH = presBase>0 ? 72 : 48;
+  // +18mm si hay certificaciones anteriores (para mostrar bloque acumulado)
+  const boxH = (presBase>0 ? 72 : 48) + (baseAnterior>0 ? 18 : 0);
   pdf.setFillColor(240,244,250); pdf.roundedRect(mX, y, pW-2*mX, boxH, 2, 2, 'F');
   pdf.setFont(undefined,'bold'); pdf.setFontSize(10); pdf.setTextColor(30,60,100);
   pdf.text('RESUMEN DE CERTIFICACIÓN', mX+5, y+7);
@@ -26654,6 +26660,20 @@ function generarCertPDFContenido({ proy, p, cli, cfg, fecha, notas, base, iva, i
   pdf.setFont(undefined,'bold'); pdf.setFontSize(11); pdf.setTextColor(30,60,100);
   pdf.text('TOTAL CERTIFICACIÓN:', col1, yr);
   pdf.text(fmt(base+iva), col2, yr); yr += 4;
+
+  // ── Bloque acumulado (sólo si hay certificaciones anteriores) ──
+  if(baseAnterior > 0){
+    yr += 4;
+    pdf.setDrawColor(184,115,51); pdf.setLineWidth(0.4); pdf.line(col1, yr-2, pW-mX-5, yr-2); yr += 4;
+    pdf.setFont(undefined,'normal'); pdf.setFontSize(9); pdf.setTextColor(60);
+    const ivaAnt = baseAnterior * (ivaPct||21) / 100;
+    pdf.text('Certificado anterior (base):', col1, yr);
+    pdf.text(fmt(baseAnterior), col2, yr); yr += 5;
+    pdf.setFont(undefined,'bold'); pdf.setFontSize(10); pdf.setTextColor(184,115,51);
+    pdf.text('TOTAL ACUMULADO A CUENTA:', col1, yr);
+    pdf.text(fmt(baseAnterior + ivaAnt + base + iva), col2, yr); yr += 4;
+    pdf.setFont(undefined,'normal'); pdf.setTextColor(60);
+  }
 
   y = y + boxH + 6;
 
