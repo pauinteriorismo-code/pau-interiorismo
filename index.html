@@ -25761,7 +25761,7 @@ async function loadCertificaciones() {
       <td style="white-space:nowrap">
         <button class="btn btn-ghost btn-sm" onclick="editarCertificacion('${c.id}')" title="Editar">✏️</button>
         <button class="btn btn-ghost btn-sm" onclick="exportarCertPDFById('${c.id}',false)" title="PDF detalle por líneas">⬇️</button>
-        <button class="btn btn-ghost btn-sm" onclick="exportarCertPDFById('${c.id}',true)" title="PDF resumido por capítulos">📑</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportarCertPDFById('${c.id}',true)" title="PDF resumido por capítulos" style="background:#eef2fb;color:#1e3c64">📚</button>
         <button class="btn btn-ghost btn-sm" onclick="convertirCertAFactura('${c.id}')" title="Convertir a factura" style="background:#e8f5ee;color:var(--green)">🧾</button>
         <button class="btn btn-danger btn-sm" onclick="eliminarCertificacion('${c.id}')" title="Eliminar">🗑</button>
       </td>
