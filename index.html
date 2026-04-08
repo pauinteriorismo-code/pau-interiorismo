@@ -3789,6 +3789,23 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <label class="form-label" style="margin-bottom:4px;display:block">Observaciones</label>
       <input class="form-input" id="alb-obs" placeholder="Notas, condiciones de entrega, transportista…" style="width:100%">
     </div>
+    <!-- PDF ADJUNTO -->
+    <div style="padding:8px 18px;border-bottom:1px solid var(--border);flex-shrink:0">
+      <label class="form-label" style="margin-bottom:4px;display:block">📎 Albarán PDF del proveedor</label>
+      <div id="alb-pdf-zone" style="border:2px dashed var(--border);border-radius:8px;padding:14px;text-align:center;cursor:pointer;transition:all .15s;background:var(--bg-card)"
+           onclick="document.getElementById('alb-pdf-input').click()"
+           ondragover="event.preventDefault();this.style.borderColor='var(--navy)'"
+           ondragleave="this.style.borderColor='var(--border)'"
+           ondrop="albHandleDrop(event)">
+        <div id="alb-pdf-label" style="color:var(--text-soft);font-size:12px">
+          📄 Arrastra el PDF aquí o <u style="color:var(--navy);cursor:pointer">haz clic para seleccionar</u>
+        </div>
+      </div>
+      <div id="alb-pdf-preview" style="display:none;margin-top:8px;align-items:center;gap:8px;padding:10px 12px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px"></div>
+      <input type="file" id="alb-pdf-input" accept=".pdf,application/pdf" style="display:none" onchange="albHandleFile(this.files[0])">
+      <input type="hidden" id="alb-pdf-b64">
+      <input type="hidden" id="alb-pdf-nombre">
+    </div>
     <!-- Líneas -->
     <div style="flex:1;overflow-y:auto">
       <table class="data-table" style="font-size:11px">
@@ -23448,6 +23465,44 @@ function coResetPDF(){window._coPDFChanged=undefined;coQuitarPDF();}
 function coVerPDF(){const b64=window._coPDFActual||document.getElementById('co-pdf-b64')?.value;const n=document.getElementById('co-pdf-nombre')?.value||'factura_compra.pdf';if(!b64){toast('No hay PDF adjunto','error');return;}abrirVisorPDF(b64,n);}
 function coVerPDFById(id){const c=CoC.find(x=>String(x.id)===String(id));if(!c||!c.adjunto_pdf){toast('Sin PDF adjunto','error');return;}abrirVisorPDF(c.adjunto_pdf,c.adjunto_nombre||'factura_compra.pdf');}
 
+// ── ALBARANES ────────────────────────────────────────────────────────
+function albHandleFile(file){
+  window._albPDFChanged=true;
+  if(!file)return;
+  if(file.type!=='application/pdf'&&!file.name.endsWith('.pdf')){toast('Solo se admiten archivos PDF','error');return;}
+  if(file.size>5*1024*1024){toast('El PDF no puede superar 5MB','error');return;}
+  const reader=new FileReader();
+  reader.onload=async e=>{
+    const b64=e.target.result.split(',')[1];
+    document.getElementById('alb-pdf-b64').value=b64;
+    document.getElementById('alb-pdf-nombre').value=file.name;
+    window._albPDFActual=b64;
+    const zone=document.getElementById('alb-pdf-zone'); if(zone)zone.style.display='none';
+    _mostrarPDFPreview('alb-pdf-preview',b64,file.name,'albQuitarPDF');
+    try{
+      await _pdfAutofill(b64,'albaran',ex=>{
+        if(ex.fecha)document.getElementById('alb-fecha').value=ex.fecha;
+        if(ex.proveedor){const sel=document.getElementById('alb-proveedor');if(sel){const opt=Array.from(sel.options).find(o=>o.value.toLowerCase().includes(ex.proveedor.toLowerCase()));if(opt)sel.value=opt.value;}}
+        if(ex.concepto&&!document.getElementById('alb-obs').value)document.getElementById('alb-obs').value=ex.concepto;
+      });
+    }catch(err){}
+  };
+  reader.readAsDataURL(file);
+}
+function albHandleDrop(e){e.preventDefault();document.getElementById('alb-pdf-zone').style.borderColor='var(--border)';const f=e.dataTransfer.files[0];if(f)albHandleFile(f);}
+function albQuitarPDF(){
+  document.getElementById('alb-pdf-b64').value='';
+  document.getElementById('alb-pdf-nombre').value='';
+  const inp=document.getElementById('alb-pdf-input');if(inp)inp.value='';
+  window._albPDFActual=null;
+  const prev=document.getElementById('alb-pdf-preview');
+  const zone=document.getElementById('alb-pdf-zone');
+  if(prev){prev.style.display='none';prev.innerHTML='';}
+  if(zone)zone.style.display='';
+}
+function albResetPDF(){window._albPDFChanged=undefined;albQuitarPDF();}
+function albVerPDFById(id){const a=(window._AlbCache||[]).find(x=>String(x.id)===String(id));if(!a||!a.adjunto_pdf){toast('Sin PDF adjunto','error');return;}abrirVisorPDF(a.adjunto_pdf,a.adjunto_nombre||'albaran.pdf');}
+
 // ── SUBCONTRATAS ──────────────────────────────────────────────────────
 function scHandleFile(file){
   window._scPDFChanged=true;
@@ -27642,6 +27697,7 @@ async function loadAlbaranes() {
     return;
   }
   const albs = await sbGet('albaranes', `?proyecto_id=eq.${proy}&order=fecha.desc`);
+  window._AlbCache = albs;
   if (!albs.length) {
     tbody.innerHTML = '<tr><td colspan="7"><div class="empty"><div class="empty-icon">📦</div><div class="empty-text">Sin albaranes. Crea el primero.</div></div></td></tr>';
     return;
@@ -27658,6 +27714,7 @@ async function loadAlbaranes() {
       <td><span style="font-size:11px;font-weight:700;color:${estadoColor}">${a.estado||'Borrador'}</span></td>
       <td style="white-space:nowrap">
         ${_badgeEnviado('albaran',a.id)}
+        ${a.adjunto_pdf?`<button class="btn btn-ghost btn-sm" onclick="albVerPDFById('${a.id}')" title="Ver PDF adjunto" style="color:var(--navy)">📄</button>`:''}
         <button class="btn btn-ghost btn-sm" onclick="editarAlbaran('${a.id}')">✏️</button>
         <button class="btn btn-ghost btn-sm" onclick="exportarAlbaranPDF('${a.id}')">⬇️ PDF</button>
         <button class="btn btn-ghost btn-sm" onclick="subirAlbaranDrive('${a.id}')" title="Subir a Google Drive">☁️</button>
@@ -27681,6 +27738,7 @@ async function nuevoAlbaran() {
   _poblarAlbProveedor('');
   document.getElementById('alb-lineas-tbody').innerHTML = '';
   addAlbLinea();
+  if(typeof albResetPDF==='function')albResetPDF();
   openModal('m-albaran');
 }
 
@@ -27703,6 +27761,14 @@ async function editarAlbaran(id) {
     lineas.forEach(l => addAlbLinea(l));
   } else {
     addAlbLinea();
+  }
+  if(typeof albResetPDF==='function')albResetPDF();
+  if(alb.adjunto_pdf){
+    document.getElementById('alb-pdf-b64').value=alb.adjunto_pdf;
+    document.getElementById('alb-pdf-nombre').value=alb.adjunto_nombre||'albaran.pdf';
+    window._albPDFActual=alb.adjunto_pdf;
+    const zone=document.getElementById('alb-pdf-zone'); if(zone)zone.style.display='none';
+    _mostrarPDFPreview('alb-pdf-preview',alb.adjunto_pdf,alb.adjunto_nombre||'albaran.pdf','albQuitarPDF');
   }
   openModal('m-albaran');
 }
@@ -27764,7 +27830,9 @@ async function guardarAlbaran() {
     direccion_entrega: document.getElementById('alb-dir').value,
     observaciones: document.getElementById('alb-obs').value,
     proveedor: document.getElementById('alb-proveedor')?.value?.trim() || null,
-    lineas: JSON.stringify(lineas)
+    lineas: JSON.stringify(lineas),
+    adjunto_pdf: document.getElementById('alb-pdf-b64')?.value || null,
+    adjunto_nombre: document.getElementById('alb-pdf-nombre')?.value || null
   };
   try {
     if (_albEditing) {
@@ -28007,7 +28075,9 @@ async function guardarAlbaranYPDF() {
     direccion_entrega: document.getElementById('alb-dir').value,
     observaciones: document.getElementById('alb-obs').value,
     proveedor: document.getElementById('alb-proveedor')?.value?.trim() || null,
-    lineas: JSON.stringify(lineas)
+    lineas: JSON.stringify(lineas),
+    adjunto_pdf: document.getElementById('alb-pdf-b64')?.value || null,
+    adjunto_nombre: document.getElementById('alb-pdf-nombre')?.value || null
   };
   try {
     let id;
