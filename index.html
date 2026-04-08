@@ -4044,7 +4044,8 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="closeModal('m-certificacion')">Cancelar</button>
-      <button class="btn btn-ghost" id="cert-btn-pdf" onclick="exportarCertPDF()" disabled>⬇️ PDF</button>
+      <button class="btn btn-ghost" id="cert-btn-pdf" onclick="exportarCertPDF(false)" disabled>⬇️ PDF detalle</button>
+      <button class="btn btn-ghost" id="cert-btn-pdf-cap" onclick="exportarCertPDF(true)" disabled title="PDF resumido por capítulos">📑 PDF capítulos</button>
       <button class="btn btn-primary" onclick="guardarCertificacion()">💾 Guardar</button>
     </div>
   </div>
@@ -25759,7 +25760,8 @@ async function loadCertificaciones() {
       <td style="font-size:11px;color:var(--text-soft);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.notas||'—'}</td>
       <td style="white-space:nowrap">
         <button class="btn btn-ghost btn-sm" onclick="editarCertificacion('${c.id}')" title="Editar">✏️</button>
-        <button class="btn btn-ghost btn-sm" onclick="exportarCertPDFById('${c.id}')" title="PDF">⬇️</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportarCertPDFById('${c.id}',false)" title="PDF detalle por líneas">⬇️</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportarCertPDFById('${c.id}',true)" title="PDF resumido por capítulos">📑</button>
         <button class="btn btn-ghost btn-sm" onclick="convertirCertAFactura('${c.id}')" title="Convertir a factura" style="background:#e8f5ee;color:var(--green)">🧾</button>
         <button class="btn btn-danger btn-sm" onclick="eliminarCertificacion('${c.id}')" title="Eliminar">🗑</button>
       </td>
@@ -26189,6 +26191,7 @@ async function nuevaCertificacion() {
   document.getElementById('cert-pct').value     = '';
   document.getElementById('cert-importe').value = '';
   document.getElementById('cert-btn-pdf').disabled = true;
+  { const _b=document.getElementById('cert-btn-pdf-cap'); if(_b) _b.disabled = true; }
 
   // Calcular importes ya certificados
   let prevCerts = [];
@@ -26221,6 +26224,7 @@ async function editarCertificacion(certId) {
   document.getElementById('cert-iva').value     = String(c.iva_pct != null ? c.iva_pct : 21);
   document.getElementById('cert-notas').value   = c.notas||'';
   document.getElementById('cert-btn-pdf').disabled = false;
+  { const _b=document.getElementById('cert-btn-pdf-cap'); if(_b) _b.disabled = false; }
 
   // Cert actual
   const base = c.base_imponible || 0;
@@ -26321,7 +26325,7 @@ async function eliminarCertificacion(id) {
 }
 
 // PDF desde modal (borrador activo)
-async function exportarCertPDF() {
+async function exportarCertPDF(agrupado) {
   const base  = parseFloat(document.getElementById('cert-importe').value) || 0;
   const ivaPct = parseFloat(document.getElementById('cert-iva').value) || 21;
   if (base <= 0) { toast('Primero introduce el importe', 'error'); return; }
@@ -26335,12 +26339,13 @@ async function exportarCertPDF() {
     proy: _certProyId, p, cli, cfg, fecha, notas,
     base, iva, ivaPct, presBase: _certPresBase,
     pct: _certPresBase > 0 ? base / _certPresBase * 100 : 0,
-    numCert: 'BORRADOR'
+    numCert: 'BORRADOR',
+    agrupado: !!agrupado
   });
 }
 
 // PDF desde tabla (cert guardada)
-async function exportarCertPDFById(certId) {
+async function exportarCertPDFById(certId, agrupado) {
   const certs = await sbGet('certificaciones', `?id=eq.${certId}`);
   const c = certs[0]; if (!c) return;
   const cfg = await getCfg();
@@ -26388,6 +26393,20 @@ async function exportarCertPDFById(certId) {
   }catch(e){}
   const pctAnt = presBase>0 ? (baseAnterior/presBase*100) : 0;
 
+  // Mapa linea_id → nombre de capítulo (para modo agrupado)
+  let capMap = {};
+  if(agrupado){
+    try{
+      const todasPres = await sbGet('presupuesto_lineas',
+        `?proyecto_id=eq.${c.proyecto_id}&version=eq.v1&order=orden.asc&select=id,descripcion,es_capitulo,orden`);
+      let curCap = 'Sin capítulo';
+      (todasPres||[]).forEach(l=>{
+        if(l.es_capitulo){ curCap = l.descripcion || 'Sin capítulo'; }
+        else { capMap[l.id] = curCap; }
+      });
+    }catch(e){ console.warn('cap map:',e.message); }
+  }
+
   generarCertPDFContenido({
     proy: c.proyecto_id, p, cli, cfg,
     fecha: c.fecha, notas: c.notas,
@@ -26395,7 +26414,9 @@ async function exportarCertPDFById(certId) {
     presBase, pct: presBase > 0 ? base/presBase*100 : 0,
     pctAnt,
     numCert: c.num_cert || c.numero,
-    lineasCert
+    lineasCert,
+    agrupado: !!agrupado,
+    capMap
   });
 }
 
@@ -26408,7 +26429,7 @@ async function getCfg() {
   } catch { return {}; }
 }
 
-function generarCertPDFContenido({ proy, p, cli, cfg, fecha, notas, base, iva, ivaPct, presBase, pct, pctAnt, numCert, lineasCert }) {
+function generarCertPDFContenido({ proy, p, cli, cfg, fecha, notas, base, iva, ivaPct, presBase, pct, pctAnt, numCert, lineasCert, agrupado, capMap }) {
   const jsPDF = window.jspdf?.jsPDF;
   if (!jsPDF) { toast('jsPDF no disponible', 'error'); return; }
   const pdf = new jsPDF('p','mm','a4');
@@ -26491,29 +26512,48 @@ function generarCertPDFContenido({ proy, p, cli, cfg, fecha, notas, base, iva, i
   // ── Detalle de partidas certificadas ──
   if(lineasCert && lineasCert.length && pdf.autoTable){
     pdf.setFont(undefined,'bold'); pdf.setFontSize(10); pdf.setTextColor(30,60,100);
-    pdf.text('PARTIDAS CERTIFICADAS', mX, y); y += 4;
-    const rows = lineasCert.map((l,i)=>[
-      i+1,
-      (l.descripcion||'').slice(0,80),
-      l.unidad||'',
-      (Number(l.cantidad_certificada)||0).toString().replace('.',','),
-      fmt(Number(l.precio_venta)||0),
-      fmt(Number(l.subtotal)||0)
-    ]);
-    pdf.autoTable({
-      startY: y,
-      head: [['#','Descripción','Ud.','Cant.','P. unit.','Subtotal']],
-      body: rows,
-      styles: { fontSize: 8, cellPadding: 1.6, textColor: 60, lineColor: [220,220,220], lineWidth: 0.1 },
-      headStyles: { fillColor: [240,244,250], textColor: [30,60,100], fontStyle: 'bold' },
-      columnStyles: {
+    pdf.text(agrupado?'RESUMEN POR CAPÍTULOS':'PARTIDAS CERTIFICADAS', mX, y); y += 4;
+    let rows, head, columnStyles;
+    if(agrupado){
+      // Agrupar por capítulo
+      const grupos = {}; const orden = [];
+      (lineasCert||[]).forEach(l=>{
+        const cap = (capMap && capMap[l.linea_id]) || 'Sin capítulo';
+        if(!(cap in grupos)){ grupos[cap] = 0; orden.push(cap); }
+        grupos[cap] += Number(l.subtotal)||0;
+      });
+      rows = orden.map((cap,i)=>[ i+1, cap, fmt(grupos[cap]) ]);
+      head = [['#','Capítulo','Subtotal']];
+      columnStyles = {
+        0:{ halign:'right', cellWidth: 10 },
+        1:{ cellWidth: 140 },
+        2:{ halign:'right', cellWidth: 32, fontStyle:'bold' }
+      };
+    } else {
+      rows = lineasCert.map((l,i)=>[
+        i+1,
+        (l.descripcion||'').slice(0,80),
+        l.unidad||'',
+        (Number(l.cantidad_certificada)||0).toString().replace('.',','),
+        fmt(Number(l.precio_venta)||0),
+        fmt(Number(l.subtotal)||0)
+      ]);
+      head = [['#','Descripción','Ud.','Cant.','P. unit.','Subtotal']];
+      columnStyles = {
         0:{ halign:'right', cellWidth: 8 },
         1:{ cellWidth: 95 },
         2:{ halign:'center', cellWidth: 12 },
         3:{ halign:'right', cellWidth: 16 },
         4:{ halign:'right', cellWidth: 25 },
         5:{ halign:'right', cellWidth: 26, fontStyle:'bold' }
-      },
+      };
+    }
+    pdf.autoTable({
+      startY: y,
+      head, body: rows,
+      styles: { fontSize: 8, cellPadding: 1.6, textColor: 60, lineColor: [220,220,220], lineWidth: 0.1 },
+      headStyles: { fillColor: [240,244,250], textColor: [30,60,100], fontStyle: 'bold' },
+      columnStyles,
       margin: { left: mX, right: mX },
       didDrawPage: ()=>{}
     });
