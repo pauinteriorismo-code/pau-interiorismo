@@ -775,13 +775,36 @@ body.rol-oficina [data-view="configuracion"] { display: none !important; }
 
 <script>
 // ═══ HANDLER GLOBAL DE ERRORES (evita cuelgues silenciosos en iOS Safari) ═══
+// Anti-recursión y rate-limit: si el propio handler/toast lanza error, NO debe
+// reentrar (causaba loop infinito → crash de la pestaña en iPhone Safari).
+var __globalErrInside = false;
+var __globalErrCount = 0;
+var __globalErrLastReset = Date.now();
 window.addEventListener('error', function(ev){
-  try{ console.error('[GlobalError]', ev.message, ev.filename+':'+ev.lineno); }catch(e){}
-  try{ if(typeof toast==='function') toast('⚠ '+(ev.message||'Error JS'), 'error'); }catch(e){}
+  if(__globalErrInside) return;
+  __globalErrInside = true;
+  try{
+    var now = Date.now();
+    if(now - __globalErrLastReset > 5000){ __globalErrCount = 0; __globalErrLastReset = now; }
+    __globalErrCount++;
+    try{ console.error('[GlobalError]', ev.message, ev.filename+':'+ev.lineno); }catch(e){}
+    if(__globalErrCount <= 3 && typeof toast==='function' && document.getElementById('toast')){
+      try{ toast('⚠ '+(ev.message||'Error JS'), 'error'); }catch(e){}
+    }
+  } finally { __globalErrInside = false; }
 });
 window.addEventListener('unhandledrejection', function(ev){
-  try{ console.error('[UnhandledRejection]', ev.reason); }catch(e){}
-  try{ if(typeof toast==='function') toast('⚠ '+((ev.reason&&ev.reason.message)||'Promesa fallida'), 'error'); }catch(e){}
+  if(__globalErrInside) return;
+  __globalErrInside = true;
+  try{
+    var now = Date.now();
+    if(now - __globalErrLastReset > 5000){ __globalErrCount = 0; __globalErrLastReset = now; }
+    __globalErrCount++;
+    try{ console.error('[UnhandledRejection]', ev.reason); }catch(e){}
+    if(__globalErrCount <= 3 && typeof toast==='function' && document.getElementById('toast')){
+      try{ toast('⚠ '+((ev.reason&&ev.reason.message)||'Promesa fallida'), 'error'); }catch(e){}
+    }
+  } finally { __globalErrInside = false; }
 });
 // ═══ MOBILE NAV HELPERS ═══
 function mnavTo(v){
@@ -6689,7 +6712,7 @@ function fmtD(d){if(!d)return'—';const p=d.split('-');return p.length===3?`${p
 function genId(pre,list,key){const ns=list.map(x=>parseInt((x[key||pre.toLowerCase()+'_id']||'').replace(/\D/g,''))||0);return`${pre}-${(Math.max(0,...ns)+1).toString().padStart(3,'0')}`}
 function ivaPct(s){return s==='Exento'?0:parseFloat(s)||21}
 let toastT;
-function toast(msg,type='success',dur=3200){const el=document.getElementById('toast');el.innerHTML=msg;el.className=`toast show ${type}`;clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),dur);}
+function toast(msg,type='success',dur=3200){try{const el=document.getElementById('toast');if(!el){try{console.log('[toast]',msg);}catch(_){}return;}el.innerHTML=msg;el.className=`toast show ${type}`;clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),dur);}catch(e){try{console.error('toast() falló:',e);}catch(_){}}}
 async function openModal(id){
   // Cargar/refrescar proveedores siempre al abrir modales que los necesitan
   if(['m-compra','m-subcontrata','m-factura'].includes(id)){
