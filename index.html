@@ -26574,6 +26574,10 @@ function generarCertPDFContenido({ proy, p, cli, cfg, fecha, notas, base, iva, i
   pdf.setFontSize(8); pdf.setTextColor(120); pdf.setFont(undefined,'normal');
   pdf.text('Firma empresa',  mX+32,   y+24, {align:'center'});
   pdf.text('Firma cliente',  pW-mX-32, y+24, {align:'center'});
+  pdf.setFontSize(9); pdf.setTextColor(60); pdf.setFont(undefined,'bold');
+  pdf.text(cfg.razon_social||'PAU INTERIORISMO S.L.', mX+32, y+29, {align:'center'});
+  pdf.text(cli.nombre||p.cliente_id||'—', pW-mX-32, y+29, {align:'center'});
+  pdf.setFont(undefined,'normal');
 
   // Footer
   pdf.setFontSize(7); pdf.setTextColor(160);
