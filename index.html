@@ -6556,8 +6556,15 @@ function navTo(v){
   const m=META[v]||{};
   document.getElementById('tb-title').textContent=m.t||v;
   document.getElementById('tb-bc').textContent=m.b||'';
-  // Run loader
-  if(loaders[v]) loaders[v]().catch(e=>{ console.error('navTo loader error ['+v+']:',e); toast('Error cargando sección: '+e.message,'error'); });
+  // Run loader (defensivo: algunos loaders no devuelven Promise)
+  if(loaders[v]){
+    try{
+      const _r = loaders[v]();
+      if(_r && typeof _r.catch === 'function'){
+        _r.catch(e=>{ console.error('navTo loader error ['+v+']:',e); toast('Error cargando sección: '+(e&&e.message||e),'error'); });
+      }
+    }catch(e){ console.error('navTo loader sync error ['+v+']:',e); toast('Error cargando sección: '+(e&&e.message||e),'error'); }
+  }
 }
 
 // ═══════════════════════════════════════════
@@ -8669,12 +8676,20 @@ async function initPresupuesto(){
   const pSel=document.getElementById('pres-proyecto-sel');
   if(lp&&pSel&&PC.some(p=>p.proyecto_id===lp)){
     pSel.value=lp;
-    // Load units first, then restore version and load
-    await presProyChanged();
+    // Pre-restaurar versión en el select ANTES de cargar unidades+presupuesto,
+    // para que _loadUnitsIntoSelector preserve la versión guardada (ej. v2)
+    // y loadPresupuesto se lance con la versión correcta.
     const vSel=document.getElementById('pres-version-sel');
     if(lv&&vSel){
       for(let o of vSel.options){ if(o.value===lv){ vSel.value=lv; break; } }
-      loadPresupuesto();
+    }
+    await presProyChanged();
+    // Tras cargar unidades, la versión guardada puede ser una unidad: si lv
+    // sigue existiendo en el select reconstruido, asegurarla y recargar.
+    if(lv&&vSel){
+      let ok=false;
+      for(let o of vSel.options){ if(o.value===lv){ vSel.value=lv; ok=true; break; } }
+      if(ok && vSel.value!==lv){ vSel.value=lv; loadPresupuesto(); }
     }
   }
 }
