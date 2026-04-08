@@ -1,5 +1,22 @@
 <!DOCTYPE html>
-<html lang="es"><head><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<html lang="es"><head>
+<script>
+// ── Redirección a versión móvil ligera SOLO en iPhone/iPod ──
+// (iPad NO entra: su userAgent moderno reporta "Macintosh", no "iPhone")
+// (PC/Mac/iPad/Android tablet: no afecta)
+// Para forzar la versión completa desde iPhone: ?full=1
+(function(){
+  try{
+    var ua=navigator.userAgent||'';
+    var esIphone=/iPhone|iPod/.test(ua);
+    var qs=location.search||'';
+    if(esIphone && qs.indexOf('full=1')===-1){
+      location.replace('m.html'+qs);
+    }
+  }catch(e){}
+})();
+</script>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
