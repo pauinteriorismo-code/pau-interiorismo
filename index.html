@@ -26398,11 +26398,16 @@ async function exportarCertPDFById(certId, agrupado) {
   if(agrupado){
     try{
       const todasPres = await sbGet('presupuesto_lineas',
-        `?proyecto_id=eq.${c.proyecto_id}&version=eq.v1&order=orden.asc&select=id,descripcion,es_capitulo,orden`);
-      let curCap = 'Sin capítulo';
-      (todasPres||[]).forEach(l=>{
-        if(l.es_capitulo){ curCap = l.descripcion || 'Sin capítulo'; }
-        else { capMap[l.id] = curCap; }
+        `?proyecto_id=eq.${c.proyecto_id}&order=version.asc,orden.asc&select=id,descripcion,es_capitulo,orden,version`);
+      // Agrupamos por versión para que cada capítulo solo arrastre a sus partidas
+      const porVer = {};
+      (todasPres||[]).forEach(l=>{ const v=l.version||'v1'; (porVer[v]=porVer[v]||[]).push(l); });
+      Object.values(porVer).forEach(arr=>{
+        let curCap = 'Sin capítulo';
+        arr.forEach(l=>{
+          if(l.es_capitulo){ curCap = l.descripcion || 'Sin capítulo'; }
+          else { capMap[l.id] = curCap; }
+        });
       });
     }catch(e){ console.warn('cap map:',e.message); }
   }
@@ -26451,7 +26456,7 @@ function generarCertPDFContenido({ proy, p, cli, cfg, fecha, notas, base, iva, i
 
   // Info proyecto/cliente
   pdf.setFontSize(9); pdf.setTextColor(50);
-  pdf.text(`Proyecto:  ${p.nombre||''}`, mX, y); y += 5;
+  pdf.text(`Proyecto:  ${p.nombre||''}  (Ref. ${p.proyecto_id||proy||''})`, mX, y); y += 5;
   pdf.text(`Cliente:   ${cli.nombre||p.cliente_id||'—'}`, mX, y); y += 5;
   pdf.text(`Dirección: ${p.direccion_obra||'—'}`, mX, y); y += 5;
   if (notas) { pdf.text(`Concepto:  ${notas}`, mX, y); y += 5; }
