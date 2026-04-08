@@ -26177,6 +26177,10 @@ async function certSelProyecto() {
 async function nuevaCertificacion() {
   if (!_certProyId) return;
   _certEditing = null;
+  _certEditingPro = false;
+  ['cert-pct','cert-importe','cert-iva'].forEach(id=>{
+    const el=document.getElementById(id); if(el){ el.readOnly=false; el.style.background=''; }
+  });
   const p   = (PC||[]).find(px => px.proyecto_id === _certProyId) || {};
   const cli = (CC||[]).find(c  => c.cliente_id   === p.cliente_id) || {};
 
@@ -26209,7 +26213,16 @@ async function editarCertificacion(certId) {
   const certs = await sbGet('certificaciones', `?id=eq.${certId}`);
   const c = certs[0];
   if (!c) return;
+  // Detectar modo pro (creada desde presupuesto con líneas detalladas)
+  let _esPro = (c.modo === 'pro');
+  if(!_esPro){
+    try{
+      const lns = await sbGet('certificacion_lineas', `?certificacion_id=eq.${certId}&limit=1`);
+      if(lns && lns.length) _esPro = true;
+    }catch(e){}
+  }
   _certEditing = certId;
+  _certEditingPro = _esPro;
   _certProyId  = c.proyecto_id;
 
   const p   = (PC||[]).find(px => px.proyecto_id === _certProyId) || {};
@@ -26239,8 +26252,19 @@ async function editarCertificacion(certId) {
   const dispBase  = _certPresBase - acumPrev;
   certActualizarInfoBase(acumPrev, dispBase);
   certActualizarResumen(base);
+  // Bloquear campos económicos si es pro (las líneas mandan)
+  ['cert-pct','cert-importe','cert-iva'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.readOnly = _esPro;
+    if(el) el.style.background = _esPro ? '#f5f5f5' : '';
+  });
+  // Aviso visual
+  const sub = document.getElementById('cert-modal-sub');
+  if(sub && _esPro){
+    sub.innerHTML += ' <span style="color:#b87333;font-weight:700">· Modo PRO (líneas) — solo editable fecha, estado y notas</span>';
+  }
   openModal('m-certificacion');
 }
+let _certEditingPro = false;
 
 function certActualizarInfoBase(acumPrev, dispBase) {
   document.getElementById('cert-base-display').textContent = _certPresBase > 0 ? fmt(_certPresBase) : 'Sin presupuesto';
@@ -26285,18 +26309,24 @@ async function guardarCertificacion() {
   const notas  = document.getElementById('cert-notas').value;
   const base   = parseFloat(document.getElementById('cert-importe').value) || 0;
 
-  if (base <= 0) { toast('Introduce el importe o porcentaje de la certificación', 'error'); return; }
   if (!fecha)    { toast('Introduce la fecha', 'error'); return; }
+  if (!_certEditingPro && base <= 0) { toast('Introduce el importe o porcentaje de la certificación', 'error'); return; }
 
-  const payload = {
-    proyecto_id:    _certProyId,
-    fecha:          fecha,
-    estado:         estado,
-    notas:          notas,
-    base_imponible: Math.round(base * 100) / 100,
-    iva_pct:        ivaPct,
-    lineas_detalle: null   // Opción B: no hay líneas detalladas
-  };
+  let payload;
+  if(_certEditing && _certEditingPro){
+    // Modo pro: solo metadatos, las líneas mandan en base/iva
+    payload = { fecha, estado, notas };
+  } else {
+    payload = {
+      proyecto_id:    _certProyId,
+      fecha:          fecha,
+      estado:         estado,
+      notas:          notas,
+      base_imponible: Math.round(base * 100) / 100,
+      iva_pct:        ivaPct,
+      lineas_detalle: null
+    };
+  }
 
   try {
     if (_certEditing) {
