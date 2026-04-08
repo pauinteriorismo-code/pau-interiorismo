@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>PAU · Móvil</title>
+<title>PAU · Obra</title>
 <style>
 :root{--bg:#0b1220;--card:#121a2c;--soft:#1a2540;--text:#e6ecff;--mut:#9aa6c4;--ln:#26314f;--blue:#3b82f6;--green:#10b981;--amber:#f59e0b;--red:#ef4444;--navy:#1e3a8a}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -35,13 +35,14 @@ label{display:block;font-size:12px;color:var(--mut);margin:8px 0 4px}
 .btn.gray{background:var(--soft);color:var(--text)}
 .btn.green{background:var(--green)}
 .btn.red{background:var(--red)}
+.btn.amber{background:var(--amber);color:#1a1200}
 .btn.full{width:100%}
 .fab{position:fixed;right:16px;bottom:80px;width:56px;height:56px;border-radius:50%;background:var(--blue);color:#fff;border:0;font-size:28px;box-shadow:0 4px 16px rgba(59,130,246,.5);z-index:15}
 .empty{text-align:center;color:var(--mut);padding:30px 10px;font-size:13px}
 .list-item{background:var(--card);border:1px solid var(--ln);border-radius:10px;padding:11px;margin-bottom:8px}
 .list-item .t{font-weight:600;font-size:14px}
 .list-item .s{font-size:12px;color:var(--mut);margin-top:3px}
-.list-item .meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.list-item .meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;align-items:center}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:none;align-items:flex-end;justify-content:center}
 .modal.on{display:flex}
 .modal .body{background:var(--bg);width:100%;max-height:92vh;border-radius:14px 14px 0 0;padding:16px;overflow-y:auto;-webkit-overflow-scrolling:touch}
@@ -56,20 +57,36 @@ label{display:block;font-size:12px;color:var(--mut);margin:8px 0 4px}
 #login h1{text-align:center;margin:0 0 4px;font-size:22px}
 #login .sub{text-align:center;color:var(--mut);font-size:13px;margin-bottom:24px}
 .search{margin-bottom:10px}
-.tag{font-size:10px;background:var(--soft);padding:2px 6px;border-radius:4px;color:var(--mut)}
 details{background:var(--card);border:1px solid var(--ln);border-radius:10px;padding:10px 12px;margin-bottom:8px}
 details summary{font-weight:600;font-size:14px;cursor:pointer;outline:none}
 details[open] summary{margin-bottom:8px}
 .kv{font-size:12px;color:var(--mut);margin:3px 0}
 .kv b{color:var(--text);font-weight:500}
 .linkfull{display:block;text-align:center;color:var(--mut);font-size:11px;padding:14px;text-decoration:none}
+.quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.quick-grid .qb{background:var(--card);border:1px solid var(--ln);border-radius:12px;padding:14px 8px;text-align:center;color:var(--text);font-size:13px;font-weight:600;cursor:pointer}
+.quick-grid .qb .ic{display:block;font-size:26px;margin-bottom:4px}
+.quick-grid .qb.blue{border-color:#1e40af;background:linear-gradient(180deg,#152444,#0f1a30)}
+.quick-grid .qb.green{border-color:#065f46;background:linear-gradient(180deg,#10342a,#0c1f1a)}
+.quick-grid .qb.amber{border-color:#92400e;background:linear-gradient(180deg,#3a2a14,#22170a)}
+.quick-grid .qb.red{border-color:#991b1b;background:linear-gradient(180deg,#3a1a1f,#22101a)}
+.kpi{display:flex;gap:8px;margin-bottom:10px}
+.kpi .k{flex:1;background:var(--card);border:1px solid var(--ln);border-radius:10px;padding:10px;text-align:center}
+.kpi .k .v{font-size:20px;font-weight:700;color:var(--blue)}
+.kpi .k .l{font-size:11px;color:var(--mut)}
+.stepper{display:flex;align-items:center;gap:6px}
+.stepper button{width:38px;height:38px;border:1px solid var(--ln);background:var(--soft);border-radius:8px;color:var(--text);font-size:18px;font-weight:700}
+.stepper input{flex:1;text-align:center;font-weight:700;font-size:18px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.chips .ch{background:var(--soft);border:1px solid var(--ln);padding:6px 10px;border-radius:16px;font-size:12px;cursor:pointer}
+.chips .ch.on{background:var(--blue);border-color:var(--blue);color:#fff}
 </style>
 </head>
 <body>
 
 <div id="login">
   <h1>PAU Interiorismo</h1>
-  <div class="sub">Versión móvil ligera</div>
+  <div class="sub">Versión obra · Apuntes rápidos</div>
   <label>Usuario</label>
   <input id="lu" autocapitalize="off" autocorrect="off" placeholder="jose / pau / sergi">
   <label>Contraseña</label>
@@ -93,16 +110,51 @@ details[open] summary{margin-bottom:8px}
 <button class="fab" id="fab" onclick="onFab()" style="display:none">＋</button>
 
 <nav class="tabs">
-  <button id="tb-inicio"  class="on" onclick="go('inicio')"><span class="ic">🏠</span>Inicio</button>
-  <button id="tb-agenda"  onclick="go('agenda')"><span class="ic">📅</span>Agenda</button>
-  <button id="tb-plan"    onclick="go('plan')"><span class="ic">🗓</span>Planning</button>
-  <button id="tb-proy"    onclick="go('proy')"><span class="ic">📁</span>Proyectos</button>
-  <button id="tb-cli"     onclick="go('cli')"><span class="ic">👥</span>Clientes</button>
+  <button id="tb-inicio" class="on" onclick="go('inicio')"><span class="ic">🏠</span>Inicio</button>
+  <button id="tb-horas"  onclick="go('horas')"><span class="ic">⏱</span>Horas</button>
+  <button id="tb-agenda" onclick="go('agenda')"><span class="ic">📅</span>Agenda</button>
+  <button id="tb-plan"   onclick="go('plan')"><span class="ic">🗓</span>Plan</button>
+  <button id="tb-proy"   onclick="go('proy')"><span class="ic">📁</span>Proyectos</button>
 </nav>
 
 <div id="toast"></div>
 
-<!-- Modal Agenda -->
+<!-- ═══════ MODAL HORAS ═══════ -->
+<div class="modal" id="m-h" onclick="if(event.target===this)closeM('m-h')">
+  <div class="body">
+    <h2 id="h-h">Registrar horas</h2>
+    <input type="hidden" id="h-id">
+    <label>Trabajador</label>
+    <select id="h-trab"></select>
+    <label>Fecha</label>
+    <input id="h-fecha" type="date">
+    <label>Horas</label>
+    <div class="stepper">
+      <button type="button" onclick="hStep(-0.5)">−</button>
+      <input id="h-horas" type="number" step="0.25" min="0" value="8">
+      <button type="button" onclick="hStep(0.5)">+</button>
+    </div>
+    <div class="chips">
+      <span class="ch" onclick="hSet(4)">4h</span>
+      <span class="ch" onclick="hSet(6)">6h</span>
+      <span class="ch" onclick="hSet(8)">8h</span>
+      <span class="ch" onclick="hSet(8.5)">8,5h</span>
+      <span class="ch" onclick="hSet(9)">9h</span>
+      <span class="ch" onclick="hSet(10)">10h</span>
+    </div>
+    <label>Proyecto</label>
+    <select id="h-proy"><option value="">—</option></select>
+    <label>Trabajo / Descripción</label>
+    <textarea id="h-desc" placeholder="Tarea realizada..."></textarea>
+    <div class="actions">
+      <button class="btn gray" onclick="closeM('m-h')">Cancelar</button>
+      <button class="btn red" id="h-del" style="display:none" onclick="hDelete()">Eliminar</button>
+      <button class="btn" onclick="hSave()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ MODAL AGENDA ═══════ -->
 <div class="modal" id="m-ag" onclick="if(event.target===this)closeM('m-ag')">
   <div class="body">
     <h2 id="ag-h">Nuevo aviso</h2>
@@ -132,7 +184,7 @@ details[open] summary{margin-bottom:8px}
   </div>
 </div>
 
-<!-- Modal Planning -->
+<!-- ═══════ MODAL PLANNING ═══════ -->
 <div class="modal" id="m-pl" onclick="if(event.target===this)closeM('m-pl')">
   <div class="body">
     <h2 id="pl-h">Nueva tarea</h2>
@@ -164,18 +216,70 @@ details[open] summary{margin-bottom:8px}
   </div>
 </div>
 
+<!-- ═══════ MODAL GASTO/COMPRA ═══════ -->
+<div class="modal" id="m-co" onclick="if(event.target===this)closeM('m-co')">
+  <div class="body">
+    <h2>💶 Gasto rápido</h2>
+    <label>Fecha</label>
+    <input id="co-fecha" type="date">
+    <label>Proyecto</label>
+    <select id="co-proy"><option value="">—</option></select>
+    <label>Proveedor / Tienda</label>
+    <input id="co-prov" placeholder="Leroy, Saneamientos...">
+    <label>Concepto</label>
+    <input id="co-concepto" placeholder="Material, herramienta...">
+    <label>Importe (€) <span style="color:var(--mut);font-size:11px">— sin IVA</span></label>
+    <input id="co-base" type="number" step="0.01" min="0" inputmode="decimal" placeholder="0,00">
+    <label>IVA</label>
+    <select id="co-iva"><option>21</option><option>10</option><option>4</option><option>0</option></select>
+    <label>Notas</label>
+    <textarea id="co-notas"></textarea>
+    <div class="actions">
+      <button class="btn gray" onclick="closeM('m-co')">Cancelar</button>
+      <button class="btn" onclick="coSave()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ MODAL NOTA DE OBRA (incidencia) ═══════ -->
+<div class="modal" id="m-nt" onclick="if(event.target===this)closeM('m-nt')">
+  <div class="body">
+    <h2>📝 Nota / Incidencia de obra</h2>
+    <div style="font-size:12px;color:var(--mut);margin-bottom:8px">Se guarda como aviso en la agenda con tipo "Tarea".</div>
+    <label>Proyecto</label>
+    <select id="nt-proy"><option value="">—</option></select>
+    <label>Descripción</label>
+    <input id="nt-desc" placeholder="Hay que reponer rodapié...">
+    <label>Detalle</label>
+    <textarea id="nt-notas"></textarea>
+    <label>Prioridad</label>
+    <select id="nt-prio">
+      <option value="normal">Normal</option>
+      <option value="alta">⚠ Urgente</option>
+      <option value="baja">Baja</option>
+    </select>
+    <div class="actions">
+      <button class="btn gray" onclick="closeM('m-nt')">Cancelar</button>
+      <button class="btn" onclick="ntSave()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ════════════════════════════════════════
-// PAU Móvil — versión ligera para iPhone
+// PAU Móvil — versión obra (apuntes rápidos)
 // ════════════════════════════════════════
 const SB_URL='https://qxyflndntpmcdbyvwjnj.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4eWZsbmRudHBtY2RieXZ3am5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MjgzOTMsImV4cCI6MjA4NzUwNDM5M30.WQ193I6oS9ANMvuWG8XXa_J6oFleoTSlLQKeFVR_d50';
 const PASSWDS={'jose':'cGF1MjAyNg==','pau':'cGF1MjAyNg==','sergi':'c2VyZ2kyMDI2'};
+const TRAB_DEFAULT=['Paco','Raúl','Boro','Julio','Pau','Jose Asins'];
+// Mapeo usuario→trabajador para preseleccionar
+const USER_TRAB={jose:'Jose Asins',pau:'Pau',sergi:'Sergi'};
 
-// Estado global mínimo
-let CUR='inicio';
-let AG=[], PL=[], PROY=[], CLI=[];
-let LOADED={ag:0,pl:0,proy:0,cli:0};
+// Estado
+let CUR='inicio', USER='';
+let HC=[], AG=[], PL=[], PROY=[], TRAB=TRAB_DEFAULT.slice();
+let LOADED={h:0,ag:0,pl:0,proy:0,trab:0};
 
 // ── Toast ──
 let _tT;
@@ -188,7 +292,7 @@ function toast(msg,kind='ok'){
   _tT=setTimeout(()=>{t.className='';},2400);
 }
 
-// ── Errores globales: protegidos contra recursión ──
+// ── Errores globales: anti-recursión ──
 let _inErr=false;
 window.addEventListener('error',e=>{
   if(_inErr)return; _inErr=true;
@@ -236,6 +340,7 @@ function logout(){
   location.reload();
 }
 function startApp(u){
+  USER=u;
   document.getElementById('login').style.display='none';
   document.getElementById('whoami').textContent=u;
   go('inicio');
@@ -244,24 +349,25 @@ function startApp(u){
 // ── Navegación ──
 function go(v){
   CUR=v;
-  ['inicio','agenda','plan','proy','cli'].forEach(k=>{
+  ['inicio','horas','agenda','plan','proy'].forEach(k=>{
     const b=document.getElementById('tb-'+k);
     if(b) b.classList.toggle('on',k===v);
   });
-  const titulos={inicio:'Inicio',agenda:'Agenda',plan:'Planning',proy:'Proyectos',cli:'Clientes'};
+  const titulos={inicio:'Inicio',horas:'Horas',agenda:'Agenda',plan:'Planning',proy:'Proyectos'};
   document.getElementById('title').textContent=titulos[v];
   const fab=document.getElementById('fab');
-  fab.style.display=(v==='agenda'||v==='plan')?'block':'none';
+  fab.style.display=(v==='horas'||v==='agenda'||v==='plan')?'block':'none';
   if(v==='inicio') renderInicio();
+  if(v==='horas')  loadHoras();
   if(v==='agenda') loadAgenda();
   if(v==='plan')   loadPlan();
   if(v==='proy')   loadProy();
-  if(v==='cli')    loadCli();
   window.scrollTo(0,0);
 }
 function onFab(){
+  if(CUR==='horas')  openH();
   if(CUR==='agenda') openAg();
-  if(CUR==='plan') openPl();
+  if(CUR==='plan')   openPl();
 }
 
 // ── Helpers ──
@@ -271,17 +377,32 @@ function fmtFecha(s){
 }
 function hoy(){ return new Date().toISOString().slice(0,10); }
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function eur(n){ return (Number(n)||0).toFixed(2).replace('.',',')+' €'; }
 
-// Carga proyectos/clientes en cache si no estaban
 async function ensureProy(){
   if(LOADED.proy) return;
   PROY=await sb('proyectos','GET',null,'?order=proyecto_id.desc').catch(()=>[]);
   LOADED.proy=1;
 }
-async function ensureCli(){
-  if(LOADED.cli) return;
-  CLI=await sb('clientes','GET',null,'?order=nombre.asc').catch(()=>[]);
-  LOADED.cli=1;
+async function ensureTrab(){
+  if(LOADED.trab) return;
+  try{
+    const cfg=await sb('configuracion','GET',null,'?clave=eq.trabajadores');
+    if(cfg && cfg[0] && cfg[0].valor){
+      let v=cfg[0].valor;
+      if(typeof v==='string'){ try{ v=JSON.parse(v); }catch(_){} }
+      if(Array.isArray(v) && v.length) TRAB=v;
+    }
+  }catch(_){}
+  LOADED.trab=1;
+}
+
+// Pinta los <option> de proyectos en un <select>
+function fillProySelect(elId, val){
+  const sel=document.getElementById(elId);
+  if(!sel) return;
+  sel.innerHTML='<option value="">—</option>'+PROY.map(p=>`<option value="${esc(p.proyecto_id)}">${esc(p.proyecto_id)} · ${esc(p.nombre||'')}</option>`).join('');
+  if(val) sel.value=val;
 }
 
 // ════════════════════════════════════════
@@ -290,26 +411,222 @@ async function ensureCli(){
 async function renderInicio(){
   const m=document.getElementById('main');
   m.innerHTML=`
-    <div class="card"><h3>Hola 👋</h3>
-      <div style="font-size:12px;color:var(--mut)">Versión móvil ligera. Solo lo esencial: agenda, planning y consulta. Si necesitas algo más, abre la app en el PC o iPad.</div>
+    <div class="quick-grid">
+      <div class="qb blue"  onclick="openH()">      <span class="ic">⏱</span>Horas hoy</div>
+      <div class="qb amber" onclick="openCo()">     <span class="ic">💶</span>Gasto rápido</div>
+      <div class="qb green" onclick="openAg()">     <span class="ic">📅</span>+ Aviso</div>
+      <div class="qb red"   onclick="openNt()">     <span class="ic">📝</span>Nota obra</div>
     </div>
-    <div class="card" id="card-resumen"><h3>📅 Próximo</h3><div class="empty">Cargando…</div></div>
+    <div class="kpi" id="kpi"><div class="k"><div class="v">—</div><div class="l">Cargando…</div></div></div>
+    <div class="card" id="card-resumen"><h3>📅 Próximos avisos</h3><div class="empty">Cargando…</div></div>
+    <div class="card" id="card-horas"><h3>⏱ Mis horas (últimos 7 días)</h3><div class="empty">Cargando…</div></div>
     <a href="?full=1" class="linkfull">Abrir versión completa (puede ir lenta o fallar en iPhone)</a>
   `;
+  // Cargar datos para KPIs y resúmenes
   try{
-    if(!LOADED.ag){ AG=await sb('agenda','GET',null,'?order=fecha.asc,hora.asc'); LOADED.ag=1; }
     const h=hoy();
-    const prox=AG.filter(a=>a&&a.estado!=='Completado'&&(a.fecha||'')>=h).slice(0,5);
+    const hace7=new Date(); hace7.setDate(hace7.getDate()-7);
+    const hace7s=hace7.toISOString().slice(0,10);
+    const [hRows, agRows] = await Promise.all([
+      sb('horas','GET',null,`?fecha=gte.${hace7s}&order=fecha.desc`).catch(()=>[]),
+      LOADED.ag ? Promise.resolve(AG) : sb('agenda','GET',null,'?order=fecha.asc,hora.asc').catch(()=>[])
+    ]);
+    HC=hRows; LOADED.h=0; // datos parciales solo última semana, no marcar global
+    AG=agRows; LOADED.ag=1;
+
+    // KPIs
+    const trabUser=USER_TRAB[USER]||'';
+    const horasHoy=hRows.filter(r=>r.fecha===h).reduce((s,r)=>s+(parseFloat(r.horas)||0),0);
+    const horasMiasHoy=trabUser?hRows.filter(r=>r.fecha===h&&r.trabajador===trabUser).reduce((s,r)=>s+(parseFloat(r.horas)||0),0):0;
+    const avisosHoy=AG.filter(a=>a&&a.fecha===h&&a.estado!=='Completado').length;
+    const venc=AG.filter(a=>a&&(a.fecha||'')<h&&a.estado!=='Completado').length;
+    document.getElementById('kpi').innerHTML=`
+      <div class="k"><div class="v">${horasMiasHoy||horasHoy}</div><div class="l">${trabUser?'Mis h. hoy':'Horas hoy'}</div></div>
+      <div class="k"><div class="v">${avisosHoy}</div><div class="l">Avisos hoy</div></div>
+      <div class="k"><div class="v" style="color:${venc?'var(--red)':'var(--blue)'}">${venc}</div><div class="l">Vencidos</div></div>
+    `;
+
+    // Próximos avisos (max 4)
+    const prox=AG.filter(a=>a&&a.estado!=='Completado'&&(a.fecha||'')>=h).slice(0,4);
     const c=document.getElementById('card-resumen');
-    if(!prox.length){ c.innerHTML=`<h3>📅 Próximo</h3><div class="empty">Sin avisos pendientes</div>`; return; }
-    c.innerHTML=`<h3>📅 Próximos avisos</h3>`+prox.map(a=>`
-      <div class="list-item" onclick="openAg('${a.id}')">
-        <div class="t">${esc(a.descripcion||'—')}</div>
-        <div class="s">${fmtFecha(a.fecha)}${a.hora?' · '+a.hora:''} · ${esc(a.tipo||'')}</div>
-      </div>`).join('');
+    if(!prox.length){ c.innerHTML='<h3>📅 Próximos avisos</h3><div class="empty">Sin avisos pendientes</div>'; }
+    else{
+      c.innerHTML='<h3>📅 Próximos avisos</h3>'+prox.map(a=>`
+        <div class="list-item" onclick="go('agenda')">
+          <div class="t">${esc(a.descripcion||'—')}</div>
+          <div class="s">${fmtFecha(a.fecha)}${a.hora?' · '+a.hora:''} · ${esc(a.tipo||'')}</div>
+        </div>`).join('');
+    }
+
+    // Mis horas últimos 7 días
+    const ch=document.getElementById('card-horas');
+    let misHoras=hRows;
+    if(trabUser) misHoras=hRows.filter(r=>r.trabajador===trabUser);
+    if(!misHoras.length){
+      ch.innerHTML='<h3>⏱ '+(trabUser?'Mis horas':'Horas')+' (últimos 7 días)</h3><div class="empty">Sin registros</div>';
+    } else {
+      // Agrupar por fecha
+      const grupos={};
+      misHoras.forEach(r=>{ const k=r.fecha||'—'; (grupos[k]=grupos[k]||[]).push(r); });
+      const ordenadas=Object.keys(grupos).sort().reverse().slice(0,7);
+      const total=misHoras.reduce((s,r)=>s+(parseFloat(r.horas)||0),0);
+      ch.innerHTML=`<h3>⏱ ${trabUser?'Mis horas':'Horas'} (últimos 7 días) · <span style="color:var(--blue)">${total}h</span></h3>`+
+        ordenadas.map(f=>{
+          const tot=grupos[f].reduce((s,r)=>s+(parseFloat(r.horas)||0),0);
+          const line=grupos[f].slice(0,3).map(r=>`${esc(r.trabajador||'?')} ${r.horas}h`).join(' · ');
+          return `<div class="list-item" onclick="go('horas')">
+            <div class="t">${fmtFecha(f)} · <span style="color:var(--blue)">${tot}h</span></div>
+            <div class="s">${line}${grupos[f].length>3?' · +'+(grupos[f].length-3):''}</div>
+          </div>`;
+        }).join('');
+    }
   }catch(e){
-    document.getElementById('card-resumen').innerHTML=`<h3>📅 Próximo</h3><div class="empty">Error: ${esc(e.message)}</div>`;
+    document.getElementById('card-resumen').innerHTML='<h3>📅 Próximos avisos</h3><div class="empty">Error: '+esc(e.message)+'</div>';
   }
+}
+
+// ════════════════════════════════════════
+// VISTA: HORAS
+// ════════════════════════════════════════
+async function loadHoras(){
+  const m=document.getElementById('main');
+  m.innerHTML=`
+    <div class="row" style="gap:6px;margin-bottom:10px">
+      <select id="h-filt" onchange="renderHoras()">
+        <option value="hoy">Hoy</option>
+        <option value="sem" selected>Esta semana</option>
+        <option value="mes">Este mes</option>
+        <option value="todas">Todas</option>
+      </select>
+      <select id="h-filt-trab" onchange="renderHoras()">
+        <option value="">Todos</option>
+      </select>
+    </div>
+    <input class="search" id="h-srch" placeholder="🔍 Buscar..." oninput="renderHoras()">
+    <div id="h-list"><div class="empty">Cargando…</div></div>
+  `;
+  try{
+    await ensureTrab();
+    // poblar select trabajadores
+    const ftr=document.getElementById('h-filt-trab');
+    ftr.innerHTML='<option value="">Todos</option>'+TRAB.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('');
+    HC=await sb('horas','GET',null,'?order=fecha.desc');
+    LOADED.h=1;
+    renderHoras();
+  }catch(e){
+    document.getElementById('h-list').innerHTML='<div class="empty">Error: '+esc(e.message)+'</div>';
+  }
+}
+function renderHoras(){
+  const filt=document.getElementById('h-filt')?.value||'sem';
+  const ft=document.getElementById('h-filt-trab')?.value||'';
+  const q=(document.getElementById('h-srch')?.value||'').toLowerCase().trim();
+  const h=hoy();
+  const ini=new Date(); ini.setDate(ini.getDate()-7);
+  const iniS=ini.toISOString().slice(0,10);
+  const mIni=h.slice(0,7)+'-01';
+  let items=(HC||[]).filter(r=>r&&typeof r==='object');
+  if(filt==='hoy') items=items.filter(r=>r.fecha===h);
+  else if(filt==='sem') items=items.filter(r=>(r.fecha||'')>=iniS);
+  else if(filt==='mes') items=items.filter(r=>(r.fecha||'')>=mIni);
+  if(ft) items=items.filter(r=>r.trabajador===ft);
+  if(q) items=items.filter(r=>((r.trabajador||'')+(r.descripcion||'')+(r.proyecto_id||'')).toLowerCase().includes(q));
+  const total=items.reduce((s,r)=>s+(parseFloat(r.horas)||0),0);
+  const c=document.getElementById('h-list');
+  if(!items.length){ c.innerHTML='<div class="empty">Sin registros</div>'; return; }
+  // Agrupar por fecha
+  const grupos={};
+  items.forEach(r=>{ (grupos[r.fecha||'—']=grupos[r.fecha||'—']||[]).push(r); });
+  const fechas=Object.keys(grupos).sort().reverse();
+  c.innerHTML=`<div style="text-align:center;color:var(--mut);font-size:12px;margin-bottom:8px">Total: <b style="color:var(--blue);font-size:14px">${total}h</b> · ${items.length} registros</div>`+
+    fechas.map(f=>{
+      const tot=grupos[f].reduce((s,r)=>s+(parseFloat(r.horas)||0),0);
+      return `<div style="font-size:12px;color:var(--mut);margin:10px 0 4px;font-weight:600">${fmtFecha(f)} · ${tot}h</div>`+
+      grupos[f].map(r=>{
+        const proy=PROY.find(p=>p.proyecto_id===r.proyecto_id);
+        const proyTxt=proy?(proy.proyecto_id+' · '+proy.nombre):(r.proyecto_id||'');
+        return `<div class="list-item" onclick="openH('${r.id}')">
+          <div class="t">${esc(r.trabajador||'?')} · <span style="color:var(--blue)">${r.horas}h</span></div>
+          ${proyTxt?`<div class="s">📁 ${esc(proyTxt)}</div>`:''}
+          ${r.descripcion?`<div class="s">${esc(r.descripcion)}</div>`:''}
+        </div>`;
+      }).join('');
+    }).join('');
+}
+async function openH(id){
+  await Promise.all([ensureProy(),ensureTrab()]);
+  const sel=document.getElementById('h-trab');
+  sel.innerHTML=TRAB.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('');
+  fillProySelect('h-proy');
+  if(id){
+    const r=HC.find(x=>x.id===id);
+    if(!r) return;
+    document.getElementById('h-h').textContent='Editar registro';
+    document.getElementById('h-id').value=r.id;
+    document.getElementById('h-trab').value=r.trabajador||'';
+    document.getElementById('h-fecha').value=r.fecha||hoy();
+    document.getElementById('h-horas').value=r.horas||0;
+    document.getElementById('h-proy').value=r.proyecto_id||'';
+    document.getElementById('h-desc').value=r.descripcion||'';
+    document.getElementById('h-del').style.display='block';
+  } else {
+    document.getElementById('h-h').textContent='Registrar horas';
+    document.getElementById('h-id').value='';
+    // Preseleccionar trabajador según usuario logueado
+    const t=USER_TRAB[USER];
+    document.getElementById('h-trab').value=(t&&TRAB.includes(t))?t:(TRAB[0]||'');
+    document.getElementById('h-fecha').value=hoy();
+    document.getElementById('h-horas').value=8;
+    document.getElementById('h-proy').value='';
+    document.getElementById('h-desc').value='';
+    document.getElementById('h-del').style.display='none';
+  }
+  openM('m-h');
+}
+function hStep(d){
+  const el=document.getElementById('h-horas');
+  const v=Math.max(0,(parseFloat(el.value)||0)+d);
+  el.value=v;
+}
+function hSet(v){ document.getElementById('h-horas').value=v; }
+async function hSave(){
+  const trab=document.getElementById('h-trab').value;
+  if(!trab){ toast('Falta trabajador','err'); return; }
+  const horas=parseFloat(document.getElementById('h-horas').value)||0;
+  if(horas<=0){ toast('Indica las horas','err'); return; }
+  const d={
+    trabajador:trab,
+    fecha:document.getElementById('h-fecha').value||hoy(),
+    horas,
+    coste_hora:18,
+    proyecto_id:document.getElementById('h-proy').value||null,
+    descripcion:document.getElementById('h-desc').value||''
+  };
+  const id=document.getElementById('h-id').value;
+  try{
+    if(id){
+      await sb('horas','PATCH',d,`?id=eq.${id}`);
+      toast('Actualizado ✓');
+    } else {
+      await sb('horas','POST',d);
+      toast('Horas guardadas ✓');
+    }
+    closeM('m-h');
+    LOADED.h=0;
+    if(CUR==='horas') loadHoras(); else if(CUR==='inicio') renderInicio();
+  }catch(e){ toast('Error: '+e.message,'err'); }
+}
+async function hDelete(){
+  const id=document.getElementById('h-id').value;
+  if(!id) return;
+  if(!confirm('¿Eliminar este registro de horas?')) return;
+  try{
+    await sb('horas','DELETE',null,`?id=eq.${id}`);
+    closeM('m-h');
+    LOADED.h=0;
+    if(CUR==='horas') loadHoras(); else renderInicio();
+    toast('Eliminado');
+  }catch(e){ toast('Error: '+e.message,'err'); }
 }
 
 // ════════════════════════════════════════
@@ -335,7 +652,7 @@ async function loadAgenda(){
     LOADED.ag=1;
     renderAgenda();
   }catch(e){
-    document.getElementById('ag-list').innerHTML=`<div class="empty">Error: ${esc(e.message)}</div>`;
+    document.getElementById('ag-list').innerHTML='<div class="empty">Error: '+esc(e.message)+'</div>';
   }
 }
 function renderAgenda(){
@@ -371,8 +688,7 @@ function renderAgenda(){
 }
 async function openAg(id){
   await ensureProy();
-  const sel=document.getElementById('ag-proy');
-  sel.innerHTML='<option value="">—</option>'+PROY.map(p=>`<option value="${esc(p.proyecto_id)}">${esc(p.proyecto_id)} · ${esc(p.nombre||'')}</option>`).join('');
+  fillProySelect('ag-proy');
   if(id){
     const a=AG.find(x=>x.id===id);
     if(!a) return;
@@ -471,7 +787,7 @@ async function loadPlan(){
     LOADED.pl=1;
     renderPlan();
   }catch(e){
-    document.getElementById('pl-list').innerHTML=`<div class="empty">Error: ${esc(e.message)}</div>`;
+    document.getElementById('pl-list').innerHTML='<div class="empty">Error: '+esc(e.message)+'</div>';
   }
 }
 function renderPlan(){
@@ -493,14 +809,15 @@ function renderPlan(){
       <div class="t">${esc(t.titulo||'—')}</div>
       <div class="s">${fmtFecha(t.fecha_ini)} → ${fmtFecha(t.fecha_fin)}</div>
       ${t.proyecto_nombre?`<div class="s">📁 ${esc(t.proyecto_nombre)}</div>`:''}
-      <div class="meta">${pill}${prio}</div>
+      <div class="meta">${pill}${prio}
+        ${t.estado!=='Completado'?`<span class="pill green" onclick="event.stopPropagation();plComplete('${t.id}')">✓ Completar</span>`:''}
+      </div>
     </div>`;
   }).join('');
 }
 async function openPl(id){
   await ensureProy();
-  const sel=document.getElementById('pl-proy');
-  sel.innerHTML='<option value="">—</option>'+PROY.map(p=>`<option value="${esc(p.proyecto_id)}">${esc(p.proyecto_id)} · ${esc(p.nombre||'')}</option>`).join('');
+  fillProySelect('pl-proy');
   if(id){
     const t=PL.find(x=>x.id===id);
     if(!t) return;
@@ -571,6 +888,14 @@ async function plDelete(){
     toast('Eliminada');
   }catch(e){ toast('Error: '+e.message,'err'); }
 }
+async function plComplete(id){
+  try{
+    await sb('planning_tareas','PATCH',{estado:'Completado'},`?id=eq.${id}`);
+    const t=PL.find(x=>x.id===id); if(t) t.estado='Completado';
+    renderPlan();
+    toast('Completado ✓');
+  }catch(e){ toast('Error: '+e.message,'err'); }
+}
 
 // ════════════════════════════════════════
 // VISTA: PROYECTOS (consulta)
@@ -582,74 +907,136 @@ async function loadProy(){
     <div id="pr-list"><div class="empty">Cargando…</div></div>
   `;
   try{
-    await Promise.all([ensureProy(),ensureCli()]);
-    LOADED.proy=1;
+    await ensureProy();
     renderProy();
   }catch(e){
-    document.getElementById('pr-list').innerHTML=`<div class="empty">Error: ${esc(e.message)}</div>`;
+    document.getElementById('pr-list').innerHTML='<div class="empty">Error: '+esc(e.message)+'</div>';
   }
 }
 function renderProy(){
   const q=(document.getElementById('pr-srch')?.value||'').toLowerCase().trim();
   let items=PROY||[];
-  if(q) items=items.filter(p=>((p.proyecto_id||'')+(p.nombre||'')+(p.direccion||'')).toLowerCase().includes(q));
+  if(q) items=items.filter(p=>((p.proyecto_id||'')+(p.nombre||'')+(p.direccion||'')+(p.poblacion||'')).toLowerCase().includes(q));
   const c=document.getElementById('pr-list');
   if(!items.length){ c.innerHTML='<div class="empty">Sin proyectos</div>'; return; }
-  c.innerHTML=items.slice(0,200).map(p=>{
-    const cli=(CLI||[]).find(x=>x.cliente_id===p.cliente_id);
-    return `<details>
+  c.innerHTML=items.slice(0,200).map(p=>`
+    <details>
       <summary>${esc(p.proyecto_id)} · ${esc(p.nombre||'')}</summary>
-      ${cli?`<div class="kv">Cliente: <b>${esc(cli.nombre||'')}</b></div>`:''}
       ${p.direccion?`<div class="kv">Dirección: <b>${esc(p.direccion)}</b></div>`:''}
       ${p.poblacion?`<div class="kv">Población: <b>${esc(p.poblacion)}</b></div>`:''}
       ${p.estado?`<div class="kv">Estado: <b>${esc(p.estado)}</b></div>`:''}
       ${p.fecha_inicio?`<div class="kv">Inicio: <b>${fmtFecha(p.fecha_inicio)}</b></div>`:''}
       ${p.fecha_fin?`<div class="kv">Fin: <b>${fmtFecha(p.fecha_fin)}</b></div>`:''}
       ${p.notas?`<div class="kv">Notas: <b>${esc(p.notas)}</b></div>`:''}
-    </details>`;
-  }).join('')+(items.length>200?`<div class="empty">Mostrando 200 de ${items.length}. Filtra para ver más.</div>`:'');
+      <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+        <button class="btn" style="font-size:12px;padding:7px 10px" onclick="openHFor('${esc(p.proyecto_id)}')">⏱ Horas</button>
+        <button class="btn amber" style="font-size:12px;padding:7px 10px" onclick="openCoFor('${esc(p.proyecto_id)}')">💶 Gasto</button>
+        <button class="btn green" style="font-size:12px;padding:7px 10px" onclick="openAgFor('${esc(p.proyecto_id)}')">📅 Aviso</button>
+        <button class="btn red" style="font-size:12px;padding:7px 10px" onclick="openNtFor('${esc(p.proyecto_id)}')">📝 Nota</button>
+      </div>
+    </details>
+  `).join('')+(items.length>200?`<div class="empty">Mostrando 200 de ${items.length}. Filtra para ver más.</div>`:'');
+}
+
+// Atajos para abrir modal con proyecto preseleccionado
+async function openHFor(pid){ await openH(); document.getElementById('h-proy').value=pid; }
+async function openCoFor(pid){ await openCo(); document.getElementById('co-proy').value=pid; }
+async function openAgFor(pid){ await openAg(); document.getElementById('ag-proy').value=pid; }
+async function openNtFor(pid){ await openNt(); document.getElementById('nt-proy').value=pid; }
+
+// ════════════════════════════════════════
+// MODAL GASTO/COMPRA
+// ════════════════════════════════════════
+async function openCo(){
+  await ensureProy();
+  fillProySelect('co-proy');
+  document.getElementById('co-fecha').value=hoy();
+  document.getElementById('co-prov').value='';
+  document.getElementById('co-concepto').value='';
+  document.getElementById('co-base').value='';
+  document.getElementById('co-iva').value='21';
+  document.getElementById('co-notas').value='';
+  openM('m-co');
+}
+async function coSave(){
+  const concepto=document.getElementById('co-concepto').value.trim();
+  const base=parseFloat(document.getElementById('co-base').value)||0;
+  if(!concepto){ toast('Falta concepto','err'); return; }
+  if(base<=0){ toast('Falta importe','err'); return; }
+  const proyTexto=document.getElementById('co-proy').value||null;
+  const proyObj=proyTexto?PROY.find(p=>p.proyecto_id===proyTexto):null;
+  const d={
+    fecha:document.getElementById('co-fecha').value||hoy(),
+    proyecto:proyTexto,
+    proyecto_id:proyObj?.id||proyTexto||null,
+    proveedor_id:document.getElementById('co-prov').value||null,
+    concepto,
+    base_imponible:base,
+    iva_pct:document.getElementById('co-iva').value,
+    estado_pago:'Pendiente',
+    notas:document.getElementById('co-notas').value||null
+  };
+  try{
+    try{
+      await sb('compras','POST',d);
+    }catch(e1){
+      // Reintento sin estado_pago (algunas BD usan estado)
+      if(e1.message&&e1.message.includes('estado_pago')){
+        const d2={...d}; delete d2.estado_pago; d2.estado='Pendiente';
+        await sb('compras','POST',d2);
+      } else if(e1.message&&(e1.message.includes('uuid')||e1.message.includes('proyecto_id'))){
+        // Si proyecto_id es UUID y falla, mandamos solo el campo "proyecto" texto
+        const d3={...d}; d3.proyecto_id=null;
+        await sb('compras','POST',d3);
+      } else throw e1;
+    }
+    toast('Gasto guardado ✓');
+    closeM('m-co');
+  }catch(e){ toast('Error: '+e.message,'err'); }
 }
 
 // ════════════════════════════════════════
-// VISTA: CLIENTES (consulta)
+// MODAL NOTA / INCIDENCIA → guardada como aviso de agenda
 // ════════════════════════════════════════
-async function loadCli(){
-  const m=document.getElementById('main');
-  m.innerHTML=`
-    <input class="search" id="cl-srch" placeholder="🔍 Buscar cliente..." oninput="renderCli()">
-    <div id="cl-list"><div class="empty">Cargando…</div></div>
-  `;
-  try{
-    await ensureCli();
-    renderCli();
-  }catch(e){
-    document.getElementById('cl-list').innerHTML=`<div class="empty">Error: ${esc(e.message)}</div>`;
-  }
+async function openNt(){
+  await ensureProy();
+  fillProySelect('nt-proy');
+  document.getElementById('nt-desc').value='';
+  document.getElementById('nt-notas').value='';
+  document.getElementById('nt-prio').value='normal';
+  openM('m-nt');
 }
-function renderCli(){
-  const q=(document.getElementById('cl-srch')?.value||'').toLowerCase().trim();
-  let items=CLI||[];
-  if(q) items=items.filter(c=>((c.nombre||'')+(c.email||'')+(c.telefono||'')+(c.nif||'')).toLowerCase().includes(q));
-  const c=document.getElementById('cl-list');
-  if(!items.length){ c.innerHTML='<div class="empty">Sin clientes</div>'; return; }
-  c.innerHTML=items.slice(0,200).map(x=>`
-    <details>
-      <summary>${esc(x.nombre||'—')}</summary>
-      ${x.nif?`<div class="kv">NIF: <b>${esc(x.nif)}</b></div>`:''}
-      ${x.telefono?`<div class="kv">Tel: <b><a href="tel:${esc(x.telefono)}" style="color:var(--blue)">${esc(x.telefono)}</a></b></div>`:''}
-      ${x.email?`<div class="kv">Email: <b><a href="mailto:${esc(x.email)}" style="color:var(--blue)">${esc(x.email)}</a></b></div>`:''}
-      ${x.direccion?`<div class="kv">Dir: <b>${esc(x.direccion)}</b></div>`:''}
-      ${x.poblacion?`<div class="kv">Población: <b>${esc(x.poblacion)}</b></div>`:''}
-      ${x.notas?`<div class="kv">Notas: <b>${esc(x.notas)}</b></div>`:''}
-    </details>
-  `).join('')+(items.length>200?`<div class="empty">Mostrando 200 de ${items.length}. Filtra para ver más.</div>`:'');
+async function ntSave(){
+  const desc=document.getElementById('nt-desc').value.trim();
+  if(!desc){ toast('Falta descripción','err'); return; }
+  const proy=document.getElementById('nt-proy').value||null;
+  const proyNom=proy?(PROY.find(p=>p.proyecto_id===proy)?.nombre||''):'';
+  const titulo=proyNom?`[${proyNom}] ${desc}`:desc;
+  const d={
+    descripcion:titulo,
+    fecha:hoy(),
+    hora:null,
+    tipo:'Tarea',
+    prioridad:document.getElementById('nt-prio').value,
+    proyecto_id:proy,
+    notas:document.getElementById('nt-notas').value||null,
+    notificacion:true,
+    estado:'Pendiente'
+  };
+  try{
+    await sb('agenda','POST',d);
+    toast('Nota guardada ✓');
+    closeM('m-nt');
+    LOADED.ag=0;
+    if(CUR==='inicio') renderInicio();
+  }catch(e){ toast('Error: '+e.message,'err'); }
 }
 
 // ── Modales ──
 function openM(id){ document.getElementById(id).classList.add('on'); }
 function closeM(id){ document.getElementById(id).classList.remove('on'); }
 
-// ── Arranque: si hay usuario en localStorage, entrar directo ──
+// ── Arranque ──
 (function(){
   const u=localStorage.getItem('pau-m-user');
   if(u && PASSWDS[u]) startApp(u);
