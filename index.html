@@ -25774,15 +25774,35 @@ async function loadCertificaciones() {
 // ═══════════════════════════════════════════════════════════════
 let _cpState = { proyId:null, ver:null, modo:'simple', lineas:[], yaCert:{}, sel:{}, cant:{} };
 
-async function abrirCertificarPartidas(){
-  const proyId = document.getElementById('pres-proyecto-sel')?.value;
-  const ver    = document.getElementById('pres-version-sel')?.value || 'v1';
+// Editar partidas de una certificación PRO existente
+async function editarCertificacionPartidas(certId){
+  const certs = await sbGet('certificaciones', `?id=eq.${certId}`);
+  const cert = certs && certs[0];
+  if(!cert){ toast('Certificación no encontrada','error'); return; }
+  // Cargar líneas de la cert
+  let lineasCert = [];
+  try{ lineasCert = await sbGet('certificacion_lineas', `?certificacion_id=eq.${certId}&order=orden.asc`); }catch(e){}
+  // Detectar versión a partir de la primera línea (linea_id → presupuesto_lineas)
+  let ver = 'v1';
+  if(lineasCert.length){
+    try{
+      const r = await sbGet('presupuesto_lineas', `?id=eq.${lineasCert[0].linea_id}&select=version`);
+      if(r && r[0]?.version) ver = r[0].version;
+    }catch(e){}
+  }
+  await abrirCertificarPartidas({ proyId: cert.proyecto_id, ver, editCert: cert, editLineas: lineasCert });
+}
+
+async function abrirCertificarPartidas(opts){
+  const editMode = !!(opts && opts.editCert);
+  const proyId = (opts && opts.proyId) || document.getElementById('pres-proyecto-sel')?.value;
+  const ver    = (opts && opts.ver) || document.getElementById('pres-version-sel')?.value || 'v1';
   if(!proyId){ toast('Selecciona un proyecto primero','error'); return; }
   const proy = (PC||[]).find(p=>p.proyecto_id===proyId);
   if(!proy){ toast('Proyecto no encontrado','error'); return; }
   const cli = (CC||[]).find(c=>c.cliente_id===proy.cliente_id);
-  const modo = proy.modo_certificacion||'simple';
-  _cpState = { proyId, ver, modo, lineas:[], yaCert:{}, sel:{}, cant:{}, proy, cli };
+  const modo = editMode ? (opts.editCert.modo||'pro') : (proy.modo_certificacion||'simple');
+  _cpState = { proyId, ver, modo, lineas:[], yaCert:{}, sel:{}, cant:{}, proy, cli, editCertId: editMode?opts.editCert.id:null };
   // Cargar líneas (con capítulos para mostrar agrupado)
   let lineas=[];
   try{ lineas = await sbGet('presupuesto_lineas', `?proyecto_id=eq.${proyId}&version=eq.${ver}&order=orden.asc`); }
@@ -25792,35 +25812,56 @@ async function abrirCertificarPartidas(){
   let prevCerts=[], prevLineas=[];
   try{ prevCerts = await sbGet('certificaciones', `?proyecto_id=eq.${proyId}`); }catch(e){}
   if(prevCerts.length){
-    const ids = prevCerts.map(c=>c.id).join(',');
-    try{ prevLineas = await sbGet('certificacion_lineas', `?certificacion_id=in.(${ids})`); }catch(e){}
+    // Excluir la cert que estamos editando para no contar sus líneas como "ya certificadas"
+    const ids = prevCerts.map(c=>c.id).filter(id => !editMode || id !== opts.editCert.id).join(',');
+    if(ids) try{ prevLineas = await sbGet('certificacion_lineas', `?certificacion_id=in.(${ids})`); }catch(e){}
   }
   const yaCert={}; // linea_id -> cantidad acumulada
   prevLineas.forEach(pl=>{ if(pl.linea_id){ yaCert[pl.linea_id] = (yaCert[pl.linea_id]||0) + (Number(pl.cantidad_certificada)||0); }});
   _cpState.yaCert = yaCert;
+  // Mapa de líneas previas de esta cert (modo edición)
+  const editPrev = {};
+  if(editMode){
+    (opts.editLineas||[]).forEach(pl=>{ if(pl.linea_id) editPrev[pl.linea_id] = Number(pl.cantidad_certificada)||0; });
+  }
   // Inicializar selección por defecto
   lineas.forEach(l=>{
     if(l.es_capitulo) return;
     const ya = yaCert[l.id]||0;
     const restante = Math.max(0, (Number(l.cantidad)||0) - ya);
-    if(modo==='simple'){
-      // Simple: pre-marcadas las terminadas con resto > 0
+    if(editMode && editPrev[l.id]!=null){
+      _cpState.sel[l.id] = true;
+      _cpState.cant[l.id] = editPrev[l.id];
+    } else if(modo==='simple'){
       _cpState.sel[l.id] = (l.estado_cert==='terminada' && restante>0);
       _cpState.cant[l.id] = restante;
     } else {
-      // Pro: nada pre-marcado, cantidad por defecto = restante completo
       _cpState.sel[l.id] = false;
       _cpState.cant[l.id] = restante;
     }
   });
   // Pre-rellenar campos
-  document.getElementById('cp-fecha').value = new Date().toISOString().split('T')[0];
-  document.getElementById('cp-iva').value = '21';
-  document.getElementById('cp-notas').value = '';
-  document.getElementById('cp-num').value = '';
-  document.getElementById('cp-title').textContent = modo==='pro'
-    ? '🔵 Certificación profesional (parcial / por avance)'
-    : '🟢 Certificación simple';
+  if(editMode){
+    document.getElementById('cp-fecha').value = opts.editCert.fecha || new Date().toISOString().split('T')[0];
+    let ivaPrev = 21;
+    if((opts.editLineas||[]).length){
+      const m = String(opts.editLineas[0].iva_pct||'').match(/(\d+(?:\.\d+)?)/);
+      if(m) ivaPrev = Number(m[1]);
+    }
+    document.getElementById('cp-iva').value = String(ivaPrev);
+    document.getElementById('cp-notas').value = opts.editCert.notas || '';
+    document.getElementById('cp-num').value = opts.editCert.num_cert || opts.editCert.numero || '';
+  } else {
+    document.getElementById('cp-fecha').value = new Date().toISOString().split('T')[0];
+    document.getElementById('cp-iva').value = '21';
+    document.getElementById('cp-notas').value = '';
+    document.getElementById('cp-num').value = '';
+  }
+  document.getElementById('cp-title').textContent = editMode
+    ? '✏️ Editar certificación '+(opts.editCert.num_cert||opts.editCert.numero||'')
+    : (modo==='pro'
+      ? '🔵 Certificación profesional (parcial / por avance)'
+      : '🟢 Certificación simple');
   document.getElementById('cp-filtros-pro').style.display = 'flex';
   document.getElementById('cp-sub').textContent = `${proyId} · ${proy.nombre||''} · ${cli?.nombre||''} · versión ${ver}`;
   cpRender();
@@ -26038,21 +26079,24 @@ async function guardarCertificacionPartidas(){
     presBase += (Number(l.cantidad)||0)*(ci>0?pv*(1+ci/100):pv);
   });
   const pctEsta = presBase>0 ? Math.round((base/presBase)*1000)/10 : 0;
-  // 1) crear certificación
-  let certNueva;
+  // 1) crear o actualizar certificación
+  let certId;
+  const _editing = !!_cpState.editCertId;
   try{
-    // Esquema real de certificaciones: id, proyecto_id, numero, factura_id, modo, fecha, notas
-    // El importe/IVA se reconstruyen desde certificacion_lineas
-    const payloadCert = {
-      proyecto_id: proyId,
-      fecha,
-      numero: numCert,
-      modo,
-      notas: notas || ''
-    };
-    certNueva = await sbPost('certificaciones', payloadCert);
-  }catch(e){ toast('Error creando certificación: '+e.message,'error'); return; }
-  const certId = Array.isArray(certNueva)?certNueva[0]?.id:certNueva?.id;
+    const payloadCert = { proyecto_id: proyId, fecha, numero: numCert, modo, notas: notas || '' };
+    if(_editing){
+      await sbPatch('certificaciones', _cpState.editCertId, { fecha, numero: numCert, notas: notas||'' });
+      certId = _cpState.editCertId;
+      // Borrar líneas previas
+      try{
+        const prev = await sbGet('certificacion_lineas', `?certificacion_id=eq.${certId}`);
+        for(const pl of (prev||[])){ try{ await sbDelete('certificacion_lineas', pl.id); }catch(e){} }
+      }catch(e){}
+    } else {
+      const certNueva = await sbPost('certificaciones', payloadCert);
+      certId = Array.isArray(certNueva)?certNueva[0]?.id:certNueva?.id;
+    }
+  }catch(e){ toast('Error guardando certificación: '+e.message,'error'); return; }
   if(!certId){ toast('No se obtuvo ID de la certificación','error'); return; }
   // 2) crear líneas
   let okLineas=0, errLineas=0;
@@ -26088,8 +26132,9 @@ async function guardarCertificacionPartidas(){
     const nuevoEstado = totalCertif >= cantP - 0.001 ? 'certificada' : 'terminada';
     try{ await sbPatch('presupuesto_lineas', l.id, { estado_cert: nuevoEstado }); }catch(e){}
   }
-  toast(`✅ Certificación ${numCert} creada (${okLineas} partidas · ${fmt(base)})${errLineas?` · ${errLineas} errores`:''}`);
+  toast(`✅ Certificación ${numCert} ${_editing?'actualizada':'creada'} (${okLineas} partidas · ${fmt(base)})${errLineas?` · ${errLineas} errores`:''}`);
   closeModal('m-cert-partidas');
+  try{ if(typeof loadCertificaciones==='function') await loadCertificaciones(); }catch(e){}
   // Refrescar presupuesto si está visible
   try{ if(typeof loadPresupuesto==='function') await loadPresupuesto(); }catch(e){}
 }
@@ -26213,7 +26258,7 @@ async function editarCertificacion(certId) {
   const certs = await sbGet('certificaciones', `?id=eq.${certId}`);
   const c = certs[0];
   if (!c) return;
-  // Detectar modo pro (creada desde presupuesto con líneas detalladas)
+  // Detectar modo pro (creada desde presupuesto con líneas detalladas) → editor de partidas
   let _esPro = (c.modo === 'pro');
   if(!_esPro){
     try{
@@ -26221,8 +26266,9 @@ async function editarCertificacion(certId) {
       if(lns && lns.length) _esPro = true;
     }catch(e){}
   }
+  if(_esPro){ return editarCertificacionPartidas(certId); }
   _certEditing = certId;
-  _certEditingPro = _esPro;
+  _certEditingPro = false;
   _certProyId  = c.proyecto_id;
 
   const p   = (PC||[]).find(px => px.proyecto_id === _certProyId) || {};
