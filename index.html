@@ -3935,6 +3935,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <div class="card"><div class="card-header"><div class="card-title">👷 Subcontratas</div><div id="rk-sub-total" style="font-weight:700;color:var(--red)"></div></div><div style="padding:0"><table style="width:100%;font-size:12px;border-collapse:collapse"><tbody id="rk-sub-list"></tbody></table></div></div>
           <div class="card"><div class="card-header"><div class="card-title">⏱ Horas</div><div id="rk-horas-total" style="font-weight:700;color:var(--red)"></div></div><div style="padding:0"><table style="width:100%;font-size:12px;border-collapse:collapse"><tbody id="rk-horas-list"></tbody></table></div></div>
         </div>
+        <div id="rent-desvios-cont" style="margin-bottom:14px"></div>
         <div class="card"><div class="card-header"><div class="card-title">📤 Facturas de venta</div><div id="rk-fact-venta-total" style="font-weight:700;color:var(--green)"></div></div><div class="table-wrap"><table><thead><tr><th>Nº Factura</th><th>Fecha</th><th>Base Imp.</th><th>Total c/IVA</th><th>Estado</th></tr></thead><tbody id="rk-fact-venta-list"></tbody></table></div></div>
         <div class="card"><div class="card-header"><div class="card-title">📥 Facturas de compra</div><div id="rk-fact-compra-total" style="font-weight:700;color:var(--red)"></div></div><div class="table-wrap"><table><thead><tr><th>Nº Factura</th><th>Fecha</th><th>Proveedor</th><th>Base Imp.</th><th>Total c/IVA</th><th>Estado</th></tr></thead><tbody id="rk-fact-compra-list"></tbody></table></div></div>
       </div>
@@ -8649,11 +8650,25 @@ async function loadProyectos(){
     PC=await sbGet('proyectos','?order=created_at.desc');
     document.getElementById('proyectos-count').textContent=PC.length+' proyectos';
     if(!PC.length){tb.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="empty-icon">📁</div><div class="empty-text">Sin proyectos</div><button class="btn btn-primary" onclick="openModal('m-proyecto')">＋ Nuevo</button></div></td></tr>`;return;}
-    tb.innerHTML=PC.map(p=>`<tr data-search="${(((CC.find(c=>c.cliente_id===p.cliente_id)||{}).nombre||'')).toLowerCase()}"><td class="td-mono" style="color:var(--text-soft)">${p.proyecto_id||'—'}</td><td><strong style="cursor:pointer;color:var(--navy)" onclick="abrirExpediente('${p.proyecto_id}')" title="Ver expediente completo">${p.nombre}</strong></td><td>${(CC.find(c=>c.cliente_id===p.cliente_id)||{}).nombre||p.cliente_id||'—'}</td><td>${bE(p.tipo)}</td><td>${bE(p.estado)}</td><td>${p.responsable||'—'}</td><td>${fmtD(p.fecha_inicio)}</td><td class="td-mono" style="text-align:right">${(()=>{const fv=(FC||[]).filter(f=>f.proyecto_id===p.proyecto_id&&(f.tipo_factura||'Venta')==='Venta');const t=fv.reduce((s,f)=>s+(f.base_imponible||0),0);return t>0?'<span style="font-size:11px">'+fmt(t)+'</span>':'<span style="color:var(--text-soft)">—</span>';})()}</td><td class="td-mono" style="text-align:right">${(()=>{const fv=(FC||[]).filter(f=>f.proyecto_id===p.proyecto_id&&(f.tipo_factura||'Venta')==='Venta');const v=fv.reduce((s,f)=>s+(f.base_imponible||0),0);const co=(CoC||[]).filter(c=>c.proyecto_id===p.proyecto_id).reduce((s,c)=>s+(c.base_imponible||0),0);const sc=(ScC||[]).filter(s=>s.proyecto_id===p.proyecto_id).reduce((s,c)=>s+(c.importe||0),0);const m=v>0?((v-co-sc)/v)*100:null;if(m===null)return'<span style="color:var(--text-soft)">—</span>';const c=m>=20?'var(--green)':m>=10?'var(--amber)':'var(--red)';return'<span style="font-weight:700;color:'+c+'">'+fmtP(m)+'</span>';})()}</td><td><div class="td-actions"><button class="btn btn-ghost btn-sm" style="font-size:11px;color:var(--navy);font-weight:600" onclick="abrirExpediente('${p.proyecto_id}')">📁 Exp.</button><button class="btn btn-ghost btn-icon btn-sm" onclick="editProyecto('${p.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('proyectos','${p.id}','${p.nombre.replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`).join('');
+    tb.innerHTML=PC.map(p=>`<tr data-search="${(((CC.find(c=>c.cliente_id===p.cliente_id)||{}).nombre||'')).toLowerCase()}"><td class="td-mono" style="color:var(--text-soft)"><span class="proy-salud" data-proy="${p.proyecto_id}" title="Salud presupuesto vs coste real" style="margin-right:4px">⏳</span>${p.proyecto_id||'—'}</td><td><strong style="cursor:pointer;color:var(--navy)" onclick="abrirExpediente('${p.proyecto_id}')" title="Ver expediente completo">${p.nombre}</strong></td><td>${(CC.find(c=>c.cliente_id===p.cliente_id)||{}).nombre||p.cliente_id||'—'}</td><td>${bE(p.tipo)}</td><td>${bE(p.estado)}</td><td>${p.responsable||'—'}</td><td>${fmtD(p.fecha_inicio)}</td><td class="td-mono" style="text-align:right">${(()=>{const fv=(FC||[]).filter(f=>f.proyecto_id===p.proyecto_id&&(f.tipo_factura||'Venta')==='Venta');const t=fv.reduce((s,f)=>s+(f.base_imponible||0),0);return t>0?'<span style="font-size:11px">'+fmt(t)+'</span>':'<span style="color:var(--text-soft)">—</span>';})()}</td><td class="td-mono" style="text-align:right">${(()=>{const fv=(FC||[]).filter(f=>f.proyecto_id===p.proyecto_id&&(f.tipo_factura||'Venta')==='Venta');const v=fv.reduce((s,f)=>s+(f.base_imponible||0),0);const co=(CoC||[]).filter(c=>c.proyecto_id===p.proyecto_id).reduce((s,c)=>s+(c.base_imponible||0),0);const sc=(ScC||[]).filter(s=>s.proyecto_id===p.proyecto_id).reduce((s,c)=>s+(c.importe||0),0);const m=v>0?((v-co-sc)/v)*100:null;if(m===null)return'<span style="color:var(--text-soft)">—</span>';const c=m>=20?'var(--green)':m>=10?'var(--amber)':'var(--red)';return'<span style="font-weight:700;color:'+c+'">'+fmtP(m)+'</span>';})()}</td><td><div class="td-actions"><button class="btn btn-ghost btn-sm" style="font-size:11px;color:var(--navy);font-weight:600" onclick="abrirExpediente('${p.proyecto_id}')">📁 Exp.</button><button class="btn btn-ghost btn-icon btn-sm" onclick="editProyecto('${p.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('proyectos','${p.id}','${p.nombre.replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`).join('');
     populateSelects();
     poblarFiltrosCliente();
     filtrarProyectosPorCliente();
+    _rellenarSemaforosProyectos(); // semáforos en background
   }catch(e){tb.innerHTML=`<tr><td colspan="8" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
+}
+
+async function _rellenarSemaforosProyectos(){
+  const spans = document.querySelectorAll('.proy-salud[data-proy]');
+  for(let i=0; i<spans.length; i++){
+    const span = spans[i];
+    const proy = span.getAttribute('data-proy');
+    if(!proy) { span.textContent=''; continue; }
+    try{
+      const icono = await _calcularSaludProyectoListado(proy);
+      span.textContent = icono || '';
+    }catch(e){ span.textContent = ''; }
+  }
 }
 function editProyecto(id){const p=PC.find(x=>x.id===id);if(!p)return;document.getElementById('m-proyecto-title').textContent='Editar proyecto';document.getElementById('p-id').value=p.id;document.getElementById('p-nombre').value=p.nombre||'';document.getElementById('p-cliente').value=p.cliente_id||'';document.getElementById('p-tipo').value=p.tipo||'Obra nueva';document.getElementById('p-estado').value=p.estado||'Nuevo lead';document.getElementById('p-resp').value=p.responsable||'Jose Asins';document.getElementById('p-fecha').value=p.fecha_inicio||'';document.getElementById('p-dir').value=p.direccion_obra||'';document.getElementById('p-notas').value=p.notas||'';document.getElementById('p-drive').value=p.carpeta_drive||'';document.getElementById('p-tipo-unidades').value=p.tipo_unidades||'';const _mc=document.getElementById('p-modo-cert');if(_mc)_mc.value=p.modo_certificacion||'simple';openModal('m-proyecto');}
 async function saveProyecto(){
@@ -14604,6 +14619,106 @@ function filtrarProyectosRentabilidad(){
     document.getElementById('rent-empty').style.display='block';
   }
 }
+// ─── Desvío de costes por capítulo ─────────────────────────
+function _umbralDesvio(){
+  const v = parseFloat(localStorage.getItem('umbral_desvio_pct'));
+  return isNaN(v) ? 10 : v;
+}
+function _setUmbralDesvio(v){
+  const n = parseFloat(v);
+  if(!isNaN(n) && n>=0) localStorage.setItem('umbral_desvio_pct', String(n));
+}
+
+// Calcula presupuestado vs real por capítulo de un proyecto + totales globales.
+// Retorna: { capitulos:[{id,nombre,pres,real,pct,alerta}], totalPres, totalReal, totalPct, alertaGlobal, umbral }
+async function calcularDesviosCapitulo(proyectoId, version){
+  const umbral = _umbralDesvio();
+  const ver = version || 'v1';
+  let lineas=[], compras=[], subcs=[];
+  try{
+    [lineas, compras, subcs] = await Promise.all([
+      sbGet('presupuesto_lineas', `?proyecto_id=eq.${proyectoId}&version=eq.${ver}&order=orden.asc`),
+      sbGet('compras', `?proyecto=eq.${proyectoId}`).catch(()=>[]),
+      sbGet('subcontratas', `?proyecto_id=eq.${proyectoId}`).catch(()=>[])
+    ]);
+  }catch(e){ return { capitulos:[], totalPres:0, totalReal:0, totalPct:0, alertaGlobal:false, umbral }; }
+
+  // Construir mapa de capítulos: id → {id, nombre, pres, real}
+  const caps = {};
+  let curCapId = null;
+  // Recorrer líneas en orden: cuando es_capitulo arranca un nuevo capítulo,
+  // las líneas siguientes (no_capitulo) se suman a ese capítulo.
+  lineas.forEach(l => {
+    if(l.es_capitulo){
+      curCapId = l.id;
+      if(!caps[curCapId]) caps[curCapId] = { id:curCapId, nombre:l.descripcion||'(sin nombre)', pres:0, real:0 };
+    } else if(curCapId){
+      const pv = l.precio_venta || 0;
+      const ci = l.ci_gg_bi_pct || 0;
+      const sub = (l.cantidad||0) * pv;
+      const importe = ci > 0 ? sub * (1 + ci/100) : sub;
+      caps[curCapId].pres += importe;
+    }
+  });
+
+  // Sumar costes reales por capítulo (compras + subcontratas con partida 'cap:<id>')
+  const sumarRealEn = (capId, importe) => {
+    if(caps[capId]) caps[capId].real += importe;
+    else caps[capId] = { id:capId, nombre:'(capítulo eliminado)', pres:0, real:importe };
+  };
+  compras.forEach(c => {
+    const part = c.partida || '';
+    if(!part.startsWith('cap:')) return;
+    const capId = part.substring(4);
+    sumarRealEn(capId, c.base_imponible || 0);
+  });
+  subcs.forEach(s => {
+    const part = s.partida || '';
+    if(!part.startsWith('cap:')) return;
+    const capId = part.substring(4);
+    sumarRealEn(capId, s.importe || 0);
+  });
+
+  // Construir array final con desvío
+  const capArr = Object.values(caps).map(c => {
+    const pct = c.pres > 0 ? ((c.real - c.pres) / c.pres) * 100 : (c.real > 0 ? 100 : 0);
+    return { ...c, pct, alerta: pct > umbral };
+  });
+  capArr.sort((a,b) => b.pct - a.pct); // los más desviados primero
+
+  // Totales globales (incluye costes sin partida asignada)
+  const totalReal = compras.reduce((s,c)=>s+(c.base_imponible||0),0)
+                  + subcs.reduce((s,c)=>s+(c.importe||0),0);
+  const totalPres = capArr.reduce((s,c)=>s+c.pres, 0);
+  const totalPct = totalPres > 0 ? ((totalReal - totalPres) / totalPres) * 100 : 0;
+  const alertaGlobal = totalPct > umbral;
+
+  return { capitulos:capArr, totalPres, totalReal, totalPct, alertaGlobal, umbral };
+}
+
+// Semáforo simple para el listado de proyectos: 🟢🟡🔴
+// Usa cachés en memoria (CoC, ScC) y carga el presupuesto bajo demanda.
+async function _calcularSaludProyectoListado(proyectoId){
+  let presTotal = 0;
+  try{
+    const lineas = await sbGet('presupuesto_lineas', `?proyecto_id=eq.${proyectoId}&version=eq.v1&es_capitulo=eq.false&select=cantidad,precio_venta,ci_gg_bi_pct`);
+    presTotal = lineas.reduce((s,l)=>{
+      const pv=l.precio_venta||0, ci=l.ci_gg_bi_pct||0;
+      const sub=(l.cantidad||0)*pv;
+      return s + (ci>0 ? sub*(1+ci/100) : sub);
+    }, 0);
+  }catch(e){ return ''; }
+  if(presTotal <= 0) return '';
+  const compras = (CoC||[]).filter(c=>c.proyecto===proyectoId || c.proyecto_id===proyectoId);
+  const subcs = (ScC||[]).filter(s=>s.proyecto_id===proyectoId);
+  const real = compras.reduce((s,c)=>s+(c.base_imponible||0),0)
+             + subcs.reduce((s,c)=>s+(c.importe||0),0);
+  const pct = (real / presTotal) * 100;
+  if(pct > 100) return '🔴';
+  if(pct >= 80) return '🟡';
+  return '🟢';
+}
+
 async function loadRentabilidad(){
   const proy=document.getElementById('rent-proyecto-sel').value;
   const clienteId=document.getElementById('rent-cliente-sel')?.value;
@@ -14704,7 +14819,67 @@ async function loadRentabilidad(){
     if(rkfvl) rkfvl.innerHTML = facVentas.length ? facVentas.map(f=>factRow(f,5)).join('') : '<tr><td colspan="5" style="text-align:center;padding:12px;color:var(--text-soft)">Sin facturas de venta</td></tr>';
     if(rkfcl) rkfcl.innerHTML = facCompras.length ? facCompras.map(f=>factRow(f,6)).join('') : '<tr><td colspan="6" style="text-align:center;padding:12px;color:var(--text-soft)">Sin facturas de compra</td></tr>';
     document.getElementById('rent-kpis').style.display='block';
+    // Bloque de desvíos por capítulo
+    _renderDesviosCapitulo(proy, verActivas[0]||'v1');
   }catch(e){toast('Error: '+e.message,'error');}
+}
+
+async function _renderBannerDesvioGlobal(proyectoId){
+  // Inserta o actualiza un banner rojo en el área de KPIs del expediente cuando hay desvío global
+  let banner = document.getElementById('exp-banner-desvio');
+  if(!banner){
+    banner = document.createElement('div');
+    banner.id = 'exp-banner-desvio';
+    banner.className = 'no-print';
+    banner.style.cssText = 'display:none;margin:0 18px 8px 18px;padding:12px 14px;border-radius:8px;font-size:13px;font-weight:700';
+    const kpiBox = document.getElementById('exp-kpis');
+    if(kpiBox && kpiBox.parentNode) kpiBox.parentNode.insertBefore(banner, kpiBox.nextSibling);
+  }
+  try{
+    const r = await calcularDesviosCapitulo(proyectoId, 'v1');
+    if(r.alertaGlobal){
+      banner.style.display = 'block';
+      banner.style.background = '#fdecea';
+      banner.style.border = '1px solid var(--red)';
+      banner.style.borderLeft = '4px solid var(--red)';
+      banner.style.color = '#7a1f1f';
+      banner.innerHTML = `⚠ Atención: los costes reales superan el presupuesto en <strong>${r.totalPct.toFixed(1)}%</strong> · ${fmt(r.totalReal)} sobre ${fmt(r.totalPres)} (umbral ${r.umbral}%)`;
+    } else {
+      banner.style.display = 'none';
+    }
+  }catch(e){ banner.style.display = 'none'; }
+}
+
+async function _renderDesviosCapitulo(proyectoId, version){
+  const cont = document.getElementById('rent-desvios-cont');
+  if(!cont) return;
+  cont.innerHTML = '<div style="padding:14px;color:var(--text-soft);font-size:12px">Calculando desvíos…</div>';
+  const r = await calcularDesviosCapitulo(proyectoId, version);
+  const conAlerta = r.capitulos.filter(c=>c.alerta);
+  const banner = r.alertaGlobal
+    ? `<div style="background:#fdecea;border:1px solid var(--red);border-left:4px solid var(--red);border-radius:8px;padding:12px 14px;margin-bottom:10px;color:#7a1f1f;font-weight:700">⚠ Atención: el coste real supera el presupuestado en <strong>${r.totalPct.toFixed(1)}%</strong> · ${fmt(r.totalReal)} sobre ${fmt(r.totalPres)}</div>`
+    : (r.totalPres>0 ? `<div style="background:#e8f5ee;border:1px solid var(--green);border-radius:8px;padding:10px 14px;margin-bottom:10px;color:#1b5e20;font-size:12px">✓ Coste dentro del presupuesto (${r.totalPct.toFixed(1)}% · umbral ${r.umbral}%)</div>` : '');
+  let tabla = '';
+  if(conAlerta.length){
+    tabla = `<div class="card"><div class="card-header"><div class="card-title">⚠ Desvíos por capítulo (umbral ${r.umbral}%)</div></div>
+      <div class="table-wrap"><table style="width:100%;font-size:12px;border-collapse:collapse">
+        <thead><tr style="background:#f8fafd"><th style="text-align:left;padding:8px 12px">Capítulo</th><th style="text-align:right;padding:8px 12px">Presupuestado</th><th style="text-align:right;padding:8px 12px">Real</th><th style="text-align:right;padding:8px 12px">Desvío</th></tr></thead>
+        <tbody>${conAlerta.map(c=>`<tr style="border-top:1px solid #f0f0f0">
+          <td style="padding:8px 12px;font-weight:600">${c.nombre}</td>
+          <td style="padding:8px 12px;text-align:right;font-family:monospace">${fmt(c.pres)}</td>
+          <td style="padding:8px 12px;text-align:right;font-family:monospace;color:var(--red);font-weight:700">${fmt(c.real)}</td>
+          <td style="padding:8px 12px;text-align:right;font-family:monospace;color:var(--red);font-weight:800">+${c.pct.toFixed(1)}%</td>
+        </tr>`).join('')}</tbody></table></div></div>`;
+  } else if(r.capitulos.length){
+    tabla = `<div style="padding:10px 14px;background:#f0f9f0;border-radius:8px;color:#2a7a2a;font-size:12px">✓ Todos los capítulos están dentro del umbral del ${r.umbral}%</div>`;
+  }
+  // Input para configurar umbral
+  const cfg = `<div style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:11px;color:var(--text-soft)">
+    <span>Umbral de alerta:</span>
+    <input type="number" min="0" max="100" step="1" value="${r.umbral}" style="width:60px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-size:11px" onchange="_setUmbralDesvio(this.value);loadRentabilidad();">
+    <span>%</span>
+  </div>`;
+  cont.innerHTML = banner + tabla + cfg;
 }
 
 // ═══════════════════════════════════════════
@@ -24869,6 +25044,8 @@ async function calcExpKPIs(proyId){
 
   const setEl = (id,val,style) => { const el=document.getElementById(id); if(el){el.textContent=val; if(style) Object.assign(el.style,style);} };
   setEl('exp-k-costes', fmt(costeTotal));
+  // Banner de alerta global de desvío de costes
+  _renderBannerDesvioGlobal(proyId);
   // Sub-línea con coste comprometido (albaranes)
   const kpiCost=document.getElementById('exp-k-costes');
   if(kpiCost){
@@ -25447,7 +25624,32 @@ async function renderExpRentabilidad(body){
     </table>
   </div>
   ${lineas.length===0?`<div style="margin-top:12px;padding:10px 14px;background:var(--amber-soft);border-radius:8px;font-size:11px;color:var(--amber)">⚠️ No hay presupuesto creado para este proyecto. Para ver la comparativa completa, crea el presupuesto desde la sección <strong>Presupuesto</strong>.</div>`:''}
+  <div id="exp-rent-desvios" style="margin-top:14px"></div>
   `;
+  // Cargar bloque de desvíos por capítulo (asíncrono)
+  (async ()=>{
+    const r = await calcularDesviosCapitulo(pid, 'v1');
+    const cont = document.getElementById('exp-rent-desvios');
+    if(!cont) return;
+    const conAlerta = r.capitulos.filter(c=>c.alerta);
+    if(!conAlerta.length){
+      cont.innerHTML = r.capitulos.length
+        ? `<div style="padding:10px 14px;background:#f0f9f0;border-radius:8px;color:#2a7a2a;font-size:12px">✓ Todos los capítulos están dentro del umbral del ${r.umbral}%</div>`
+        : '';
+      return;
+    }
+    cont.innerHTML = `<div style="background:#fff;border:1px solid var(--red);border-radius:10px;overflow:hidden">
+      <div style="padding:10px 14px;background:#fdecea;border-bottom:1px solid var(--red);font-size:12px;font-weight:700;color:var(--red)">⚠ Desvíos por capítulo (umbral ${r.umbral}%)</div>
+      <table style="width:100%;font-size:12px;border-collapse:collapse">
+        <thead><tr style="background:#f8fafd"><th style="text-align:left;padding:8px 12px">Capítulo</th><th style="text-align:right;padding:8px 12px">Presupuestado</th><th style="text-align:right;padding:8px 12px">Real</th><th style="text-align:right;padding:8px 12px">Desvío</th></tr></thead>
+        <tbody>${conAlerta.map(c=>`<tr style="border-top:1px solid #f0f0f0">
+          <td style="padding:8px 12px;font-weight:600">${c.nombre}</td>
+          <td style="padding:8px 12px;text-align:right;font-family:monospace">${fmt(c.pres)}</td>
+          <td style="padding:8px 12px;text-align:right;font-family:monospace;color:var(--red);font-weight:700">${fmt(c.real)}</td>
+          <td style="padding:8px 12px;text-align:right;font-family:monospace;color:var(--red);font-weight:800">+${c.pct.toFixed(1)}%</td>
+        </tr>`).join('')}</tbody>
+      </table></div>`;
+  })();
 }
 
 // ══════════════════════════════════════════════════════════════════════
