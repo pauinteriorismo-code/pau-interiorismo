@@ -5312,7 +5312,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
   <div class="modal-body"><input type="hidden" id="co-id">
     <div class="form-grid">
       <div class="form-group"><label class="form-label">Fecha</label><input class="form-input" id="co-fecha" type="date"></div>
-      <div class="form-group"><label class="form-label">Proyecto</label><select class="form-input" id="co-proyecto" onchange="onChangeProyectoGenerico('co');poblarAlbsVinculados(document.getElementById('co-id')?.value||null)"><option value="">Seleccionar…</option><option value="PRY-001">PRY-001 · Mobiliario de cocina</option><option value="PRY-002">PRY-002 · Rehabilitación lateral fachada</option><option value="PRY-003">PRY-003 · Pavimento/revestimiento vivienda.</option><option value="PRY-004">PRY-004 · Rehabilitación estudio</option><option value="PRY-005">PRY-005 · Trabajos en terraza</option></select></div>
+      <div class="form-group"><label class="form-label">Proyecto</label><select class="form-input" id="co-proyecto" onchange="onChangeProyectoGenerico('co');poblarAlbsVinculados(document.getElementById('co-id')?.value||null);_autoDestinoCompra()"><option value="">Seleccionar…</option><option value="PRY-001">PRY-001 · Mobiliario de cocina</option><option value="PRY-002">PRY-002 · Rehabilitación lateral fachada</option><option value="PRY-003">PRY-003 · Pavimento/revestimiento vivienda.</option><option value="PRY-004">PRY-004 · Rehabilitación estudio</option><option value="PRY-005">PRY-005 · Trabajos en terraza</option></select></div>
       <div class="form-group"><label class="form-label">Proveedor</label>
   <select class="form-input" id="co-prov-sel" onchange="document.getElementById('co-prov-id').value=this.value;poblarAlbsVinculados(document.getElementById('co-id')?.value||null)">
     <option value="">— Seleccionar proveedor —</option>
@@ -14407,7 +14407,10 @@ async function saveCompra(){
         const _tipoDoc=document.getElementById('co-tipo-doc')?.value||'Facturas';
         const _destino=document.getElementById('co-destino')?.value||'obra';
         const _subCarpetaDestino = _destino==='interiorismo' ? '09 Interiorismo' : DRIVE_SUB.proveedores;
-        const _fname=(coNombreVal.replace(/\.pdf$/i,'')||_tipoDoc.toLowerCase())+(_safe?'_'+_safe:'')+'.pdf';
+        // Nombre único: {tipoDoc}_{num|concepto}_{proveedor}_{fecha}.pdf para evitar colisiones
+        const _numRef = _safeNombre((d.concepto||'').split(' ')[0]||'').slice(0,20);
+        const _fecha = d.fecha || new Date().toISOString().split('T')[0];
+        const _fname = `${_tipoDoc}${_numRef?'_'+_numRef:''}${_safe?'_'+_safe:''}_${_fecha}.pdf`;
         subirPDFb64aDrive(pdfB64,_fname,proyTexto,_subCarpetaDestino,{tipoDoc:_tipoDoc,proveedor:_provNom||'Sin proveedor'})
           .then(j=>{ if(j&&j.ok&&!j.duplicate) toast('☁️ '+_tipoDoc+' subido a Drive ✅'); else if(j&&j.duplicate) toast('☁️ Documento ya existía en Drive (no duplicado)'); });
       }
@@ -14624,7 +14627,10 @@ async function saveSubcontrata(){
       if(_scProy){
         const _provNom=d.proveedor_id||'';
         const _safe=_safeNombre(_provNom);
-        const _fname=(scNombreVal.replace(/\.pdf$/i,'')||'factura')+(_safe?'_'+_safe:'')+'.pdf';
+        // Nombre único con fecha para evitar colisiones al subir varias facturas del mismo subcontratista
+        const _fecha = d.fecha || new Date().toISOString().split('T')[0];
+        const _trab = _safeNombre((d.trabajo||'').slice(0,25));
+        const _fname = `Factura${_trab?'_'+_trab:''}${_safe?'_'+_safe:''}_${_fecha}.pdf`;
         subirPDFb64aDrive(pdfB64,_fname,_scProy,DRIVE_SUB.proveedores,{tipoDoc:'Facturas',proveedor:_provNom||'Sin proveedor'})
           .then(j=>{ if(j&&j.ok&&!j.duplicate) toast('☁️ PDF subido a Drive ✅'); else if(j&&j.duplicate) toast('☁️ PDF ya existía en Drive (no duplicado)'); });
       }
@@ -25773,27 +25779,53 @@ Reglas: iva_pct puede ser "21%","10%","4%" o "Exento". base_imponible es el impo
       : tipo==='albaran'
       ? `Extrae los datos de este albarán de proveedor y devuelve SOLO JSON sin markdown ni texto adicional:
 {"num_albaran":"","fecha":"YYYY-MM-DD","proveedor":"nombre empresa emisora","concepto":"descripción breve de los materiales","importe_total":null}
-Reglas: fecha en formato YYYY-MM-DD. proveedor es la empresa que entrega el material. importe_total es el total del albarán sin IVA como número decimal SOLO si aparece claramente en el documento; si el albarán NO lleva importes (es informativo, ej. albarán de pruebas/control de calidad/entrega sin valoración) deja importe_total como null. NUNCA inventes ni estimes el importe.`
-      : `Extrae de esta factura de proveedor todos los datos y devuelve SOLO JSON sin markdown ni texto adicional:
-{"num_factura":"","fecha":"YYYY-MM-DD","proveedor":"nombre empresa emisora","concepto":"descripción breve del concepto principal","base_imponible":0.00,"iva_pct":"21%","vencimientos":[{"fecha":"YYYY-MM-DD","importe":0.00}]}
-Reglas: iva_pct puede ser "21%","10%","4%" o "Exento". base_imponible es el importe sin IVA como número decimal. En "vencimientos" incluye los plazos de pago (máximo 4); si solo hay una fecha de vencimiento ponla con el importe total con IVA; si no hay ninguna fecha de pago devuelve array vacío.`;
+Reglas: fecha en formato YYYY-MM-DD. proveedor es la empresa que entrega el material (NO PAU Interiorisme). importe_total es el total del albarán sin IVA como número decimal SOLO si aparece claramente en el documento; si el albarán NO lleva importes (es informativo, ej. albarán de pruebas/control de calidad/entrega sin valoración) deja importe_total como null. NUNCA inventes ni estimes el importe.`
+      : `Extrae de este documento español de proveedor TODOS los datos y devuelve SOLO JSON válido sin markdown ni backticks.
+
+Estructura EXACTA:
+{"tipo_documento":"Facturas","num_factura":"","fecha":"YYYY-MM-DD","proveedor":"nombre empresa emisora","cif_proveedor":"","concepto":"descripción breve del concepto principal","base_imponible":0.00,"iva_pct":"21%","iva_importe":0.00,"total":0.00,"vencimientos":[{"fecha":"YYYY-MM-DD","importe":0.00}]}
+
+Reglas ESTRICTAS:
+- tipo_documento: "Facturas" si es una factura, "Presupuestos" si es un presupuesto/oferta/proforma, "Albaranes" si es un albarán de entrega.
+- proveedor: NOMBRE de la empresa que EMITE el documento (NO PAU INTERIORISMO S.L., que es el receptor). Si hay varios nombres, el que aparece en la cabecera con CIF.
+- num_factura: número/referencia tal como aparece (también para presupuestos y albaranes).
+- fecha: formato YYYY-MM-DD. Si solo ves DD/MM/AAAA, conviértela.
+- base_imponible: importe sin IVA (número decimal con punto, sin símbolo €).
+- iva_pct: "21%", "10%", "4%" o "Exento".
+- total: importe con IVA (base + iva_importe).
+- vencimientos: array con los plazos de pago (máximo 4). Si solo hay uno, ponlo con el total c/IVA. Si no hay fecha de pago, devuelve [].
+- Si algún dato no es legible, déjalo vacío "" o 0 según corresponda.`;
     const resp=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
       headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:600,messages:[{role:'user',content:[
+      body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:1000,messages:[{role:'user',content:[
         {type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}},
         {type:'text',text:prompt}
       ]}]})
     });
-    if(!resp.ok) throw new Error('API error '+resp.status);
+    if(!resp.ok){
+      let msg='API error '+resp.status;
+      try{ const e=await resp.json(); msg=e?.error?.message||msg; }catch(_){}
+      throw new Error(msg);
+    }
     const data=await resp.json();
     const raw=data.content.filter(b=>b.type==='text').map(b=>b.text).join('');
-    const ex=JSON.parse(raw.replace(/```json|```/g,'').trim());
+    // Parseo robusto: primero intenta directo, luego extrae entre llaves
+    let ex=null;
+    const limpio = raw.replace(/```json|```/g,'').trim();
+    try{ ex = JSON.parse(limpio); }
+    catch(eParse){
+      const m = limpio.match(/\{[\s\S]*\}/);
+      if(m){ try{ ex = JSON.parse(m[0]); }catch(e2){} }
+    }
+    if(!ex){ throw new Error('La IA no devolvió JSON válido (respuesta: '+raw.slice(0,100)+')'); }
     onResult(ex);
-    toast('✅ Factura leída automáticamente');
+    toast('✅ PDF leído automáticamente');
+    return ex;
   }catch(e){
     console.warn('PDF autofill error:',e.message);
-    toast('PDF cargado ✅ (autolectura: '+e.message+')','warning');
+    toast('⚠️ PDF cargado pero no se pudo leer automáticamente: '+e.message,'error');
+    return null;
   }
 }
 
@@ -25821,6 +25853,20 @@ function _setIVA(selId, iva){
   if(opt) sel.value=opt.value;
 }
 
+// Auto-selecciona destino (Obra/Interiorismo) en el modal de compra
+// según el tipo del proyecto seleccionado
+function _autoDestinoCompra(){
+  const proyId = document.getElementById('co-proyecto')?.value;
+  if(!proyId) return;
+  const p = (PC||[]).find(x=>x.proyecto_id===proyId);
+  if(!p) return;
+  const destEl = document.getElementById('co-destino');
+  if(!destEl) return;
+  const t = (p.tipo||'').toLowerCase();
+  const esInterior = t.includes('interior')||t.includes('cocina')||t.includes('baño')||t.includes('bano')||t.includes('mobiliario');
+  destEl.value = esInterior ? 'interiorismo' : 'obra';
+}
+
 // ── COMPRAS ──────────────────────────────────────────────────────────
 function coHandleFile(file){
   window._coPDFChanged=true;
@@ -25842,6 +25888,13 @@ function coHandleFile(file){
       const concepto=ex.num_factura?(ex.num_factura+(ex.concepto?' · '+ex.concepto:'')):ex.concepto||'';
       if(concepto&&!document.getElementById('co-concepto').value)document.getElementById('co-concepto').value=concepto;
       if(ex.proveedor){_poblarProvSel('co-prov');_setSelectByText('co-prov',ex.proveedor);}
+      // Auto-seleccionar tipo de documento (Factura/Presupuesto/Albarán)
+      if(ex.tipo_documento){
+        const tdEl=document.getElementById('co-tipo-doc');
+        if(tdEl && ['Facturas','Presupuestos','Albaranes'].includes(ex.tipo_documento)) tdEl.value=ex.tipo_documento;
+      }
+      // Auto-detectar destino por el proyecto actualmente seleccionado
+      _autoDestinoCompra();
     });
   };
   reader.readAsDataURL(file);
@@ -25878,14 +25931,28 @@ function albHandleFile(file){
     try{
       await _pdfAutofill(b64,'albaran',ex=>{
         if(ex.fecha)document.getElementById('alb-fecha').value=ex.fecha;
-        if(ex.proveedor){const sel=document.getElementById('alb-proveedor');if(sel){const opt=Array.from(sel.options).find(o=>o.value.toLowerCase().includes(ex.proveedor.toLowerCase()));if(opt){sel.value=opt.value; poblarAlbCompraSel();}}}
+        if(ex.num_albaran){const ne=document.getElementById('alb-num');if(ne&&!ne.value)ne.value=ex.num_albaran;}
+        if(ex.proveedor){
+          const sel=document.getElementById('alb-proveedor');
+          if(sel){
+            // Matching robusto: normaliza (lowercase, sin acentos, sin espacios)
+            const norm = s => (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[\s\.,_\-]+/g,'');
+            const target = norm(ex.proveedor);
+            const opt = Array.from(sel.options).find(o=>{
+              const v = norm(o.value||o.text||'');
+              return v && (v.includes(target.slice(0,8)) || target.includes(v.slice(0,8)));
+            });
+            if(opt){ sel.value=opt.value; poblarAlbCompraSel(); }
+            else { toast('⚠️ Proveedor "'+ex.proveedor+'" no encontrado en la lista — selecciónalo manualmente','warning'); }
+          }
+        }
         if(ex.concepto&&!document.getElementById('alb-obs').value)document.getElementById('alb-obs').value=ex.concepto;
         if(ex.importe_total!=null && ex.importe_total!==''){
           const impEl=document.getElementById('alb-importe');
           if(impEl && !impEl.value) impEl.value=parseFloat(ex.importe_total).toFixed(2);
         }
       });
-    }catch(err){}
+    }catch(err){ console.warn('albHandleFile:',err); toast('Error leyendo albarán: '+err.message,'error'); }
   };
   reader.readAsDataURL(file);
 }
