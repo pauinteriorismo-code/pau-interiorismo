@@ -4752,15 +4752,23 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <input class="form-input" id="ea-importe" type="number" step="0.01" placeholder="0,00" style="font-size:18px;font-weight:700;color:#7b3fa0">
       </div>
       <div class="form-group">
+        <label class="form-label">Tipo</label>
+        <select class="form-input" id="ea-tipo">
+          <option value="Entrega a cuenta">💵 Entrega a cuenta</option>
+          <option value="Nota sin factura">📝 Nota — cobro sin factura (efectivo)</option>
+        </select>
+      </div>
+      <div class="form-group">
         <label class="form-label">Concepto</label>
-        <input class="form-input" id="ea-concepto" placeholder="Ej: 1ª entrega a cuenta obra · efectivo">
+        <input class="form-input" id="ea-concepto" placeholder="Ej: Pago presupuesto v2 en efectivo (sin IVA)">
       </div>
       <div class="form-group">
         <label class="form-label">Notas</label>
         <textarea class="form-input" id="ea-notas" rows="2" placeholder="Observaciones…" style="resize:vertical"></textarea>
       </div>
       <div style="background:#f5eeff;border:1px solid #c9a0e0;border-radius:6px;padding:8px 12px;font-size:11px;color:#7b3fa0;margin-top:4px">
-        💡 Las entregas a cuenta se descuentan directamente de la base del presupuesto, sin IVA. No generan factura.
+        💡 <strong>Entrega a cuenta</strong>: adelanto que se descuenta del presupuesto, sin IVA, no genera factura.<br>
+        💡 <strong>Nota sin factura</strong>: cobro cerrado en efectivo de un presupuesto exento. Se contabiliza como ingreso en el dossier de cierre sin generar factura.
       </div>
     </div>
     <div class="modal-foot">
@@ -8859,15 +8867,20 @@ async function generarDossierCierre(proyId){
   // ─── Recopilar datos ───
   const cli = (CC||[]).find(c=>String(c.id)===String(p.cliente_id)||c.cliente_id===p.cliente_id) || {};
   const facturas = (FC||[]).filter(f=>f.proyecto_id===proyId && (f.tipo_factura||'Venta')==='Venta');
-  const compras = (typeof _cocProy==='function') ? _cocProy(proyId) : ((typeof CoC!=='undefined'?CoC:[]).filter(c=>c.proyecto_id===proyId||c.proyecto===proyId));
-  const subcs = (typeof _scProy==='function') ? _scProy(proyId) : ((typeof ScC!=='undefined'?ScC:[]).filter(s=>s.proyecto_id===proyId));
-  const horas = (HC||[]).filter(h=>h.proyecto_id===proyId);
-  const totalHoras = horas.reduce((s,h)=>s+(h.horas||0),0);
-  let certs = [];
-  try{ certs = await sbGet('certificaciones',`?proyecto_id=eq.${proyId}&order=fecha.asc`); }catch(e){ certs=[]; }
-  // Presupuesto vendido: suma importes de presupuesto_lineas (todas versiones, solo líneas no capítulo)
-  let presLineas = [];
+  // Fetch directo desde Supabase para asegurar datos frescos (los globales CoC/HC/ScC
+  // pueden estar vacíos si el usuario no ha abierto esos módulos aún)
+  const uuidProy = p.id;
+  let compras=[],subcs=[],horas=[],certs=[],presLineas=[],entregas=[];
+  try{ compras = await sbGet('compras',`?or=(proyecto_id.eq.${proyId},proyecto.eq.${proyId},proyecto_id.eq.${uuidProy})&order=fecha.desc`); }catch(e){ compras=[]; }
+  try{ subcs   = await sbGet('subcontratas',`?proyecto_id=eq.${proyId}&order=fecha.desc`); }catch(e){ subcs=[]; }
+  try{ horas   = await sbGet('horas',`?proyecto_id=eq.${proyId}&order=fecha.desc`); }catch(e){ horas=[]; }
+  try{ certs   = await sbGet('certificaciones',`?proyecto_id=eq.${proyId}&order=fecha.asc`); }catch(e){ certs=[]; }
   try{ presLineas = await sbGet('presupuesto_lineas',`?proyecto_id=eq.${proyId}&es_capitulo=eq.false`); }catch(e){ presLineas=[]; }
+  try{ entregas   = await sbGet('entregas_cuenta',`?proyecto_id=eq.${proyId}&order=fecha.desc`); }catch(e){ entregas=[]; }
+  const totalHoras = horas.reduce((s,h)=>s+(h.horas||0),0);
+  // Coste mano de obra: intentar tarifa/hora si existe en el registro o en config
+  let tarifaHora = 0;
+  try{ const cfgT=await getCfg(); tarifaHora = parseFloat(cfgT?.tarifa_hora||0)||0; }catch(e){}
 
   // Presupuesto vendido: suma del subtotal (o precio_venta*cantidad) de las líneas de la última versión disponible
   const presVendido = (function(){
@@ -8884,10 +8897,15 @@ async function generarDossierCierre(proyId){
   const facturado = facturas.reduce((s,f)=>s+((f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100)),0);
   const costeCompras = compras.reduce((s,c)=>s+((c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100)),0);
   const costeSubc = subcs.reduce((s,x)=>s+((x.importe||0)*(1+ivaPct(x.iva_pct)/100)),0);
-  const costeHoras = 0; // no hay tarifa/hora por registro
+  const costeHoras = horas.reduce((s,h)=>s+((h.importe||0) || ((h.horas||0)*(h.precio_hora||h.tarifa||tarifaHora||0))),0);
   const costeReal = costeCompras + costeSubc + costeHoras;
-  const margen = facturado - costeReal;
-  const margenPct = facturado>0 ? (margen/facturado*100) : 0;
+  // Cobros sin factura (notas en efectivo / entregas): sumar entregas_cuenta del proyecto
+  const cobrosSinFactura = entregas.reduce((s,e)=>s+(parseFloat(e.importe)||0),0);
+  const ingresosTotales = facturado + cobrosSinFactura;
+  const margen2 = ingresosTotales - costeReal;
+  const margenPct2 = ingresosTotales>0 ? (margen2/ingresosTotales*100) : 0;
+  const margen = ingresosTotales - costeReal;
+  const margenPct = ingresosTotales>0 ? (margen/ingresosTotales*100) : 0;
 
   const pdf = new jsPDF('p','mm','a4');
   const pW=210, pH=297, mX=14;
@@ -8930,17 +8948,19 @@ async function generarDossierCierre(proyId){
   pdf.rect(mX,y,pW-2*mX,8,'F'); pdf.text('RESUMEN ECONÓMICO', mX+3, y+5.5); y+=12;
   pdf.setFontSize(10); pdf.setTextColor(40); pdf.setFont(undefined,'normal');
   const eco = [
-    ['Presupuesto vendido',       fmt(presVendido)],
-    ['Facturado al cliente',      fmt(facturado)],
-    ['Coste compras (materiales)',fmt(costeCompras)],
-    ['Coste subcontratas',        fmt(costeSubc)],
-    ['Mano de obra (horas)',      totalHoras.toFixed(1)+' h'],
-    ['COSTE REAL TOTAL',          fmt(costeReal)],
-    ['Margen final €',            fmt(margen)],
-    ['Margen final %',            fmtP(margenPct)]
+    ['Presupuesto vendido',         fmt(presVendido)],
+    ['Facturado al cliente',        fmt(facturado)],
+    ['Cobros sin factura (notas)',  fmt(cobrosSinFactura)],
+    ['INGRESOS TOTALES',            fmt(ingresosTotales)],
+    ['Coste compras (materiales)',  fmt(costeCompras)],
+    ['Coste subcontratas',          fmt(costeSubc)],
+    ['Coste mano de obra'+(totalHoras?` (${totalHoras.toFixed(1)} h)`:''), fmt(costeHoras)],
+    ['COSTE REAL TOTAL',            fmt(costeReal)],
+    ['Margen final €',              fmt(margen)],
+    ['Margen final %',              fmtP(margenPct)]
   ];
   eco.forEach(([k,v],i)=>{
-    const bold = (k.startsWith('COSTE REAL')||k.startsWith('Margen'));
+    const bold = (k.startsWith('COSTE REAL')||k.startsWith('Margen')||k.startsWith('INGRESOS'));
     if(bold){ pdf.setFillColor(245,247,250); pdf.rect(mX,y-4,pW-2*mX,6,'F'); }
     pdf.setFont(undefined,bold?'bold':'normal');
     pdf.setTextColor(bold?(k.includes('Margen')&&margen>=0?34:(k.includes('Margen')?192:30)):60, bold?(k.includes('Margen')&&margen>=0?139:(k.includes('Margen')?57:60)):60, bold?(k.includes('Margen')&&margen>=0?34:(k.includes('Margen')?43:100)):60);
@@ -8973,6 +8993,28 @@ async function generarDossierCierre(proyId){
   });
   if(!facturas.length){ pdf.setTextColor(150); pdf.text('Sin facturas',mX+3,y); y+=6; }
   y+=4;
+
+  // ─── NOTAS / COBROS SIN FACTURA ───
+  if(entregas.length){
+    if(y>240){ pdf.addPage(); y=20; }
+    pdf.setFillColor(30,60,100); pdf.setTextColor(255); pdf.setFont(undefined,'bold'); pdf.setFontSize(11);
+    pdf.rect(mX,y,pW-2*mX,8,'F'); pdf.text(`NOTAS / COBROS SIN FACTURA (${entregas.length})`, mX+3, y+5.5); y+=11;
+    pdf.setFontSize(9); pdf.setTextColor(100); pdf.setFont(undefined,'bold');
+    pdf.text('Fecha',mX+1,y); pdf.text('Concepto',mX+28,y); pdf.text('Importe',pW-mX-3,y,{align:'right'});
+    y+=2; pdf.setDrawColor(200); pdf.line(mX,y,pW-mX,y); y+=4;
+    pdf.setFont(undefined,'normal'); pdf.setTextColor(40);
+    entregas.forEach((e,i)=>{
+      if(y>275){ pdf.addPage(); y=20; }
+      if(i%2===0){ pdf.setFillColor(250,251,253); pdf.rect(mX,y-3.5,pW-2*mX,5.5,'F'); }
+      const conc=(e.concepto||'Nota sin factura');
+      const concT=conc.length>75?conc.substring(0,72)+'…':conc;
+      pdf.text(fmtD(e.fecha)||'—',mX+1,y);
+      pdf.text(concT,mX+28,y);
+      pdf.text(fmt(parseFloat(e.importe)||0),pW-mX-3,y,{align:'right'});
+      y+=5.5;
+    });
+    y+=4;
+  }
 
   // ─── COMPRAS Y SUBCONTRATAS PRINCIPALES ───
   if(y>240){ pdf.addPage(); y=20; }
@@ -25401,6 +25443,7 @@ function abrirModalEntrega(id){
   document.getElementById('ea-importe').value = '';
   document.getElementById('ea-concepto').value = '';
   document.getElementById('ea-notas').value = '';
+  const _et=document.getElementById('ea-tipo'); if(_et) _et.value='Entrega a cuenta';
   const btnBorrar = document.getElementById('ea-btn-borrar');
   if(id){
     const ea = EAC.find(x=>String(x.id)===String(id));
@@ -25409,6 +25452,7 @@ function abrirModalEntrega(id){
       document.getElementById('ea-importe').value = ea.importe||'';
       document.getElementById('ea-concepto').value = ea.concepto||'';
       document.getElementById('ea-notas').value = ea.notas||'';
+      const _et2=document.getElementById('ea-tipo'); if(_et2) _et2.value = ea.tipo || 'Entrega a cuenta';
     }
     document.querySelector('#m-entrega-cuenta .modal-title').textContent = '✏️ Editar entrega a cuenta';
     if(btnBorrar) btnBorrar.style.display='';
@@ -25442,11 +25486,24 @@ async function saveEntrega(){
     fecha: document.getElementById('ea-fecha').value || new Date().toISOString().split('T')[0],
     importe: importe,
     concepto: document.getElementById('ea-concepto').value||'Entrega a cuenta',
-    notas: document.getElementById('ea-notas').value||''
+    notas: document.getElementById('ea-notas').value||'',
+    tipo: document.getElementById('ea-tipo')?.value || 'Entrega a cuenta'
   };
   try{
-    if(id){ await sb('entregas_cuenta','PATCH',d,null,`?id=eq.${id}`); toast('Entrega actualizada ✅'); }
-    else  { await sbPost('entregas_cuenta',d); toast('Entrega registrada ✅'); }
+    const _doSave = async(payload)=>{
+      if(id){ await sb('entregas_cuenta','PATCH',payload,null,`?id=eq.${id}`); }
+      else  { await sbPost('entregas_cuenta',payload); }
+    };
+    try{ await _doSave(d); }
+    catch(err){
+      // Si la columna 'tipo' no existe aún, reintentar sin ella (fallback)
+      if(err.message&&err.message.toLowerCase().includes('tipo')){
+        const {tipo, ...d2} = d;
+        if(d.tipo && d.tipo!=='Entrega a cuenta'){ d2.concepto = `[${d.tipo}] ${d2.concepto||''}`.trim(); }
+        await _doSave(d2);
+      } else { throw err; }
+    }
+    toast(id?'Entrega actualizada ✅':'Entrega registrada ✅');
     closeModal('m-entrega-cuenta');
     await loadEntregas();
     await calcExpKPIs(proyId);
