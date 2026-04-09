@@ -8576,6 +8576,22 @@ async function subirPDFaDrive(elementId, nombreArchivo, proyId, subCarpeta, fold
   }catch(e){toast('Error: '+e.message,'error');}
 }
 
+// Sube un PDF en base64 ya existente (sin generar desde DOM) a Drive.
+// Pide al script que evite duplicados (mismo nombre en la misma subcarpeta).
+async function subirPDFb64aDrive(b64, fileName, proyId, subCarpeta, extras){
+  try{
+    const folderId=_driveFolderId(proyId);
+    if(!folderId) return {ok:false,error:'sin-folder'};
+    const body={action:'uploadFile',fileData:b64,fileName,mimeType:'application/pdf',folderId,
+      subCarpeta:subCarpeta||null,
+      tipoDoc:(extras&&extras.tipoDoc)||null,
+      proveedor:(extras&&extras.proveedor)||null,
+      skipIfDuplicate:true};
+    const res=await fetch(DRIVE_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(body)});
+    return await res.json().catch(()=>({ok:false}));
+  }catch(e){ console.warn('Drive upload b64:',e); return {ok:false,error:e.message}; }
+}
+
 async function subirAlbaranDrive(id){
   const data=await sbGet('albaranes',`?id=eq.${id}`);
   const alb=data[0];if(!alb)return;
@@ -12731,9 +12747,18 @@ async function saveCompra(){
       } else { throw eCol; }
     }
     if(pdfB64&&window._coPDFChanged&&savedId){
-      try{ const coNombreVal=document.getElementById('co-pdf-nombre')?.value||'factura_compra.pdf';
-      await sb('compras','PATCH',{adjunto_pdf:pdfB64,adjunto_nombre:coNombreVal},null,`?id=eq.${savedId}`); }
-      catch(ePDF){ console.warn('PDF no guardado:',ePDF.message); toast('Compra guardada. PDF no adjuntado ⚠️','warning'); }
+      const coNombreVal=document.getElementById('co-pdf-nombre')?.value||'factura_compra.pdf';
+      try{
+        await sb('compras','PATCH',{adjunto_pdf:pdfB64,adjunto_nombre:coNombreVal},null,`?id=eq.${savedId}`);
+      }catch(ePDF){ console.warn('PDF no guardado:',ePDF.message); toast('Compra guardada. PDF no adjuntado ⚠️','warning'); }
+      // Subir también a Google Drive (subcarpeta del proveedor) si hay carpeta configurada
+      if(proyTexto){
+        const _provNom=d.proveedor_id||'';
+        const _safe=_safeNombre(_provNom);
+        const _fname=(coNombreVal.replace(/\.pdf$/i,'')||'factura')+(_safe?'_'+_safe:'')+'.pdf';
+        subirPDFb64aDrive(pdfB64,_fname,proyTexto,'06 Subcontratas y Proveedores',{tipoDoc:'Facturas',proveedor:_provNom})
+          .then(j=>{ if(j&&j.ok&&!j.duplicate) toast('☁️ PDF subido a Drive ✅'); else if(j&&j.duplicate) toast('☁️ PDF ya existía en Drive (no duplicado)'); });
+      }
     }
     toast(id?'Compra actualizada ✅':'Compra registrada ✅');
     document.getElementById('co-id').value='';
@@ -12916,6 +12941,15 @@ async function saveSubcontrata(){
       const scNombreVal=document.getElementById('sc-pdf-nombre')?.value||'factura_subcontrata.pdf';
       try{ await sb('subcontratas','PATCH',{adjunto_pdf:pdfB64,adjunto_nombre:scNombreVal},null,`?id=eq.${savedId}`); }
       catch(ep){ console.warn('PDF no guardado:',ep.message); }
+      // Subir también a Google Drive (subcarpeta del subcontratista)
+      const _scProy=d.proyecto_id;
+      if(_scProy){
+        const _provNom=d.proveedor_id||'';
+        const _safe=_safeNombre(_provNom);
+        const _fname=(scNombreVal.replace(/\.pdf$/i,'')||'factura')+(_safe?'_'+_safe:'')+'.pdf';
+        subirPDFb64aDrive(pdfB64,_fname,_scProy,'06 Subcontratas y Proveedores',{tipoDoc:'Facturas',proveedor:_provNom})
+          .then(j=>{ if(j&&j.ok&&!j.duplicate) toast('☁️ PDF subido a Drive ✅'); else if(j&&j.duplicate) toast('☁️ PDF ya existía en Drive (no duplicado)'); });
+      }
     }
     toast(id?'Subcontrata actualizada ✅':'Subcontrata registrada ✅');
     document.getElementById('sc-id').value='';
