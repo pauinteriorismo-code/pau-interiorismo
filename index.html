@@ -1122,6 +1122,7 @@ if(window.MutationObserver){
           <thead>
             <tr style="background:#f7f4ef">
               <th style="padding:7px 10px;text-align:center;width:60px;color:#4a3728;border-bottom:1px solid #e8e0d4;font-size:10px;text-transform:uppercase">Cant.</th>
+              <th style="padding:7px 10px;text-align:left;width:120px;color:#4a3728;border-bottom:1px solid #e8e0d4;font-size:10px;text-transform:uppercase">Referencia</th>
               <th style="padding:7px 10px;text-align:left;color:#4a3728;border-bottom:1px solid #e8e0d4;font-size:10px;text-transform:uppercase">Descripción / Concepto</th>
             </tr>
           </thead>
@@ -13127,7 +13128,7 @@ function abrirDocPedido(pedidoId){
 
 // Nuevo pedido en blanco
 function nuevoPedidoDoc(){
-  window.pdLineas = Array.from({length:20}, ()=>({cant:'',desc:''}));
+  window.pdLineas = Array.from({length:20}, ()=>({cant:'',ref:'',desc:''}));
   window.pdPedidoId = null;
   ['pd-num-input','pd-prov-input','pd-prov-tel-input','pd-proyecto-input','pd-obs-input'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.value='';
@@ -13170,9 +13171,9 @@ function cargarPedidoEnDoc(){
   // Líneas
   if(p.lineas && Array.isArray(p.lineas) && p.lineas.length){
     window.pdLineas = p.lineas;
-    while(window.pdLineas.length < 20) window.pdLineas.push({cant:'',desc:''});
+    while(window.pdLineas.length < 20) window.pdLineas.push({cant:'',ref:'',desc:''});
   } else {
-    window.pdLineas = Array.from({length:20}, ()=>({cant:'',desc:''}));
+    window.pdLineas = Array.from({length:20}, ()=>({cant:'',ref:'',desc:''}));
   }
   renderPedidoLineas();
 }
@@ -13180,7 +13181,7 @@ function cargarPedidoEnDoc(){
 // Guarda el documento en la tabla pedidos
 async function guardarDocPedido(){
   const getVal = id => { const el=document.getElementById(id); return el?el.value:''; };
-  const lineasLimpias = (window.pdLineas||[]).filter(l=>l.cant||l.desc);
+  const lineasLimpias = (window.pdLineas||[]).filter(l=>l.cant||l.desc||l.ref);
   const d = {
     num_pedido:   getVal('pd-num-input'),
     fecha:        getVal('pd-fecha-input') || new Date().toISOString().split('T')[0],
@@ -13259,15 +13260,15 @@ async function pedRegistrarRecepcion(){
   // Líneas del pedido
   const tbody=document.getElementById('alb-lineas-tbody');
   if(tbody){ tbody.innerHTML=''; }
-  const lineasPed=(ped.lineas&&Array.isArray(ped.lineas)) ? ped.lineas.filter(l=>l.cant||l.desc) : [];
+  const lineasPed=(ped.lineas&&Array.isArray(ped.lineas)) ? ped.lineas.filter(l=>l.cant||l.desc||l.ref) : [];
   if(lineasPed.length){
     lineasPed.forEach(l=>{
-      addAlbLinea({ descripcion:l.desc||'', referencia:'', unidad:'', cantidad:parseFloat(l.cant)||1, estado:'Pendiente' });
+      addAlbLinea({ descripcion:l.desc||'', referencia:l.ref||'', unidad:'', cantidad:parseFloat(l.cant)||1, estado:'Pendiente' });
     });
   } else {
     addAlbLinea();
   }
-  toast('📦 Recepción del pedido '+(ped.num_pedido||'')+' iniciada · ajusta cantidades si es parcial');
+  toast('📦 Recepción del pedido '+(ped.num_pedido||'')+' iniciada · usa Observaciones para incidencias si la recepción es parcial');
 }
 
 async function _renderPedidoAlbaranesBadge(pedidoId){
@@ -13349,12 +13350,15 @@ function renderPedidoLineas(){
   const tbody=document.getElementById('pd-lineas-body');
   if(!tbody)return;
   if(!window.pdLineas||!window.pdLineas.length){
-    window.pdLineas=Array.from({length:20},()=>({cant:'',desc:''}));
+    window.pdLineas=Array.from({length:20},()=>({cant:'',ref:'',desc:''}));
   }
   tbody.innerHTML=window.pdLineas.map((l,i)=>`
     <tr style="border-bottom:1px solid #ddd">
       <td style="padding:4px 6px;text-align:center;border-right:1px solid #ddd;width:64px;vertical-align:top">
         <input value="${l.cant}" oninput="window.pdLineas[${i}].cant=this.value" style="width:54px;text-align:center;font-size:12px;font-family:'Inter',Arial;border:none;outline:none;background:transparent;min-height:20px" placeholder="">
+      </td>
+      <td style="padding:4px 6px;border-right:1px solid #ddd;width:120px;vertical-align:top">
+        <input value="${l.ref||''}" oninput="window.pdLineas[${i}].ref=this.value" style="width:108px;font-size:12px;font-family:'Inter',Arial;border:none;outline:none;background:transparent;min-height:20px" placeholder="">
       </td>
       <td style="padding:4px 6px;vertical-align:top">
         <textarea rows="1" oninput="window.pdLineas[${i}].desc=this.value;this.style.height='1px';this.style.height=(this.scrollHeight)+'px'" style="width:100%;font-size:12px;font-family:'Inter',Arial;border:none;outline:none;background:transparent;resize:none;overflow:hidden;height:20px;display:block;box-sizing:border-box;word-wrap:break-word;white-space:pre-wrap;line-height:1.5;padding:1px 0">${l.desc}</textarea>
@@ -13364,7 +13368,7 @@ function renderPedidoLineas(){
 }
 function addPedidoLinea(){
   if(!window.pdLineas)window.pdLineas=[];
-  window.pdLineas.push({cant:'',desc:''});
+  window.pdLineas.push({cant:'',ref:'',desc:''});
   renderPedidoLineas();
 }
 function clearPedidoLineas(){
@@ -16374,7 +16378,7 @@ const loaders={
       if(sel) sel.value = window.pdPedidoId;
     } else {
       // Solo iniciar en blanco si no hay pedido activo
-      window.pdLineas=Array.from({length:20},()=>({cant:'',desc:''}));
+      window.pdLineas=Array.from({length:20},()=>({cant:'',ref:'',desc:''}));
       const today=new Date().toISOString().split('T')[0];
       const f=document.getElementById('pd-fecha-input');if(f&&!f.value)f.value=today;
     }
@@ -28223,7 +28227,9 @@ async function guardarAlbaran() {
     window._albPedidoOrigen = null;
     closeModal('m-albaran');
     loadAlbaranes();
-    if(pedidoIdAfectado) _actualizarEstadoPedidoTrasAlbaran(pedidoIdAfectado);
+    // Auto-actualización de estado del pedido desactivada (gestión manual desde el modal m-pedido).
+    // Para reactivar: descomentar la línea siguiente.
+    // if(pedidoIdAfectado) _actualizarEstadoPedidoTrasAlbaran(pedidoIdAfectado);
   } catch(e) { toast('Error: '+e.message, 'error'); }
 }
 
@@ -28481,7 +28487,9 @@ async function guardarAlbaranYPDF() {
     window._albPedidoOrigen = null;
     closeModal('m-albaran');
     loadAlbaranes();
-    if(pedidoIdAfectado) _actualizarEstadoPedidoTrasAlbaran(pedidoIdAfectado);
+    // Auto-actualización de estado del pedido desactivada (gestión manual desde el modal m-pedido).
+    // Para reactivar: descomentar la línea siguiente.
+    // if(pedidoIdAfectado) _actualizarEstadoPedidoTrasAlbaran(pedidoIdAfectado);
     if (id) await exportarAlbaranPDF(id);
   } catch(e) { toast('Error: '+e.message, 'error'); }
 }
