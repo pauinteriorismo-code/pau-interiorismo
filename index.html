@@ -1269,6 +1269,10 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <div style="font-size:13px;font-weight:700;color:var(--red)" id="g-banner-cobros-txt">—</div>
         <button class="btn btn-sm" style="background:var(--red);color:#fff;font-size:11px;padding:6px 12px" onclick="navTo('facturas');setTimeout(()=>filtrarTabFacturas('PdteCobro'),150)">Ver facturas</button>
       </div>
+      <div id="g-banner-hitos" style="display:none;background:linear-gradient(90deg,#fff8e1,#fffdf5);border:1px solid #f0d68a;border-left:5px solid #b85c00;border-radius:8px;padding:12px 16px;margin-bottom:12px;align-items:center;justify-content:space-between;gap:10px">
+        <div style="font-size:13px;font-weight:700;color:#b85c00" id="g-banner-hitos-txt">—</div>
+        <button class="btn btn-sm" style="background:#b85c00;color:#fff;font-size:11px;padding:6px 12px" onclick="mostrarHitosProximos()">Ver hitos</button>
+      </div>
       <div class="kpi-grid">
         <div class="kpi gerencia-fin blue"><div class="kpi-label">Total Ventas (Base Imp.)</div><div class="kpi-value" id="g-ventas">—</div><div class="kpi-sub">Facturas emitidas</div></div>
         <div class="kpi gerencia-fin" style="background:#e6f0ff;border-left:4px solid #1a5fa8"><div class="kpi-label" style="color:#1a5fa8">📐 S1 · Obra</div><div class="kpi-value" id="g-ventas-s1" style="font-size:20px">—</div><div class="kpi-sub">Ventas serie 1</div></div>
@@ -5275,6 +5279,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <button class="exp-tab" onclick="expTab('gantt')" data-tab="gantt" style="padding:10px 16px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-mid);border-bottom:2px solid transparent">📅 Planificación</button>
       <button class="exp-tab" onclick="expTab('compras')" data-tab="compras" style="padding:10px 16px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-mid);border-bottom:2px solid transparent">🛒 Compras</button>
       <button class="exp-tab" onclick="expTab('facturas')" data-tab="facturas" style="padding:10px 16px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-mid);border-bottom:2px solid transparent">🧾 Facturas</button>
+      <button class="exp-tab" onclick="expTab('hitos')" data-tab="hitos" style="padding:10px 16px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-mid);border-bottom:2px solid transparent">💰 Hitos</button>
       <button class="exp-tab" onclick="expTab('subcontratas')" data-tab="subcontratas" style="padding:10px 16px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-mid);border-bottom:2px solid transparent">👷 Subcontratas</button>
       <button class="exp-tab" onclick="expTab('horas')" data-tab="horas" style="padding:10px 16px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-mid);border-bottom:2px solid transparent">⏱ Horas</button>
       <button class="exp-tab" onclick="expTab('notas')" data-tab="notas" style="padding:10px 16px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-mid);border-bottom:2px solid transparent">📝 Notas</button><button class="exp-tab" onclick="expTab('fotos')" data-tab="fotos" style="padding:10px 16px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-mid);border-bottom:2px solid transparent">📷 Fotos</button>
@@ -8463,6 +8468,25 @@ async function loadGerencia(){
     const sv2=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
     sv2('g-en-ejecucion',pr.filter(p=>p.estado==='En ejecución').length||'0');
     sv2('g-fra-vencidas',fac.filter(f=>(f.tipo_factura||'Venta')==='Venta'&&f.estado==='Vencida').length||'0');
+    // Banner de hitos próximos (pendientes que vencen en ≤7 días o ya vencidos sin facturar)
+    try{
+      const hitosAll = await sbGet('hitos_pago','?estado=eq.Pendiente&order=fecha_prevista.asc').catch(()=>[]);
+      const hoy=new Date(); hoy.setHours(0,0,0,0);
+      const limite=new Date(hoy); limite.setDate(limite.getDate()+7);
+      const prox = hitosAll.filter(h=>{
+        if(!h.fecha_prevista) return false;
+        const f=new Date(h.fecha_prevista); f.setHours(0,0,0,0);
+        return f<=limite; // vencidos + los que vencen en ≤7d
+      });
+      const bnH=document.getElementById('g-banner-hitos');
+      if(bnH){
+        if(prox.length){
+          const tot=prox.reduce((s,h)=>s+(parseFloat(h.importe)||0),0);
+          document.getElementById('g-banner-hitos-txt').textContent=`📅 ${prox.length} hito${prox.length>1?'s':''} de pago vencen esta semana — Total: ${fmt(tot)}`;
+          bnH.style.display='flex';
+        } else { bnH.style.display='none'; }
+      }
+    }catch(e){ console.warn('banner hitos:',e); }
     // Banner de cobros vencidos (basado en fecha_vencimiento real + importe pendiente)
     try{
       const vencInfo = (fac||[]).map(f=>estadoCobroFactura(f)).filter(s=>s && (s.cat==='vencida30'||s.cat==='vencida60'||s.cat==='vencida'));
@@ -15641,6 +15665,8 @@ function limpiarFiltrosFacturas(){
 
 async function abrirNuevaFactura(tipo){
   const esC=tipo==='Compra';
+  // Limpiar enlace pendiente de hito si no lo activa generarFacturaDesdeHito inmediatamente después
+  if(!window._hitoGenerandoPrefill) _hitoPendienteFactura = null;
   document.getElementById('f-id').value='';
   document.getElementById('f-tipo').value=tipo;
   document.getElementById('f-modal-title').textContent=esC?'📥 Nueva factura de compra':'📤 Nueva factura de venta';
@@ -16517,12 +16543,22 @@ async function saveFactura(){
   }
 
   try{
+    let _savedFacId = id;
     if(id){
       await sb('facturas','PATCH',d,null,`?id=eq.${id}`);
       toast('Factura actualizada ✅');
     } else {
-      await sbPost('facturas',d);
+      const res = await sbPost('facturas',d);
+      if(res && res[0] && res[0].id) _savedFacId = res[0].id;
       toast('Factura guardada ✅');
+    }
+    // Si venía de un hito, marcarlo como facturado y guardar el factura_id
+    if(_hitoPendienteFactura && _savedFacId){
+      try{
+        await sb('hitos_pago','PATCH',{estado:'Facturado',factura_id:_savedFacId},null,`?id=eq.${_hitoPendienteFactura}`);
+        toast('💰 Hito marcado como Facturado ✅');
+      }catch(errH){ console.warn('Marcar hito:',errH); }
+      _hitoPendienteFactura = null;
     }
     document.getElementById('f-id').value='';
     // Auto-subida a Google Drive (solo facturas de venta — las de compra ya se gestionan por adjunto)
@@ -25705,12 +25741,305 @@ function expTab(tab){
     case 'gantt':        renderExpGantt(body); break;
     case 'compras':      renderExpCompras(body); break;
     case 'facturas':     renderExpFacturas(body); break;
+    case 'hitos':        renderExpHitos(body); break;
     case 'subcontratas': renderExpSubcontratas(body); break;
     case 'horas':        renderExpHoras(body); break;
     case 'notas':        renderExpNotas(body); break;
     case 'fotos':       renderExpFotos(body); break;
     case 'docs':        renderExpDocs(body); break;
     case 'unidades':    renderExpUnidades(body); break;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// HITOS DE PAGO (tabla hitos_pago)
+// ═══════════════════════════════════════════════════════════════════
+let _hitoPendienteFactura = null; // guarda id del hito al generar factura
+
+// IVA automático según tipo de proyecto
+function _ivaPorTipoProyecto(tipo){
+  const t=(tipo||'').toLowerCase();
+  if(t.includes('obra')||t.includes('rehab')||t.includes('reforma')) return '10%';
+  return '21%';
+}
+
+// Estado visual del hito
+function _estadoHito(h){
+  if(h.estado==='Facturado') return {cat:'fact',emoji:'🟢',color:'#2a7a2a',label:'Facturado'};
+  if(!h.fecha_prevista)      return {cat:'pdte',emoji:'🔵',color:'#1a5fa8',label:'Pendiente'};
+  const hoy=new Date(); hoy.setHours(0,0,0,0);
+  const f=new Date(h.fecha_prevista); f.setHours(0,0,0,0);
+  const dias=Math.floor((f-hoy)/(1000*60*60*24));
+  if(dias<0)   return {cat:'vencido',emoji:'🔴',color:'#c62828',label:`Vencido (${-dias}d)`};
+  if(dias<=7)  return {cat:'proximo',emoji:'🟡',color:'#b85c00',label:`Próximo (${dias}d)`};
+  return              {cat:'pdte',emoji:'🔵',color:'#1a5fa8',label:'Pendiente'};
+}
+
+async function _loadHitosProy(pid){
+  try{ return await sbGet('hitos_pago',`?proyecto_id=eq.${pid}&order=orden.asc`); }
+  catch(e){ console.warn('hitos_pago:',e.message); return []; }
+}
+
+async function renderExpHitos(body){
+  const pid=_expProyId, p=PC.find(x=>x.proyecto_id===pid);
+  if(!p){body.innerHTML='<p>No encontrado</p>';return;}
+  body.innerHTML='<div style="text-align:center;padding:20px;color:var(--text-soft)">Cargando hitos…</div>';
+
+  // Base del 100%: presupuesto vendido (suma de todas las versiones con datos)
+  let basePres=0;
+  try{
+    const lins=await sbGet('presupuesto_lineas',`?proyecto_id=eq.${pid}&es_capitulo=eq.false`);
+    lins.forEach(l=>{
+      const pv=l.precio_venta||0, ci=l.ci_gg_bi_pct||0, sub=(l.cantidad||0)*pv;
+      basePres += ci>0?sub*(1+ci/100):sub;
+    });
+  }catch(e){}
+
+  const hitos = await _loadHitosProy(pid);
+  const sumaImportes = hitos.reduce((s,h)=>s+(parseFloat(h.importe)||0),0);
+  const sumaPct = basePres>0 ? (sumaImportes/basePres*100) : 0;
+  const desfase = basePres - sumaImportes;
+  const ivaDef = _ivaPorTipoProyecto(p.tipo);
+
+  const filas = hitos.map((h,i)=>{
+    const st=_estadoHito(h);
+    const pctH = basePres>0?(parseFloat(h.importe||0)/basePres*100):0;
+    const esFact = st.cat==='fact';
+    const btnFact = esFact
+      ? (h.factura_id
+          ? `<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:3px 8px;color:var(--green)" onclick="editFactura('${h.factura_id}')" title="Ver factura">📄 Ver factura</button>`
+          : `<span style="font-size:10px;color:var(--green);font-weight:700">✓ Facturado</span>`)
+      : `<button class="btn btn-primary btn-sm" style="font-size:10px;padding:4px 10px" onclick="generarFacturaDesdeHito('${h.id}')">🧾 Generar factura</button>`;
+    return `<tr data-hito="${h.id}" style="border-bottom:1px solid #f0f0f0">
+      <td style="padding:8px 10px;text-align:center;width:30px;color:var(--text-soft);font-weight:700">${h.orden||i+1}</td>
+      <td style="padding:8px 10px">
+        <div style="font-weight:600;color:var(--navy)">${h.descripcion||'—'}</div>
+        <div style="font-size:10px;color:var(--text-soft)">${fmtP(pctH)} del presupuesto</div>
+      </td>
+      <td style="padding:8px 10px;text-align:right;font-family:monospace;font-weight:700">${fmt(parseFloat(h.importe)||0)}</td>
+      <td style="padding:8px 10px;text-align:center;font-size:11px">${fmtD(h.fecha_prevista)||'—'}</td>
+      <td style="padding:8px 10px;text-align:center">
+        <span style="display:inline-block;padding:3px 8px;border-radius:10px;background:${st.color}15;color:${st.color};font-size:10px;font-weight:700">${st.emoji} ${st.label}</span>
+      </td>
+      <td style="padding:8px 10px;text-align:center">${btnFact}</td>
+      <td style="padding:8px 4px;text-align:center;white-space:nowrap">
+        <button class="btn btn-ghost btn-icon btn-sm" onclick="abrirModalHito('${h.id}')" title="Editar">✏️</button>
+        <button class="btn btn-ghost btn-icon btn-sm" onclick="borrarHito('${h.id}')" title="Eliminar" style="color:var(--red)">🗑</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  const avisoTotal = (hitos.length>0 && basePres>0)
+    ? (Math.abs(desfase)<0.01
+        ? `<div style="background:#e6f5e6;color:#2a7a2a;padding:8px 12px;border-radius:6px;font-size:12px;font-weight:600">✅ Los hitos suman el 100% del presupuesto (${fmt(sumaImportes)})</div>`
+        : `<div style="background:#fff3e0;color:#b85c00;padding:8px 12px;border-radius:6px;font-size:12px;font-weight:600">⚠️ Los hitos suman ${fmtP(sumaPct)} (${fmt(sumaImportes)}) · Presupuesto ${fmt(basePres)} · Desfase ${fmt(desfase)}</div>`)
+    : (basePres===0?'<div style="background:#fff3e0;color:#b85c00;padding:8px 12px;border-radius:6px;font-size:12px;font-weight:600">⚠️ Este proyecto no tiene presupuesto cargado — los hitos no se pueden validar contra el 100%</div>':'');
+
+  body.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--navy)">💰 Hitos de pago</div>
+        <div style="font-size:11px;color:var(--text-soft)">Base: ${fmt(basePres)} presupuesto vendido · IVA por defecto ${ivaDef}</div>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="abrirModalHito()" ${hitos.length>=5?'disabled style="opacity:.5;cursor:not-allowed"':''}>➕ Añadir hito ${hitos.length>=5?'(máx 5)':''}</button>
+    </div>
+    ${avisoTotal?`<div style="margin-bottom:12px">${avisoTotal}</div>`:''}
+    ${hitos.length
+      ? `<div style="background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden">
+          <table style="width:100%;font-size:12px;border-collapse:collapse">
+            <thead><tr style="background:#f8fafd;border-bottom:1px solid var(--border)">
+              <th style="padding:8px 10px;text-align:center;color:var(--text-soft);font-weight:600;width:40px">#</th>
+              <th style="padding:8px 10px;text-align:left;color:var(--text-soft);font-weight:600">Descripción</th>
+              <th style="padding:8px 10px;text-align:right;color:var(--text-soft);font-weight:600;width:100px">Importe</th>
+              <th style="padding:8px 10px;text-align:center;color:var(--text-soft);font-weight:600;width:90px">Fecha</th>
+              <th style="padding:8px 10px;text-align:center;color:var(--text-soft);font-weight:600;width:130px">Estado</th>
+              <th style="padding:8px 10px;text-align:center;color:var(--text-soft);font-weight:600;width:140px">Acción</th>
+              <th style="padding:8px 4px;width:70px"></th>
+            </tr></thead>
+            <tbody>${filas}</tbody>
+          </table>
+        </div>`
+      : `<div class="empty" style="padding:30px;text-align:center"><div style="font-size:32px">💰</div><div style="font-size:13px;color:var(--text-soft);margin-top:6px">Sin hitos de pago definidos</div><div style="font-size:11px;color:var(--text-soft);margin-top:4px">Añade hasta 5 hitos para facturar por etapas automáticamente</div></div>`
+    }`;
+}
+
+// ─── Modal de hito ───────────────────────────────────────────────
+function abrirModalHito(id){
+  const pid=_expProyId;
+  const p=PC.find(x=>x.proyecto_id===pid);
+  if(!p){ toast('Proyecto no encontrado','error'); return; }
+  // Inyectar modal si no existe
+  let modal=document.getElementById('m-hito');
+  if(!modal){
+    modal=document.createElement('div');
+    modal.className='overlay';
+    modal.id='m-hito';
+    modal.style.zIndex='600';
+    modal.innerHTML=`<div class="modal" style="width:460px">
+      <div class="modal-head"><div class="modal-title">💰 Hito de pago</div><button class="modal-close" onclick="closeModal('m-hito')">×</button></div>
+      <div class="modal-body">
+        <input type="hidden" id="ht-id">
+        <div class="form-group"><label class="form-label">Descripción</label>
+          <input class="form-input" id="ht-desc" placeholder="Ej: 30% a la firma del contrato">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div class="form-group"><label class="form-label">Porcentaje (%)</label>
+            <input class="form-input" id="ht-pct" type="number" step="0.01" placeholder="30" oninput="_htoPctToImporte()">
+          </div>
+          <div class="form-group"><label class="form-label">Importe €</label>
+            <input class="form-input" id="ht-imp" type="number" step="0.01" placeholder="0,00" oninput="_htoImporteToPct()">
+          </div>
+        </div>
+        <div class="form-group"><label class="form-label">Fecha prevista</label>
+          <input class="form-input" id="ht-fecha" type="date">
+        </div>
+        <div class="form-group"><label class="form-label">Orden</label>
+          <input class="form-input" id="ht-orden" type="number" min="1" max="5" value="1">
+        </div>
+        <div id="ht-base-info" style="font-size:11px;color:var(--text-soft);padding:6px 10px;background:#f8fafd;border-radius:6px">Base presupuesto: —</div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" onclick="closeModal('m-hito')">Cancelar</button>
+        <button class="btn btn-primary" onclick="guardarHito()">💾 Guardar</button>
+      </div>
+    </div>`;
+    document.body.appendChild(modal);
+  }
+  // Pre-calcular base del presupuesto
+  (async()=>{
+    let basePres=0;
+    try{
+      const lins=await sbGet('presupuesto_lineas',`?proyecto_id=eq.${pid}&es_capitulo=eq.false`);
+      lins.forEach(l=>{ const pv=l.precio_venta||0,ci=l.ci_gg_bi_pct||0,sub=(l.cantidad||0)*pv; basePres += ci>0?sub*(1+ci/100):sub; });
+    }catch(e){}
+    window._htoBase=basePres;
+    document.getElementById('ht-base-info').textContent=`Base presupuesto: ${fmt(basePres)}`;
+  })();
+  document.getElementById('ht-id').value=id||'';
+  if(id){
+    (async()=>{
+      const hitos=await _loadHitosProy(pid);
+      const h=hitos.find(x=>x.id===id);
+      if(!h) return;
+      document.getElementById('ht-desc').value=h.descripcion||'';
+      document.getElementById('ht-pct').value=h.porcentaje||'';
+      document.getElementById('ht-imp').value=h.importe||'';
+      document.getElementById('ht-fecha').value=h.fecha_prevista||'';
+      document.getElementById('ht-orden').value=h.orden||1;
+    })();
+  } else {
+    document.getElementById('ht-desc').value='';
+    document.getElementById('ht-pct').value='';
+    document.getElementById('ht-imp').value='';
+    document.getElementById('ht-fecha').value='';
+    // siguiente orden libre
+    _loadHitosProy(pid).then(hs=>{ document.getElementById('ht-orden').value=Math.min(5,(hs.length||0)+1); });
+  }
+  openModal('m-hito');
+}
+
+function _htoPctToImporte(){
+  const base=parseFloat(window._htoBase)||0;
+  const pct=parseFloat(document.getElementById('ht-pct').value)||0;
+  if(base>0 && pct) document.getElementById('ht-imp').value=(base*pct/100).toFixed(2);
+}
+function _htoImporteToPct(){
+  const base=parseFloat(window._htoBase)||0;
+  const imp=parseFloat(document.getElementById('ht-imp').value)||0;
+  if(base>0 && imp) document.getElementById('ht-pct').value=(imp/base*100).toFixed(2);
+}
+
+async function guardarHito(){
+  const pid=_expProyId;
+  const id=document.getElementById('ht-id').value;
+  const desc=document.getElementById('ht-desc').value.trim();
+  const importe=parseFloat(document.getElementById('ht-imp').value)||0;
+  if(!desc){ toast('Introduce descripción','error'); return; }
+  if(!importe){ toast('Introduce un importe válido','error'); return; }
+  const d={
+    proyecto_id:pid,
+    descripcion:desc,
+    porcentaje:parseFloat(document.getElementById('ht-pct').value)||null,
+    importe:importe,
+    fecha_prevista:document.getElementById('ht-fecha').value||null,
+    orden:parseInt(document.getElementById('ht-orden').value)||1
+  };
+  try{
+    if(id){ await sb('hitos_pago','PATCH',d,null,`?id=eq.${id}`); toast('Hito actualizado ✅'); }
+    else  { d.estado='Pendiente'; await sbPost('hitos_pago',d); toast('Hito creado ✅'); }
+    closeModal('m-hito');
+    expTab('hitos');
+  }catch(e){
+    if(e.message&&e.message.includes('does not exist')){
+      toast('⚠️ Falta crear la tabla hitos_pago (ejecuta el SQL)','error');
+    } else { toast('Error: '+e.message,'error'); }
+  }
+}
+
+async function borrarHito(id){
+  if(!confirm('¿Eliminar este hito de pago?')) return;
+  try{
+    await sbDelete('hitos_pago',id);
+    toast('Hito eliminado ✅');
+    expTab('hitos');
+  }catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+// ─── Generar factura desde un hito ───────────────────────────────
+async function generarFacturaDesdeHito(hitoId){
+  const pid=_expProyId;
+  const p=PC.find(x=>x.proyecto_id===pid);
+  if(!p){ toast('Proyecto no encontrado','error'); return; }
+  const hitos=await _loadHitosProy(pid);
+  const h=hitos.find(x=>x.id===hitoId);
+  if(!h){ toast('Hito no encontrado','error'); return; }
+  // Abrir modal de nueva venta
+  closeModal('m-expediente');
+  window._hitoGenerandoPrefill = true;
+  await abrirNuevaFactura('Venta');
+  window._hitoGenerandoPrefill = false;
+  // Pre-rellenar
+  setTimeout(()=>{
+    try{
+      document.getElementById('f-concepto').value = h.descripcion || 'Hito de pago';
+      document.getElementById('f-base').value = parseFloat(h.importe)||0;
+      document.getElementById('f-iva').value = _ivaPorTipoProyecto(p.tipo);
+      // Cliente y proyecto
+      const fcl=document.getElementById('f-cliente');
+      if(fcl){ fcl.value=p.cliente_id||''; if(typeof cascadaClienteFactura==='function') cascadaClienteFactura(); }
+      setTimeout(()=>{
+        const fpr=document.getElementById('f-proyecto');
+        if(fpr) fpr.value=pid;
+        if(typeof calcTotalFac==='function') calcTotalFac();
+      },100);
+      // Serie según tipo
+      const serieEl=document.getElementById('f-serie');
+      if(serieEl){
+        const t=(p.tipo||'').toLowerCase();
+        serieEl.value = (t.includes('obra')||t.includes('rehab')||t.includes('reforma')) ? '1' : '2';
+      }
+      _hitoPendienteFactura = hitoId;
+      toast('🧾 Borrador generado · Revisa y guarda para marcar el hito como facturado');
+    }catch(e){ console.warn('prefill hito:',e); }
+  }, 300);
+}
+
+async function mostrarHitosProximos(){
+  let hitos=[];
+  try{ hitos=await sbGet('hitos_pago','?estado=eq.Pendiente&order=fecha_prevista.asc'); }catch(e){ toast('Error: '+e.message,'error'); return; }
+  const hoy=new Date(); hoy.setHours(0,0,0,0);
+  const limite=new Date(hoy); limite.setDate(limite.getDate()+7);
+  const prox=hitos.filter(h=>{ if(!h.fecha_prevista) return false; const f=new Date(h.fecha_prevista); f.setHours(0,0,0,0); return f<=limite; });
+  if(!prox.length){ toast('No hay hitos próximos'); return; }
+  const lineas = prox.map(h=>{
+    const p=PC.find(x=>x.proyecto_id===h.proyecto_id);
+    const st=_estadoHito(h);
+    return `• ${h.proyecto_id} · ${p?.nombre||'—'}\n  ${h.descripcion} — ${fmt(parseFloat(h.importe)||0)} (${fmtD(h.fecha_prevista)}) ${st.label}`;
+  }).join('\n\n');
+  const pidAbrir = prompt(`Hitos próximos:\n\n${lineas}\n\nIntroduce el PRY-XXX para abrir su expediente (o cancela):`);
+  if(pidAbrir && PC.find(x=>x.proyecto_id===pidAbrir)){
+    abrirExpediente(pidAbrir);
+    setTimeout(()=>expTab('hitos'), 400);
   }
 }
 
