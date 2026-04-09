@@ -26115,11 +26115,15 @@ async function renderExpRentabilidad(body){
   let presTotalVenta = 0;
   lins.forEach(l=>{ const pv=l.precio_venta||0,ci=l.ci_gg_bi_pct||0,sub=(l.cantidad||0)*pv; presTotalVenta+=ci>0?sub*(1+ci/100):sub; });
 
-  // Totales reales
-  const costesReales = compProy.reduce((s,c)=>s+(c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100),0)
-                     + scProy.reduce((s,c)=>s+(c.importe||0)*(1+ivaPct(c.iva_pct)/100),0)
+  // Totales reales — TODO en base imponible (s/IVA) para calcular beneficio real
+  const costesReales = compProy.reduce((s,c)=>s+(c.base_imponible||0),0)
+                     + scProy.reduce((s,c)=>s+(c.importe||0),0)
                      + horProy.reduce((s,h)=>s+(h.total||0),0);
-  const ventasReales = factProy.reduce((s,f)=>s+(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100),0);
+  const factBaseReal = factProy.reduce((s,f)=>s+(f.base_imponible||0),0);
+  // Incluir notas / cobros sin factura (entregas_cuenta) como ingresos reales
+  const eaResProy = (typeof EAC!=='undefined'?EAC:[]).filter(e=>e.proyecto_id===pid);
+  const notasTotal = eaResProy.reduce((s,e)=>s+(parseFloat(e.importe)||0),0);
+  const ventasReales = factBaseReal + notasTotal;
 
   const benefPres = presTotalVenta - presTotalVenta*(1-0.19); // presupuesto margen teórico (estimación si no hay desglose)
   const benefReal = ventasReales - costesReales;
@@ -26178,9 +26182,9 @@ async function renderExpRentabilidad(body){
       </tr></thead>
       <tbody>
         <tr style="border-top:1px solid #f0f0f0">
-          <td style="padding:8px 12px;font-weight:600">💰 Ingresos (ventas/facturas)</td>
+          <td style="padding:8px 12px;font-weight:600">💰 Ingresos (facturas${notasTotal>0?' + notas':''})</td>
           <td style="padding:8px 12px;text-align:right;font-family:monospace;color:var(--navy)">${fmt(presTotalVenta)}</td>
-          <td style="padding:8px 12px;text-align:right;font-family:monospace;color:var(--green);font-weight:700">${fmt(ventasReales)}</td>
+          <td style="padding:8px 12px;text-align:right;font-family:monospace;color:var(--green);font-weight:700">${fmt(ventasReales)}${notasTotal>0?`<div style="font-size:9px;font-weight:400;color:var(--text-soft)">(${fmt(factBaseReal)} fact. + ${fmt(notasTotal)} notas)</div>`:''}</td>
           <td style="padding:8px 12px;text-align:right;font-family:monospace;color:${ventasReales>=presTotalVenta?'var(--green)':'var(--amber)'}">${fmt(ventasReales-presTotalVenta)}</td>
         </tr>
         <tr style="border-top:1px solid #f0f0f0">
@@ -26203,8 +26207,8 @@ async function renderExpRentabilidad(body){
         </tr>
         <tr style="border-top:2px solid var(--border)">
           <td colspan="4" style="padding:6px 12px 2px;font-size:10px;color:var(--text-soft)">
-            Desglose costes: Compras ${fmt(compProy.reduce((s,c)=>s+(c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100),0))} 
-            · Subcontratas ${fmt(scProy.reduce((s,c)=>s+(c.importe||0)*(1+ivaPct(c.iva_pct)/100),0))} 
+            Desglose costes (s/IVA): Compras ${fmt(compProy.reduce((s,c)=>s+(c.base_imponible||0),0))}
+            · Subcontratas ${fmt(scProy.reduce((s,c)=>s+(c.importe||0),0))}
             · Mano de obra ${fmt(horProy.reduce((s,h)=>s+(h.total||0),0))}
           </td>
         </tr>
