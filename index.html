@@ -1265,6 +1265,10 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 
     <!-- ═══ GERENCIA ═══ -->
     <div class="view active" id="view-gerencia">
+      <div id="g-banner-cobros" style="display:none;background:linear-gradient(90deg,#fdecea,#fff5f5);border:1px solid #f5c6c6;border-left:5px solid var(--red);border-radius:8px;padding:12px 16px;margin-bottom:12px;display:none;align-items:center;justify-content:space-between;gap:10px">
+        <div style="font-size:13px;font-weight:700;color:var(--red)" id="g-banner-cobros-txt">—</div>
+        <button class="btn btn-sm" style="background:var(--red);color:#fff;font-size:11px;padding:6px 12px" onclick="navTo('facturas');setTimeout(()=>filtrarTabFacturas('PdteCobro'),150)">Ver facturas</button>
+      </div>
       <div class="kpi-grid">
         <div class="kpi gerencia-fin blue"><div class="kpi-label">Total Ventas (Base Imp.)</div><div class="kpi-value" id="g-ventas">—</div><div class="kpi-sub">Facturas emitidas</div></div>
         <div class="kpi gerencia-fin" style="background:#e6f0ff;border-left:4px solid #1a5fa8"><div class="kpi-label" style="color:#1a5fa8">📐 S1 · Obra</div><div class="kpi-value" id="g-ventas-s1" style="font-size:20px">—</div><div class="kpi-sub">Ventas serie 1</div></div>
@@ -4258,6 +4262,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <button id="ftab-todas" class="btn" style="border-radius:0;background:var(--navy);color:white;font-size:12px;padding:6px 12px" onclick="filtrarTabFacturas(&#39;todas&#39;)">Todas</button>
           <button id="ftab-venta" class="btn btn-ghost" style="border-radius:0;font-size:12px;padding:6px 12px" onclick="filtrarTabFacturas(&#39;Venta&#39;)">📤 Ventas</button>
           <button id="ftab-compra" class="btn btn-ghost" style="border-radius:0;font-size:12px;padding:6px 12px" onclick="filtrarTabFacturas(&#39;Compra&#39;)">📥 Compras</button>
+          <button id="ftab-pdte-cobro" class="btn btn-ghost" style="border-radius:0;font-size:12px;padding:6px 12px;border-left:1px solid var(--border)" onclick="filtrarTabFacturas(&#39;PdteCobro&#39;)" title="Ventas pendientes de cobro">💰 Pdte. cobro</button>
         </div>
         <div class="search-wrap" style="flex:1;min-width:160px"><span class="search-icon">🔍</span>
           <input class="form-input" id="search-facturas" placeholder="Buscar nº, cliente, proveedor…" oninput="filtrarFacturas()">
@@ -5589,7 +5594,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     <input type="hidden" id="f-tipo" value="Venta">
     <div class="form-grid">
       <div class="form-group"><label class="form-label">Nº Factura *</label><input class="form-input" id="f-num" placeholder="1-001/2026"></div>
-      <div class="form-group"><label class="form-label">Fecha emisión</label><input class="form-input" id="f-fecha" type="date"></div>
+      <div class="form-group"><label class="form-label">Fecha emisión</label><input class="form-input" id="f-fecha" type="date" onchange="autoVtoVenta()"></div>
       <div class="form-group" id="f-grp-serie"><label class="form-label">Serie</label>
         <select class="form-input" id="f-serie" onchange="autoNumFactura()">
           <option value="1">Serie 1 · Obra</option>
@@ -8450,6 +8455,18 @@ async function loadGerencia(){
     const sv2=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
     sv2('g-en-ejecucion',pr.filter(p=>p.estado==='En ejecución').length||'0');
     sv2('g-fra-vencidas',fac.filter(f=>(f.tipo_factura||'Venta')==='Venta'&&f.estado==='Vencida').length||'0');
+    // Banner de cobros vencidos (basado en fecha_vencimiento real + importe pendiente)
+    try{
+      const vencInfo = (fac||[]).map(f=>estadoCobroFactura(f)).filter(s=>s && (s.cat==='vencida30'||s.cat==='vencida60'||s.cat==='vencida'));
+      const bn=document.getElementById('g-banner-cobros');
+      if(bn){
+        if(vencInfo.length){
+          const total=vencInfo.reduce((a,s)=>a+(s.pdte||0),0);
+          document.getElementById('g-banner-cobros-txt').textContent=`🔴 ${vencInfo.length} factura${vencInfo.length>1?'s':''} vencida${vencInfo.length>1?'s':''} por cobrar — Total: ${fmt(total)}`;
+          bn.style.display='flex';
+        } else { bn.style.display='none'; }
+      }
+    }catch(e){}
     sv2('g-pres-enviados',pr.filter(p=>p.estado==='Presupuesto enviado').length||'0');
     sv2('g-compras-pdte',comp.filter(c=>c.estado_pago==='Pendiente').length||'0');
 
@@ -15147,12 +15164,14 @@ async function loadFacturas(){
         :(CC.find(c=>String(c.id)===String(f.cliente_id)||c.cliente_id===f.cliente_id)?.nombre || f.cliente_id || '—');
       const yaCobrada = f.estado==='Cobrada'||f.estado==='Pagada';
       const srch=(tipo+' '+(f.num_factura||'')+' '+contra+' '+(f.proyecto_id||'')+' '+(f.concepto||'')).toLowerCase();
-      return `<tr data-fid="${f.id}" data-tipo="${tipo}" data-serie="${f.serie||1}" data-contra="${contra.toLowerCase()}" data-vto="${f.fecha_vencimiento||''}" data-estado="${f.estado||''}" data-search="${srch}">
+      const sc=estadoCobroFactura(f);
+      const semaforo = sc ? `<span title="${sc.label}" style="margin-right:3px">${sc.emoji}</span>` : '';
+      return `<tr data-fid="${f.id}" data-tipo="${tipo}" data-serie="${f.serie||1}" data-contra="${contra.toLowerCase()}" data-vto="${f.fecha_vencimiento||''}" data-estado="${f.estado||''}" data-cobro="${sc?sc.cat:''}" data-search="${srch}">
         <td style="padding:6px 4px">${badge}</td>
-        <td style="text-align:center">${(()=>{const s=f.serie||1;const sc={1:['#e6f0ff','#1a5fa8'],2:['#f0e6ff','#7b2fa8'],3:['#e6f5e6','#2a7a2a'],4:['#fff3e6','#b85c00']};const c=sc[s]||sc[1];return`<span style="background:${c[0]};color:${c[1]};padding:1px 7px;border-radius:10px;font-size:10px;font-weight:700">S${s}</span>`;})()}</td>
+        <td style="text-align:center">${(()=>{const s=f.serie||1;const sc2={1:['#e6f0ff','#1a5fa8'],2:['#f0e6ff','#7b2fa8'],3:['#e6f5e6','#2a7a2a'],4:['#fff3e6','#b85c00']};const c=sc2[s]||sc2[1];return`<span style="background:${c[0]};color:${c[1]};padding:1px 7px;border-radius:10px;font-size:10px;font-weight:700">S${s}</span>`;})()}</td>
         <td class="td-mono" style="font-weight:700;padding:6px 4px">${f.num_factura||'—'}</td>
         <td>${fmtD(f.fecha_emision)}</td>
-        <td>${fmtD(f.fecha_vencimiento)}</td>
+        <td style="${sc?'color:'+sc.color+';font-weight:600':''}">${semaforo}${fmtD(f.fecha_vencimiento)}</td>
         <td>${contra}</td>
         <td class="td-mono" style="color:var(--text-soft)">${f.proyecto_id||'—'}</td>
         <td class="td-mono">${fmt(base)}</td>
@@ -15180,14 +15199,46 @@ async function loadFacturas(){
 
 function filtrarTabFacturas(tipo){
   window._facTabActivo = tipo;
-  ['todas','venta','compra'].forEach(t=>{
-    const el=document.getElementById(`ftab-${t}`);
+  [['todas','todas'],['venta','Venta'],['compra','Compra'],['pdte-cobro','PdteCobro']].forEach(([id,val])=>{
+    const el=document.getElementById(`ftab-${id}`);
     if(!el)return;
-    const active=(tipo==='todas'&&t==='todas')||(tipo!=='todas'&&t===tipo.toLowerCase());
+    const active=(tipo===val);
     el.style.background=active?'var(--navy)':'';
     el.style.color=active?'white':'';
   });
   filtrarFacturas();
+}
+
+// ═══ Recordatorios de cobro: helper semáforo por vencimiento ═══
+// Devuelve {cat, dias, color, emoji, label} para facturas de venta pendientes.
+// cat: 'plazo' | 'proximo' | 'vencida30' | 'vencida60' | 'vencida' | null
+function estadoCobroFactura(f){
+  if(!f || (f.tipo_factura||'Venta')!=='Venta') return null;
+  if(f.estado==='Cobrada' || f.estado==='Anulada') return null;
+  const base=f.base_imponible||0;
+  const tot=base*(1+ivaPct(f.iva_pct)/100);
+  const pdte=tot-(f.importe_cobrado||0);
+  if(pdte<=0.01) return null;
+  const vto=f.fecha_vencimiento;
+  if(!vto) return {cat:'plazo',dias:null,color:'#2a7a2a',emoji:'🟢',label:'Sin vto.',pdte};
+  const hoy=new Date(); hoy.setHours(0,0,0,0);
+  const d=new Date(vto); d.setHours(0,0,0,0);
+  const dias=Math.floor((hoy-d)/(1000*60*60*24)); // positivo = vencida
+  if(dias<-7) return {cat:'plazo',dias,color:'#2a7a2a',emoji:'🟢',label:'En plazo',pdte};
+  if(dias<0)  return {cat:'proximo',dias,color:'#b85c00',emoji:'🟡',label:`Vence en ${-dias}d`,pdte};
+  if(dias<=30)return {cat:'vencida30',dias,color:'#e67e22',emoji:'🟠',label:`Vencida ${dias}d`,pdte};
+  if(dias<=60)return {cat:'vencida60',dias,color:'#c0392b',emoji:'🔴',label:`Vencida ${dias}d`,pdte};
+  return         {cat:'vencida',dias,color:'#7a0000',emoji:'🔴',label:`Vencida ${dias}d`,pdte};
+}
+
+// Auto-calcula vencimiento de venta = fecha emisión + 30 días (solo si está vacío o es venta nueva)
+function autoVtoVenta(){
+  const tipo=document.getElementById('f-tipo')?.value||'Venta';
+  if(tipo==='Compra') return;
+  const f=document.getElementById('f-fecha')?.value; if(!f) return;
+  const v=document.getElementById('f-vto-venta'); if(!v) return;
+  const d=new Date(f); d.setDate(d.getDate()+30);
+  v.value=d.toISOString().split('T')[0];
 }
 
 function filtrarFacturas(){
@@ -15202,8 +15253,23 @@ function filtrarFacturas(){
 
   let visible=0;
   const visibleIds=[];
-  document.querySelectorAll('#facturas-tbody tr[data-tipo]').forEach(tr=>{
-    const matchTipo = tipo==='todas' || (tr.dataset.tipo||'').toLowerCase()===tipo.toLowerCase();
+  const esPdteCobro = (tipo==='PdteCobro');
+  // Orden de urgencia para semáforo (más urgente primero)
+  const catOrden={vencida:0,vencida60:1,vencida30:2,proximo:3,plazo:4,'':5};
+  const tbody=document.getElementById('facturas-tbody');
+  const rows=Array.from(document.querySelectorAll('#facturas-tbody tr[data-tipo]'));
+  if(esPdteCobro){
+    rows.sort((a,b)=>(catOrden[a.dataset.cobro||'']??9)-(catOrden[b.dataset.cobro||'']??9));
+    rows.forEach(r=>tbody.appendChild(r));
+  }
+  rows.forEach(tr=>{
+    const esVenta=(tr.dataset.tipo||'').toLowerCase()==='venta';
+    let matchTipo;
+    if(tipo==='todas') matchTipo=true;
+    else if(tipo==='Venta') matchTipo=esVenta;
+    else if(tipo==='Compra') matchTipo=!esVenta;
+    else if(esPdteCobro) matchTipo=esVenta && !!tr.dataset.cobro;
+    else matchTipo=true;
     const matchQ = !q || (tr.dataset.search||'').toLowerCase().includes(q);
     const matchContra = !contra || (tr.dataset.contra||'').includes(contra);
     const matchVto = !vtoHasta || (tr.dataset.vto && tr.dataset.vto>=hoy && tr.dataset.vto<=vtoHasta);
@@ -15264,7 +15330,7 @@ function limpiarFiltrosFacturas(){
   document.getElementById('filt-fac-vto').value='';
   document.getElementById('filt-fac-estado').value='';
   window._facTabActivo='todas';
-  ['todas','venta','compra'].forEach(t=>{
+  ['todas','venta','compra','pdte-cobro'].forEach(t=>{
     const el=document.getElementById(`ftab-${t}`);
     if(el){el.style.background=t==='todas'?'var(--navy)':'';el.style.color=t==='todas'?'white':'';}
   });
@@ -15309,6 +15375,8 @@ async function abrirNuevaFactura(tipo){
   document.getElementById('f-total-display').value='';
   document.getElementById('f-vto').value='';
   document.getElementById('f-fecha').value=new Date().toISOString().split('T')[0];
+  // Vencimiento venta por defecto = hoy + 30 días (editable)
+  if(!esC){ const vv=document.getElementById('f-vto-venta'); if(vv){vv.value=''; autoVtoVenta();} }
   document.getElementById('f-estado').value='Pendiente'; // Siempre Pendiente por defecto
   // Forma de pago por defecto según tipo
   const fPagoEl=document.getElementById('f-pago');
@@ -26008,6 +26076,10 @@ function abrirFichaObra(proyId){
     ...scProy2.filter(s=>['Pendiente','Parcial','Vencido'].includes(s.estado_pago)).map(s=>({tipo:'sc', label:s.proveedor_id||s.trabajo||'—', importe:(s.importe||0)*(1+ivaPct(s.iva_pct)/100)}))
   ];
   const factPend = factProy.filter(f=>f.estado!=='Cobrada');
+  const factVencidas = factProy.map(f=>estadoCobroFactura(f)).filter(s=>s && (s.cat==='vencida30'||s.cat==='vencida60'||s.cat==='vencida'));
+  const badgeCobroPdte = factVencidas.length
+    ? `<div style="margin-top:8px;display:inline-block;background:var(--red);color:#fff;padding:4px 10px;border-radius:10px;font-size:11px;font-weight:700">⚠️ Cobro pendiente · ${factVencidas.length}</div>`
+    : '';
 
   document.getElementById('ficha-body').innerHTML = `
     <!-- Info obra -->
@@ -26016,6 +26088,7 @@ function abrirFichaObra(proyId){
       <div style="font-size:12px;opacity:.75">${p.cliente_id||''}</div>
       ${p.direccion_obra?`<div style="font-size:11px;opacity:.6;margin-top:4px">📍 ${p.direccion_obra}</div>`:''}
       <div style="margin-top:10px;display:inline-block;background:rgba(255,255,255,.15);padding:3px 12px;border-radius:10px;font-size:12px;font-weight:700">${p.estado||'—'}</div>
+      ${badgeCobroPdte}
     </div>
 
     <!-- KPIs rápidos -->
