@@ -4672,7 +4672,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     <div class="form-grid">
       <div class="form-group fg-full"><label class="form-label">Nombre *</label><input class="form-input" id="c-nombre"></div>
       <div class="form-group"><label class="form-label">Tipo doc. / Número</label><div style="display:flex;gap:6px"><select class="form-input" id="c-cif-tipo" style="width:90px;flex-shrink:0"><option value="">—</option><option value="CIF">CIF</option><option value="NIF">NIF</option><option value="DNI" selected>DNI</option></select><input class="form-input" id="c-cif" placeholder="" style="flex:1"></div></div>
-      <div class="form-group"><label class="form-label">Teléfono</label><input class="form-input" id="c-tel"></div>
+      <div class="form-group"><label class="form-label">Teléfono</label><div style="display:flex;gap:6px"><input class="form-input" id="c-tel" style="flex:1"><button type="button" class="btn btn-ghost btn-sm" onclick="waClienteFromModal()" style="background:#25d366;color:#fff;border:none;padding:0 12px;white-space:nowrap" title="Enviar WhatsApp">💬</button></div></div>
       <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="c-email" type="email"></div>
       <div class="form-group"><label class="form-label">Tipo</label><select class="form-input" id="c-tipo" onchange="if(this.value==='Particular'){document.getElementById('c-cif-tipo').value='DNI';}else if(this.value==='Empresa'||this.value==='Promotora'){document.getElementById('c-cif-tipo').value='DNI';}"><option value="">Seleccionar…</option><option value="Administración">Administración</option><option value="Empresa">Empresa</option><option value="Otros">Otros</option><option value="Particular">Particular</option><option value="Promotora">Promotora</option><option value="Proveedor">Proveedor</option></select></div>
       <div class="form-group"><label class="form-label">Forma de pago</label><select class="form-input" id="c-pago"><option value="">Seleccionar…</option><option value="Confirming">Confirming</option><option value="Domiciliación">Domiciliación</option><option value="Efectivo">Efectivo</option><option value="Giro">Giro</option><option value="Pagaré">Pagaré</option><option value="Transferencia">Transferencia</option></select></div>
@@ -5685,7 +5685,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="form-group"><label class="form-label">Tipo documento</label><select class="form-input" id="pv-tipo-doc"><option value="">Seleccionar…</option><option value="CIF">CIF</option><option value="NIF">NIF</option><option value="DNI">DNI</option><option value="NIE">NIE</option><option value="OTRO">Otro</option></select></div>
       <div class="form-group"><label class="form-label"><span id="pv-cif-label">CIF</span></label><input class="form-input" id="pv-cif" placeholder="" oninput="document.getElementById('pv-cif-label').textContent=document.getElementById('pv-tipo-doc').value"><script>document.getElementById('pv-tipo-doc')?.addEventListener('change',function(){document.getElementById('pv-cif-label').textContent=this.value;});</script></div>
       <div class="form-group"><label class="form-label">Tipo</label><select class="form-input" id="pv-tipo"><option value="">Seleccionar…</option><option value="Proveedor">Proveedor</option><option value="Subcontrata">Subcontrata</option><option value="Servicio">Servicio</option><option value="Alquiler">Alquiler</option><option value="Transporte">Transporte</option><option value="Otros">Otros</option></select></div>
-      <div class="form-group"><label class="form-label">Teléfono</label><input class="form-input" id="pv-tel"></div>
+      <div class="form-group"><label class="form-label">Teléfono</label><div style="display:flex;gap:6px"><input class="form-input" id="pv-tel" style="flex:1"><button type="button" class="btn btn-ghost btn-sm" onclick="waProveedorFromModal()" style="background:#25d366;color:#fff;border:none;padding:0 12px;white-space:nowrap" title="Enviar WhatsApp">💬</button></div></div>
       <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="pv-email" type="email"></div>
       <div class="form-group"><label class="form-label">Especialidad</label><input class="form-input" id="pv-esp"></div>
       <div class="form-group"><label class="form-label">Forma de pago</label><select class="form-input" id="pv-pago"><option value="">Seleccionar…</option><option value="Confirming">Confirming</option><option value="Domiciliación">Domiciliación</option><option value="Efectivo">Efectivo</option><option value="Giro">Giro</option><option value="Pagaré">Pagaré</option><option value="Transferencia">Transferencia</option></select></div>
@@ -9879,6 +9879,113 @@ function _piaEliminarPartida(ci,pi){
     _piaResultado.capitulos.splice(ci,1);
   }
   _piaRenderPreview();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// WHATSAPP — mensajes rápidos pre-redactados en valenciano
+// ═══════════════════════════════════════════════════════════════
+
+// Formatea el teléfono a internacional (+34 por defecto si son 9 dígitos)
+function _waFormatTel(tel){
+  if(!tel) return '';
+  let t = String(tel).replace(/\D/g,''); // solo dígitos
+  if(!t) return '';
+  if(t.startsWith('34') && t.length===11) return t; // ya internacional sin +
+  if(t.length===9) return '34'+t;   // España 9 dígitos
+  if(t.length===11 && t.startsWith('0034')) return t.slice(2);
+  return t; // otros casos, dejamos tal cual
+}
+
+// Abre wa.me con mensaje preparado. Si el mensaje es editable, pide confirmación primero.
+function waAbrir(tel, msg, editable){
+  const telFmt = _waFormatTel(tel);
+  if(!telFmt){ toast('No hi ha telèfon registrat per a aquest contacte','error'); return; }
+  let mensajeFinal = msg;
+  if(editable){
+    const ed = prompt('Edita el missatge abans d\'enviar-lo per WhatsApp:', msg);
+    if(ed===null) return; // cancelado
+    mensajeFinal = ed;
+  }
+  const url = `https://wa.me/${telFmt}?text=${encodeURIComponent(mensajeFinal)}`;
+  window.open(url,'_blank','noopener');
+}
+
+// ─── Cliente (desde la ficha del cliente) ────────────────────
+function waCliente(cliId, proyIdOpc){
+  const c = (CC||[]).find(x=>String(x.id)===String(cliId) || x.cliente_id===cliId);
+  if(!c){ toast('Client no trobat','error'); return; }
+  const tel = c.telefono||c.tel||document.getElementById('c-tel')?.value||'';
+  const nomClient = (c.nombre||'').split(' ')[0] || c.nombre || '';
+  let nomProjecte = '';
+  if(proyIdOpc){ const p=(PC||[]).find(x=>x.proyecto_id===proyIdOpc); if(p) nomProjecte=p.nombre||''; }
+  else {
+    // buscar proyecto más reciente de este cliente
+    const ps=(PC||[]).filter(x=>x.cliente_id===c.cliente_id||x.cliente_id===c.id);
+    if(ps.length) nomProjecte = ps[ps.length-1].nombre||'';
+  }
+  const msg = nomProjecte
+    ? `Hola ${nomClient}, li contactem des de PAU Interiorisme en relació al projecte "${nomProjecte}". Podria atendre'ns un moment?`
+    : `Hola ${nomClient}, li contactem des de PAU Interiorisme. Podria atendre'ns un moment?`;
+  waAbrir(tel, msg, true);
+}
+
+// Variante que lee directamente los campos del modal cliente abierto
+function waClienteFromModal(){
+  const tel=document.getElementById('c-tel')?.value||'';
+  const nombre=(document.getElementById('c-nombre')?.value||'').split(' ')[0];
+  if(!tel){ toast('No hi ha telèfon registrat per a aquest contacte','error'); return; }
+  const msg = `Hola ${nombre||''}, li contactem des de PAU Interiorisme. Podria atendre'ns un moment?`;
+  waAbrir(tel, msg, true);
+}
+
+// ─── Proyecto (desde la ficha de obra) ───────────────────────
+async function waProyecto(proyId){
+  const p = (PC||[]).find(x=>x.proyecto_id===proyId);
+  if(!p){ toast('Projecte no trobat','error'); return; }
+  const c = (CC||[]).find(x=>String(x.id)===String(p.cliente_id)||x.cliente_id===p.cliente_id) || {};
+  const tel = c.telefono||c.tel||'';
+  const nomClient = (c.nombre||'').split(' ')[0] || '';
+  const estado = (p.estado||'').toLowerCase();
+  let msg = `Hola ${nomClient}, li contactem des de PAU Interiorisme en relació al projecte "${p.nombre||''}". Podria atendre'ns un moment?`;
+  // Mensajes contextuales según estado del proyecto
+  if(estado.includes('pressupost') || estado.includes('presupuesto enviado')){
+    // Buscar número de presupuesto más reciente (usamos proyecto_id como referencia)
+    msg = `Hola ${nomClient}, li enviem el pressupost per al projecte "${p.nombre||''}". Ha pogut revisar-lo?`;
+  } else if(estado.includes('aprobado') || estado.includes('en ejecución') || estado.includes('ejecucion')){
+    msg = `Hola ${nomClient}, confirmem l'inici dels treballs a "${p.nombre||''}" segons l'acordat. Qualsevol dubte, a la seua disposició.`;
+  } else if(estado.includes('facturado') || estado.includes('cobrado') || estado.includes('finalizado')){
+    // Buscar última factura
+    const fac = (FC||[]).filter(f=>f.proyecto_id===proyId && (f.tipo_factura||'Venta')==='Venta').sort((a,b)=>(b.fecha_emision||'').localeCompare(a.fecha_emision||''))[0];
+    if(fac){
+      const tot = (fac.base_imponible||0)*(1+ivaPct(fac.iva_pct)/100);
+      msg = `Hola ${nomClient}, li hem enviat la factura nº ${fac.num_factura||''} per import de ${fmt(tot)}. Reste a la seua disposició.`;
+    } else {
+      msg = `Hola ${nomClient}, li contactem des de PAU Interiorisme en relació al projecte "${p.nombre||''}".`;
+    }
+  }
+  waAbrir(tel, msg, true);
+}
+
+// ─── Factura pendiente de cobro (recordatorio) ───────────────
+function waRecordarFactura(facId){
+  const f = (FC||[]).find(x=>String(x.id)===String(facId));
+  if(!f){ toast('Factura no trobada','error'); return; }
+  const c = (CC||[]).find(x=>String(x.id)===String(f.cliente_id)||x.cliente_id===f.cliente_id) || {};
+  const tel = c.telefono||c.tel||'';
+  const nomClient = (c.nombre||'').split(' ')[0] || '';
+  const total = (f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100);
+  const pendiente = total - (f.importe_cobrado||0);
+  const msg = `Hola ${nomClient}, li recordem que té pendent de pagament la factura nº ${f.num_factura||''} de data ${fmtD(f.fecha_emision)||''} per import de ${fmt(pendiente)}. Pot contactar-nos per a qualsevol consulta. Gràcies, PAU Interiorisme.`;
+  waAbrir(tel, msg, true);
+}
+
+// ─── Proveedor ───────────────────────────────────────────────
+function waProveedorFromModal(){
+  const tel=document.getElementById('pv-tel')?.value||'';
+  const nombre=(document.getElementById('pv-nombre')?.value||'').split(' ')[0];
+  if(!tel){ toast('No hi ha telèfon registrat per a aquest proveïdor','error'); return; }
+  const msg = `Hola ${nombre||''}, li contactem des de PAU Interiorisme. `;
+  waAbrir(tel, msg, true);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -16000,7 +16107,7 @@ async function loadFacturas(){
                <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px" onclick="marcarFacturaParcial('${f.id}')">💶</button>`
             : `<button class="btn btn-sm ${yaCobrada?'btn-green':'btn-ghost'}" style="font-size:10px;padding:2px 6px" title="${yaCobrada?'Ya pagada':'Marcar como pagada'}" onclick="marcarFacturaPagada('${f.id}')">💳</button>`
           }
-          ${!esC ? `<button class="btn btn-ghost btn-sm" style="font-size:11px;padding:2px 5px;${f.email_enviado?'color:var(--green)':''}" title="${f.email_enviado?'📬 Enviada el '+fmtD(f.fecha_envio):'📧 Enviar por email'}" onclick="enviarFacturaEmail('${f.id}')">${f.email_enviado?'📬':'📧'}</button>` : ''}
+          ${!esC ? `<button class="btn btn-ghost btn-sm" style="font-size:11px;padding:2px 5px;${f.email_enviado?'color:var(--green)':''}" title="${f.email_enviado?'📬 Enviada el '+fmtD(f.fecha_envio):'📧 Enviar por email'}" onclick="enviarFacturaEmail('${f.id}')">${f.email_enviado?'📬':'📧'}</button>${!yaCobrada?`<button class="btn btn-ghost btn-sm" style="font-size:11px;padding:2px 5px;color:#25d366" title="Recordar pagament per WhatsApp" onclick="waRecordarFactura('${f.id}')">💬</button>`:''}` : ''}
           <button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('facturas','${f.id}','${(f.num_factura||'factura').replace(/'/g,"\\'")}')" >🗑</button>
         </td>
       </tr>`;
@@ -25101,7 +25208,7 @@ async function sortAndRenderFacturas(col, dir) {
              <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px" onclick="marcarFacturaParcial('${f.id}')">💶</button>`
           : `<button class="btn btn-sm ${yaCobrada?'btn-green':'btn-ghost'}" style="font-size:10px;padding:2px 6px" title="${yaCobrada?'Ya pagada':'Marcar como pagada'}" onclick="marcarFacturaPagada('${f.id}')">💳</button>`
         }
-        ${!esC ? `<button class="btn btn-ghost btn-sm" style="font-size:11px;padding:2px 5px;${f.email_enviado?'color:var(--green)':''}" title="${f.email_enviado?'📬 Enviada el '+fmtD(f.fecha_envio):'📧 Enviar por email'}" onclick="enviarFacturaEmail('${f.id}')">${f.email_enviado?'📬':'📧'}</button>` : ''}
+        ${!esC ? `<button class="btn btn-ghost btn-sm" style="font-size:11px;padding:2px 5px;${f.email_enviado?'color:var(--green)':''}" title="${f.email_enviado?'📬 Enviada el '+fmtD(f.fecha_envio):'📧 Enviar por email'}" onclick="enviarFacturaEmail('${f.id}')">${f.email_enviado?'📬':'📧'}</button>${!yaCobrada?`<button class="btn btn-ghost btn-sm" style="font-size:11px;padding:2px 5px;color:#25d366" title="Recordar pagament per WhatsApp" onclick="waRecordarFactura('${f.id}')">💬</button>`:''}` : ''}
         ${f.adjunto_pdf?`<button class="btn btn-ghost btn-icon btn-sm" onclick="fVerPDFById('${f.id}')" style="font-size:11px;color:var(--navy)" title="Ver PDF">📄</button>`:''}
         <button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('facturas','${f.id}','${(f.num_factura||'factura').replace(/'/g,"\\'")}')">🗑</button>
       </td>
@@ -27552,6 +27659,7 @@ function abrirFichaObra(proyId){
 
     <!-- Acciones rápidas -->
     <div style="display:flex;flex-direction:column;gap:8px">
+      <button class="btn" onclick="waProyecto('${proyId}')" style="background:#25d366;color:#fff;border:none;justify-content:center;padding:12px;font-weight:700">💬 WhatsApp client</button>
       <button class="btn btn-primary" onclick="closeModal('m-ficha-obra');abrirExpediente('${proyId}')" style="justify-content:center;padding:12px">📁 Ver expediente completo</button>
       <button class="btn btn-ghost" onclick="closeModal('m-ficha-obra');editProyecto('${p.id}')" style="justify-content:center;padding:10px">✏️ Editar proyecto</button>
     </div>
