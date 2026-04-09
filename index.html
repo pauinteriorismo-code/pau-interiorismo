@@ -6040,6 +6040,7 @@ if('serviceWorker' in navigator){
   // Inyectar botón Drive via DOM (sin tocar el template literal)
   if(driveOpts && driveOpts.folderId){
     const _fi=driveOpts.folderId, _sc=driveOpts.subCarpeta||'', _nom=(filename||titulo||'documento')+'.pdf';
+    const _extras={tipoDoc:driveOpts.tipoDoc||null, proveedor:driveOpts.proveedor||null};
     // Guardamos referencia al elemento del DOM padre que se usó para generar la vista previa
     const _srcEl = doc; // el elemento original (fac-preview-doc) en la ventana padre
     setTimeout(function(){
@@ -6051,7 +6052,7 @@ if('serviceWorker' in navigator){
         btn.onclick=function(){
           // Llamar a subirPDFaDrive en la ventana PADRE usando el elemento original
           btn.disabled=true; btn.textContent='Subiendo...';
-          subirPDFaDrive(_srcEl, _nom, null, _sc, _fi)
+          subirPDFaDrive(_srcEl, _nom, null, _sc, _fi, _extras)
             .then(function(){
               btn.textContent='✅ Subido';
             })
@@ -8522,7 +8523,7 @@ function _driveFolderId(proyId){
   return m?m[1]:null;
 }
 
-async function subirPDFaDrive(elementId, nombreArchivo, proyId, subCarpeta, folderIdOverride){
+async function subirPDFaDrive(elementId, nombreArchivo, proyId, subCarpeta, folderIdOverride, extras){
   const folderId=folderIdOverride||_driveFolderId(proyId);
   if(!folderId){toast('Sin carpeta Drive para este proyecto. Abre el expediente y añade el enlace de Drive.','error');return;}
   const el=(typeof elementId==='string')?document.getElementById(elementId):elementId;
@@ -8568,7 +8569,7 @@ async function subirPDFaDrive(elementId, nombreArchivo, proyId, subCarpeta, fold
   try{
     const base64=await html2pdf().set(opt).from(el).output('datauristring');
     const res=await fetch(DRIVE_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
-      body:JSON.stringify({action:'uploadFile',fileData:base64,fileName:nombreArchivo,mimeType:'application/pdf',folderId,subCarpeta:subCarpeta||null})});
+      body:JSON.stringify({action:'uploadFile',fileData:base64,fileName:nombreArchivo,mimeType:'application/pdf',folderId,subCarpeta:subCarpeta||null,tipoDoc:(extras&&extras.tipoDoc)||null,proveedor:(extras&&extras.proveedor)||null})});
     const json=await res.json().catch(()=>({}));
     if(json.ok){toast('☁️ Subido a Drive ✅');}
     else{toast('Error Drive: '+(json.error||'desconocido'),'error');}
@@ -8633,7 +8634,7 @@ async function subirAlbaranDrive(id){
   const fileName=`Albaran_${alb.num_albaran||id}_${alb.fecha||''}${_prov?'_'+_prov:''}.pdf`;
   try{
     const res=await fetch(DRIVE_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
-      body:JSON.stringify({action:'uploadFile',fileData:base64,fileName,mimeType:'application/pdf',folderId,subCarpeta:'06 Subcontratas'})});
+      body:JSON.stringify({action:'uploadFile',fileData:base64,fileName,mimeType:'application/pdf',folderId,subCarpeta:'06 Subcontratas y Proveedores',tipoDoc:'Albaranes',proveedor:alb.proveedor||null})});
     const json=await res.json().catch(()=>({}));
     if(json.ok){toast('☁️ Albarán subido a Drive ✅');}
     else{toast('Error Drive: '+(json.error||'desconocido'),'error');}
@@ -8648,7 +8649,7 @@ async function subirDocPedidoDrive(){
   const _numPed=document.getElementById('pd-num-input')?.value||'pedido';
   const _provPed=_safeNombre(ped?.proveedor||'');
   const nombre=_numPed+(_provPed?'_'+_provPed:'')+'.pdf';
-  await subirPDFaDrive('pd-doc',nombre,proyId,'06 Subcontratas');
+  await subirPDFaDrive('pd-doc',nombre,proyId,'06 Subcontratas y Proveedores',null,{tipoDoc:'Presupuestos',proveedor:ped?.proveedor||null});
 }
 
 async function subirPresupuestoDrive(){
@@ -15145,7 +15146,10 @@ function previsualizarFactura(){
   const _fn = d.num ? 'Factura_' + d.num.replace(/[^a-zA-Z0-9_-]/g,'_') + '_' + _safeNombre(d.contra||'') + '_PAU' : 'Factura';
   const _proyDrive = document.getElementById('f-proyecto')?.value || '';
   const _folderId = _proyDrive ? _driveFolderId(_proyDrive) : null;
-  const _driveOpts = _folderId ? {folderId:_folderId, subCarpeta:'08 Facturas'} : null;
+  const _esCompra = !!d.esC;
+  const _driveOpts = _folderId ? (_esCompra
+    ? {folderId:_folderId, subCarpeta:'06 Subcontratas y Proveedores', tipoDoc:'Facturas', proveedor:d.contra||null}
+    : {folderId:_folderId, subCarpeta:'08 Facturas'}) : null;
   abrirVistaPrevia('fac-preview-doc', 'Factura', false, _fn, _driveOpts);
 }
 
