@@ -3783,7 +3783,9 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="form-group" style="margin:0;min-width:130px"><label class="form-label">Estado</label>
         <select class="form-input" id="alb-estado"><option>Borrador</option><option>Entregado</option><option>Firmado</option><option>Incidencia</option></select></div>
       <div class="form-group" style="margin:0;flex:1;min-width:200px"><label class="form-label">Dirección de entrega</label><input class="form-input" id="alb-dir" placeholder="C/ Dirección obra…"></div>
-      <div class="form-group" style="margin:0;min-width:200px"><label class="form-label">Subcontrata / Proveedor</label><select class="form-input" id="alb-proveedor"><option value="">— Seleccionar —</option></select></div>
+      <div class="form-group" style="margin:0;min-width:200px"><label class="form-label">Subcontrata / Proveedor</label><select class="form-input" id="alb-proveedor" onchange="poblarAlbCompraSel()"><option value="">— Seleccionar —</option></select></div>
+      <div class="form-group" style="margin:0;width:140px"><label class="form-label">Importe (€)</label><input class="form-input" id="alb-importe" type="number" step="0.01" placeholder="vacío = informativo"></div>
+      <div class="form-group" style="margin:0;min-width:220px;flex:1"><label class="form-label">Factura de compra asociada</label><select class="form-input" id="alb-compra-id"><option value="">— Sin factura —</option></select></div>
     </div>
     <div style="padding:6px 18px;border-bottom:1px solid var(--border);flex-shrink:0">
       <label class="form-label" style="margin-bottom:4px;display:block">Observaciones</label>
@@ -3912,7 +3914,8 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div id="rent-kpis" style="display:none">
         <div class="kpi-grid">
           <div class="kpi blue"><div class="kpi-label">Presupuesto (s/IVA)</div><div class="kpi-value" id="rk-pres">—</div></div>
-          <div class="kpi red"><div class="kpi-label">Coste real total</div><div class="kpi-value" id="rk-coste">—</div></div>
+          <div class="kpi" style="background:#fff7e6;border-left:4px solid #b85c00"><div class="kpi-label" style="color:#b85c00">Coste comprometido</div><div class="kpi-value" id="rk-comprometido" style="color:#b85c00">—</div><div class="kpi-sub" id="rk-comprometido-sub" style="font-size:10px;color:var(--text-soft)">Albaranes con importe</div></div>
+          <div class="kpi red"><div class="kpi-label">Coste facturado</div><div class="kpi-value" id="rk-coste">—</div><div class="kpi-sub" style="font-size:10px;color:var(--text-soft)">Compras + Subc. + MO</div></div>
           <div class="kpi green"><div class="kpi-label">Beneficio bruto</div><div class="kpi-value" id="rk-benef">—</div></div>
           <div class="kpi amber"><div class="kpi-label">Margen real %</div><div class="kpi-value" id="rk-margen">—</div><div class="kpi-sub" style="font-size:10px;color:var(--text-soft)">Sobre coste</div></div>
         </div>
@@ -14339,7 +14342,7 @@ async function loadRentabilidad(){
     const verFilter = verActivas.length===1
       ? `version=eq.${verActivas[0]}`
       : `version=in.(${verActivas.join(',')})`;
-    const[lineas,compras,subcs,horas,facturas]=await Promise.all([sbGet('presupuesto_lineas',`?proyecto_id=eq.${proy}&${verFilter}`),sbGet('compras',`?proyecto=eq.${proy}`),sbGet('subcontratas',`?proyecto_id=eq.${proy}`),sbGet('horas',`?proyecto_id=eq.${proy}`),sbGet('facturas',`?proyecto_id=eq.${proy}`)]);
+    const[lineas,compras,subcs,horas,facturas,albaranes]=await Promise.all([sbGet('presupuesto_lineas',`?proyecto_id=eq.${proy}&${verFilter}`),sbGet('compras',`?proyecto=eq.${proy}`),sbGet('subcontratas',`?proyecto_id=eq.${proy}`),sbGet('horas',`?proyecto_id=eq.${proy}`),sbGet('facturas',`?proyecto_id=eq.${proy}`),sbGet('albaranes',`?proyecto_id=eq.${proy}`).catch(()=>[])]);
     const totalPres=lineas.filter(l=>!l.es_capitulo).reduce((s,l)=>s+(l.subtotal||0),0);
     const totalCompras=compras.reduce((s,c)=>s+(c.base_imponible||0),0);
     const totalSubcs=subcs.reduce((s,c)=>s+(c.importe||0),0);
@@ -14350,6 +14353,18 @@ async function loadRentabilidad(){
     // Actualizar etiqueta KPI con versiones activas
     const kpiPresLabel = document.querySelector('#rent-kpis .kpi.blue .kpi-label');
     if(kpiPresLabel) kpiPresLabel.textContent = `Presupuesto (${verActivas.join('+')} · s/IVA)`;
+    // Coste comprometido = importe_total de albaranes con importe (excluye informativos)
+    const albsConImporte=(albaranes||[]).filter(a=>a.importe_total!=null && a.importe_total!=='');
+    const totalComprometido=albsConImporte.reduce((s,a)=>s+(parseFloat(a.importe_total)||0),0);
+    const albsPdteFact=albsConImporte.filter(a=>!a.compra_id);
+    const totalPdteFact=albsPdteFact.reduce((s,a)=>s+(parseFloat(a.importe_total)||0),0);
+    const elComp=document.getElementById('rk-comprometido'); if(elComp) elComp.textContent=totalComprometido>0?fmt(totalComprometido):'—';
+    const elCompSub=document.getElementById('rk-comprometido-sub');
+    if(elCompSub){
+      if(totalPdteFact>0.01){ elCompSub.textContent='⚠ Pdte facturar: '+fmt(totalPdteFact); elCompSub.style.color='var(--amber)'; }
+      else if(totalComprometido>0){ elCompSub.textContent='✓ Todo facturado'; elCompSub.style.color='var(--green)'; }
+      else { elCompSub.textContent='Sin albaranes valorados'; elCompSub.style.color='var(--text-soft)'; }
+    }
     document.getElementById('rk-pres').textContent=fmt(totalPres);document.getElementById('rk-coste').textContent=fmt(totalCoste);
     document.getElementById('rk-benef').textContent=fmt(beneficio);document.getElementById('rk-benef').style.color=beneficio>=0?'var(--green)':'var(--red)';
     document.getElementById('rk-margen').textContent=fmtP(margen);document.getElementById('rk-margen').style.color=margen>=15?'var(--green)':margen>=0?'var(--amber)':'var(--red)';
@@ -23416,6 +23431,10 @@ async function _pdfAutofill(b64, tipo, onResult){
       ? `Extrae de esta factura los datos y devuelve SOLO JSON sin markdown ni texto adicional:
 {"num_factura":"","fecha":"YYYY-MM-DD","fecha_vencimiento":"YYYY-MM-DD","cliente":"nombre del cliente","concepto":"descripción breve del concepto principal","base_imponible":0.00,"iva_pct":"21%"}
 Reglas: iva_pct puede ser "21%","10%","4%" o "Exento". base_imponible es el importe sin IVA como número decimal. fecha_vencimiento es la fecha límite de pago (vacía si no aparece).`
+      : tipo==='albaran'
+      ? `Extrae los datos de este albarán de proveedor y devuelve SOLO JSON sin markdown ni texto adicional:
+{"num_albaran":"","fecha":"YYYY-MM-DD","proveedor":"nombre empresa emisora","concepto":"descripción breve de los materiales","importe_total":null}
+Reglas: fecha en formato YYYY-MM-DD. proveedor es la empresa que entrega el material. importe_total es el total del albarán sin IVA como número decimal SOLO si aparece claramente en el documento; si el albarán NO lleva importes (es informativo, ej. albarán de pruebas/control de calidad/entrega sin valoración) deja importe_total como null. NUNCA inventes ni estimes el importe.`
       : `Extrae de esta factura de proveedor todos los datos y devuelve SOLO JSON sin markdown ni texto adicional:
 {"num_factura":"","fecha":"YYYY-MM-DD","proveedor":"nombre empresa emisora","concepto":"descripción breve del concepto principal","base_imponible":0.00,"iva_pct":"21%","vencimientos":[{"fecha":"YYYY-MM-DD","importe":0.00}]}
 Reglas: iva_pct puede ser "21%","10%","4%" o "Exento". base_imponible es el importe sin IVA como número decimal. En "vencimientos" incluye los plazos de pago (máximo 4); si solo hay una fecha de vencimiento ponla con el importe total con IVA; si no hay ninguna fecha de pago devuelve array vacío.`;
@@ -23520,8 +23539,12 @@ function albHandleFile(file){
     try{
       await _pdfAutofill(b64,'albaran',ex=>{
         if(ex.fecha)document.getElementById('alb-fecha').value=ex.fecha;
-        if(ex.proveedor){const sel=document.getElementById('alb-proveedor');if(sel){const opt=Array.from(sel.options).find(o=>o.value.toLowerCase().includes(ex.proveedor.toLowerCase()));if(opt)sel.value=opt.value;}}
+        if(ex.proveedor){const sel=document.getElementById('alb-proveedor');if(sel){const opt=Array.from(sel.options).find(o=>o.value.toLowerCase().includes(ex.proveedor.toLowerCase()));if(opt){sel.value=opt.value; poblarAlbCompraSel();}}}
         if(ex.concepto&&!document.getElementById('alb-obs').value)document.getElementById('alb-obs').value=ex.concepto;
+        if(ex.importe_total!=null && ex.importe_total!==''){
+          const impEl=document.getElementById('alb-importe');
+          if(impEl && !impEl.value) impEl.value=parseFloat(ex.importe_total).toFixed(2);
+        }
       });
     }catch(err){}
   };
@@ -24488,6 +24511,13 @@ async function calcExpKPIs(proyId){
   const horProy = (HC||[]).filter(h=>h.proyecto_id===proyId);
   const costeHoras = horProy.reduce((s,h)=>s+(h.total||0), 0);
 
+  // Albaranes del proyecto → coste comprometido
+  let albsProy=[];
+  try{ albsProy=await sbGet('albaranes',`?proyecto_id=eq.${proyId}&select=importe_total,compra_id`); }catch(e){}
+  const albsImp=albsProy.filter(a=>a.importe_total!=null && a.importe_total!=='');
+  const comprometidoTotal=albsImp.reduce((s,a)=>s+(parseFloat(a.importe_total)||0),0);
+  const pdteFactTotal=albsImp.filter(a=>!a.compra_id).reduce((s,a)=>s+(parseFloat(a.importe_total)||0),0);
+
   // Subcontratas del proyecto
   const scProy = _scProy(proyId);
   const costeSubc = scProy.reduce((s,c)=>s+(c.importe||0)*(1+ivaPct(c.iva_pct)/100), 0);
@@ -24510,6 +24540,16 @@ async function calcExpKPIs(proyId){
 
   const setEl = (id,val,style) => { const el=document.getElementById(id); if(el){el.textContent=val; if(style) Object.assign(el.style,style);} };
   setEl('exp-k-costes', fmt(costeTotal));
+  // Sub-línea con coste comprometido (albaranes)
+  const kpiCost=document.getElementById('exp-k-costes');
+  if(kpiCost){
+    let subC=kpiCost.parentNode.querySelector('.kpi-comprometido-sub');
+    if(!subC){ subC=document.createElement('div'); subC.className='kpi-comprometido-sub'; subC.style.cssText='font-size:10px;margin-top:1px'; kpiCost.parentNode.appendChild(subC); }
+    if(comprometidoTotal>0){
+      if(pdteFactTotal>0.01){ subC.style.color='var(--amber)'; subC.textContent='Comprom.: '+fmt(comprometidoTotal)+' · Pdte fact: '+fmt(pdteFactTotal); }
+      else { subC.style.color='var(--green)'; subC.textContent='Comprom.: '+fmt(comprometidoTotal)+' ✓'; }
+    } else { subC.textContent=''; }
+  }
   recalcPresKPI(); // Renderiza presupuesto y margen (necesita exp-k-costes ya actualizado)
   const nFact = factProy.length;
   setEl('exp-k-fact', factTotalBI>0 ? fmt(factTotalBI) : '—');
@@ -24970,6 +25010,10 @@ async function renderExpRentabilidad(body){
   const factProy = (FC||[]).filter(f=>f.proyecto_id===pid&&(f.tipo_factura||'Venta')==='Venta');
   const scProy   = _scProy(pid);
   const horProy  = (HC||[]).filter(h=>h.proyecto_id===pid);
+  let albsProy=[]; try{ albsProy=await sbGet('albaranes',`?proyecto_id=eq.${pid}&select=importe_total,compra_id`); }catch(e){}
+  const albsImp=albsProy.filter(a=>a.importe_total!=null && a.importe_total!=='');
+  const comprometidoExp=albsImp.reduce((s,a)=>s+(parseFloat(a.importe_total)||0),0);
+  const pdteFactExp=albsImp.filter(a=>!a.compra_id).reduce((s,a)=>s+(parseFloat(a.importe_total)||0),0);
 
   // Totales presupuesto
   const caps = lineas.filter(l=>l.es_capitulo);
@@ -25046,7 +25090,13 @@ async function renderExpRentabilidad(body){
           <td style="padding:8px 12px;text-align:right;font-family:monospace;color:${ventasReales>=presTotalVenta?'var(--green)':'var(--amber)'}">${fmt(ventasReales-presTotalVenta)}</td>
         </tr>
         <tr style="border-top:1px solid #f0f0f0">
-          <td style="padding:8px 12px;font-weight:600">🛒 Costes totales (compras+subcontratas+MO)</td>
+          <td style="padding:8px 12px;font-weight:600">📦 Coste comprometido (albaranes valorados)</td>
+          <td style="padding:8px 12px;text-align:right;font-family:monospace;color:var(--navy)">—</td>
+          <td style="padding:8px 12px;text-align:right;font-family:monospace;color:#b85c00;font-weight:700">${comprometidoExp>0?fmt(comprometidoExp):'—'}</td>
+          <td style="padding:8px 12px;text-align:right;font-family:monospace;font-size:11px;color:${pdteFactExp>0.01?'var(--amber)':'var(--green)'}">${comprometidoExp>0?(pdteFactExp>0.01?'Pdte fact: '+fmt(pdteFactExp):'✓ Todo facturado'):'—'}</td>
+        </tr>
+        <tr style="border-top:1px solid #f0f0f0">
+          <td style="padding:8px 12px;font-weight:600">🛒 Coste facturado (compras+subcontratas+MO)</td>
           <td style="padding:8px 12px;text-align:right;font-family:monospace;color:var(--navy)">—</td>
           <td style="padding:8px 12px;text-align:right;font-family:monospace;color:var(--amber);font-weight:700">${fmt(costesReales)}</td>
           <td style="padding:8px 12px;text-align:right">—</td>
@@ -27743,13 +27793,19 @@ async function loadAlbaranes() {
   tbody.innerHTML = albs.map(a => {
     const estadoColor = a.estado === 'Firmado' ? 'var(--green)' : a.estado === 'Entregado' ? 'var(--amber)' : 'var(--text-soft)';
     const lineas = typeof a.lineas === 'string' ? JSON.parse(a.lineas || '[]') : (a.lineas || []);
+    const tieneImporte = a.importe_total!=null && a.importe_total!=='';
+    const facBadge = a.compra_id
+      ? '<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:#e8f5ee;color:var(--green)">✓ Facturado</span>'
+      : tieneImporte
+        ? '<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:#fff3e0;color:#b85c00">⏳ Pendiente factura</span>'
+        : '<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:#eceff1;color:#607d8b">ⓘ Informativo</span>';
     return `<tr>
       <td class="td-mono" style="font-weight:700">${a.num_albaran || '—'}</td>
       <td>${fmtD(a.fecha)}</td>
       <td style="font-size:11px">${a.proyecto_id} · ${(PC||[]).find(p=>p.proyecto_id===a.proyecto_id)?.nombre||''}</td>
       <td style="font-size:11px;color:var(--text-soft)">${a.direccion_entrega || '—'}</td>
       <td style="text-align:center">${lineas.length} ítem${lineas.length!==1?'s':''}</td>
-      <td><span style="font-size:11px;font-weight:700;color:${estadoColor}">${a.estado||'Borrador'}</span></td>
+      <td><div style="display:flex;flex-direction:column;gap:3px"><span style="font-size:11px;font-weight:700;color:${estadoColor}">${a.estado||'Borrador'}</span>${tieneImporte?`<span class="td-mono" style="font-size:11px;color:var(--navy);font-weight:700">${fmt(a.importe_total)}</span>`:''}${facBadge}</div></td>
       <td style="white-space:nowrap">
         ${_badgeEnviado('albaran',a.id)}
         ${a.adjunto_pdf?`<button class="btn btn-ghost btn-sm" onclick="albVerPDFById('${a.id}')" title="Ver PDF adjunto" style="color:var(--navy)">📄</button>`:''}
@@ -27774,6 +27830,9 @@ async function nuevoAlbaran() {
   document.getElementById('alb-dir').value = p.direccion_obra || '';
   document.getElementById('alb-obs').value = '';
   _poblarAlbProveedor('');
+  document.getElementById('alb-importe').value = '';
+  window._albCompraSelected = '';
+  await poblarAlbCompraSel();
   document.getElementById('alb-lineas-tbody').innerHTML = '';
   addAlbLinea();
   if(typeof albResetPDF==='function')albResetPDF();
@@ -27792,6 +27851,9 @@ async function editarAlbaran(id) {
   document.getElementById('alb-dir').value = alb.direccion_entrega || '';
   document.getElementById('alb-obs').value = alb.observaciones || '';
   _poblarAlbProveedor(alb.proveedor||'');
+  document.getElementById('alb-importe').value = alb.importe_total!=null ? alb.importe_total : '';
+  window._albCompraSelected = alb.compra_id || '';
+  await poblarAlbCompraSel();
   const lineas = typeof alb.lineas === 'string' ? JSON.parse(alb.lineas || '[]') : (alb.lineas || []);
   const tbody = document.getElementById('alb-lineas-tbody');
   tbody.innerHTML = '';
@@ -27812,6 +27874,37 @@ async function editarAlbaran(id) {
 }
 
 let _albLineaCounter = 0;
+// Pobla el desplegable de compras del proyecto disponibles para enlazar al albarán.
+// Filtra por proveedor seleccionado (si hay) y mantiene la compra ya enlazada al albarán en edición.
+async function poblarAlbCompraSel(){
+  const sel=document.getElementById('alb-compra-id'); if(!sel) return;
+  const proy=document.getElementById('alb-proyecto-sel')?.value;
+  const provNom=(document.getElementById('alb-proveedor')?.value||'').trim().toLowerCase();
+  const currentVal=sel.value||window._albCompraSelected||'';
+  if(!proy){ sel.innerHTML='<option value="">— Sin factura —</option>'; return; }
+  let compras=[];
+  try{ compras=await sbGet('compras',`?proyecto=eq.${proy}&order=fecha.desc`); }catch(e){ try{ compras=await sbGet('compras',`?proyecto_id=eq.${proy}&order=fecha.desc`);}catch{} }
+  // Compras ya enlazadas a otro albarán (excepto la del albarán que estamos editando)
+  let enlazadas=new Set();
+  try{
+    const albs=await sbGet('albaranes',`?proyecto_id=eq.${proy}&compra_id=not.is.null&select=id,compra_id`);
+    albs.forEach(a=>{ if(a.compra_id && a.id!==_albEditing) enlazadas.add(a.compra_id); });
+  }catch(e){}
+  const opciones=compras
+    .filter(c=>!enlazadas.has(c.id))
+    .filter(c=>{
+      if(!provNom) return true;
+      const cp=(c.proveedor_id||'').toLowerCase();
+      return cp.includes(provNom)||provNom.includes(cp.slice(0,8));
+    })
+    .map(c=>{
+      const lbl=`${fmtD(c.fecha)} · ${c.concepto||c.proveedor_id||'—'} · ${fmt(c.base_imponible||0)}`;
+      return `<option value="${c.id}">${lbl}</option>`;
+    });
+  sel.innerHTML='<option value="">— Sin factura —</option>'+opciones.join('');
+  if(currentVal){ sel.value=currentVal; }
+}
+
 function addAlbLinea(data) {
   const id = ++_albLineaCounter;
   const row = document.createElement('tr');
@@ -27861,6 +27954,7 @@ async function guardarAlbaran() {
   if (!proy) return;
   const lineas = getAlbLineas();
   if (!lineas.length) { toast('Añade al menos un artículo', 'error'); return; }
+  const _impVal = document.getElementById('alb-importe')?.value;
   const payload = {
     proyecto_id: proy,
     fecha: document.getElementById('alb-fecha').value,
@@ -27868,6 +27962,8 @@ async function guardarAlbaran() {
     direccion_entrega: document.getElementById('alb-dir').value,
     observaciones: document.getElementById('alb-obs').value,
     proveedor: document.getElementById('alb-proveedor')?.value?.trim() || null,
+    importe_total: _impVal!=='' && _impVal!=null ? parseFloat(_impVal) : null,
+    compra_id: document.getElementById('alb-compra-id')?.value || null,
     lineas: JSON.stringify(lineas),
     adjunto_pdf: document.getElementById('alb-pdf-b64')?.value || null,
     adjunto_nombre: document.getElementById('alb-pdf-nombre')?.value || null
@@ -28106,6 +28202,7 @@ async function guardarAlbaranYPDF() {
   if (!proy) return;
   const lineas = getAlbLineas();
   if (!lineas.length) { toast('Añade al menos un artículo', 'error'); return; }
+  const _impVal = document.getElementById('alb-importe')?.value;
   const payload = {
     proyecto_id: proy,
     fecha: document.getElementById('alb-fecha').value,
@@ -28113,6 +28210,8 @@ async function guardarAlbaranYPDF() {
     direccion_entrega: document.getElementById('alb-dir').value,
     observaciones: document.getElementById('alb-obs').value,
     proveedor: document.getElementById('alb-proveedor')?.value?.trim() || null,
+    importe_total: _impVal!=='' && _impVal!=null ? parseFloat(_impVal) : null,
+    compra_id: document.getElementById('alb-compra-id')?.value || null,
     lineas: JSON.stringify(lineas),
     adjunto_pdf: document.getElementById('alb-pdf-b64')?.value || null,
     adjunto_nombre: document.getElementById('alb-pdf-nombre')?.value || null
