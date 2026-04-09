@@ -8867,24 +8867,20 @@ async function generarDossierCierre(proyId){
   // ─── Recopilar datos ───
   const cli = (CC||[]).find(c=>String(c.id)===String(p.cliente_id)||c.cliente_id===p.cliente_id) || {};
   const facturas = (FC||[]).filter(f=>f.proyecto_id===proyId && (f.tipo_factura||'Venta')==='Venta');
-  // Fetch directo desde Supabase para asegurar datos frescos (los globales CoC/HC/ScC
-  // pueden estar vacíos si el usuario no ha abierto esos módulos aún)
+  // Asegurar que los globales estén cargados (replicamos la misma lógica del expediente)
+  if(typeof CoC==='undefined' || !CoC || !CoC.length){ try{ CoC = await sbGet('compras','?order=fecha.desc'); }catch(e){ if(typeof CoC==='undefined') CoC=[]; } }
+  if(typeof HC==='undefined'  || !HC  || !HC.length ){ try{ HC  = await sbGet('horas','?order=fecha.desc');   }catch(e){ if(typeof HC==='undefined') HC=[]; } }
+  if(typeof ScC==='undefined' || !ScC || !ScC.length){ try{ ScC = await sbGet('subcontratas','?order=fecha.desc'); }catch(e){ if(typeof ScC==='undefined') ScC=[]; } }
+  if(typeof EAC==='undefined' || !EAC){ try{ EAC = await sbGet('entregas_cuenta','?order=fecha.desc'); }catch(e){ EAC=[]; } }
   const uuidProy = p.id;
-  let compras=[],subcs=[],horas=[],certs=[],presLineas=[],entregas=[];
-  // Compras: el campo puede ser 'proyecto' (string) o 'proyecto_id' (uuid o string). Hacemos fetches separados y deduplicamos.
-  const _merge=(arr,r)=>{ const ids=new Set(arr.map(x=>x.id)); r.forEach(x=>{ if(!ids.has(x.id)){ arr.push(x); ids.add(x.id); }}); return arr; };
-  try{ const a=await sbGet('compras',`?proyecto=eq.${proyId}&order=fecha.desc`); compras=_merge(compras,a); }catch(e){}
-  try{ const a=await sbGet('compras',`?proyecto_id=eq.${proyId}&order=fecha.desc`); compras=_merge(compras,a); }catch(e){}
-  if(uuidProy){ try{ const a=await sbGet('compras',`?proyecto_id=eq.${uuidProy}&order=fecha.desc`); compras=_merge(compras,a); }catch(e){} }
-  // Subcontratas: proyecto_id puede ser string o uuid
-  try{ const a=await sbGet('subcontratas',`?proyecto_id=eq.${proyId}&order=fecha.desc`); subcs=_merge(subcs,a); }catch(e){}
-  if(uuidProy){ try{ const a=await sbGet('subcontratas',`?proyecto_id=eq.${uuidProy}&order=fecha.desc`); subcs=_merge(subcs,a); }catch(e){} }
-  // Horas: el campo proyecto_id es el UUID del proyecto
-  if(uuidProy){ try{ horas = await sbGet('horas',`?proyecto_id=eq.${uuidProy}&order=fecha.desc`); }catch(e){ horas=[]; } }
-  if(!horas.length){ try{ const a=await sbGet('horas',`?proyecto_id=eq.${proyId}&order=fecha.desc`); horas=_merge(horas,a); }catch(e){} }
+  // Filtros IDÉNTICOS a los del expediente (renderExpResumen)
+  const compras = (CoC||[]).filter(c=>(c.proyecto||c.proyecto_id)===proyId);
+  const subcs   = (typeof _scProy==='function') ? _scProy(proyId) : (ScC||[]).filter(s=>s.proyecto_id===proyId);
+  const horas   = (HC||[]).filter(h=>h.proyecto_id===proyId);
+  const entregas= (EAC||[]).filter(e=>e.proyecto_id===proyId);
+  let certs=[],presLineas=[];
   try{ certs   = await sbGet('certificaciones',`?proyecto_id=eq.${proyId}&order=fecha.asc`); }catch(e){ certs=[]; }
   try{ presLineas = await sbGet('presupuesto_lineas',`?proyecto_id=eq.${proyId}&es_capitulo=eq.false`); }catch(e){ presLineas=[]; }
-  try{ entregas   = await sbGet('entregas_cuenta',`?proyecto_id=eq.${proyId}&order=fecha.desc`); }catch(e){ entregas=[]; }
   const totalHoras = horas.reduce((s,h)=>s+(h.horas||0),0);
   // Coste mano de obra: intentar tarifa/hora si existe en el registro o en config
   let tarifaHora = 0;
@@ -8905,7 +8901,7 @@ async function generarDossierCierre(proyId){
   const facturado = facturas.reduce((s,f)=>s+((f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100)),0);
   const costeCompras = compras.reduce((s,c)=>s+((c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100)),0);
   const costeSubc = subcs.reduce((s,x)=>s+((x.importe||0)*(1+ivaPct(x.iva_pct)/100)),0);
-  const costeHoras = horas.reduce((s,h)=>s+(h.total || ((h.horas||0)*(h.coste_hora||tarifaHora||0))),0);
+  const costeHoras = horas.reduce((s,h)=>s+((h.total||0) || ((h.horas||0)*(h.coste_hora||tarifaHora||0))),0);
   const costeReal = costeCompras + costeSubc + costeHoras;
   // Cobros sin factura (notas en efectivo / entregas): sumar entregas_cuenta del proyecto
   const cobrosSinFactura = entregas.reduce((s,e)=>s+(parseFloat(e.importe)||0),0);
