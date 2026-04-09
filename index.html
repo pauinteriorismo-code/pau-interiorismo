@@ -8687,7 +8687,7 @@ async function saveProyecto(){
   const nombre=document.getElementById('p-nombre').value.trim();if(!nombre){toast('El nombre es obligatorio','error');return;}
   const id=document.getElementById('p-id').value;
   const d={cliente_id:document.getElementById('p-cliente').value||null,nombre,tipo:document.getElementById('p-tipo').value,estado:document.getElementById('p-estado').value,responsable:document.getElementById('p-resp').value,fecha_inicio:document.getElementById('p-fecha').value||null,direccion_obra:document.getElementById('p-dir').value,notas:document.getElementById('p-notas').value,carpeta_drive:document.getElementById('p-drive').value||null,tipo_unidades:document.getElementById('p-tipo-unidades').value.trim()||null,modo_certificacion:document.getElementById('p-modo-cert')?.value||'simple'};
-  try{if(id){await sbPatch('proyectos',id,d);toast('Proyecto actualizado ✅');}else{d.proyecto_id=genId('PRY',PC,'proyecto_id');await sbPost('proyectos',d);toast('Proyecto creado ✅');crearCarpetasDrive(d.proyecto_id,nombre);}closeModal('m-proyecto');document.getElementById('p-id').value='';loadProyectos();populateSelects();}catch(e){toast('Error: '+e.message,'error');}
+  try{if(id){await sbPatch('proyectos',id,d);toast('Proyecto actualizado ✅');}else{d.proyecto_id=genId('PRY',PC,'proyecto_id');await sbPost('proyectos',d);toast('Proyecto creado ✅');crearCarpetasDrive(d.proyecto_id,nombre);crearTareasAutoProyecto(d.proyecto_id,d.tipo,d.fecha_inicio);}closeModal('m-proyecto');document.getElementById('p-id').value='';loadProyectos();populateSelects();}catch(e){toast('Error: '+e.message,'error');}
 }
 
 const DRIVE_SCRIPT_URL='https://script.google.com/macros/s/AKfycbxsSebGjLyu0VecIKtBMk7adJ_8ki4j_y8Xb62IDVgPWV7DY5ZkX1kdSM88bKPU4nln4g/exec';
@@ -8729,6 +8729,70 @@ async function crearCarpetasDrive(proyId, nombre){
     }
   }catch(e){
     console.warn('Drive:',e);
+  }
+}
+
+// ─── Checklist automático de tareas al crear proyecto ───
+const TAREAS_AUTO_RESPONSABLE = 'Jose Asins Primo';
+const TAREAS_AUTO_OBRA = [
+  { dias: 0,   desc: 'Visita previa a obra',          tipo: 'Visita obra' },
+  { dias: 3,   desc: 'Medición y toma de datos',      tipo: 'Visita obra' },
+  { dias: 7,   desc: 'Elaborar presupuesto',          tipo: 'Otro' },
+  { dias: 10,  desc: 'Enviar presupuesto al cliente', tipo: 'Llamada' },
+  { dias: 20,  desc: 'Firma de contrato',             tipo: 'Reunión' },
+  { dias: 30,  desc: 'Inicio de obra',                tipo: 'Visita obra' },
+  { dias: 60,  desc: 'Primera certificación',         tipo: 'Pago' },
+  { dias: 90,  desc: 'Entrega provisional',           tipo: 'Entrega' },
+  { dias: 120, desc: 'Entrega definitiva y cierre',   tipo: 'Entrega' }
+];
+const TAREAS_AUTO_INTERIORISMO = [
+  { dias: 0,  desc: 'Visita y toma de medidas',      tipo: 'Visita obra' },
+  { dias: 5,  desc: 'Elaborar presupuesto',          tipo: 'Otro' },
+  { dias: 7,  desc: 'Enviar presupuesto al cliente', tipo: 'Llamada' },
+  { dias: 15, desc: 'Selección de materiales',       tipo: 'Reunión' },
+  { dias: 20, desc: 'Firma de contrato',             tipo: 'Reunión' },
+  { dias: 25, desc: 'Realizar pedidos a proveedor',  tipo: 'Otro' },
+  { dias: 60, desc: 'Entrega e instalación',         tipo: 'Entrega' },
+  { dias: 75, desc: 'Entrega final al cliente',      tipo: 'Entrega' }
+];
+function _plantillaTareasPorTipo(tipo){
+  const t = (tipo||'').toLowerCase();
+  if(t.includes('obra nueva') || t.includes('rehabilitación') || t.includes('rehabilitacion') || t.includes('reforma')) return TAREAS_AUTO_OBRA;
+  if(t.includes('interiorismo') || t.includes('cocina') || t.includes('baño') || t.includes('bano') || t.includes('mobiliario')) return TAREAS_AUTO_INTERIORISMO;
+  return null;
+}
+async function crearTareasAutoProyecto(proyectoId, tipo, fechaInicio){
+  const plantilla = _plantillaTareasPorTipo(tipo);
+  if(!plantilla){ return; } // tipo sin plantilla → no se crea nada
+  // Fecha base: fecha_inicio del proyecto, o hoy si no hay
+  const baseStr = fechaInicio || new Date().toISOString().split('T')[0];
+  const base = new Date(baseStr+'T00:00:00');
+  if(isNaN(base.getTime())){ console.warn('Fecha inicio inválida para tareas auto'); return; }
+  let creadas = 0;
+  for(const t of plantilla){
+    const f = new Date(base);
+    f.setDate(f.getDate() + t.dias);
+    const fecha = f.toISOString().split('T')[0];
+    const payload = {
+      descripcion: t.desc,
+      fecha,
+      hora: null,
+      tipo: t.tipo,
+      prioridad: 'normal',
+      proyecto_id: proyectoId,
+      notas: `[AUTO|${TAREAS_AUTO_RESPONSABLE}] Tarea generada automáticamente del checklist de proyecto`,
+      notificacion: true,
+      estado: 'Pendiente'
+    };
+    try{
+      await sbPost('agenda', payload);
+      creadas++;
+    }catch(e){
+      console.warn('Error creando tarea auto "'+t.desc+'":', e.message);
+    }
+  }
+  if(creadas > 0){
+    setTimeout(()=>toast(`📋 Se han creado ${creadas} tareas automáticas en la Agenda`), 1800);
   }
 }
 
@@ -19031,11 +19095,19 @@ function renderAgenda(){
                         esHoy?'<span class="badge b-amber">📅 Hoy</span>':
                         '<span class="badge b-gray">Pendiente</span>';
     const desc = a.descripcion||'—';
-    const notas = a.notas||'';
+    const notasRaw = a.notas||'';
+    // Detectar tareas auto-generadas y limpiar el marcador [AUTO|responsable]
+    const autoMatch = notasRaw.match(/^\[AUTO(?:\|([^\]]+))?\]\s*/);
+    const esAuto = !!autoMatch;
+    const respAuto = autoMatch ? (autoMatch[1]||'') : '';
+    const notas = esAuto ? notasRaw.replace(/^\[AUTO(?:\|[^\]]+)?\]\s*/, '') : notasRaw;
+    const autoBadge = esAuto
+      ? `<span class="badge" style="background:#e3f2fd;color:#0d47a1;font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px;margin-left:6px;border:1px solid #1565c0" title="${respAuto?'Asignado a '+respAuto:'Tarea generada automáticamente'}">🤖 AUTO</span>`
+      : '';
     const search = ((a.descripcion||'')+(a.tipo||'')+(a.proyecto_id||'')).toLowerCase().replace(/"/g,'');
     return `<tr style="${rowStyle}" data-search="${search}">
       <td style="font-size:18px;text-align:center">${AG_TIPOS[a.tipo]||'📋'}</td>
-      <td><strong>${desc}</strong>${notas?`<div style="font-size:11px;color:var(--text-soft)">${notas}</div>`:''}</td>
+      <td><strong>${desc}</strong>${autoBadge}${notas?`<div style="font-size:11px;color:var(--text-soft)">${notas}</div>`:''}</td>
       <td class="td-mono">${fmtD(a.fecha)}</td>
       <td class="td-mono" style="font-weight:${a.hora?'700':'400'};color:${a.hora?'var(--navy)':'var(--text-soft)'}">${a.hora||'—'}</td>
       <td>${a.tipo||'—'}</td>
