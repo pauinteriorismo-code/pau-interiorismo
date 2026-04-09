@@ -3755,6 +3755,12 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
   <div class="search-bar" style="gap:8px;flex-wrap:wrap;align-items:center">
     <select class="form-input" style="width:190px;flex-shrink:0" id="filter-cliente-albaranes" onchange="cascadaClienteProyecto('albaranes')"><option value="">👤 Cliente…</option></select>
     <select class="form-input" style="width:240px" id="alb-proyecto-sel" onchange="loadAlbaranes()"><option value="">📁 Seleccionar proyecto…</option></select>
+    <select class="form-input" style="width:180px" id="alb-filtro-fac" onchange="filtrarAlbaranesFac()">
+      <option value="">Todos los albaranes</option>
+      <option value="pendiente">⏳ Pendiente factura</option>
+      <option value="facturado">✅ Facturados</option>
+      <option value="informativo">ⓘ Informativos</option>
+    </select>
     <button class="btn btn-ghost btn-sm" onclick="exportarExcel('albaranes')" style="font-size:11px">📊 Excel</button>
     <button class="btn btn-primary" id="alb-btn-nuevo" onclick="nuevoAlbaran()" disabled>＋ Nuevo albarán</button>
   </div>
@@ -5129,9 +5135,9 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
   <div class="modal-body"><input type="hidden" id="co-id">
     <div class="form-grid">
       <div class="form-group"><label class="form-label">Fecha</label><input class="form-input" id="co-fecha" type="date"></div>
-      <div class="form-group"><label class="form-label">Proyecto</label><select class="form-input" id="co-proyecto" onchange="onChangeProyectoGenerico('co')"><option value="">Seleccionar…</option><option value="PRY-001">PRY-001 · Mobiliario de cocina</option><option value="PRY-002">PRY-002 · Rehabilitación lateral fachada</option><option value="PRY-003">PRY-003 · Pavimento/revestimiento vivienda.</option><option value="PRY-004">PRY-004 · Rehabilitación estudio</option><option value="PRY-005">PRY-005 · Trabajos en terraza</option></select></div>
+      <div class="form-group"><label class="form-label">Proyecto</label><select class="form-input" id="co-proyecto" onchange="onChangeProyectoGenerico('co');poblarAlbsVinculados(document.getElementById('co-id')?.value||null)"><option value="">Seleccionar…</option><option value="PRY-001">PRY-001 · Mobiliario de cocina</option><option value="PRY-002">PRY-002 · Rehabilitación lateral fachada</option><option value="PRY-003">PRY-003 · Pavimento/revestimiento vivienda.</option><option value="PRY-004">PRY-004 · Rehabilitación estudio</option><option value="PRY-005">PRY-005 · Trabajos en terraza</option></select></div>
       <div class="form-group"><label class="form-label">Proveedor</label>
-  <select class="form-input" id="co-prov-sel" onchange="document.getElementById('co-prov-id').value=this.value">
+  <select class="form-input" id="co-prov-sel" onchange="document.getElementById('co-prov-id').value=this.value;poblarAlbsVinculados(document.getElementById('co-id')?.value||null)">
     <option value="">— Seleccionar proveedor —</option>
   </select>
   <input type="hidden" id="co-prov-id">
@@ -5158,6 +5164,12 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <option value="obra" selected>🏗 Obra</option>
           <option value="interiorismo">🛋 Interiorismo</option>
         </select>
+      </div>
+      <div class="form-group fg-full">
+        <label class="form-label">📦 Albaranes vinculados <span style="font-size:10px;font-weight:400;color:var(--text-soft)">(del mismo proveedor y proyecto)</span></label>
+        <div id="co-albs-vinculados" style="border:1px solid var(--border);border-radius:8px;padding:8px 10px;background:var(--bg-card);max-height:160px;overflow-y:auto;font-size:12px">
+          <div style="color:var(--text-soft);font-size:11px;text-align:center;padding:6px">Selecciona proyecto y proveedor para ver albaranes pendientes</div>
+        </div>
       </div>
       <div class="form-group fg-full">
         <label class="form-label">📎 PDF del proveedor</label>
@@ -12908,9 +12920,83 @@ async function loadCompras(){
   filtrarModuloPorProyecto('compras');
   aplicarFiltroPartida('compras');
 }
+// ─── Conciliación albaranes ↔ compras ───
+// Pobla el listado de albaranes vinculables al modal de compra.
+// `compraIdActual` es el id de la compra si estamos editando (para mantener marcadas las ya enlazadas).
+async function poblarAlbsVinculados(compraIdActual){
+  const cont=document.getElementById('co-albs-vinculados'); if(!cont) return;
+  const proy=document.getElementById('co-proyecto')?.value;
+  const provSel=document.getElementById('co-prov-sel');
+  const provNom=provSel && provSel.selectedIndex>=0 ? (provSel.options[provSel.selectedIndex].text.split(' · ')[0]||'').trim().toLowerCase() : '';
+  if(!proy){
+    cont.innerHTML='<div style="color:var(--text-soft);font-size:11px;text-align:center;padding:6px">Selecciona proyecto y proveedor</div>';
+    return;
+  }
+  cont.innerHTML='<div style="color:var(--text-soft);font-size:11px;text-align:center;padding:6px">Cargando albaranes…</div>';
+  let albs=[];
+  try{ albs=await sbGet('albaranes',`?proyecto_id=eq.${proy}&order=fecha.desc`); }catch(e){ cont.innerHTML='<div style="color:var(--red);font-size:11px;padding:6px">Error: '+e.message+'</div>'; return; }
+  // Filtrado: del mismo proveedor (si hay) y pendientes O ya enlazados a esta compra
+  const candidatos=albs.filter(a=>{
+    const enlazadoAEsta = compraIdActual && a.compra_id===compraIdActual;
+    const pendiente = !a.compra_id;
+    if(!enlazadoAEsta && !pendiente) return false;
+    if(provNom){
+      const ap=(a.proveedor||'').toLowerCase();
+      if(ap && !ap.includes(provNom) && !provNom.includes(ap.slice(0,8))) return false;
+    }
+    return true;
+  });
+  if(!candidatos.length){
+    cont.innerHTML='<div style="color:var(--text-soft);font-size:11px;text-align:center;padding:6px">No hay albaranes pendientes para este proveedor/proyecto</div>';
+    return;
+  }
+  cont.innerHTML=candidatos.map(a=>{
+    const checked = (compraIdActual && a.compra_id===compraIdActual) ? 'checked' : '';
+    const importe = (a.importe_total!=null && a.importe_total!=='') ? fmt(a.importe_total) : '<span style="color:var(--text-soft)">sin importe</span>';
+    return `<label style="display:flex;align-items:center;gap:8px;padding:5px 4px;border-bottom:1px solid #f0f0f0;cursor:pointer">
+      <input type="checkbox" class="co-alb-vinc" data-alb="${a.id}" data-importe="${a.importe_total||0}" ${checked} onchange="_actualizarSumaAlbs()">
+      <span class="td-mono" style="font-weight:700;min-width:120px">${a.num_albaran||'—'}</span>
+      <span style="color:var(--text-soft);min-width:80px">${fmtD(a.fecha)}</span>
+      <span style="flex:1;font-size:11px">${a.proveedor||'—'}</span>
+      <span class="td-mono" style="font-weight:600">${importe}</span>
+    </label>`;
+  }).join('') + `<div id="co-albs-suma" style="padding:6px 4px;font-size:11px;color:var(--text-soft);text-align:right;border-top:1px solid var(--border);margin-top:4px"></div>`;
+  _actualizarSumaAlbs();
+}
+
+function _actualizarSumaAlbs(){
+  const checks=document.querySelectorAll('#co-albs-vinculados .co-alb-vinc:checked');
+  let suma=0; let n=0;
+  checks.forEach(c=>{ const v=parseFloat(c.getAttribute('data-importe'))||0; suma+=v; if(v>0)n++; });
+  const sumDiv=document.getElementById('co-albs-suma');
+  if(sumDiv) sumDiv.textContent = checks.length>0 ? `${checks.length} seleccionado${checks.length>1?'s':''} · suma: ${fmt(suma)}` : '';
+}
+
+function _albsSeleccionadosCompra(){
+  return Array.from(document.querySelectorAll('#co-albs-vinculados .co-alb-vinc:checked')).map(c=>({
+    id: c.getAttribute('data-alb'),
+    importe: parseFloat(c.getAttribute('data-importe'))||0
+  }));
+}
+
 async function saveCompra(){
   const id=document.getElementById('co-id')?.value;
   const pdfB64=document.getElementById('co-pdf-b64')?.value||null;
+  // ─── Conciliación: validar diferencia importe albaranes vs factura ───
+  const albsSel = _albsSeleccionadosCompra();
+  const baseImp = parseFloat(document.getElementById('co-base').value)||0;
+  if(albsSel.length > 0 && baseImp > 0){
+    const sumaAlbs = albsSel.reduce((s,a)=>s+a.importe, 0);
+    if(sumaAlbs > 0){
+      const diff = Math.abs(sumaAlbs - baseImp);
+      const diffPct = (diff / baseImp) * 100;
+      if(diffPct > 2){
+        const sign = sumaAlbs > baseImp ? 'mayor' : 'menor';
+        const ok = confirm(`⚠ El importe de la factura (${fmt(baseImp)}) difiere de la suma de los albaranes seleccionados (${fmt(sumaAlbs)}) en ${fmt(diff)} (${sign} en un ${diffPct.toFixed(1)}%).\n\n¿Quieres continuar y guardar igualmente?`);
+        if(!ok) return;
+      }
+    }
+  }
   const estadoVal=document.getElementById('co-estado').value;
   const proyTexto=document.getElementById('co-proyecto').value||null; // "PRY-004"
   const proyObj=proyTexto?(PC||[]).find(p=>p.proyecto_id===proyTexto):null;
@@ -12966,6 +13052,30 @@ async function saveCompra(){
         subirPDFb64aDrive(pdfB64,_fname,proyTexto,_subCarpetaDestino,{tipoDoc:_tipoDoc,proveedor:_provNom||'Sin proveedor'})
           .then(j=>{ if(j&&j.ok&&!j.duplicate) toast('☁️ '+_tipoDoc+' subido a Drive ✅'); else if(j&&j.duplicate) toast('☁️ Documento ya existía en Drive (no duplicado)'); });
       }
+    }
+    // ─── Conciliar albaranes vinculados con esta compra ───
+    if(savedId){
+      try{
+        // Albaranes que ya estaban enlazados a esta compra antes de este guardado
+        const previos = id ? await sbGet('albaranes',`?compra_id=eq.${savedId}&select=id`).catch(()=>[]) : [];
+        const previosIds = new Set(previos.map(p=>p.id));
+        const seleccIds = new Set(albsSel.map(a=>a.id));
+        // Enlazar los nuevos seleccionados (los que no estaban ya)
+        for(const a of albsSel){
+          if(!previosIds.has(a.id)){
+            try{ await sbPatch('albaranes', a.id, { compra_id: savedId }); }
+            catch(eL){ console.warn('Error enlazando albarán:',eL.message); }
+          }
+        }
+        // Desenlazar los que ya no están seleccionados
+        for(const pid of previosIds){
+          if(!seleccIds.has(pid)){
+            try{ await sbPatch('albaranes', pid, { compra_id: null }); }
+            catch(eU){ console.warn('Error desenlazando albarán:',eU.message); }
+          }
+        }
+        if(albsSel.length>0) toast('🔗 '+albsSel.length+' albarán(es) vinculado(s) a la compra');
+      }catch(eC){ console.warn('Conciliación albaranes:',eC.message); }
     }
     toast(id?'Compra actualizada ✅':'Compra registrada ✅');
     document.getElementById('co-id').value='';
@@ -13053,6 +13163,8 @@ async function editCompra(id) {
   const coProvHid = document.getElementById('co-prov-id');
   if(coProvHid) coProvHid.value = c.proveedor_id||'';
   _initProvSelect(null,'co-prov-sel','co-prov-id');
+  // Cargar albaranes vinculados (mantiene marcados los ya enlazados a esta compra)
+  poblarAlbsVinculados(c.id);
   document.getElementById('co-concepto').value  = c.concepto || '';
   document.getElementById('co-base').value      = c.base_imponible || 0;
   document.getElementById('co-iva').value       = c.iva_pct || '21%';
@@ -25015,12 +25127,31 @@ async function calcExpKPIs(proyId){
   const horProy = (HC||[]).filter(h=>h.proyecto_id===proyId);
   const costeHoras = horProy.reduce((s,h)=>s+(h.total||0), 0);
 
-  // Albaranes del proyecto → coste comprometido
+  // Albaranes del proyecto → coste comprometido + pendientes de factura
   let albsProy=[];
   try{ albsProy=await sbGet('albaranes',`?proyecto_id=eq.${proyId}&select=importe_total,compra_id`); }catch(e){}
   const albsImp=albsProy.filter(a=>a.importe_total!=null && a.importe_total!=='');
   const comprometidoTotal=albsImp.reduce((s,a)=>s+(parseFloat(a.importe_total)||0),0);
   const pdteFactTotal=albsImp.filter(a=>!a.compra_id).reduce((s,a)=>s+(parseFloat(a.importe_total)||0),0);
+  const albsPdteFactCount=albsImp.filter(a=>!a.compra_id).length;
+  // Banner de albaranes pendientes de factura en la ficha
+  setTimeout(()=>{
+    let pdteEl=document.getElementById('exp-banner-albs-pdte');
+    if(!pdteEl){
+      pdteEl=document.createElement('div');
+      pdteEl.id='exp-banner-albs-pdte';
+      pdteEl.className='no-print';
+      pdteEl.style.cssText='display:none;margin:0 18px 8px 18px;padding:10px 14px;border-radius:8px;font-size:12px;background:#fff3e0;border:1px solid #b85c00;color:#7a3f00;font-weight:600';
+      const kpiBox=document.getElementById('exp-kpis');
+      if(kpiBox && kpiBox.parentNode) kpiBox.parentNode.insertBefore(pdteEl, kpiBox.nextSibling);
+    }
+    if(albsPdteFactCount>0){
+      pdteEl.style.display='block';
+      pdteEl.innerHTML=`📦 ${albsPdteFactCount} albarán${albsPdteFactCount>1?'es':''} pendiente${albsPdteFactCount>1?'s':''} de facturar (${fmt(pdteFactTotal)}) — <a href="javascript:void(0)" onclick="closeModal('m-expediente');navTo('albaranes');setTimeout(()=>{const s=document.getElementById('alb-proyecto-sel');if(s){s.value='${proyId}';loadAlbaranes();}const f=document.getElementById('alb-filtro-fac');if(f){f.value='pendiente';filtrarAlbaranesFac();}},300)" style="color:#7a3f00;text-decoration:underline">ver listado</a>`;
+    } else {
+      pdteEl.style.display='none';
+    }
+  }, 50);
 
   // Subcontratas del proyecto
   const scProy = _scProy(proyId);
@@ -28296,6 +28427,20 @@ function _poblarAlbProveedor(valorActual){
 
 let _albEditing = null;
 
+function filtrarAlbaranesFac(){
+  const v=document.getElementById('alb-filtro-fac')?.value||'';
+  document.querySelectorAll('#alb-tbody tr[data-fac]').forEach(tr=>{
+    if(!v) tr.style.display='';
+    else tr.style.display = tr.getAttribute('data-fac')===v ? '' : 'none';
+  });
+}
+
+function abrirCompraDesdeAlbaran(compraId){
+  if(!compraId) return;
+  navTo('compras');
+  setTimeout(()=>{ if(typeof editCompra==='function') editCompra(compraId); }, 250);
+}
+
 async function loadAlbaranes() {
   const sel = document.getElementById('alb-proyecto-sel');
   if (!sel) return;
@@ -28325,12 +28470,13 @@ async function loadAlbaranes() {
     const estadoColor = a.estado === 'Firmado' ? 'var(--green)' : a.estado === 'Entregado' ? 'var(--amber)' : 'var(--text-soft)';
     const lineas = typeof a.lineas === 'string' ? JSON.parse(a.lineas || '[]') : (a.lineas || []);
     const tieneImporte = a.importe_total!=null && a.importe_total!=='';
+    const facEstado = a.compra_id ? 'facturado' : (tieneImporte ? 'pendiente' : 'informativo');
     const facBadge = a.compra_id
-      ? '<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:#e8f5ee;color:var(--green)">✓ Facturado</span>'
+      ? `<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:#e8f5ee;color:var(--green);cursor:pointer" onclick="abrirCompraDesdeAlbaran('${a.compra_id}')" title="Ver factura de compra">✓ Facturado</span>`
       : tieneImporte
         ? '<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:#fff3e0;color:#b85c00">⏳ Pendiente factura</span>'
         : '<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:#eceff1;color:#607d8b">ⓘ Informativo</span>';
-    return `<tr>
+    return `<tr data-fac="${facEstado}">
       <td class="td-mono" style="font-weight:700">${a.num_albaran || '—'}</td>
       <td>${fmtD(a.fecha)}</td>
       <td style="font-size:11px">${a.proyecto_id} · ${(PC||[]).find(p=>p.proyecto_id===a.proyecto_id)?.nombre||''}</td>
@@ -28347,6 +28493,7 @@ async function loadAlbaranes() {
       </td>
     </tr>`;
   }).join('');
+  filtrarAlbaranesFac();
 }
 
 async function nuevoAlbaran() {
