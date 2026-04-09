@@ -1583,6 +1583,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <button class="btn btn-primary" onclick="addLineaPresupuesto()">＋ Línea</button>
         <button class="btn btn-ghost" onclick="addCapituloPresupuesto()">＋ Capítulo</button>
         <button class="btn btn-ghost" style="background:#f5e6ff;color:#7b2fa8;border-color:#d4b3e6" onclick="abrirPresupuestoIA()" title="Generar presupuesto automáticamente con IA">🤖 Generar con IA</button>
+        <div id="pres-badge-versiones" style="display:none;padding:4px 10px;background:#fff3e0;color:#8a5a00;border:1px solid #f0d68a;border-radius:10px;font-size:11px;font-weight:700;cursor:pointer" onclick="mostrarCatVersionesDesactualizadas()" title="Hay versiones de catálogo más recientes desde que se creó este presupuesto">⚠️ Precios desactualizados</div>
         <button class="btn btn-ghost" id="btn-comparativa" style="display:none" onclick="abrirComparativa()">⚖️ Comparar</button>
         <select class="form-input" id="pres-filtro-estado" onchange="setPresFiltroEstado(this.value)" title="Filtrar por estado de certificación" style="width:auto;min-width:135px;font-size:11px;padding:4px 6px">
           <option value="todos">🔎 Todos los estados</option>
@@ -1801,6 +1802,20 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 
     <!-- ═══ CATÁLOGOS ═══ -->
     <div class="view" id="view-catalogos">
+
+      <!-- PANEL GESTIÓN DE VERSIONES DE CATÁLOGO (solo admin) -->
+      <div id="cat-versiones-panel" style="display:none;background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div>
+            <div style="font-size:14px;font-weight:700;color:var(--navy)">📚 Gestión de versiones de catálogo</div>
+            <div style="font-size:11px;color:var(--text-soft)">Registra cuándo actualizas los precios de cada catálogo · Solo admin</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="abrirModalCatVersion()">➕ Registrar nueva versión</button>
+        </div>
+        <div id="cat-versiones-tabla" style="font-size:12px">
+          <div style="color:var(--text-soft);padding:10px;text-align:center">Cargando…</div>
+        </div>
+      </div>
 
       <!-- GRID DE FABRICANTES -->
       <div id="cat-selector">
@@ -4786,6 +4801,49 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 </div>
 
 <!-- PRESUPUESTO CAPÍTULO -->
+<!-- MODAL REGISTRAR VERSIÓN DE CATÁLOGO -->
+<div class="overlay" id="m-cat-version" style="z-index:550">
+  <div class="modal" style="width:480px">
+    <div class="modal-head"><div class="modal-title">📚 Registrar versión de catálogo</div><button class="modal-close" onclick="closeModal('m-cat-version')">×</button></div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Catálogo</label>
+        <select class="form-input" id="cv-catalogo">
+          <option value="saitra">Saitra — Mobiliario cocina</option>
+          <option value="imex">IMEX — Griferías</option>
+          <option value="marmoles">Mármoles Santamaría — Encimeras y revestimientos</option>
+          <option value="campoaras">Campoaras — Mueble baño</option>
+          <option value="daqua">D'Aqua / Tecknika — Equipamiento baño</option>
+          <option value="roca">Roca — Sanitarios</option>
+          <option value="genexia">Genexia — Espejos</option>
+          <option value="mamparas">Mamparas Deyban</option>
+          <option value="visek">Platos Visek</option>
+          <option value="electrodom">Electrodomésticos</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nombre de la versión</label>
+        <input class="form-input" id="cv-version" placeholder="Ej: 2026.2">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Fecha de validez</label>
+        <input class="form-input" id="cv-fecha" type="date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notas / cambios</label>
+        <textarea class="form-input" id="cv-notas" rows="3" placeholder="Ej: Subida general +3% en baño, precios cocina sin cambios" style="resize:vertical"></textarea>
+      </div>
+      <div style="background:#fff3e0;border:1px solid #f0d68a;border-radius:6px;padding:8px 12px;font-size:11px;color:#8a5a00">
+        ⚠️ Al registrar una nueva versión, los presupuestos creados antes de esta fecha mostrarán un aviso de "precios posiblemente desactualizados".
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('m-cat-version')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarCatVersion()">💾 Guardar versión</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL GENERAR PRESUPUESTO CON IA -->
 <div class="overlay" id="m-pres-ia" style="z-index:550">
   <div class="modal" style="width:720px;max-width:95vw">
@@ -9514,6 +9572,7 @@ async function loadPresupuesto(){
   try{
     PresC=await sbGet('presupuesto_lineas',`?proyecto_id=eq.${proy}&version=eq.${ver}&order=orden.asc`);
     renderPresupuesto();
+    if(typeof checkPresupuestoDesactualizado==='function') checkPresupuestoDesactualizado();
   }catch(e){tbody.innerHTML=`<tr><td colspan="11" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
 }
 // ═══ Estados de certificación de partidas ═══
@@ -9820,6 +9879,154 @@ function _piaEliminarPartida(ci,pi){
     _piaResultado.capitulos.splice(ci,1);
   }
   _piaRenderPreview();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// GESTIÓN DE VERSIONES DE CATÁLOGO (Fase 1 mínima)
+// ═══════════════════════════════════════════════════════════════
+let _catVersiones = [];
+const CAT_NOMBRES = {
+  saitra:'Saitra',imex:'IMEX',marmoles:'Mármoles Santamaría',campoaras:'Campoaras',
+  daqua:"D'Aqua / Tecknika",roca:'Roca',genexia:'Genexia',mamparas:'Mamparas Deyban',
+  visek:'Platos Visek',electrodom:'Electrodomésticos'
+};
+
+async function loadCatVersiones(){
+  try{
+    _catVersiones = await sbGet('catalogo_versiones','?order=fecha_validez.desc');
+  }catch(e){ _catVersiones=[]; console.warn('catalogo_versiones:',e.message); }
+  renderCatVersionesPanel();
+}
+
+// Devuelve la versión vigente (más reciente) de un catálogo
+function _catVersionVigente(catId){
+  return (_catVersiones||[]).filter(v=>v.catalogo_id===catId).sort((a,b)=>(b.fecha_validez||'').localeCompare(a.fecha_validez||''))[0]||null;
+}
+
+function renderCatVersionesPanel(){
+  // Solo visible para admin
+  const isAdmin = document.body.classList.contains('rol-admin');
+  const panel = document.getElementById('cat-versiones-panel');
+  if(!panel) return;
+  panel.style.display = isAdmin ? '' : 'none';
+  if(!isAdmin) return;
+  const cont = document.getElementById('cat-versiones-tabla');
+  if(!cont) return;
+  const cats = Object.keys(CAT_NOMBRES);
+  const hoy = new Date().toISOString().split('T')[0];
+  const rows = cats.map(catId=>{
+    const vig = _catVersionVigente(catId);
+    const estado = vig ? (vig.fecha_validez >= hoy || !vig.fecha_caducidad ? '✅ Vigente' : '⚠️ Desactualizado') : '—';
+    const color = vig ? (estado.startsWith('✅')?'#2a7a2a':'#b85c00') : '#999';
+    return `<tr style="border-bottom:1px solid #f0f0f0">
+      <td style="padding:8px 12px;font-weight:600">${CAT_NOMBRES[catId]}</td>
+      <td style="padding:8px 12px;font-family:monospace">${vig?.version||'—'}</td>
+      <td style="padding:8px 12px">${vig?.fecha_validez?fmtD(vig.fecha_validez):'—'}</td>
+      <td style="padding:8px 12px;color:${color};font-weight:700">${estado}</td>
+      <td style="padding:8px 12px;color:var(--text-soft);font-size:11px">${vig?.usuario||'—'}</td>
+      <td style="padding:8px 12px;color:var(--text-soft);font-size:11px;max-width:200px;overflow:hidden;text-overflow:ellipsis">${vig?.notas||''}</td>
+      <td style="padding:8px 4px;text-align:center">
+        ${vig?`<button class="btn btn-ghost btn-icon btn-sm" onclick="borrarCatVersion('${vig.id}')" title="Eliminar versión" style="color:var(--red)">🗑</button>`:''}
+      </td>
+    </tr>`;
+  }).join('');
+  cont.innerHTML=`<table style="width:100%;border-collapse:collapse">
+    <thead><tr style="background:#f8fafd;border-bottom:1px solid var(--border)">
+      <th style="padding:8px 12px;text-align:left;font-weight:600;color:var(--text-soft)">Catálogo</th>
+      <th style="padding:8px 12px;text-align:left;font-weight:600;color:var(--text-soft)">Versión actual</th>
+      <th style="padding:8px 12px;text-align:left;font-weight:600;color:var(--text-soft)">Fecha</th>
+      <th style="padding:8px 12px;text-align:left;font-weight:600;color:var(--text-soft)">Estado</th>
+      <th style="padding:8px 12px;text-align:left;font-weight:600;color:var(--text-soft)">Por</th>
+      <th style="padding:8px 12px;text-align:left;font-weight:600;color:var(--text-soft)">Notas</th>
+      <th style="padding:8px 4px"></th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+function abrirModalCatVersion(){
+  document.getElementById('cv-catalogo').value='saitra';
+  document.getElementById('cv-version').value='';
+  document.getElementById('cv-fecha').value=new Date().toISOString().split('T')[0];
+  document.getElementById('cv-notas').value='';
+  openModal('m-cat-version');
+}
+
+async function guardarCatVersion(){
+  const catId=document.getElementById('cv-catalogo').value;
+  const ver=document.getElementById('cv-version').value.trim();
+  if(!ver){ toast('Introduce el nombre de la versión','error'); return; }
+  const payload={
+    catalogo_id:catId,
+    version:ver,
+    fecha_validez:document.getElementById('cv-fecha').value||new Date().toISOString().split('T')[0],
+    notas:document.getElementById('cv-notas').value||null,
+    usuario:(document.getElementById('user-name')?.textContent||'—')
+  };
+  try{
+    await sbPost('catalogo_versiones',payload);
+    toast('Versión registrada ✅');
+    closeModal('m-cat-version');
+    await loadCatVersiones();
+  }catch(e){
+    if(e.message&&e.message.includes('does not exist')){
+      toast('⚠️ Falta crear la tabla catalogo_versiones (ejecuta el SQL)','error');
+    } else { toast('Error: '+e.message,'error'); }
+  }
+}
+
+async function borrarCatVersion(id){
+  if(!confirm('¿Eliminar esta versión del historial?')) return;
+  try{
+    await sbDelete('catalogo_versiones',id);
+    toast('Versión eliminada ✅');
+    await loadCatVersiones();
+  }catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+// Comprueba si el presupuesto abierto fue creado antes de la última versión
+// publicada de algún catálogo. Si es así muestra el badge naranja.
+async function checkPresupuestoDesactualizado(){
+  const badge=document.getElementById('pres-badge-versiones');
+  if(!badge) return;
+  const proy=document.getElementById('pres-proyecto-sel')?.value;
+  const ver =document.getElementById('pres-version-sel')?.value;
+  if(!proy){ badge.style.display='none'; return; }
+  // Fecha de creación del presupuesto: usar la línea más antigua del proyecto/version
+  if(!_catVersiones.length){ try{ await loadCatVersiones(); }catch(e){} }
+  if(!_catVersiones.length){ badge.style.display='none'; return; }
+  let fechaPres=null;
+  try{
+    const rows = await sbGet('presupuesto_lineas',`?proyecto_id=eq.${proy}&version=eq.${ver}&select=created_at&order=created_at.asc&limit=1`);
+    if(rows && rows[0]) fechaPres = (rows[0].created_at||'').split('T')[0];
+  }catch(e){}
+  if(!fechaPres){ badge.style.display='none'; return; }
+  // Si hay alguna versión posterior a fechaPres → badge visible
+  const posteriores = _catVersiones.filter(v=>v.fecha_validez>fechaPres);
+  if(posteriores.length){
+    const cats = [...new Set(posteriores.map(v=>CAT_NOMBRES[v.catalogo_id]||v.catalogo_id))];
+    badge.title = 'Hay versiones más recientes de: '+cats.join(', ');
+    badge.style.display='';
+  } else {
+    badge.style.display='none';
+  }
+}
+
+function mostrarCatVersionesDesactualizadas(){
+  const proy=document.getElementById('pres-proyecto-sel')?.value;
+  const ver =document.getElementById('pres-version-sel')?.value;
+  if(!proy) return;
+  (async ()=>{
+    let fechaPres=null;
+    try{
+      const rows = await sbGet('presupuesto_lineas',`?proyecto_id=eq.${proy}&version=eq.${ver}&select=created_at&order=created_at.asc&limit=1`);
+      if(rows && rows[0]) fechaPres = (rows[0].created_at||'').split('T')[0];
+    }catch(e){}
+    const posteriores = (_catVersiones||[]).filter(v=>v.fecha_validez>(fechaPres||''));
+    if(!posteriores.length){ toast('No hay versiones posteriores'); return; }
+    const txt = posteriores.map(v=>`• ${CAT_NOMBRES[v.catalogo_id]||v.catalogo_id} — v${v.version} (${fmtD(v.fecha_validez)})${v.notas?'\n    '+v.notas:''}`).join('\n');
+    alert(`Este presupuesto fue creado el ${fmtD(fechaPres)||'—'}.\nDesde entonces se han publicado estas versiones de catálogo:\n\n${txt}\n\n⚠️ Revisa los precios antes de enviarlo al cliente.`);
+  })();
 }
 
 async function importarPresupuestoIA(){
@@ -17447,7 +17654,8 @@ document.addEventListener('click', e=>{
 
 const loaders={
   gerencia:loadGerencia,agenda:loadAgenda,clientes:loadClientes,proyectos:loadProyectos,
-  presupuesto:()=>{initPresupuesto();const _pProy=document.getElementById('pres-proyecto-sel')?.value;const _pVer=document.getElementById('pres-version-sel')?.value;if(_pProy&&_pVer)loadPfObs();},
+  catalogos:()=>{ loadCatVersiones(); },
+  presupuesto:()=>{initPresupuesto();const _pProy=document.getElementById('pres-proyecto-sel')?.value;const _pVer=document.getElementById('pres-version-sel')?.value;if(_pProy&&_pVer)loadPfObs();if(typeof checkPresupuestoDesactualizado==='function') setTimeout(checkPresupuestoDesactualizado,500);},
   comparativa:()=>{initComparativa();if(document.getElementById('comp-proyecto-sel').value)loadComparativa();},
   tarifario:loadTarifario,cype:loadCype,interiorismo:loadInteriorismo,
   saitra:()=>{ initSaitra(); },
