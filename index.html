@@ -8650,7 +8650,7 @@ async function subirAlbaranDrive(id){
   const fileName=`Albaran_${alb.num_albaran||id}_${alb.fecha||''}${_prov?'_'+_prov:''}.pdf`;
   try{
     const res=await fetch(DRIVE_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
-      body:JSON.stringify({action:'uploadFile',fileData:base64,fileName,mimeType:'application/pdf',folderId,subCarpeta:'06 Subcontratas y Proveedores',tipoDoc:'Albaranes',proveedor:alb.proveedor||null})});
+      body:JSON.stringify({action:'uploadFile',fileData:base64,fileName,mimeType:'application/pdf',folderId,subCarpeta:'06 Subcontratas y Proveedores',tipoDoc:'Albaranes',proveedor:alb.proveedor||'Sin proveedor'})});
     const json=await res.json().catch(()=>({}));
     if(json.ok){toast('☁️ Albarán subido a Drive ✅');}
     else{toast('Error Drive: '+(json.error||'desconocido'),'error');}
@@ -8665,7 +8665,7 @@ async function subirDocPedidoDrive(){
   const _numPed=document.getElementById('pd-num-input')?.value||'pedido';
   const _provPed=_safeNombre(ped?.proveedor||'');
   const nombre=_numPed+(_provPed?'_'+_provPed:'')+'.pdf';
-  await subirPDFaDrive('pd-doc',nombre,proyId,'06 Subcontratas y Proveedores',null,{tipoDoc:'Presupuestos',proveedor:ped?.proveedor||null});
+  await subirPDFaDrive('pd-doc',nombre,proyId,'06 Subcontratas y Proveedores',null,{tipoDoc:'Presupuestos',proveedor:ped?.proveedor||'Sin proveedor'});
 }
 
 async function subirPresupuestoDrive(){
@@ -12756,7 +12756,7 @@ async function saveCompra(){
         const _provNom=d.proveedor_id||'';
         const _safe=_safeNombre(_provNom);
         const _fname=(coNombreVal.replace(/\.pdf$/i,'')||'factura')+(_safe?'_'+_safe:'')+'.pdf';
-        subirPDFb64aDrive(pdfB64,_fname,proyTexto,'06 Subcontratas y Proveedores',{tipoDoc:'Facturas',proveedor:_provNom})
+        subirPDFb64aDrive(pdfB64,_fname,proyTexto,'06 Subcontratas y Proveedores',{tipoDoc:'Facturas',proveedor:_provNom||'Sin proveedor'})
           .then(j=>{ if(j&&j.ok&&!j.duplicate) toast('☁️ PDF subido a Drive ✅'); else if(j&&j.duplicate) toast('☁️ PDF ya existía en Drive (no duplicado)'); });
       }
     }
@@ -12947,7 +12947,7 @@ async function saveSubcontrata(){
         const _provNom=d.proveedor_id||'';
         const _safe=_safeNombre(_provNom);
         const _fname=(scNombreVal.replace(/\.pdf$/i,'')||'factura')+(_safe?'_'+_safe:'')+'.pdf';
-        subirPDFb64aDrive(pdfB64,_fname,_scProy,'06 Subcontratas y Proveedores',{tipoDoc:'Facturas',proveedor:_provNom})
+        subirPDFb64aDrive(pdfB64,_fname,_scProy,'06 Subcontratas y Proveedores',{tipoDoc:'Facturas',proveedor:_provNom||'Sin proveedor'})
           .then(j=>{ if(j&&j.ok&&!j.duplicate) toast('☁️ PDF subido a Drive ✅'); else if(j&&j.duplicate) toast('☁️ PDF ya existía en Drive (no duplicado)'); });
       }
     }
@@ -15182,7 +15182,7 @@ function previsualizarFactura(){
   const _folderId = _proyDrive ? _driveFolderId(_proyDrive) : null;
   const _esCompra = !!d.esC;
   const _driveOpts = _folderId ? (_esCompra
-    ? {folderId:_folderId, subCarpeta:'06 Subcontratas y Proveedores', tipoDoc:'Facturas', proveedor:d.contra||null}
+    ? {folderId:_folderId, subCarpeta:'06 Subcontratas y Proveedores', tipoDoc:'Facturas', proveedor:d.contra||'Sin proveedor'}
     : {folderId:_folderId, subCarpeta:'08 Facturas'}) : null;
   abrirVistaPrevia('fac-preview-doc', 'Factura', false, _fn, _driveOpts);
 }
