@@ -1072,6 +1072,8 @@ if(window.MutationObserver){
           <option value="">— Pedido… —</option>
         </select>
         <button class="btn btn-primary" onclick="guardarDocPedido()">💾 Guardar</button>
+        <button class="btn btn-ghost" style="background:#e8f5ee;color:#1b5e20;border:1px solid var(--green)" onclick="pedRegistrarRecepcion()" title="Crear albarán pre-rellenado con las líneas del pedido">📦 Registrar recepción</button>
+        <span id="pd-albaran-badge" style="display:none;font-size:11px"></span>
         <button class="btn btn-ghost" onclick="abrirVistaPrevia('pd-doc','Doc. Pedido')">👁 Vista previa</button>
         <button class="btn btn-ghost no-print" onclick="abrirEnviarEmail('pedido')">📧 Enviar</button>
         <button class="btn btn-primary" onclick="exportarPDF(&#39;pd-doc&#39;, (document.getElementById(&#39;pd-num-input&#39;)?.value||&#39;pedido&#39;)+&#39;.pdf&#39;)">⬇️ PDF</button>
@@ -5436,7 +5438,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 
       <div class="form-group fg-full"><label class="form-label">Referencia / Descripción</label><input class="form-input" id="ped-ref" placeholder="Ej: Azulejo baño modelo X, Mueble cocina ref.123..."></div>
       <div class="form-group"><label class="form-label">Importe €</label><input class="form-input" id="ped-importe" type="number" step="0.01"></div>
-      <div class="form-group"><label class="form-label">Estado</label><select class="form-input" id="ped-estado"><option>Cancelado</option><option selected>Confirmado</option><option>En tránsito</option><option>Pagado</option><option>Pendiente</option><option>Recibido</option><option>Solicitado</option></select></div>
+      <div class="form-group"><label class="form-label">Estado</label><select class="form-input" id="ped-estado"><option>Cancelado</option><option selected>Confirmado</option><option>En tránsito</option><option>Pagado</option><option>Pendiente</option><option>Recibido parcialmente</option><option>Recibido completamente</option><option>Recibido</option><option>Solicitado</option></select></div>
       <div class="form-group fg-full"><label class="form-label">Observaciones</label><input class="form-input" id="ped-obs"></div>
     </div>
     <!-- Adjuntos PDF -->
@@ -13141,10 +13143,11 @@ function nuevoPedidoDoc(){
 // Carga el pedido seleccionado en el documento
 function cargarPedidoEnDoc(){
   const sel = document.getElementById('pd-pedido-sel');
-  if(!sel||!sel.value){ nuevoPedidoDoc(); return; }
+  if(!sel||!sel.value){ nuevoPedidoDoc(); _renderPedidoAlbaranesBadge(null); return; }
   const p = PedC.find(x=>String(x.id)===String(sel.value));
   if(!p) return;
   window.pdPedidoId = p.id;
+  _renderPedidoAlbaranesBadge(p.id);
   const setVal=(id,v)=>{ const el=document.getElementById(id); if(el) el.value=v||''; };
   const setText=(id,v)=>{ const el=document.getElementById(id); if(el) el.textContent=v||''; };
   setVal('pd-num-input', p.num_pedido);
@@ -13216,6 +13219,119 @@ async function guardarDocPedido(){
       if(sel) sel.value = window.pdPedidoId;
     }
   }catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+// ─── Flujo Pedido → Albarán ───
+async function pedRegistrarRecepcion(){
+  if(!window.pdPedidoId){ toast('Guarda el pedido antes de registrar la recepción','error'); return; }
+  const ped=(PedC||[]).find(x=>String(x.id)===String(window.pdPedidoId));
+  if(!ped){ toast('Pedido no encontrado','error'); return; }
+  const proy=ped.proyecto_id||document.getElementById('pd-proyecto-input')?.value;
+  if(!proy){ toast('El pedido no tiene proyecto asignado','error'); return; }
+  // Aviso si el estado no es uno de los esperados (pero permite continuar)
+  const okStates=['Confirmado','Recibido parcialmente','Pendiente','En tránsito','Solicitado'];
+  if(ped.estado && !okStates.includes(ped.estado)){
+    if(!confirm(`El pedido está en estado "${ped.estado}". ¿Quieres registrar la recepción de todas formas?`)) return;
+  }
+  // Navegar al módulo Albaranes y asegurar selector poblado
+  navTo('albaranes');
+  await new Promise(r=>setTimeout(r,250));
+  const selProy=document.getElementById('alb-proyecto-sel');
+  if(selProy){
+    if(!Array.from(selProy.options).some(o=>o.value===proy)){
+      const o=document.createElement('option'); o.value=proy; o.textContent=proy; selProy.appendChild(o);
+    }
+    selProy.value=proy;
+    try{ await loadAlbaranes(); }catch(e){}
+  }
+  // Reset y abrir modal nuevo
+  await nuevoAlbaran();
+  // Marca de origen DESPUÉS de nuevoAlbaran (que la habría limpiado)
+  window._albPedidoOrigen={ pedidoId:ped.id, pedidoNum:ped.num_pedido||'', proveedor:ped.proveedor||'' };
+  // Sobrescribir con datos del pedido
+  const obsEl=document.getElementById('alb-obs');
+  if(obsEl) obsEl.value=`Recepción del pedido ${ped.num_pedido||''}`.trim();
+  const provSel=document.getElementById('alb-proveedor');
+  if(provSel && ped.proveedor){
+    const opt=Array.from(provSel.options).find(o=>o.value===ped.proveedor || o.textContent.toLowerCase().includes((ped.proveedor||'').toLowerCase()));
+    if(opt){ provSel.value=opt.value; if(typeof poblarAlbCompraSel==='function') poblarAlbCompraSel(); }
+  }
+  // Líneas del pedido
+  const tbody=document.getElementById('alb-lineas-tbody');
+  if(tbody){ tbody.innerHTML=''; }
+  const lineasPed=(ped.lineas&&Array.isArray(ped.lineas)) ? ped.lineas.filter(l=>l.cant||l.desc) : [];
+  if(lineasPed.length){
+    lineasPed.forEach(l=>{
+      addAlbLinea({ descripcion:l.desc||'', referencia:'', unidad:'', cantidad:parseFloat(l.cant)||1, estado:'Pendiente' });
+    });
+  } else {
+    addAlbLinea();
+  }
+  toast('📦 Recepción del pedido '+(ped.num_pedido||'')+' iniciada · ajusta cantidades si es parcial');
+}
+
+async function _renderPedidoAlbaranesBadge(pedidoId){
+  const badge=document.getElementById('pd-albaran-badge');
+  if(!badge) return;
+  if(!pedidoId){ badge.style.display='none'; badge.innerHTML=''; return; }
+  let albs=[];
+  try{ albs=await sbGet('albaranes',`?pedido_id=eq.${pedidoId}&order=fecha.desc`); }catch(e){ badge.style.display='none'; return; }
+  if(!albs||!albs.length){ badge.style.display='none'; badge.innerHTML=''; return; }
+  const links=albs.map(a=>`<a href="javascript:void(0)" onclick="abrirAlbaranDesdePedido('${a.id}','${a.proyecto_id}')" style="color:#1565c0;text-decoration:underline;font-weight:600">${a.num_albaran||'Albarán'}</a>`).join(' · ');
+  badge.style.display='inline-flex';
+  badge.style.alignItems='center';
+  badge.style.gap='6px';
+  badge.style.padding='4px 10px';
+  badge.style.background='#e3f2fd';
+  badge.style.border='1px solid #1565c0';
+  badge.style.borderRadius='12px';
+  badge.style.color='#0d3c71';
+  badge.innerHTML=`📦 ${albs.length} albarán${albs.length>1?'es':''}: ${links}`;
+}
+
+async function abrirAlbaranDesdePedido(albId, proyId){
+  navTo('albaranes');
+  await new Promise(r=>setTimeout(r,250));
+  const sel=document.getElementById('alb-proyecto-sel');
+  if(sel){
+    if(!Array.from(sel.options).some(o=>o.value===proyId)){
+      const o=document.createElement('option'); o.value=proyId; o.textContent=proyId; sel.appendChild(o);
+    }
+    sel.value=proyId;
+    try{ await loadAlbaranes(); }catch(e){}
+  }
+  if(typeof editarAlbaran==='function') editarAlbaran(albId);
+}
+
+// Recalcula el estado del pedido sumando cantidades recibidas en sus albaranes vinculados
+async function _actualizarEstadoPedidoTrasAlbaran(pedidoId){
+  if(!pedidoId) return;
+  try{
+    const [pedArr,albs]=await Promise.all([
+      sbGet('pedidos',`?id=eq.${pedidoId}`),
+      sbGet('albaranes',`?pedido_id=eq.${pedidoId}`).catch(()=>[])
+    ]);
+    const ped=pedArr&&pedArr[0]; if(!ped) return;
+    const lineasPed=(ped.lineas&&Array.isArray(ped.lineas))?ped.lineas:[];
+    const totalPedido=lineasPed.reduce((s,l)=>s+(parseFloat(l.cant)||0),0);
+    if(totalPedido<=0) return;
+    let totalRecibido=0;
+    (albs||[]).forEach(a=>{
+      const ls=typeof a.lineas==='string'?JSON.parse(a.lineas||'[]'):(a.lineas||[]);
+      ls.forEach(l=>{ totalRecibido+=parseFloat(l.cantidad)||0; });
+    });
+    let nuevoEstado;
+    if(totalRecibido<=0) nuevoEstado=ped.estado;
+    else if(totalRecibido>=totalPedido-0.001) nuevoEstado='Recibido completamente';
+    else nuevoEstado='Recibido parcialmente';
+    if(nuevoEstado && nuevoEstado!==ped.estado){
+      await sb('pedidos','PATCH',{estado:nuevoEstado},null,`?id=eq.${pedidoId}`);
+      // Actualizar cache
+      const cached=(PedC||[]).find(x=>String(x.id)===String(pedidoId));
+      if(cached) cached.estado=nuevoEstado;
+      toast('Pedido actualizado: '+nuevoEstado);
+    }
+  }catch(e){ console.warn('No se pudo actualizar estado del pedido:',e.message); }
 }
 
 // Rellena el selector con los pedidos existentes
@@ -27938,6 +28054,8 @@ async function nuevoAlbaran() {
   const proy = document.getElementById('alb-proyecto-sel')?.value;
   if (!proy) return;
   _albEditing = null;
+  // Limpiar marca de origen "desde pedido" — pedRegistrarRecepcion la re-asigna después de llamar a nuevoAlbaran
+  window._albPedidoOrigen = null;
   const p = (PC||[]).find(x => x.proyecto_id === proy) || {};
   document.getElementById('alb-modal-title').textContent = '📦 Nuevo albarán de entrega';
   document.getElementById('alb-modal-sub').textContent = `${proy} · ${p.nombre||''} · ${p.cliente_id||''}`;
@@ -28071,6 +28189,7 @@ async function guardarAlbaran() {
   const lineas = getAlbLineas();
   if (!lineas.length) { toast('Añade al menos un artículo', 'error'); return; }
   const _impVal = document.getElementById('alb-importe')?.value;
+  const _pedidoOrigen = !_albEditing ? (window._albPedidoOrigen||null) : null;
   const payload = {
     proyecto_id: proy,
     fecha: document.getElementById('alb-fecha').value,
@@ -28084,19 +28203,27 @@ async function guardarAlbaran() {
     adjunto_pdf: document.getElementById('alb-pdf-b64')?.value || null,
     adjunto_nombre: document.getElementById('alb-pdf-nombre')?.value || null
   };
+  if(_pedidoOrigen) payload.pedido_id = _pedidoOrigen.pedidoId;
+  let pedidoIdAfectado = _pedidoOrigen?.pedidoId || null;
   try {
     if (_albEditing) {
-      await sbPatch('albaranes', _albEditing, payload);
+      // Si editamos, recuperar pedido_id existente para poder actualizar el pedido
+      try{ const prevAlb=await sbGet('albaranes',`?id=eq.${_albEditing}&select=pedido_id`); if(prevAlb&&prevAlb[0]&&prevAlb[0].pedido_id) pedidoIdAfectado=prevAlb[0].pedido_id; }catch(e){}
+      try{ await sbPatch('albaranes', _albEditing, payload); }
+      catch(eCol){ if(/pedido_id/.test(eCol.message||'')){ delete payload.pedido_id; await sbPatch('albaranes', _albEditing, payload); } else throw eCol; }
       toast('Albarán actualizado ✅');
     } else {
       const prev = await sbGet('albaranes', `?proyecto_id=eq.${proy}&order=num_albaran.desc&limit=1`);
       const lastNum = prev.length ? (parseInt(prev[0].num_albaran?.replace(/\D/g,'')) || 0) : 0;
       payload.num_albaran = `ALB-${proy}-${String(lastNum+1).padStart(2,'0')}`;
-      await sbPost('albaranes', payload);
+      try{ await sbPost('albaranes', payload); }
+      catch(eCol){ if(/pedido_id/.test(eCol.message||'')){ delete payload.pedido_id; await sbPost('albaranes', payload); pedidoIdAfectado=null; toast('⚠ Falta columna pedido_id en BD — vínculo no guardado','warning'); } else throw eCol; }
       toast('Albarán creado ✅');
     }
+    window._albPedidoOrigen = null;
     closeModal('m-albaran');
     loadAlbaranes();
+    if(pedidoIdAfectado) _actualizarEstadoPedidoTrasAlbaran(pedidoIdAfectado);
   } catch(e) { toast('Error: '+e.message, 'error'); }
 }
 
@@ -28319,6 +28446,7 @@ async function guardarAlbaranYPDF() {
   const lineas = getAlbLineas();
   if (!lineas.length) { toast('Añade al menos un artículo', 'error'); return; }
   const _impVal = document.getElementById('alb-importe')?.value;
+  const _pedidoOrigen = !_albEditing ? (window._albPedidoOrigen||null) : null;
   const payload = {
     proyecto_id: proy,
     fecha: document.getElementById('alb-fecha').value,
@@ -28332,20 +28460,28 @@ async function guardarAlbaranYPDF() {
     adjunto_pdf: document.getElementById('alb-pdf-b64')?.value || null,
     adjunto_nombre: document.getElementById('alb-pdf-nombre')?.value || null
   };
+  if(_pedidoOrigen) payload.pedido_id = _pedidoOrigen.pedidoId;
+  let pedidoIdAfectado = _pedidoOrigen?.pedidoId || null;
   try {
     let id;
     if (_albEditing) {
-      await sbPatch('albaranes', _albEditing, payload);
+      try{ const prevAlb=await sbGet('albaranes',`?id=eq.${_albEditing}&select=pedido_id`); if(prevAlb&&prevAlb[0]&&prevAlb[0].pedido_id) pedidoIdAfectado=prevAlb[0].pedido_id; }catch(e){}
+      try{ await sbPatch('albaranes', _albEditing, payload); }
+      catch(eCol){ if(/pedido_id/.test(eCol.message||'')){ delete payload.pedido_id; await sbPatch('albaranes', _albEditing, payload); } else throw eCol; }
       id = _albEditing;
     } else {
       const prev = await sbGet('albaranes', `?proyecto_id=eq.${proy}&order=num_albaran.desc&limit=1`);
       const lastNum = prev.length ? (parseInt(prev[0].num_albaran?.replace(/\D/g,''))||0) : 0;
       payload.num_albaran = `ALB-${proy}-${String(lastNum+1).padStart(2,'0')}`;
-      const res = await sbPost('albaranes', payload);
+      let res;
+      try{ res = await sbPost('albaranes', payload); }
+      catch(eCol){ if(/pedido_id/.test(eCol.message||'')){ delete payload.pedido_id; res = await sbPost('albaranes', payload); pedidoIdAfectado=null; toast('⚠ Falta columna pedido_id en BD — vínculo no guardado','warning'); } else throw eCol; }
       id = res?.[0]?.id || _albEditing;
     }
+    window._albPedidoOrigen = null;
     closeModal('m-albaran');
     loadAlbaranes();
+    if(pedidoIdAfectado) _actualizarEstadoPedidoTrasAlbaran(pedidoIdAfectado);
     if (id) await exportarAlbaranPDF(id);
   } catch(e) { toast('Error: '+e.message, 'error'); }
 }
