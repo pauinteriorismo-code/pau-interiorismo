@@ -8886,18 +8886,16 @@ async function generarDossierCierre(proyId){
   let tarifaHora = 0;
   try{ const cfgT=await getCfg(); tarifaHora = parseFloat(cfgT?.tarifa_hora||0)||0; }catch(e){}
 
-  // Presupuesto vendido: suma del subtotal (o precio_venta*cantidad) de las líneas de la última versión disponible
-  const presVendido = (function(){
-    if(!presLineas.length) return 0;
-    // Agrupar por versión y quedarse con la versión cuyo total sea mayor (la "vendida")
-    const porVer = {};
-    presLineas.forEach(l=>{
-      const v=l.version||'v1';
-      const imp = (l.subtotal!=null)?l.subtotal:((l.precio_venta||0)*(l.cantidad||0));
-      porVer[v]=(porVer[v]||0)+imp;
-    });
-    return Math.max(...Object.values(porVer), 0);
-  })();
+  // Presupuesto vendido: suma de TODAS las versiones con datos (v1+v2+...),
+  // usando la misma fórmula que el expediente: cantidad * precio_venta * (1 + ci_gg_bi_pct/100)
+  const presPorVersion = {};
+  presLineas.forEach(l=>{
+    const pv=l.precio_venta||0, ci=l.ci_gg_bi_pct||0, sub=(l.cantidad||0)*pv;
+    const importe = ci>0 ? sub*(1+ci/100) : sub;
+    const ver = l.version||'v1';
+    presPorVersion[ver] = (presPorVersion[ver]||0) + importe;
+  });
+  const presVendido = Object.values(presPorVersion).reduce((s,v)=>s+v,0);
   const facturado = facturas.reduce((s,f)=>s+((f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100)),0);
   const costeCompras = compras.reduce((s,c)=>s+((c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100)),0);
   const costeSubc = subcs.reduce((s,x)=>s+((x.importe||0)*(1+ivaPct(x.iva_pct)/100)),0);
@@ -8951,8 +8949,9 @@ async function generarDossierCierre(proyId){
   pdf.setFillColor(30,60,100); pdf.setTextColor(255); pdf.setFont(undefined,'bold'); pdf.setFontSize(11);
   pdf.rect(mX,y,pW-2*mX,8,'F'); pdf.text('RESUMEN ECONÓMICO', mX+3, y+5.5); y+=12;
   pdf.setFontSize(10); pdf.setTextColor(40); pdf.setFont(undefined,'normal');
+  const versionesTxt = Object.keys(presPorVersion).sort().map(v=>`${v.toUpperCase()}: ${fmt(presPorVersion[v])}`).join(' · ');
   const eco = [
-    ['Presupuesto vendido',         fmt(presVendido)],
+    ['Presupuesto vendido'+(versionesTxt?' ('+versionesTxt+')':''), fmt(presVendido)],
     ['Facturado al cliente',        fmt(facturado)],
     ['Cobros sin factura (notas)',  fmt(cobrosSinFactura)],
     ['INGRESOS TOTALES',            fmt(ingresosTotales)],
