@@ -5986,6 +5986,17 @@ async function pfMarcarAceptado(){
     Object.assign(p, patch);
     toast('✅ '+ver.toUpperCase()+' aceptada · Proyecto Aprobado');
     _pfActualizarBannerAceptado(p, ver);
+    // Auto-subida del presupuesto aceptado a Drive (carpeta 04 Presupuestos)
+    const folderId = _driveFolderId(proy);
+    if(folderId){
+      const filename = `${proy}-${ver}_Presupuesto_ACEPTADO.pdf`;
+      setTimeout(()=>{
+        subirPDFaDrive('pf-doc', filename, null, '04 Presupuestos', folderId)
+          .catch(err=>toast('Error subiendo presupuesto aceptado a Drive: '+err.message,'error'));
+      }, 200);
+    } else {
+      toast('⚠ El proyecto no tiene carpeta Drive configurada — no se ha subido','warning');
+    }
   }catch(e){ toast('Error: '+e.message,'error'); }
 }
 
