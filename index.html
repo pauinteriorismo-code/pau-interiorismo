@@ -3721,7 +3721,9 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <select class="form-input" style="width:200px;flex-shrink:0" id="filter-partida-compras" onchange="aplicarFiltroPartida('compras')"><option value="">📂 Partida…</option></select>
         <div class="search-wrap" style="flex:1;min-width:160px"><span class="search-icon">🔍</span><input class="form-input" id="search-compras" placeholder="Buscar…" oninput="filterTable(&#39;compras-tbody&#39;,&#39;search-compras&#39;)"></div>
         <button class="btn btn-ghost btn-sm" onclick="exportarExcel('compras')" style="font-size:11px">📊 Excel</button>
-<button class="btn btn-primary" onclick="openModal(&#39;m-compra&#39;)">＋ Nueva compra</button> <a href="manual_obra.html" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;padding:5px 8px" title="Manual">❓</a>
+<button class="btn btn-primary" onclick="openModal(&#39;m-compra&#39;)">＋ Nueva compra</button>
+<button class="btn btn-ghost" style="background:#e3f2fd;color:#1565c0;border-color:#90caf9" onclick="abrirImportarPDFs()" title="Importar facturas de proveedor desde PDFs (drag & drop)">📧 Importar PDFs</button>
+<a href="manual_obra.html" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;padding:5px 8px" title="Manual">❓</a>
       </div>
       <div class="card">
         <div class="card-header"><div class="card-title">🛒 Compras<span id="compras-count" style="font-size:11px;font-weight:400;color:var(--text-soft);margin-left:6px"></span></div></div>
@@ -4801,6 +4803,49 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 </div>
 
 <!-- PRESUPUESTO CAPÍTULO -->
+<!-- MODAL IMPORTAR FACTURAS DESDE PDF -->
+<div class="overlay" id="m-importar-pdfs" style="z-index:550">
+  <div class="modal" style="width:920px;max-width:97vw">
+    <div class="modal-head">
+      <div class="modal-title">📧 Importar facturas de proveedor desde PDFs</div>
+      <button class="modal-close" onclick="closeModal('m-importar-pdfs')">×</button>
+    </div>
+    <div class="modal-body" style="max-height:75vh;overflow-y:auto">
+      <!-- Paso 1: Drag and drop -->
+      <div id="ipdf-step1">
+        <div class="info-box" style="background:#e3f2fd;border-color:#90caf9;color:#0d47a1;margin-bottom:12px">
+          💡 <strong>Cómo usarlo:</strong> arrastra aquí los PDFs de facturas de proveedor (varios a la vez) o pulsa para seleccionarlos. La IA los leerá automáticamente y rellenará los campos (proveedor, nº factura, fecha, base, IVA, total).
+        </div>
+        <div id="ipdf-dropzone" style="border:3px dashed #90caf9;border-radius:10px;padding:40px 20px;text-align:center;background:#f8fbff;cursor:pointer;transition:all .2s" onclick="document.getElementById('ipdf-file-input').click()">
+          <div style="font-size:48px;margin-bottom:10px">📄⬇️</div>
+          <div style="font-size:15px;font-weight:700;color:#1565c0;margin-bottom:4px">Arrastra aquí los PDFs de facturas</div>
+          <div style="font-size:12px;color:var(--text-soft)">o pulsa para seleccionar archivos (admite varios)</div>
+          <input type="file" id="ipdf-file-input" accept="application/pdf" multiple style="display:none" onchange="_ipdfArchivosSeleccionados(this.files)">
+        </div>
+        <div id="ipdf-archivos-lista" style="margin-top:14px"></div>
+        <div id="ipdf-loading" style="display:none;margin-top:14px;padding:16px;background:#e8f5ee;border-radius:6px;text-align:center;color:#2a7a2a;font-weight:600">
+          <div style="font-size:24px;margin-bottom:6px">🤖</div>
+          <div id="ipdf-loading-txt">Procesando PDFs con IA…</div>
+          <div id="ipdf-progreso" style="font-size:11px;color:var(--text-soft);margin-top:4px"></div>
+        </div>
+      </div>
+      <!-- Paso 2: Revisión -->
+      <div id="ipdf-step2" style="display:none">
+        <div class="info-box" style="background:#fff3e0;border-color:#f0d68a;color:#8a5a00;margin-bottom:12px">
+          ✅ Facturas procesadas. Revisa cada una antes de guardar. Los duplicados aparecen marcados en rojo.
+        </div>
+        <div id="ipdf-review" style="display:flex;flex-direction:column;gap:12px"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('m-importar-pdfs')">Cancelar</button>
+      <button class="btn btn-ghost" id="ipdf-btn-volver" style="display:none" onclick="_ipdfVolverPaso1()">⬅ Atrás</button>
+      <button class="btn btn-primary" id="ipdf-btn-procesar" onclick="procesarPDFsImport()" disabled>🤖 Procesar con IA</button>
+      <button class="btn btn-primary" id="ipdf-btn-confirmar" style="display:none;background:var(--green);border-color:var(--green)" onclick="confirmarTodasImportaciones()">✅ Confirmar todas</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL REGISTRAR VERSIÓN DE CATÁLOGO -->
 <div class="overlay" id="m-cat-version" style="z-index:550">
   <div class="modal" style="width:480px">
@@ -9879,6 +9924,319 @@ function _piaEliminarPartida(ci,pi){
     _piaResultado.capitulos.splice(ci,1);
   }
   _piaRenderPreview();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// IMPORTAR FACTURAS DE PROVEEDOR DESDE PDFs (drag & drop + IA)
+// ═══════════════════════════════════════════════════════════════
+let _ipdfArchivos = [];    // File objects seleccionados
+let _ipdfResultados = [];  // {file, base64, extraidos:{...}, duplicado:boolean}
+
+function abrirImportarPDFs(){
+  _ipdfArchivos = [];
+  _ipdfResultados = [];
+  document.getElementById('ipdf-step1').style.display='';
+  document.getElementById('ipdf-step2').style.display='none';
+  document.getElementById('ipdf-btn-procesar').style.display='';
+  document.getElementById('ipdf-btn-procesar').disabled=true;
+  document.getElementById('ipdf-btn-confirmar').style.display='none';
+  document.getElementById('ipdf-btn-volver').style.display='none';
+  document.getElementById('ipdf-loading').style.display='none';
+  document.getElementById('ipdf-archivos-lista').innerHTML='';
+  document.getElementById('ipdf-file-input').value='';
+  openModal('m-importar-pdfs');
+  _ipdfBindDrop();
+}
+
+function _ipdfBindDrop(){
+  const dz = document.getElementById('ipdf-dropzone');
+  if(!dz || dz.dataset.bound) return;
+  dz.dataset.bound='1';
+  ['dragenter','dragover'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();e.stopPropagation();dz.style.background='#bbdefb';dz.style.borderColor='#1565c0';}));
+  ['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();e.stopPropagation();dz.style.background='#f8fbff';dz.style.borderColor='#90caf9';}));
+  dz.addEventListener('drop',e=>{
+    const files = Array.from(e.dataTransfer?.files||[]).filter(f=>f.type==='application/pdf' || f.name.toLowerCase().endsWith('.pdf'));
+    if(files.length) _ipdfArchivosSeleccionados(files);
+  });
+}
+
+function _ipdfArchivosSeleccionados(fileList){
+  const files = Array.from(fileList).filter(f=>f.type==='application/pdf' || f.name.toLowerCase().endsWith('.pdf'));
+  if(!files.length){ toast('Selecciona archivos PDF','error'); return; }
+  // Añadir (no reemplazar)
+  files.forEach(f=>{
+    if(!_ipdfArchivos.find(x=>x.name===f.name && x.size===f.size)) _ipdfArchivos.push(f);
+  });
+  _ipdfRenderListaArchivos();
+  document.getElementById('ipdf-btn-procesar').disabled = _ipdfArchivos.length===0;
+}
+
+function _ipdfRenderListaArchivos(){
+  const cont = document.getElementById('ipdf-archivos-lista');
+  if(!_ipdfArchivos.length){ cont.innerHTML=''; return; }
+  cont.innerHTML = `<div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:6px">${_ipdfArchivos.length} archivo${_ipdfArchivos.length>1?'s':''} seleccionado${_ipdfArchivos.length>1?'s':''}:</div>
+    ${_ipdfArchivos.map((f,i)=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#f5f5f5;border-radius:6px;margin-bottom:4px">
+      <span style="font-size:12px">📄 ${f.name} <span style="color:var(--text-soft);font-size:10px">(${(f.size/1024).toFixed(0)} KB)</span></span>
+      <button class="btn btn-ghost btn-icon btn-sm" onclick="_ipdfQuitarArchivo(${i})" title="Quitar" style="color:var(--red)">✕</button>
+    </div>`).join('')}`;
+}
+
+function _ipdfQuitarArchivo(i){
+  _ipdfArchivos.splice(i,1);
+  _ipdfRenderListaArchivos();
+  document.getElementById('ipdf-btn-procesar').disabled = _ipdfArchivos.length===0;
+}
+
+async function procesarPDFsImport(){
+  if(!_ipdfArchivos.length){ toast('Selecciona al menos un PDF','error'); return; }
+  const key = window._ANTHROPIC_KEY||'';
+  if(!key){ toast('Configura tu API Key de Anthropic en Configuración','error'); return; }
+
+  document.getElementById('ipdf-loading').style.display='block';
+  document.getElementById('ipdf-btn-procesar').disabled=true;
+  _ipdfResultados = [];
+
+  const total = _ipdfArchivos.length;
+  for(let i=0; i<total; i++){
+    const f = _ipdfArchivos[i];
+    document.getElementById('ipdf-progreso').textContent = `Procesando ${i+1}/${total}: ${f.name}`;
+    try{
+      const base64 = await new Promise((res,rej)=>{
+        const r=new FileReader();
+        r.onload=()=>res(r.result.split(',')[1]);
+        r.onerror=()=>rej(new Error('Error leyendo archivo'));
+        r.readAsDataURL(f);
+      });
+      const extraidos = await _ipdfExtraerFactura(base64, key);
+      _ipdfResultados.push({file:f, base64, extraidos, duplicado:false, index:i});
+    }catch(err){
+      console.warn('Error procesando '+f.name+':', err);
+      _ipdfResultados.push({file:f, base64:null, extraidos:{_error:err.message}, duplicado:false, index:i});
+    }
+  }
+
+  // Detectar duplicados contra compras existentes
+  try{
+    const comprasExistentes = await sbGet('compras','?select=num_factura,proveedor_id&limit=5000').catch(()=>[]);
+    _ipdfResultados.forEach(r=>{
+      if(r.extraidos && r.extraidos.num_factura){
+        const dup = comprasExistentes.find(c =>
+          c.num_factura && String(c.num_factura).trim()===String(r.extraidos.num_factura).trim() &&
+          c.proveedor_id && r.extraidos.proveedor &&
+          String(c.proveedor_id).toLowerCase().includes(String(r.extraidos.proveedor).toLowerCase().substring(0,8))
+        );
+        if(dup) r.duplicado=true;
+      }
+    });
+  }catch(e){ console.warn('check dup:',e); }
+
+  document.getElementById('ipdf-loading').style.display='none';
+  document.getElementById('ipdf-step1').style.display='none';
+  document.getElementById('ipdf-step2').style.display='';
+  document.getElementById('ipdf-btn-procesar').style.display='none';
+  document.getElementById('ipdf-btn-confirmar').style.display='';
+  document.getElementById('ipdf-btn-volver').style.display='';
+  _ipdfRenderReview();
+}
+
+async function _ipdfExtraerFactura(base64, key){
+  const systemPrompt = `Eres un experto extrayendo datos de facturas españolas. Respondes ÚNICAMENTE con JSON válido puro, sin markdown, sin backticks.
+
+Estructura EXACTA del JSON:
+{"proveedor":"Nombre empresa emisora","cif":"B-12345678","num_factura":"FC2026/001","fecha":"2026-04-09","base_imponible":1234.56,"iva_pct":21,"iva_importe":259.26,"total":1493.82,"concepto":"Descripción breve de lo facturado"}
+
+REGLAS:
+- "proveedor": nombre de la empresa que EMITE la factura (no PAU Interiorismo, que es el receptor).
+- "num_factura": número/referencia de factura tal cual aparece.
+- "fecha": en formato YYYY-MM-DD.
+- Importes en euros con decimales (punto, no coma).
+- "iva_pct": solo el número (10, 21, 4, 0).
+- "concepto": resumen breve del objeto de la factura.
+- Si algún dato no es legible o falta, pon null en ese campo.`;
+
+  const userContent = [
+    {type:'document',source:{type:'base64',media_type:'application/pdf',data:base64}},
+    {type:'text',text:'Extrae los datos de esta factura según el formato JSON indicado.'}
+  ];
+
+  const resp = await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({
+      model:'claude-sonnet-4-20250514',
+      max_tokens:1500,
+      system:systemPrompt,
+      messages:[{role:'user',content:userContent}]
+    })
+  });
+  if(!resp.ok){
+    let m='Error API '+resp.status;
+    try{ const e=await resp.json(); m=e?.error?.message||m; }catch(e){}
+    throw new Error(m);
+  }
+  const data = await resp.json();
+  const raw = data.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+  let parsed=null;
+  try{ parsed=JSON.parse(raw); }
+  catch(e){
+    const m = raw.match(/\{[\s\S]*\}/);
+    if(m){ try{ parsed=JSON.parse(m[0]); }catch(e2){} }
+  }
+  if(!parsed) throw new Error('La IA no devolvió JSON válido');
+  return parsed;
+}
+
+function _ipdfRenderReview(){
+  const cont = document.getElementById('ipdf-review');
+  cont.innerHTML = _ipdfResultados.map((r,i)=>{
+    const e = r.extraidos || {};
+    if(e._error){
+      return `<div style="background:#fdecea;border:1px solid #f5c6c6;border-radius:8px;padding:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-weight:700;color:var(--red)">❌ ${r.file.name}</span>
+          <button class="btn btn-ghost btn-icon btn-sm" onclick="_ipdfQuitarResultado(${i})">✕</button>
+        </div>
+        <div style="font-size:11px;color:#666;margin-top:4px">Error: ${e._error}</div>
+      </div>`;
+    }
+    const dupBadge = r.duplicado
+      ? '<div style="background:#fdecea;color:var(--red);padding:6px 10px;border-radius:6px;font-size:11px;font-weight:700;margin-bottom:8px">⚠️ Esta factura puede estar duplicada — nº '+(e.num_factura||'')+' de '+(e.proveedor||'')+' ya existe</div>'
+      : '';
+    const serieAuto = (()=>{
+      // S4 gastos sin proyecto, S3 con proyecto. Por defecto S3.
+      return '3';
+    })();
+    return `<div data-idx="${i}" style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-weight:700;color:var(--navy);font-size:13px">📄 ${r.file.name}</div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <button class="btn btn-sm" style="background:var(--green);color:#fff;border:none;font-size:11px;padding:4px 10px" onclick="confirmarUnaImportacion(${i})">✅ Guardar</button>
+          <button class="btn btn-ghost btn-icon btn-sm" onclick="_ipdfQuitarResultado(${i})" title="Descartar" style="color:var(--red)">✕</button>
+        </div>
+      </div>
+      ${dupBadge}
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;margin-bottom:8px">
+        <div><label style="font-size:10px;color:var(--text-soft);font-weight:600">Proveedor</label><input class="form-input" id="ipdf-${i}-prov" value="${(e.proveedor||'').replace(/"/g,'&quot;')}" style="font-size:12px;padding:5px 8px"></div>
+        <div><label style="font-size:10px;color:var(--text-soft);font-weight:600">Nº factura</label><input class="form-input" id="ipdf-${i}-num" value="${(e.num_factura||'').replace(/"/g,'&quot;')}" style="font-size:12px;padding:5px 8px"></div>
+        <div><label style="font-size:10px;color:var(--text-soft);font-weight:600">Fecha</label><input class="form-input" id="ipdf-${i}-fecha" type="date" value="${e.fecha||''}" style="font-size:12px;padding:5px 8px"></div>
+        <div><label style="font-size:10px;color:var(--text-soft);font-weight:600">Proyecto</label>
+          <select class="form-input" id="ipdf-${i}-proy" style="font-size:12px;padding:5px 8px">
+            <option value="">— Sin proyecto —</option>
+            ${[...(PC||[])].sort((a,b)=>a.proyecto_id.localeCompare(b.proyecto_id,'es',{numeric:true})).map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${(p.nombre||'').substring(0,25)}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:8px">
+        <div><label style="font-size:10px;color:var(--text-soft);font-weight:600">Concepto</label><input class="form-input" id="ipdf-${i}-conc" value="${(e.concepto||'').replace(/"/g,'&quot;')}" style="font-size:12px;padding:5px 8px"></div>
+        <div><label style="font-size:10px;color:var(--text-soft);font-weight:600">Base imponible €</label><input class="form-input" id="ipdf-${i}-base" type="number" step="0.01" value="${e.base_imponible||0}" style="font-size:12px;padding:5px 8px;font-weight:700"></div>
+        <div><label style="font-size:10px;color:var(--text-soft);font-weight:600">IVA %</label>
+          <select class="form-input" id="ipdf-${i}-iva" style="font-size:12px;padding:5px 8px">
+            <option value="21%" ${e.iva_pct==21?'selected':''}>21%</option>
+            <option value="10%" ${e.iva_pct==10?'selected':''}>10%</option>
+            <option value="4%" ${e.iva_pct==4?'selected':''}>4%</option>
+            <option value="0%" ${e.iva_pct==0?'selected':''}>Exento</option>
+          </select>
+        </div>
+        <div><label style="font-size:10px;color:var(--text-soft);font-weight:600">Total €</label><input class="form-input" value="${fmt(e.total||0)}" readonly style="font-size:12px;padding:5px 8px;background:#f5f5f5;font-weight:700"></div>
+        <div><label style="font-size:10px;color:var(--text-soft);font-weight:600">Estado</label>
+          <select class="form-input" id="ipdf-${i}-estado" style="font-size:12px;padding:5px 8px">
+            <option value="Pendiente">Pendiente</option>
+            <option value="Pagada">Pagada</option>
+            <option value="Parcial">Parcial</option>
+          </select>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function _ipdfQuitarResultado(i){
+  _ipdfResultados.splice(i,1);
+  _ipdfRenderReview();
+  if(!_ipdfResultados.length){ closeModal('m-importar-pdfs'); toast('Sin facturas para importar'); }
+}
+
+function _ipdfVolverPaso1(){
+  document.getElementById('ipdf-step1').style.display='';
+  document.getElementById('ipdf-step2').style.display='none';
+  document.getElementById('ipdf-btn-procesar').style.display='';
+  document.getElementById('ipdf-btn-procesar').disabled = _ipdfArchivos.length===0;
+  document.getElementById('ipdf-btn-confirmar').style.display='none';
+  document.getElementById('ipdf-btn-volver').style.display='none';
+}
+
+async function confirmarUnaImportacion(idx){
+  const r = _ipdfResultados[idx];
+  if(!r || !r.extraidos || r.extraidos._error) return;
+  const ok = await _ipdfGuardarCompra(idx);
+  if(ok){
+    _ipdfResultados.splice(idx,1);
+    _ipdfRenderReview();
+    if(!_ipdfResultados.length){
+      closeModal('m-importar-pdfs');
+      toast('✅ Todas las facturas importadas');
+      loadCompras();
+    }
+  }
+}
+
+async function confirmarTodasImportaciones(){
+  const validas = _ipdfResultados.map((r,i)=>({r,i})).filter(({r})=>r.extraidos && !r.extraidos._error);
+  if(!validas.length){ toast('No hay facturas válidas para guardar','error'); return; }
+  const btn = document.getElementById('ipdf-btn-confirmar');
+  btn.disabled=true; btn.textContent='Guardando…';
+  let ok=0, fail=0;
+  // Iterar desde el final para que los splice no rompan índices
+  for(let k=validas.length-1; k>=0; k--){
+    const idx = validas[k].i;
+    try{
+      const saved = await _ipdfGuardarCompra(idx);
+      if(saved) ok++; else fail++;
+    }catch(e){ fail++; }
+  }
+  btn.disabled=false; btn.textContent='✅ Confirmar todas';
+  if(ok>0){
+    toast(`✅ ${ok} factura${ok>1?'s':''} importada${ok>1?'s':''}${fail?' · '+fail+' con error':''}`);
+    closeModal('m-importar-pdfs');
+    loadCompras();
+  } else {
+    toast('❌ No se pudo guardar ninguna factura','error');
+  }
+}
+
+async function _ipdfGuardarCompra(idx){
+  const r = _ipdfResultados[idx];
+  if(!r) return false;
+  const proy = document.getElementById(`ipdf-${idx}-proy`)?.value || null;
+  const proyObj = proy ? (PC||[]).find(p=>p.proyecto_id===proy) : null;
+  const payload = {
+    fecha: document.getElementById(`ipdf-${idx}-fecha`)?.value || new Date().toISOString().split('T')[0],
+    proyecto: proy,
+    proyecto_id: proyObj?.id || proy || null,
+    proveedor_id: document.getElementById(`ipdf-${idx}-prov`)?.value || null,
+    num_factura: document.getElementById(`ipdf-${idx}-num`)?.value || null,
+    concepto: document.getElementById(`ipdf-${idx}-conc`)?.value || '',
+    base_imponible: parseFloat(document.getElementById(`ipdf-${idx}-base`)?.value)||0,
+    iva_pct: document.getElementById(`ipdf-${idx}-iva`)?.value || '21%',
+    estado_pago: document.getElementById(`ipdf-${idx}-estado`)?.value || 'Pendiente',
+    adjunto_pdf: r.base64 ? 'data:application/pdf;base64,'+r.base64 : null,
+    adjunto_nombre: r.file.name
+  };
+  // Intentar con estado_pago, fallback a estado
+  try{
+    await sbPost('compras', payload);
+    return true;
+  }catch(err){
+    if(err.message && err.message.includes('estado_pago')){
+      const alt = {...payload}; delete alt.estado_pago; alt.estado = payload.estado_pago;
+      try{ await sbPost('compras', alt); return true; }catch(e2){ toast('Error guardando: '+e2.message,'error'); return false; }
+    } else if(err.message && err.message.includes('num_factura')){
+      const alt = {...payload}; delete alt.num_factura;
+      try{ await sbPost('compras', alt); return true; }catch(e2){ toast('Error guardando: '+e2.message,'error'); return false; }
+    }
+    toast('Error guardando '+r.file.name+': '+err.message,'error');
+    return false;
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
