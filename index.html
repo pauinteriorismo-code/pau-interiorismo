@@ -8704,7 +8704,35 @@ async function saveProyecto(){
   const nombre=document.getElementById('p-nombre').value.trim();if(!nombre){toast('El nombre es obligatorio','error');return;}
   const id=document.getElementById('p-id').value;
   const d={cliente_id:document.getElementById('p-cliente').value||null,nombre,tipo:document.getElementById('p-tipo').value,estado:document.getElementById('p-estado').value,responsable:document.getElementById('p-resp').value,fecha_inicio:document.getElementById('p-fecha').value||null,direccion_obra:document.getElementById('p-dir').value,notas:document.getElementById('p-notas').value,carpeta_drive:document.getElementById('p-drive').value||null,tipo_unidades:document.getElementById('p-tipo-unidades').value.trim()||null,modo_certificacion:document.getElementById('p-modo-cert')?.value||'simple'};
-  try{if(id){await sbPatch('proyectos',id,d);toast('Proyecto actualizado ✅');}else{d.proyecto_id=genId('PRY',PC,'proyecto_id');await sbPost('proyectos',d);toast('Proyecto creado ✅');crearCarpetasDrive(d.proyecto_id,nombre);crearTareasAutoProyecto(d.proyecto_id,d.tipo,d.fecha_inicio);}closeModal('m-proyecto');document.getElementById('p-id').value='';loadProyectos();populateSelects();}catch(e){toast('Error: '+e.message,'error');}
+  try{
+    let proyIdParaDossier=null, dispararDossier=false;
+    if(id){
+      const prev=(PC||[]).find(x=>x.id===id);
+      const estadoPrev=prev?.estado||'';
+      await sbPatch('proyectos',id,d);
+      toast('Proyecto actualizado ✅');
+      if(DOSSIER_ESTADOS_CIERRE.includes(d.estado) && estadoPrev!==d.estado && prev?.proyecto_id){
+        proyIdParaDossier=prev.proyecto_id; dispararDossier=true;
+      }
+    } else {
+      d.proyecto_id=genId('PRY',PC,'proyecto_id');
+      await sbPost('proyectos',d);
+      toast('Proyecto creado ✅');
+      crearCarpetasDrive(d.proyecto_id,nombre);
+      crearTareasAutoProyecto(d.proyecto_id,d.tipo,d.fecha_inicio);
+    }
+    closeModal('m-proyecto');
+    document.getElementById('p-id').value='';
+    await loadProyectos();
+    populateSelects();
+    if(dispararDossier){
+      setTimeout(()=>{
+        if(confirm(`¿Generar dossier de cierre del proyecto ${proyIdParaDossier}?\n\nSe creará un PDF resumen (económico, facturas, compras, certificaciones) y se subirá a su carpeta de Google Drive.`)){
+          generarDossierCierre(proyIdParaDossier);
+        }
+      }, 400);
+    }
+  }catch(e){toast('Error: '+e.message,'error');}
 }
 
 const DRIVE_SCRIPT_URL='https://script.google.com/macros/s/AKfycbxsSebGjLyu0VecIKtBMk7adJ_8ki4j_y8Xb62IDVgPWV7DY5ZkX1kdSM88bKPU4nln4g/exec';
@@ -8810,6 +8838,224 @@ async function crearTareasAutoProyecto(proyectoId, tipo, fechaInicio){
   }
   if(creadas > 0){
     setTimeout(()=>toast(`📋 Se han creado ${creadas} tareas automáticas en la Agenda`), 1800);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// DOSSIER DE CIERRE DE PROYECTO
+// Genera un PDF resumen del expediente y lo sube a Drive en la raíz
+// del proyecto. Se dispara al marcar el proyecto como "Cobrado" o
+// "Finalizado" desde el modal de edición de proyecto.
+// ═══════════════════════════════════════════════════════════════════
+const DOSSIER_ESTADOS_CIERRE = ['Cobrado','Finalizado'];
+
+async function generarDossierCierre(proyId){
+  const p = (PC||[]).find(x=>x.proyecto_id===proyId);
+  if(!p){ toast('Proyecto no encontrado','error'); return; }
+  const jsPDF = window.jspdf?.jsPDF;
+  if(!jsPDF){ toast('jsPDF no disponible','error'); return; }
+  toast('📋 Generando dossier de cierre…');
+
+  // ─── Recopilar datos ───
+  const cli = (CC||[]).find(c=>String(c.id)===String(p.cliente_id)||c.cliente_id===p.cliente_id) || {};
+  const facturas = (FC||[]).filter(f=>f.proyecto_id===proyId && (f.tipo_factura||'Venta')==='Venta');
+  const compras = (typeof CmpC!=='undefined'?CmpC:[]).filter(c=>c.proyecto_id===proyId);
+  const subcs = (typeof ScC!=='undefined'?ScC:[]).filter(s=>s.proyecto_id===proyId);
+  const horas = (HC||[]).filter(h=>h.proyecto_id===proyId);
+  let certs = [];
+  try{ certs = await sbGet('certificaciones',`?proyecto_id=eq.${proyId}&order=fecha.asc`); }catch(e){ certs=[]; }
+
+  const presVendido = (function(){
+    try{
+      const pres = (typeof PresC!=='undefined'?PresC:[]).filter(x=>x.proyecto_id===proyId && (x.estado==='Aprobado'||x.estado==='Enviado'));
+      if(pres.length) return pres.reduce((s,x)=>s+(x.total||x.importe||0),0);
+    }catch(e){}
+    return 0;
+  })();
+  const facturado = facturas.reduce((s,f)=>s+((f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100)),0);
+  const costeCompras = compras.reduce((s,c)=>s+((c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100)),0);
+  const costeSubc = subcs.reduce((s,x)=>s+((x.importe||0)*(1+ivaPct(x.iva_pct)/100)),0);
+  const costeHoras = horas.reduce((s,h)=>s+((h.horas||0)*(h.precio_hora||0)),0);
+  const costeReal = costeCompras + costeSubc + costeHoras;
+  const margen = facturado - costeReal;
+  const margenPct = facturado>0 ? (margen/facturado*100) : 0;
+
+  const pdf = new jsPDF('p','mm','a4');
+  const pW=210, pH=297, mX=14;
+  let y=14;
+  try{ pdf.addImage(PAU_LOGO,'PNG',mX,y,50,25); }catch(e){}
+  let cfg={}; try{ cfg=await getCfg(); }catch(e){}
+  pdf.setFontSize(9); pdf.setTextColor(100);
+  pdf.text(cfg.razon_social||'PAU INTERIORISMO S.L.', mX+54, y+5);
+  pdf.text(cfg.direccion||'', mX+54, y+9);
+  pdf.text(`CIF: ${cfg.cif||''}  ·  Tel: ${cfg.telefono||''}`, mX+54, y+13);
+  pdf.setFontSize(16); pdf.setTextColor(30,60,100); pdf.setFont(undefined,'bold');
+  pdf.text('DOSSIER DE CIERRE', pW-mX, y+6, {align:'right'});
+  pdf.setFontSize(10); pdf.setTextColor(100); pdf.setFont(undefined,'normal');
+  pdf.text(p.proyecto_id||'', pW-mX, y+13, {align:'right'});
+  y+=26; pdf.setDrawColor(184,115,51); pdf.setLineWidth(0.6); pdf.line(mX,y,pW-mX,y); y+=8;
+
+  // ─── PORTADA ───
+  pdf.setFontSize(18); pdf.setTextColor(30,60,100); pdf.setFont(undefined,'bold');
+  pdf.text(p.nombre||'Proyecto', mX, y); y+=9;
+  pdf.setFontSize(10); pdf.setTextColor(80); pdf.setFont(undefined,'normal');
+  const hoy = new Date().toISOString().split('T')[0];
+  const portada = [
+    ['Cliente',        cli.nombre || p.cliente_id || '—'],
+    ['Dirección obra', p.direccion_obra || '—'],
+    ['Tipo',           p.tipo || '—'],
+    ['Responsable',    p.responsable || '—'],
+    ['Fecha inicio',   fmtD(p.fecha_inicio) || '—'],
+    ['Fecha cierre',   fmtD(hoy)],
+    ['Estado',         p.estado || '—']
+  ];
+  portada.forEach(([k,v])=>{
+    pdf.setFont(undefined,'bold'); pdf.setTextColor(100); pdf.text(k+':', mX, y);
+    pdf.setFont(undefined,'normal'); pdf.setTextColor(40); pdf.text(String(v), mX+38, y);
+    y+=6;
+  });
+  y+=4;
+
+  // ─── RESUMEN ECONÓMICO ───
+  pdf.setFillColor(30,60,100); pdf.setTextColor(255); pdf.setFont(undefined,'bold'); pdf.setFontSize(11);
+  pdf.rect(mX,y,pW-2*mX,8,'F'); pdf.text('RESUMEN ECONÓMICO', mX+3, y+5.5); y+=12;
+  pdf.setFontSize(10); pdf.setTextColor(40); pdf.setFont(undefined,'normal');
+  const eco = [
+    ['Presupuesto vendido',       fmt(presVendido)],
+    ['Facturado al cliente',      fmt(facturado)],
+    ['Coste compras (materiales)',fmt(costeCompras)],
+    ['Coste subcontratas',        fmt(costeSubc)],
+    ['Coste mano de obra',        fmt(costeHoras)],
+    ['COSTE REAL TOTAL',          fmt(costeReal)],
+    ['Margen final €',            fmt(margen)],
+    ['Margen final %',            fmtP(margenPct)]
+  ];
+  eco.forEach(([k,v],i)=>{
+    const bold = (k.startsWith('COSTE REAL')||k.startsWith('Margen'));
+    if(bold){ pdf.setFillColor(245,247,250); pdf.rect(mX,y-4,pW-2*mX,6,'F'); }
+    pdf.setFont(undefined,bold?'bold':'normal');
+    pdf.setTextColor(bold?(k.includes('Margen')&&margen>=0?34:(k.includes('Margen')?192:30)):60, bold?(k.includes('Margen')&&margen>=0?139:(k.includes('Margen')?57:60)):60, bold?(k.includes('Margen')&&margen>=0?34:(k.includes('Margen')?43:100)):60);
+    pdf.text(k, mX+3, y);
+    pdf.text(v, pW-mX-3, y, {align:'right'});
+    pdf.setTextColor(40); y+=6;
+  });
+  y+=4;
+
+  // ─── FACTURAS EMITIDAS ───
+  if(y>240){ pdf.addPage(); y=20; }
+  pdf.setFillColor(30,60,100); pdf.setTextColor(255); pdf.setFont(undefined,'bold'); pdf.setFontSize(11);
+  pdf.rect(mX,y,pW-2*mX,8,'F'); pdf.text(`FACTURAS EMITIDAS (${facturas.length})`, mX+3, y+5.5); y+=11;
+  pdf.setFontSize(9); pdf.setTextColor(100); pdf.setFont(undefined,'bold');
+  pdf.text('Nº',mX+1,y); pdf.text('Fecha',mX+30,y); pdf.text('Concepto',mX+55,y);
+  pdf.text('Total',pW-mX-30,y,{align:'right'}); pdf.text('Estado',pW-mX-3,y,{align:'right'});
+  y+=2; pdf.setDrawColor(200); pdf.line(mX,y,pW-mX,y); y+=4;
+  pdf.setFont(undefined,'normal'); pdf.setTextColor(40);
+  facturas.forEach((f,i)=>{
+    if(y>275){ pdf.addPage(); y=20; }
+    if(i%2===0){ pdf.setFillColor(250,251,253); pdf.rect(mX,y-3.5,pW-2*mX,5.5,'F'); }
+    const tot=(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100);
+    const concepto=(f.concepto||'—').length>45?(f.concepto||'').substring(0,42)+'…':(f.concepto||'—');
+    pdf.text(String(f.num_factura||'—'),mX+1,y);
+    pdf.text(fmtD(f.fecha_emision)||'—',mX+30,y);
+    pdf.text(concepto,mX+55,y);
+    pdf.text(fmt(tot),pW-mX-30,y,{align:'right'});
+    pdf.text(f.estado||'—',pW-mX-3,y,{align:'right'});
+    y+=5.5;
+  });
+  if(!facturas.length){ pdf.setTextColor(150); pdf.text('Sin facturas',mX+3,y); y+=6; }
+  y+=4;
+
+  // ─── COMPRAS Y SUBCONTRATAS PRINCIPALES ───
+  if(y>240){ pdf.addPage(); y=20; }
+  pdf.setFillColor(30,60,100); pdf.setTextColor(255); pdf.setFont(undefined,'bold'); pdf.setFontSize(11);
+  pdf.rect(mX,y,pW-2*mX,8,'F'); pdf.text('COMPRAS Y SUBCONTRATAS PRINCIPALES', mX+3, y+5.5); y+=11;
+  const itemsCoste = [
+    ...compras.map(c=>({tipo:'Compra',  prov:c.proveedor_id||c.concepto||'—', concepto:c.concepto||'—', importe:(c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100)})),
+    ...subcs.map(s=>({tipo:'Subcontrata',prov:s.proveedor_id||s.trabajo||'—', concepto:s.trabajo||'—',  importe:(s.importe||0)*(1+ivaPct(s.iva_pct)/100)}))
+  ].sort((a,b)=>b.importe-a.importe).slice(0,20);
+  pdf.setFontSize(9); pdf.setTextColor(100); pdf.setFont(undefined,'bold');
+  pdf.text('Tipo',mX+1,y); pdf.text('Proveedor',mX+26,y); pdf.text('Concepto',mX+80,y);
+  pdf.text('Importe',pW-mX-3,y,{align:'right'});
+  y+=2; pdf.setDrawColor(200); pdf.line(mX,y,pW-mX,y); y+=4;
+  pdf.setFont(undefined,'normal'); pdf.setTextColor(40);
+  itemsCoste.forEach((it,i)=>{
+    if(y>275){ pdf.addPage(); y=20; }
+    if(i%2===0){ pdf.setFillColor(250,251,253); pdf.rect(mX,y-3.5,pW-2*mX,5.5,'F'); }
+    const prov=(it.prov||'').length>26?(it.prov||'').substring(0,23)+'…':(it.prov||'');
+    const conc=(it.concepto||'').length>38?(it.concepto||'').substring(0,35)+'…':(it.concepto||'');
+    pdf.text(it.tipo,mX+1,y);
+    pdf.text(prov,mX+26,y);
+    pdf.text(conc,mX+80,y);
+    pdf.text(fmt(it.importe),pW-mX-3,y,{align:'right'});
+    y+=5.5;
+  });
+  if(!itemsCoste.length){ pdf.setTextColor(150); pdf.text('Sin compras ni subcontratas',mX+3,y); y+=6; }
+  y+=4;
+
+  // ─── CERTIFICACIONES ───
+  if(certs.length){
+    if(y>240){ pdf.addPage(); y=20; }
+    pdf.setFillColor(30,60,100); pdf.setTextColor(255); pdf.setFont(undefined,'bold'); pdf.setFontSize(11);
+    pdf.rect(mX,y,pW-2*mX,8,'F'); pdf.text(`CERTIFICACIONES (${certs.length})`, mX+3, y+5.5); y+=11;
+    pdf.setFontSize(9); pdf.setTextColor(100); pdf.setFont(undefined,'bold');
+    pdf.text('Nº',mX+1,y); pdf.text('Fecha',mX+20,y); pdf.text('Descripción',mX+50,y);
+    pdf.text('Importe',pW-mX-3,y,{align:'right'});
+    y+=2; pdf.setDrawColor(200); pdf.line(mX,y,pW-mX,y); y+=4;
+    pdf.setFont(undefined,'normal'); pdf.setTextColor(40);
+    certs.forEach((c,i)=>{
+      if(y>275){ pdf.addPage(); y=20; }
+      if(i%2===0){ pdf.setFillColor(250,251,253); pdf.rect(mX,y-3.5,pW-2*mX,5.5,'F'); }
+      const desc=(c.descripcion||c.concepto||'—');
+      const descT=desc.length>55?desc.substring(0,52)+'…':desc;
+      pdf.text(String(c.numero||c.num||i+1),mX+1,y);
+      pdf.text(fmtD(c.fecha)||'—',mX+20,y);
+      pdf.text(descT,mX+50,y);
+      pdf.text(fmt(c.importe||c.total||0),pW-mX-3,y,{align:'right'});
+      y+=5.5;
+    });
+    y+=4;
+  }
+
+  // ─── PIE ───
+  const totalPaginas = pdf.internal.getNumberOfPages();
+  for(let i=1;i<=totalPaginas;i++){
+    pdf.setPage(i);
+    pdf.setFontSize(8); pdf.setTextColor(140);
+    pdf.text(`Dossier de cierre · ${p.proyecto_id} · Generado ${fmtD(hoy)}`, mX, pH-8);
+    pdf.text(`Página ${i} de ${totalPaginas}`, pW-mX, pH-8, {align:'right'});
+  }
+
+  // ─── Subir a Drive ───
+  const base64 = pdf.output('datauristring');
+  const safe = (typeof _safeNombre==='function' ? _safeNombre(p.nombre||'') : (p.nombre||'').replace(/[^a-zA-Z0-9_\-]/g,'_'));
+  const fileName = `Dossier_Cierre_${p.proyecto_id}_${safe}.pdf`;
+  const folderId = _driveFolderId(proyId);
+  if(!folderId){
+    // Sin carpeta Drive: descargar local como fallback
+    pdf.save(fileName);
+    toast('⚠️ Sin carpeta Drive: dossier descargado localmente','error');
+    return;
+  }
+  try{
+    const res = await fetch(DRIVE_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify({action:'uploadFile',fileData:base64,fileName,mimeType:'application/pdf',folderId,subCarpeta:null,tipoDoc:'Dossier cierre'})});
+    const json = await res.json().catch(()=>({}));
+    if(json.ok){
+      const fileUrl = json.fileUrl || json.url || p.carpeta_drive || '';
+      // Persistir enlace en el proyecto (columna dossier_cierre_url; si no existe, se ignora el error)
+      try{
+        await sbPatch('proyectos', p.id, { dossier_cierre_url: fileUrl, dossier_cierre_fecha: hoy });
+        p.dossier_cierre_url = fileUrl; p.dossier_cierre_fecha = hoy;
+      }catch(e){ console.warn('No se pudo guardar dossier_cierre_url:', e.message); }
+      const linkTxt = fileUrl ? ` · <a href="${fileUrl}" target="_blank" style="color:#fff;text-decoration:underline">Ver en Drive</a>` : '';
+      toast('📋 Dossier de cierre subido a Drive ✅'+linkTxt);
+    } else {
+      pdf.save(fileName);
+      toast('Error Drive: '+(json.error||'desconocido')+' — descargado local','error');
+    }
+  }catch(e){
+    pdf.save(fileName);
+    toast('Error subiendo dossier: '+e.message+' — descargado local','error');
   }
 }
 
@@ -26089,6 +26335,7 @@ function abrirFichaObra(proyId){
       ${p.direccion_obra?`<div style="font-size:11px;opacity:.6;margin-top:4px">📍 ${p.direccion_obra}</div>`:''}
       <div style="margin-top:10px;display:inline-block;background:rgba(255,255,255,.15);padding:3px 12px;border-radius:10px;font-size:12px;font-weight:700">${p.estado||'—'}</div>
       ${badgeCobroPdte}
+      ${p.dossier_cierre_url?`<div style="margin-top:8px"><a href="${p.dossier_cierre_url}" target="_blank" style="display:inline-block;background:#e6f5e6;color:#2a7a2a;padding:4px 10px;border-radius:10px;font-size:11px;font-weight:700;text-decoration:none;border:1px solid #2a7a2a">📋 Dossier generado${p.dossier_cierre_fecha?' · '+fmtD(p.dossier_cierre_fecha):''}</a></div>`:''}
     </div>
 
     <!-- KPIs rápidos -->
