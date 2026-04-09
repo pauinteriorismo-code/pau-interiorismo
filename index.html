@@ -903,6 +903,7 @@ if(window.MutationObserver){
         <button class="btn btn-ghost no-print" onclick="subirPresupuestoDrive()" title="Subir a Google Drive">☁️ Drive</button>
         <button class="btn btn-ghost no-print" onclick="window.print()">🖨️ Imprimir</button>
       </div>
+      <div id="pf-aceptado-banner" class="no-print" style="display:none;max-width:794px;margin:8px auto 12px auto;padding:14px 18px;border-radius:8px;font-size:13px;font-weight:600"></div>
       <div id="pf-doc" style="background:white;max-width:794px;width:794px;margin:0 auto;padding:20mm 20mm 12mm 20mm;border:1px solid var(--border);border-radius:var(--radius);font-family:'Inter','Segoe UI',Arial,sans-serif;font-size:12px">
         <!-- Cabecera empresa -->
         <div class="doc-repeat-header" style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:24px;padding-bottom:12px;border-bottom:2px solid #b87333">
@@ -5910,7 +5911,122 @@ async function loadPresupuestoFinal(){
     document.getElementById('pf-total').textContent=fmtES(total)+'€';
     loadPfObs();
     _refreshEnviadoPres();
+    window._pfTotalCIVA = total;
+    _pfActualizarBannerAceptado(p, ver);
   }catch(e){toast('Error: '+e.message,'error');}
+}
+
+// ─── Flujo presupuesto aceptado → contrato ───
+function _pfActualizarBannerAceptado(p, ver){
+  const banner=document.getElementById('pf-aceptado-banner');
+  if(!banner) return;
+  if(!p || !p.proyecto_id){ banner.style.display='none'; return; }
+  const aceptadaVer   = p.presupuesto_aceptado_version || '';
+  const aceptadaFecha = p.presupuesto_aceptado_fecha   || '';
+  const contratoFecha = p.contrato_generado_fecha      || '';
+  const contratoVer   = p.contrato_generado_version    || '';
+  const fmtFecha = f => { try{ return new Date(f).toLocaleDateString('es-ES'); }catch(e){ return f||''; } };
+  // Caso 1 — esta versión NO es la aceptada (o aún no hay aceptada)
+  if(!aceptadaVer || aceptadaVer!==ver){
+    banner.style.display='block';
+    banner.style.background='#f8fafc';
+    banner.style.border='1px dashed var(--border)';
+    banner.style.color='var(--text-soft)';
+    banner.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+      <span>${aceptadaVer
+        ? `✅ Versión aceptada del proyecto: <strong style="color:var(--green)">${aceptadaVer.toUpperCase()}</strong> · estás viendo ${ver.toUpperCase()}`
+        : `📋 Versión <strong>${ver.toUpperCase()}</strong> · pendiente de aceptar por el cliente`}</span>
+      <button class="btn btn-primary btn-sm no-print" onclick="pfMarcarAceptado()">✅ Marcar ${ver.toUpperCase()} como aceptada</button>
+    </div>`;
+    return;
+  }
+  // Caso 2 — aceptada, sin contrato → botón generar
+  if(!contratoFecha){
+    banner.style.display='block';
+    banner.style.background='#e8f5ee';
+    banner.style.border='1px solid var(--green)';
+    banner.style.color='#1b5e20';
+    banner.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+      <span>✅ Presupuesto <strong>${ver.toUpperCase()}</strong> aceptado el ${fmtFecha(aceptadaFecha)}</span>
+      <button class="btn btn-primary btn-sm no-print" onclick="pfGenerarContrato()">📄 Generar contrato</button>
+    </div>`;
+    return;
+  }
+  // Caso 3 — aceptada y con contrato generado
+  banner.style.display='block';
+  banner.style.background='#e3f2fd';
+  banner.style.border='1px solid #1565c0';
+  banner.style.color='#0d3c71';
+  banner.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+    <span>✅ <strong>${ver.toUpperCase()}</strong> aceptada · 📄 Contrato generado el ${fmtFecha(contratoFecha)}${contratoVer&&contratoVer!==ver?` (sobre ${contratoVer.toUpperCase()})`:''}</span>
+    <div style="display:flex;gap:6px">
+      <button class="btn btn-primary btn-sm no-print" onclick="pfAbrirContrato()">📄 Abrir contrato</button>
+      <button class="btn btn-ghost btn-sm no-print" onclick="pfRegenerarContrato()" title="Regenerar contrato">🔄</button>
+    </div>
+  </div>`;
+}
+
+async function pfMarcarAceptado(){
+  const proy=document.getElementById('pf-proyecto-sel')?.value;
+  const ver=document.getElementById('pf-version-sel')?.value;
+  if(!proy||!ver){ toast('Selecciona proyecto y versión','error'); return; }
+  const p=(PC||[]).find(x=>x.proyecto_id===proy);
+  if(!p){ toast('Proyecto no encontrado','error'); return; }
+  if(!confirm(`¿Marcar ${ver.toUpperCase()} como versión aceptada?\nEl proyecto pasará automáticamente al estado "Aprobado".`)) return;
+  try{
+    const patch={
+      presupuesto_aceptado_version: ver,
+      presupuesto_aceptado_fecha:   new Date().toISOString(),
+      estado: 'Aprobado'
+    };
+    await sbPatch('proyectos', p.id, patch);
+    Object.assign(p, patch);
+    toast('✅ '+ver.toUpperCase()+' aceptada · Proyecto Aprobado');
+    _pfActualizarBannerAceptado(p, ver);
+  }catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+async function pfAbrirContrato(){
+  const proy=document.getElementById('pf-proyecto-sel')?.value;
+  if(!proy) return;
+  navTo('contrato');
+  setTimeout(async ()=>{
+    const ctSel=document.getElementById('ct-proyecto-sel');
+    if(!ctSel) return;
+    const p=(PC||[]).find(x=>x.proyecto_id===proy)||{};
+    if(!Array.from(ctSel.options).some(o=>o.value===proy)){
+      const opt=document.createElement('option'); opt.value=proy; opt.textContent=proy+' · '+(p.nombre||''); ctSel.appendChild(opt);
+    }
+    ctSel.value=proy;
+    await loadContrato();
+  }, 250);
+}
+
+async function pfGenerarContrato(){
+  const proy=document.getElementById('pf-proyecto-sel')?.value;
+  const ver=document.getElementById('pf-version-sel')?.value;
+  if(!proy) return;
+  const p=(PC||[]).find(x=>x.proyecto_id===proy);
+  if(!p) return;
+  // Marcar contrato como generado
+  try{
+    const patch={
+      contrato_generado_fecha:   new Date().toISOString(),
+      contrato_generado_version: p.presupuesto_aceptado_version || ver
+    };
+    await sbPatch('proyectos', p.id, patch);
+    Object.assign(p, patch);
+    toast('📄 Contrato generado para '+proy);
+  }catch(e){ console.warn('No se pudo registrar contrato_generado_fecha:', e.message); }
+  await pfAbrirContrato();
+}
+
+async function pfRegenerarContrato(){
+  const proy=document.getElementById('pf-proyecto-sel')?.value;
+  const p=(PC||[]).find(x=>x.proyecto_id===proy);
+  if(!p) return;
+  if(!confirm('¿Regenerar el contrato? Se actualizará la fecha de generación.')) return;
+  await pfGenerarContrato();
 }
 
 
@@ -6106,11 +6222,11 @@ async function loadContrato(){
   const proyId=document.getElementById('ct-proyecto-sel').value;
   if(!proyId)return;
   try{
-    const[proyArr,lineas]=await Promise.all([
-      sbGet('proyectos',`?proyecto_id=eq.${proyId}`),
-      sbGet('presupuesto_lineas',`?proyecto_id=eq.${proyId}&version=eq.v1&es_capitulo=eq.false`)
-    ]);
+    const proyArr=await sbGet('proyectos',`?proyecto_id=eq.${proyId}`);
     const p=proyArr[0]||{};
+    // Usar la versión aceptada del proyecto; fallback a v1 si no hay
+    const verUsar = p.presupuesto_aceptado_version || 'v1';
+    const lineas=await sbGet('presupuesto_lineas',`?proyecto_id=eq.${proyId}&version=eq.${verUsar}&es_capitulo=eq.false`);
     const cliente=CC.find(c=>c.cliente_id===p.cliente_id)||{};
     const totalBase=lineas.reduce((s,l)=>s+(l.subtotal||0),0);
     const totalIvaImporte=lineas.reduce((s,l)=>{
@@ -6126,11 +6242,11 @@ async function loadContrato(){
     document.getElementById('ct-cliente-dir').textContent=cliente.direccion||'[DIRECCIÓN]';
     document.getElementById('ct-proyecto-nombre').textContent=p.nombre||'[PROYECTO]';
     document.getElementById('ct-proyecto-dir').textContent=p.direccion_obra||'[DIRECCIÓN OBRA]';
-    document.getElementById('ct-pres-id').textContent=`${proyId}-V1`;
+    document.getElementById('ct-pres-id').textContent=`${proyId}-${verUsar.toUpperCase()}`;
     document.getElementById('ct-importe').textContent=fmtES(totalIVA)+'€ (IVA incluido)';
     document.getElementById('ct-firma-cliente').textContent=cliente.nombre||'[CLIENTE]';
     // Populate presupuesto selector
-    document.getElementById('ct-pres-sel').innerHTML=`<option value="v1">${proyId}-v1 · ${fmtES(totalIVA)}€ c/IVA</option>`;
+    document.getElementById('ct-pres-sel').innerHTML=`<option value="${verUsar}">${proyId}-${verUsar} · ${fmtES(totalIVA)}€ c/IVA</option>`;
   }catch(e){toast('Error: '+e.message,'error');}
 }
 
