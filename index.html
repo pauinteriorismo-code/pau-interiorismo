@@ -5151,6 +5151,13 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <option value="Albaranes">📦 Albarán</option>
         </select>
       </div>
+      <div class="form-group">
+        <label class="form-label">Destino</label>
+        <select class="form-input" id="co-destino" title="Obra: 06 Subcontratas · Interiorismo: 09 Interiorismo (mobiliario sin obra)">
+          <option value="obra" selected>🏗 Obra</option>
+          <option value="interiorismo">🛋 Interiorismo</option>
+        </select>
+      </div>
       <div class="form-group fg-full">
         <label class="form-label">📎 PDF del proveedor</label>
         <!-- Zona de carga — solo activa cuando NO hay PDF -->
@@ -8657,11 +8664,34 @@ async function saveProyecto(){
 }
 
 const DRIVE_SCRIPT_URL='https://script.google.com/macros/s/AKfycbxsSebGjLyu0VecIKtBMk7adJ_8ki4j_y8Xb62IDVgPWV7DY5ZkX1kdSM88bKPU4nln4g/exec';
+// ─── Estructura única de carpetas Drive del proyecto ───
+// Esta lista es la fuente de verdad. Las subCarpeta usadas en las subidas (04/05/06/08)
+// DEBEN coincidir exactamente con uno de estos nombres. Si cambias un nombre aquí,
+// también hay que renombrarlo en Drive en los proyectos existentes (o usar el GAS para hacerlo en bulk).
+const DRIVE_FOLDER_NAMES = [
+  '01 Mediciones',
+  '02 Planos',
+  '03 Sketchup 3D',
+  '04 Presupuestos',
+  '05 Contratos',
+  '06 Subcontratas',
+  '07 Fotos obra',
+  '08 Facturas',
+  '09 Interiorismo',
+  '10 Licencias'
+];
+// Alias para subCarpetas usadas por el código (single source of truth)
+const DRIVE_SUB = {
+  presupuestos: '04 Presupuestos',
+  contratos:    '05 Contratos',
+  proveedores:  '06 Subcontratas',
+  facturas:     '08 Facturas'
+};
 
 async function crearCarpetasDrive(proyId, nombre){
   const carpeta=proyId+' '+nombre;
   try{
-    const r=await fetch(DRIVE_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({nombre:carpeta})});
+    const r=await fetch(DRIVE_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({nombre:carpeta, carpetas:DRIVE_FOLDER_NAMES})});
     const json=await r.json().catch(()=>({}));
     if(json.ok && json.url){
       const p=PC.find(x=>x.proyecto_id===proyId);
@@ -8809,7 +8839,7 @@ async function subirAlbaranDrive(id){
   const fileName=`Albaran_${alb.num_albaran||id}_${alb.fecha||''}${_prov?'_'+_prov:''}.pdf`;
   try{
     const res=await fetch(DRIVE_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
-      body:JSON.stringify({action:'uploadFile',fileData:base64,fileName,mimeType:'application/pdf',folderId,subCarpeta:'06 Subcontratas y Proveedores',tipoDoc:'Albaranes',proveedor:alb.proveedor||'Sin proveedor'})});
+      body:JSON.stringify({action:'uploadFile',fileData:base64,fileName,mimeType:'application/pdf',folderId,subCarpeta:DRIVE_SUB.proveedores,tipoDoc:'Albaranes',proveedor:alb.proveedor||'Sin proveedor'})});
     const json=await res.json().catch(()=>({}));
     if(json.ok){toast('☁️ Albarán subido a Drive ✅');}
     else{toast('Error Drive: '+(json.error||'desconocido'),'error');}
@@ -8824,7 +8854,7 @@ async function subirDocPedidoDrive(){
   const _numPed=document.getElementById('pd-num-input')?.value||'pedido';
   const _provPed=_safeNombre(ped?.proveedor||'');
   const nombre=_numPed+(_provPed?'_'+_provPed:'')+'.pdf';
-  await subirPDFaDrive('pd-doc',nombre,proyId,'06 Subcontratas y Proveedores',null,{tipoDoc:'Presupuestos',proveedor:ped?.proveedor||'Sin proveedor'});
+  await subirPDFaDrive('pd-doc',nombre,proyId,DRIVE_SUB.proveedores,null,{tipoDoc:'Presupuestos',proveedor:ped?.proveedor||'Sin proveedor'});
 }
 
 async function subirPresupuestoDrive(){
@@ -12915,8 +12945,10 @@ async function saveCompra(){
         const _provNom=d.proveedor_id||'';
         const _safe=_safeNombre(_provNom);
         const _tipoDoc=document.getElementById('co-tipo-doc')?.value||'Facturas';
+        const _destino=document.getElementById('co-destino')?.value||'obra';
+        const _subCarpetaDestino = _destino==='interiorismo' ? '09 Interiorismo' : DRIVE_SUB.proveedores;
         const _fname=(coNombreVal.replace(/\.pdf$/i,'')||_tipoDoc.toLowerCase())+(_safe?'_'+_safe:'')+'.pdf';
-        subirPDFb64aDrive(pdfB64,_fname,proyTexto,'06 Subcontratas y Proveedores',{tipoDoc:_tipoDoc,proveedor:_provNom||'Sin proveedor'})
+        subirPDFb64aDrive(pdfB64,_fname,proyTexto,_subCarpetaDestino,{tipoDoc:_tipoDoc,proveedor:_provNom||'Sin proveedor'})
           .then(j=>{ if(j&&j.ok&&!j.duplicate) toast('☁️ '+_tipoDoc+' subido a Drive ✅'); else if(j&&j.duplicate) toast('☁️ Documento ya existía en Drive (no duplicado)'); });
       }
     }
@@ -13107,7 +13139,7 @@ async function saveSubcontrata(){
         const _provNom=d.proveedor_id||'';
         const _safe=_safeNombre(_provNom);
         const _fname=(scNombreVal.replace(/\.pdf$/i,'')||'factura')+(_safe?'_'+_safe:'')+'.pdf';
-        subirPDFb64aDrive(pdfB64,_fname,_scProy,'06 Subcontratas y Proveedores',{tipoDoc:'Facturas',proveedor:_provNom||'Sin proveedor'})
+        subirPDFb64aDrive(pdfB64,_fname,_scProy,DRIVE_SUB.proveedores,{tipoDoc:'Facturas',proveedor:_provNom||'Sin proveedor'})
           .then(j=>{ if(j&&j.ok&&!j.duplicate) toast('☁️ PDF subido a Drive ✅'); else if(j&&j.duplicate) toast('☁️ PDF ya existía en Drive (no duplicado)'); });
       }
     }
@@ -13257,7 +13289,7 @@ async function guardarDocPedido(){
       const sel=document.getElementById('pd-pedido-sel');
       if(sel) sel.value = window.pdPedidoId;
     }
-    // Auto-subida a Google Drive (carpeta del proyecto · 06 Subcontratas y Proveedores)
+    // Auto-subida a Google Drive (carpeta del proyecto · 06 Subcontratas)
     if(d.proyecto_id){
       // Pequeña espera para que el DOM del documento esté listo
       setTimeout(()=>{
@@ -15479,7 +15511,7 @@ function previsualizarFactura(opts){
   const _folderId = _proyDrive ? _driveFolderId(_proyDrive) : null;
   const _esCompra = !!d.esC;
   const _driveOpts = _folderId ? (_esCompra
-    ? {folderId:_folderId, subCarpeta:'06 Subcontratas y Proveedores', tipoDoc:'Facturas', proveedor:d.contra||'Sin proveedor'}
+    ? {folderId:_folderId, subCarpeta:DRIVE_SUB.proveedores, tipoDoc:'Facturas', proveedor:d.contra||'Sin proveedor'}
     : {folderId:_folderId, subCarpeta:'08 Facturas'}) : null;
   if(_silent){
     // Modo auto-Drive: subir sin abrir popup de preview
