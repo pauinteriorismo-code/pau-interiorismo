@@ -5143,8 +5143,16 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="form-group"><label class="form-label">Estado pago</label><select class="form-input" id="co-estado"><option selected>Pendiente</option><option>Pagado</option><option>Parcial</option><option>Vencido</option></select></div>
       <div class="form-group fg-full"><label class="form-label">Notas</label><input class="form-input" id="co-notas"></div>
       <!-- PDF ADJUNTO -->
+      <div class="form-group">
+        <label class="form-label">Tipo de documento</label>
+        <select class="form-input" id="co-tipo-doc">
+          <option value="Facturas" selected>📄 Factura</option>
+          <option value="Presupuestos">📋 Presupuesto</option>
+          <option value="Albaranes">📦 Albarán</option>
+        </select>
+      </div>
       <div class="form-group fg-full">
-        <label class="form-label">📎 Factura PDF del proveedor</label>
+        <label class="form-label">📎 PDF del proveedor</label>
         <!-- Zona de carga — solo activa cuando NO hay PDF -->
         <div id="co-pdf-zone" style="border:2px dashed var(--border);border-radius:8px;padding:14px;text-align:center;cursor:pointer;transition:all .15s;background:var(--bg-card)" 
              onclick="document.getElementById('co-pdf-input').click()"
@@ -12906,9 +12914,10 @@ async function saveCompra(){
       if(proyTexto){
         const _provNom=d.proveedor_id||'';
         const _safe=_safeNombre(_provNom);
-        const _fname=(coNombreVal.replace(/\.pdf$/i,'')||'factura')+(_safe?'_'+_safe:'')+'.pdf';
-        subirPDFb64aDrive(pdfB64,_fname,proyTexto,'06 Subcontratas y Proveedores',{tipoDoc:'Facturas',proveedor:_provNom||'Sin proveedor'})
-          .then(j=>{ if(j&&j.ok&&!j.duplicate) toast('☁️ PDF subido a Drive ✅'); else if(j&&j.duplicate) toast('☁️ PDF ya existía en Drive (no duplicado)'); });
+        const _tipoDoc=document.getElementById('co-tipo-doc')?.value||'Facturas';
+        const _fname=(coNombreVal.replace(/\.pdf$/i,'')||_tipoDoc.toLowerCase())+(_safe?'_'+_safe:'')+'.pdf';
+        subirPDFb64aDrive(pdfB64,_fname,proyTexto,'06 Subcontratas y Proveedores',{tipoDoc:_tipoDoc,proveedor:_provNom||'Sin proveedor'})
+          .then(j=>{ if(j&&j.ok&&!j.duplicate) toast('☁️ '+_tipoDoc+' subido a Drive ✅'); else if(j&&j.duplicate) toast('☁️ Documento ya existía en Drive (no duplicado)'); });
       }
     }
     toast(id?'Compra actualizada ✅':'Compra registrada ✅');
