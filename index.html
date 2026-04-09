@@ -8896,9 +8896,11 @@ async function generarDossierCierre(proyId){
     presPorVersion[ver] = (presPorVersion[ver]||0) + importe;
   });
   const presVendido = Object.values(presPorVersion).reduce((s,v)=>s+v,0);
-  const facturado = facturas.reduce((s,f)=>s+((f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100)),0);
-  const costeCompras = compras.reduce((s,c)=>s+((c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100)),0);
-  const costeSubc = subcs.reduce((s,x)=>s+((x.importe||0)*(1+ivaPct(x.iva_pct)/100)),0);
+  // Todos los importes del resumen económico en BASE IMPONIBLE (s/IVA), para que
+  // el margen refleje beneficio real y coincida con la pestaña Rentabilidad del expediente.
+  const facturado = facturas.reduce((s,f)=>s+(f.base_imponible||0),0);
+  const costeCompras = compras.reduce((s,c)=>s+(c.base_imponible||0),0);
+  const costeSubc = subcs.reduce((s,x)=>s+(x.importe||0),0);
   const costeHoras = horas.reduce((s,h)=>s+((h.total||0) || ((h.horas||0)*(h.coste_hora||tarifaHora||0))),0);
   const costeReal = costeCompras + costeSubc + costeHoras;
   // Cobros sin factura (notas en efectivo / entregas): sumar entregas_cuenta del proyecto
