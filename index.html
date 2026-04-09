@@ -1582,6 +1582,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <button class="btn btn-ghost btn-sm no-print" onclick="eliminarVersionPresupuesto()" title="Eliminar todas las lineas de esta version" style="color:var(--red);border-color:var(--red);font-size:11px;padding:4px 8px">🗑 Versión</button>
         <button class="btn btn-primary" onclick="addLineaPresupuesto()">＋ Línea</button>
         <button class="btn btn-ghost" onclick="addCapituloPresupuesto()">＋ Capítulo</button>
+        <button class="btn btn-ghost" style="background:#f5e6ff;color:#7b2fa8;border-color:#d4b3e6" onclick="abrirPresupuestoIA()" title="Generar presupuesto automáticamente con IA">🤖 Generar con IA</button>
         <button class="btn btn-ghost" id="btn-comparativa" style="display:none" onclick="abrirComparativa()">⚖️ Comparar</button>
         <select class="form-input" id="pres-filtro-estado" onchange="setPresFiltroEstado(this.value)" title="Filtrar por estado de certificación" style="width:auto;min-width:135px;font-size:11px;padding:4px 6px">
           <option value="todos">🔎 Todos los estados</option>
@@ -4785,6 +4786,61 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 </div>
 
 <!-- PRESUPUESTO CAPÍTULO -->
+<!-- MODAL GENERAR PRESUPUESTO CON IA -->
+<div class="overlay" id="m-pres-ia" style="z-index:550">
+  <div class="modal" style="width:720px;max-width:95vw">
+    <div class="modal-head">
+      <div class="modal-title">🤖 Generar presupuesto con IA</div>
+      <button class="modal-close" onclick="closeModal('m-pres-ia')">×</button>
+    </div>
+    <div class="modal-body" style="max-height:70vh;overflow-y:auto">
+      <!-- Paso 1: Descripción -->
+      <div id="pia-step1">
+        <div class="info-box" style="background:#fff8e1;border-color:#f0d68a;color:#8a5a00;margin-bottom:12px">
+          ⚠️ <strong>Aviso importante:</strong> Los precios generados por IA son orientativos (mercado Valencia 2026). <strong>Revisa y ajusta antes de enviar al cliente.</strong>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tipo de proyecto</label>
+          <select class="form-input" id="pia-tipo">
+            <option value="Obra nueva">🏗️ Obra nueva (IVA 10%)</option>
+            <option value="Rehabilitación">🔨 Rehabilitación (IVA 10%)</option>
+            <option value="Interiorismo">🛋️ Interiorismo (IVA 21%)</option>
+            <option value="Cocina">🍳 Cocina (IVA 21%)</option>
+            <option value="Baño">🚿 Baño (IVA 21%)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Describe el proyecto a presupuestar</label>
+          <textarea class="form-input" id="pia-desc" rows="6" placeholder="Sé lo más concreto posible: m2, materiales, acabados, electrodomésticos, número de estancias, alturas…" style="resize:vertical;font-size:13px"></textarea>
+        </div>
+        <div style="background:#f5f7fa;border-radius:6px;padding:10px 12px;font-size:11px;color:#555">
+          <div style="font-weight:700;margin-bottom:6px;color:var(--navy)">💡 Ejemplos de descripción:</div>
+          <div style="margin-bottom:4px;cursor:pointer;padding:4px 6px;border-radius:4px" onclick="document.getElementById('pia-desc').value=this.textContent.replace(/^• /,'')" onmouseover="this.style.background='#e6f0ff'" onmouseout="this.style.background=''">• Cocina abierta 12m2 con isla, encimera silestone, electrodomésticos Bosch integrados, frente ventana con vistas</div>
+          <div style="margin-bottom:4px;cursor:pointer;padding:4px 6px;border-radius:4px" onclick="document.getElementById('pia-desc').value=this.textContent.replace(/^• /,'')" onmouseover="this.style.background='#e6f0ff'" onmouseout="this.style.background=''">• Reforma baño completo 6m2, plato ducha, sanitarios suspendidos, suelo porcelánico, mampara de vidrio</div>
+          <div style="cursor:pointer;padding:4px 6px;border-radius:4px" onclick="document.getElementById('pia-desc').value=this.textContent.replace(/^• /,'')" onmouseover="this.style.background='#e6f0ff'" onmouseout="this.style.background=''">• Rehabilitación fachada edificio 200m2, enfoscado, pintura, reparación grietas, andamio</div>
+        </div>
+        <div id="pia-loading" style="display:none;margin-top:14px;padding:16px;background:#f5e6ff;border-radius:6px;text-align:center;color:#7b2fa8;font-weight:600">
+          <div style="font-size:24px;margin-bottom:6px">🤖</div>
+          La IA está generando tu presupuesto… (puede tardar ~15-30 s)
+        </div>
+      </div>
+      <!-- Paso 2: Preview de partidas generadas -->
+      <div id="pia-step2" style="display:none">
+        <div class="info-box" style="background:#e6f5e6;border-color:#a8d8a8;color:#2a7a2a;margin-bottom:12px">
+          ✅ Presupuesto generado. Revisa las partidas, elimina las que no necesites y pulsa Importar.
+        </div>
+        <div id="pia-preview" style="max-height:50vh;overflow-y:auto;border:1px solid var(--border);border-radius:6px;padding:10px"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('m-pres-ia')">Cancelar</button>
+      <button class="btn btn-ghost" id="pia-btn-volver" style="display:none" onclick="_piaVolverPaso1()">⬅ Atrás</button>
+      <button class="btn btn-primary" id="pia-btn-generar" onclick="generarPresupuestoIA()" style="background:#7b2fa8;border-color:#7b2fa8">✨ Generar presupuesto</button>
+      <button class="btn btn-primary" id="pia-btn-importar" style="display:none" onclick="importarPresupuestoIA()">📥 Importar al presupuesto</button>
+    </div>
+  </div>
+</div>
+
 <div class="overlay" id="m-pres-cap"><div class="modal" style="width:400px">
   <div class="modal-head"><div class="modal-title">📂 Nuevo capítulo</div><button class="modal-close" onclick="closeModal(&#39;m-pres-cap&#39;)">×</button></div>
   <div class="modal-body"><div class="form-group"><label class="form-label">Nombre del capítulo</label><input type="hidden" id="cap-id"><input class="form-input" id="cap-nombre" placeholder="01. Demoliciones y trabajos previos"></div></div>
@@ -9599,6 +9655,229 @@ async function saveLineaPresupuesto(){
   try{if(id){await sbPatch('presupuesto_lineas',id,d);toast('Línea actualizada ✅');}else{await sbPost('presupuesto_lineas',d);toast('Línea añadida ✅');}closeModal('m-pres-linea');const _presScroll=document.querySelector('.content')?.scrollTop||0;await loadPresupuesto();requestAnimationFrame(()=>{const c=document.querySelector('.content');if(c)c.scrollTop=_presScroll;});}catch(e){toast('Error: '+e.message,'error');}
 }
 function addCapituloPresupuesto(){const proy=document.getElementById('pres-proyecto-sel').value;if(!proy){toast('Selecciona un proyecto primero','error');return;}addCapituloModal();}
+
+// ═══════════════════════════════════════════════════════════════
+// GENERACIÓN DE PRESUPUESTO CON IA (Claude API)
+// ═══════════════════════════════════════════════════════════════
+let _piaResultado = null; // {capitulos:[{nombre,partidas:[...]}]}
+
+function abrirPresupuestoIA(){
+  const proy=document.getElementById('pres-proyecto-sel').value;
+  if(!proy){ toast('Selecciona un proyecto primero','error'); return; }
+  // Auto-seleccionar tipo según el proyecto si lo encontramos
+  const p = PC.find(x=>x.proyecto_id===proy);
+  if(p && p.tipo){
+    const sel=document.getElementById('pia-tipo');
+    const t=(p.tipo||'').toLowerCase();
+    if(t.includes('cocina')) sel.value='Cocina';
+    else if(t.includes('baño')||t.includes('bano')) sel.value='Baño';
+    else if(t.includes('interior')||t.includes('mobiliario')) sel.value='Interiorismo';
+    else if(t.includes('rehab')||t.includes('reforma')) sel.value='Rehabilitación';
+    else if(t.includes('obra')) sel.value='Obra nueva';
+  }
+  document.getElementById('pia-step1').style.display='';
+  document.getElementById('pia-step2').style.display='none';
+  document.getElementById('pia-btn-generar').style.display='';
+  document.getElementById('pia-btn-importar').style.display='none';
+  document.getElementById('pia-btn-volver').style.display='none';
+  document.getElementById('pia-loading').style.display='none';
+  openModal('m-pres-ia');
+}
+
+function _piaVolverPaso1(){
+  document.getElementById('pia-step1').style.display='';
+  document.getElementById('pia-step2').style.display='none';
+  document.getElementById('pia-btn-generar').style.display='';
+  document.getElementById('pia-btn-importar').style.display='none';
+  document.getElementById('pia-btn-volver').style.display='none';
+}
+
+async function generarPresupuestoIA(){
+  const desc = document.getElementById('pia-desc').value.trim();
+  const tipo = document.getElementById('pia-tipo').value;
+  if(desc.length<10){ toast('Describe el proyecto con más detalle','error'); return; }
+  const key = window._ANTHROPIC_KEY||'';
+  if(!key){ toast('Configura tu API Key de Anthropic en Configuración','error'); return; }
+
+  document.getElementById('pia-loading').style.display='block';
+  document.getElementById('pia-btn-generar').disabled=true;
+
+  const esObra = (tipo==='Obra nueva'||tipo==='Rehabilitación');
+  const ivaPctN = esObra?10:21;
+
+  const systemPrompt = `Eres un técnico de presupuestos de PAU INTERIORISMO S.L., empresa de construcción e interiorismo en Valencia, España. Conoces los precios de mercado de la zona de Valencia para 2026. Generas presupuestos estructurados en capítulos y partidas con precios realistas.
+
+REGLAS ESTRICTAS:
+1. Responde ÚNICAMENTE con JSON válido puro, sin markdown, sin backticks, sin explicaciones fuera del JSON.
+2. Estructura exacta:
+{"capitulos":[{"nombre":"Nombre capítulo","partidas":[{"descripcion":"...","unidad":"m2|ml|Ud|h|kg|m3|pa","cantidad":0,"precio_unitario":0,"total":0}]}]}
+3. Cada partida debe tener total = cantidad × precio_unitario.
+4. Usa unidades reales del sector: m2, ml, Ud, h, kg, m3, pa (partida alzada).
+5. Precios en EUROS base imponible (sin IVA), de mercado Valencia 2026.
+6. Agrupa partidas en capítulos lógicos (Demoliciones, Albañilería, Instalaciones, Acabados, Carpintería, Fontanería, Electricidad, Pintura, etc. según corresponda).
+7. Para proyectos de cocina/baño/interiorismo incluye partidas de mobiliario, encimeras, sanitarios, electrodomésticos según la descripción.
+8. Sé completo pero realista: entre 3-8 capítulos, entre 2-10 partidas por capítulo.
+9. NO inventes marcas específicas salvo que el usuario las mencione.
+10. Tipo de proyecto: ${tipo} (IVA aplicable: ${ivaPctN}%).`;
+
+  const userPrompt = `Descripción del proyecto a presupuestar:\n\n${desc}\n\nGenera el presupuesto completo en JSON.`;
+
+  try{
+    const resp = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:4000,
+        system:systemPrompt,
+        messages:[{role:'user',content:userPrompt}]
+      })
+    });
+    if(!resp.ok){
+      let m='Error API '+resp.status;
+      try{ const e=await resp.json(); m=e?.error?.message||m; }catch(e){}
+      throw new Error(m);
+    }
+    const data = await resp.json();
+    const raw = data.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+    // Intentar parsear JSON (tolerante a markdown accidental)
+    let parsed=null;
+    try{ parsed=JSON.parse(raw); }
+    catch(e){
+      const m = raw.match(/\{[\s\S]*\}/);
+      if(m){ try{ parsed=JSON.parse(m[0]); }catch(e2){} }
+    }
+    if(!parsed || !Array.isArray(parsed.capitulos)){
+      throw new Error('La IA no devolvió un formato válido. Inténtalo de nuevo o reformula la descripción.');
+    }
+    _piaResultado = parsed;
+    _piaRenderPreview();
+    document.getElementById('pia-step1').style.display='none';
+    document.getElementById('pia-step2').style.display='';
+    document.getElementById('pia-btn-generar').style.display='none';
+    document.getElementById('pia-btn-importar').style.display='';
+    document.getElementById('pia-btn-volver').style.display='';
+  }catch(err){
+    toast('Error IA: '+err.message,'error');
+  }finally{
+    document.getElementById('pia-loading').style.display='none';
+    document.getElementById('pia-btn-generar').disabled=false;
+  }
+}
+
+function _piaRenderPreview(){
+  const cont = document.getElementById('pia-preview');
+  if(!_piaResultado || !_piaResultado.capitulos.length){
+    cont.innerHTML = '<div style="color:#999;padding:20px;text-align:center">Sin resultados</div>';
+    return;
+  }
+  let totalGlobal = 0;
+  const html = _piaResultado.capitulos.map((cap,ci)=>{
+    const partidas = (cap.partidas||[]);
+    const totalCap = partidas.reduce((s,p)=>s+(parseFloat(p.total)||((parseFloat(p.cantidad)||0)*(parseFloat(p.precio_unitario)||0))),0);
+    totalGlobal += totalCap;
+    return `<div style="margin-bottom:14px;border:1px solid #e0d0e8;border-radius:6px;overflow:hidden">
+      <div style="background:#7b2fa8;color:#fff;padding:8px 12px;font-size:13px;font-weight:700;display:flex;justify-content:space-between">
+        <span>📂 ${cap.nombre||'Capítulo '+(ci+1)}</span>
+        <span>${fmt(totalCap)}</span>
+      </div>
+      <table style="width:100%;font-size:11px;border-collapse:collapse">
+        <thead><tr style="background:#f9f5fc;border-bottom:1px solid #e0d0e8">
+          <th style="padding:5px 8px;text-align:left">Descripción</th>
+          <th style="padding:5px 4px;text-align:center;width:50px">Ud</th>
+          <th style="padding:5px 4px;text-align:right;width:55px">Cant.</th>
+          <th style="padding:5px 4px;text-align:right;width:70px">Pr. unit.</th>
+          <th style="padding:5px 4px;text-align:right;width:80px">Total</th>
+          <th style="padding:5px 4px;width:30px"></th>
+        </tr></thead>
+        <tbody>
+          ${partidas.map((p,pi)=>{
+            const tot = parseFloat(p.total) || ((parseFloat(p.cantidad)||0)*(parseFloat(p.precio_unitario)||0));
+            return `<tr data-ci="${ci}" data-pi="${pi}" style="border-bottom:1px solid #f5f0fa">
+              <td style="padding:5px 8px">${(p.descripcion||'—').replace(/</g,'&lt;')}</td>
+              <td style="padding:5px 4px;text-align:center;color:#666">${p.unidad||'Ud'}</td>
+              <td style="padding:5px 4px;text-align:right;font-family:monospace">${(parseFloat(p.cantidad)||0).toFixed(2)}</td>
+              <td style="padding:5px 4px;text-align:right;font-family:monospace">${fmt(parseFloat(p.precio_unitario)||0)}</td>
+              <td style="padding:5px 4px;text-align:right;font-family:monospace;font-weight:700">${fmt(tot)}</td>
+              <td style="padding:5px 4px;text-align:center"><button class="btn btn-ghost btn-icon btn-sm" onclick="_piaEliminarPartida(${ci},${pi})" title="Eliminar" style="color:var(--red);font-size:12px">✕</button></td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>`;
+  }).join('');
+  cont.innerHTML = html + `<div style="text-align:right;padding:10px 12px;background:#f5e6ff;border-radius:6px;margin-top:8px">
+    <span style="font-size:13px;color:#7b2fa8">TOTAL ESTIMADO (s/IVA):</span>
+    <span style="font-size:18px;font-weight:800;color:#7b2fa8;margin-left:10px">${fmt(totalGlobal)}</span>
+  </div>`;
+}
+
+function _piaEliminarPartida(ci,pi){
+  if(!_piaResultado) return;
+  _piaResultado.capitulos[ci].partidas.splice(pi,1);
+  // Si el capítulo queda vacío, eliminarlo también
+  if(_piaResultado.capitulos[ci].partidas.length===0){
+    _piaResultado.capitulos.splice(ci,1);
+  }
+  _piaRenderPreview();
+}
+
+async function importarPresupuestoIA(){
+  if(!_piaResultado || !_piaResultado.capitulos.length){ toast('Sin partidas para importar','error'); return; }
+  const proy = document.getElementById('pres-proyecto-sel').value;
+  const ver  = document.getElementById('pres-version-sel').value;
+  if(!proy){ toast('Selecciona un proyecto','error'); return; }
+  const tipo = document.getElementById('pia-tipo').value;
+  const esObra = (tipo==='Obra nueva'||tipo==='Rehabilitación');
+  const ivaGlobal = esObra?'10%':'21%';
+
+  const btn=document.getElementById('pia-btn-importar');
+  btn.disabled=true; btn.textContent='Importando…';
+
+  try{
+    // Calcular orden base (después de las líneas actuales)
+    let ordenBase = (PresC||[]).length;
+    for(const cap of _piaResultado.capitulos){
+      ordenBase++;
+      await sbPost('presupuesto_lineas',{
+        proyecto_id: proy, version: ver,
+        descripcion: cap.nombre||'Capítulo IA',
+        es_capitulo: true,
+        orden: ordenBase,
+        cantidad: 0, precio_base: 0, precio_venta: 0, subtotal: 0
+      });
+      for(const partida of (cap.partidas||[])){
+        ordenBase++;
+        const cant = parseFloat(partida.cantidad)||0;
+        const pu   = parseFloat(partida.precio_unitario)||0;
+        const sub  = parseFloat(partida.total) || (cant*pu);
+        await sbPost('presupuesto_lineas',{
+          proyecto_id: proy, version: ver,
+          descripcion: partida.descripcion||'—',
+          unidad: partida.unidad||'Ud',
+          cantidad: cant,
+          precio_base: pu,
+          margen_pct: 0,
+          ci_gg_bi_pct: 0,
+          precio_venta: pu,
+          subtotal: sub,
+          iva_pct: ivaGlobal,
+          es_capitulo: false,
+          orden: ordenBase
+        });
+      }
+    }
+    const totalPartidas = _piaResultado.capitulos.reduce((s,c)=>s+(c.partidas?.length||0),0);
+    toast(`✅ ${totalPartidas} partidas importadas · Revisa y ajusta antes de enviar al cliente`);
+    closeModal('m-pres-ia');
+    _piaResultado = null;
+    await loadPresupuesto();
+  }catch(e){
+    toast('Error importando: '+e.message,'error');
+  }finally{
+    btn.disabled=false; btn.textContent='📥 Importar al presupuesto';
+  }
+}
 function editCapitulo(id, nombre){
   // Si no se pasa nombre, buscarlo en PresC por id
   if(!nombre || nombre === 'undefined'){
