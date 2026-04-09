@@ -1162,8 +1162,9 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <select class="form-input" style="width:90px" id="inf-anyo">
           <option>2024</option><option>2025</option><option selected="">2026</option><option>2027</option>
         </select>
-        <button class="btn btn-primary" onclick="generarInformeMensual()">📊 Generar informe</button>
-        <button class="btn btn-ghost" onclick="exportarPDF(document.getElementById(&#39;inf-body&#39;).firstElementChild,&#39;Informe_&#39;+document.getElementById(&#39;inf-mes&#39;).value+&#39;_&#39;+document.getElementById(&#39;inf-anyo&#39;).value+&#39;.pdf&#39;)">⬇️ PDF</button>
+        <button class="btn btn-primary" onclick="generarInformeMensual()">📊 Generar informe mensual</button>
+        <button class="btn btn-ghost" onclick="exportarPDF(document.getElementById(&#39;inf-body&#39;).firstElementChild,&#39;Informe_&#39;+document.getElementById(&#39;inf-mes&#39;).value+&#39;_&#39;+document.getElementById(&#39;inf-anyo&#39;).value+&#39;.pdf&#39;)">📄 Descargar PDF</button>
+        <button class="btn btn-ghost" onclick="subirInformeMensualDrive()">☁️ Subir a Drive</button>
       </div>
       <div class="card" style="margin-top:12px">
         <div class="card-body" id="inf-body">
@@ -17704,7 +17705,299 @@ async function generarInformeMensual(){
           Informe generado el ${new Date().toLocaleDateString('es-ES')} · PAU INTERIORISMO S.L. · CIF B-56909641
         </div>
       </div>`;
+    // Añadir secciones extras al informe (proyectos activos, desgloses, comparativa, alertas, pendientes)
+    try{
+      const extras = await _informeMensualExtras(mes, anyo, facs, comps, subcs, hors);
+      body.firstElementChild.insertAdjacentHTML('beforeend', extras);
+    }catch(eE){ console.warn('informe extras:', eE); }
   }catch(e){ body.innerHTML=`<div style="color:var(--red);padding:12px">Error: ${e.message}</div>`; }
+}
+
+// ─── Secciones extra del informe mensual ────────────────────────
+async function _informeMensualExtras(mes, anyo, facs, comps, subcs, hors){
+  const mesNum=parseInt(mes), anyoNum=parseInt(anyo);
+  const meses=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  // Mes anterior
+  const prevMes = mesNum===1 ? 12 : mesNum-1;
+  const prevAnyo = mesNum===1 ? anyoNum-1 : anyoNum;
+  const desdePrev = `${prevAnyo}-${String(prevMes).padStart(2,'0')}-01`;
+  const hastaPrev = new Date(prevAnyo, prevMes, 0).toISOString().split('T')[0];
+
+  let facsPrev=[], compsPrev=[];
+  try{ facsPrev = await sbGet('facturas',`?fecha_emision=gte.${desdePrev}&fecha_emision=lte.${hastaPrev}`); }catch(e){}
+  try{ compsPrev = await sbGet('compras',`?fecha=gte.${desdePrev}&fecha=lte.${hastaPrev}`); }catch(e){}
+
+  // Facturas del mes: solo ventas
+  const facsVenta = facs.filter(f=>(f.tipo_factura||'Venta')==='Venta');
+  const facsCompra = facs.filter(f=>(f.tipo_factura||'Venta')==='Compra');
+  const facturadoBase = facsVenta.reduce((s,f)=>s+(f.base_imponible||0),0);
+  const facturadoTotal = facsVenta.reduce((s,f)=>s+(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100),0);
+  const cobradas = facsVenta.filter(f=>f.estado==='Cobrada');
+  const pendientesCobro = facsVenta.filter(f=>f.estado!=='Cobrada' && f.estado!=='Anulada');
+  const totalCobradas = cobradas.reduce((s,f)=>s+(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100),0);
+  const totalPendCobro = pendientesCobro.reduce((s,f)=>{
+    const t=(f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100);
+    return s+(t-(f.importe_cobrado||0));
+  },0);
+
+  // Desglose compras por tipo de proyecto: S3 obra / S4 interiorismo / S5 gastos
+  const isObra = (tipo)=>{const t=(tipo||'').toLowerCase();return t.includes('obra')||t.includes('rehab')||t.includes('reforma');};
+  const isInterior = (tipo)=>{const t=(tipo||'').toLowerCase();return t.includes('interior')||t.includes('cocina')||t.includes('baño')||t.includes('bano')||t.includes('mobiliario');};
+  let compS3=0, compS4=0, compS5=0;
+  comps.forEach(c=>{
+    const pid=c.proyecto||c.proyecto_id;
+    const p=PC.find(x=>x.proyecto_id===pid||String(x.id)===String(pid));
+    const base=c.base_imponible||0;
+    if(!p){ compS5 += base; }
+    else if(isObra(p.tipo)){ compS3 += base; }
+    else if(isInterior(p.tipo)){ compS4 += base; }
+    else { compS5 += base; }
+  });
+  const totalGastos = compS3+compS4+compS5;
+  // Subcontratas y horas del mes (añadir a gastos reales)
+  const subcBase = subcs.reduce((s,x)=>s+(x.importe||0),0);
+  const horasBase = hors.reduce((s,h)=>s+(h.total||0),0);
+  const gastosReales = totalGastos + subcBase + horasBase;
+  const beneficioMes = facturadoBase - gastosReales;
+
+  // Comparativa mes anterior
+  const facturadoPrev = facsPrev.filter(f=>(f.tipo_factura||'Venta')==='Venta').reduce((s,f)=>s+(f.base_imponible||0),0);
+  const gastosPrev = compsPrev.reduce((s,c)=>s+(c.base_imponible||0),0);
+  const beneficioPrev = facturadoPrev - gastosPrev;
+  const deltaPct = (a,b)=> b!==0 ? ((a-b)/Math.abs(b)*100) : 0;
+
+  // Proyectos activos ese mes: con facturas, compras, subc u horas registradas
+  const pidsActivos = new Set();
+  facsVenta.forEach(f=>{ if(f.proyecto_id) pidsActivos.add(f.proyecto_id); });
+  comps.forEach(c=>{ const pid=c.proyecto||c.proyecto_id; if(pid) pidsActivos.add(pid); });
+  subcs.forEach(s=>{ if(s.proyecto_id) pidsActivos.add(s.proyecto_id); });
+  hors.forEach(h=>{ if(h.proyecto_id) pidsActivos.add(h.proyecto_id); });
+  const proyActivos = Array.from(pidsActivos).map(pid=>{
+    const p=PC.find(x=>x.proyecto_id===pid||String(x.id)===String(pid));
+    if(!p) return null;
+    const cli = CC.find(c=>String(c.id)===String(p.cliente_id)||c.cliente_id===p.cliente_id) || {};
+    // Margen actual del proyecto
+    const facP = (FC||[]).filter(f=>f.proyecto_id===p.proyecto_id&&(f.tipo_factura||'Venta')==='Venta');
+    const comP = (CoC||[]).filter(c=>(c.proyecto||c.proyecto_id)===p.proyecto_id);
+    const scP  = (typeof _scProy==='function') ? _scProy(p.proyecto_id) : [];
+    const hoP  = (HC||[]).filter(h=>h.proyecto_id===p.proyecto_id);
+    const ingP = facP.reduce((s,f)=>s+(f.base_imponible||0),0);
+    const costP = comP.reduce((s,c)=>s+(c.base_imponible||0),0)
+                + scP.reduce((s,c)=>s+(c.importe||0),0)
+                + hoP.reduce((s,h)=>s+(h.total||0),0);
+    const margP = ingP>0 ? ((ingP-costP)/ingP*100) : 0;
+    return { p, cliNombre: cli.nombre||p.cliente_id||'—', ingP, costP, margP };
+  }).filter(Boolean).sort((a,b)=>a.p.proyecto_id.localeCompare(b.p.proyecto_id,'es',{numeric:true}));
+
+  // Proyectos con desviación de costes (costes > 90% de los ingresos y ingresos > 0)
+  const proyDesviados = proyActivos.filter(x=> x.ingP>0 && x.costP > x.ingP*0.9 );
+
+  // Facturas pendientes de cobro con días de retraso
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  const pendCobroDetalle = pendientesCobro.map(f=>{
+    let dias=null;
+    if(f.fecha_vencimiento){ const d=new Date(f.fecha_vencimiento); d.setHours(0,0,0,0); dias=Math.floor((hoy-d)/(1000*60*60*24)); }
+    const cli = CC.find(c=>String(c.id)===String(f.cliente_id)||c.cliente_id===f.cliente_id) || {};
+    const tot = (f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100);
+    return { num:f.num_factura, cliNombre:cli.nombre||f.cliente_id||'—', total:tot, pdte:tot-(f.importe_cobrado||0), dias };
+  }).sort((a,b)=>(b.dias||-999)-(a.dias||-999));
+
+  // ═══ Helpers de formato HTML ═══
+  const secHead = (emoji,txt) => `<div style="background:#1e3c64;color:#fff;padding:8px 14px;border-radius:6px;font-size:13px;font-weight:700;margin:18px 0 10px">${emoji} ${txt}</div>`;
+  const deltaBadge = (v) => {
+    const color = v>=0?'var(--green)':'var(--red)';
+    const sign = v>=0?'▲':'▼';
+    return `<span style="color:${color};font-weight:700;font-size:11px">${sign} ${Math.abs(v).toFixed(1)}%</span>`;
+  };
+
+  // ═══ Render ═══
+  let html = '';
+
+  // ── Proyectos activos
+  html += secHead('🏗️','PROYECTOS ACTIVOS ESTE MES ('+proyActivos.length+')');
+  if(proyActivos.length){
+    html += `<table style="width:100%;font-size:11px;border-collapse:collapse;margin-bottom:10px">
+      <thead><tr style="background:#f8f8f8;border-bottom:1px solid #ddd">
+        <th style="padding:6px;text-align:left">Proyecto</th>
+        <th style="padding:6px;text-align:left">Cliente</th>
+        <th style="padding:6px;text-align:left">Estado</th>
+        <th style="padding:6px;text-align:right">Ingresos</th>
+        <th style="padding:6px;text-align:right">Costes</th>
+        <th style="padding:6px;text-align:right">Margen</th>
+      </tr></thead><tbody>
+      ${proyActivos.map((x,i)=>`<tr style="border-bottom:1px solid #f0f0f0;background:${i%2?'#fafafa':'#fff'}">
+        <td style="padding:6px;font-weight:700">${x.p.proyecto_id}<br><span style="font-weight:400;font-size:10px;color:#666">${x.p.nombre||''}</span></td>
+        <td style="padding:6px">${x.cliNombre}</td>
+        <td style="padding:6px"><span style="font-size:10px;padding:2px 6px;background:#eef;border-radius:8px">${x.p.estado||'—'}</span></td>
+        <td style="padding:6px;text-align:right;font-family:monospace">${fmt(x.ingP)}</td>
+        <td style="padding:6px;text-align:right;font-family:monospace;color:#b85c00">${fmt(x.costP)}</td>
+        <td style="padding:6px;text-align:right;font-family:monospace;font-weight:700;color:${x.margP>=20?'var(--green)':x.margP>=10?'var(--amber)':'var(--red)'}">${x.margP.toFixed(1)}%</td>
+      </tr>`).join('')}
+    </tbody></table>`;
+  } else {
+    html += '<div style="color:#999;font-size:12px;padding:10px">Sin proyectos con actividad en el mes.</div>';
+  }
+
+  // ── Compras y gastos por serie
+  html += secHead('🛒','COMPRAS Y GASTOS');
+  html += `<table style="width:100%;font-size:12px;border-collapse:collapse;margin-bottom:10px">
+    <tr><td style="padding:6px;background:#e6f0ff">S3 · Obra (compras proyectos de obra)</td><td style="padding:6px;text-align:right;background:#e6f0ff;font-family:monospace;font-weight:700">${fmt(compS3)}</td></tr>
+    <tr><td style="padding:6px;background:#f0e6ff">S4 · Interiorismo (compras interiorismo/cocina)</td><td style="padding:6px;text-align:right;background:#f0e6ff;font-family:monospace;font-weight:700">${fmt(compS4)}</td></tr>
+    <tr><td style="padding:6px;background:#fff3e6">S5 · Gastos generales (sin proyecto)</td><td style="padding:6px;text-align:right;background:#fff3e6;font-family:monospace;font-weight:700">${fmt(compS5)}</td></tr>
+    <tr><td style="padding:6px">Subcontratas del mes</td><td style="padding:6px;text-align:right;font-family:monospace">${fmt(subcBase)}</td></tr>
+    <tr><td style="padding:6px">Mano de obra (horas)</td><td style="padding:6px;text-align:right;font-family:monospace">${fmt(horasBase)}</td></tr>
+    <tr style="background:#fdecea"><td style="padding:8px;font-weight:700">TOTAL GASTOS DEL MES (s/IVA)</td><td style="padding:8px;text-align:right;font-family:monospace;font-weight:700;color:var(--red)">${fmt(gastosReales)}</td></tr>
+  </table>`;
+
+  // ── Margen global
+  html += secHead('💰','MARGEN GLOBAL DEL MES');
+  html += `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
+    <div style="background:#e6f5e6;padding:12px;border-radius:6px;text-align:center">
+      <div style="font-size:10px;color:#2a7a2a;font-weight:700">FACTURADO</div>
+      <div style="font-size:18px;font-weight:700;color:#2a7a2a;margin-top:4px">${fmt(facturadoBase)}</div>
+      <div style="font-size:10px;color:#666;margin-top:3px">vs mes ant. ${fmt(facturadoPrev)} ${deltaBadge(deltaPct(facturadoBase,facturadoPrev))}</div>
+    </div>
+    <div style="background:#fdecea;padding:12px;border-radius:6px;text-align:center">
+      <div style="font-size:10px;color:#b85c00;font-weight:700">GASTOS</div>
+      <div style="font-size:18px;font-weight:700;color:#b85c00;margin-top:4px">${fmt(gastosReales)}</div>
+      <div style="font-size:10px;color:#666;margin-top:3px">vs mes ant. ${fmt(gastosPrev)} ${deltaBadge(-deltaPct(gastosReales,gastosPrev))}</div>
+    </div>
+    <div style="background:${beneficioMes>=0?'#e8f5ee':'#fdecea'};padding:12px;border-radius:6px;text-align:center;border:2px solid ${beneficioMes>=0?'var(--green)':'var(--red)'}">
+      <div style="font-size:10px;font-weight:700;color:${beneficioMes>=0?'var(--green)':'var(--red)'}">BENEFICIO BRUTO</div>
+      <div style="font-size:22px;font-weight:700;color:${beneficioMes>=0?'var(--green)':'var(--red)'};margin-top:4px">${fmt(beneficioMes)}</div>
+      <div style="font-size:10px;color:#666;margin-top:3px">vs mes ant. ${fmt(beneficioPrev)} ${deltaBadge(deltaPct(beneficioMes,beneficioPrev))}</div>
+    </div>
+  </div>`;
+
+  // ── Facturas emitidas
+  html += secHead('🧾','FACTURAS EMITIDAS EN EL MES ('+facsVenta.length+')');
+  if(facsVenta.length){
+    html += `<table style="width:100%;font-size:11px;border-collapse:collapse;margin-bottom:10px">
+      <thead><tr style="background:#f8f8f8;border-bottom:1px solid #ddd">
+        <th style="padding:6px;text-align:left">Nº</th>
+        <th style="padding:6px;text-align:left">Fecha</th>
+        <th style="padding:6px;text-align:left">Cliente</th>
+        <th style="padding:6px;text-align:left">Proyecto</th>
+        <th style="padding:6px;text-align:right">Base</th>
+        <th style="padding:6px;text-align:right">Total c/IVA</th>
+        <th style="padding:6px;text-align:center">Estado</th>
+      </tr></thead><tbody>
+      ${facsVenta.map((f,i)=>{
+        const cli = CC.find(c=>String(c.id)===String(f.cliente_id)||c.cliente_id===f.cliente_id) || {};
+        const tot = (f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100);
+        return `<tr style="border-bottom:1px solid #f0f0f0;background:${i%2?'#fafafa':'#fff'}">
+          <td style="padding:5px;font-weight:700">${f.num_factura||'—'}</td>
+          <td style="padding:5px">${fmtD(f.fecha_emision)}</td>
+          <td style="padding:5px">${(cli.nombre||f.cliente_id||'—').substring(0,25)}</td>
+          <td style="padding:5px">${f.proyecto_id||'—'}</td>
+          <td style="padding:5px;text-align:right;font-family:monospace">${fmt(f.base_imponible||0)}</td>
+          <td style="padding:5px;text-align:right;font-family:monospace;font-weight:700">${fmt(tot)}</td>
+          <td style="padding:5px;text-align:center"><span style="font-size:10px;padding:2px 6px;border-radius:8px;background:${f.estado==='Cobrada'?'#e6f5e6':'#fff3e0'};color:${f.estado==='Cobrada'?'#2a7a2a':'#b85c00'}">${f.estado||'—'}</span></td>
+        </tr>`;
+      }).join('')}
+    </tbody></table>
+    <div style="font-size:11px;color:#666;margin-bottom:14px">
+      Total facturado s/IVA: <b>${fmt(facturadoBase)}</b> · c/IVA: <b>${fmt(facturadoTotal)}</b><br>
+      Cobradas: <b style="color:var(--green)">${fmt(totalCobradas)}</b> (${cobradas.length}) · Pendientes de cobro: <b style="color:var(--amber)">${fmt(totalPendCobro)}</b> (${pendientesCobro.length})
+    </div>`;
+  } else {
+    html += '<div style="color:#999;font-size:12px;padding:10px">Sin facturas emitidas este mes.</div>';
+  }
+
+  // ── Proyectos con desviación
+  if(proyDesviados.length){
+    html += secHead('🚨','PROYECTOS CON DESVIACIÓN DE COSTES ('+proyDesviados.length+')');
+    html += `<table style="width:100%;font-size:11px;border-collapse:collapse;margin-bottom:10px">
+      <thead><tr style="background:#fdecea;border-bottom:1px solid #f5c6c6">
+        <th style="padding:6px;text-align:left">Proyecto</th>
+        <th style="padding:6px;text-align:left">Cliente</th>
+        <th style="padding:6px;text-align:right">Ingresos</th>
+        <th style="padding:6px;text-align:right">Costes</th>
+        <th style="padding:6px;text-align:right">Desvío</th>
+      </tr></thead><tbody>
+      ${proyDesviados.map((x,i)=>{
+        const desvio = x.ingP>0 ? ((x.costP-x.ingP)/x.ingP*100) : 0;
+        return `<tr style="border-bottom:1px solid #f0f0f0;background:${i%2?'#fff5f5':'#fff'}">
+          <td style="padding:6px;font-weight:700">${x.p.proyecto_id} · ${(x.p.nombre||'').substring(0,30)}</td>
+          <td style="padding:6px">${x.cliNombre}</td>
+          <td style="padding:6px;text-align:right;font-family:monospace">${fmt(x.ingP)}</td>
+          <td style="padding:6px;text-align:right;font-family:monospace;color:#b85c00;font-weight:700">${fmt(x.costP)}</td>
+          <td style="padding:6px;text-align:right;font-family:monospace;font-weight:700;color:var(--red)">${desvio>0?'+':''}${desvio.toFixed(1)}%</td>
+        </tr>`;
+      }).join('')}
+    </tbody></table>`;
+  }
+
+  // ── Facturas pendientes de cobro
+  if(pendCobroDetalle.length){
+    html += secHead('⏰','FACTURAS PENDIENTES DE COBRO ('+pendCobroDetalle.length+')');
+    html += `<table style="width:100%;font-size:11px;border-collapse:collapse;margin-bottom:10px">
+      <thead><tr style="background:#fff3e0;border-bottom:1px solid #f0d68a">
+        <th style="padding:6px;text-align:left">Nº Factura</th>
+        <th style="padding:6px;text-align:left">Cliente</th>
+        <th style="padding:6px;text-align:right">Total</th>
+        <th style="padding:6px;text-align:right">Pendiente</th>
+        <th style="padding:6px;text-align:center">Retraso</th>
+      </tr></thead><tbody>
+      ${pendCobroDetalle.map((d,i)=>{
+        const diasTxt = d.dias==null?'—':(d.dias<0?`vence en ${-d.dias}d`:`${d.dias}d`);
+        const diasColor = d.dias==null?'#666':(d.dias<=0?'#666':d.dias<=7?'#b85c00':d.dias<=30?'#e67e22':'var(--red)');
+        return `<tr style="border-bottom:1px solid #f0f0f0;background:${i%2?'#fafafa':'#fff'}">
+          <td style="padding:6px;font-weight:700">${d.num||'—'}</td>
+          <td style="padding:6px">${d.cliNombre}</td>
+          <td style="padding:6px;text-align:right;font-family:monospace">${fmt(d.total)}</td>
+          <td style="padding:6px;text-align:right;font-family:monospace;font-weight:700;color:var(--amber)">${fmt(d.pdte)}</td>
+          <td style="padding:6px;text-align:center;color:${diasColor};font-weight:700">${diasTxt}</td>
+        </tr>`;
+      }).join('')}
+    </tbody></table>`;
+  }
+
+  html += `<div style="font-size:10px;color:#999;text-align:center;margin-top:20px;padding-top:8px;border-top:1px solid #eee">📅 Informe mensual ${meses[mesNum-1]} ${anyoNum} · PAU INTERIORISMO S.L.</div>`;
+  return html;
+}
+
+// ─── Subir informe mensual a Drive ────────────────────────────
+async function subirInformeMensualDrive(){
+  const mes  = document.getElementById('inf-mes')?.value;
+  const anyo = document.getElementById('inf-anyo')?.value;
+  if(!mes||!anyo){ toast('Selecciona mes y año','error'); return; }
+  const body = document.getElementById('inf-body');
+  if(!body || !body.firstElementChild || body.firstElementChild.tagName==='DIV' && body.firstElementChild.textContent.includes('Selecciona')){
+    toast('Primero genera el informe','error'); return;
+  }
+  // Obtener o pedir folderId de "Informes mensuales"
+  let folderId = localStorage.getItem('drive_informes_folder_id');
+  if(!folderId){
+    const url = prompt('Introduce la URL de la carpeta "Informes mensuales" en Google Drive (se guardará para próximas veces):');
+    if(!url) return;
+    const m = url.match(/folders\/([a-zA-Z0-9_-]+)/);
+    if(!m){ toast('URL inválida','error'); return; }
+    folderId = m[1];
+    localStorage.setItem('drive_informes_folder_id', folderId);
+  }
+  const meses=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const fileName = `Informe_${String(mes).padStart(2,'0')}_${meses[parseInt(mes)-1]}_${anyo}.pdf`;
+  toast('☁️ Preparando informe para Drive…');
+  try{
+    const el = body.firstElementChild;
+    const opt = {
+      margin:[10,10,15,10],
+      image:{type:'jpeg',quality:0.95},
+      html2canvas:{scale:2,useCORS:true},
+      jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
+    };
+    const base64 = await html2pdf().set(opt).from(el).output('datauristring');
+    const res = await fetch(DRIVE_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify({action:'uploadFile',fileData:base64,fileName,mimeType:'application/pdf',folderId,subCarpeta:null,tipoDoc:'Informe mensual'})});
+    const json = await res.json().catch(()=>({}));
+    if(json.ok){
+      const link = json.fileUrl || json.url;
+      toast(`☁️ Informe subido a Drive ✅${link?' · <a href="'+link+'" target="_blank" style="color:#fff;text-decoration:underline">Ver</a>':''}`);
+    } else {
+      toast('Error Drive: '+(json.error||'desconocido')+' — intenta cambiar la carpeta con localStorage.removeItem("drive_informes_folder_id")','error');
+    }
+  }catch(e){ toast('Error subiendo: '+e.message,'error'); }
 }
 
 // ════════════════════════════════════════════════════════════════

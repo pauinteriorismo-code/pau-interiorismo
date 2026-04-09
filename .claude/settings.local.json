@@ -4,7 +4,9 @@
       "Bash(git add:*)",
       "Bash(git commit -m ':*)",
       "Bash(git push:*)",
-      "Bash(ls *.sql)"
+      "Bash(ls *.sql)",
+      "Bash(awk 'NR>=17595 && NR<=17950' \"C:/Users/Usuario/Desktop/Pau Interiorismo/Administracion/Control proyectos/Aplicacion/Html/index.html\")",
+      "Bash(awk 'NR==17598,/^}$/{print NR\": \"$0; if\\(/^}$/\\){exit}}' \"C:/Users/Usuario/Desktop/Pau Interiorismo/Administracion/Control proyectos/Aplicacion/Html/index.html\")"
     ]
   }
 }
