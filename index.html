@@ -8938,18 +8938,20 @@ const DRIVE_FOLDER_NAMES = [
   '03 Sketchup 3D',
   '04 Presupuestos',
   '05 Contratos',
-  '06 Subcontratas',
+  '06 Proveedores',
   '07 Fotos obra',
   '08 Facturas',
   '09 Interiorismo',
-  '10 Licencias'
+  '10 Licencias',
+  '11 Comparativas'
 ];
 // Alias para subCarpetas usadas por el código (single source of truth)
 const DRIVE_SUB = {
   presupuestos: '04 Presupuestos',
   contratos:    '05 Contratos',
-  proveedores:  '06 Subcontratas',
-  facturas:     '08 Facturas'
+  proveedores:  '06 Proveedores',  // antes "06 Subcontratas" — renombrado para reflejar que contiene compras de materiales y subcontratas
+  facturas:     '08 Facturas',
+  comparativas: '11 Comparativas'
 };
 
 async function crearCarpetasDrive(proyId, nombre){
@@ -10894,6 +10896,19 @@ Reglas:
     status.innerHTML = `✅ ${file.name}${provInfo}`;
     status.style.color = provInfo ? 'var(--amber)' : 'var(--green)';
     toast('PDF analizado ✅');
+
+    // Subir el PDF a Drive en la subcarpeta "11 Comparativas" del proyecto activo
+    try{
+      const proyId = document.getElementById('comp-proyecto-sel')?.value;
+      if(proyId && typeof subirPDFb64aDrive==='function'){
+        const provNom = r.proveedor || `oferta${n}`;
+        const safe = (typeof _safeNombre==='function') ? _safeNombre(provNom) : provNom.replace(/[^a-zA-Z0-9_\-]/g,'_');
+        const fechaStr = new Date().toISOString().split('T')[0];
+        const fileName = `Comparativa_oferta${n}_${safe}_${fechaStr}.pdf`;
+        subirPDFb64aDrive(base64, fileName, proyId, DRIVE_SUB.comparativas, {tipoDoc:'Comparativas', proveedor:provNom})
+          .then(j=>{ if(j && j.ok && !j.duplicate) toast('☁️ Oferta subida a Drive (Comparativas) ✅'); });
+      }
+    }catch(eUp){ console.warn('Drive comparativa:', eUp); }
   } catch(e){
     status.innerHTML = '❌ ' + e.message;
     status.style.color = 'var(--red)';
@@ -25895,6 +25910,22 @@ function coHandleFile(file){
       }
       // Auto-detectar destino por el proyecto actualmente seleccionado
       _autoDestinoCompra();
+      // Si hay vencimientos múltiples, añadirlos a notas para no perder la información
+      // (el módulo Compras no tiene campos multi-vencimiento, solo Facturas tipo Compra los soporta)
+      if(ex.vencimientos && Array.isArray(ex.vencimientos) && ex.vencimientos.length > 1){
+        const notasEl=document.getElementById('co-notas');
+        if(notasEl){
+          const vtoTxt = 'Vencimientos: '+ex.vencimientos.map(v=>`${v.fecha||'?'}: ${fmt(v.importe||0)}`).join(' · ');
+          notasEl.value = (notasEl.value ? notasEl.value+' | ' : '') + vtoTxt;
+        }
+        toast('💡 '+ex.vencimientos.length+' vencimientos detectados — guardados en notas. Para gestionarlos como plazos, usa Facturas tipo Compra','warning');
+      } else if(ex.vencimientos && ex.vencimientos.length===1 && ex.vencimientos[0].fecha){
+        // Único vencimiento → guardar en notas como referencia
+        const notasEl=document.getElementById('co-notas');
+        if(notasEl && !notasEl.value.includes('Vto')){
+          notasEl.value = (notasEl.value ? notasEl.value+' | ' : '') + 'Vto: '+ex.vencimientos[0].fecha;
+        }
+      }
     });
   };
   reader.readAsDataURL(file);
