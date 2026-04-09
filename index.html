@@ -8859,23 +8859,32 @@ async function generarDossierCierre(proyId){
   // ─── Recopilar datos ───
   const cli = (CC||[]).find(c=>String(c.id)===String(p.cliente_id)||c.cliente_id===p.cliente_id) || {};
   const facturas = (FC||[]).filter(f=>f.proyecto_id===proyId && (f.tipo_factura||'Venta')==='Venta');
-  const compras = (typeof CmpC!=='undefined'?CmpC:[]).filter(c=>c.proyecto_id===proyId);
-  const subcs = (typeof ScC!=='undefined'?ScC:[]).filter(s=>s.proyecto_id===proyId);
+  const compras = (typeof _cocProy==='function') ? _cocProy(proyId) : ((typeof CoC!=='undefined'?CoC:[]).filter(c=>c.proyecto_id===proyId||c.proyecto===proyId));
+  const subcs = (typeof _scProy==='function') ? _scProy(proyId) : ((typeof ScC!=='undefined'?ScC:[]).filter(s=>s.proyecto_id===proyId));
   const horas = (HC||[]).filter(h=>h.proyecto_id===proyId);
+  const totalHoras = horas.reduce((s,h)=>s+(h.horas||0),0);
   let certs = [];
   try{ certs = await sbGet('certificaciones',`?proyecto_id=eq.${proyId}&order=fecha.asc`); }catch(e){ certs=[]; }
+  // Presupuesto vendido: suma importes de presupuesto_lineas (todas versiones, solo líneas no capítulo)
+  let presLineas = [];
+  try{ presLineas = await sbGet('presupuesto_lineas',`?proyecto_id=eq.${proyId}&es_capitulo=eq.false`); }catch(e){ presLineas=[]; }
 
+  // Presupuesto vendido: suma del subtotal (o precio_venta*cantidad) de las líneas de la última versión disponible
   const presVendido = (function(){
-    try{
-      const pres = (typeof PresC!=='undefined'?PresC:[]).filter(x=>x.proyecto_id===proyId && (x.estado==='Aprobado'||x.estado==='Enviado'));
-      if(pres.length) return pres.reduce((s,x)=>s+(x.total||x.importe||0),0);
-    }catch(e){}
-    return 0;
+    if(!presLineas.length) return 0;
+    // Agrupar por versión y quedarse con la versión cuyo total sea mayor (la "vendida")
+    const porVer = {};
+    presLineas.forEach(l=>{
+      const v=l.version||'v1';
+      const imp = (l.subtotal!=null)?l.subtotal:((l.precio_venta||0)*(l.cantidad||0));
+      porVer[v]=(porVer[v]||0)+imp;
+    });
+    return Math.max(...Object.values(porVer), 0);
   })();
   const facturado = facturas.reduce((s,f)=>s+((f.base_imponible||0)*(1+ivaPct(f.iva_pct)/100)),0);
   const costeCompras = compras.reduce((s,c)=>s+((c.base_imponible||0)*(1+ivaPct(c.iva_pct)/100)),0);
   const costeSubc = subcs.reduce((s,x)=>s+((x.importe||0)*(1+ivaPct(x.iva_pct)/100)),0);
-  const costeHoras = horas.reduce((s,h)=>s+((h.horas||0)*(h.precio_hora||0)),0);
+  const costeHoras = 0; // no hay tarifa/hora por registro
   const costeReal = costeCompras + costeSubc + costeHoras;
   const margen = facturado - costeReal;
   const margenPct = facturado>0 ? (margen/facturado*100) : 0;
@@ -8925,7 +8934,7 @@ async function generarDossierCierre(proyId){
     ['Facturado al cliente',      fmt(facturado)],
     ['Coste compras (materiales)',fmt(costeCompras)],
     ['Coste subcontratas',        fmt(costeSubc)],
-    ['Coste mano de obra',        fmt(costeHoras)],
+    ['Mano de obra (horas)',      totalHoras.toFixed(1)+' h'],
     ['COSTE REAL TOTAL',          fmt(costeReal)],
     ['Margen final €',            fmt(margen)],
     ['Margen final %',            fmtP(margenPct)]
