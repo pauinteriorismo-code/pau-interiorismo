@@ -7824,11 +7824,11 @@ async function presAgruparCliente(){
     if(!descripcion) return;
   }
 
-  // Preguntar si mantener las líneas detalladas
+  // Preguntar qué hacer con las líneas detalladas
   const mantener = confirm(
     `Descripción generada:\n"${descripcion}"\n\nPrecio total: ${totPvp.toFixed(2)}€\n\n` +
-    `¿Mantener las líneas detalladas en el presupuesto?\n\n` +
-    `[Aceptar] = Mantener detalle + añadir línea resumen\n[Cancelar] = Eliminar detalle, dejar solo resumen`
+    `¿Mantener las líneas detalladas como INTERNAS?\n\n` +
+    `[Aceptar] = Mantener detalle como interno (pedidos) + línea resumen (cliente)\n[Cancelar] = Eliminar detalle, dejar solo resumen`
   );
 
   // Obtener proyecto y versión actuales
@@ -7856,15 +7856,24 @@ async function presAgruparCliente(){
       orden:maxOrden+1
     });
 
-    // Si no mantener detalle, borrar las líneas originales
-    if(!mantener){
+    if(mantener){
+      // Marcar las líneas detalladas como internas automáticamente
+      for(const id of ids){
+        const l = PresC.find(x=>x.id===id);
+        if(l && !l.es_capitulo){
+          await sbPatch('presupuesto_lineas', id, {categoria:'interno'});
+          l.categoria = 'interno';
+        }
+      }
+      toast('📋 Resumen creado + '+lineas.length+' líneas marcadas como internas');
+    } else {
+      // Borrar las líneas originales
       for(const id of ids){
         const l = PresC.find(x=>x.id===id);
         if(l && !l.es_capitulo) await sbDelete('presupuesto_lineas', id);
       }
+      toast('📋 Línea resumen creada, detalle eliminado');
     }
-
-    toast('📋 Línea resumen creada para el cliente');
     loadPresupuesto();
   }catch(e){ toast('Error: '+e.message,'error'); }
 }
