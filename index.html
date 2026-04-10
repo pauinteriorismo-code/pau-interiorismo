@@ -3777,7 +3777,12 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <div class="card" style="flex-shrink:0;border-top:3px solid var(--copper)">
             <div style="padding:10px 14px 6px;display:flex;justify-content:space-between;align-items:center">
               <span style="font-size:12px;font-weight:700;text-transform:uppercase;color:var(--copper);letter-spacing:.06em">📋 Valoración TOBISA</span>
-              <span style="font-size:10px;color:var(--text-soft)" id="tb-bud-cnt">Sin productos aún</span>
+              <div style="display:flex;gap:4px;align-items:center">
+                <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px" onclick="tbSelTodos()" title="Seleccionar/deseleccionar todos">☑ Todo</button>
+                <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px" onclick="tbCambiarAcabadoSel()" title="Cambiar acabado a seleccionados">🎨 Acabado</button>
+                <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px" onclick="tbAbrirSuplemento()" title="Añadir suplemento">➕ Suplemento</button>
+                <span style="font-size:10px;color:var(--text-soft)" id="tb-bud-cnt">Sin productos aún</span>
+              </div>
             </div>
             <div id="tb-bud-lines" style="max-height:180px;overflow-y:auto;padding:0 14px;scrollbar-width:thin"></div>
             <div style="padding:10px 14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;border-top:1px solid var(--border)">
@@ -25524,6 +25529,7 @@ function tbRecalc(){
 
 
   _tbLineas.forEach(l=>{
+    if(l.esSup) return; // suplementos no se recalculan (precio fijo)
     const p = _tbData.find(d=>d.ref===l.ref);
     if(!p) return;
     const tipo = l.acabadoTipo || (l.acabado==='base'?'base':'color');
@@ -25554,17 +25560,18 @@ function _tbRenderBudget(){
   cnt.textContent = _tbLineas.length + ' producto' + (_tbLineas.length>1?'s':'');
 
   lines.innerHTML = _tbLineas.map((l,i) => `
-    <div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--border);font-size:11px">
-      <span style="font-weight:700;width:60px;flex-shrink:0;font-family:monospace">${l.ref}</span>
+    <div style="display:flex;align-items:center;gap:5px;padding:4px 0;border-bottom:1px solid var(--border);font-size:11px">
+      <input type="checkbox" class="tb-chk" data-idx="${i}" style="margin:0;flex-shrink:0">
+      <span style="font-weight:700;width:55px;flex-shrink:0;font-family:monospace;font-size:10px">${l.ref}</span>
       <div style="flex:1;overflow:hidden;min-width:0">
         <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-soft)">${l.desc} <span style="font-size:9px;background:var(--bg-main);padding:1px 4px;border-radius:3px">${l.acabado}</span></div>
         ${l.nota ? `<div style="font-size:10px;color:var(--copper);font-style:italic;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${l.nota.replace(/"/g,'&quot;')}">📝 ${l.nota}</div>` : ''}
       </div>
-      <input type="number" value="${l.cant}" min="1" style="width:40px;text-align:center;font-size:11px;border:1px solid var(--border);border-radius:4px;padding:1px" onchange="_tbLineas[${i}].cant=parseInt(this.value)||1;_tbGuardarLineas();_tbRenderBudget()">
-      <span style="font-weight:600;width:65px;text-align:right">${fE(l.coste*l.cant)}</span>
-      <span style="font-weight:700;width:65px;text-align:right;color:var(--copper)">${fE(l.pvpSinIva*l.cant)}</span>
-      <button class="btn btn-ghost btn-sm" style="font-size:9px;padding:1px 4px;color:var(--copper)" title="Editar nota" onclick="tbEditarNota(${i})">📝</button>
-      <button class="btn btn-ghost btn-sm" style="font-size:9px;padding:1px 4px;color:var(--red)" onclick="_tbLineas.splice(${i},1);_tbGuardarLineas();_tbRenderBudget()">✕</button>
+      <input type="number" value="${l.cant}" min="1" style="width:38px;text-align:center;font-size:10px;border:1px solid var(--border);border-radius:4px;padding:1px" onchange="_tbLineas[${i}].cant=parseInt(this.value)||1;_tbGuardarLineas();_tbRenderBudget()">
+      <span style="font-weight:600;width:60px;text-align:right;font-size:10px">${fE(l.coste*l.cant)}</span>
+      <span style="font-weight:700;width:60px;text-align:right;color:var(--copper);font-size:10px">${fE(l.pvpSinIva*l.cant)}</span>
+      <button class="btn btn-ghost btn-sm" style="font-size:9px;padding:1px 3px;color:var(--copper)" title="Editar nota" onclick="tbEditarNota(${i})">📝</button>
+      <button class="btn btn-ghost btn-sm" style="font-size:9px;padding:1px 3px;color:var(--red)" onclick="_tbLineas.splice(${i},1);_tbGuardarLineas();_tbRenderBudget()">✕</button>
     </div>
   `).join('');
 
@@ -25574,6 +25581,160 @@ function _tbRenderBudget(){
   document.getElementById('tb-tot-pvp').textContent = fE(totPvp);
   document.getElementById('tb-tot-iva').textContent = fE(totPvp*1.21);
   document.getElementById('tb-tot-mrg').textContent = fE(totPvp-totCoste);
+}
+
+// ── Selección en lote ──
+function tbSelTodos(){
+  const chks = document.querySelectorAll('.tb-chk');
+  const allChecked = [...chks].every(c=>c.checked);
+  chks.forEach(c=>c.checked = !allChecked);
+}
+
+function _tbGetSelIdx(){
+  return [...document.querySelectorAll('.tb-chk:checked')].map(c=>parseInt(c.dataset.idx));
+}
+
+function tbCambiarAcabadoSel(){
+  const sel = _tbGetSelIdx();
+  if(!sel.length){ toast('Selecciona líneas primero con los checkboxes','error'); return; }
+  const {tipo, nombre} = _tbAcabadoInfo();
+  sel.forEach(i=>{
+    if(!_tbLineas[i]) return;
+    _tbLineas[i].acabado = nombre;
+    _tbLineas[i].acabadoTipo = tipo;
+  });
+  tbRecalc();
+  _tbGuardarLineas();
+  toast('🎨 Acabado "'+nombre+'" aplicado a '+sel.length+' líneas');
+}
+
+// ── Suplementos TOBISA (frentes, tiradores, vitrinas, tapizados, LED) ──
+const TB_SUPLEMENTOS = [
+  {cat:'Tipos de frente', items:[
+    {nombre:'IN — Cajón',         base:0,  color:20},
+    {nombre:'IN — Puerta H<140',  base:0,  color:20},
+    {nombre:'IN MIDDLE — Cajón',  base:20, color:40},
+    {nombre:'IN MIDDLE — Puerta', base:20, color:40},
+    {nombre:'BUO — Cajón',        base:0,  color:20},
+    {nombre:'BUO — Puerta',       base:0,  color:20},
+    {nombre:'ROSCA/ROSCO — Cajón',base:0,  color:20},
+    {nombre:'ROSCA — Puerta',     base:0,  color:20},
+    {nombre:'UFO — Cajón',        base:0,  color:20},
+    {nombre:'UFO — Puerta',       base:0,  color:20},
+    {nombre:'PICARO — Cajón',     base:20, color:40},
+    {nombre:'PICARO — Puerta',    base:20, color:40},
+    {nombre:'EQUAL — Cajón',      base:50, color:60},
+    {nombre:'EQUAL — Puerta',     base:50, color:60},
+    {nombre:'RANURADO — Cajón',   base:0,  color:45},
+    {nombre:'RANURADO — Puerta',  base:0,  color:45},
+    {nombre:'DELINEA V — Cajón',  base:0,  color:70},
+    {nombre:'DELINEA V — Puerta', base:0,  color:85},
+    {nombre:'RANURADO — Cama abatible', base:0, color:200},
+  ]},
+  {cat:'Tiradores', items:[
+    {nombre:'CURVE L4.5 (DT06)',   base:0,  color:25},
+    {nombre:'CURVE L10 (DT07)',    base:0,  color:25},
+    {nombre:'CURVE L30 (DT08)',    base:0,  color:25},
+    {nombre:'CURVE L120 (DT16)',   base:15, color:40},
+    {nombre:'FLEXA Piel (DT17)',   base:15, color:40},
+    {nombre:'AXEL Piel (DT18)',    base:15, color:40},
+    {nombre:'MUSHROOM S (DT12)',   base:5,  color:10},
+    {nombre:'MUSHROOM M (DT13)',   base:5,  color:19},
+    {nombre:'MUSHROOM L (DT14)',   base:5,  color:25},
+    {nombre:'HOLE (DT01)',         base:0,  color:25},
+    {nombre:'HOLE Anodizado (DT03)',base:0, color:0},
+    {nombre:'MAX (DT09/DT10)',     base:5,  color:25},
+    {nombre:'REX (DT15)',          base:5,  color:25},
+    {nombre:'ROSCO (DF12)',        base:5,  color:25},
+    {nombre:'PUSH (DT20)',         base:20, color:40},
+  ]},
+  {cat:'Puertas vitrina módulos', items:[
+    {nombre:'Vitrina Transparente H70 L68',  base:160, color:160},
+    {nombre:'Vitrina Transparente H70 L98',  base:180, color:180},
+    {nombre:'Vitrina Transparente H70 L152', base:220, color:220},
+    {nombre:'Vitrina Parsol H70 L98',        base:180, color:180},
+    {nombre:'Vitrina Parsol H70 L152',       base:200, color:200},
+    {nombre:'Vitrina Luxmat H70 L68',        base:200, color:200},
+    {nombre:'Vitrina Luxmat H70 L98',        base:230, color:230},
+    {nombre:'Vitrina Luxmat H70 L152',       base:300, color:300},
+    {nombre:'Vitrina Espejo H70 L68',        base:180, color:180},
+    {nombre:'Vitrina Espejo H70 L98',        base:200, color:200},
+    {nombre:'Vitrina Espejo H70 L152',       base:250, color:250},
+    {nombre:'Vitrina Flutes H70 L68',        base:220, color:220},
+    {nombre:'Vitrina Flutes H70 L98',        base:260, color:260},
+    {nombre:'Vitrina Flutes H70 L152',       base:350, color:350},
+  ]},
+  {cat:'Tapizados', items:[
+    {nombre:'Tapizado 0104 Poussin',  base:0, color:0, esFijo:true, precio:0},
+    {nombre:'Tapizado 0133 Minthé',   base:0, color:0, esFijo:true, precio:0},
+    {nombre:'Tapizado 0129 Bleu',     base:0, color:0, esFijo:true, precio:0},
+    {nombre:'Tapizado 0113 Rose',     base:0, color:0, esFijo:true, precio:0},
+    {nombre:'Tapizado 0149 Platinum', base:0, color:0, esFijo:true, precio:0},
+    {nombre:'Tapizado 0126 Marino',   base:0, color:0, esFijo:true, precio:0},
+    {nombre:'Tapizado 0152 Notte',    base:0, color:0, esFijo:true, precio:0},
+    {nombre:'Tapizado Tela cliente',  base:0, color:0, esFijo:true, precio:0},
+  ]},
+  {cat:'Interruptores LED', items:[
+    {nombre:'Interruptor PROXY (D1531)',        base:40, color:40, esFijo:true, precio:40},
+    {nombre:'Interruptor TOUCH integrado (D1532)',base:40, color:40, esFijo:true, precio:40},
+    {nombre:'Interruptor DOOR 1 pta (D1533)',   base:40, color:40, esFijo:true, precio:40},
+    {nombre:'Interruptor DOOR 2 ptas (D1536)',  base:40, color:40, esFijo:true, precio:40},
+    {nombre:'Interruptor ON/OFF (D1535)',        base:40, color:40, esFijo:true, precio:40},
+    {nombre:'Suplemento cambio interruptor',     base:25, color:25, esFijo:true, precio:25},
+  ]},
+];
+
+function tbAbrirSuplemento(){
+  // Construir lista agrupada
+  let h = '<div style="max-height:350px;overflow-y:auto;font-size:11px">';
+  TB_SUPLEMENTOS.forEach(cat=>{
+    h += `<div style="font-weight:700;font-size:11px;color:var(--copper);padding:8px 0 3px;border-bottom:1px solid var(--border)">${cat.cat}</div>`;
+    cat.items.forEach((item,j)=>{
+      const precio = item.esFijo ? item.precio : Math.max(item.base, item.color);
+      h += `<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;cursor:pointer;border-bottom:1px dotted #eee" onmouseenter="this.style.background='var(--bg-main)'" onmouseleave="this.style.background=''" onclick="tbAddSuplemento('${cat.cat}','${item.nombre.replace(/'/g,"\\'")}',${item.base},${item.color},${item.esFijo?'true':'false'},${item.precio||0})">
+        <span>${item.nombre}</span>
+        <span style="font-weight:600;color:var(--navy)">${precio>0?precio+'€/ud':'incluido'}</span>
+      </div>`;
+    });
+  });
+  h += '</div>';
+
+  // Mostrar en un modal simple
+  const modal = document.createElement('div');
+  modal.id = 'tb-sup-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:9999;display:flex;align-items:center;justify-content:center';
+  modal.innerHTML = `<div style="background:#fff;border-radius:12px;padding:16px;width:450px;max-width:90vw;box-shadow:0 10px 40px rgba(0,0,0,.2)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <span style="font-weight:700;font-size:14px">➕ Añadir suplemento</span>
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('tb-sup-modal').remove()">✕</button>
+    </div>
+    <div style="margin-bottom:8px;font-size:11px;color:var(--text-soft)">Haz clic en un suplemento para añadirlo a la valoración. El precio se aplica por unidad.</div>
+    ${h}
+  </div>`;
+  modal.addEventListener('click',e=>{ if(e.target===modal) modal.remove(); });
+  document.body.appendChild(modal);
+}
+
+function tbAddSuplemento(cat, nombre, precioBase, precioColor, esFijo, precioFijo){
+  const {tipo} = _tbAcabadoInfo();
+  const dto1 = parseFloat(document.getElementById('tb-dto1')?.value)||0;
+  const dto2 = parseFloat(document.getElementById('tb-dto2')?.value)||0;
+  const tarifa = esFijo ? precioFijo : (tipo==='color' ? precioColor : precioBase);
+  const coste = tarifa * (1 - dto1/100) * (1 - dto2/100);
+  const pvpSinIva = tarifa / 1.21;
+
+  const cant = parseInt(prompt(`Cantidad de "${nombre}":`, '1'))||0;
+  if(!cant) return;
+
+  _tbLineas.push({
+    ref: 'SUP', desc: cat+': '+nombre, acabado: tipo==='color'?'Color':'Base',
+    acabadoTipo: tipo, coste, pvpSinIva, nota:'', cant, esSup:true
+  });
+  _tbGuardarLineas();
+  _tbRenderBudget();
+  toast('➕ Suplemento añadido: '+nombre);
+  const modal = document.getElementById('tb-sup-modal');
+  if(modal) modal.remove();
 }
 
 function tbEditarNota(idx){
