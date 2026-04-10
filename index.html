@@ -3674,16 +3674,11 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           </select>
         </div>
         <div style="display:flex;align-items:center;gap:8px;background:#fef3e0;padding:5px 10px;border-radius:6px;border:1px solid #ffe0b2">
-          <span style="font-size:11px;color:#e65100">💰 Coste = PVP/1,21 × (1 − Dto%)</span>
+          <span style="font-size:11px;color:#e65100">💰 Coste = Tarifa × Dto% · PVP = Tarifa / 1,21</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
           <label style="font-size:12px;font-weight:600;color:var(--text-soft)">Dto %:</label>
-          <input type="number" class="form-input" id="tb-dto" value="30" min="0" max="80" style="width:60px;text-align:center" oninput="tbRecalc()">
-        </div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <label style="font-size:12px;font-weight:600;color:var(--text-soft)">Mi margen:</label>
-          <input type="number" class="form-input" id="tb-margen" value="35" min="0" max="200" style="width:60px;text-align:center" oninput="tbRecalc()">
-          <span style="font-size:12px;color:var(--text-soft)">%</span>
+          <input type="number" class="form-input" id="tb-dto" value="50" min="0" max="80" style="width:60px;text-align:center" oninput="tbRecalc()">
         </div>
         <div style="margin-left:auto;display:flex;gap:6px">
           <button class="btn btn-ghost btn-sm" onclick="tbLimpiar()" style="color:var(--danger)">🗑 Limpiar</button>
@@ -3707,9 +3702,9 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
                 <th style="text-align:right;width:45px">H</th>
                 <th style="text-align:right;width:45px">L</th>
                 <th style="text-align:right;width:45px">P</th>
-                <th style="text-align:right;width:65px">PVP s/IVA</th>
+                <th style="text-align:right;width:65px">TARIFA</th>
                 <th style="text-align:right;width:65px">COSTE</th>
-                <th style="text-align:right;width:70px">PVP CLI.</th>
+                <th style="text-align:right;width:70px">PVP s/IVA</th>
                 <th style="width:35px"></th>
               </tr></thead>
               <tbody id="tb-tbody"></tbody>
@@ -25358,20 +25353,19 @@ function tbRenderTabla(){
   const fD = v => v!==null&&v!==undefined ? Number(v) : '—';
 
   tbody.innerHTML = slice.map((p,i) => {
-    const pvpIva = acabado==='color' ? (p.precio_color??p.precio_base) : (p.precio_base??p.precio_color);
-    if(pvpIva===null||pvpIva===undefined) return '';
-    const pvpSinIva = pvpIva / 1.21;
-    const coste = pvpSinIva * (1 - dto/100);
-    const pvpCli = coste * (1 + margen/100);
+    const tarifa = acabado==='color' ? (p.precio_color??p.precio_base) : (p.precio_base??p.precio_color);
+    if(tarifa===null||tarifa===undefined) return '';
+    const coste = tarifa * (1 - dto/100);
+    const pvpSinIva = tarifa / 1.21;
     return `<tr style="cursor:pointer" onmouseenter="this.style.background='var(--bg-main)'" onmouseleave="this.style.background=''">
       <td style="font-weight:700;font-family:monospace;white-space:nowrap">${p.ref}</td>
       <td>${p.descripcion||'—'}</td>
       <td style="text-align:right;font-family:monospace">${fD(p.alto)}</td>
       <td style="text-align:right;font-family:monospace">${fD(p.ancho)}</td>
       <td style="text-align:right;font-family:monospace">${fD(p.fondo)}</td>
-      <td style="text-align:right;color:var(--text-soft)">${fE(pvpSinIva)}</td>
+      <td style="text-align:right;color:var(--text-soft)">${fE(tarifa)}</td>
       <td style="text-align:right;font-weight:600">${fE(coste)}</td>
-      <td style="text-align:right;font-weight:700;color:var(--copper)">${fE(pvpCli)}</td>
+      <td style="text-align:right;font-weight:700;color:var(--copper)">${fE(pvpSinIva)}</td>
       <td><button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px" onclick="tbAnadir(${start+i})">➕</button></td>
     </tr>`;
   }).join('');
@@ -25395,34 +25389,34 @@ function tbAnadir(idx){
   const acabado = document.getElementById('tb-acabado')?.value||'base';
   const dto = parseFloat(document.getElementById('tb-dto')?.value)||0;
   const margen = parseFloat(document.getElementById('tb-margen')?.value)||0;
-  const pvpIva = acabado==='color' ? (p.precio_color??p.precio_base) : (p.precio_base??p.precio_color);
-  if(!pvpIva){ toast('Sin precio para este acabado','error'); return; }
-  const pvpSinIva = pvpIva / 1.21;
-  const coste = pvpSinIva * (1 - dto/100);
-  const pvpCli = coste * (1 + margen/100);
+  const tarifa = acabado==='color' ? (p.precio_color??p.precio_base) : (p.precio_base??p.precio_color);
+  if(!tarifa){ toast('Sin precio para este acabado','error'); return; }
+  const coste = tarifa * (1 - dto/100);
+  const pvpSinIva = tarifa / 1.21;
 
-  const existing = _tbLineas.find(l=>l.ref===p.ref && l.acabado===acabado);
+  // Pedir nota libre (medidas exactas, observaciones…)
+  const nota = prompt(`📝 ${p.ref} — ${p.descripcion}\n\nNota libre (medidas, color, observaciones…):\nEj: "Ancho 35 cm" o "Color Midnight"\n\n(Dejar vacío si no aplica)`) || '';
+
+  const existing = _tbLineas.find(l=>l.ref===p.ref && l.acabado===acabado && l.nota===nota);
   if(existing){ existing.cant++; }
   else {
-    _tbLineas.push({ref:p.ref, desc:p.descripcion||'', acabado, coste, pvpCli, cant:1});
+    _tbLineas.push({ref:p.ref, desc:p.descripcion||'', acabado, coste, pvpSinIva, nota, cant:1});
   }
   tbRecalc();
   toast('➕ '+p.ref+' añadido');
 }
 
 function tbRecalc(){
-  // Recalcular precios de todas las líneas con dto/margen actuales
+  // Recalcular precios: Coste = Tarifa × (1-Dto%) · PVP s/IVA = Tarifa / 1,21
   const dto = parseFloat(document.getElementById('tb-dto')?.value)||0;
-  const margen = parseFloat(document.getElementById('tb-margen')?.value)||0;
-  const acabado = document.getElementById('tb-acabado')?.value||'base';
 
   _tbLineas.forEach(l=>{
     const p = _tbData.find(d=>d.ref===l.ref);
     if(!p) return;
-    const pvpIva = l.acabado==='color' ? (p.precio_color??p.precio_base) : (p.precio_base??p.precio_color);
-    if(!pvpIva) return;
-    l.coste = (pvpIva/1.21) * (1 - dto/100);
-    l.pvpCli = l.coste * (1 + margen/100);
+    const tarifa = l.acabado==='color' ? (p.precio_color??p.precio_base) : (p.precio_base??p.precio_color);
+    if(!tarifa) return;
+    l.coste = tarifa * (1 - dto/100);
+    l.pvpSinIva = tarifa / 1.21;
   });
 
   _tbRenderBudget();
@@ -25447,21 +25441,32 @@ function _tbRenderBudget(){
 
   lines.innerHTML = _tbLineas.map((l,i) => `
     <div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--border);font-size:11px">
-      <span style="font-weight:700;width:70px;flex-shrink:0;font-family:monospace">${l.ref}</span>
-      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-soft)">${l.desc}</span>
+      <span style="font-weight:700;width:60px;flex-shrink:0;font-family:monospace">${l.ref}</span>
+      <div style="flex:1;overflow:hidden;min-width:0">
+        <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-soft)">${l.desc}</div>
+        ${l.nota ? `<div style="font-size:10px;color:var(--copper);font-style:italic;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${l.nota.replace(/"/g,'&quot;')}">📝 ${l.nota}</div>` : ''}
+      </div>
       <input type="number" value="${l.cant}" min="1" style="width:40px;text-align:center;font-size:11px;border:1px solid var(--border);border-radius:4px;padding:1px" onchange="_tbLineas[${i}].cant=parseInt(this.value)||1;_tbRenderBudget()">
       <span style="font-weight:600;width:65px;text-align:right">${fE(l.coste*l.cant)}</span>
-      <span style="font-weight:700;width:65px;text-align:right;color:var(--copper)">${fE(l.pvpCli*l.cant)}</span>
+      <span style="font-weight:700;width:65px;text-align:right;color:var(--copper)">${fE(l.pvpSinIva*l.cant)}</span>
+      <button class="btn btn-ghost btn-sm" style="font-size:9px;padding:1px 4px;color:var(--copper)" title="Editar nota" onclick="tbEditarNota(${i})">📝</button>
       <button class="btn btn-ghost btn-sm" style="font-size:9px;padding:1px 4px;color:var(--red)" onclick="_tbLineas.splice(${i},1);_tbRenderBudget()">✕</button>
     </div>
   `).join('');
 
   let totCoste=0, totPvp=0;
-  _tbLineas.forEach(l=>{ totCoste+=l.coste*l.cant; totPvp+=l.pvpCli*l.cant; });
+  _tbLineas.forEach(l=>{ totCoste+=l.coste*l.cant; totPvp+=l.pvpSinIva*l.cant; });
   document.getElementById('tb-tot-coste').textContent = fE(totCoste);
   document.getElementById('tb-tot-pvp').textContent = fE(totPvp);
   document.getElementById('tb-tot-iva').textContent = fE(totPvp*1.21);
   document.getElementById('tb-tot-mrg').textContent = fE(totPvp-totCoste);
+}
+
+function tbEditarNota(idx){
+  const l = _tbLineas[idx];
+  if(!l) return;
+  const nueva = prompt(`📝 ${l.ref} — ${l.desc}\n\nNota:`, l.nota || '');
+  if(nueva !== null){ l.nota = nueva; _tbRenderBudget(); }
 }
 
 function tbLimpiar(){
@@ -25477,7 +25482,7 @@ async function tbExportarPresupuesto(){
   if(!proy){ toast('Selecciona un proyecto','error'); return; }
   const proyObj = (PC||[]).find(p=>p.proyecto_id===proy);
   const proyFinal = proyObj?.id || proy;
-  const margen = parseFloat(document.getElementById('tb-margen')?.value)||0;
+  const dto = parseFloat(document.getElementById('tb-dto')?.value)||0;
 
   try{
     const lineas = await sbGet('presupuesto_lineas',`?proyecto_id=eq.${proyFinal}&version=eq.${ver}&select=orden&order=orden.desc&limit=1`);
@@ -25487,14 +25492,16 @@ async function tbExportarPresupuesto(){
 
     for(let i=0;i<_tbLineas.length;i++){
       const l = _tbLineas[i];
+      const descLinea = 'TOBISA ['+l.ref+'] '+l.desc+' ('+l.acabado+')' + (l.nota ? ' — '+l.nota : '');
+      const margenPct = l.coste > 0 ? ((l.pvpSinIva - l.coste) / l.coste * 100) : 0;
       await sbPost('presupuesto_lineas',{
         proyecto_id:proyFinal, version:ver,
-        descripcion:'TOBISA ['+l.ref+'] '+l.desc+' ('+l.acabado+')',
+        descripcion:descLinea,
         unidad:'Ud', cantidad:l.cant,
         precio_base:parseFloat(l.coste.toFixed(4)),
-        margen_pct:margen,
-        precio_venta:parseFloat(l.pvpCli.toFixed(4)),
-        subtotal:parseFloat((l.pvpCli*l.cant).toFixed(4)),
+        margen_pct:parseFloat(margenPct.toFixed(2)),
+        precio_venta:parseFloat(l.pvpSinIva.toFixed(4)),
+        subtotal:parseFloat((l.pvpSinIva*l.cant).toFixed(4)),
         iva_pct:'21%', es_capitulo:false,
         orden:ordenBase+2+i
       });
