@@ -25653,7 +25653,11 @@ function tbAnadir(idx){
   modal.innerHTML = `<div style="background:#fff;border-radius:12px;padding:18px;width:380px;max-width:90vw;box-shadow:0 10px 40px rgba(0,0,0,.2)">
     <div style="font-weight:700;font-size:13px;margin-bottom:4px">${p.ref} — ${p.descripcion}</div>
     <div style="font-size:11px;color:var(--text-soft);margin-bottom:12px">Acabado: <strong>${nombre}</strong> · Tarifa: ${tarifa}€</div>
-    <div style="display:flex;gap:8px;margin-bottom:10px">
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+      <input type="checkbox" id="tb-m-sinmed" onchange="document.getElementById('tb-m-dims').style.display=this.checked?'none':''">
+      <label for="tb-m-sinmed" style="font-size:11px;color:var(--text-soft);cursor:pointer">Sin medidas (patas, ruedas, accesorios…)</label>
+    </div>
+    <div id="tb-m-dims" style="display:flex;gap:8px;margin-bottom:10px">
       <div style="flex:1"><label style="font-size:10px;font-weight:600;color:var(--text-soft)">H (alto)</label><input type="number" id="tb-m-h" value="${defH}" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;text-align:center" placeholder="—"></div>
       <div style="flex:1"><label style="font-size:10px;font-weight:600;color:var(--text-soft)">L (ancho)</label><input type="number" id="tb-m-l" value="${defL}" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;text-align:center" placeholder="—"></div>
       <div style="flex:1"><label style="font-size:10px;font-weight:600;color:var(--text-soft)">P (fondo)</label><input type="number" id="tb-m-p" value="${defP}" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;text-align:center" placeholder="—"></div>
@@ -25675,14 +25679,15 @@ function tbAnadir(idx){
 function tbConfirmarAnadir(){
   const d = window._tbPendiente;
   if(!d) return;
-  const h = document.getElementById('tb-m-h')?.value || '';
-  const l = document.getElementById('tb-m-l')?.value || '';
-  const p = document.getElementById('tb-m-p')?.value || '';
+  const sinMedidas = document.getElementById('tb-m-sinmed')?.checked;
+  const h = sinMedidas ? '' : (document.getElementById('tb-m-h')?.value || '');
+  const l = sinMedidas ? '' : (document.getElementById('tb-m-l')?.value || '');
+  const p = sinMedidas ? '' : (document.getElementById('tb-m-p')?.value || '');
   const notaExtra = document.getElementById('tb-m-nota')?.value?.trim() || '';
 
-  // Construir nota con medidas
+  // Construir nota con medidas (solo si no está marcado "sin medidas")
   let medidas = '';
-  if(h || l || p){
+  if(!sinMedidas && (h || l || p)){
     const parts = [];
     if(h) parts.push(h+' H');
     if(l) parts.push(l+' L');
