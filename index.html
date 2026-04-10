@@ -1877,10 +1877,10 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
             <div class="cat-card-name">Electrodomésticos</div>
             <div class="cat-card-desc">Balay &amp; Cata · Hornos, Placas, Fríos, Lavado</div>
           </div>
-          <div class="cat-card cat-card-new" onclick="toast('Próximamente: añadir fabricante','info')">
+          <div class="cat-card cat-card-new" onclick="catAbrir('catalogo-generico')">
             <div class="cat-card-icon">＋</div>
-            <div class="cat-card-name" style="color:var(--text-soft)">Nuevo</div>
-            <div class="cat-card-desc">Añadir fabricante</div>
+            <div class="cat-card-name" style="color:var(--text-soft)">Catálogos Excel</div>
+            <div class="cat-card-desc">TOBISA · Importar nuevos fabricantes</div>
           </div>
         </div>
       </div>
@@ -3632,6 +3632,129 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       </div>
     </div>
 
+
+    <!-- PANEL: CATÁLOGO GENÉRICO (multi-fabricante desde Supabase) -->
+    <div class="cat-panel" id="cat-panel-catalogo-generico">
+      <div class="cat-header">
+        <button class="cat-back" onclick="catVolver()">← Catálogos</button>
+        <span class="cat-header-title" id="cg-title">📦 Catálogos de producto</span>
+        <span class="cat-header-desc" id="cg-desc">Selecciona un fabricante o importa uno nuevo</span>
+      </div>
+      <!-- SELECTOR DE FABRICANTE -->
+      <div id="cg-fab-selector">
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
+          <div style="font-size:12px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em">Fabricantes disponibles</div>
+          <button class="btn btn-primary btn-sm" onclick="cgMostrarImportador()" style="background:var(--copper);margin-left:auto">📥 Importar Excel nuevo</button>
+        </div>
+        <div id="cg-fab-grid" class="cat-grid" style="margin-bottom:16px">
+          <div style="text-align:center;padding:40px;color:var(--text-soft)">Cargando fabricantes…</div>
+        </div>
+      </div>
+      <!-- IMPORTADOR DE EXCEL -->
+      <div id="cg-importador" style="display:none">
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <div style="font-size:14px;font-weight:700">📥 Importar catálogo desde Excel</div>
+            <button class="btn btn-ghost btn-sm" onclick="cgCerrarImportador()">✕ Cerrar</button>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:12px">
+            <div style="flex:1;min-width:200px">
+              <label class="form-label" style="font-size:11px">Nombre del fabricante</label>
+              <input class="form-input" id="cg-imp-fab" placeholder="Ej: TOBISA, FINSA, EGGER…" style="font-size:13px">
+            </div>
+            <div style="flex:1;min-width:200px">
+              <label class="form-label" style="font-size:11px">Archivo Excel (.xlsx)</label>
+              <input type="file" class="form-input" id="cg-imp-file" accept=".xlsx,.xls" onchange="cgParsearExcel()" style="font-size:12px;padding:6px">
+            </div>
+          </div>
+          <div id="cg-imp-config" style="display:none">
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+              <div>
+                <label class="form-label" style="font-size:11px">Hoja</label>
+                <select class="form-input" id="cg-imp-hoja" onchange="cgSeleccionarHoja()" style="width:200px;font-size:12px"></select>
+              </div>
+              <div>
+                <label class="form-label" style="font-size:11px">Fila de cabeceras</label>
+                <input type="number" class="form-input" id="cg-imp-header" value="2" min="1" max="20" style="width:70px;font-size:12px" onchange="cgDetectarColumnas()">
+              </div>
+              <div>
+                <label class="form-label" style="font-size:11px">Dimensiones en</label>
+                <select class="form-input" id="cg-imp-unidad" style="width:80px;font-size:12px">
+                  <option value="mm">mm</option>
+                  <option value="cm">cm</option>
+                </select>
+              </div>
+            </div>
+            <div style="font-size:11px;font-weight:600;margin-bottom:6px;color:var(--text-soft)">Mapeo de columnas (selecciona qué columna del Excel corresponde a cada campo)</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px;margin-bottom:12px" id="cg-imp-mapeo"></div>
+            <div id="cg-imp-preview" style="max-height:200px;overflow:auto;border:1px solid var(--border);border-radius:6px;margin-bottom:12px;font-size:11px"></div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <button class="btn btn-primary" onclick="cgImportar()" style="background:var(--copper)">📤 Importar <span id="cg-imp-count">0</span> productos</button>
+              <div id="cg-imp-progress" style="display:none;font-size:12px;color:var(--copper);font-weight:600"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- PANEL DE BÚSQUEDA DEL FABRICANTE SELECCIONADO -->
+      <div id="cg-catalogo" style="display:none">
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+          <button class="btn btn-ghost btn-sm" onclick="cgVolverFabricantes()" style="font-size:11px">← Fabricantes</button>
+          <div class="search-wrap" style="flex:1;min-width:180px"><span class="search-icon">🔍</span>
+            <input class="form-input" id="cg-buscar" placeholder="Buscar referencia o descripción…" oninput="cgBuscar()">
+          </div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <label style="font-size:11px;font-weight:600">Acabado:</label>
+            <label style="font-size:11px;cursor:pointer"><input type="radio" name="cg-acabado" value="base" checked onchange="cgBuscar()"> Base</label>
+            <label style="font-size:11px;cursor:pointer"><input type="radio" name="cg-acabado" value="color" onchange="cgBuscar()"> Color</label>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <label style="font-size:11px;font-weight:600">Margen %:</label>
+            <input type="number" class="form-input" id="cg-margen" value="35" min="0" max="200" step="1" style="width:55px;text-align:center;font-size:11px">
+          </div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="font-size:10px;font-weight:700;color:var(--text-soft)">Exportar a:</span>
+            <select id="cg-export-proy" class="form-input" style="width:180px;font-size:11px;padding:3px 5px;height:26px" onchange="_loadUnitsIntoSelector(this.value,document.getElementById('cg-export-ver'))">
+              <option value="">Proyecto…</option>
+            </select>
+            <select id="cg-export-ver" class="form-input" style="width:70px;font-size:11px;padding:3px 5px;height:26px">
+              <option value="v1">v1</option><option value="v2">v2</option><option value="v3">v3</option><option value="v4">v4</option><option value="v5">v5</option><option value="v6">v6</option><option value="v7">v7</option><option value="v8">v8</option>
+            </select>
+          </div>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="imex-tbl" style="width:100%">
+            <thead><tr>
+              <th style="width:90px">REF</th>
+              <th>DESCRIPCION</th>
+              <th style="text-align:right;width:55px">ALTO</th>
+              <th style="text-align:right;width:55px">ANCHO</th>
+              <th style="text-align:right;width:55px">FONDO</th>
+              <th style="text-align:right;width:75px">PRECIO</th>
+              <th style="text-align:right;width:80px">PVP</th>
+              <th style="width:40px"></th>
+            </tr></thead>
+            <tbody id="cg-tbody"></tbody>
+          </table>
+        </div>
+        <div id="cg-nor" style="display:none;text-align:center;padding:30px;color:var(--text-soft);font-size:13px">Escribe para buscar en el catálogo</div>
+        <div id="cg-paginacion" style="display:flex;justify-content:center;gap:6px;margin-top:10px"></div>
+        <!-- Valoración sticky -->
+        <div id="cg-budget" style="display:none;position:sticky;bottom:0;background:var(--bg-card);border-top:2px solid var(--copper);border-radius:10px 10px 0 0;padding:12px 16px;margin-top:12px;box-shadow:0 -4px 20px rgba(0,0,0,.15)">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-soft);margin-bottom:6px">Valoración <span id="cg-bud-cnt">0</span> productos</div>
+          <div id="cg-bud-lines" style="max-height:150px;overflow-y:auto;font-size:11px;margin-bottom:8px"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+            <div style="display:flex;gap:16px;align-items:center">
+              <div><span style="font-size:11px;color:var(--text-soft)">Coste</span><div style="font-weight:700;font-size:15px" id="cg-tot-coste">0,00</div></div>
+              <div><span style="font-size:11px;color:var(--text-soft)">PVP s/IVA</span><div style="font-weight:700;font-size:15px;color:var(--copper)" id="cg-tot-pvp">0,00</div></div>
+            </div>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-primary btn-sm" onclick="cgExportarPresupuesto()" style="background:var(--copper)">📤 Exportar al presupuesto</button>
+              <button class="btn btn-ghost btn-sm" onclick="cgLimpiar()">🗑 Vaciar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- ═══ PLANNING ═══ -->
     <div class="view" id="view-planning">
@@ -24453,9 +24576,12 @@ function catAbrir(fab){
   } else if(fab === 'visek'){
     document.getElementById('cat-panel-visek').classList.add('open');
     vkRender();
+  } else if(fab === 'catalogo-generico'){
+    document.getElementById('cat-panel-catalogo-generico').classList.add('open');
+    cgInit();
   }
   // Actualizar título topbar
-  const nombres = {saitra:'Saitra · Cocinas', imex:'IMEX · Griferías', campoaras:'Campoaras · Baño', fregaderos:"Plados · D'Aqua", genexia:'Genexia · Espejos', mamparas:'Mámparas · Deyban', roca:'Roca · Sanitarios', electrodom:'Electrodomésticos · Balay & Cata', marmoles:'Mármoles Santamaría · Bancadas', visek:'Platos Visek · Minimal Collection'};
+  const nombres = {saitra:'Saitra · Cocinas', imex:'IMEX · Griferías', campoaras:'Campoaras · Baño', fregaderos:"Plados · D'Aqua", genexia:'Genexia · Espejos', mamparas:'Mámparas · Deyban', roca:'Roca · Sanitarios', electrodom:'Electrodomésticos · Balay & Cata', marmoles:'Mármoles Santamaría · Bancadas', visek:'Platos Visek · Minimal Collection', 'catalogo-generico':'Catálogos Excel'};
   document.getElementById('tb-title').textContent = 'Catálogos · ' + (nombres[fab]||fab);
   document.getElementById('tb-bc').textContent = 'Catálogos de precios → Exportar al presupuesto';
   // Sincronizar proyecto activo del presupuesto a los selectores del catálogo
@@ -24941,6 +25067,423 @@ async function impConfirmarImport(){
   }
 }
 // ═══════════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════════
+// CATÁLOGO GENÉRICO — multi-fabricante desde Supabase
+// ═══════════════════════════════════════════════════════════════
+let _cgFabActual = null;
+let _cgResultados = [];
+let _cgLineas = [];
+let _cgPagina = 0;
+const CG_POR_PAG = 50;
+let _cgExcelData = null; // {sheets, raw, headers}
+
+async function cgInit(){
+  document.getElementById('cg-fab-selector').style.display = '';
+  document.getElementById('cg-catalogo').style.display = 'none';
+  document.getElementById('cg-importador').style.display = 'none';
+  _cgFabActual = null;
+  // Cargar fabricantes disponibles
+  try{
+    const all = await sbGet('catalogo_productos','?select=fabricante&limit=10000');
+    const fabs = [...new Set((all||[]).map(r=>r.fabricante))].sort();
+    const grid = document.getElementById('cg-fab-grid');
+    if(!fabs.length){
+      grid.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-soft)">No hay catálogos importados aún. Haz clic en <b>📥 Importar Excel nuevo</b> para empezar.</div>';
+      return;
+    }
+    // Contar por fabricante
+    const counts = {};
+    (all||[]).forEach(r=>{ counts[r.fabricante] = (counts[r.fabricante]||0)+1; });
+    grid.innerHTML = fabs.map(f => `
+      <div class="cat-card" onclick="cgAbrirFabricante('${f.replace(/'/g,"\\'")}')" style="cursor:pointer">
+        <div class="cat-card-icon">📦</div>
+        <div class="cat-card-name">${f}</div>
+        <div class="cat-card-desc">${counts[f]||0} referencias</div>
+      </div>
+    `).join('');
+  }catch(e){ document.getElementById('cg-fab-grid').innerHTML = '<div style="color:var(--red);padding:20px">Error: '+e.message+'</div>'; }
+  // Poblar selector de proyectos
+  const sel = document.getElementById('cg-export-proy');
+  if(sel && PC && PC.length){
+    sel.innerHTML = '<option value="">Proyecto…</option>' + PC.map(p=>'<option value="'+p.proyecto_id+'">'+p.proyecto_id+' '+p.nombre+'</option>').join('');
+  }
+}
+
+function cgAbrirFabricante(fab){
+  _cgFabActual = fab;
+  _cgResultados = [];
+  _cgLineas = [];
+  _cgPagina = 0;
+  document.getElementById('cg-fab-selector').style.display = 'none';
+  document.getElementById('cg-importador').style.display = 'none';
+  document.getElementById('cg-catalogo').style.display = '';
+  document.getElementById('cg-title').textContent = '📦 ' + fab;
+  document.getElementById('cg-desc').textContent = 'Catálogo de productos · Buscar y añadir al presupuesto';
+  document.getElementById('cg-buscar').value = '';
+  document.getElementById('cg-tbody').innerHTML = '';
+  document.getElementById('cg-nor').style.display = '';
+  document.getElementById('cg-nor').textContent = 'Escribe para buscar en el catálogo de ' + fab;
+  document.getElementById('cg-budget').style.display = 'none';
+  document.getElementById('cg-paginacion').innerHTML = '';
+}
+
+function cgVolverFabricantes(){
+  _cgFabActual = null;
+  document.getElementById('cg-catalogo').style.display = 'none';
+  document.getElementById('cg-title').textContent = '📦 Catálogos de producto';
+  document.getElementById('cg-desc').textContent = 'Selecciona un fabricante o importa uno nuevo';
+  cgInit();
+}
+
+let _cgTimer = null;
+function cgBuscar(){
+  clearTimeout(_cgTimer);
+  _cgTimer = setTimeout(_cgBuscarReal, 300);
+}
+
+async function _cgBuscarReal(){
+  const q = (document.getElementById('cg-buscar')?.value||'').trim();
+  if(!q || q.length < 2){
+    document.getElementById('cg-tbody').innerHTML = '';
+    document.getElementById('cg-nor').style.display = '';
+    document.getElementById('cg-nor').textContent = 'Escribe al menos 2 caracteres para buscar';
+    document.getElementById('cg-paginacion').innerHTML = '';
+    return;
+  }
+  try{
+    const filter = `?fabricante=eq.${encodeURIComponent(_cgFabActual)}&or=(ref.ilike.*${encodeURIComponent(q)}*,descripcion.ilike.*${encodeURIComponent(q)}*)&order=ref.asc&limit=500`;
+    _cgResultados = await sbGet('catalogo_productos', filter);
+    _cgPagina = 0;
+    _cgRenderTabla();
+  }catch(e){
+    document.getElementById('cg-nor').style.display = '';
+    document.getElementById('cg-nor').textContent = 'Error: ' + e.message;
+  }
+}
+
+function _cgRenderTabla(){
+  const acabado = document.querySelector('input[name="cg-acabado"]:checked')?.value || 'base';
+  const margen = parseFloat(document.getElementById('cg-margen')?.value) || 0;
+  const tbody = document.getElementById('cg-tbody');
+  const nor = document.getElementById('cg-nor');
+  const pag = document.getElementById('cg-paginacion');
+
+  if(!_cgResultados.length){
+    tbody.innerHTML = '';
+    nor.style.display = '';
+    nor.textContent = 'Sin resultados';
+    pag.innerHTML = '';
+    return;
+  }
+  nor.style.display = 'none';
+  const start = _cgPagina * CG_POR_PAG;
+  const slice = _cgResultados.slice(start, start + CG_POR_PAG);
+  const fE = v => v !== null && v !== undefined ? Number(v).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€' : '—';
+  const fD = v => v !== null && v !== undefined ? Number(v).toLocaleString('es-ES',{maximumFractionDigits:1}) : '—';
+
+  tbody.innerHTML = slice.map((p,i) => {
+    const precio = acabado === 'color' ? (p.precio_color ?? p.precio_base) : (p.precio_base ?? p.precio_color);
+    const pvp = precio !== null ? precio * (1 + margen/100) : null;
+    return `<tr>
+      <td style="font-weight:700;font-family:monospace;font-size:11px;white-space:nowrap">${p.ref}</td>
+      <td style="font-size:11px">${p.descripcion||'—'}</td>
+      <td style="text-align:right;font-size:11px;font-family:monospace">${fD(p.alto)}</td>
+      <td style="text-align:right;font-size:11px;font-family:monospace">${fD(p.ancho)}</td>
+      <td style="text-align:right;font-size:11px;font-family:monospace">${fD(p.fondo)}</td>
+      <td style="text-align:right;font-size:11px;font-weight:600">${fE(precio)}</td>
+      <td style="text-align:right;font-size:11px;font-weight:700;color:var(--copper)">${pvp!==null?fE(pvp):'—'}</td>
+      <td><button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px" onclick="cgAnadir(${start+i})">➕</button></td>
+    </tr>`;
+  }).join('');
+
+  // Paginación
+  const totalPags = Math.ceil(_cgResultados.length / CG_POR_PAG);
+  if(totalPags > 1){
+    let ph = '';
+    for(let i=0;i<totalPags;i++){
+      ph += `<button class="btn btn-sm ${i===_cgPagina?'btn-primary':'btn-ghost'}" style="font-size:10px;padding:2px 8px;${i===_cgPagina?'background:var(--copper)':''}" onclick="_cgPagina=${i};_cgRenderTabla()">${i+1}</button>`;
+    }
+    ph = `<span style="font-size:10px;color:var(--text-soft)">${_cgResultados.length} resultados</span> ` + ph;
+    pag.innerHTML = ph;
+  } else {
+    pag.innerHTML = _cgResultados.length ? `<span style="font-size:10px;color:var(--text-soft)">${_cgResultados.length} resultados</span>` : '';
+  }
+}
+
+function cgAnadir(idx){
+  const p = _cgResultados[idx];
+  if(!p) return;
+  const acabado = document.querySelector('input[name="cg-acabado"]:checked')?.value || 'base';
+  const margen = parseFloat(document.getElementById('cg-margen')?.value) || 0;
+  const precio = acabado === 'color' ? (p.precio_color ?? p.precio_base) : (p.precio_base ?? p.precio_color);
+  if(precio === null){ toast('Producto sin precio para este acabado','error'); return; }
+  const pvp = precio * (1 + margen/100);
+  // Comprobar si ya existe
+  const existing = _cgLineas.find(l => l.ref === p.ref && l.acabado === acabado);
+  if(existing){ existing.cant++; }
+  else {
+    _cgLineas.push({ref:p.ref, desc:p.descripcion||'', acabado, precio, pvp, cant:1, fab:_cgFabActual});
+  }
+  _cgRenderBudget();
+  toast('➕ ' + p.ref + ' añadido');
+}
+
+function _cgRenderBudget(){
+  const bud = document.getElementById('cg-budget');
+  const lines = document.getElementById('cg-bud-lines');
+  const cnt = document.getElementById('cg-bud-cnt');
+  if(!_cgLineas.length){ bud.style.display = 'none'; return; }
+  bud.style.display = '';
+  cnt.textContent = _cgLineas.length;
+  const fE = v => Number(v).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+'€';
+  lines.innerHTML = _cgLineas.map((l,i) => `
+    <div style="display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid var(--border)">
+      <span style="font-weight:700;width:80px;flex-shrink:0">${l.ref}</span>
+      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.desc} (${l.acabado})</span>
+      <input type="number" value="${l.cant}" min="1" style="width:40px;text-align:center;font-size:11px;border:1px solid var(--border);border-radius:4px;padding:1px" onchange="_cgLineas[${i}].cant=parseInt(this.value)||1;_cgRenderBudget()">
+      <span style="font-weight:600;width:70px;text-align:right">${fE(l.pvp * l.cant)}</span>
+      <button class="btn btn-ghost btn-sm" style="font-size:9px;padding:1px 4px;color:var(--red)" onclick="_cgLineas.splice(${i},1);_cgRenderBudget()">✕</button>
+    </div>
+  `).join('');
+  let totCoste = 0, totPvp = 0;
+  _cgLineas.forEach(l => { totCoste += l.precio * l.cant; totPvp += l.pvp * l.cant; });
+  document.getElementById('cg-tot-coste').textContent = fE(totCoste);
+  document.getElementById('cg-tot-pvp').textContent = fE(totPvp);
+}
+
+function cgLimpiar(){
+  if(!confirm('¿Vaciar la valoración?')) return;
+  _cgLineas = [];
+  _cgRenderBudget();
+}
+
+async function cgExportarPresupuesto(){
+  if(!_cgLineas.length){ toast('Añade productos primero','error'); return; }
+  const proy = document.getElementById('cg-export-proy')?.value;
+  const ver = document.getElementById('cg-export-ver')?.value || 'v1';
+  if(!proy){ toast('Selecciona un proyecto','error'); return; }
+  const proyObj = (PC||[]).find(p=>p.proyecto_id===proy);
+  const proyFinal = proyObj?.id || proy;
+  const margen = parseFloat(document.getElementById('cg-margen')?.value) || 0;
+
+  try{
+    // Obtener orden máximo
+    const lineas = await sbGet('presupuesto_lineas',`?proyecto_id=eq.${proyFinal}&version=eq.${ver}&select=orden&order=orden.desc&limit=1`);
+    let ordenBase = (lineas && lineas[0]) ? lineas[0].orden : 0;
+
+    // Capítulo
+    const capNombre = _cgFabActual || 'Catálogo';
+    await sbPost('presupuesto_lineas',{proyecto_id:proyFinal,version:ver,descripcion:capNombre,es_capitulo:true,orden:ordenBase+1,cantidad:0,precio_base:0});
+
+    // Líneas
+    for(let i=0;i<_cgLineas.length;i++){
+      const l = _cgLineas[i];
+      const pvpU = l.pvp;
+      await sbPost('presupuesto_lineas',{
+        proyecto_id:proyFinal, version:ver,
+        descripcion: _cgFabActual+' ['+l.ref+'] '+l.desc+' ('+l.acabado+')',
+        unidad:'Ud', cantidad:l.cant,
+        precio_base:parseFloat(l.precio.toFixed(4)),
+        margen_pct:margen,
+        precio_venta:parseFloat(pvpU.toFixed(4)),
+        subtotal:parseFloat((pvpU*l.cant).toFixed(4)),
+        iva_pct:'21%', es_capitulo:false,
+        orden:ordenBase+2+i
+      });
+    }
+    toast('📤 '+_cgLineas.length+' líneas exportadas al presupuesto ✅');
+    _cgLineas = [];
+    _cgRenderBudget();
+  }catch(e){ toast('Error exportando: '+e.message,'error'); }
+}
+
+// ─── IMPORTADOR DE EXCEL ────────────────────────────────────
+function cgMostrarImportador(){
+  document.getElementById('cg-importador').style.display = '';
+  document.getElementById('cg-imp-config').style.display = 'none';
+  document.getElementById('cg-imp-fab').value = '';
+  document.getElementById('cg-imp-file').value = '';
+  _cgExcelData = null;
+}
+function cgCerrarImportador(){
+  document.getElementById('cg-importador').style.display = 'none';
+}
+
+function cgParsearExcel(){
+  const file = document.getElementById('cg-imp-file').files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const loadXlsx = ()=>{
+      try{
+        const wb = XLSX.read(new Uint8Array(e.target.result), {type:'array'});
+        _cgExcelData = {wb, sheets:wb.SheetNames};
+        const sel = document.getElementById('cg-imp-hoja');
+        sel.innerHTML = wb.SheetNames.map((s,i)=>'<option value="'+i+'">'+s+'</option>').join('');
+        // Auto-seleccionar hoja con datos (no "Leer esto")
+        const idx = wb.SheetNames.findIndex(s=>!/leer/i.test(s));
+        if(idx>=0) sel.value = idx;
+        document.getElementById('cg-imp-config').style.display = '';
+        cgSeleccionarHoja();
+      }catch(err){ toast('Error leyendo Excel: '+err.message,'error'); }
+    };
+    if(window.XLSX) loadXlsx();
+    else{
+      const s=document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+      s.onload=loadXlsx;
+      document.head.appendChild(s);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+const CG_CAMPOS = [
+  {key:'ref', label:'Referencia', required:true},
+  {key:'desc', label:'Descripción'},
+  {key:'alto', label:'Alto (H)'},
+  {key:'ancho', label:'Ancho (L)'},
+  {key:'fondo', label:'Fondo (P)'},
+  {key:'precio_base', label:'Precio Base'},
+  {key:'precio_color', label:'Precio Color'},
+  {key:'pagina', label:'Página PDF'},
+  {key:'otras', label:'Otras pág.'}
+];
+
+function cgSeleccionarHoja(){
+  const idx = parseInt(document.getElementById('cg-imp-hoja').value);
+  const ws = _cgExcelData.wb.Sheets[_cgExcelData.wb.SheetNames[idx]];
+  _cgExcelData.raw = XLSX.utils.sheet_to_json(ws, {header:1});
+  cgDetectarColumnas();
+}
+
+function cgDetectarColumnas(){
+  const headerIdx = parseInt(document.getElementById('cg-imp-header').value) - 1;
+  const headers = (_cgExcelData.raw[headerIdx]||[]).map(h=>String(h||'').trim());
+  _cgExcelData.headerIdx = headerIdx;
+  _cgExcelData.headers = headers;
+
+  // Auto-detect mapeo
+  const pats = {
+    ref: /REFERENCIA|REF/i,
+    desc: /DESCRIPCI|DESC/i,
+    alto: /^H$|ALTO|HEIGHT/i,
+    ancho: /^L$|ANCHO|WIDTH|LARGO/i,
+    fondo: /^P$|FONDO|DEPTH|PROF/i,
+    precio_base: /BASE|PRECIO.*BASE|PVP.*BASE/i,
+    precio_color: /COLOR|PRECIO.*COLOR/i,
+    pagina: /P.GINA|PAGE/i,
+    otras: /OTRAS|OTHER/i
+  };
+
+  const mapeo = document.getElementById('cg-imp-mapeo');
+  mapeo.innerHTML = CG_CAMPOS.map(c => {
+    const auto = headers.findIndex(h => pats[c.key] && pats[c.key].test(h));
+    return `<div>
+      <label style="font-size:10px;font-weight:600">${c.label}${c.required?' *':''}</label>
+      <select class="form-input" id="cg-map-${c.key}" style="font-size:11px;padding:3px" onchange="cgPreview()">
+        <option value="-1">— No mapear —</option>
+        ${headers.map((h,i)=>'<option value="'+i+'"'+(i===auto?' selected':'')+'>'+h+'</option>').join('')}
+      </select>
+    </div>`;
+  }).join('');
+  cgPreview();
+}
+
+function cgPreview(){
+  const map = {};
+  CG_CAMPOS.forEach(c => { map[c.key] = parseInt(document.getElementById('cg-map-'+c.key)?.value ?? -1); });
+  const data = _cgExcelData.raw;
+  const start = _cgExcelData.headerIdx + 1;
+  let count = 0;
+  for(let i=start;i<data.length;i++){
+    if(data[i] && map.ref>=0 && data[i][map.ref]) count++;
+  }
+  document.getElementById('cg-imp-count').textContent = count;
+
+  // Preview primeras filas
+  const preview = document.getElementById('cg-imp-preview');
+  const sample = [];
+  for(let i=start;i<Math.min(start+5, data.length);i++){
+    const r = data[i];
+    if(!r || (map.ref>=0 && !r[map.ref])) continue;
+    sample.push(r);
+  }
+  if(!sample.length){ preview.innerHTML = '<div style="padding:8px;color:var(--text-soft)">Sin datos</div>'; return; }
+  preview.innerHTML = '<table style="width:100%;border-collapse:collapse"><thead><tr>'+
+    CG_CAMPOS.filter(c=>map[c.key]>=0).map(c=>'<th style="padding:3px 6px;background:var(--bg-main);font-size:10px;text-align:left;border:1px solid var(--border)">'+c.label+'</th>').join('')+
+    '</tr></thead><tbody>'+
+    sample.map(r => '<tr>'+CG_CAMPOS.filter(c=>map[c.key]>=0).map(c=>'<td style="padding:2px 6px;font-size:10px;border:1px solid var(--border)">'+(r[map[c.key]]??'')+'</td>').join('')+'</tr>').join('')+
+    '</tbody></table>';
+}
+
+async function cgImportar(){
+  const fab = (document.getElementById('cg-imp-fab')?.value||'').trim().toUpperCase();
+  if(!fab){ toast('Escribe el nombre del fabricante','error'); return; }
+  const map = {};
+  CG_CAMPOS.forEach(c => { map[c.key] = parseInt(document.getElementById('cg-map-'+c.key)?.value ?? -1); });
+  if(map.ref < 0){ toast('Mapea al menos la columna Referencia','error'); return; }
+
+  const unidad = document.getElementById('cg-imp-unidad')?.value || 'mm';
+  const divDim = unidad === 'mm' ? 10 : 1; // mm→cm o cm→cm
+  const data = _cgExcelData.raw;
+  const start = _cgExcelData.headerIdx + 1;
+  const productos = [];
+  const toNum = v => { const n = parseFloat(v); return isNaN(n)?null:n; };
+
+  for(let i=start;i<data.length;i++){
+    const r = data[i];
+    if(!r || !r[map.ref]) continue;
+    const ref = String(r[map.ref]).trim();
+    if(!ref) continue;
+    const obj = {fabricante:fab, ref};
+    if(map.desc>=0) obj.descripcion = r[map.desc] ? String(r[map.desc]).trim() : null;
+    if(map.alto>=0){ const v=toNum(r[map.alto]); obj.alto = v!==null ? Math.round(v/divDim*10)/10 : null; }
+    if(map.ancho>=0){ const v=toNum(r[map.ancho]); obj.ancho = v!==null ? Math.round(v/divDim*10)/10 : null; }
+    if(map.fondo>=0){ const v=toNum(r[map.fondo]); obj.fondo = v!==null ? Math.round(v/divDim*10)/10 : null; }
+    if(map.precio_base>=0) obj.precio_base = toNum(r[map.precio_base]);
+    if(map.precio_color>=0) obj.precio_color = toNum(r[map.precio_color]);
+    if(map.pagina>=0) obj.pagina_pdf = r[map.pagina] ? parseInt(r[map.pagina])||null : null;
+    if(map.otras>=0) obj.otras_pag = r[map.otras] ? String(r[map.otras]).trim() : null;
+    productos.push(obj);
+  }
+
+  if(!productos.length){ toast('No se encontraron productos','error'); return; }
+  if(!confirm('¿Importar '+productos.length+' productos de '+fab+'? Se reemplazarán los datos existentes de este fabricante.')) return;
+
+  const prog = document.getElementById('cg-imp-progress');
+  prog.style.display = '';
+  prog.textContent = 'Eliminando datos anteriores…';
+
+  // Borrar anteriores
+  try{
+    await fetch(SB_URL+'/rest/v1/catalogo_productos?fabricante=eq.'+encodeURIComponent(fab),{
+      method:'DELETE', headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}
+    });
+  }catch(e){}
+
+  // Insertar en lotes
+  const BATCH = 200;
+  let ok = 0, errors = 0;
+  for(let i=0;i<productos.length;i+=BATCH){
+    const batch = productos.slice(i, i+BATCH);
+    prog.textContent = `Importando ${Math.min(i+BATCH,productos.length)}/${productos.length}…`;
+    try{
+      await fetch(SB_URL+'/rest/v1/catalogo_productos',{
+        method:'POST',
+        headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},
+        body:JSON.stringify(batch)
+      });
+      ok += batch.length;
+    }catch(e){ errors += batch.length; }
+  }
+
+  prog.style.display = 'none';
+  toast('✅ Importados '+ok+' productos de '+fab+(errors?' ('+errors+' errores)':''));
+  cgCerrarImportador();
+  cgInit(); // Recargar fabricantes
+}
 
 function catVolver(){
   catActual = null;
