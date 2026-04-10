@@ -537,11 +537,12 @@ tbody td{padding:7px 10px;vertical-align:middle}
 #saitra-col-izquierda>.card{max-height:45vh;overflow-y:auto;scrollbar-width:thin}
 #cat-panel-tobisa.open{display:flex;flex-direction:column;height:calc(100vh - 56px - 36px);overflow:hidden}
 #cat-panel-tobisa .cat-header{flex-shrink:0}
-.tb-fam-item{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:500;transition:background .15s}
+#tb-familias{align-self:start;position:sticky;top:0;max-height:calc(100vh - 200px);overflow-y:auto;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:8px}
+.tb-fam-item{display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:500;transition:background .15s;white-space:nowrap}
 .tb-fam-item:hover{background:var(--bg-main)}
 .tb-fam-item.active{background:var(--copper);color:white;font-weight:700}
 .tb-fam-item.active .tb-fam-cnt{background:rgba(255,255,255,.3);color:white}
-.tb-fam-cnt{margin-left:auto;font-size:10px;background:var(--bg-main);padding:1px 7px;border-radius:99px;font-weight:600;color:var(--text-soft)}
+.tb-fam-cnt{margin-left:auto;font-size:10px;background:var(--bg-main);padding:1px 6px;border-radius:99px;font-weight:600;color:var(--text-soft)}
 #saitra-col-contenido{display:flex!important;flex-direction:column!important;min-height:0}
 #saitra-col-contenido>.card:first-child{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
 #saitra-col-contenido>.card:first-child>div:last-child{flex:1;min-height:0;overflow-y:auto}
@@ -3686,15 +3687,15 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         </div>
       </div>
       <!-- GRID: izq familias + der tabla + valoración -->
-      <div style="display:grid;grid-template-columns:280px 1fr;gap:14px;flex:1;min-height:0;overflow:hidden">
+      <div style="display:grid;grid-template-columns:220px 1fr;gap:10px;flex:1;min-height:0;overflow:hidden;align-items:start">
         <!-- COL IZQUIERDA: Familias -->
-        <div style="overflow-y:auto;scrollbar-width:thin;display:flex;flex-direction:column;gap:4px" id="tb-familias">
-          <div class="search-wrap" style="margin-bottom:6px"><span class="search-icon">🔍</span>
-            <input class="form-input" id="tb-buscar" placeholder="Buscar ref o descripción…" oninput="tbBuscarTexto()" style="font-size:12px">
+        <div style="display:flex;flex-direction:column;gap:3px" id="tb-familias">
+          <div class="search-wrap" style="margin-bottom:4px"><span class="search-icon">🔍</span>
+            <input class="form-input" id="tb-buscar" placeholder="Buscar ref o descripción…" oninput="tbBuscarTexto()" style="font-size:11px;padding:5px 8px 5px 28px">
           </div>
         </div>
         <!-- COL DERECHA: Tabla + valoración -->
-        <div style="display:flex;flex-direction:column;gap:10px;overflow:hidden">
+        <div style="display:flex;flex-direction:column;gap:10px;overflow:hidden;max-height:calc(100vh - 200px)">
           <div style="overflow-y:auto;flex:1;scrollbar-width:thin" id="tb-tabla-wrap">
             <table class="imex-tbl" style="width:100%;font-size:11px">
               <thead style="position:sticky;top:0;z-index:1"><tr>
