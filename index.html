@@ -7771,15 +7771,21 @@ function presCrearPedido(){
     const d = window._pedidoDesdePres;
     if(!d) return;
 
-    // Inicializar nuevo pedido
+    // Forzar nuevo pedido (deseleccionar cualquier pedido cargado)
+    const pedSel = document.getElementById('pd-pedido-sel');
+    if(pedSel) pedSel.value = '';
     nuevoPedidoDoc();
 
     // Rellenar líneas
     window.pdLineas = d.pedLineas;
     renderPedidoLineas();
 
+    // Generar número de pedido
+    const nextNum = 'PED-'+String((PedC?.length||0)+1).padStart(3,'0');
+
     // Rellenar campos
     const set = (id,v) => { const el=document.getElementById(id); if(el && v) el.value=v; };
+    set('pd-num-input', nextNum);
     set('pd-proyecto-input', d.proy + ' · ' + (d.proyObj.nombre||''));
     set('pd-prov-input', d.proveedor);
     set('pd-ref-doc-input', 'Presupuesto ' + d.proy + '-' + d.ver.toUpperCase());
