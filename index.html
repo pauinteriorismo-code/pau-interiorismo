@@ -10188,11 +10188,12 @@ async function procesarPDFsImport(){
 
   // Detectar duplicados contra compras existentes
   try{
-    const comprasExistentes = await sbGet('compras','?select=num_factura,proveedor_id&limit=5000').catch(()=>[]);
+    const comprasExistentes = await sbGet('compras','?select=concepto,proveedor_id&limit=5000').catch(()=>[]);
     _ipdfResultados.forEach(r=>{
       if(r.extraidos && r.extraidos.num_factura){
+        const numRef = String(r.extraidos.num_factura).trim();
         const dup = comprasExistentes.find(c =>
-          c.num_factura && String(c.num_factura).trim()===String(r.extraidos.num_factura).trim() &&
+          c.concepto && String(c.concepto).includes(numRef) &&
           c.proveedor_id && r.extraidos.proveedor &&
           String(c.proveedor_id).toLowerCase().includes(String(r.extraidos.proveedor).toLowerCase().substring(0,8))
         );
@@ -10387,26 +10388,29 @@ async function _ipdfGuardarCompra(idx){
   if(!r) return false;
   const proy = document.getElementById(`ipdf-${idx}-proy`)?.value || null;
   const proyObj = proy ? (PC||[]).find(p=>p.proyecto_id===proy) : null;
+  const numFac = document.getElementById(`ipdf-${idx}-num`)?.value || null;
+  const tipoDoc = document.getElementById(`ipdf-${idx}-tipodoc`)?.value || 'Facturas';
+  let concepto = document.getElementById(`ipdf-${idx}-conc`)?.value || '';
+  // Prefijo tipo documento en concepto si no es Factura (para que quede claro en la tabla)
+  if(tipoDoc !== 'Facturas' && concepto && !concepto.startsWith('['+tipoDoc)){
+    concepto = '['+tipoDoc.replace(/s$/,'')+'] ' + concepto;
+  }
+  // Incluir nº documento en concepto para no perder la referencia (compras no tiene columna num_factura)
+  if(numFac && !concepto.includes(numFac)){
+    concepto = concepto ? (numFac + ' · ' + concepto) : numFac;
+  }
   const payload = {
     fecha: document.getElementById(`ipdf-${idx}-fecha`)?.value || new Date().toISOString().split('T')[0],
     proyecto: proy,
     proyecto_id: proyObj?.id || proy || null,
     proveedor_id: document.getElementById(`ipdf-${idx}-prov`)?.value || null,
-    num_factura: document.getElementById(`ipdf-${idx}-num`)?.value || null,
-    concepto: document.getElementById(`ipdf-${idx}-conc`)?.value || '',
+    concepto: concepto,
     base_imponible: parseFloat(document.getElementById(`ipdf-${idx}-base`)?.value)||0,
     iva_pct: document.getElementById(`ipdf-${idx}-iva`)?.value || '21%',
     estado_pago: document.getElementById(`ipdf-${idx}-estado`)?.value || 'Pendiente',
-    tipo_documento: document.getElementById(`ipdf-${idx}-tipodoc`)?.value || 'Facturas',
     adjunto_pdf: r.base64 ? 'data:application/pdf;base64,'+r.base64 : null,
     adjunto_nombre: r.file.name
   };
-  // Prefijo tipo documento en concepto si no es Factura (para que quede claro en la tabla)
-  const tipoDoc = payload.tipo_documento || 'Facturas';
-  if(tipoDoc !== 'Facturas' && payload.concepto && !payload.concepto.startsWith('['+tipoDoc)){
-    payload.concepto = '['+tipoDoc.replace(/s$/,'')+'] ' + payload.concepto;
-  }
-  delete payload.tipo_documento; // Quitar del payload DB por si la columna no existe
 
   // Intentar con estado_pago, fallback a estado
   try{
@@ -10415,9 +10419,6 @@ async function _ipdfGuardarCompra(idx){
   }catch(err){
     if(err.message && err.message.includes('estado_pago')){
       const alt = {...payload}; delete alt.estado_pago; alt.estado = payload.estado_pago;
-      try{ await sbPost('compras', alt); return true; }catch(e2){ toast('Error guardando: '+e2.message,'error'); return false; }
-    } else if(err.message && err.message.includes('num_factura')){
-      const alt = {...payload}; delete alt.num_factura;
       try{ await sbPost('compras', alt); return true; }catch(e2){ toast('Error guardando: '+e2.message,'error'); return false; }
     }
     toast('Error guardando '+r.file.name+': '+err.message,'error');
