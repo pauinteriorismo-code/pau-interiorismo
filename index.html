@@ -1593,6 +1593,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <button class="btn btn-ghost btn-sm no-print" onclick="eliminarVersionPresupuesto()" title="Eliminar todas las lineas de esta version" style="color:var(--red);border-color:var(--red);font-size:11px;padding:4px 8px">🗑 Versión</button>
         <button class="btn btn-ghost btn-sm no-print" onclick="presBorrarSeleccion()" title="Borrar líneas seleccionadas" style="color:var(--red);font-size:11px;padding:4px 8px">🗑 Selección</button>
         <button class="btn btn-ghost btn-sm no-print" onclick="presAgruparCliente()" title="Agrupar líneas seleccionadas en una sola para el cliente (sin detalle de refs)" style="background:#e8f5ee;color:#166534;font-size:11px;padding:4px 8px">📋 Agrupar cliente</button>
+        <button class="btn btn-ghost btn-sm no-print" onclick="presReimportarACatalogo()" title="Devolver líneas TOBISA seleccionadas al catálogo para re-exportar" style="background:#e8f0f8;color:#1a5276;font-size:11px;padding:4px 8px">📥 Reimportar catálogo</button>
         <button class="btn btn-primary" onclick="addLineaPresupuesto()">＋ Línea</button>
         <button class="btn btn-ghost" onclick="addCapituloPresupuesto()">＋ Capítulo</button>
         <button class="btn btn-ghost" style="background:#f5e6ff;color:#7b2fa8;border-color:#d4b3e6" onclick="abrirPresupuestoIA()" title="Generar presupuesto automáticamente con IA">🤖 Generar con IA</button>
@@ -7698,6 +7699,39 @@ async function presBorrarSeleccion(){
     toast(`🗑 ${ids.length} líneas eliminadas`);
     loadPresupuesto();
   }catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+// ── Reimportar líneas TOBISA del presupuesto al catálogo ──
+function presReimportarACatalogo(){
+  const tbody = document.getElementById('pres-tbody');
+  const ids = [...(tbody||document).querySelectorAll('input.pres-chk:checked')].map(c=>c.value);
+  // Si hay selección, usar solo las seleccionadas; si no, todas las TOBISA
+  const lineas = ids.length
+    ? PresC.filter(l=>ids.includes(l.id) && !l.es_capitulo && (l.descripcion||'').includes('TOBISA'))
+    : PresC.filter(l=>!l.es_capitulo && (l.descripcion||'').includes('TOBISA'));
+  if(!lineas.length){ toast('No hay líneas TOBISA para reimportar','error'); return; }
+
+  // Parsear cada línea del presupuesto y reconstruir la valoración
+  const nuevas = lineas.map(l=>{
+    // Extraer ref del patrón "TOBISA [D1234] DESCRIPCION (acabado) — nota"
+    const m = (l.descripcion||'').match(/TOBISA\s*\[(\w+)\]\s*(.+?)(?:\(([^)]+)\))?(?:\s*—\s*(.*))?$/);
+    const ref = m ? m[1] : 'REF';
+    const desc = m ? m[2].trim() : l.descripcion||'';
+    const acabado = m && m[3] ? m[3].trim() : 'Cotton';
+    const nota = m && m[4] ? m[4].trim() : '';
+    const acabadoTipo = ['Cotton','Raw','Gris Coco','Mohave','Okume','Roble Biscuit','Roble Nice','Nogal MN','Eucalipto Victoria'].includes(acabado) ? 'base' : 'color';
+    return {
+      ref, desc, acabado, acabadoTipo,
+      coste: parseFloat(l.precio_base)||0,
+      pvpSinIva: parseFloat(l.precio_venta)||0,
+      nota, cant: l.cantidad||1
+    };
+  });
+
+  // Guardar en sessionStorage como valoración Tobisa
+  _tbLineas = nuevas;
+  _tbGuardarLineas();
+  toast('📥 '+nuevas.length+' líneas reimportadas al catálogo TOBISA. Ve a Catálogos → TOBISA para verlas.');
 }
 
 // ── Agrupar líneas para cliente (sin detalle de refs/precios unitarios) ──
