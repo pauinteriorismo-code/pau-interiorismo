@@ -1592,6 +1592,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <button class="btn btn-ghost btn-sm no-print" onclick="renombrarVersion('pres-version-sel','pres-proyecto-sel')" title="Renombrar versión" style="font-size:11px;padding:4px 8px">✏️ v</button>
         <button class="btn btn-ghost btn-sm no-print" onclick="eliminarVersionPresupuesto()" title="Eliminar todas las lineas de esta version" style="color:var(--red);border-color:var(--red);font-size:11px;padding:4px 8px">🗑 Versión</button>
         <button class="btn btn-ghost btn-sm no-print" onclick="presBorrarSeleccion()" title="Borrar líneas seleccionadas" style="color:var(--red);font-size:11px;padding:4px 8px">🗑 Selección</button>
+        <button class="btn btn-ghost btn-sm no-print" onclick="presAgruparCliente()" title="Agrupar líneas seleccionadas en una sola para el cliente (sin detalle de refs)" style="background:#e8f5ee;color:#166534;font-size:11px;padding:4px 8px">📋 Agrupar cliente</button>
         <button class="btn btn-primary" onclick="addLineaPresupuesto()">＋ Línea</button>
         <button class="btn btn-ghost" onclick="addCapituloPresupuesto()">＋ Capítulo</button>
         <button class="btn btn-ghost" style="background:#f5e6ff;color:#7b2fa8;border-color:#d4b3e6" onclick="abrirPresupuestoIA()" title="Generar presupuesto automáticamente con IA">🤖 Generar con IA</button>
@@ -7689,6 +7690,112 @@ async function presBorrarSeleccion(){
   try{
     for(const id of ids) await sbDelete('presupuesto_lineas', id);
     toast(`🗑 ${ids.length} líneas eliminadas`);
+    loadPresupuesto();
+  }catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+// ── Agrupar líneas para cliente (sin detalle de refs/precios unitarios) ──
+async function presAgruparCliente(){
+  const ids = [...document.querySelectorAll('.pres-chk:checked')].map(c=>c.value);
+  if(!ids.length){ toast('Selecciona las líneas a agrupar con los checkboxes','error'); return; }
+
+  // Recoger datos de las líneas seleccionadas
+  const lineas = PresC.filter(l=>ids.includes(l.id) && !l.es_capitulo);
+  if(!lineas.length){ toast('No hay líneas de producto seleccionadas','error'); return; }
+
+  // Calcular totales
+  let totCoste=0, totPvp=0;
+  lineas.forEach(l=>{
+    const pv=l.precio_venta||0, cant=l.cantidad||0;
+    const ci=l.ci_gg_bi_pct||0;
+    const sub=cant*pv, subCI=ci>0?sub*(1+ci/100):sub;
+    totCoste += cant*(l.precio_base||0);
+    totPvp += subCI;
+  });
+
+  // Pedir modo: con IA o manual
+  const modo = confirm(
+    `📋 Agrupar ${lineas.length} líneas para el cliente\n\n` +
+    `Total PVP: ${totPvp.toFixed(2)}€\n\n` +
+    `¿Generar descripción automática con IA?\n\n` +
+    `[Aceptar] = Descripción con IA\n[Cancelar] = Escribir descripción manual`
+  );
+
+  let descripcion = '';
+
+  if(modo){
+    // Generar con IA
+    const key = window._ANTHROPIC_KEY||'';
+    if(!key){ toast('Configura tu API Key de Anthropic en Configuración','error'); return; }
+
+    toast('🤖 Generando descripción con IA…');
+    const resumen = lineas.map(l=>`- ${l.descripcion} (${l.cantidad||1} ud)`).join('\n');
+
+    try{
+      const resp = await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+        body:JSON.stringify({
+          model:'claude-sonnet-4-20250514',
+          max_tokens:300,
+          system:`Eres un interiorista profesional. Genera una descripción breve y elegante (2-3 frases) para un presupuesto de cliente, resumiendo los productos/mobiliario listados. NO menciones referencias de producto, códigos, ni precios unitarios. Usa un tono profesional y atractivo. Responde SOLO con la descripción, sin comillas ni formato extra.`,
+          messages:[{role:'user',content:`Resume estas ${lineas.length} partidas de mobiliario/interiorismo para presentar al cliente:\n\n${resumen}`}]
+        })
+      });
+      if(!resp.ok) throw new Error('Error API '+resp.status);
+      const data = await resp.json();
+      descripcion = data.content.filter(b=>b.type==='text').map(b=>b.text).join('').trim();
+    }catch(e){
+      toast('Error IA: '+e.message+'. Escribe manualmente.','error');
+      descripcion = prompt('Descripción para el cliente:','Mobiliario y equipamiento según diseño');
+      if(!descripcion) return;
+    }
+  } else {
+    descripcion = prompt('Descripción para el cliente:','Mobiliario y equipamiento según diseño');
+    if(!descripcion) return;
+  }
+
+  // Preguntar si mantener las líneas detalladas
+  const mantener = confirm(
+    `Descripción generada:\n"${descripcion}"\n\nPrecio total: ${totPvp.toFixed(2)}€\n\n` +
+    `¿Mantener las líneas detalladas en el presupuesto?\n\n` +
+    `[Aceptar] = Mantener detalle + añadir línea resumen\n[Cancelar] = Eliminar detalle, dejar solo resumen`
+  );
+
+  // Obtener proyecto y versión actuales
+  const proy = document.getElementById('pres-proyecto-sel')?.value;
+  const ver = document.getElementById('pres-version-sel')?.value || 'v1';
+  if(!proy){ toast('No hay proyecto seleccionado','error'); return; }
+
+  try{
+    // Obtener orden máximo
+    const maxOrden = PresC.reduce((m,l)=>Math.max(m,l.orden||0),0);
+
+    // Calcular margen real
+    const margenPct = totCoste>0 ? ((totPvp-totCoste)/totCoste*100) : 0;
+
+    // Crear línea resumen para el cliente
+    await sbPost('presupuesto_lineas',{
+      proyecto_id:proy, version:ver,
+      descripcion:descripcion,
+      unidad:'pa', cantidad:1,
+      precio_base:parseFloat(totCoste.toFixed(2)),
+      margen_pct:parseFloat(margenPct.toFixed(2)),
+      precio_venta:parseFloat(totPvp.toFixed(2)),
+      subtotal:parseFloat(totPvp.toFixed(2)),
+      iva_pct:'21%', es_capitulo:false,
+      orden:maxOrden+1
+    });
+
+    // Si no mantener detalle, borrar las líneas originales
+    if(!mantener){
+      for(const id of ids){
+        const l = PresC.find(x=>x.id===id);
+        if(l && !l.es_capitulo) await sbDelete('presupuesto_lineas', id);
+      }
+    }
+
+    toast('📋 Línea resumen creada para el cliente');
     loadPresupuesto();
   }catch(e){ toast('Error: '+e.message,'error'); }
 }
