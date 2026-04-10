@@ -543,6 +543,9 @@ tbody td{padding:7px 10px;vertical-align:middle}
 .tb-fam-item.active{background:var(--copper);color:white;font-weight:700}
 .tb-fam-item.active .tb-fam-cnt{background:rgba(255,255,255,.3);color:white}
 .tb-fam-cnt{margin-left:auto;font-size:10px;background:var(--bg-main);padding:1px 6px;border-radius:99px;font-weight:600;color:var(--text-soft)}
+.tb-seccion-hdr{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--copper);padding:8px 10px 3px;margin-top:6px;border-top:1px solid var(--border)}
+.tb-seccion-hdr:first-of-type{margin-top:0;border-top:none}
+.tb-fam-item.tb-sub{padding-left:22px;font-size:10.5px}
 #saitra-col-contenido{display:flex!important;flex-direction:column!important;min-height:0}
 #saitra-col-contenido>.card:first-child{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
 #saitra-col-contenido>.card:first-child>div:last-child{flex:1;min-height:0;overflow-y:auto}
@@ -3689,7 +3692,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <!-- GRID: izq familias + der tabla + valoración -->
       <div style="display:grid;grid-template-columns:220px 1fr;gap:10px;flex:1;min-height:0;overflow:hidden;align-items:start">
         <!-- COL IZQUIERDA: Familias -->
-        <div style="display:flex;flex-direction:column;gap:3px" id="tb-familias">
+        <div style="display:flex;flex-direction:column;gap:3px;overflow-y:auto;max-height:calc(100vh - 200px);scrollbar-width:thin" id="tb-familias">
           <div class="search-wrap" style="margin-bottom:4px"><span class="search-icon">🔍</span>
             <input class="form-input" id="tb-buscar" placeholder="Buscar ref o descripción…" oninput="tbBuscarTexto()" style="font-size:11px;padding:5px 8px 5px 28px">
           </div>
@@ -25179,29 +25182,32 @@ async function impConfirmarImport(){
 // ═══════════════════════════════════════════════════════════════
 // TOBISA — Panel con familias desplegables
 // ═══════════════════════════════════════════════════════════════
-const TB_FAMILIAS = [
-  {key:'MODULOS',     label:'Módulos',        icon:'📦', pat:/^(MODULO|MÓDULO)\b/i},
-  {key:'ARRIMADEROS', label:'Arrimaderos',    icon:'🧱', pat:/^ARRIMADERO/i},
-  {key:'CUBOS',       label:'Cubos',          icon:'🔲', pat:/^CUBO/i},
-  {key:'CABECEROS',   label:'Cabeceros',      icon:'🛏️', pat:/^CABECERO/i},
-  {key:'CAMAS',       label:'Camas',          icon:'🛌', pat:/^CAMA/i},
-  {key:'ARMARIOS',    label:'Armarios',       icon:'🚪', pat:/^ARMARIO/i},
-  {key:'CONJUNTOS',   label:'Conjuntos',      icon:'🧩', pat:/^CONJUNTO/i},
-  {key:'COLUMNAS',    label:'Columnas',       icon:'📏', pat:/^COLUMNA/i},
-  {key:'CAJAS_PUENTE',label:'Cajas puente',   icon:'📐', pat:/^CAJA/i},
-  {key:'TRASERAS',    label:'Traseras',       icon:'🪵', pat:/^TRASERA/i},
-  {key:'CAJONERAS',   label:'Cajoneras',      icon:'🗄️', pat:/^CAJONERA/i},
-  {key:'BANDEJAS',    label:'Bandejas',       icon:'📋', pat:/^BANDEJA/i},
-  {key:'BARRAS',      label:'Barras',         icon:'➖', pat:/^BARRA/i},
-  {key:'ESTANTES',    label:'Estantes',       icon:'📚', pat:/^ESTANTE/i},
-  {key:'ESCALERAS',   label:'Escaleras',      icon:'🪜', pat:/^ESCALERA/i},
-  {key:'PATAS',       label:'Patas',          icon:'🦿', pat:/^PATA/i},
-  {key:'FORROS',      label:'Forros',         icon:'📄', pat:/^FORRO/i},
-  {key:'BARANDILLAS', label:'Barandillas',    icon:'🔩', pat:/^BARANDILLA/i},
-  {key:'ESTRUCTURAS', label:'Estructuras y mesas', icon:'🪑', pat:/^(ESTRUCTURA|MESA)\b/i},
-  {key:'PUERTAS',     label:'Puertas y costados',  icon:'🚪', pat:/^(PUERTA|COSTADO)\b/i},
-  {key:'ACCESORIOS',  label:'Accesorios / Otros',  icon:'⚙️', pat:null}, // catch-all
+// Estructura jerárquica según la tarifa física TOBISA 2.51
+const TB_SECCIONES = [
+  { key:'S1', label:'1. Módulos | Cajas puente', icon:'📦', pagMin:11, pagMax:27,
+    pat:/^(MODULO|MÓDULO|CAJA PUENTE|CAJA|MESA AUXILIAR|JUEGO DE PATAS|FORRO|COMPLEMENTO|PERSONALIZACI)/i,
+    antiPat:/^(MODULO|MÓDULO)\s+(TR|BLOCK)\b/i },
+  { key:'S2', label:'2. Escritorios', icon:'✏️', pagMin:28, pagMax:33,
+    pat:/^(ENCIMERA|ESCRITORIO|PORTER)/i },
+  { key:'S3', label:'3. Estanterías', icon:'📚', pagMin:34, pagMax:62,
+    pat:/^(ESTANTER|CUBO|ESTANTE|TRASERA|CONJUNTO|CHAPA PLEGADA)/i,
+    antiPat:/^ESTANTE.*(ARMARIO|VESTIDOR|COLGAR)/i },
+  { key:'S4_1', label:'4.1 Arrimaderos | Cabeceros | Paneles', icon:'🧱', pagMin:63, pagMax:82,
+    pat:/^(ARRIMADERO|CABECERO|PANEL|RESPALDO|ARC[OÓ]N)/i, sub:true },
+  { key:'S4_2', label:'4.2 Nidos | Literas | Camas', icon:'🛌', pagMin:83, pagMax:90,
+    pat:/^(NIDO|BLOCK(?!\s)|LITERA|CAMA SINGULAR|BASTIDOR|SOMIER|SUSTITUCI)/i,
+    antiPat:/^(CAMA ABATIBLE|CAMA NIDO TR)/i, sub:true },
+  { key:'S4_3', label:'4.3 Módulos TR | Módulos Block', icon:'🔲', pagMin:91, pagMax:103,
+    pat:/^(MODULO|MÓDULO)\s+(TR|BLOCK)\b/i, sub:true },
+  { key:'S4_4', label:'4.4 Camas abatibles', icon:'🛏️', pagMin:104, pagMax:108,
+    pat:/^CAMA ABATIBLE/i, sub:true },
+  { key:'S4_5', label:'4.5 Complementos camas', icon:'🔩', pagMin:109, pagMax:112,
+    pat:/^(BARANDILLA|ESCALERA|SOPORTE|STEP)/i, sub:true },
+  { key:'S5', label:'5. Armarios | Vestidores', icon:'🚪', pagMin:113, pagMax:135,
+    pat:/^(ARMARIO|VESTIDOR|PUERTA|COSTADO|COLUMNA|TERMINAL|BISAGRA|BARRA|CORTE ESPECIAL)/i },
 ];
+// Flat list compatible con el resto del código
+const TB_FAMILIAS = TB_SECCIONES;
 
 let _tbData = [];        // Todos los productos TOBISA cargados
 let _tbFiltered = [];    // Filtrados por familia/búsqueda
@@ -25210,13 +25216,31 @@ let _tbPagina = 0;
 let _tbFamActiva = null;
 const TB_POR_PAG = 50;
 
-function _tbCategoria(desc){
-  if(!desc) return 'ACCESORIOS';
-  const d = desc.toUpperCase();
-  for(const f of TB_FAMILIAS){
-    if(f.pat && f.pat.test(d)) return f.key;
+function _tbCategoria(desc, pagina){
+  // 1) Clasificar por página PDF si disponible (más fiable)
+  if(pagina != null && pagina > 0){
+    const pg = Number(pagina);
+    for(const s of TB_SECCIONES){
+      if(pg >= s.pagMin && pg <= s.pagMax) return s.key;
+    }
   }
-  return 'ACCESORIOS';
+  // 2) Fallback: regex sobre descripción
+  if(!desc) return 'S1';
+  const d = desc;
+  // Probar secciones específicas primero (las que tienen antiPat en otras)
+  // S4_3 "MÓDULO TR/BLOCK" antes que S1 "MÓDULO" genérico
+  const s43 = TB_SECCIONES.find(s=>s.key==='S4_3');
+  if(s43 && s43.pat.test(d)) return 'S4_3';
+  // S4_4 "CAMA ABATIBLE" antes que S4_2 "CAMA"
+  const s44 = TB_SECCIONES.find(s=>s.key==='S4_4');
+  if(s44 && s44.pat.test(d)) return 'S4_4';
+  // Resto en orden
+  for(const s of TB_SECCIONES){
+    if(s.key==='S4_3'||s.key==='S4_4') continue; // ya probados
+    if(s.antiPat && s.antiPat.test(d)) continue;
+    if(s.pat && s.pat.test(d)) return s.key;
+  }
+  return 'S1'; // catch-all → módulos
 }
 
 async function tbInit(){
@@ -25228,19 +25252,31 @@ async function tbInit(){
   }
   // Contar por familia
   const counts = {};
-  _tbData.forEach(p=>{ const c=_tbCategoria(p.descripcion); counts[c]=(counts[c]||0)+1; });
+  _tbData.forEach(p=>{ const c=_tbCategoria(p.descripcion, p.pagina_pdf); counts[c]=(counts[c]||0)+1; });
 
-  // Render familias
+  // Render familias con estructura jerárquica
   const cont = document.getElementById('tb-familias');
   let h = cont.querySelector('.search-wrap').outerHTML; // mantener buscador
   h += `<div class="tb-fam-item${_tbFamActiva===null?' active':''}" onclick="tbSelFamilia(null)" style="font-weight:700">
     <span>📦</span> <span>Todos</span> <span class="tb-fam-cnt">${_tbData.length}</span>
   </div>`;
-  TB_FAMILIAS.forEach(f=>{
-    const cnt = counts[f.key]||0;
+  // Renderizar secciones con cabecera "4. Camas" agrupando subsecciones
+  let camasHeader = false;
+  TB_SECCIONES.forEach(s=>{
+    const cnt = counts[s.key]||0;
+    // Cabecera "4. CAMAS" antes de la primera subsección
+    if(s.sub && !camasHeader){
+      const camasCnt = TB_SECCIONES.filter(x=>x.sub).reduce((a,x)=>a+(counts[x.key]||0),0);
+      h += `<div class="tb-seccion-hdr">🛌 4. Camas <span class="tb-fam-cnt">${camasCnt}</span></div>`;
+      h += `<div class="tb-fam-item${_tbFamActiva==='S4_ALL'?' active':''}" onclick="tbSelFamilia('S4_ALL')" style="font-weight:600;font-size:10.5px;padding-left:14px">
+        <span>📁</span> <span>Todas las camas</span> <span class="tb-fam-cnt">${camasCnt}</span>
+      </div>`;
+      camasHeader = true;
+    }
     if(!cnt) return;
-    h += `<div class="tb-fam-item${_tbFamActiva===f.key?' active':''}" onclick="tbSelFamilia('${f.key}')">
-      <span>${f.icon}</span> <span>${f.label}</span> <span class="tb-fam-cnt">${cnt}</span>
+    const subCls = s.sub ? ' tb-sub' : '';
+    h += `<div class="tb-fam-item${subCls}${_tbFamActiva===s.key?' active':''}" onclick="tbSelFamilia('${s.key}')">
+      <span>${s.icon}</span> <span>${s.label}</span> <span class="tb-fam-cnt">${cnt}</span>
     </div>`;
   });
   cont.innerHTML = h;
@@ -25281,8 +25317,11 @@ function tbRenderTabla(){
   // Filtrar
   if(q.length >= 2){
     _tbFiltered = _tbData.filter(p => (p.ref||'').toUpperCase().includes(q) || (p.descripcion||'').toUpperCase().includes(q));
+  } else if(_tbFamActiva === 'S4_ALL'){
+    // Todas las subsecciones de camas (4.x)
+    _tbFiltered = _tbData.filter(p => { const c = _tbCategoria(p.descripcion, p.pagina_pdf); return c.startsWith('S4_'); });
   } else if(_tbFamActiva){
-    _tbFiltered = _tbData.filter(p => _tbCategoria(p.descripcion) === _tbFamActiva);
+    _tbFiltered = _tbData.filter(p => _tbCategoria(p.descripcion, p.pagina_pdf) === _tbFamActiva);
   } else if(q.length === 0 && _tbFamActiva === null){
     _tbFiltered = _tbData;
   } else {
