@@ -25641,17 +25641,66 @@ function tbAnadir(idx){
   const coste = tarifa * (1 - dto1/100) * (1 - dto2/100);
   const pvpSinIva = tarifa / 1.21;
 
-  // Pedir nota libre (medidas exactas, observaciones…)
-  const nota = prompt(`📝 ${p.ref} — ${p.descripcion}\nAcabado: ${nombre}\n\nNota libre (medidas, observaciones…):\nEj: "Ancho 35 cm"\n\n(Dejar vacío si no aplica)`) || '';
+  // Medidas por defecto del producto (en cm, pueden venir como mm/10)
+  const defH = p.alto!=null ? Number(p.alto) : '';
+  const defL = p.ancho!=null ? Number(p.ancho) : '';
+  const defP = p.fondo!=null ? Number(p.fondo) : '';
 
-  const existing = _tbLineas.find(l=>l.ref===p.ref && l.acabado===nombre && l.nota===nota);
+  // Mini-modal para medidas + nota
+  const modal = document.createElement('div');
+  modal.id = 'tb-medidas-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:9999;display:flex;align-items:center;justify-content:center';
+  modal.innerHTML = `<div style="background:#fff;border-radius:12px;padding:18px;width:380px;max-width:90vw;box-shadow:0 10px 40px rgba(0,0,0,.2)">
+    <div style="font-weight:700;font-size:13px;margin-bottom:4px">${p.ref} — ${p.descripcion}</div>
+    <div style="font-size:11px;color:var(--text-soft);margin-bottom:12px">Acabado: <strong>${nombre}</strong> · Tarifa: ${tarifa}€</div>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <div style="flex:1"><label style="font-size:10px;font-weight:600;color:var(--text-soft)">H (alto)</label><input type="number" id="tb-m-h" value="${defH}" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;text-align:center" placeholder="—"></div>
+      <div style="flex:1"><label style="font-size:10px;font-weight:600;color:var(--text-soft)">L (ancho)</label><input type="number" id="tb-m-l" value="${defL}" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;text-align:center" placeholder="—"></div>
+      <div style="flex:1"><label style="font-size:10px;font-weight:600;color:var(--text-soft)">P (fondo)</label><input type="number" id="tb-m-p" value="${defP}" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;text-align:center" placeholder="—"></div>
+    </div>
+    <div style="margin-bottom:12px"><label style="font-size:10px;font-weight:600;color:var(--text-soft)">Nota libre (opcional)</label><input type="text" id="tb-m-nota" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px" placeholder="Ej: Acabado Oxid, somier 190cm…"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('tb-medidas-modal').remove()">Cancelar</button>
+      <button class="btn btn-primary btn-sm" style="background:var(--copper)" onclick="tbConfirmarAnadir()">➕ Añadir</button>
+    </div>
+  </div>`;
+  modal.addEventListener('click',e=>{ if(e.target===modal) modal.remove(); });
+  document.body.appendChild(modal);
+  document.getElementById('tb-m-l').focus();
+
+  // Guardar datos temporales para confirmar
+  window._tbPendiente = {ref:p.ref, desc:p.descripcion||'', acabado:nombre, acabadoTipo:tipo, coste, pvpSinIva};
+}
+
+function tbConfirmarAnadir(){
+  const d = window._tbPendiente;
+  if(!d) return;
+  const h = document.getElementById('tb-m-h')?.value || '';
+  const l = document.getElementById('tb-m-l')?.value || '';
+  const p = document.getElementById('tb-m-p')?.value || '';
+  const notaExtra = document.getElementById('tb-m-nota')?.value?.trim() || '';
+
+  // Construir nota con medidas
+  let medidas = '';
+  if(h || l || p){
+    const parts = [];
+    if(h) parts.push(h+' H');
+    if(l) parts.push(l+' L');
+    if(p) parts.push(p+' P');
+    medidas = parts.join(' x ');
+  }
+  const nota = [medidas, notaExtra].filter(Boolean).join(' — ');
+
+  const existing = _tbLineas.find(x=>x.ref===d.ref && x.acabado===d.acabado && x.nota===nota);
   if(existing){ existing.cant++; }
   else {
-    _tbLineas.push({ref:p.ref, desc:p.descripcion||'', acabado:nombre, acabadoTipo:tipo, coste, pvpSinIva, nota, cant:1});
+    _tbLineas.push({...d, nota, cant:1});
   }
   tbRecalc();
   _tbGuardarLineas();
-  toast('➕ '+p.ref+' ('+nombre+') añadido');
+  toast('➕ '+d.ref+' ('+d.acabado+') añadido');
+  document.getElementById('tb-medidas-modal')?.remove();
+  window._tbPendiente = null;
 }
 
 function tbRecalc(){
