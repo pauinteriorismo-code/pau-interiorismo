@@ -4927,6 +4927,9 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 
     <!-- ═══ CONFIGURACIÓN ═══ -->
     <div class="view" id="view-configuracion">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+        <button class="btn btn-primary" onclick="saveAllConfig()" style="background:var(--copper);font-size:13px;padding:8px 20px">💾 Guardar toda la configuración</button>
+      </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
         <div class="card">
           <div class="card-header"><div class="card-title">🏢 Datos de la empresa</div><button class="btn btn-ghost btn-sm" onclick="saveConfig()">💾 Guardar</button></div>
@@ -19571,6 +19574,20 @@ async function loadConfiguracion(){
   await _loadFasesConfig();
   loadFasesConfigUI();
 }
+async function saveAllConfig(){
+  try{
+    await saveConfig();
+    // API Key solo si tiene valor
+    const apiKey = document.getElementById('cfg-apikey')?.value?.trim();
+    if(apiKey && apiKey.startsWith('sk-ant')) await saveApiKey();
+    await saveDiasPago();
+    await saveUmbrales();
+    await saveFasesConfig();
+    await savePieFactura();
+    toast('💾 Toda la configuración guardada correctamente');
+  }catch(e){ toast('Error al guardar: '+e.message,'error'); }
+}
+
 async function saveApiKey(){
   const key = document.getElementById('cfg-apikey')?.value?.trim();
   if(!key){ toast('Introduce la API Key','error'); return; }
