@@ -16252,7 +16252,7 @@ function plRenderMes(){
         const chips=tDia.map(t=>{
           const col=PL_COLORES[t.estado]||PL_COLORES['Pendiente'];
           const esAlta=t.prioridad==='alta';
-          const trabs=t.trabajadores.filter(w=>w!==enc && enc!=='__sin_asignar__');
+          const trabs=t.trabajadores;
           const jefeLabel=enc==='__sin_asignar__'&&t.jefe_tarea?`⭐ ${t.jefe_tarea}`:'';
           return `<div style="background:${col.bg};border-left:3px solid ${esAlta?'#7c3aed':col.border};border-radius:3px;padding:3px 6px;margin-bottom:2px;font-size:10px;line-height:1.45;position:relative">
             <div style="display:flex;align-items:flex-start;gap:2px">
