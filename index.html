@@ -3725,7 +3725,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           </select>
         </div>
         <div style="display:flex;align-items:center;gap:8px;background:#fef3e0;padding:5px 10px;border-radius:6px;border:1px solid #ffe0b2">
-          <span style="font-size:11px;color:#e65100">💰 Coste = Tarifa − Dto1% − Dto2%</span>
+          <span style="font-size:10px;color:#e65100">💰 Coste = Tarifa−Dto1%−Dto2% · PVP = (Tarifa−DtoPVP%)/1,21</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
           <label style="font-size:12px;font-weight:600;color:var(--text-soft)">Dto1:</label>
@@ -3735,6 +3735,11 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <div style="display:flex;align-items:center;gap:8px">
           <label style="font-size:12px;font-weight:600;color:var(--text-soft)">Dto2:</label>
           <input type="number" class="form-input" id="tb-dto2" value="8" min="0" max="50" step="0.5" style="width:55px;text-align:center" oninput="tbRecalc()">
+          <span style="font-size:11px;color:var(--text-soft)">%</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <label style="font-size:12px;font-weight:600;color:var(--text-soft)">Dto PVP:</label>
+          <input type="number" class="form-input" id="tb-dto-pvp" value="10" min="0" max="50" step="0.5" style="width:55px;text-align:center" oninput="tbRecalc()">
           <span style="font-size:11px;color:var(--text-soft)">%</span>
         </div>
         <div style="margin-left:auto;display:flex;gap:6px">
@@ -25376,6 +25381,7 @@ function tbRenderTabla(){
   const acabado = document.getElementById('tb-acabado')?.value||'base';
   const dto1 = parseFloat(document.getElementById('tb-dto1')?.value)||0;
   const dto2 = parseFloat(document.getElementById('tb-dto2')?.value)||0;
+  const dtoPvp = parseFloat(document.getElementById('tb-dto-pvp')?.value)||0;
 
   // Filtrar
   if(q.length >= 2){
@@ -25413,7 +25419,7 @@ function tbRenderTabla(){
     const tarifa = acabado==='color' ? (p.precio_color??p.precio_base) : (p.precio_base??p.precio_color);
     if(tarifa===null||tarifa===undefined) return '';
     const coste = tarifa * (1 - dto1/100) * (1 - dto2/100);
-    const pvpSinIva = tarifa / 1.21;
+    const pvpSinIva = tarifa * (1 - dtoPvp/100) / 1.21;
     return `<tr style="cursor:pointer" onmouseenter="this.style.background='var(--bg-main)'" onmouseleave="this.style.background=''">
       <td style="font-weight:700;font-family:monospace;white-space:nowrap">${p.ref}</td>
       <td>${p.descripcion||'—'}</td>
@@ -25454,10 +25460,11 @@ function tbAnadir(idx){
   const {tipo, nombre} = _tbAcabadoInfo();
   const dto1 = parseFloat(document.getElementById('tb-dto1')?.value)||0;
   const dto2 = parseFloat(document.getElementById('tb-dto2')?.value)||0;
+  const dtoPvp = parseFloat(document.getElementById('tb-dto-pvp')?.value)||0;
   const tarifa = tipo==='color' ? (p.precio_color??p.precio_base) : (p.precio_base??p.precio_color);
   if(!tarifa){ toast('Sin precio para este acabado','error'); return; }
   const coste = tarifa * (1 - dto1/100) * (1 - dto2/100);
-  const pvpSinIva = tarifa / 1.21;
+  const pvpSinIva = tarifa * (1 - dtoPvp/100) / 1.21;
 
   // Pedir nota libre (medidas exactas, observaciones…)
   const nota = prompt(`📝 ${p.ref} — ${p.descripcion}\nAcabado: ${nombre}\n\nNota libre (medidas, observaciones…):\nEj: "Ancho 35 cm"\n\n(Dejar vacío si no aplica)`) || '';
@@ -25472,9 +25479,10 @@ function tbAnadir(idx){
 }
 
 function tbRecalc(){
-  // Recalcular precios: Coste = Tarifa × (1-Dto1%) × (1-Dto2%) · PVP s/IVA = Tarifa / 1,21
+  // Recalcular: Coste = Tarifa×(1-Dto1%)×(1-Dto2%) · PVP s/IVA = Tarifa×(1-DtoPVP%)/1,21
   const dto1 = parseFloat(document.getElementById('tb-dto1')?.value)||0;
   const dto2 = parseFloat(document.getElementById('tb-dto2')?.value)||0;
+  const dtoPvp = parseFloat(document.getElementById('tb-dto-pvp')?.value)||0;
 
   _tbLineas.forEach(l=>{
     const p = _tbData.find(d=>d.ref===l.ref);
@@ -25483,7 +25491,7 @@ function tbRecalc(){
     const tarifa = tipo==='color' ? (p.precio_color??p.precio_base) : (p.precio_base??p.precio_color);
     if(!tarifa) return;
     l.coste = tarifa * (1 - dto1/100) * (1 - dto2/100);
-    l.pvpSinIva = tarifa / 1.21;
+    l.pvpSinIva = tarifa * (1 - dtoPvp/100) / 1.21;
   });
 
   _tbRenderBudget();
