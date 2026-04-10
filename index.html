@@ -10297,7 +10297,14 @@ function _ipdfRenderReview(){
           </select>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:8px">
+      <div style="display:grid;grid-template-columns:1fr 2fr 1fr 1fr 1fr 1fr;gap:8px">
+        <div><label style="font-size:10px;color:var(--text-soft);font-weight:600">Tipo doc.</label>
+          <select class="form-input" id="ipdf-${i}-tipodoc" style="font-size:12px;padding:5px 8px;font-weight:700;color:${(e.tipo_documento||'Facturas')==='Presupuestos'?'#b85c00':(e.tipo_documento||'Facturas')==='Albaranes'?'#1565c0':'var(--navy)'}" onchange="this.style.color=this.value==='Presupuestos'?'#b85c00':this.value==='Albaranes'?'#1565c0':'var(--navy)'">
+            <option value="Facturas" ${(e.tipo_documento||'Facturas')==='Facturas'?'selected':''}>📄 Factura</option>
+            <option value="Presupuestos" ${e.tipo_documento==='Presupuestos'?'selected':''}>📋 Presupuesto</option>
+            <option value="Albaranes" ${e.tipo_documento==='Albaranes'?'selected':''}>📦 Albarán</option>
+          </select>
+        </div>
         <div><label style="font-size:10px;color:var(--text-soft);font-weight:600">Concepto</label><input class="form-input" id="ipdf-${i}-conc" value="${(e.concepto||'').replace(/"/g,'&quot;')}" style="font-size:12px;padding:5px 8px"></div>
         <div><label style="font-size:10px;color:var(--text-soft);font-weight:600">Base imponible €</label><input class="form-input" id="ipdf-${i}-base" type="number" step="0.01" value="${e.base_imponible||0}" style="font-size:12px;padding:5px 8px;font-weight:700"></div>
         <div><label style="font-size:10px;color:var(--text-soft);font-weight:600">IVA %</label>
@@ -10390,9 +10397,17 @@ async function _ipdfGuardarCompra(idx){
     base_imponible: parseFloat(document.getElementById(`ipdf-${idx}-base`)?.value)||0,
     iva_pct: document.getElementById(`ipdf-${idx}-iva`)?.value || '21%',
     estado_pago: document.getElementById(`ipdf-${idx}-estado`)?.value || 'Pendiente',
+    tipo_documento: document.getElementById(`ipdf-${idx}-tipodoc`)?.value || 'Facturas',
     adjunto_pdf: r.base64 ? 'data:application/pdf;base64,'+r.base64 : null,
     adjunto_nombre: r.file.name
   };
+  // Prefijo tipo documento en concepto si no es Factura (para que quede claro en la tabla)
+  const tipoDoc = payload.tipo_documento || 'Facturas';
+  if(tipoDoc !== 'Facturas' && payload.concepto && !payload.concepto.startsWith('['+tipoDoc)){
+    payload.concepto = '['+tipoDoc.replace(/s$/,'')+'] ' + payload.concepto;
+  }
+  delete payload.tipo_documento; // Quitar del payload DB por si la columna no existe
+
   // Intentar con estado_pago, fallback a estado
   try{
     await sbPost('compras', payload);
@@ -15660,7 +15675,12 @@ async function saveCompra(){
     proyecto_id: proyUUID||proyTexto||null, // UUID si existe, fallback a texto
     // Guardar NOMBRE del proveedor en proveedor_id (columna TEXT igual que subcontratas)
     proveedor_id: (()=>{ const sel=document.getElementById('co-prov-sel'); if(!sel||!sel.value) return null; const opt=sel.options[sel.selectedIndex]; return opt?opt.text.split(' · ')[0]:sel.value; })(),
-    concepto: document.getElementById('co-concepto').value,
+    concepto: (()=>{
+      const conc = document.getElementById('co-concepto').value||'';
+      const td = document.getElementById('co-tipo-doc')?.value||'Facturas';
+      if(td!=='Facturas' && conc && !conc.startsWith('['+td)) return '['+td.replace(/s$/,'')+'] '+conc;
+      return conc;
+    })(),
     base_imponible: parseFloat(document.getElementById('co-base').value)||0,
     iva_pct: document.getElementById('co-iva').value,
     estado_pago: estadoVal,
