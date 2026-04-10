@@ -25630,9 +25630,10 @@ async function tbInit(){
   // Sincronizar con presupuesto activo (cliente + proyecto + versión)
   tbSyncDesdePresupuesto();
 
-  // Restaurar valoración persistida desde sessionStorage
+  // Restaurar valoración persistida desde sessionStorage y recalcular precios
   _tbLineas = JSON.parse(sessionStorage.getItem('tb_lineas')||'[]');
-  _tbRenderBudget();
+  if(_tbLineas.length && _tbData.length) tbRecalc(); // recalcular con datos actuales
+  else _tbRenderBudget();
 
   tbRenderTabla();
 }
