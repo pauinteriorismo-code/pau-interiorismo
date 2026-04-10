@@ -5925,7 +5925,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="modal-title" id="f-modal-title">🧾 Nueva factura</div>
       <span id="f-tipo-badge" style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;background:#e8f5ee;color:var(--green)">📤 VENTA</span>
     </div>
-    <button class="modal-close" onclick="closeModal(&#39;m-factura&#39;)">×</button>
+    <button class="modal-close" onclick="_hitoPendienteFactura=null;closeModal(&#39;m-factura&#39;)">×</button>
   </div>
   <div class="modal-body">
     <input type="hidden" id="f-id">
@@ -6095,7 +6095,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <button class="btn btn-ghost btn-sm" onclick="fVerPDF()" style="color:var(--navy)">📄 Ver PDF adjunto</button>
     </div>
     <div style="display:flex;gap:8px">
-    <button class="btn btn-ghost" onclick="closeModal(&#39;m-factura&#39;)">Cancelar</button>
+    <button class="btn btn-ghost" onclick="_hitoPendienteFactura=null;closeModal(&#39;m-factura&#39;)">Cancelar</button>
     <button class="btn btn-ghost" onclick="previsualizarFactura()" style="border:1px solid var(--border)">👁 Vista previa</button>
     <button class="btn btn-primary" onclick="saveFactura()">💾 Guardar</button>
     </div>
@@ -7372,6 +7372,10 @@ async function confirmDeleteAction(){
     if(pendingDel.table === 'proyectos'){
       await eliminarProyectoCompleto(pendingDel.id);
     } else {
+      // Si es factura, limpiar hitos vinculados antes de eliminar
+      if(pendingDel.table === 'facturas'){
+        try{ await sb('hitos_pago','PATCH',{estado:'Pendiente',factura_id:null},null,`?factura_id=eq.${pendingDel.id}`); }catch(e){ console.warn('Limpieza hito:',e); }
+      }
       await sbDelete(pendingDel.table, pendingDel.id);
       toast('Eliminado ✅');
     }
@@ -7405,7 +7409,7 @@ async function eliminarProyectoCompleto(proyId){
     const tablas = [
       'pedidos','albaranes','compras','subcontratas','horas_trabajo',
       'presupuesto_lineas','certificaciones','entregas_cuenta',
-      'fotos_proyecto','proyecto_unidades','facturas'
+      'fotos_proyecto','proyecto_unidades','hitos_pago','facturas'
     ];
     for(const tbl of tablas){
       try{ await sb(tbl,'DELETE',null,null,`?proyecto_id=eq.${proyectoId}`); }catch(e){ console.warn('No se pudo borrar en '+tbl,e); }
@@ -28531,10 +28535,12 @@ async function renderExpHitos(body){
     const st=_estadoHito(h);
     const pctH = basePres>0?(parseFloat(h.importe||0)/basePres*100):0;
     const esFact = st.cat==='fact';
+    // Verificar si la factura vinculada aún existe
+    const facExiste = h.factura_id && (FC||[]).some(f=>String(f.id)===String(h.factura_id));
     const btnFact = esFact
-      ? (h.factura_id
+      ? (facExiste
           ? `<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:3px 8px;color:var(--green)" onclick="editFactura('${h.factura_id}')" title="Ver factura">📄 Ver factura</button>`
-          : `<span style="font-size:10px;color:var(--green);font-weight:700">✓ Facturado</span>`)
+          : `<span style="font-size:10px;color:var(--text-soft)">⚠ Factura eliminada</span> <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:3px 8px" onclick="resetearHito('${h.id}')" title="Volver a pendiente">↩ Restaurar</button>`)
       : `<button class="btn btn-primary btn-sm" style="font-size:10px;padding:4px 10px" onclick="generarFacturaDesdeHito('${h.id}')">🧾 Generar factura</button>`;
     return `<tr data-hito="${h.id}" style="border-bottom:1px solid #f0f0f0">
       <td style="padding:8px 10px;text-align:center;width:30px;color:var(--text-soft);font-weight:700">${h.orden||i+1}</td>
@@ -28708,6 +28714,18 @@ async function borrarHito(id){
     await sbDelete('hitos_pago',id);
     toast('Hito eliminado ✅');
     expTab('hitos');
+  }catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+// ─── Restaurar hito a Pendiente (si la factura fue eliminada) ────
+async function resetearHito(hitoId){
+  try{
+    await sb('hitos_pago','PATCH',{estado:'Pendiente',factura_id:null},null,`?id=eq.${hitoId}`);
+    toast('Hito restaurado a Pendiente ✅');
+    // Recargar la vista de hitos
+    const tab = document.querySelector('[data-tab="hitos"].active, [onclick*="hitos"].active');
+    if(tab) tab.click();
+    else if(typeof renderExpHitos === 'function') renderExpHitos(document.getElementById('exp-tab-content'));
   }catch(e){ toast('Error: '+e.message,'error'); }
 }
 
