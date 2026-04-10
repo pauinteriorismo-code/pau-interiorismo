@@ -3662,8 +3662,12 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <!-- TOOLBAR -->
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px;flex-shrink:0">
         <div style="display:flex;align-items:center;gap:8px">
+          <label style="font-size:12px;font-weight:600;color:var(--text-soft)">Cliente:</label>
+          <select class="form-input" id="tb-cliente" style="width:150px" onchange="tbCascadaCliente()"><option value="">— Cliente —</option></select>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
           <label style="font-size:12px;font-weight:600;color:var(--text-soft)">Proyecto:</label>
-          <select class="form-input" id="tb-proyecto" style="width:200px"><option value="">— Seleccionar —</option></select>
+          <select class="form-input" id="tb-proyecto" style="width:200px"><option value="">— Proyecto —</option></select>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
           <label style="font-size:12px;font-weight:600;color:var(--text-soft)">Versión:</label>
@@ -7806,7 +7810,13 @@ function syncPresContext(){
   const edProy = document.getElementById('ed-proyecto');
   if(edProy) edProy.value = proyectoId;
   _syncVer('ed-version');
-  // 6. Presupuesto Final
+  // 6. TOBISA — cliente + proyecto + versión
+  const tbCli = document.getElementById('tb-cliente');
+  if(tbCli && clienteId){ tbCli.value = clienteId; tbCascadaCliente(); }
+  const tbProy = document.getElementById('tb-proyecto');
+  if(tbProy) tbProy.value = proyectoId;
+  _syncVer('tb-version');
+  // 7. Presupuesto Final
   if(clienteId){
     const pfCli = document.getElementById('filter-cliente-pres_final');
     if(pfCli){ pfCli.value = clienteId; cascadaModulo('pres_final','pf-proyecto-sel',null); }
@@ -25263,10 +25273,36 @@ const TB_FAMILIAS = TB_SECCIONES;
 
 let _tbData = [];        // Todos los productos TOBISA cargados
 let _tbFiltered = [];    // Filtrados por familia/búsqueda
-let _tbLineas = [];      // Valoración
+let _tbLineas = JSON.parse(sessionStorage.getItem('tb_lineas')||'[]'); // Valoración persistida
 let _tbPagina = 0;
 let _tbFamActiva = null;
 const TB_POR_PAG = 50;
+
+function _tbGuardarLineas(){ sessionStorage.setItem('tb_lineas', JSON.stringify(_tbLineas)); }
+
+// Cascada cliente → proyecto en panel Tobisa
+function tbCascadaCliente(){
+  const cliSel = document.getElementById('tb-cliente');
+  const cliId = cliSel?.value || '';
+  const proySel = document.getElementById('tb-proyecto');
+  if(!proySel) return;
+  const filtrados = cliId ? PC.filter(p=>p.cliente_id===cliId) : PC;
+  proySel.innerHTML = '<option value="">— Proyecto —</option>' + filtrados.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
+}
+
+// Sincronizar selectores Tobisa desde PRES_ACTIVO (presupuesto)
+function tbSyncDesdePresupuesto(){
+  const {clienteId, proyectoId, version} = PRES_ACTIVO;
+  // Cliente
+  const cliSel = document.getElementById('tb-cliente');
+  if(cliSel && clienteId){ cliSel.value = clienteId; tbCascadaCliente(); }
+  // Proyecto
+  const proySel = document.getElementById('tb-proyecto');
+  if(proySel && proyectoId) proySel.value = proyectoId;
+  // Versión
+  const verSel = document.getElementById('tb-version');
+  if(verSel && version){ _loadUnitsIntoSelector(proyectoId, verSel); verSel.value = version; }
+}
 
 function _tbCategoria(desc, pagina){
   // 1) Clasificar por página PDF si disponible (más fiable)
@@ -25344,12 +25380,19 @@ async function tbInit(){
   const hdrDesc = document.getElementById('tb-header-desc');
   if(hdrDesc) hdrDesc.textContent = `PVP con IVA incluido · Dto configurable · ${_tbData.length.toLocaleString('es-ES')} referencias`;
 
-  // Poblar selector de proyectos
-  const sel = document.getElementById('tb-proyecto');
-  if(sel && PC && PC.length){
-    const curr = sel.value;
-    sel.innerHTML = '<option value="">— Seleccionar —</option>' + PC.map(p=>'<option value="'+p.proyecto_id+'"'+(p.proyecto_id===curr?' selected':'')+'>'+p.proyecto_id+' '+p.nombre+'</option>').join('');
+  // Poblar selector de clientes
+  const cliSel = document.getElementById('tb-cliente');
+  if(cliSel && CC && CC.length){
+    const cur = cliSel.value;
+    cliSel.innerHTML = '<option value="">— Cliente —</option>' + [...CC].sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||'','es')).map(c=>`<option value="${c.cliente_id}">${c.nombre}</option>`).join('');
+    if(cur) cliSel.value = cur;
   }
+
+  // Sincronizar con presupuesto activo (cliente + proyecto + versión)
+  tbSyncDesdePresupuesto();
+
+  // Restaurar valoración persistida
+  if(_tbLineas.length) _tbRenderBudget();
 
   tbRenderTabla();
 }
@@ -25470,6 +25513,7 @@ function tbAnadir(idx){
     _tbLineas.push({ref:p.ref, desc:p.descripcion||'', acabado:nombre, acabadoTipo:tipo, coste, pvpSinIva, nota, cant:1});
   }
   tbRecalc();
+  _tbGuardarLineas();
   toast('➕ '+p.ref+' ('+nombre+') añadido');
 }
 
@@ -25516,11 +25560,11 @@ function _tbRenderBudget(){
         <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-soft)">${l.desc} <span style="font-size:9px;background:var(--bg-main);padding:1px 4px;border-radius:3px">${l.acabado}</span></div>
         ${l.nota ? `<div style="font-size:10px;color:var(--copper);font-style:italic;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${l.nota.replace(/"/g,'&quot;')}">📝 ${l.nota}</div>` : ''}
       </div>
-      <input type="number" value="${l.cant}" min="1" style="width:40px;text-align:center;font-size:11px;border:1px solid var(--border);border-radius:4px;padding:1px" onchange="_tbLineas[${i}].cant=parseInt(this.value)||1;_tbRenderBudget()">
+      <input type="number" value="${l.cant}" min="1" style="width:40px;text-align:center;font-size:11px;border:1px solid var(--border);border-radius:4px;padding:1px" onchange="_tbLineas[${i}].cant=parseInt(this.value)||1;_tbGuardarLineas();_tbRenderBudget()">
       <span style="font-weight:600;width:65px;text-align:right">${fE(l.coste*l.cant)}</span>
       <span style="font-weight:700;width:65px;text-align:right;color:var(--copper)">${fE(l.pvpSinIva*l.cant)}</span>
       <button class="btn btn-ghost btn-sm" style="font-size:9px;padding:1px 4px;color:var(--copper)" title="Editar nota" onclick="tbEditarNota(${i})">📝</button>
-      <button class="btn btn-ghost btn-sm" style="font-size:9px;padding:1px 4px;color:var(--red)" onclick="_tbLineas.splice(${i},1);_tbRenderBudget()">✕</button>
+      <button class="btn btn-ghost btn-sm" style="font-size:9px;padding:1px 4px;color:var(--red)" onclick="_tbLineas.splice(${i},1);_tbGuardarLineas();_tbRenderBudget()">✕</button>
     </div>
   `).join('');
 
@@ -25536,12 +25580,13 @@ function tbEditarNota(idx){
   const l = _tbLineas[idx];
   if(!l) return;
   const nueva = prompt(`📝 ${l.ref} — ${l.desc}\n\nNota:`, l.nota || '');
-  if(nueva !== null){ l.nota = nueva; _tbRenderBudget(); }
+  if(nueva !== null){ l.nota = nueva; _tbGuardarLineas(); _tbRenderBudget(); }
 }
 
 function tbLimpiar(){
   if(_tbLineas.length && !confirm('¿Vaciar la valoración?')) return;
   _tbLineas = [];
+  _tbGuardarLineas();
   _tbRenderBudget();
 }
 
@@ -25582,6 +25627,7 @@ async function tbExportarPresupuesto(){
     }
     toast('📤 '+_tbLineas.length+' líneas TOBISA exportadas al presupuesto' + (dtoGlobal>0 ? ' (dto '+dtoGlobal+'%)':''));
     _tbLineas = [];
+    _tbGuardarLineas();
     _tbRenderBudget();
   }catch(e){ toast('Error: '+e.message,'error'); }
 }
