@@ -1595,6 +1595,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <button class="btn btn-ghost btn-sm no-print" onclick="presAgruparCliente()" title="Agrupar líneas seleccionadas en una sola para el cliente (sin detalle de refs)" style="background:#e8f5ee;color:#166534;font-size:11px;padding:4px 8px">📋 Agrupar cliente</button>
         <button class="btn btn-ghost btn-sm no-print" onclick="presToggleInterno()" title="Marcar/desmarcar seleccionadas como solo interno (no aparecen en Doc. Final)" style="font-size:11px;padding:4px 8px">👁 Interno</button>
         <button class="btn btn-ghost btn-sm no-print" onclick="presReimportarACatalogo()" title="Devolver líneas TOBISA seleccionadas al catálogo para re-exportar" style="background:#e8f0f8;color:#1a5276;font-size:11px;padding:4px 8px">📥 Reimportar catálogo</button>
+        <button class="btn btn-ghost btn-sm no-print" onclick="presCrearPedido()" title="Crear pedido con las líneas seleccionadas (sin precios)" style="background:#fff3e0;color:#e65100;font-size:11px;padding:4px 8px">📦 Crear pedido</button>
         <button class="btn btn-primary" onclick="addLineaPresupuesto()">＋ Línea</button>
         <button class="btn btn-ghost" onclick="addCapituloPresupuesto()">＋ Capítulo</button>
         <button class="btn btn-ghost" style="background:#f5e6ff;color:#7b2fa8;border-color:#d4b3e6" onclick="abrirPresupuestoIA()" title="Generar presupuesto automáticamente con IA">🤖 Generar con IA</button>
@@ -7730,6 +7731,57 @@ async function presToggleInterno(){
     toast(`👁 ${lineas.length} líneas ${accion}`);
     renderPresupuesto();
   }catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+// ── Crear pedido desde líneas del presupuesto (sin precios) ──
+function presCrearPedido(){
+  const tbody = document.getElementById('pres-tbody');
+  const ids = [...(tbody||document).querySelectorAll('input.pres-chk:checked')].map(c=>c.value);
+  if(!ids.length){ toast('Selecciona las líneas para el pedido con los checkboxes','error'); return; }
+
+  const lineas = PresC.filter(l=>ids.includes(l.id) && !l.es_capitulo);
+  if(!lineas.length){ toast('No hay líneas de producto seleccionadas','error'); return; }
+
+  // Extraer ref y descripción de cada línea (patrón TOBISA [REF] DESC (acabado) — nota)
+  const pedLineas = lineas.map(l=>{
+    const m = (l.descripcion||'').match(/\[(\w+)\]\s*(.+)/);
+    const ref = m ? m[1] : '';
+    let desc = m ? m[2].trim() : (l.descripcion||'');
+    return {cant: String(l.cantidad||1), ref, desc};
+  });
+
+  // Rellenar hasta 20 líneas
+  while(pedLineas.length < 20) pedLineas.push({cant:'',ref:'',desc:''});
+
+  // Guardar en pdLineas y navegar a pedidos
+  window.pdLineas = pedLineas;
+  window.pdPedidoId = null;
+
+  // Preparar datos del proyecto
+  const proy = document.getElementById('pres-proyecto-sel')?.value || '';
+
+  // Navegar a la vista de documento pedido
+  navTo('pedidos');
+  setTimeout(()=>{
+    // Activar pestaña documento si existe
+    const tabDoc = document.querySelector('[onclick*="ppPedSetTab(\'doc\')"]') || document.querySelector('[onclick*="pedidoDoc"]');
+    if(tabDoc) tabDoc.click();
+
+    // Nuevo pedido con las líneas
+    nuevoPedidoDoc();
+    window.pdLineas = pedLineas;
+    renderPedidoLineas();
+
+    // Rellenar proyecto
+    const proyInput = document.getElementById('pd-proyecto-input');
+    if(proyInput && proy) proyInput.value = proy;
+
+    // Rellenar proveedor si es TOBISA
+    const provInput = document.getElementById('pd-prov-input');
+    if(provInput && lineas[0]?.descripcion?.includes('TOBISA')) provInput.value = 'TOBISA';
+
+    toast('📦 Pedido creado con '+lineas.length+' líneas (sin precios). Revisa y guarda.');
+  }, 300);
 }
 
 // ── Reimportar líneas TOBISA del presupuesto al catálogo ──
