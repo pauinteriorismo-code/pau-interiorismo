@@ -7742,46 +7742,59 @@ function presCrearPedido(){
   const lineas = PresC.filter(l=>ids.includes(l.id) && !l.es_capitulo);
   if(!lineas.length){ toast('No hay líneas de producto seleccionadas','error'); return; }
 
-  // Extraer ref y descripción de cada línea (patrón TOBISA [REF] DESC (acabado) — nota)
+  // Datos del presupuesto activo
+  const proy = document.getElementById('pres-proyecto-sel')?.value || '';
+  const ver = document.getElementById('pres-version-sel')?.value || 'v1';
+  const cliId = PRES_ACTIVO.clienteId || '';
+  const cli = CC.find(c=>c.cliente_id===cliId) || {};
+  const proyObj = PC.find(p=>p.proyecto_id===proy) || {};
+
+  // Detectar proveedor
+  const esTobisa = lineas.some(l=>(l.descripcion||'').includes('TOBISA'));
+  const proveedor = esTobisa ? 'TOBISA' : '';
+
+  // Extraer ref y descripción de cada línea
   const pedLineas = lineas.map(l=>{
     const m = (l.descripcion||'').match(/\[(\w+)\]\s*(.+)/);
     const ref = m ? m[1] : '';
-    let desc = m ? m[2].trim() : (l.descripcion||'');
+    const desc = m ? m[2].trim() : (l.descripcion||'');
     return {cant: String(l.cantidad||1), ref, desc};
   });
-
-  // Rellenar hasta 20 líneas
   while(pedLineas.length < 20) pedLineas.push({cant:'',ref:'',desc:''});
 
-  // Guardar en pdLineas y navegar a pedidos
-  window.pdLineas = pedLineas;
-  window.pdPedidoId = null;
+  // Guardar líneas temporales
+  window._pedidoDesdePres = {pedLineas, proy, ver, cliId, cli, proyObj, proveedor, numLineas:lineas.length};
 
-  // Preparar datos del proyecto
-  const proy = document.getElementById('pres-proyecto-sel')?.value || '';
-
-  // Navegar a la vista de documento pedido
-  navTo('pedidos');
+  // Navegar al documento de pedido
+  navTo('pedido_doc');
   setTimeout(()=>{
-    // Activar pestaña documento si existe
-    const tabDoc = document.querySelector('[onclick*="ppPedSetTab(\'doc\')"]') || document.querySelector('[onclick*="pedidoDoc"]');
-    if(tabDoc) tabDoc.click();
+    const d = window._pedidoDesdePres;
+    if(!d) return;
 
-    // Nuevo pedido con las líneas
+    // Inicializar nuevo pedido
     nuevoPedidoDoc();
-    window.pdLineas = pedLineas;
+
+    // Rellenar líneas
+    window.pdLineas = d.pedLineas;
     renderPedidoLineas();
 
-    // Rellenar proyecto
-    const proyInput = document.getElementById('pd-proyecto-input');
-    if(proyInput && proy) proyInput.value = proy;
+    // Rellenar campos
+    const set = (id,v) => { const el=document.getElementById(id); if(el && v) el.value=v; };
+    set('pd-proyecto-input', d.proy + ' · ' + (d.proyObj.nombre||''));
+    set('pd-prov-input', d.proveedor);
+    set('pd-ref-doc-input', 'Presupuesto ' + d.proy + '-' + d.ver.toUpperCase());
 
-    // Rellenar proveedor si es TOBISA
-    const provInput = document.getElementById('pd-prov-input');
-    if(provInput && lineas[0]?.descripcion?.includes('TOBISA')) provInput.value = 'TOBISA';
+    // Cliente
+    set('pd-cliente-nombre-input', d.cli.nombre||'');
+    set('pd-cliente-dir-input', d.cli.direccion||'');
+    set('pd-cliente-tel-input', d.cli.telefono||'');
+    set('pd-cliente-nif-input', d.cli.cif||'');
+    const cliBlock = document.getElementById('pd-cliente-block');
+    if(cliBlock) cliBlock.style.display = d.cli.nombre ? '' : 'none';
 
-    toast('📦 Pedido creado con '+lineas.length+' líneas (sin precios). Revisa y guarda.');
-  }, 300);
+    window._pedidoDesdePres = null;
+    toast('📦 Pedido con '+d.numLineas+' líneas listo. Revisa y guarda.');
+  }, 400);
 }
 
 // ── Reimportar líneas TOBISA del presupuesto al catálogo ──
