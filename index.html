@@ -1814,17 +1814,20 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     <!-- ═══ CATÁLOGOS ═══ -->
     <div class="view" id="view-catalogos">
 
-      <!-- PANEL GESTIÓN DE VERSIONES DE CATÁLOGO (solo admin) -->
-      <div id="cat-versiones-panel" style="display:none;background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:16px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-          <div>
-            <div style="font-size:14px;font-weight:700;color:var(--navy)">📚 Gestión de versiones de catálogo</div>
-            <div style="font-size:11px;color:var(--text-soft)">Registra cuándo actualizas los precios de cada catálogo · Solo admin</div>
+      <!-- PANEL GESTIÓN DE VERSIONES DE CATÁLOGO (solo admin, colapsable) -->
+      <div id="cat-versiones-panel" style="display:none;background:#fff;border:1px solid var(--border);border-radius:10px;margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 14px;cursor:pointer" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'':'none';this.querySelector('.cv-arrow').textContent=this.nextElementSibling.style.display==='none'?'▸':'▾'">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="cv-arrow" style="font-size:11px;color:var(--text-soft)">▸</span>
+            <span style="font-size:12px;font-weight:600;color:var(--navy)">📚 Versiones de catálogo</span>
+            <span style="font-size:10px;color:var(--text-soft)">· Admin</span>
           </div>
-          <button class="btn btn-primary btn-sm" onclick="abrirModalCatVersion()">➕ Registrar nueva versión</button>
+          <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();abrirModalCatVersion()" style="font-size:10px;padding:3px 8px">➕ Registrar versión</button>
         </div>
-        <div id="cat-versiones-tabla" style="font-size:12px">
-          <div style="color:var(--text-soft);padding:10px;text-align:center">Cargando…</div>
+        <div style="display:none;padding:0 14px 10px">
+          <div id="cat-versiones-tabla" style="font-size:12px">
+            <div style="color:var(--text-soft);padding:10px;text-align:center">Cargando…</div>
+          </div>
         </div>
       </div>
 
