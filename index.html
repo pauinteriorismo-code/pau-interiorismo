@@ -25964,8 +25964,11 @@ async function tbExportarPresupuesto(){
     for(let i=0;i<_tbLineas.length;i++){
       const l = _tbLineas[i];
       const descLinea = 'TOBISA ['+l.ref+'] '+l.desc+' ('+l.acabado+')' + (l.nota ? ' — '+l.nota : '');
-      const pvpConDto = dtoGlobal > 0 ? l.pvpSinIva * (1 - dtoGlobal/100) : l.pvpSinIva;
-      const margenPct = l.coste > 0 ? ((pvpConDto - l.coste) / l.coste * 100) : 0;
+      // Margen sobre PVP COMPLETO (sin dto), el dto se aplica después
+      const margenPct = l.coste > 0 ? ((l.pvpSinIva - l.coste) / l.coste * 100) : 0;
+      // Precio venta = base + margen - dto
+      const pvpSinDto = l.coste * (1 + margenPct/100); // = pvpSinIva
+      const pvpConDto = dtoGlobal > 0 ? pvpSinDto * (1 - dtoGlobal/100) : pvpSinDto;
       await sbPost('presupuesto_lineas',{
         proyecto_id:proy, version:ver,
         descripcion:descLinea,
