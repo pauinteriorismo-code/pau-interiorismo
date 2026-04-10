@@ -16381,9 +16381,6 @@ function plRenderTrabajadoresCheck(seleccionados){
         <input type="checkbox" value="${t}" ${seleccionados.includes(t)?'checked':''} style="accent-color:var(--navy)" onchange="plActualizarBadge()">
         👷 ${t}</label>`).join('');
   }
-  // Selector jefe hardcodeado: solo restaurar valor
-  const selJefe=document.getElementById('pl-jefe');
-  if(selJefe&&selJefe.dataset.jefeActual) selJefe.value=selJefe.dataset.jefeActual;
 }
 
 
@@ -16477,13 +16474,19 @@ function plAbrirModal(id){
 
   // Jefe y trabajadores
   const selJefe=document.getElementById('pl-jefe');
-  if(selJefe) selJefe.dataset.jefeActual=t?.jefe_tarea||'';
+  const jefeVal=t?.jefe_tarea||'';
   const trabsSel=t?_plParseTrabajadores(t.trabajadores):[];
   plRenderTrabajadoresCheck(trabsSel);
-  if(selJefe&&t?.jefe_tarea) setTimeout(()=>{ selJefe.value=t.jefe_tarea; },10);
 
   // Abrir sección asignación solo si ya tiene datos
-  plAbrirAsignacionSiTiene(t?.jefe_tarea||'', trabsSel);
+  plAbrirAsignacionSiTiene(jefeVal, trabsSel);
+
+  // Restaurar jefe DESPUÉS de que la sección esté visible
+  if(selJefe){
+    selJefe.value=jefeVal;
+    // Segundo intento tras render por si el DOM no estaba listo
+    setTimeout(()=>{ selJefe.value=jefeVal; plActualizarBadge(); },50);
+  }
 
   openModal('m-planning');
   setTimeout(()=>document.getElementById('pl-titulo').focus(),150);
