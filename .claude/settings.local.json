@@ -7,7 +7,25 @@
       "Bash(ls *.sql)",
       "Bash(awk 'NR>=17595 && NR<=17950' \"C:/Users/Usuario/Desktop/Pau Interiorismo/Administracion/Control proyectos/Aplicacion/Html/index.html\")",
       "Bash(awk 'NR==17598,/^}$/{print NR\": \"$0; if\\(/^}$/\\){exit}}' \"C:/Users/Usuario/Desktop/Pau Interiorismo/Administracion/Control proyectos/Aplicacion/Html/index.html\")",
-      "Bash(awk NR>=26015 && NR<=26060:*)"
+      "Bash(awk NR>=26015 && NR<=26060:*)",
+      "Bash(unzip -o \"Bases gola.zip\" -d \"Bases gola_extracted\")",
+      "Bash(python -c \"import fitz; print\\('pymupdf ok'\\)\")",
+      "Bash(python -c \"import PyPDF2; print\\('pypdf2 ok'\\)\")",
+      "Bash(python -c \"import pdfplumber; print\\('pdfplumber ok'\\)\")",
+      "Bash(pip install:*)",
+      "Bash(python3 -c \"import fitz; print\\('pymupdf ok'\\)\")",
+      "Bash(python3 -c \"import PyPDF2; print\\('pypdf2 ok'\\)\")",
+      "Bash(python3 -c \"import pdfplumber; print\\('pdfplumber ok'\\)\")",
+      "Bash(/c/Users/Usuario/AppData/Local/Microsoft/WindowsApps/python.exe -m pip install pymupdf)",
+      "Bash(node -e \"console.log\\('node ok'\\)\")",
+      "Bash(npm list:*)",
+      "Bash(npm install:*)",
+      "Bash(node:*)",
+      "Bash(curl -s 'https://qxyflndntpmcdbyvwjnj.supabase.co/rest/v1/planning_tareas?select=id,titulo,jefe_tarea,trabajadores&order=fecha_ini.asc' -H 'apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4eWZsbmRudHBtY2RieXZ3am5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MjgzOTMsImV4cCI6MjA4NzUwNDM5M30.WQ193I6oS9ANMvuWG8XXa_J6oFleoTSlLQKeFVR_d50' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4eWZsbmRudHBtY2RieXZ3am5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MjgzOTMsImV4cCI6MjA4NzUwNDM5M30.WQ193I6oS9ANMvuWG8XXa_J6oFleoTSlLQKeFVR_d50')",
+      "Bash(curl:*)",
+      "Read(//c/Users/Usuario/Desktop/Pau Interiorismo/Administracion/Control proyectos/Aplicacion/saitra/Bases premium gola/**)",
+      "Bash(unzip -o \"Bases premium gola.zip\" -d \"extracted\")",
+      "WebFetch(domain:script.google.com)"
     ]
   }
 }
