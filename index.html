@@ -4742,6 +4742,31 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           </div>
         </div>
 
+        <!-- FASES DE FOTOS -->
+        <div class="card" style="margin-top:14px">
+          <div class="card-header">
+            <div class="card-title">📷 Fases de fotos por tipo de proyecto</div>
+            <button class="btn btn-ghost btn-sm" onclick="saveFasesConfig()">💾 Guardar</button>
+          </div>
+          <div class="card-body">
+            <div class="info-box">Define las fases fotográficas para cada tipo de proyecto. Las fotos se organizarán según estas fases en el expediente. Formato: <code>id|emoji|etiqueta</code> (una por línea).</div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">Obra (obra nueva, rehabilitación, reforma)</label>
+                <textarea class="form-input" id="cfg-fases-obra" rows="6" style="font-family:monospace;font-size:11px" placeholder="demolicion|🔨|Demolición"></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Interiorismo (cocina, baño, mobiliario)</label>
+                <textarea class="form-input" id="cfg-fases-interiorismo" rows="6" style="font-family:monospace;font-size:11px" placeholder="antes|📍|Antes"></textarea>
+              </div>
+              <div class="form-group fg-full">
+                <label class="form-label">General (otros tipos)</label>
+                <textarea class="form-input" id="cfg-fases-general" rows="3" style="font-family:monospace;font-size:11px" placeholder="inicio|📍|Inicio"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="card" style="margin-top:14px">
           <div class="card-header">
             <div class="card-title">🧾 Pie de factura</div>
@@ -17442,6 +17467,38 @@ function _setUmbralDesvio(v){
   if(!isNaN(n) && n>=0) _umbralesCache.umbral_desvio_pct = n;
 }
 
+// ── Fases de fotos: cargar/guardar en Configuración ────────────
+function _fasesToText(fases){
+  return fases.map(f=>`${f.id}|${f.emoji}|${f.label}`).join('\n');
+}
+function _textToFases(text){
+  return text.split('\n').map(l=>l.trim()).filter(Boolean).map(l=>{
+    const [id,emoji,label] = l.split('|').map(s=>s.trim());
+    return id&&label ? {id, emoji:emoji||'📷', label} : null;
+  }).filter(Boolean);
+}
+function loadFasesConfigUI(){
+  const cfg = _fasesConfig || FASES_FOTOS_DEFAULT;
+  const el = (id,key)=>{ const e=document.getElementById(id); if(e) e.value=_fasesToText(cfg[key]||FASES_FOTOS_DEFAULT[key]); };
+  el('cfg-fases-obra','obra');
+  el('cfg-fases-interiorismo','interiorismo');
+  el('cfg-fases-general','general');
+}
+async function saveFasesConfig(){
+  const obra = _textToFases(document.getElementById('cfg-fases-obra')?.value||'');
+  const interiorismo = _textToFases(document.getElementById('cfg-fases-interiorismo')?.value||'');
+  const general = _textToFases(document.getElementById('cfg-fases-general')?.value||'');
+  if(!obra.length||!interiorismo.length||!general.length){
+    toast('Cada tipo debe tener al menos una fase','warn'); return;
+  }
+  const val = {obra, interiorismo, general};
+  try{
+    await upsertConfig('fases_fotos', JSON.stringify(val));
+    _fasesConfig = val;
+    toast('Fases de fotos guardadas ✅');
+  }catch(e){ toast('Error: '+e.message,'error'); }
+}
+
 // Calcula presupuestado vs real por capítulo de un proyecto + totales globales.
 // Retorna: { capitulos:[{id,nombre,pres,real,pct,alerta}], totalPres, totalReal, totalPct, alertaGlobal, umbral }
 async function calcularDesviosCapitulo(proyectoId, version){
@@ -18969,6 +19026,8 @@ async function loadConfiguracion(){
   }catch(e){toast('Configura la tabla configuracion ejecutando el SQL de nuevas tablas','error');}
   await loadDiasPago();
   await loadUmbrales();
+  await _loadFasesConfig();
+  loadFasesConfigUI();
 }
 async function saveApiKey(){
   const key = document.getElementById('cfg-apikey')?.value?.trim();
@@ -31576,23 +31635,58 @@ async function renderExpDocs(body){
   `;
 }
 
+// ── Fases de fotos por tipo de proyecto ────────────────────────
+const FASES_FOTOS_DEFAULT = {
+  obra:         [{id:'demolicion',emoji:'🔨',label:'Demolición'},{id:'estructura',emoji:'🧱',label:'Estructura'},{id:'instalaciones',emoji:'⚡',label:'Instalaciones'},{id:'cerramientos',emoji:'🪟',label:'Cerramientos'},{id:'acabados',emoji:'🎨',label:'Acabados'},{id:'final',emoji:'✅',label:'Obra terminada'}],
+  interiorismo: [{id:'antes',emoji:'📍',label:'Antes'},{id:'proceso',emoji:'🔨',label:'En proceso'},{id:'mobiliario',emoji:'🪑',label:'Mobiliario'},{id:'decoracion',emoji:'🖼️',label:'Decoración'},{id:'final',emoji:'✅',label:'Resultado final'}],
+  general:      [{id:'inicio',emoji:'📍',label:'Inicio'},{id:'proceso',emoji:'🔨',label:'En proceso'},{id:'final',emoji:'✅',label:'Terminado'}],
+};
+let _fasesConfig = null;
+
+async function _loadFasesConfig(){
+  if(_fasesConfig) return _fasesConfig;
+  try{
+    const data = await sbGet('configuracion','?clave=eq.fases_fotos');
+    if(data?.length && data[0].valor) _fasesConfig = JSON.parse(data[0].valor);
+  }catch(e){ console.warn('fases_fotos config',e); }
+  if(!_fasesConfig) _fasesConfig = {...FASES_FOTOS_DEFAULT};
+  return _fasesConfig;
+}
+
+function _getFasesParaProyecto(tipo){
+  const t = (tipo||'').toLowerCase();
+  const cfg = _fasesConfig || FASES_FOTOS_DEFAULT;
+  if(t.includes('obra')||t.includes('rehab')||t.includes('reforma')) return cfg.obra||FASES_FOTOS_DEFAULT.obra;
+  if(t.includes('interior')||t.includes('cocina')||t.includes('baño')||t.includes('bano')||t.includes('mobiliario')) return cfg.interiorismo||FASES_FOTOS_DEFAULT.interiorismo;
+  return cfg.general||FASES_FOTOS_DEFAULT.general;
+}
+
+function _faseLabel(faseId, fases){
+  const f = fases.find(x=>x.id===faseId);
+  return f ? `${f.emoji} ${f.label}` : faseId||'';
+}
+
 async function renderExpFotos(body) {
   const pid = _expProyId;
+  const proy = PC.find(x=>x.proyecto_id===pid);
+  await _loadFasesConfig();
+  const fases = _getFasesParaProyecto(proy?.tipo);
+  const opcionesHtml = fases.map(f=>`<option value="${f.id}">${f.emoji} ${f.label}</option>`).join('');
+  const fasesTexto = fases.map(f=>f.label).join(', ');
+
   body.innerHTML = `
     <div style="padding:16px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <span style="font-size:12px;color:var(--text-soft)">Sube fotos del proyecto (inicio, proceso, final)</span>
+        <span style="font-size:12px;color:var(--text-soft)">Sube fotos del proyecto (${fasesTexto})</span>
         <label style="cursor:pointer" class="btn btn-primary btn-sm">
           📷 Añadir fotos
           <input type="file" accept="image/*" multiple style="display:none" onchange="subirFotosProyecto(this,'${pid}')">
         </label>
       </div>
       <div style="margin-bottom:12px">
-        <select id="foto-fase-filter" class="form-input" style="width:180px" onchange="renderFotosFase('${pid}')">
+        <select id="foto-fase-filter" class="form-input" style="width:220px" onchange="renderFotosFase('${pid}')">
           <option value="">Todas las fases</option>
-          <option value="inicio">📍 Inicio de obra</option>
-          <option value="proceso">🔨 En proceso</option>
-          <option value="final">✅ Obra terminada</option>
+          ${opcionesHtml}
         </select>
       </div>
       <div id="fotos-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px">
@@ -31616,7 +31710,9 @@ async function renderFotosFase(pid) {
     return;
   }
   grid.innerHTML = fotos.map(f => {
-    const faseLabel = {inicio:'📍 Inicio',proceso:'🔨 Proceso',final:'✅ Final'}[f.fase] || f.fase || '';
+    const proy = PC.find(x=>x.proyecto_id===pid);
+    const fases = _getFasesParaProyecto(proy?.tipo);
+    const faseLabel = _faseLabel(f.fase, fases);
     return `<div style="border:1px solid var(--border);border-radius:8px;overflow:hidden;background:#fff;cursor:pointer" onclick="verFotoGrande('${f.url}','${f.descripcion||''}')">
       <img src="${f.url}" loading="lazy" style="width:100%;height:110px;object-fit:cover;display:block" onerror="this.style.display='none'">
       <div style="padding:6px 8px">
@@ -31636,10 +31732,14 @@ async function subirFotosProyecto(input, pid) {
   const files = Array.from(input.files);
   if (!files.length) return;
 
-  // Ask fase
-  const fase = prompt('Fase de las fotos:\n1 = Inicio de obra\n2 = En proceso\n3 = Obra terminada\n(Enter para sin fase)', '2');
-  const faseMap = {'1':'inicio','2':'proceso','3':'final'};
-  const faseVal = faseMap[fase] || '';
+  // Ask fase (dinámico según tipo de proyecto)
+  const proy = PC.find(x=>x.proyecto_id===pid);
+  await _loadFasesConfig();
+  const fases = _getFasesParaProyecto(proy?.tipo);
+  const promptText = 'Fase de las fotos:\n' + fases.map((f,i)=>`${i+1} = ${f.emoji} ${f.label}`).join('\n') + '\n(Enter para sin fase)';
+  const fase = prompt(promptText, '1');
+  const idx = parseInt(fase) - 1;
+  const faseVal = (idx >= 0 && idx < fases.length) ? fases[idx].id : '';
 
   toast(`Subiendo ${files.length} foto(s)…`);
   let ok = 0;
@@ -31695,8 +31795,14 @@ function verFotoGrande(url, desc) {
 
 async function editarFoto(id, descActual, faseActual) {
   const desc = prompt('Descripción de la foto:', descActual) ?? descActual;
-  const faseInput = prompt('Fase (inicio/proceso/final):', faseActual) ?? faseActual;
-  await sbPatch('fotos_proyecto', id, { descripcion: desc, fase: faseInput });
+  const proy = PC.find(x=>x.proyecto_id===_expProyId);
+  const fases = _getFasesParaProyecto(proy?.tipo);
+  const opsFase = fases.map((f,i)=>`${i+1}=${f.label}`).join(', ');
+  const faseInput = prompt(`Fase (${opsFase}):`, faseActual) ?? faseActual;
+  // Aceptar tanto el id directo como el número
+  const idx = parseInt(faseInput) - 1;
+  const faseVal = (idx >= 0 && idx < fases.length) ? fases[idx].id : faseInput;
+  await sbPatch('fotos_proyecto', id, { descripcion: desc, fase: faseVal });
   toast('Foto actualizada');
   renderFotosFase(_expProyId);
 }
