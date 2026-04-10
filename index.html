@@ -3654,7 +3654,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="cat-header">
         <button class="cat-back" onclick="catVolver()">← Catálogos</button>
         <span class="cat-header-title">🛏️ TOBISA — Habitaciones Juveniles & Armarios</span>
-        <span class="cat-header-desc">PVP con IVA incluido · Dto configurable · 3.360 referencias</span>
+        <span class="cat-header-desc" id="tb-header-desc">PVP con IVA incluido · Dto configurable</span>
       </div>
       <!-- TOOLBAR -->
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px;flex-shrink:0">
@@ -25184,16 +25184,16 @@ async function impConfirmarImport(){
 // ═══════════════════════════════════════════════════════════════
 // Estructura jerárquica según la tarifa física TOBISA 2.51
 const TB_SECCIONES = [
-  { key:'S1', label:'1. Módulos | Cajas puente', icon:'📦', pagMin:11, pagMax:27,
-    pat:/^(MODULO|MÓDULO|CAJA PUENTE|CAJA|MESA AUXILIAR|JUEGO DE PATAS|FORRO|COMPLEMENTO|PERSONALIZACI)/i,
+  { key:'S1', label:'1. Módulos | Cajas puente', icon:'📦', pagMin:10, pagMax:27,
+    pat:/^(MODULO|MÓDULO|CAJA PUENTE|CAJA|MESA AUXILIAR|JUEGO DE PATAS|FORRO|COMPLEMENTO|PERSONALIZACI|LED |TIRA LED|PLATAFORMA|CUBRE TRANS|TRANSFORMADOR|INTERRUPTOR)/i,
     antiPat:/^(MODULO|MÓDULO)\s+(TR|BLOCK)\b/i },
   { key:'S2', label:'2. Escritorios', icon:'✏️', pagMin:28, pagMax:33,
     pat:/^(ENCIMERA|ESCRITORIO|PORTER)/i },
   { key:'S3', label:'3. Estanterías', icon:'📚', pagMin:34, pagMax:62,
-    pat:/^(ESTANTER|CUBO|ESTANTE|TRASERA|CONJUNTO|CHAPA PLEGADA)/i,
+    pat:/^(ESTANTER|CUBO|ESTANTE|TRASERA|CONJUNTO|CHAPA PLEGADA|BANDEJA SUP)/i,
     antiPat:/^ESTANTE.*(ARMARIO|VESTIDOR|COLGAR)/i },
   { key:'S4_1', label:'4.1 Arrimaderos | Cabeceros | Paneles', icon:'🧱', pagMin:63, pagMax:82,
-    pat:/^(ARRIMADERO|CABECERO|PANEL|RESPALDO|ARC[OÓ]N)/i, sub:true },
+    pat:/^(ARRIMADERO|CABECERO|PANEL|RESPALDO|ARC[OÓ]N|LISS A M2)/i, sub:true },
   { key:'S4_2', label:'4.2 Nidos | Literas | Camas', icon:'🛌', pagMin:83, pagMax:90,
     pat:/^(NIDO|BLOCK(?!\s)|LITERA|CAMA SINGULAR|BASTIDOR|SOMIER|SUSTITUCI)/i,
     antiPat:/^(CAMA ABATIBLE|CAMA NIDO TR)/i, sub:true },
@@ -25204,7 +25204,7 @@ const TB_SECCIONES = [
   { key:'S4_5', label:'4.5 Complementos camas', icon:'🔩', pagMin:109, pagMax:112,
     pat:/^(BARANDILLA|ESCALERA|SOPORTE|STEP)/i, sub:true },
   { key:'S5', label:'5. Armarios | Vestidores', icon:'🚪', pagMin:113, pagMax:135,
-    pat:/^(ARMARIO|VESTIDOR|PUERTA|COSTADO|COLUMNA|TERMINAL|BISAGRA|BARRA|CORTE ESPECIAL)/i },
+    pat:/^(ARMARIO|VESTIDOR|PUERTA|COSTADO|COLUMNA|TERMINAL|BISAGRA|BARRA|CORTE|CAJONERA|ORGANIZADOR|PANTALONERO|ZAPATERO|CESTA|ESPEJO|FORRO|BANDEJA|COLGADOR|PARTIDOR|ESTANTE ARMARIO|ESTANTE EXTRA|ESTANTE VESTIDOR|ESTANTE INTERIOR)/i },
 ];
 // Flat list compatible con el resto del código
 const TB_FAMILIAS = TB_SECCIONES;
@@ -25244,10 +25244,17 @@ function _tbCategoria(desc, pagina){
 }
 
 async function tbInit(){
-  // Cargar todos los productos TOBISA de una vez
+  // Cargar todos los productos TOBISA (paginado, Supabase max 1000/req)
   if(!_tbData.length){
     try{
-      _tbData = await sbGet('catalogo_productos','?fabricante=eq.TOBISA&order=ref.asc&limit=5000');
+      const PAGE = 1000;
+      let offset = 0, batch;
+      _tbData = [];
+      do {
+        batch = await sbGet('catalogo_productos',`?fabricante=eq.TOBISA&order=ref.asc&limit=${PAGE}&offset=${offset}`);
+        _tbData = _tbData.concat(batch);
+        offset += PAGE;
+      } while(batch.length === PAGE);
     }catch(e){ _tbData = []; }
   }
   // Contar por familia
@@ -25280,6 +25287,10 @@ async function tbInit(){
     </div>`;
   });
   cont.innerHTML = h;
+
+  // Actualizar contador en cabecera
+  const hdrDesc = document.getElementById('tb-header-desc');
+  if(hdrDesc) hdrDesc.textContent = `PVP con IVA incluido · Dto configurable · ${_tbData.length.toLocaleString('es-ES')} referencias`;
 
   // Poblar selector de proyectos
   const sel = document.getElementById('tb-proyecto');
