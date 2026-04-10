@@ -3668,9 +3668,57 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
           <label style="font-size:12px;font-weight:600;color:var(--text-soft)">Acabado:</label>
-          <select class="form-input" id="tb-acabado" style="width:90px" onchange="tbRenderTabla()">
-            <option value="base">Base</option>
-            <option value="color">Color</option>
+          <select class="form-input" id="tb-acabado" style="width:180px" onchange="tbRenderTabla()">
+            <optgroup label="ACABADOS BASE (precio Base)">
+              <option value="base" data-nombre="Cotton">Cotton</option>
+              <option value="base" data-nombre="Raw">Raw</option>
+              <option value="base" data-nombre="Gris Coco">Gris Coco</option>
+              <option value="base" data-nombre="Mohave">Mohave</option>
+              <option value="base" data-nombre="Okume">Okume</option>
+              <option value="base" data-nombre="Roble Biscuit">Roble Biscuit</option>
+              <option value="base" data-nombre="Roble Nice">Roble Nice</option>
+              <option value="base" data-nombre="Nogal MN">Nogal MN</option>
+              <option value="base" data-nombre="Eucalipto Victoria">Eucalipto Victoria</option>
+            </optgroup>
+            <optgroup label="ACABADOS COLOR (precio Color)">
+              <option value="color" data-nombre="0690 Blanco">0690 Blanco</option>
+              <option value="color" data-nombre="2201 Oui">2201 Oui</option>
+              <option value="color" data-nombre="2202 Calm">2202 Calm</option>
+              <option value="color" data-nombre="0696 Gris">0696 Gris</option>
+              <option value="color" data-nombre="0291 Grey">0291 Grey</option>
+              <option value="color" data-nombre="0292 Shade">0292 Shade</option>
+              <option value="color" data-nombre="2203 Chic">2203 Chic</option>
+              <option value="color" data-nombre="0206 Caramel">0206 Caramel</option>
+              <option value="color" data-nombre="2209 Camel">2209 Camel</option>
+              <option value="color" data-nombre="2208 Beige">2208 Beige</option>
+              <option value="color" data-nombre="2204 Ocre">2204 Ocre</option>
+              <option value="color" data-nombre="2210 Cognac">2210 Cognac</option>
+              <option value="color" data-nombre="2207 Ocean">2207 Ocean</option>
+              <option value="color" data-nombre="2205 Peach">2205 Peach</option>
+              <option value="color" data-nombre="0801 Caqui">0801 Caqui</option>
+              <option value="color" data-nombre="0C15 Grigio">0C15 Grigio</option>
+              <option value="color" data-nombre="0802 Bebe">0802 Bebe</option>
+              <option value="color" data-nombre="0705 Pink">0705 Pink</option>
+              <option value="color" data-nombre="0703 Eucalyptus">0703 Eucalyptus</option>
+              <option value="color" data-nombre="0701 Pale Green">0701 Pale Green</option>
+              <option value="color" data-nombre="0803 Night">0803 Night</option>
+              <option value="color" data-nombre="2206 Terracota">2206 Terracota</option>
+              <option value="color" data-nombre="0208 Brownie">0208 Brownie</option>
+              <option value="color" data-nombre="0704 Forest">0704 Forest</option>
+              <option value="color" data-nombre="0264 Midnight">0264 Midnight</option>
+              <option value="color" data-nombre="2211 Interdit">2211 Interdit</option>
+              <option value="color" data-nombre="0207 Deep">0207 Deep</option>
+              <option value="color" data-nombre="0209 Black">0209 Black</option>
+            </optgroup>
+            <optgroup label="ACABADOS ESPECÍFICOS (precio Color)">
+              <option value="color" data-nombre="Equal Raw">Equal Raw</option>
+              <option value="color" data-nombre="Equal Mohave">Equal Mohave</option>
+              <option value="color" data-nombre="Equal Roble Biscuit">Equal Roble Biscuit</option>
+              <option value="color" data-nombre="Equal Eucalipto Victoria">Equal Eucalipto Victoria</option>
+              <option value="color" data-nombre="Equal Color">Equal Color</option>
+              <option value="color" data-nombre="Delinea Color">Delinea Color</option>
+              <option value="color" data-nombre="Textil Linen">Textil Linen</option>
+            </optgroup>
           </select>
         </div>
         <div style="display:flex;align-items:center;gap:8px;background:#fef3e0;padding:5px 10px;border-radius:6px;border:1px solid #ffe0b2">
@@ -3678,7 +3726,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
           <label style="font-size:12px;font-weight:600;color:var(--text-soft)">Dto %:</label>
-          <input type="number" class="form-input" id="tb-dto" value="50" min="0" max="80" style="width:60px;text-align:center" oninput="tbRecalc()">
+          <input type="number" class="form-input" id="tb-dto" value="55.5" min="0" max="80" step="0.5" style="width:60px;text-align:center" oninput="tbRecalc()">
         </div>
         <div style="margin-left:auto;display:flex;gap:6px">
           <button class="btn btn-ghost btn-sm" onclick="tbLimpiar()" style="color:var(--danger)">🗑 Limpiar</button>
@@ -25383,27 +25431,34 @@ function tbRenderTabla(){
   }
 }
 
+function _tbAcabadoInfo(){
+  const sel = document.getElementById('tb-acabado');
+  const opt = sel?.selectedOptions[0];
+  const tipo = opt?.value || 'base';                     // 'base' o 'color' (determina columna precio)
+  const nombre = opt?.getAttribute('data-nombre') || (tipo==='color'?'Color':'Cotton'); // nombre concreto
+  return {tipo, nombre};
+}
+
 function tbAnadir(idx){
   const p = _tbFiltered[idx];
   if(!p) return;
-  const acabado = document.getElementById('tb-acabado')?.value||'base';
+  const {tipo, nombre} = _tbAcabadoInfo();
   const dto = parseFloat(document.getElementById('tb-dto')?.value)||0;
-  const margen = parseFloat(document.getElementById('tb-margen')?.value)||0;
-  const tarifa = acabado==='color' ? (p.precio_color??p.precio_base) : (p.precio_base??p.precio_color);
+  const tarifa = tipo==='color' ? (p.precio_color??p.precio_base) : (p.precio_base??p.precio_color);
   if(!tarifa){ toast('Sin precio para este acabado','error'); return; }
   const coste = tarifa * (1 - dto/100);
   const pvpSinIva = tarifa / 1.21;
 
   // Pedir nota libre (medidas exactas, observaciones…)
-  const nota = prompt(`📝 ${p.ref} — ${p.descripcion}\n\nNota libre (medidas, color, observaciones…):\nEj: "Ancho 35 cm" o "Color Midnight"\n\n(Dejar vacío si no aplica)`) || '';
+  const nota = prompt(`📝 ${p.ref} — ${p.descripcion}\nAcabado: ${nombre}\n\nNota libre (medidas, observaciones…):\nEj: "Ancho 35 cm"\n\n(Dejar vacío si no aplica)`) || '';
 
-  const existing = _tbLineas.find(l=>l.ref===p.ref && l.acabado===acabado && l.nota===nota);
+  const existing = _tbLineas.find(l=>l.ref===p.ref && l.acabado===nombre && l.nota===nota);
   if(existing){ existing.cant++; }
   else {
-    _tbLineas.push({ref:p.ref, desc:p.descripcion||'', acabado, coste, pvpSinIva, nota, cant:1});
+    _tbLineas.push({ref:p.ref, desc:p.descripcion||'', acabado:nombre, acabadoTipo:tipo, coste, pvpSinIva, nota, cant:1});
   }
   tbRecalc();
-  toast('➕ '+p.ref+' añadido');
+  toast('➕ '+p.ref+' ('+nombre+') añadido');
 }
 
 function tbRecalc(){
@@ -25413,7 +25468,8 @@ function tbRecalc(){
   _tbLineas.forEach(l=>{
     const p = _tbData.find(d=>d.ref===l.ref);
     if(!p) return;
-    const tarifa = l.acabado==='color' ? (p.precio_color??p.precio_base) : (p.precio_base??p.precio_color);
+    const tipo = l.acabadoTipo || (l.acabado==='base'?'base':'color');
+    const tarifa = tipo==='color' ? (p.precio_color??p.precio_base) : (p.precio_base??p.precio_color);
     if(!tarifa) return;
     l.coste = tarifa * (1 - dto/100);
     l.pvpSinIva = tarifa / 1.21;
@@ -25443,7 +25499,7 @@ function _tbRenderBudget(){
     <div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--border);font-size:11px">
       <span style="font-weight:700;width:60px;flex-shrink:0;font-family:monospace">${l.ref}</span>
       <div style="flex:1;overflow:hidden;min-width:0">
-        <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-soft)">${l.desc}</div>
+        <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-soft)">${l.desc} <span style="font-size:9px;background:var(--bg-main);padding:1px 4px;border-radius:3px">${l.acabado}</span></div>
         ${l.nota ? `<div style="font-size:10px;color:var(--copper);font-style:italic;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${l.nota.replace(/"/g,'&quot;')}">📝 ${l.nota}</div>` : ''}
       </div>
       <input type="number" value="${l.cant}" min="1" style="width:40px;text-align:center;font-size:11px;border:1px solid var(--border);border-radius:4px;padding:1px" onchange="_tbLineas[${i}].cant=parseInt(this.value)||1;_tbRenderBudget()">
