@@ -7681,12 +7681,20 @@ async function confirmDeleteAction(){
 // ── Selección y borrado masivo en presupuesto ──
 function presToggleAll(){
   const tbody = document.getElementById('pres-tbody');
-  if(!tbody) return;
-  const chks = tbody.querySelectorAll('input[type="checkbox"].pres-chk');
-  if(!chks.length){ toast('No hay líneas con checkbox','error'); return; }
-  const allChecked = [...chks].every(c=>c.checked);
-  chks.forEach(c=>c.checked = !allChecked);
-  toast(allChecked ? 'Deseleccionadas '+chks.length+' líneas' : 'Seleccionadas '+chks.length+' líneas');
+  if(!tbody){ toast('No se encontró pres-tbody','error'); return; }
+  // Buscar TODOS los checkboxes dentro del tbody, sin filtrar por clase
+  const allInputs = tbody.querySelectorAll('input[type="checkbox"]');
+  const chks = tbody.querySelectorAll('.pres-chk');
+  if(!allInputs.length && !chks.length){
+    // Debug: contar filas y contenido
+    const rows = tbody.querySelectorAll('tr');
+    toast('Debug: '+rows.length+' filas, 0 checkboxes. HTML: '+tbody.innerHTML.substring(0,100),'error');
+    return;
+  }
+  const lista = chks.length ? chks : allInputs;
+  const allChecked = [...lista].every(c=>c.checked);
+  lista.forEach(c=>c.checked = !allChecked);
+  toast(allChecked ? 'Deseleccionadas '+lista.length+' líneas' : 'Seleccionadas '+lista.length+' líneas');
 }
 
 async function presBorrarSeleccion(){
