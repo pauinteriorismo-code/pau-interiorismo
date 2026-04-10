@@ -9523,7 +9523,7 @@ async function subirPDFaDrive(elementId, nombreArchivo, proyId, subCarpeta, fold
   try{
     const base64=await html2pdf().set(opt).from(el).output('datauristring');
     const res=await fetch(DRIVE_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
-      body:JSON.stringify({action:'uploadFile',fileData:base64,fileName:nombreArchivo,mimeType:'application/pdf',folderId,subCarpeta:subCarpeta||null,tipoDoc:(extras&&extras.tipoDoc)||null,proveedor:(extras&&extras.proveedor)||null})});
+      body:JSON.stringify((()=>{const partes=subCarpeta?subCarpeta.split('/').filter(Boolean):[];return{action:'uploadFile',fileData:base64,fileName:nombreArchivo,mimeType:'application/pdf',folderId,subCarpeta:partes[0]||null,subCarpetas:partes.length>1?partes:null,tipoDoc:(extras&&extras.tipoDoc)||null,proveedor:(extras&&extras.proveedor)||null};})())});
     const json=await res.json().catch(()=>({}));
     if(json.ok){toast('☁️ Subido a Drive ✅');}
     else{toast('Error Drive: '+(json.error||'desconocido'),'error');}
@@ -9532,12 +9532,16 @@ async function subirPDFaDrive(elementId, nombreArchivo, proyId, subCarpeta, fold
 
 // Sube un PDF en base64 ya existente (sin generar desde DOM) a Drive.
 // Pide al script que evite duplicados (mismo nombre en la misma subcarpeta).
+// subCarpeta puede ser ruta anidada con '/' (ej: '06 Proveedores/Proveedor/Facturas')
 async function subirPDFb64aDrive(b64, fileName, proyId, subCarpeta, extras){
   try{
     const folderId=_driveFolderId(proyId);
     if(!folderId) return {ok:false,error:'sin-folder'};
+    // Soportar rutas anidadas: '06 Proveedores/Proveedor/Facturas' → subCarpetas array
+    const partes = subCarpeta ? subCarpeta.split('/').filter(Boolean) : [];
     const body={action:'uploadFile',fileData:b64,fileName,mimeType:'application/pdf',folderId,
-      subCarpeta:subCarpeta||null,
+      subCarpeta:partes[0]||null,
+      subCarpetas: partes.length>1 ? partes : null,
       tipoDoc:(extras&&extras.tipoDoc)||null,
       proveedor:(extras&&extras.proveedor)||null,
       skipIfDuplicate:true};
@@ -9604,7 +9608,7 @@ async function subirAlbaranDrive(id){
   const fileName=`Albaran_${alb.num_albaran||id}_${alb.fecha||''}${_prov?'_'+_prov:''}.pdf`;
   try{
     const res=await fetch(DRIVE_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
-      body:JSON.stringify({action:'uploadFile',fileData:base64,fileName,mimeType:'application/pdf',folderId,subCarpeta:DRIVE_SUB.proveedores,tipoDoc:'Albaranes',proveedor:alb.proveedor||'Sin proveedor'})});
+      body:JSON.stringify((()=>{const _pn=alb.proveedor||'Sin proveedor';const partes=[DRIVE_SUB.proveedores,_pn,'Albaranes'];return{action:'uploadFile',fileData:base64,fileName,mimeType:'application/pdf',folderId,subCarpeta:partes[0],subCarpetas:partes,tipoDoc:'Albaranes',proveedor:_pn};})())});
     const json=await res.json().catch(()=>({}));
     if(json.ok){toast('☁️ Albarán subido a Drive ✅');}
     else{toast('Error Drive: '+(json.error||'desconocido'),'error');}
@@ -10413,17 +10417,31 @@ async function _ipdfGuardarCompra(idx){
   };
 
   // Intentar con estado_pago, fallback a estado
+  let ok = false;
   try{
     await sbPost('compras', payload);
-    return true;
+    ok = true;
   }catch(err){
     if(err.message && err.message.includes('estado_pago')){
       const alt = {...payload}; delete alt.estado_pago; alt.estado = payload.estado_pago;
-      try{ await sbPost('compras', alt); return true; }catch(e2){ toast('Error guardando: '+e2.message,'error'); return false; }
+      try{ await sbPost('compras', alt); ok = true; }catch(e2){ toast('Error guardando: '+e2.message,'error'); return false; }
+    } else {
+      toast('Error guardando '+r.file.name+': '+err.message,'error');
+      return false;
     }
-    toast('Error guardando '+r.file.name+': '+err.message,'error');
-    return false;
   }
+  // Subir PDF a Drive: 06 Proveedores/{Proveedor}/{TipoDoc}
+  if(ok && r.base64 && proy){
+    const _provNom = payload.proveedor_id || '';
+    const _safe = _safeNombre(_provNom);
+    const _baseDir = DRIVE_SUB.proveedores;
+    const _subCarpeta = _provNom ? `${_baseDir}/${_provNom}/${tipoDoc}` : `${_baseDir}/${tipoDoc}`;
+    const _fecha = payload.fecha || new Date().toISOString().split('T')[0];
+    const _fname = `${tipoDoc}${numFac?'_'+_safeNombre(numFac):''}${_safe?'_'+_safe:''}_${_fecha}.pdf`;
+    subirPDFb64aDrive('data:application/pdf;base64,'+r.base64, _fname, proy, _subCarpeta, {tipoDoc, proveedor:_provNom||'Sin proveedor'})
+      .then(j=>{ if(j&&j.ok&&!j.duplicate) toast('☁️ '+tipoDoc+' subido a Drive ✅'); });
+  }
+  return true;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -15712,13 +15730,15 @@ async function saveCompra(){
       try{
         await sb('compras','PATCH',{adjunto_pdf:pdfB64,adjunto_nombre:coNombreVal},null,`?id=eq.${savedId}`);
       }catch(ePDF){ console.warn('PDF no guardado:',ePDF.message); toast('Compra guardada. PDF no adjuntado ⚠️','warning'); }
-      // Subir también a Google Drive (subcarpeta del proveedor) si hay carpeta configurada
+      // Subir también a Google Drive (subcarpeta proveedor/tipo) si hay carpeta configurada
       if(proyTexto){
         const _provNom=d.proveedor_id||'';
         const _safe=_safeNombre(_provNom);
         const _tipoDoc=document.getElementById('co-tipo-doc')?.value||'Facturas';
         const _destino=document.getElementById('co-destino')?.value||'obra';
-        const _subCarpetaDestino = _destino==='interiorismo' ? '09 Interiorismo' : DRIVE_SUB.proveedores;
+        // Ruta anidada: 06 Proveedores/{Proveedor}/{TipoDoc} o 09 Interiorismo/{Proveedor}/{TipoDoc}
+        const _baseDir = _destino==='interiorismo' ? '09 Interiorismo' : DRIVE_SUB.proveedores;
+        const _subCarpetaDestino = _provNom ? `${_baseDir}/${_provNom}/${_tipoDoc}` : `${_baseDir}/${_tipoDoc}`;
         // Nombre único: {tipoDoc}_{num|concepto}_{proveedor}_{fecha}.pdf para evitar colisiones
         const _numRef = _safeNombre((d.concepto||'').split(' ')[0]||'').slice(0,20);
         const _fecha = d.fecha || new Date().toISOString().split('T')[0];
@@ -15943,7 +15963,8 @@ async function saveSubcontrata(){
         const _fecha = d.fecha || new Date().toISOString().split('T')[0];
         const _trab = _safeNombre((d.trabajo||'').slice(0,25));
         const _fname = `Factura${_trab?'_'+_trab:''}${_safe?'_'+_safe:''}_${_fecha}.pdf`;
-        subirPDFb64aDrive(pdfB64,_fname,_scProy,DRIVE_SUB.proveedores,{tipoDoc:'Facturas',proveedor:_provNom||'Sin proveedor'})
+        const _subCarpeta = _provNom ? `${DRIVE_SUB.proveedores}/${_provNom}/Facturas` : `${DRIVE_SUB.proveedores}/Facturas`;
+        subirPDFb64aDrive(pdfB64,_fname,_scProy,_subCarpeta,{tipoDoc:'Facturas',proveedor:_provNom||'Sin proveedor'})
           .then(j=>{ if(j&&j.ok&&!j.duplicate) toast('☁️ PDF subido a Drive ✅'); else if(j&&j.duplicate) toast('☁️ PDF ya existía en Drive (no duplicado)'); });
       }
     }
