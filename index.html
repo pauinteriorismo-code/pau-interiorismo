@@ -3725,7 +3725,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           </select>
         </div>
         <div style="display:flex;align-items:center;gap:8px;background:#fef3e0;padding:5px 10px;border-radius:6px;border:1px solid #ffe0b2">
-          <span style="font-size:10px;color:#e65100">💰 Coste = Tarifa−Dto1%−Dto2% · PVP = (Tarifa−DtoPVP%)/1,21</span>
+          <span style="font-size:10px;color:#e65100">💰 Coste = Tarifa−Dto1%−Dto2% · PVP = Tarifa/1,21</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
           <label style="font-size:12px;font-weight:600;color:var(--text-soft)">Dto1:</label>
@@ -3735,11 +3735,6 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <div style="display:flex;align-items:center;gap:8px">
           <label style="font-size:12px;font-weight:600;color:var(--text-soft)">Dto2:</label>
           <input type="number" class="form-input" id="tb-dto2" value="8" min="0" max="50" step="0.5" style="width:55px;text-align:center" oninput="tbRecalc()">
-          <span style="font-size:11px;color:var(--text-soft)">%</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <label style="font-size:12px;font-weight:600;color:var(--text-soft)">Dto PVP:</label>
-          <input type="number" class="form-input" id="tb-dto-pvp" value="10" min="0" max="50" step="0.5" style="width:55px;text-align:center" oninput="tbRecalc()">
           <span style="font-size:11px;color:var(--text-soft)">%</span>
         </div>
         <div style="margin-left:auto;display:flex;gap:6px">
@@ -25381,7 +25376,7 @@ function tbRenderTabla(){
   const acabado = document.getElementById('tb-acabado')?.value||'base';
   const dto1 = parseFloat(document.getElementById('tb-dto1')?.value)||0;
   const dto2 = parseFloat(document.getElementById('tb-dto2')?.value)||0;
-  const dtoPvp = parseFloat(document.getElementById('tb-dto-pvp')?.value)||0;
+
 
   // Filtrar
   if(q.length >= 2){
@@ -25419,7 +25414,7 @@ function tbRenderTabla(){
     const tarifa = acabado==='color' ? (p.precio_color??p.precio_base) : (p.precio_base??p.precio_color);
     if(tarifa===null||tarifa===undefined) return '';
     const coste = tarifa * (1 - dto1/100) * (1 - dto2/100);
-    const pvpSinIva = tarifa * (1 - dtoPvp/100) / 1.21;
+    const pvpSinIva = tarifa / 1.21;
     return `<tr style="cursor:pointer" onmouseenter="this.style.background='var(--bg-main)'" onmouseleave="this.style.background=''">
       <td style="font-weight:700;font-family:monospace;white-space:nowrap">${p.ref}</td>
       <td>${p.descripcion||'—'}</td>
@@ -25460,11 +25455,11 @@ function tbAnadir(idx){
   const {tipo, nombre} = _tbAcabadoInfo();
   const dto1 = parseFloat(document.getElementById('tb-dto1')?.value)||0;
   const dto2 = parseFloat(document.getElementById('tb-dto2')?.value)||0;
-  const dtoPvp = parseFloat(document.getElementById('tb-dto-pvp')?.value)||0;
+
   const tarifa = tipo==='color' ? (p.precio_color??p.precio_base) : (p.precio_base??p.precio_color);
   if(!tarifa){ toast('Sin precio para este acabado','error'); return; }
   const coste = tarifa * (1 - dto1/100) * (1 - dto2/100);
-  const pvpSinIva = tarifa * (1 - dtoPvp/100) / 1.21;
+  const pvpSinIva = tarifa / 1.21;
 
   // Pedir nota libre (medidas exactas, observaciones…)
   const nota = prompt(`📝 ${p.ref} — ${p.descripcion}\nAcabado: ${nombre}\n\nNota libre (medidas, observaciones…):\nEj: "Ancho 35 cm"\n\n(Dejar vacío si no aplica)`) || '';
@@ -25482,7 +25477,7 @@ function tbRecalc(){
   // Recalcular: Coste = Tarifa×(1-Dto1%)×(1-Dto2%) · PVP s/IVA = Tarifa×(1-DtoPVP%)/1,21
   const dto1 = parseFloat(document.getElementById('tb-dto1')?.value)||0;
   const dto2 = parseFloat(document.getElementById('tb-dto2')?.value)||0;
-  const dtoPvp = parseFloat(document.getElementById('tb-dto-pvp')?.value)||0;
+
 
   _tbLineas.forEach(l=>{
     const p = _tbData.find(d=>d.ref===l.ref);
@@ -25491,7 +25486,7 @@ function tbRecalc(){
     const tarifa = tipo==='color' ? (p.precio_color??p.precio_base) : (p.precio_base??p.precio_color);
     if(!tarifa) return;
     l.coste = tarifa * (1 - dto1/100) * (1 - dto2/100);
-    l.pvpSinIva = tarifa * (1 - dtoPvp/100) / 1.21;
+    l.pvpSinIva = tarifa / 1.21;
   });
 
   _tbRenderBudget();
@@ -25555,33 +25550,37 @@ async function tbExportarPresupuesto(){
   const proy = document.getElementById('tb-proyecto')?.value;
   const ver = document.getElementById('tb-version')?.value || 'v1';
   if(!proy){ toast('Selecciona un proyecto','error'); return; }
-  const proyObj = (PC||[]).find(p=>p.proyecto_id===proy);
-  const proyFinal = proyObj?.id || proy;
-  const dto = parseFloat(document.getElementById('tb-dto')?.value)||0;
+
+  // Preguntar si aplicar descuento global o por línea
+  const dtoMode = prompt('Descuento al cliente:\n\n• Escribe un % para aplicar descuento GLOBAL a todas las líneas (ej: 10)\n• Escribe 0 o deja vacío para añadirlo MANUALMENTE por línea en el presupuesto','0');
+  if(dtoMode === null) return; // cancelado
+  const dtoGlobal = parseFloat(dtoMode)||0;
 
   try{
-    const lineas = await sbGet('presupuesto_lineas',`?proyecto_id=eq.${proyFinal}&version=eq.${ver}&select=orden&order=orden.desc&limit=1`);
+    const lineas = await sbGet('presupuesto_lineas',`?proyecto_id=eq.${proy}&version=eq.${ver}&select=orden&order=orden.desc&limit=1`);
     let ordenBase = (lineas&&lineas[0]) ? lineas[0].orden : 0;
 
-    await sbPost('presupuesto_lineas',{proyecto_id:proyFinal,version:ver,descripcion:'TOBISA — Juvenil & Armarios',es_capitulo:true,orden:ordenBase+1,cantidad:0,precio_base:0});
+    await sbPost('presupuesto_lineas',{proyecto_id:proy,version:ver,descripcion:'TOBISA — Juvenil & Armarios',es_capitulo:true,orden:ordenBase+1,cantidad:0,precio_base:0});
 
     for(let i=0;i<_tbLineas.length;i++){
       const l = _tbLineas[i];
       const descLinea = 'TOBISA ['+l.ref+'] '+l.desc+' ('+l.acabado+')' + (l.nota ? ' — '+l.nota : '');
-      const margenPct = l.coste > 0 ? ((l.pvpSinIva - l.coste) / l.coste * 100) : 0;
+      const pvpConDto = dtoGlobal > 0 ? l.pvpSinIva * (1 - dtoGlobal/100) : l.pvpSinIva;
+      const margenPct = l.coste > 0 ? ((pvpConDto - l.coste) / l.coste * 100) : 0;
       await sbPost('presupuesto_lineas',{
-        proyecto_id:proyFinal, version:ver,
+        proyecto_id:proy, version:ver,
         descripcion:descLinea,
         unidad:'Ud', cantidad:l.cant,
         precio_base:parseFloat(l.coste.toFixed(4)),
         margen_pct:parseFloat(margenPct.toFixed(2)),
-        precio_venta:parseFloat(l.pvpSinIva.toFixed(4)),
-        subtotal:parseFloat((l.pvpSinIva*l.cant).toFixed(4)),
+        dto_pct:dtoGlobal,
+        precio_venta:parseFloat(pvpConDto.toFixed(4)),
+        subtotal:parseFloat((pvpConDto*l.cant).toFixed(4)),
         iva_pct:'21%', es_capitulo:false,
         orden:ordenBase+2+i
       });
     }
-    toast('📤 '+_tbLineas.length+' líneas TOBISA exportadas al presupuesto ✅');
+    toast('📤 '+_tbLineas.length+' líneas TOBISA exportadas al presupuesto' + (dtoGlobal>0 ? ' (dto '+dtoGlobal+'%)':''));
     _tbLineas = [];
     _tbRenderBudget();
   }catch(e){ toast('Error: '+e.message,'error'); }
