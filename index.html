@@ -7775,15 +7775,21 @@ async function presAgruparCliente(){
   const lineas = PresC.filter(l=>ids.includes(l.id) && !l.es_capitulo);
   if(!lineas.length){ toast('No hay líneas de producto seleccionadas','error'); return; }
 
-  // Calcular totales
-  let totCoste=0, totPvp=0;
+  // Calcular totales (con y sin descuento)
+  let totCoste=0, totPvp=0, totPvpSinDto=0;
   lineas.forEach(l=>{
     const pv=l.precio_venta||0, cant=l.cantidad||0;
     const ci=l.ci_gg_bi_pct||0;
     const sub=cant*pv, subCI=ci>0?sub*(1+ci/100):sub;
     totCoste += cant*(l.precio_base||0);
     totPvp += subCI;
+    // Reconstruir PVP sin descuento: base*(1+margen%)
+    const pb=parseFloat(l.precio_base)||0, mg=parseFloat(l.margen_pct)||0;
+    const pvSinDto = mg>0 ? pb*(1+mg/100) : pb;
+    totPvpSinDto += cant * (ci>0 ? pvSinDto*(1+ci/100) : pvSinDto);
   });
+  // Detectar descuento global
+  const dtoDetectado = totPvpSinDto>0.01 && totPvp<(totPvpSinDto-0.01) ? Math.round((1-totPvp/totPvpSinDto)*1000)/10 : 0;
 
   // Pedir modo: con IA o manual
   const modo = confirm(
@@ -7843,16 +7849,17 @@ async function presAgruparCliente(){
     // Obtener orden máximo
     const maxOrden = PresC.reduce((m,l)=>Math.max(m,l.orden||0),0);
 
-    // Calcular margen real
-    const margenPct = totCoste>0 ? ((totPvp-totCoste)/totCoste*100) : 0;
+    // Margen sobre PVP SIN descuento (para que el Doc. Final detecte el dto)
+    const margenPct = totCoste>0 ? ((totPvpSinDto-totCoste)/totCoste*100) : 0;
 
-    // Crear línea resumen para el cliente
+    // Crear línea resumen para el cliente (con dto visible)
     await sbPost('presupuesto_lineas',{
       proyecto_id:proy, version:ver,
       descripcion:descripcion,
       unidad:'pa', cantidad:1,
       precio_base:parseFloat(totCoste.toFixed(2)),
       margen_pct:parseFloat(margenPct.toFixed(2)),
+      dto_pct:dtoDetectado,
       precio_venta:parseFloat(totPvp.toFixed(2)),
       subtotal:parseFloat(totPvp.toFixed(2)),
       iva_pct:'21%', es_capitulo:false,
