@@ -25413,8 +25413,9 @@ async function tbInit(){
   // Sincronizar con presupuesto activo (cliente + proyecto + versión)
   tbSyncDesdePresupuesto();
 
-  // Restaurar valoración persistida
-  if(_tbLineas.length) _tbRenderBudget();
+  // Restaurar valoración persistida desde sessionStorage
+  _tbLineas = JSON.parse(sessionStorage.getItem('tb_lineas')||'[]');
+  _tbRenderBudget();
 
   tbRenderTabla();
 }
