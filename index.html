@@ -16115,15 +16115,26 @@ async function plCargarProyectosSelector(){
 async function plCargarTareas(){
   try{
     const data = await sbGet('planning_tareas','?order=fecha_ini.asc');
-    // Normalizar campo trabajadores (puede venir como string JSON o array postgres)
+    // Normalizar campo trabajadores y jefe_tarea
     plTareas = (data||[]).map(t=>({
       ...t,
-      trabajadores: _plParseTrabajadores(t.trabajadores)
+      trabajadores: _plParseTrabajadores(t.trabajadores),
+      jefe_tarea: _plNormalizarJefe(t.jefe_tarea)
     }));
   } catch(e){
     console.warn('planning_tareas',e);
     plTareas = [];
   }
+}
+
+// Normalizar jefe_tarea: si se guardó un nombre completo, mapearlo al encargado corto
+function _plNormalizarJefe(val){
+  if(!val) return null;
+  // Si coincide exactamente con un encargado, ok
+  if(PL_ENCARGADOS.includes(val)) return val;
+  // Si empieza con el nombre de un encargado (ej: "Jose Asins Primo" → "Jose")
+  const match = PL_ENCARGADOS.find(enc => val.toLowerCase().startsWith(enc.toLowerCase()));
+  return match || val;
 }
 
 function _plParseTrabajadores(val){
