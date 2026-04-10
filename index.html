@@ -10374,10 +10374,11 @@ function renderPresupuesto(){
         : '';
       return`<tr style="background:#f7f4ef"><td style="width:28px"></td><td colspan="10" style="padding:9px 10px;font-weight:700;font-size:12px;color:#4a3728;border-bottom:2px solid #b87333">${l.descripcion}${infoCap}</td><td></td><td style="white-space:nowrap"><button class="btn btn-icon btn-sm" style="background:#e8f0e8;border:none;color:#2d6a2d;margin-right:4px" onclick="editCapitulo('${l.id}','${l.descripcion.replace(/'/g,"\\'")}')">✏️</button><button class="btn btn-icon btn-sm" style="background:#e8e0d4;border:none;color:#4a3728" onclick="confirmDelete('presupuesto_lineas','${l.id}','${l.descripcion.replace(/'/g,"\\'")}')">🗑</button></td></tr>`;
     }
+    const esInterno = l.categoria==='interno';
     const pv=l.precio_venta||0,ci=l.ci_gg_bi_pct||0,sub=(l.cantidad||0)*pv,subCI=ci>0?sub*(1+ci/100):sub;
     const ivaPctNum=ivaPct(l.iva_pct),ivaImporte=subCI*ivaPctNum/100;
     const esExento=(l.iva_pct==='Exento');
-    totBase+=(l.cantidad||0)*(l.precio_base||0);totCI+=subCI-sub;totVenta+=subCI;
+    if(!esInterno){ totBase+=(l.cantidad||0)*(l.precio_base||0);totCI+=subCI-sub;totVenta+=subCI; }
     const _pb=parseFloat(l.precio_base)||0,_mg=parseFloat(l.margen_pct)||0,_ciR=parseFloat(l.ci_gg_bi_pct)||0;
     let _pvSinDto=_mg>0?_pb*(1+_mg/100):_pb;if(_ciR>0)_pvSinDto=_pvSinDto*(1+_ciR/100);
     const _dto=(_pvSinDto>0.001&&pv<_pvSinDto-0.001)?Math.round((1-pv/_pvSinDto)*1000)/10:0;
@@ -10394,7 +10395,7 @@ function renderPresupuesto(){
   // Calcular IVA por tramos según el iva_pct de cada línea
   let ivaDesglose={};
   PresC.forEach(l=>{
-    if(l.es_capitulo) return;
+    if(l.es_capitulo || l.categoria==='interno') return; // Internas no suman
     const pv=l.precio_venta||0, ci=l.ci_gg_bi_pct||0;
     const sub=(l.cantidad||0)*pv, subCI=ci>0?sub*(1+ci/100):sub;
     const tipoIva=l.iva_pct||'10%';
@@ -29269,6 +29270,7 @@ renderPresupuesto=function(){
   PresC.forEach(l=>{
     if(l.es_capitulo){ _curCapId=l.id; _capTotals[_curCapId]=0; _capStats[_curCapId]={sub:0,cert:0,p:0,e:0,t:0,c:0,n:0}; return; }
     if(!_curCapId) return;
+    if(l.categoria==='interno') return; // Internas no suman en totales
     const _pv=l.precio_venta||0,_ci=l.ci_gg_bi_pct||0,_s=(l.cantidad||0)*_pv,_sCI=_ci>0?_s*(1+_ci/100):_s;
     _capTotals[_curCapId]+=_sCI;
     const st=l.estado_cert||'pendiente';
