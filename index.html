@@ -7680,13 +7680,18 @@ async function confirmDeleteAction(){
 
 // ── Selección y borrado masivo en presupuesto ──
 function presToggleAll(){
-  const chks = document.querySelectorAll('.pres-chk');
-  const allChecked = chks.length > 0 && [...chks].every(c=>c.checked);
+  const tbody = document.getElementById('pres-tbody');
+  if(!tbody) return;
+  const chks = tbody.querySelectorAll('input[type="checkbox"].pres-chk');
+  if(!chks.length){ toast('No hay líneas con checkbox','error'); return; }
+  const allChecked = [...chks].every(c=>c.checked);
   chks.forEach(c=>c.checked = !allChecked);
+  toast(allChecked ? 'Deseleccionadas '+chks.length+' líneas' : 'Seleccionadas '+chks.length+' líneas');
 }
 
 async function presBorrarSeleccion(){
-  const ids = [...document.querySelectorAll('.pres-chk:checked')].map(c=>c.value);
+  const tbody = document.getElementById('pres-tbody');
+  const ids = [...(tbody||document).querySelectorAll('input.pres-chk:checked')].map(c=>c.value);
   if(!ids.length){ toast('Selecciona líneas primero con los checkboxes','error'); return; }
   if(!confirm(`¿Eliminar ${ids.length} línea${ids.length>1?'s':''} seleccionada${ids.length>1?'s':''}? No se puede deshacer.`)) return;
   try{
@@ -7698,7 +7703,8 @@ async function presBorrarSeleccion(){
 
 // ── Agrupar líneas para cliente (sin detalle de refs/precios unitarios) ──
 async function presAgruparCliente(){
-  const ids = [...document.querySelectorAll('.pres-chk:checked')].map(c=>c.value);
+  const tbody = document.getElementById('pres-tbody');
+  const ids = [...(tbody||document).querySelectorAll('input.pres-chk:checked')].map(c=>c.value);
   if(!ids.length){ toast('Selecciona las líneas a agrupar con los checkboxes','error'); return; }
 
   // Recoger datos de las líneas seleccionadas
