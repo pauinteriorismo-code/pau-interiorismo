@@ -4699,6 +4699,49 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           </div>
         </div>
 
+        <!-- UMBRALES DE DESVÍO -->
+        <div class="card" style="margin-top:14px">
+          <div class="card-header">
+            <div class="card-title">⚠ Umbrales de desvío</div>
+            <button class="btn btn-ghost btn-sm" onclick="saveUmbrales()">💾 Guardar</button>
+          </div>
+          <div class="card-body">
+            <div class="info-box">Estos umbrales controlan cuándo se muestran alertas y semáforos de desvío en los proyectos. Ajústalos según la tolerancia de tu empresa.</div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">Desvío por capítulo %</label>
+                <input class="form-input" id="cfg-umbral-desvio" type="number" step="1" min="0" value="10" title="Se muestra alerta si un capítulo supera este % sobre el presupuesto">
+                <span style="font-size:10px;color:var(--text-soft)">Banner rojo en Rentabilidad</span>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Coste sobre ingresos %</label>
+                <input class="form-input" id="cfg-umbral-coste-ingreso" type="number" step="1" min="0" value="90" title="En Informe Mensual, filtra proyectos cuyo coste supere este % de los ingresos">
+                <span style="font-size:10px;color:var(--text-soft)">Informe mensual: proyectos con desviación</span>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Semáforo amarillo %</label>
+                <input class="form-input" id="cfg-umbral-semaforo-amarillo" type="number" step="1" min="0" value="80" title="Consumo de presupuesto a partir del cual el semáforo pasa a amarillo">
+                <span style="font-size:10px;color:var(--text-soft)">🟡 en listado de proyectos</span>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Semáforo rojo %</label>
+                <input class="form-input" id="cfg-umbral-semaforo-rojo" type="number" step="1" min="0" value="100" title="Consumo de presupuesto a partir del cual el semáforo pasa a rojo">
+                <span style="font-size:10px;color:var(--text-soft)">🔴 en listado de proyectos</span>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Margen verde %</label>
+                <input class="form-input" id="cfg-umbral-margen-verde" type="number" step="1" min="0" value="20" title="Margen mínimo para color verde en informe">
+                <span style="font-size:10px;color:var(--text-soft)">Color verde en informe mensual</span>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Margen ámbar %</label>
+                <input class="form-input" id="cfg-umbral-margen-ambar" type="number" step="1" min="0" value="10" title="Margen mínimo para color ámbar (por debajo = rojo)">
+                <span style="font-size:10px;color:var(--text-soft)">Color ámbar en informe mensual</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="card" style="margin-top:14px">
           <div class="card-header">
             <div class="card-title">🧾 Pie de factura</div>
@@ -17340,13 +17383,63 @@ function filtrarProyectosRentabilidad(){
   }
 }
 // ─── Desvío de costes por capítulo ─────────────────────────
-function _umbralDesvio(){
-  const v = parseFloat(localStorage.getItem('umbral_desvio_pct'));
-  return isNaN(v) ? 10 : v;
+// ── Umbrales de desvío (cargados desde Supabase, con fallback a defaults) ──
+const _UMBRALES_DEFAULTS = {
+  umbral_desvio_pct: 10,
+  umbral_coste_ingreso_pct: 90,
+  umbral_semaforo_amarillo_pct: 80,
+  umbral_semaforo_rojo_pct: 100,
+  umbral_margen_verde_pct: 20,
+  umbral_margen_ambar_pct: 10,
+};
+let _umbralesCache = {..._UMBRALES_DEFAULTS};
+
+async function loadUmbrales(){
+  try{
+    const data = await sbGet('configuracion','?clave=in.(umbral_desvio_pct,umbral_coste_ingreso_pct,umbral_semaforo_amarillo_pct,umbral_semaforo_rojo_pct,umbral_margen_verde_pct,umbral_margen_ambar_pct)');
+    (data||[]).forEach(d=>{
+      const v = parseFloat(d.valor);
+      if(!isNaN(v)) _umbralesCache[d.clave] = v;
+    });
+  }catch(e){ console.warn('loadUmbrales',e); }
+  // Poblar inputs si existen
+  const map = {
+    'cfg-umbral-desvio': 'umbral_desvio_pct',
+    'cfg-umbral-coste-ingreso': 'umbral_coste_ingreso_pct',
+    'cfg-umbral-semaforo-amarillo': 'umbral_semaforo_amarillo_pct',
+    'cfg-umbral-semaforo-rojo': 'umbral_semaforo_rojo_pct',
+    'cfg-umbral-margen-verde': 'umbral_margen_verde_pct',
+    'cfg-umbral-margen-ambar': 'umbral_margen_ambar_pct',
+  };
+  Object.entries(map).forEach(([elId,key])=>{
+    const el = document.getElementById(elId);
+    if(el) el.value = _umbralesCache[key];
+  });
 }
+
+async function saveUmbrales(){
+  const pairs = [
+    ['umbral_desvio_pct',             document.getElementById('cfg-umbral-desvio')?.value],
+    ['umbral_coste_ingreso_pct',      document.getElementById('cfg-umbral-coste-ingreso')?.value],
+    ['umbral_semaforo_amarillo_pct',   document.getElementById('cfg-umbral-semaforo-amarillo')?.value],
+    ['umbral_semaforo_rojo_pct',       document.getElementById('cfg-umbral-semaforo-rojo')?.value],
+    ['umbral_margen_verde_pct',        document.getElementById('cfg-umbral-margen-verde')?.value],
+    ['umbral_margen_ambar_pct',        document.getElementById('cfg-umbral-margen-ambar')?.value],
+  ];
+  try{
+    for(const [k,v] of pairs){
+      if(v===undefined||v===null) continue;
+      await upsertConfig(k, v);
+      _umbralesCache[k] = parseFloat(v);
+    }
+    toast('Umbrales guardados ✅');
+  }catch(e){ toast('Error guardando umbrales: '+e.message,'error'); }
+}
+
+function _umbralDesvio(){ return _umbralesCache.umbral_desvio_pct; }
 function _setUmbralDesvio(v){
   const n = parseFloat(v);
-  if(!isNaN(n) && n>=0) localStorage.setItem('umbral_desvio_pct', String(n));
+  if(!isNaN(n) && n>=0) _umbralesCache.umbral_desvio_pct = n;
 }
 
 // Calcula presupuestado vs real por capítulo de un proyecto + totales globales.
@@ -17434,8 +17527,8 @@ async function _calcularSaludProyectoListado(proyectoId){
   const real = compras.reduce((s,c)=>s+(c.base_imponible||0),0)
              + subcs.reduce((s,c)=>s+(c.importe||0),0);
   const pct = (real / presTotal) * 100;
-  if(pct > 100) return '🔴';
-  if(pct >= 80) return '🟡';
+  if(pct > _umbralesCache.umbral_semaforo_rojo_pct) return '🔴';
+  if(pct >= _umbralesCache.umbral_semaforo_amarillo_pct) return '🟡';
   return '🟢';
 }
 
@@ -18875,6 +18968,7 @@ async function loadConfiguracion(){
       .forEach(id=>document.getElementById(id)?.addEventListener('input', actualizarPreviewPie));
   }catch(e){toast('Configura la tabla configuracion ejecutando el SQL de nuevas tablas','error');}
   await loadDiasPago();
+  await loadUmbrales();
 }
 async function saveApiKey(){
   const key = document.getElementById('cfg-apikey')?.value?.trim();
@@ -19503,6 +19597,7 @@ async function init(){
   }, 30000); // 30s para iOS Safari
   const today=new Date().toISOString().split('T')[0];
   ['co-fecha','sc-fecha','h-fecha','f-fecha','ped-fecha'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=today;});
+  await loadUmbrales();
   await loadGerencia();
   // Cargar proveedores al inicio para tenerlos siempre disponibles
   try{ ProvC=await sbGet('proveedores','?order=nombre.asc'); }catch(e){ ProvC=[]; }
@@ -19991,7 +20086,8 @@ async function _informeMensualExtras(mes, anyo, facs, comps, subcs, hors){
   }).filter(Boolean).sort((a,b)=>a.p.proyecto_id.localeCompare(b.p.proyecto_id,'es',{numeric:true}));
 
   // Proyectos con desviación de costes (costes > 90% de los ingresos y ingresos > 0)
-  const proyDesviados = proyActivos.filter(x=> x.ingP>0 && x.costP > x.ingP*0.9 );
+  const _umbCosteIng = _umbralesCache.umbral_coste_ingreso_pct / 100;
+  const proyDesviados = proyActivos.filter(x=> x.ingP>0 && x.costP > x.ingP*_umbCosteIng );
 
   // Facturas pendientes de cobro con días de retraso
   const hoy = new Date(); hoy.setHours(0,0,0,0);
@@ -20032,7 +20128,7 @@ async function _informeMensualExtras(mes, anyo, facs, comps, subcs, hors){
         <td style="padding:6px"><span style="font-size:10px;padding:2px 6px;background:#eef;border-radius:8px">${x.p.estado||'—'}</span></td>
         <td style="padding:6px;text-align:right;font-family:monospace">${fmt(x.ingP)}</td>
         <td style="padding:6px;text-align:right;font-family:monospace;color:#b85c00">${fmt(x.costP)}</td>
-        <td style="padding:6px;text-align:right;font-family:monospace;font-weight:700;color:${x.margP>=20?'var(--green)':x.margP>=10?'var(--amber)':'var(--red)'}">${x.margP.toFixed(1)}%</td>
+        <td style="padding:6px;text-align:right;font-family:monospace;font-weight:700;color:${x.margP>=_umbralesCache.umbral_margen_verde_pct?'var(--green)':x.margP>=_umbralesCache.umbral_margen_ambar_pct?'var(--amber)':'var(--red)'}">${x.margP.toFixed(1)}%</td>
       </tr>`).join('')}
     </tbody></table>`;
   } else {
