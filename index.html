@@ -1877,10 +1877,15 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
             <div class="cat-card-name">Electrodomésticos</div>
             <div class="cat-card-desc">Balay &amp; Cata · Hornos, Placas, Fríos, Lavado</div>
           </div>
+          <div class="cat-card" data-cat="tobisa" onclick="catAbrir('tobisa')">
+            <div class="cat-card-icon">🛏️</div>
+            <div class="cat-card-name">TOBISA</div><div style="font-size:10px;color:var(--text-soft);margin-top:2px">Juvenil &amp; Armarios</div>
+            <div class="cat-card-desc">Habitaciones juveniles · Armarios · 3.360 refs</div>
+          </div>
           <div class="cat-card cat-card-new" onclick="catAbrir('catalogo-generico')">
             <div class="cat-card-icon">＋</div>
-            <div class="cat-card-name" style="color:var(--text-soft)">Catálogos Excel</div>
-            <div class="cat-card-desc">TOBISA · Importar nuevos fabricantes</div>
+            <div class="cat-card-name" style="color:var(--text-soft)">Nuevo fabricante</div>
+            <div class="cat-card-desc">Importar catálogo desde Excel</div>
           </div>
         </div>
       </div>
@@ -24576,12 +24581,15 @@ function catAbrir(fab){
   } else if(fab === 'visek'){
     document.getElementById('cat-panel-visek').classList.add('open');
     vkRender();
+  } else if(fab === 'tobisa'){
+    document.getElementById('cat-panel-catalogo-generico').classList.add('open');
+    cgInit().then(()=>cgAbrirFabricante('TOBISA'));
   } else if(fab === 'catalogo-generico'){
     document.getElementById('cat-panel-catalogo-generico').classList.add('open');
     cgInit();
   }
   // Actualizar título topbar
-  const nombres = {saitra:'Saitra · Cocinas', imex:'IMEX · Griferías', campoaras:'Campoaras · Baño', fregaderos:"Plados · D'Aqua", genexia:'Genexia · Espejos', mamparas:'Mámparas · Deyban', roca:'Roca · Sanitarios', electrodom:'Electrodomésticos · Balay & Cata', marmoles:'Mármoles Santamaría · Bancadas', visek:'Platos Visek · Minimal Collection', 'catalogo-generico':'Catálogos Excel'};
+  const nombres = {saitra:'Saitra · Cocinas', imex:'IMEX · Griferías', campoaras:'Campoaras · Baño', fregaderos:"Plados · D'Aqua", genexia:'Genexia · Espejos', mamparas:'Mámparas · Deyban', roca:'Roca · Sanitarios', electrodom:'Electrodomésticos · Balay & Cata', marmoles:'Mármoles Santamaría · Bancadas', visek:'Platos Visek · Minimal Collection', tobisa:'TOBISA · Juvenil & Armarios', 'catalogo-generico':'Nuevo fabricante'};
   document.getElementById('tb-title').textContent = 'Catálogos · ' + (nombres[fab]||fab);
   document.getElementById('tb-bc').textContent = 'Catálogos de precios → Exportar al presupuesto';
   // Sincronizar proyecto activo del presupuesto a los selectores del catálogo

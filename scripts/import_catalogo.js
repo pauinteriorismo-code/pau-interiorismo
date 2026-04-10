@@ -36,7 +36,7 @@ const raw = XLSX.utils.sheet_to_json(ws, { header: 1 });
 let headerRow = -1;
 for (let i = 0; i < Math.min(10, raw.length); i++) {
   const row = raw[i];
-  if (row && row.some(c => typeof c === 'string' && /REFERENCIA/i.test(c))) {
+  if (row && row.some(c => typeof c === 'string' && /^REFERENCIA$/i.test(c.trim()))) {
     headerRow = i;
     break;
   }
