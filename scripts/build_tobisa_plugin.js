@@ -225,17 +225,19 @@ module PauInteriorismo
       dlg.set_html(generar_html)
       dlg.add_action_callback('ins') do |d, p|
         arr = p.split('|')
-        ref   = arr[0]
-        ancho = arr[1].to_i
-        alto  = arr[2].to_i
-        prof  = arr[3].to_i
-        fam   = arr[4]
-        sub   = arr[5] || ''
-        desc  = arr[6] ? (URI.decode_www_form_component(arr[6]) rescue arr[6]) : ''
+        ref     = arr[0]
+        ancho   = arr[1].to_i
+        alto    = arr[2].to_i
+        prof    = arr[3].to_i
+        fam     = arr[4]
+        sub     = arr[5] || ''
+        desc    = arr[6] ? (URI.decode_www_form_component(arr[6]) rescue arr[6]) : ''
+        acabado = arr[7] ? (URI.decode_www_form_component(arr[7]) rescue arr[7]) : ''
+        nota    = arr[8] ? (URI.decode_www_form_component(arr[8]) rescue arr[8]) : ''
         mod = Sketchup.active_model
         mod.start_operation("#{ref} #{ancho}x#{alto}cm", true)
         begin
-          insertar(mod, ref, ancho, alto, prof, fam, sub, desc)
+          insertar(mod, ref, ancho, alto, prof, fam, sub, desc, acabado, nota)
           mod.commit_operation
         rescue => e
           mod.abort_operation
@@ -245,31 +247,38 @@ module PauInteriorismo
       dlg.show
     end
 
-    def self.insertar(mod, ref, ancho, alto, prof, fam, sub, desc='')
-      # Nombre único por ref+medidas — distintas medidas = distintos componentes
-      nom = "T_#{ref}_#{ancho}x#{alto}_#{sub}"
+    def self.insertar(mod, ref, ancho, alto, prof, fam, sub, desc='', acabado='', nota='')
+      # Nombre único por ref+medidas+acabado+nota → cada combinación = componente independiente
+      key = "#{ref}_#{ancho}x#{alto}x#{prof}_#{acabado}_#{nota}".gsub(/[^\w]/, '_')
+      nom = "T_#{key}"
       defs = mod.definitions
       comp = defs[nom]
       unless comp
         comp = defs.add(nom)
         dibujar(comp.entities, ref, ancho.to_f, alto.to_f, fam, sub, mod)
-        # Etiqueta DENTRO del componente: flecha apunta al top-center, texto 6cm encima
+        # Etiqueta DENTRO del componente: "REF HxLxP acabado nota"
+        # La IA de la app leerá este texto al analizar el plano.
+        etiqueta = "#{ref} #{alto}x#{ancho}x#{prof}"
+        etiqueta += " #{acabado}" unless acabado.nil? || acabado.strip.empty?
+        etiqueta += " #{nota}" unless nota.nil? || nota.strip.empty?
         begin
           comp.entities.add_text(
-            "#{ref}  #{ancho}×#{alto} cm",
+            etiqueta,
             Geom::Point3d.new((ancho/2.0).cm, 0, alto.cm),
             Geom::Vector3d.new(0, 0, 6.cm)
           )
         rescue; end
         # Metadata persistente
         begin
-          comp.set_attribute('PauTobisa', 'ref',   ref)
-          comp.set_attribute('PauTobisa', 'desc',  desc)
-          comp.set_attribute('PauTobisa', 'ancho', ancho)
-          comp.set_attribute('PauTobisa', 'alto',  alto)
-          comp.set_attribute('PauTobisa', 'prof',  prof)
-          comp.set_attribute('PauTobisa', 'fam',   fam)
-          comp.set_attribute('PauTobisa', 'sub',   sub)
+          comp.set_attribute('PauTobisa', 'ref',     ref)
+          comp.set_attribute('PauTobisa', 'desc',    desc)
+          comp.set_attribute('PauTobisa', 'ancho',   ancho)
+          comp.set_attribute('PauTobisa', 'alto',    alto)
+          comp.set_attribute('PauTobisa', 'prof',    prof)
+          comp.set_attribute('PauTobisa', 'fam',     fam)
+          comp.set_attribute('PauTobisa', 'sub',     sub)
+          comp.set_attribute('PauTobisa', 'acabado', acabado)
+          comp.set_attribute('PauTobisa', 'nota',    nota)
         rescue; end
       end
       inst = mod.active_entities.add_instance(comp, Geom::Transformation.new)
@@ -539,9 +548,36 @@ function sti(i){
   h+='<div><label class="nano">L ancho</label><input type="number" id="ill" min="1" max="400" oninput="updMed()"></div>';
   h+='<div><label class="nano">P fondo</label><input type="number" id="ipp" min="1" max="400" oninput="updMed()"></div>';
   h+='</div>';
-  h+='<div class="hint">✏️ Los valores se auto-rellenan al elegir una ref; edítalos si lo necesitas.</div>';
+  h+='<div class="hint">✏️ Auto-rellenadas desde la tarifa. Edítalas si el cliente lo pide.</div>';
 
-  h+='<div class="prev hide" id="pv"><div class="pr" id="pr"></div><div class="pd" id="pd"></div><div class="pm" id="pm" style="color:'+c+'"></div></div>';
+  // Acabado: dropdown + opción "Otro…" con texto libre
+  h+='<span class="lbl">Acabado:</span>';
+  h+='<select id="iacab" onchange="onAcabadoChange()">';
+  h+='<option value="">— Del proyecto (por defecto) —</option>';
+  h+='<optgroup label="Acabados base">';
+  ['Cotton','Raw','Gris Coco','Mohave','Okume','Roble Biscuit','Roble Nice','Nogal MN','Eucalipto Victoria'].forEach(function(a){
+    h+='<option value="'+a+'">'+a+'</option>';
+  });
+  h+='</optgroup>';
+  h+='<optgroup label="Acabados color">';
+  ['0690 Blanco','2201 Oui','2202 Calm','0696 Gris','0291 Grey','0292 Shade','2203 Chic','0206 Caramel','2209 Camel','2208 Beige','2204 Ocre','2210 Cognac','2207 Ocean','2205 Peach','0801 Caqui','0C15 Grigio','0802 Bebe','0705 Pink','0703 Eucalyptus','0701 Pale Green','0803 Night','2206 Terracota','0208 Brownie','0704 Forest','0264 Midnight','2211 Interdit','0207 Deep','0209 Black'].forEach(function(a){
+    h+='<option value="'+a+'">'+a+'</option>';
+  });
+  h+='</optgroup>';
+  h+='<optgroup label="Acabados específicos">';
+  ['Equal Raw','Equal Mohave','Equal Roble Biscuit','Equal Eucalipto Victoria','Equal Color','Delinea Color','Textil Linen'].forEach(function(a){
+    h+='<option value="'+a+'">'+a+'</option>';
+  });
+  h+='</optgroup>';
+  h+='<option value="__otro__">➕ Otro acabado (texto libre)…</option>';
+  h+='</select>';
+  h+='<input type="text" id="iacab-libre" placeholder="Escribe el acabado libre" style="display:none;margin-top:4px" oninput="updMed()">';
+
+  // Nota libre
+  h+='<span class="lbl">Nota para proveedor:</span>';
+  h+='<input type="text" id="inota" placeholder="Ej: trasera forrada, tirador a la derecha…" oninput="updMed()">';
+
+  h+='<div class="prev hide" id="pv"><div class="pr" id="pr"></div><div class="pd" id="pd"></div><div class="pm" id="pm" style="color:'+c+'"></div><div class="pm" id="pm2" style="color:#555;font-size:10px;font-weight:600;margin-top:3px"></div></div>';
   h+='<button class="ins" id="bi" style="background:'+c+'" onclick="ins()" disabled>&#43; Insertar en plano</button>';
   document.getElementById("s2").innerHTML=h;
 }
@@ -566,6 +602,28 @@ function sref(k){
   updMed();
 }
 
+function onAcabadoChange(){
+  var sel=document.getElementById("iacab");
+  var libre=document.getElementById("iacab-libre");
+  if(sel.value==="__otro__"){
+    libre.style.display="block";
+    libre.focus();
+  } else {
+    libre.style.display="none";
+    libre.value="";
+  }
+  updMed();
+}
+
+function getAcabado(){
+  var sel=document.getElementById("iacab");
+  if(!sel) return "";
+  if(sel.value==="__otro__"){
+    return (document.getElementById("iacab-libre").value||"").trim();
+  }
+  return (sel.value||"").trim();
+}
+
 function updMed(){
   if(!CUR) return;
   var h=parseFloat(document.getElementById("ihh").value)||0;
@@ -576,6 +634,13 @@ function updMed(){
     document.getElementById("pr").textContent = CUR.r;
     document.getElementById("pd").textContent = CUR.d;
     document.getElementById("pm").textContent = "H "+h+" × L "+l+" × P "+p+" cm";
+    // Vista previa de la etiqueta final
+    var acab = getAcabado();
+    var nota = (document.getElementById("inota").value||"").trim();
+    var etiqueta = CUR.r+" "+h+"x"+l+"x"+p;
+    if(acab) etiqueta += " "+acab;
+    if(nota) etiqueta += " "+nota;
+    document.getElementById("pm2").textContent = "🏷️ "+etiqueta;
     pv.classList.remove("hide");
     bi.disabled=false;
   } else {
@@ -592,7 +657,12 @@ function ins(){
   if(h<=0 || l<=0){ alert("H y L deben ser mayores que 0"); return; }
   var ti=D[F].ti[TI];
   var desc=(CUR.d||"").replace(/\|/g,"-");
-  window.location = "skp:ins@" + CUR.r + "|" + l + "|" + h + "|" + p + "|" + F + "|" + ti.sub + "|" + encodeURIComponent(desc);
+  var acab=getAcabado().replace(/\|/g,"-");
+  var nota=((document.getElementById("inota").value||"").trim()).replace(/\|/g,"-");
+  window.location = "skp:ins@" + CUR.r + "|" + l + "|" + h + "|" + p + "|" + F + "|" + ti.sub
+    + "|" + encodeURIComponent(desc)
+    + "|" + encodeURIComponent(acab)
+    + "|" + encodeURIComponent(nota);
 }
 
 sf("mod");

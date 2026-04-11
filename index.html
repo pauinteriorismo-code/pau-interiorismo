@@ -534,7 +534,10 @@ tbody td{padding:7px 10px;vertical-align:middle}
 .cat-panel.open{display:block}
 #cat-panel-saitra.open{display:flex;flex-direction:column;height:calc(100vh - 56px - 36px);overflow:hidden}
 #cat-panel-saitra .cat-header{flex-shrink:0}
-#saitra-col-izquierda>.card{max-height:45vh;overflow-y:auto;scrollbar-width:thin}
+#saitra-col-izquierda{overflow-y:auto;scrollbar-width:thin;padding-right:4px}
+#saitra-col-izquierda::-webkit-scrollbar{width:8px}
+#saitra-col-izquierda::-webkit-scrollbar-thumb{background:#d0c8b8;border-radius:4px}
+#saitra-col-izquierda::-webkit-scrollbar-thumb:hover{background:#b8ac95}
 #cat-panel-tobisa.open{display:flex;flex-direction:column;height:calc(100vh - 56px - 36px);overflow:hidden}
 #cat-panel-tobisa .cat-header{flex-shrink:0}
 #tb-familias{align-self:start;position:sticky;top:0;max-height:calc(100vh - 200px);overflow-y:auto;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:8px}
@@ -1935,9 +1938,6 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <span style="font-size:11px;font-weight:700;background:#2e7d32;color:white;padding:2px 5px;border-radius:3px;margin-left:8px">M3</span>
           <select class="form-input" id="s-col-3" style="width:50px" onchange="saitraPuntosPreview()"><option value="">—</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select>
           <span id="s-col-3-lbl" style="font-size:10px;color:#2e7d32;font-weight:600"></span>
-          <span style="font-size:11px;font-weight:700;background:#7b5ea7;color:white;padding:2px 5px;border-radius:3px;margin-left:8px">M4</span>
-          <select class="form-input" id="s-col-4" style="width:50px" onchange="saitraPuntosPreview()"><option value="">—</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select>
-          <span id="s-col-4-lbl" style="font-size:10px;color:#7b5ea7;font-weight:600"></span>
         </div>
         <div style="display:flex;align-items:center;gap:8px;background:#f0f9f0;padding:5px 10px;border-radius:6px;border:1px solid #c8e6c9">
           <span style="font-size:11px;color:#2e7d32">💰 Coste = Pts × 0,99€ · PVP = Coste × (1+margen%)</span>
@@ -2166,64 +2166,6 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <div>
             <label class="form-label">🎨 <span style="color:#2e7d32;font-weight:700">M3</span> Frente <span style="font-weight:400;color:var(--text-soft)">(opcional)</span></label>
             <select class="form-input" id="s-frente-3" onchange="saitraFrenteChange()">
-              <option value="">— No usar —</option>
-              <optgroup label="━━ LAMINADOS ━━">
-                <option value="Kariba|1">Kariba · T.1</option>
-                <option value="Alice|1">Alice · T.1</option>
-                <option value="Nordik|1">Nordik · T.1</option>
-                <option value="Kleeia|1">Kleeia · T.1</option>
-                <option value="Atria|1">Atria · T.1</option>
-                <option value="Izar|2">Izar · T.2</option>
-                <option value="Lure|2">Lure · T.2</option>
-                <option value="Tubalu|3">Tubalu · T.3</option>
-                <option value="Narai Laminado|3">Narai Laminado · T.3</option>
-                <option value="Naos|4">Naos · T.4</option>
-              </optgroup>
-              <optgroup label="━━ ESTRATIFICADOS Y PET ━━">
-                <option value="Bora Blanco|2">Bora Blanco/Mate · T.2</option>
-                <option value="Bora Color|3">Bora Color · T.3</option>
-                <option value="Lunda|3">Lunda · T.3</option>
-                <option value="Morget Blanco|2">Morget Blanco Seda/Brillo · T.2</option>
-                <option value="Morget Color|3">Morget Colores Seda · T.3</option>
-                <option value="Morget Metal|4">Morget Metal · T.4</option>
-                <option value="Morget 45 Blanco|3">Morget 45 Blanco · T.3</option>
-                <option value="Morget 45 Color|4">Morget 45 Color · T.4</option>
-                <option value="Narai PET Blanco|4">Narai PET Blanco · T.4</option>
-                <option value="Narai PET Color|4">Narai PET Color · T.4</option>
-                <option value="Alice Veta Vertical|2">Alice Veta Vertical · T.2</option>
-                <option value="Fénix|5">Fénix · T.5</option>
-                <option value="Fénix 45|6">Fénix 45 · T.6</option>
-              </optgroup>
-              <optgroup label="━━ MADERAS ━━">
-                <option value="Nemin Roble/Fresno|7">Nemin Roble/Fresno · T.7</option>
-                <option value="Nemin Nogal/Fumé|8">Nemin Nogal/Fumé · T.8</option>
-                <option value="Travis Roble|8">Travis Roble · T.8</option>
-                <option value="Belat|8">Belat Roble · T.8</option>
-                <option value="Smog|8">Smog Roble/Fresno · T.8</option>
-                <option value="Aore Roble|8">Aore Roble/Fresno · T.8</option>
-                <option value="Kara Roble|8">Kara Roble/Olmo · T.8</option>
-                <option value="Sayula Roble|8">Sayula Roble · T.8</option>
-                <option value="Deo|9">Deo Roble/Olmo · T.9</option>
-                <option value="Drinet Roble|9">Drinet Roble · T.9</option>
-                <option value="Tai Roble|9">Tai Roble · T.9</option>
-              </optgroup>
-              <optgroup label="━━ LACAS ━━">
-                <option value="Glass Blanco|3">Glass Blanco · T.3</option>
-                <option value="Glass Color|4">Glass Color · T.4</option>
-                <option value="Buran Blanco|4">Buran Blanco · T.4</option>
-                <option value="Buran Color|5">Buran Colores · T.5</option>
-                <option value="Calma Blanco|5">Calma Blanco · T.5</option>
-                <option value="Vega Blanco|5">Vega Blanco · T.5</option>
-                <option value="Inari Blanco|6">Inari Blanco · T.6</option>
-                <option value="Sismo Blanco|5">Sismo Blanco · T.5</option>
-              </optgroup>
-            </select>
-          </div>
-
-          <!-- 4. ACABADO FRENTE MODELO 4 (opcional) -->
-          <div>
-            <label class="form-label">🎨 <span style="color:#7b5ea7;font-weight:700">M4</span> Frente <span style="font-weight:400;color:var(--text-soft)">(opcional)</span></label>
-            <select class="form-input" id="s-frente-4" onchange="saitraFrenteChange()">
               <option value="">— No usar —</option>
               <optgroup label="━━ LAMINADOS ━━">
                 <option value="Kariba|1">Kariba · T.1</option>
@@ -2708,7 +2650,6 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
                     <label style="display:flex;align-items:center;gap:2px;font-size:11px;cursor:pointer"><input type="radio" name="s-modelo" value="1" checked onchange="saitraPuntosPreview()"><span style="font-weight:700;color:var(--copper)">M1</span></label>
                     <label style="display:flex;align-items:center;gap:2px;font-size:11px;cursor:pointer"><input type="radio" name="s-modelo" value="2" onchange="saitraPuntosPreview()"><span style="font-weight:700;color:#1565c0">M2</span></label>
                     <label style="display:flex;align-items:center;gap:2px;font-size:11px;cursor:pointer"><input type="radio" name="s-modelo" value="3" onchange="saitraPuntosPreview()"><span style="font-weight:700;color:#2e7d32">M3</span></label>
-                    <label style="display:flex;align-items:center;gap:2px;font-size:11px;cursor:pointer"><input type="radio" name="s-modelo" value="4" onchange="saitraPuntosPreview()"><span style="font-weight:700;color:#7b5ea7">M4</span></label>
                   </div>
                 </div>
                 <div style="width:50px">
@@ -2757,10 +2698,6 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
                     <input type="radio" name="sinc-modelo" value="3">
                     <span style="font-weight:700;color:#2e7d32">M3</span>
                   </label>
-                  <label style="display:flex;align-items:center;gap:3px;font-size:12px;cursor:pointer">
-                    <input type="radio" name="sinc-modelo" value="4">
-                    <span style="font-weight:700;color:#7b5ea7">M4</span>
-                  </label>
                 </div>
               </div>
             </div>
@@ -2796,7 +2733,6 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
                   <label style="display:flex;align-items:center;gap:3px;font-size:12px;cursor:pointer"><input type="radio" name="scomp-modelo" value="1" checked><span style="font-weight:700;color:var(--copper)">M1</span></label>
                   <label style="display:flex;align-items:center;gap:3px;font-size:12px;cursor:pointer"><input type="radio" name="scomp-modelo" value="2"><span style="font-weight:700;color:#1565c0">M2</span></label>
                   <label style="display:flex;align-items:center;gap:3px;font-size:12px;cursor:pointer"><input type="radio" name="scomp-modelo" value="3"><span style="font-weight:700;color:#2e7d32">M3</span></label>
-                  <label style="display:flex;align-items:center;gap:3px;font-size:12px;cursor:pointer"><input type="radio" name="scomp-modelo" value="4"><span style="font-weight:700;color:#7b5ea7">M4</span></label>
                 </div>
               </div>
               <div>
@@ -3132,7 +3068,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
               <span style="font-size:12px;color:var(--text-mid)">IVA (<span id="s-tot-iva-pct">21</span>%): <strong id="s-tot-iva-eur">0,00€</strong></span>
               <span style="font-size:14px;font-weight:800;color:var(--navy)">TOTAL CON IVA: <span id="s-tot-con-iva" style="font-size:18px;color:#1565c0">0,00€</span></span>
             </div>
-            <!-- Subtotales por modelo M1-M4 -->
+            <!-- Subtotales por modelo M1-M3 -->
             <div id="s-tot-m1-row" style="margin-bottom:4px;padding:7px 12px;background:#fff8f0;border-radius:6px;border-left:3px solid var(--copper);font-size:12px">
               <span style="font-weight:700;color:var(--copper)">M1</span> — PVP: <strong id="s-tot-m1">0,00€</strong>
             </div>
@@ -3141,9 +3077,6 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
             </div>
             <div id="s-tot-m3-row" style="display:none;margin-bottom:4px;padding:7px 12px;background:#f0fff4;border-radius:6px;border-left:3px solid #2e7d32;font-size:12px">
               <span style="font-weight:700;color:#2e7d32">M3</span> — PVP: <strong id="s-tot-m3">0,00€</strong>
-            </div>
-            <div id="s-tot-m4-row" style="display:none;margin-bottom:4px;padding:7px 12px;background:#f5f0ff;border-radius:6px;border-left:3px solid #7b5ea7;font-size:12px">
-              <span style="font-weight:700;color:#7b5ea7">M4</span> — PVP: <strong id="s-tot-m4">0,00€</strong>
             </div>
 
             <div style="padding:10px 12px;background:#fff3e0;border-radius:6px;border-left:3px solid #ff9800;font-size:11px;color:#e65100;margin-bottom:12px">
@@ -14529,8 +14462,8 @@ const TARIFA_A_LINEA_ACABADO = {
 };
 
 function saitraFrenteChange(){
-  // Actualizar tarifa y label para cada modelo M1-M4
-  ['1','2','3','4'].forEach(n => {
+  // Actualizar tarifa y label para cada modelo M1-M3 (M4 no se usa)
+  ['1','2','3'].forEach(n => {
     const sel    = document.getElementById('s-frente-'+n);
     const colSel = document.getElementById('s-col-'+n);
     const lblEl  = document.getElementById('s-col-'+n+'-lbl');
@@ -15689,11 +15622,9 @@ function saitraGuardar(){
       frente1: document.getElementById('s-frente-1')?.value || '',
       frente2: document.getElementById('s-frente-2')?.value || '',
       frente3: document.getElementById('s-frente-3')?.value || '',
-      frente4: document.getElementById('s-frente-4')?.value || '',
       col1:    document.getElementById('s-col-1')?.value || '4',
       col2:    document.getElementById('s-col-2')?.value || '',
       col3:    document.getElementById('s-col-3')?.value || '',
-      col4:    document.getElementById('s-col-4')?.value || '',
       casco:   document.getElementById('s-casco')?.value || '',
       cajones: document.getElementById('s-cajones')?.value || '',
       vitrina: document.getElementById('s-vitrina')?.value || '',
@@ -15727,11 +15658,9 @@ function saitraRestaurar(){
       set('s-frente-1', est.frente1);
       set('s-frente-2', est.frente2);
       set('s-frente-3', est.frente3);
-      set('s-frente-4', est.frente4);
       set('s-col-1',    est.col1);
       set('s-col-2',    est.col2);
       set('s-col-3',    est.col3);
-      set('s-col-4',    est.col4);
       set('s-casco',    est.casco);
       set('s-cajones',  est.cajones);
       set('s-vitrina',  est.vitrina);
@@ -15761,7 +15690,7 @@ function saitraRecalc(){
   const margen = parseFloat(document.getElementById('s-margen')?.value)||70;
   document.getElementById('s-tot-margen-lbl').textContent = margen;
   let totalCoste=0, totalPvp=0;
-  const pvpMx = {'1':0,'2':0,'3':0,'4':0};
+  const pvpMx = {'1':0,'2':0,'3':0};
   saitraLineas.forEach(l=>{
     l.pvpUnit   = saitraCalcPvp(l.costeUnit, margen);
     l.pvpTotal  = l.pvpUnit * l.cant;
@@ -15783,8 +15712,8 @@ function saitraRecalc(){
   document.getElementById('s-tot-iva-pct').textContent = ivaPct;
   document.getElementById('s-tot-iva-eur').textContent = fmtE(ivaEur);
   document.getElementById('s-tot-con-iva').textContent = fmtE(totalConIva);
-  // Subtotales M1-M4: mostrar solo los modelos con importe
-  ['1','2','3','4'].forEach(n => {
+  // Subtotales M1-M3: mostrar solo los modelos con importe
+  ['1','2','3'].forEach(n => {
     const el  = document.getElementById('s-tot-m'+n);
     const row = document.getElementById('s-tot-m'+n+'-row');
     if(el) el.textContent = fmtE(pvpMx[n]);
