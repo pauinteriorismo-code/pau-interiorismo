@@ -518,6 +518,17 @@ body{font-family:Arial,sans-serif;font-size:12px;background:#f2f2f2;overflow-x:h
 .cnt{padding:10px}
 .stit{font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
 .cnt2{background:#f3e5f5;border-radius:4px;padding:5px 8px;font-size:10px;color:#4a148c;margin-bottom:6px;text-align:center}
+.sq-wrap{padding:6px 10px;background:#faf7fc;border-bottom:1px solid #d8c9e0;position:relative}
+.sq-input{width:100%;padding:7px 10px;border:1px solid #b39ddb;border-radius:4px;font-size:11px;background:white;outline:none;font-family:inherit}
+.sq-input:focus{border-color:#6a1b9a;box-shadow:0 0 0 2px rgba(106,27,154,.15)}
+.sq-results{position:absolute;left:10px;right:10px;top:calc(100% - 2px);background:white;border:1px solid #b39ddb;border-top:none;border-radius:0 0 5px 5px;max-height:360px;overflow-y:auto;z-index:1000;box-shadow:0 6px 16px rgba(0,0,0,.18);display:none;scrollbar-width:thin}
+.sq-item{padding:7px 10px;cursor:pointer;font-size:11px;border-bottom:1px solid #f0e6f5;line-height:1.35}
+.sq-item:last-child{border-bottom:none}
+.sq-item:hover{background:#f5ebfa}
+.sq-item .sq-ref{font-family:monospace;font-weight:bold;color:#6a1b9a;font-size:12px}
+.sq-item .sq-tab{float:right;font-size:9px;color:#888;background:#ede7f6;padding:1px 5px;border-radius:3px;margin-top:1px}
+.sq-item .sq-dims{font-size:9px;color:#888;margin-left:6px}
+.sq-none{padding:10px;color:#999;font-size:10px;text-align:center;font-style:italic}
 .lbl{display:block;font-size:10px;color:#555;margin:7px 0 3px;font-weight:bold}
 select,input{width:100%;padding:5px 7px;border:1px solid #ccc;border-radius:4px;font-size:11px;background:white;font-family:inherit}
 select.big{font-family:monospace;font-size:11px}
@@ -550,6 +561,10 @@ select.big{font-family:monospace;font-size:11px}
   <div class="tab" id="tb-arm" onclick="sf('arm')">Arma-<br><small>rios</small></div>
   <div class="tab" id="tb-otr" onclick="sf('otr')">Otros<br><small>/zoc.</small></div>
 </div>
+<div class="sq-wrap">
+  <input type="text" class="sq-input" id="sq-input" placeholder="🔍 Busca por referencia o descripción (ej: D1001, cajón, arrimadero…)" oninput="sq()" onkeydown="if(event.key==='Escape')sqCerrar()" onblur="setTimeout(sqCerrar, 200)">
+  <div class="sq-results" id="sq-results"></div>
+</div>
 <div class="cnt" id="cnt">
   <p style="color:#aaa;font-size:11px;text-align:center;margin-top:20px">Selecciona una familia</p>
 </div>
@@ -563,6 +578,79 @@ window._PAU_CFG = window._PAU_CFG || {proyecto:'',cliente:'',version:'v1',acabad
 function saveCfg(k, v){
   window._PAU_CFG[k] = v;
   window.location = "skp:cfg@" + k + "|" + encodeURIComponent(v||"");
+}
+
+// ═══ Búsqueda global por referencia ═══
+function sq(){
+  var q = (document.getElementById("sq-input").value||"").toLowerCase().trim();
+  var out = document.getElementById("sq-results");
+  if(q.length < 2){ out.style.display="none"; return; }
+  var results = [];
+  var tabs = ["mod","esc","est","cam","arm","otr"];
+  var MAX = 30;
+  outer: for(var ti=0; ti<tabs.length; ti++){
+    var tab = tabs[ti];
+    var d = D[tab];
+    if(!d) continue;
+    for(var i=0; i<d.ti.length; i++){
+      var t = d.ti[i];
+      for(var k=0; k<t.refs.length; k++){
+        var r = t.refs[k];
+        var ref = String(r.r||"").toLowerCase();
+        var desc = String(r.d||"").toLowerCase();
+        if(ref.indexOf(q) >= 0 || desc.indexOf(q) >= 0){
+          results.push({
+            tab: tab,
+            tidx: i,
+            ridx: k,
+            ref: r.r,
+            desc: r.d,
+            h: r.h, l: r.l, p: r.p,
+            tLabel: t.t,
+            tabLbl: d.lbl || tab
+          });
+          if(results.length >= MAX) break outer;
+        }
+      }
+    }
+  }
+  if(!results.length){
+    out.innerHTML = '<div class="sq-none">Sin resultados para "'+q+'"</div>';
+    out.style.display = "block";
+    return;
+  }
+  out.innerHTML = results.map(function(r){
+    return '<div class="sq-item" onmousedown="sqGo(\''+r.tab+'\','+r.tidx+','+r.ridx+')">'
+      +'<span class="sq-tab">'+r.tabLbl+'</span>'
+      +'<span class="sq-ref">'+r.ref+'</span>'
+      +'<span class="sq-dims">· H '+r.h+' × L '+r.l+' × P '+r.p+' cm</span>'
+      +'<div style="color:#333;margin-top:2px">'+r.desc+'</div>'
+      +'<div style="color:#999;font-size:9px;margin-top:1px">'+r.tLabel+'</div>'
+      +'</div>';
+  }).join("");
+  out.style.display = "block";
+}
+
+function sqGo(tab, tidx, ridx){
+  sf(tab);
+  // Esperar al re-render del tab, luego abrir tipo y ref
+  setTimeout(function(){
+    var sel = document.getElementById("stype");
+    if(sel){ sel.value = String(tidx); }
+    sti(tidx);
+    setTimeout(function(){
+      var sref_el = document.getElementById("sref");
+      if(sref_el){ sref_el.value = String(ridx); }
+      sref(ridx);
+    }, 40);
+  }, 30);
+  document.getElementById("sq-input").value = "";
+  sqCerrar();
+}
+
+function sqCerrar(){
+  var out = document.getElementById("sq-results");
+  if(out) out.style.display = "none";
 }
 
 function onCfgLoaded(){
