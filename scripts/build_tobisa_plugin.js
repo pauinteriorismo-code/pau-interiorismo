@@ -309,7 +309,47 @@ module PauInteriorismo
         end
       end
 
+      # Migrar componentes antiguos del plano XZ al plano XY
+      dlg.add_action_callback('migrate') do |d, _p|
+        result = migrar_a_planta
+        d.execute_script("window._mig_done(#{result[:migrated]}, #{result[:skipped]});")
+      end
+
       dlg.show
+    end
+
+    # Detecta componentes antiguos (dibujados en el plano XZ) y los rota 90°
+    # para dejarlos en XY. Idempotente: los ya correctos se saltan.
+    def self.migrar_a_planta
+      mod = Sketchup.active_model
+      return {migrated:0, skipped:0} unless mod
+      migrated = 0
+      skipped = 0
+      mod.start_operation('Migrar Tobisa a vista planta', true)
+      begin
+        tr = Geom::Transformation.rotation(
+          Geom::Point3d.new(0, 0, 0),
+          Geom::Vector3d.new(1, 0, 0),
+          -90.degrees
+        )
+        mod.definitions.each do |defn|
+          next unless defn.name.start_with?('T_')
+          bb = defn.bounds
+          y_ext = (bb.max.y - bb.min.y).abs
+          z_ext = (bb.max.z - bb.min.z).abs
+          if y_ext < 0.01 && z_ext > 0.01
+            defn.entities.transform_entities(tr, defn.entities.to_a)
+            migrated += 1
+          else
+            skipped += 1
+          end
+        end
+        mod.commit_operation
+      rescue => e
+        mod.abort_operation
+        puts "Tobisa migrar error: #{e.message}"
+      end
+      {migrated: migrated, skipped: skipped}
     end
 
     def self.insertar(mod, ref, ancho, alto, prof, fam, sub, desc='', acabado='', nota='', cant=1)
@@ -736,7 +776,26 @@ function sfProyecto(){
 
   h += '<div class="hint" style="margin-top:12px;background:#f3e5f5;padding:8px;border-radius:5px;color:#4a148c">✅ El <strong>acabado global</strong> se aplicará a cada módulo. Puedes sobrescribirlo en un módulo concreto si lo necesitas.</div>';
 
+  // Migración XZ→XY (solo útil en proyectos antiguos que se insertaron con la versión frontal)
+  h += '<div class="sep" style="height:1px;background:#e0e0e0;margin:10px 0"></div>';
+  h += '<div style="font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;color:#555">🔄 Migración de proyecto antiguo</div>';
+  h += '<div class="hint">Si este .skp tiene módulos insertados con una versión previa (vista frontal), este botón los rota a vista planta.</div>';
+  h += '<button onclick="migrar()" id="mig-btn" style="width:100%;padding:8px;background:#fff3e0;color:#e65100;border:1px solid #ffb74d;border-radius:5px;font-size:11px;font-weight:bold;cursor:pointer">🔄 Migrar módulos antiguos a vista planta</button>';
+  h += '<div id="mig-res" style="margin-top:6px;font-size:10px;color:#2e7d32;text-align:center"></div>';
+
   document.getElementById("cnt").innerHTML = h;
+}
+
+function migrar(){
+  if(!confirm("¿Rotar 90° los módulos Tobisa antiguos (plano XZ) a vista planta (XY)?\\n\\nSeguro: los que ya están en XY se saltan automáticamente.")) return;
+  document.getElementById("mig-btn").disabled = true;
+  document.getElementById("mig-btn").textContent = "⏳ Migrando…";
+  window._mig_done = function(migrated, skipped){
+    document.getElementById("mig-btn").disabled = false;
+    document.getElementById("mig-btn").textContent = "🔄 Migrar módulos antiguos a vista planta";
+    document.getElementById("mig-res").innerHTML = "✓ Migrados: <b>"+migrated+"</b> · Ya estaban OK: <b>"+skipped+"</b>";
+  };
+  window.location = "skp:migrate@1";
 }
 
 function sf(f){
