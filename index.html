@@ -532,12 +532,16 @@ tbody td{padding:7px 10px;vertical-align:middle}
 .cat-card-desc{font-size:11px;color:var(--text-soft);line-height:1.4}
 .cat-panel{display:none}
 .cat-panel.open{display:block}
-#cat-panel-saitra.open{display:flex;flex-direction:column;height:calc(100vh - 56px - 36px);overflow:hidden}
+#cat-panel-saitra.open{display:flex;flex-direction:column;min-height:calc(100vh - 56px - 36px);overflow-y:auto;scrollbar-width:thin}
+#cat-panel-saitra.open::-webkit-scrollbar{width:10px}
+#cat-panel-saitra.open::-webkit-scrollbar-thumb{background:#c8bda8;border-radius:5px}
+#cat-panel-saitra.open::-webkit-scrollbar-thumb:hover{background:#a89878}
 #cat-panel-saitra .cat-header{flex-shrink:0}
-#saitra-col-izquierda{overflow-y:auto;scrollbar-width:thin;padding-right:4px}
-#saitra-col-izquierda::-webkit-scrollbar{width:8px}
-#saitra-col-izquierda::-webkit-scrollbar-thumb{background:#d0c8b8;border-radius:4px}
-#saitra-col-izquierda::-webkit-scrollbar-thumb:hover{background:#b8ac95}
+/* Per-card scroll en col. izquierda (como estaba antes) */
+#saitra-col-izquierda>.card{max-height:45vh;overflow-y:auto;scrollbar-width:thin}
+#saitra-col-izquierda>.card::-webkit-scrollbar{width:8px}
+#saitra-col-izquierda>.card::-webkit-scrollbar-thumb{background:#d0c8b8;border-radius:4px}
+#saitra-col-izquierda>.card::-webkit-scrollbar-thumb:hover{background:#b8ac95}
 #cat-panel-tobisa.open{display:flex;flex-direction:column;height:calc(100vh - 56px - 36px);overflow:hidden}
 #cat-panel-tobisa .cat-header{flex-shrink:0}
 #tb-familias{align-self:start;position:sticky;top:0;max-height:calc(100vh - 200px);overflow-y:auto;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:8px}
@@ -2259,7 +2263,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         </div>
       </div>
 
-      <div id="saitra-grid" style="display:grid;grid-template-columns:400px 1fr;grid-template-rows:1fr;gap:14px;flex:1;min-height:0;overflow:hidden">
+      <div id="saitra-grid" style="display:grid;grid-template-columns:400px 1fr;gap:14px;align-items:start">
 
         <!-- ─── PANEL IZQUIERDO ─── -->
         <div id="saitra-col-izquierda" style="display:flex;flex-direction:column;gap:10px;scrollbar-width:thin">
@@ -3694,9 +3698,9 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         </div>
         <!-- COL DERECHA: Tabla/IA + valoración -->
         <div style="display:flex;flex-direction:column;gap:6px;overflow:hidden;max-height:calc(100vh - 190px)">
-          <!-- Vista catálogo (tabla + paginación) — se oculta cuando IA activo -->
-          <div id="tb-catalog-view" style="display:flex;flex-direction:column;gap:6px;flex:3;min-height:120px;overflow:hidden">
-            <div style="overflow-y:auto;flex:1;min-height:120px;scrollbar-width:thin" id="tb-tabla-wrap">
+          <!-- Vista catálogo (tabla + paginación) — compacta, solo 28vh para dejar el resto a la valoración -->
+          <div id="tb-catalog-view" style="display:flex;flex-direction:column;gap:6px;flex:0 0 auto;max-height:30vh;min-height:140px;overflow:hidden">
+            <div style="overflow-y:auto;flex:1;min-height:0;scrollbar-width:thin" id="tb-tabla-wrap">
               <table class="imex-tbl" style="width:100%;font-size:11px">
                 <thead style="position:sticky;top:0;z-index:1"><tr>
                   <th style="width:80px">REF</th>
@@ -3774,8 +3778,8 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
               </div>
             </div>
           </div>
-          <!-- VALORACIÓN -->
-          <div class="card" style="flex:2;min-height:100px;display:flex;flex-direction:column;border-top:3px solid var(--copper);overflow:hidden">
+          <!-- VALORACIÓN — ocupa todo el espacio restante -->
+          <div class="card" style="flex:1;min-height:200px;display:flex;flex-direction:column;border-top:3px solid var(--copper);overflow:hidden">
             <div style="padding:8px 14px 4px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
               <span style="font-size:12px;font-weight:700;text-transform:uppercase;color:var(--copper);letter-spacing:.06em">📋 Valoración TOBISA</span>
               <div style="display:flex;gap:4px;align-items:center">
