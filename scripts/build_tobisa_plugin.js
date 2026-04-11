@@ -297,6 +297,18 @@ module PauInteriorismo
         d.execute_script(js)
       end
 
+      # Cambiar la cámara a vista planta + proyección paralela
+      dlg.add_action_callback('vt') do |_d, _p|
+        begin
+          mod = Sketchup.active_model
+          mod.active_view.camera.perspective = false
+          Sketchup.send_action('viewTop:')
+          mod.active_view.zoom_extents
+        rescue => e
+          puts "Tobisa viewTop error: #{e.message}"
+        end
+      end
+
       dlg.show
     end
 
@@ -314,11 +326,12 @@ module PauInteriorismo
         etiqueta += " ×#{cant}" if cant > 1
         etiqueta += " =#{acabado}" unless acabado.nil? || acabado.strip.empty?
         etiqueta += " #{nota}" unless nota.nil? || nota.strip.empty?
+        # Anclaje en el borde superior del módulo (plano XY, hacia +Y) + offset 6cm
         begin
           comp.entities.add_text(
             etiqueta,
-            Geom::Point3d.new((ancho/2.0).cm, 0, alto.cm),
-            Geom::Vector3d.new(0, 0, 6.cm)
+            Geom::Point3d.new((ancho/2.0).cm, alto.cm, 0),
+            Geom::Vector3d.new(0, 6.cm, 0)
           )
         rescue; end
         # Metadata persistente
@@ -340,12 +353,15 @@ module PauInteriorismo
       inst
     end
 
-    def self.pt(x, z); Geom::Point3d.new(x.cm, 0, z.cm); end
+    # Los módulos se dibujan en el plano XY (horizontal) para ser visibles
+    # desde la vista "Planta" de SketchUp. El segundo parámetro (z) se mapea al eje Y.
+    def self.pt(x, z); Geom::Point3d.new(x.cm, z.cm, 0); end
 
     def self.fc(ents, pts, gris, mod)
       face = ents.add_face(pts)
       return unless face.is_a?(Sketchup::Face)
-      face.reverse! if face.normal.y > 0
+      # Orientar todas las caras hacia +Z para que el material se vea correctamente desde arriba
+      face.reverse! if face.normal.z < 0
       if gris
         m = mod.materials['PG_TOBISA'] rescue nil
         unless m
@@ -529,6 +545,8 @@ body{font-family:Arial,sans-serif;font-size:12px;background:#f2f2f2;overflow-x:h
 .sq-item .sq-tab{float:right;font-size:9px;color:#888;background:#ede7f6;padding:1px 5px;border-radius:3px;margin-top:1px}
 .sq-item .sq-dims{font-size:9px;color:#888;margin-left:6px}
 .sq-none{padding:10px;color:#999;font-size:10px;text-align:center;font-style:italic}
+.vt-btn{background:#6a1b9a;color:white;border:none;border-radius:4px;padding:5px 10px;font-size:10px;font-weight:bold;cursor:pointer;margin-left:auto;white-space:nowrap}
+.vt-btn:hover{background:#4a148c}
 .lbl{display:block;font-size:10px;color:#555;margin:7px 0 3px;font-weight:bold}
 select,input{width:100%;padding:5px 7px;border:1px solid #ccc;border-radius:4px;font-size:11px;background:white;font-family:inherit}
 select.big{font-family:monospace;font-size:11px}
@@ -550,7 +568,8 @@ select.big{font-family:monospace;font-size:11px}
 </head><body>
 <div class="hdr">
   <div class="ic">P</div>
-  <div><div class="ht">PAU Interiorismo</div><div class="hs">Tobisa &mdash; Alzado 2D &mdash; Tarifa 2.51.2</div></div>
+  <div><div class="ht">PAU Interiorismo</div><div class="hs">Tobisa &mdash; Vista planta &mdash; Tarifa 2.51.2</div></div>
+  <button class="vt-btn" onclick="vtop()" title="Cambiar la cámara a vista planta + proyección paralela">📐 Vista planta</button>
 </div>
 <div class="tabs">
   <div class="tab" id="tb-pro" onclick="sfProyecto()" style="background:#1a1a2e">⚙<br><small>Proyecto</small></div>
@@ -651,6 +670,11 @@ function sqGo(tab, tidx, ridx){
 function sqCerrar(){
   var out = document.getElementById("sq-results");
   if(out) out.style.display = "none";
+}
+
+// Cambia la cámara de SketchUp a vista planta + proyección paralela
+function vtop(){
+  window.location = "skp:vt@1";
 }
 
 function onCfgLoaded(){
