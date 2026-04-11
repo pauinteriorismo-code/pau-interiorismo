@@ -2963,19 +2963,19 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
             </div>
             <div id="saitra-ia-step1">
               <div style="background:#e3f2fd;border:1px solid #90caf9;border-radius:6px;padding:9px 12px;font-size:11px;color:#0d47a1;margin-bottom:12px">
-                <strong>📌 Cómo funciona:</strong> Sube el plano acotado (JPG, PNG o PDF). La IA identifica los módulos y los coteja con el catálogo Saitra.
+                <strong>📌 Cómo funciona:</strong> Puedes subir <strong>una o varias imágenes</strong> acotadas del mismo proyecto (por ejemplo varias paredes de una cocina). La IA identifica los módulos de todas las imágenes y los suma en una única valoración.
               </div>
               <div id="saitra-ia-dropzone" onclick="document.getElementById('saitra-ia-input').click()"
-                style="border:2px dashed #90caf9;border-radius:8px;padding:28px;text-align:center;cursor:pointer;background:#f8fbff;transition:background .2s;margin-bottom:12px"
+                style="border:2px dashed #90caf9;border-radius:8px;padding:22px;text-align:center;cursor:pointer;background:#f8fbff;transition:background .2s;margin-bottom:10px"
                 ondragover="event.preventDefault();this.style.background='#dceeff'"
                 ondragleave="this.style.background='#f8fbff'"
                 ondrop="saitraIAOnDrop(event)">
-                <div style="font-size:30px;margin-bottom:8px">📂</div>
+                <div style="font-size:26px;margin-bottom:6px">📂</div>
                 <div style="font-size:13px;font-weight:700;color:#1565c0">Haz clic o arrastra aquí</div>
-                <div style="font-size:11px;color:#888;margin-top:4px">JPG · PNG · PDF</div>
-                <div id="saitra-ia-nombre" style="font-size:11px;color:#2e7d32;margin-top:8px;font-weight:600"></div>
+                <div style="font-size:10px;color:#888;margin-top:4px">JPG · PNG · PDF · Varias imágenes del mismo proyecto</div>
               </div>
-              <input type="file" id="saitra-ia-input" accept="image/jpeg,image/png,application/pdf" style="display:none" onchange="saitraIAArchivoSel(this)">
+              <div id="saitra-ia-nombre" style="font-size:11px;margin-top:-2px;margin-bottom:8px"></div>
+              <input type="file" id="saitra-ia-input" accept="image/jpeg,image/png,application/pdf" multiple style="display:none" onchange="saitraIAArchivoSel(this)">
               <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px;padding:8px 12px;background:#f7f4ef;border-radius:6px;font-size:11px">
                 <label style="font-weight:600;color:var(--text-soft)">Tarifa:</label>
                 <select class="form-input" id="saitra-ia-tarifa" style="width:160px;font-size:11px">
@@ -2990,8 +2990,8 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
               </div>
               <div id="saitra-ia-analizando" style="display:none;text-align:center;padding:16px;font-size:12px;color:#1565c0">
                 <div style="font-size:24px;animation:spin 1.2s linear infinite;display:inline-block">⚙️</div>
-                <div style="margin-top:6px;font-weight:600">Analizando el plano con IA…</div>
-                <div style="font-size:10px;color:#888;margin-top:3px">Identificando módulos y cotejando con el catálogo</div>
+                <div style="margin-top:6px;font-weight:600">Analizando los planos con IA…</div>
+                <div style="font-size:10px;color:#888;margin-top:3px">Identificando módulos y cotejando con el catálogo · puede tardar más con varias imágenes</div>
               </div>
               <div style="display:flex;justify-content:flex-end;gap:8px">
                 <button class="btn btn-ghost btn-sm" onclick="saitraIACerrar()" style="font-size:11px">Cancelar</button>
@@ -3731,7 +3731,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
             </div>
             <div id="tb-ia-step1">
               <div style="background:#ede7f6;border:1px solid #b39ddb;border-radius:6px;padding:9px 12px;font-size:11px;color:#4a148c;margin-bottom:12px">
-                <strong>📌 Cómo funciona:</strong> Sube el plano (JPG, PNG o PDF). La IA leerá las etiquetas con flecha (formato <code>D1001 62cm 39cm</code>) y creará una lista revisable. Puedes seguir añadiendo módulos manualmente desde la tabla del catálogo — todo se suma en la valoración.
+                <strong>📌 Cómo funciona:</strong> Puedes subir <strong>una o varias imágenes</strong> del mismo proyecto (por ejemplo 3 paredes de una habitación). La IA las analizará todas en conjunto y creará una lista con los módulos sumados. Puedes seguir añadiendo módulos manualmente desde el catálogo — todo se acumula en la valoración.
               </div>
               <div id="tb-ia-dropzone" onclick="document.getElementById('tb-ia-input').click()"
                 style="border:2px dashed #b39ddb;border-radius:8px;padding:22px;text-align:center;cursor:pointer;background:#faf7fc;transition:background .2s;margin-bottom:10px"
@@ -3740,13 +3740,14 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
                 ondrop="tbIAOnDrop(event)">
                 <div style="font-size:26px;margin-bottom:6px">📂</div>
                 <div style="font-size:13px;font-weight:700;color:#6a1b9a">Haz clic o arrastra aquí</div>
-                <div style="font-size:10px;color:#888;margin-top:4px">JPG · PNG · PDF</div>
-                <div id="tb-ia-nombre" style="font-size:11px;color:#2e7d32;margin-top:6px;font-weight:600"></div>
+                <div style="font-size:10px;color:#888;margin-top:4px">JPG · PNG · PDF · Varias imágenes del mismo proyecto</div>
               </div>
-              <input type="file" id="tb-ia-input" accept="image/jpeg,image/png,application/pdf" style="display:none" onchange="tbIAArchivoSel(this)">
+              <div id="tb-ia-nombre" style="font-size:11px;margin-top:-2px;margin-bottom:8px"></div>
+              <input type="file" id="tb-ia-input" accept="image/jpeg,image/png,application/pdf" multiple style="display:none" onchange="tbIAArchivoSel(this)">
               <div id="tb-ia-analizando" style="display:none;text-align:center;padding:12px;font-size:11px;color:#6a1b9a">
                 <div style="font-size:22px;animation:spin 1.2s linear infinite;display:inline-block">⚙️</div>
-                <div style="margin-top:4px;font-weight:600">Analizando el plano con IA…</div>
+                <div style="margin-top:4px;font-weight:600">Analizando los planos con IA…</div>
+                <div style="font-size:9px;color:#888;margin-top:2px">El análisis puede tardar más con varias imágenes</div>
               </div>
               <div style="display:flex;justify-content:flex-end;gap:8px">
                 <button class="btn btn-ghost btn-sm" onclick="tbIACerrar()" style="font-size:11px">Cancelar</button>
@@ -14932,7 +14933,7 @@ function saitraAddModulo(){
 // LEER PLANO CON IA — Saitra (columna derecha, con chat y edición inline)
 // ═══════════════════════════════════════════════════════════════
 
-let _saitraIAFile    = null;
+let _saitraIAFiles   = [];   // múltiples imágenes del mismo proyecto
 let _saitraIAModulos = [];
 let _saitraIATarifa  = 3;
 let _saitraIAMargen  = 70;
@@ -14950,8 +14951,8 @@ function _saitraIAGenerarCatalogo(){
 }
 
 function saitraAbrirLeerPlano(){
-  _saitraIAFile = null; _saitraIAModulos = []; _saitraIAChatHist = [];
-  document.getElementById('saitra-ia-nombre').textContent = '';
+  _saitraIAFiles = []; _saitraIAModulos = []; _saitraIAChatHist = [];
+  document.getElementById('saitra-ia-nombre').innerHTML = '';
   document.getElementById('saitra-ia-btn-analizar').disabled = true;
   document.getElementById('saitra-ia-analizando').style.display = 'none';
   document.getElementById('saitra-ia-input').value = '';
@@ -15015,19 +15016,53 @@ function saitraIAVolverPaso1(){
 }
 
 function saitraIAArchivoSel(input){
-  const file = input.files[0]; if(!file) return;
-  _saitraIAFile = file;
-  document.getElementById('saitra-ia-nombre').textContent = '📄 ' + file.name + ' (' + (file.size/1024).toFixed(0) + ' KB)';
+  const files = Array.from(input.files || []);
+  if(!files.length) return;
+  _saitraIAFiles = _saitraIAFiles.concat(files);
+  _saitraIAActualizarListaArchivos();
   document.getElementById('saitra-ia-btn-analizar').disabled = false;
+  input.value = '';
 }
 
 function saitraIAOnDrop(e){
   e.preventDefault();
   document.getElementById('saitra-ia-dropzone').style.background = '#f8fbff';
-  const file = e.dataTransfer.files[0]; if(!file) return;
-  _saitraIAFile = file;
-  document.getElementById('saitra-ia-nombre').textContent = '📄 ' + file.name + ' (' + (file.size/1024).toFixed(0) + ' KB)';
+  const files = Array.from(e.dataTransfer.files || []);
+  if(!files.length) return;
+  _saitraIAFiles = _saitraIAFiles.concat(files);
+  _saitraIAActualizarListaArchivos();
   document.getElementById('saitra-ia-btn-analizar').disabled = false;
+}
+
+function _saitraIAActualizarListaArchivos(){
+  const el = document.getElementById('saitra-ia-nombre');
+  if(!_saitraIAFiles.length){ el.innerHTML = ''; return; }
+  const total = _saitraIAFiles.reduce((a,f)=>a+f.size, 0);
+  el.innerHTML =
+    '<div style="font-weight:700;color:#0d47a1;padding:4px 8px;background:#e3f2fd;border-radius:4px;display:flex;align-items:center;justify-content:space-between">'
+    +  '<span>📐 '+_saitraIAFiles.length+' imagen'+(_saitraIAFiles.length>1?'es':'')+' ('+(total/1024).toFixed(0)+' KB) — se analizarán juntas</span>'
+    +  '<span style="font-size:10px;color:#1565c0;cursor:pointer;text-decoration:underline" onclick="_saitraIAVaciarArchivos()">vaciar</span>'
+    +'</div>'
+    + _saitraIAFiles.map((f,i) =>
+      '<div style="padding:3px 8px;font-size:10px;color:#2e7d32;display:flex;align-items:center;justify-content:space-between;border-bottom:1px dotted #eee">'
+      +'<span>📄 '+(i+1)+'. '+f.name+' ('+(f.size/1024).toFixed(0)+' KB)</span>'
+      +'<span style="color:#c00;cursor:pointer;padding:0 4px;font-weight:700" onclick="_saitraIAQuitarArchivo('+i+')" title="Quitar">✕</span>'
+      +'</div>'
+    ).join('');
+}
+
+function _saitraIAQuitarArchivo(idx){
+  _saitraIAFiles.splice(idx, 1);
+  _saitraIAActualizarListaArchivos();
+  if(!_saitraIAFiles.length){
+    document.getElementById('saitra-ia-btn-analizar').disabled = true;
+  }
+}
+
+function _saitraIAVaciarArchivos(){
+  _saitraIAFiles = [];
+  _saitraIAActualizarListaArchivos();
+  document.getElementById('saitra-ia-btn-analizar').disabled = true;
 }
 
 function _saitraIAParseJSON(raw){
@@ -15387,7 +15422,7 @@ function _saitraIAañadirManual(tipoAdd){
 }
 
 async function saitraIAAnalizar(){
-  if(!_saitraIAFile){toast('Selecciona un archivo primero','error');return;}
+  if(!_saitraIAFiles || !_saitraIAFiles.length){toast('Selecciona al menos un archivo','error');return;}
   const key=window._ANTHROPIC_KEY||'';
   if(!key){toast('Configura tu API Key de Anthropic en Ajustes','error');return;}
   _saitraIATarifa=parseInt(document.getElementById('saitra-ia-tarifa').value)||3;
@@ -15395,11 +15430,33 @@ async function saitraIAAnalizar(){
   document.getElementById('saitra-ia-analizando').style.display='block';
   document.getElementById('saitra-ia-btn-analizar').disabled=true;
   try {
-    const base64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=()=>rej(new Error('Error leyendo archivo'));r.readAsDataURL(_saitraIAFile);});
-    const isPdf=_saitraIAFile.type==='application/pdf';
-    const mediaType=isPdf?'application/pdf':_saitraIAFile.type;
+    // Leer todas las imágenes en paralelo
+    const fileContents = await Promise.all(_saitraIAFiles.map(file => new Promise((res,rej) => {
+      const r = new FileReader();
+      r.onload = () => {
+        const b64 = r.result.split(',')[1];
+        const isPdf = file.type === 'application/pdf';
+        const mediaType = isPdf ? 'application/pdf' : file.type;
+        res(isPdf
+          ? {type:'document', source:{type:'base64', media_type:mediaType, data:b64}}
+          : {type:'image',    source:{type:'base64', media_type:mediaType, data:b64}}
+        );
+      };
+      r.onerror = () => rej(new Error('Error leyendo '+file.name));
+      r.readAsDataURL(file);
+    })));
+    const nImgs = _saitraIAFiles.length;
     const catalog=_saitraIAGenerarCatalogo();
     const prompt='Eres un técnico experto en el catálogo Saitra. Analiza el plano con MÁXIMA ATENCIÓN al OCR y genera la lista de módulos usando EXCLUSIVAMENTE las referencias del catálogo oficial.\n\n'
+      + (nImgs > 1 ?
+        '═══ MÚLTIPLES IMÁGENES (¡IMPORTANTE!) ═══\n'
+        +'Recibes '+nImgs+' imágenes del MISMO proyecto (distintas paredes/vistas). DEBES analizarlas\n'
+        +'TODAS y devolver TODOS los módulos en la misma lista "modulos", como si fueran un único plano.\n'
+        +'• NO separes por imagen. Devuelve una lista plana.\n'
+        +'• Si un módulo aparece EXACTAMENTE igual (misma ref, mismo ancho, mismo modelo) en dos\n'
+        +'  imágenes, cuéntalo UNA vez (es la misma pieza vista desde dos ángulos).\n'
+        +'• Si una misma ref tiene distintos anchos en distintas imágenes, son módulos distintos.\n\n'
+        : '')
       +'═══ FORMATO ESTRICTO DE LAS ETIQUETAS (plugin PAU Interiorismo) ═══\n'
       +'Cada etiqueta sigue esta sintaxis exacta:\n'
       +'   REF ANCHOcm MODELO [×N] [DESCRIPCIÓN] [NOTA]\n\n'
@@ -15460,13 +15517,12 @@ async function saitraIAAnalizar(){
       +'{"modulos":[{"ref":"PBP","ancho":60,"modelo":"M1","cant":1,"nota":"C izq., R der.","tipo":"bajo"}],'
       +'"extras":[{"desc":"Costado C 62,5x88","cant":1,"medidas":"62,5x88"},{"desc":"Regleta R 79","cant":1,"medidas":"79cm"}],'
       +'"observaciones":"notas generales: acabado global, cliente, proyecto, etc."}';
-    const userContent=isPdf
-      ?[{type:'document',source:{type:'base64',media_type:'application/pdf',data:base64}},{type:'text',text:prompt}]
-      :[{type:'image',source:{type:'base64',media_type:mediaType,data:base64}},{type:'text',text:prompt}];
+    // Todas las imágenes + el prompt en un solo mensaje
+    const userContent = [...fileContents, {type:'text', text:prompt}];
     _saitraIAChatHist=[{role:'user',content:userContent}];
     const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
       headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:4000,
+      body:JSON.stringify({model:'claude-sonnet-4-20250514', max_tokens: Math.min(8000, 3000 + nImgs * 1500),
         system:'Eres un experto en catálogos Saitra. Responde ÚNICAMENTE con JSON válido puro, sin markdown, sin backticks.',
         messages:_saitraIAChatHist})});
     if(!resp.ok){let m='Error API '+resp.status;try{const e=await resp.json();m=e?.error?.message||m;}catch(e){}throw new Error(m);}
@@ -26299,13 +26355,13 @@ async function tbExportarPresupuesto(){
 // LEER PLANO CON IA — Tobisa (Opción B: IA lee etiquetas, validamos contra _tbData)
 // ═══════════════════════════════════════════════════════════════
 
-let _tbIAFile     = null;
+let _tbIAFiles    = [];   // múltiples imágenes del mismo proyecto
 let _tbIAModulos  = [];
 let _tbIAChatHist = [];
 
 function tbAbrirLeerPlano(){
-  _tbIAFile = null; _tbIAModulos = []; _tbIAChatHist = [];
-  document.getElementById('tb-ia-nombre').textContent = '';
+  _tbIAFiles = []; _tbIAModulos = []; _tbIAChatHist = [];
+  document.getElementById('tb-ia-nombre').innerHTML = '';
   document.getElementById('tb-ia-btn-analizar').disabled = true;
   document.getElementById('tb-ia-analizando').style.display = 'none';
   document.getElementById('tb-ia-input').value = '';
@@ -26375,19 +26431,54 @@ function tbIAVolverPaso1(){
 }
 
 function tbIAArchivoSel(input){
-  const file = input.files[0]; if(!file) return;
-  _tbIAFile = file;
-  document.getElementById('tb-ia-nombre').textContent = '📄 ' + file.name + ' (' + (file.size/1024).toFixed(0) + ' KB)';
+  const files = Array.from(input.files || []);
+  if(!files.length) return;
+  _tbIAFiles = _tbIAFiles.concat(files);
+  _tbIAActualizarListaArchivos();
   document.getElementById('tb-ia-btn-analizar').disabled = false;
+  // Reset del input para permitir volver a añadir el mismo archivo en otra selección
+  input.value = '';
 }
 
 function tbIAOnDrop(e){
   e.preventDefault();
   document.getElementById('tb-ia-dropzone').style.background = '#faf7fc';
-  const file = e.dataTransfer.files[0]; if(!file) return;
-  _tbIAFile = file;
-  document.getElementById('tb-ia-nombre').textContent = '📄 ' + file.name + ' (' + (file.size/1024).toFixed(0) + ' KB)';
+  const files = Array.from(e.dataTransfer.files || []);
+  if(!files.length) return;
+  _tbIAFiles = _tbIAFiles.concat(files);
+  _tbIAActualizarListaArchivos();
   document.getElementById('tb-ia-btn-analizar').disabled = false;
+}
+
+function _tbIAActualizarListaArchivos(){
+  const el = document.getElementById('tb-ia-nombre');
+  if(!_tbIAFiles.length){ el.innerHTML = ''; return; }
+  const total = _tbIAFiles.reduce((a,f)=>a+f.size, 0);
+  el.innerHTML =
+    '<div style="font-weight:700;color:#4a148c;padding:4px 8px;background:#ede7f6;border-radius:4px;display:flex;align-items:center;justify-content:space-between">'
+    +  '<span>📐 '+_tbIAFiles.length+' imagen'+(_tbIAFiles.length>1?'es':'')+' ('+(total/1024).toFixed(0)+' KB) — se analizarán juntas</span>'
+    +  '<span style="font-size:10px;color:#6a1b9a;cursor:pointer;text-decoration:underline" onclick="_tbIAVaciarArchivos()">vaciar</span>'
+    +'</div>'
+    + _tbIAFiles.map((f,i) =>
+      '<div style="padding:3px 8px;font-size:10px;color:#2e7d32;display:flex;align-items:center;justify-content:space-between;border-bottom:1px dotted #eee">'
+      +'<span>📄 '+(i+1)+'. '+f.name+' ('+(f.size/1024).toFixed(0)+' KB)</span>'
+      +'<span style="color:#c00;cursor:pointer;padding:0 4px;font-weight:700" onclick="_tbIAQuitarArchivo('+i+')" title="Quitar">✕</span>'
+      +'</div>'
+    ).join('');
+}
+
+function _tbIAQuitarArchivo(idx){
+  _tbIAFiles.splice(idx, 1);
+  _tbIAActualizarListaArchivos();
+  if(!_tbIAFiles.length){
+    document.getElementById('tb-ia-btn-analizar').disabled = true;
+  }
+}
+
+function _tbIAVaciarArchivos(){
+  _tbIAFiles = [];
+  _tbIAActualizarListaArchivos();
+  document.getElementById('tb-ia-btn-analizar').disabled = true;
 }
 
 function _tbIAParseJSON(raw){
@@ -26555,7 +26646,7 @@ function _tbIAGenerarHintCatalogo(){
 }
 
 async function tbIAAnalizar(){
-  if(!_tbIAFile){ toast('Selecciona un archivo primero','error'); return; }
+  if(!_tbIAFiles || !_tbIAFiles.length){ toast('Selecciona al menos un archivo','error'); return; }
   const key = window._ANTHROPIC_KEY || '';
   if(!key){ toast('Configura tu API Key de Anthropic en Ajustes','error'); return; }
   if(!_tbData || !_tbData.length){ toast('El catálogo Tobisa no está cargado. Entra al panel Tobisa primero.','error'); return; }
@@ -26563,19 +26654,41 @@ async function tbIAAnalizar(){
   document.getElementById('tb-ia-analizando').style.display = 'block';
   document.getElementById('tb-ia-btn-analizar').disabled = true;
   try {
-    const base64 = await new Promise((res,rej) => {
+    // Leer todas las imágenes a base64 en paralelo
+    const fileContents = await Promise.all(_tbIAFiles.map(file => new Promise((res,rej) => {
       const r = new FileReader();
-      r.onload = () => res(r.result.split(',')[1]);
-      r.onerror = () => rej(new Error('Error leyendo archivo'));
-      r.readAsDataURL(_tbIAFile);
-    });
-    const isPdf = _tbIAFile.type === 'application/pdf';
-    const mediaType = isPdf ? 'application/pdf' : _tbIAFile.type;
+      r.onload = () => {
+        const b64 = r.result.split(',')[1];
+        const isPdf = file.type === 'application/pdf';
+        const mediaType = isPdf ? 'application/pdf' : file.type;
+        res(isPdf
+          ? {type:'document', source:{type:'base64', media_type:mediaType, data:b64}}
+          : {type:'image',    source:{type:'base64', media_type:mediaType, data:b64}}
+        );
+      };
+      r.onerror = () => rej(new Error('Error leyendo '+file.name));
+      r.readAsDataURL(file);
+    })));
     const hintCat = _tbIAGenerarHintCatalogo();
+    const nImgs = _tbIAFiles.length;
 
     const prompt =
       'Eres un técnico experto en el catálogo Tobisa (habitaciones juveniles, armarios y vestidores). '
       +'Analiza el plano de SketchUp con MÁXIMA ATENCIÓN al OCR y extrae cada etiqueta de módulo.\n\n'
+
+      + (nImgs > 1 ?
+        '═══ MÚLTIPLES IMÁGENES (¡IMPORTANTE!) ═══\n'
+        +'Recibes '+nImgs+' imágenes que corresponden al MISMO proyecto (distintas paredes o vistas\n'
+        +'de la misma estancia). DEBES analizarlas TODAS y devolver TODOS los módulos encontrados\n'
+        +'en la misma lista "modulos" — como si fueran un único plano.\n'
+        +'• NO separes los módulos por imagen. Devuelve una única lista plana.\n'
+        +'• NO deduzques cantidades entre imágenes: si una ref aparece sólo en la pared A con una\n'
+        +'  medida concreta, añádela una vez.\n'
+        +'• Si la MISMA ref con las MISMAS medidas aparece en dos imágenes, probablemente es la\n'
+        +'  misma pieza vista desde otro ángulo — cuéntala UNA sola vez.\n'
+        +'• Si la misma ref aparece con medidas DIFERENTES en distintas imágenes, son módulos\n'
+        +'  distintos — añádelos por separado.\n\n'
+        : '')
 
       +'═══ FORMATO ESTRICTO DE LAS ETIQUETAS (plugin PAU Interiorismo) ═══\n'
       +'Cada etiqueta sigue esta sintaxis exacta:\n'
@@ -26659,9 +26772,8 @@ async function tbIAAnalizar(){
       +'"observaciones":"..."}\n\n'
       +'IMPORTANTE: "ancho"=L (dimensión horizontal del alzado), "alto"=H (dimensión vertical), "prof"=P.';
 
-    const userContent = isPdf
-      ? [{type:'document', source:{type:'base64', media_type:'application/pdf', data:base64}}, {type:'text', text:prompt}]
-      : [{type:'image', source:{type:'base64', media_type:mediaType, data:base64}}, {type:'text', text:prompt}];
+    // Todas las imágenes + prompt en el mismo mensaje para que la IA las trate juntas
+    const userContent = [...fileContents, {type:'text', text:prompt}];
     _tbIAChatHist = [{role:'user', content:userContent}];
 
     const resp = await fetch('https://api.anthropic.com/v1/messages', {
@@ -26669,7 +26781,7 @@ async function tbIAAnalizar(){
       headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       body: JSON.stringify({
         model:'claude-sonnet-4-20250514',
-        max_tokens:4000,
+        max_tokens: Math.min(8000, 3000 + nImgs * 1500),
         system:'Eres un experto en el catálogo Tobisa. Responde ÚNICAMENTE con JSON válido puro, sin markdown, sin backticks.',
         messages:_tbIAChatHist
       })
