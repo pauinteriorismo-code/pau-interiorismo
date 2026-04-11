@@ -2962,8 +2962,32 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
               <span id="saitra-ia-paso-lbl" style="margin-left:auto;font-size:10px;background:#e3f2fd;color:#1565c0;padding:2px 8px;border-radius:10px;font-weight:600">Paso 1 de 2 — Subir plano</span>
             </div>
             <div id="saitra-ia-step1">
+              <!-- IMPORTAR DESDE PLUGIN (100% fiable, sin OCR) -->
+              <div style="background:linear-gradient(135deg,#e8f5e9,#c8e6c9);border:1px solid #66bb6a;border-radius:8px;padding:10px 12px;margin-bottom:10px">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                  <span style="font-size:16px">📥</span>
+                  <strong style="color:#1b5e20;font-size:12px">Opción recomendada · Importar lista del plugin SketchUp</strong>
+                </div>
+                <div style="font-size:10px;color:#2e7d32;margin-bottom:8px;line-height:1.4">
+                  Si el plano lo hiciste con el plugin Saitra de PAU, usa su botón <em>📋 Exportar lista</em> (pestaña Proyecto), cópialo y pégalo aquí. Es <strong>100 % fiable</strong>, sin IA, sin errores de OCR.
+                </div>
+                <div style="display:flex;gap:6px;align-items:stretch">
+                  <button class="btn btn-sm" onclick="saitraIAAbrirImportPlugin()" style="flex:1;background:#2e7d32;color:white;border:none;font-weight:700;font-size:11px;padding:8px">📋 Pegar / cargar lista del plugin</button>
+                </div>
+                <div id="saitra-ia-import-plugin-wrap" style="display:none;margin-top:8px">
+                  <textarea id="saitra-ia-import-plugin-text" placeholder='Pega aquí el JSON exportado desde el plugin (empieza por {"version":"PAU_SAITRA_V1"…})' rows="5"
+                    style="width:100%;font-family:monospace;font-size:9px;padding:6px;border:1px solid #81c784;border-radius:4px;resize:vertical;box-sizing:border-box"></textarea>
+                  <div style="display:flex;gap:6px;margin-top:6px;align-items:center">
+                    <input type="file" id="saitra-ia-import-plugin-file" accept=".json,application/json" style="flex:1;font-size:10px" onchange="saitraIACargarArchivoPlugin(this)">
+                    <button class="btn btn-sm" onclick="saitraIAImportarPlugin()" style="background:#2e7d32;color:white;border:none;font-weight:700;font-size:11px;padding:6px 12px">✓ Importar</button>
+                    <button class="btn btn-ghost btn-sm" onclick="saitraIACerrarImportPlugin()" style="font-size:10px;padding:6px 10px">Cancelar</button>
+                  </div>
+                  <div id="saitra-ia-import-plugin-err" style="display:none;margin-top:6px;padding:6px 8px;background:#ffebee;border:1px solid #ef9a9a;border-radius:4px;font-size:10px;color:#b71c1c"></div>
+                </div>
+              </div>
+
               <div style="background:#e3f2fd;border:1px solid #90caf9;border-radius:6px;padding:9px 12px;font-size:11px;color:#0d47a1;margin-bottom:12px">
-                <strong>📌 Cómo funciona:</strong> Puedes subir <strong>una o varias imágenes</strong> acotadas del mismo proyecto (por ejemplo varias paredes de una cocina). La IA identifica los módulos de todas las imágenes y los suma en una única valoración.
+                <strong>📌 O usa IA (fallback):</strong> Si no tienes el .skp original, puedes subir <strong>una o varias imágenes</strong> acotadas del plano. <em>Menos fiable, revisa siempre las medidas antes de valorar.</em>
               </div>
               <div id="saitra-ia-dropzone" onclick="document.getElementById('saitra-ia-input').click()"
                 style="border:2px dashed #90caf9;border-radius:8px;padding:22px;text-align:center;cursor:pointer;background:#f8fbff;transition:background .2s;margin-bottom:10px"
@@ -3730,8 +3754,32 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
               <span id="tb-ia-paso-lbl" style="margin-left:auto;font-size:10px;background:#ede7f6;color:#4a148c;padding:2px 8px;border-radius:10px;font-weight:600">Paso 1 de 2 — Subir plano</span>
             </div>
             <div id="tb-ia-step1">
+              <!-- IMPORTAR DESDE PLUGIN (100% fiable, sin OCR) -->
+              <div style="background:linear-gradient(135deg,#e8f5e9,#c8e6c9);border:1px solid #66bb6a;border-radius:8px;padding:10px 12px;margin-bottom:10px">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                  <span style="font-size:16px">📥</span>
+                  <strong style="color:#1b5e20;font-size:12px">Opción recomendada · Importar lista del plugin SketchUp</strong>
+                </div>
+                <div style="font-size:10px;color:#2e7d32;margin-bottom:8px;line-height:1.4">
+                  Si el plano lo hiciste con el plugin Tobisa de PAU, usa su botón <em>📋 Exportar lista</em> (pestaña Proyecto), cópialo y pégalo aquí. Es <strong>100 % fiable</strong>, sin IA, sin errores de OCR.
+                </div>
+                <div style="display:flex;gap:6px;align-items:stretch">
+                  <button class="btn btn-sm" onclick="tbIAAbrirImportPlugin()" style="flex:1;background:#2e7d32;color:white;border:none;font-weight:700;font-size:11px;padding:8px">📋 Pegar / cargar lista del plugin</button>
+                </div>
+                <div id="tb-ia-import-plugin-wrap" style="display:none;margin-top:8px">
+                  <textarea id="tb-ia-import-plugin-text" placeholder='Pega aquí el JSON exportado desde el plugin (empieza por {"version":"PAU_TOBISA_V1"…})' rows="5"
+                    style="width:100%;font-family:monospace;font-size:9px;padding:6px;border:1px solid #81c784;border-radius:4px;resize:vertical;box-sizing:border-box"></textarea>
+                  <div style="display:flex;gap:6px;margin-top:6px;align-items:center">
+                    <input type="file" id="tb-ia-import-plugin-file" accept=".json,application/json" style="flex:1;font-size:10px" onchange="tbIACargarArchivoPlugin(this)">
+                    <button class="btn btn-sm" onclick="tbIAImportarPlugin()" style="background:#2e7d32;color:white;border:none;font-weight:700;font-size:11px;padding:6px 12px">✓ Importar</button>
+                    <button class="btn btn-ghost btn-sm" onclick="tbIACerrarImportPlugin()" style="font-size:10px;padding:6px 10px">Cancelar</button>
+                  </div>
+                  <div id="tb-ia-import-plugin-err" style="display:none;margin-top:6px;padding:6px 8px;background:#ffebee;border:1px solid #ef9a9a;border-radius:4px;font-size:10px;color:#b71c1c"></div>
+                </div>
+              </div>
+
               <div style="background:#ede7f6;border:1px solid #b39ddb;border-radius:6px;padding:9px 12px;font-size:11px;color:#4a148c;margin-bottom:12px">
-                <strong>📌 Cómo funciona:</strong> Puedes subir <strong>una o varias imágenes</strong> del mismo proyecto (por ejemplo 3 paredes de una habitación). La IA las analizará todas en conjunto y creará una lista con los módulos sumados. Puedes seguir añadiendo módulos manualmente desde el catálogo — todo se acumula en la valoración.
+                <strong>📌 O usa IA (fallback):</strong> Si no tienes el .skp original, puedes subir <strong>una o varias imágenes</strong> del plano. La IA las analizará y creará una lista con los módulos. <em>Menos fiable, revisa siempre las medidas antes de valorar.</em>
               </div>
               <div id="tb-ia-dropzone" onclick="document.getElementById('tb-ia-input').click()"
                 style="border:2px dashed #b39ddb;border-radius:8px;padding:22px;text-align:center;cursor:pointer;background:#faf7fc;transition:background .2s;margin-bottom:10px"
@@ -15421,6 +15469,115 @@ function _saitraIAañadirManual(tipoAdd){
   setTimeout(()=>_saitraIAToggleEdit(newIdx),50);
 }
 
+// ═══════════════════════════════════════════════════════════════
+// IMPORTAR DESDE PLUGIN SKETCHUP — Saitra, sin OCR, 100% fiable
+// ═══════════════════════════════════════════════════════════════
+function saitraIAAbrirImportPlugin(){
+  document.getElementById('saitra-ia-import-plugin-wrap').style.display = 'block';
+  document.getElementById('saitra-ia-import-plugin-err').style.display = 'none';
+  document.getElementById('saitra-ia-import-plugin-text').focus();
+}
+
+function saitraIACerrarImportPlugin(){
+  document.getElementById('saitra-ia-import-plugin-wrap').style.display = 'none';
+  document.getElementById('saitra-ia-import-plugin-text').value = '';
+  document.getElementById('saitra-ia-import-plugin-err').style.display = 'none';
+  const f = document.getElementById('saitra-ia-import-plugin-file');
+  if(f) f.value = '';
+}
+
+function saitraIACargarArchivoPlugin(input){
+  const file = input.files && input.files[0];
+  if(!file) return;
+  const r = new FileReader();
+  r.onload = () => { document.getElementById('saitra-ia-import-plugin-text').value = r.result; };
+  r.onerror = () => _saitraIAImportError('Error leyendo el archivo: '+file.name);
+  r.readAsText(file, 'utf-8');
+}
+
+function _saitraIAImportError(msg){
+  const el = document.getElementById('saitra-ia-import-plugin-err');
+  el.style.display = 'block';
+  el.textContent = '⚠️ ' + msg;
+}
+
+function saitraIAImportarPlugin(){
+  const raw = (document.getElementById('saitra-ia-import-plugin-text').value || '').trim();
+  if(!raw){ _saitraIAImportError('Pega el JSON del plugin o carga el archivo .json.'); return; }
+  let data;
+  try { data = JSON.parse(raw); }
+  catch(e){ _saitraIAImportError('JSON inválido: '+e.message); return; }
+  if(!data || data.version !== 'PAU_SAITRA_V1'){
+    _saitraIAImportError('El JSON no es del plugin Saitra (falta version=PAU_SAITRA_V1). Asegúrate de copiar el texto tal cual lo da el plugin.');
+    return;
+  }
+  const modulos = Array.isArray(data.modulos) ? data.modulos : [];
+  if(!modulos.length){ _saitraIAImportError('El JSON no contiene módulos.'); return; }
+
+  // Auto-rellenar config del proyecto si viene en el export (best-effort)
+  if(data.proyecto && typeof data.proyecto === 'object'){
+    const p = data.proyecto;
+    const setIfExists = (id, val) => {
+      const el = document.getElementById(id);
+      if(!el || val == null || val === '') return;
+      const v = String(val);
+      if(el.tagName === 'SELECT'){
+        const match = Array.from(el.options||[]).some(o => o.value === v);
+        if(match){ el.value = v; el.dispatchEvent(new Event('change')); }
+      } else {
+        el.value = v;
+        el.dispatchEvent(new Event('change'));
+      }
+    };
+    setIfExists('s-proyecto',  p.proyecto);
+    setIfExists('s-margen',    p.margen);
+    setIfExists('s-iva-global',p.iva);
+    setIfExists('s-casco',     p.casco);
+    setIfExists('s-col-1',     p.tarifa1);
+    setIfExists('s-col-2',     p.tarifa2);
+    setIfExists('s-col-3',     p.tarifa3);
+  }
+
+  // Leer los parámetros actuales para calcular costes/PVP
+  _saitraIATarifa = parseInt(document.getElementById('saitra-ia-tarifa').value) || 3;
+  _saitraIAMargen = parseFloat(document.getElementById('saitra-ia-margen').value) || 70;
+
+  // Normalizar módulos al formato que espera _saitraIACalcularModulos
+  // Plugin: {ref, ancho, alto, fam, modelo, cant, nota, desc_adicional}
+  const lista = modulos.map(m => ({
+    ref:    (m.ref || '').toString().trim(),
+    ancho:  parseFloat(m.ancho) || 0,
+    alto:   parseFloat(m.alto)  || 0,
+    modelo: (m.modelo || 'M1').toString(),
+    cant:   parseInt(m.cant)    || 1,
+    nota:   (m.nota || '').toString().trim() + (m.desc_adicional ? (m.nota ? ' · ' : '') + m.desc_adicional : ''),
+  }));
+
+  _saitraIAModulos = _saitraIACalcularModulos(lista, _saitraIATarifa, _saitraIAMargen);
+  _saitraIARenderLista();
+  _saitraIASyncLineas();
+
+  // Observaciones breves
+  const obs = document.getElementById('saitra-ia-obs');
+  if(data.proyecto){
+    const p = data.proyecto;
+    const bits = [];
+    if(p.proyecto) bits.push('<strong>Proyecto:</strong> '+p.proyecto);
+    if(p.cliente)  bits.push('<strong>Cliente:</strong> '+p.cliente);
+    if(p.casco)    bits.push('<strong>Casco:</strong> '+p.casco);
+    if(p.frente1)  bits.push('<strong>F1:</strong> '+p.frente1);
+    if(bits.length){
+      obs.style.display = 'block';
+      obs.innerHTML = '📋 Importado del plugin · ' + bits.join(' · ');
+    }
+  }
+
+  document.getElementById('saitra-ia-step1').style.display = 'none';
+  document.getElementById('saitra-ia-step2').style.display = 'block';
+  document.getElementById('saitra-ia-paso-lbl').textContent = 'Paso 2 de 2 — Revisión y ajuste';
+  toast('✅ '+lista.length+' módulos importados del plugin Saitra (100% fiable)');
+}
+
 async function saitraIAAnalizar(){
   if(!_saitraIAFiles || !_saitraIAFiles.length){toast('Selecciona al menos un archivo','error');return;}
   const key=window._ANTHROPIC_KEY||'';
@@ -26632,6 +26789,25 @@ function _tbIAValidarModulos(lista){
     // Ajuste M/L: si el producto se cobra por metro lineal, el precio se
     // multiplica por L/100
     const ajuste = _tbAjustarML(p, anchoF, baseCoste, basePvp);
+    // Verificación de consistencia: compara medidas de la IA con las del catálogo.
+    // Si desvían más del 50%, marcamos como "sospechoso" para que el usuario lo
+    // revise antes de valorar. Esto NO afecta al cálculo, solo al render.
+    const sospechas = [];
+    const catAlto  = parseFloat(p.alto)  || null;
+    const catAncho = parseFloat(p.ancho) || null;
+    const catProf  = parseFloat(p.fondo) || null;
+    // Desviación "grave": más del 50% relativo Y al menos 10cm absolutos.
+    // El doble umbral evita falsos positivos en estantes finos (5cm vs 3cm
+    // serían 40% relativo pero solo 2cm absolutos, no merece aviso).
+    const desvia = (v, ref) => {
+      if(v == null || ref == null || ref === 0) return false;
+      const absDiff = Math.abs(v - ref);
+      const relDiff = absDiff / ref;
+      return relDiff > 0.5 && absDiff >= 10;
+    };
+    if(mH != null && catAlto  && desvia(mH, catAlto))  sospechas.push('H='+mH+' vs catálogo '+catAlto);
+    if(mL != null && catAncho && desvia(mL, catAncho)) sospechas.push('L='+mL+' vs catálogo '+catAncho);
+    if(mP != null && catProf  && desvia(mP, catProf))  sospechas.push('P='+mP+' vs catálogo '+catProf);
     return {
       ...m, idx, ref, valido:true,
       activo: m.activo !== false,
@@ -26645,7 +26821,9 @@ function _tbIAValidarModulos(lista){
       fondo: profF  != null ? profF  : '',
       acabado: acabadoOverride,
       nota: notaBase,
-      cant: m.cant || 1
+      cant: m.cant || 1,
+      sospechoso: sospechas.length > 0,
+      sospechaMsg: sospechas.join(' · ')
     };
   });
 }
@@ -26715,14 +26893,18 @@ function _tbIARenderLista(){
         +'</div></div>';
     }
     const activo = m.activo !== false;
-    const bgRow = activo ? bg : '#f5f5f5';
+    const sospechoso = m.sospechoso === true;
+    const bgRow = sospechoso ? '#fff8e1' : (activo ? bg : '#f5f5f5');
+    const borderRow = sospechoso ? '2px solid #ffb300' : '1px solid var(--border)';
     const opaque = activo ? '1' : '.5';
-    return '<div id="tbIArow-'+m.idx+'" style="border-bottom:1px solid var(--border);background:'+bgRow+';padding:7px 10px;opacity:'+opaque+'">'
+    return '<div id="tbIArow-'+m.idx+'" style="border-bottom:'+borderRow+';background:'+bgRow+';padding:7px 10px;opacity:'+opaque+'">'
       +'<div style="display:flex;align-items:center;gap:6px">'
       +'<input type="checkbox" '+(activo?'checked':'')+' onchange="_tbIAToggleActivo('+m.idx+')" title="Incluir en la valoración" style="width:14px;height:14px;cursor:pointer">'
-      +'<span style="font-weight:700;font-family:monospace;font-size:11px;color:#6a1b9a;width:55px;flex-shrink:0">'+m.ref+'</span>'
+      +(sospechoso ? '<span title="'+(m.sospechaMsg||'').replace(/"/g,'&quot;')+'" style="font-size:12px;color:#e65100;flex-shrink:0">⚠️</span>' : '')
+      +'<span style="font-weight:700;font-family:monospace;font-size:11px;color:'+(sospechoso?'#e65100':'#6a1b9a')+';width:55px;flex-shrink:0">'+m.ref+'</span>'
       +'<div style="flex:1;font-size:11px;min-width:0;overflow:hidden">'
       +'<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+(m.desc||'').replace(/"/g,'&quot;')+'">'+(m.desc||'')+'</div>'
+      +(sospechoso?'<div style="font-size:10px;color:#e65100;font-weight:600">⚠️ Revisa medidas · '+m.sospechaMsg+'</div>':'')
       +(m.nota?'<div style="font-size:10px;color:#6a1b9a;font-style:italic">📝 '+m.nota+'</div>':'')
       +'</div>'
       +'<span style="font-size:10px;color:var(--text-soft);width:80px;text-align:right;flex-shrink:0">'+(m.ancho||'?')+'×'+(m.alto||'?')+' cm</span>'
@@ -26747,6 +26929,125 @@ function _tbIARenderLista(){
   document.getElementById('tb-ia-resumen').innerHTML =
     '<span>'+activos+' activos · '+validos+' válidos / '+_tbIAModulos.length+' detectados</span>'
     +'<span>Coste: '+fE(totalCoste)+' · PVP s/IVA: '+fE(totalPvp)+'</span>';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// IMPORTAR DESDE PLUGIN SKETCHUP — sin OCR, 100% fiable
+// Lee el JSON exportado por el plugin tobisa_cocinas.rb y lo convierte
+// directamente en módulos validados contra _tbData.
+// ═══════════════════════════════════════════════════════════════
+function tbIAAbrirImportPlugin(){
+  document.getElementById('tb-ia-import-plugin-wrap').style.display = 'block';
+  document.getElementById('tb-ia-import-plugin-err').style.display = 'none';
+  document.getElementById('tb-ia-import-plugin-text').focus();
+}
+
+function tbIACerrarImportPlugin(){
+  document.getElementById('tb-ia-import-plugin-wrap').style.display = 'none';
+  document.getElementById('tb-ia-import-plugin-text').value = '';
+  document.getElementById('tb-ia-import-plugin-err').style.display = 'none';
+  const f = document.getElementById('tb-ia-import-plugin-file');
+  if(f) f.value = '';
+}
+
+function tbIACargarArchivoPlugin(input){
+  const file = input.files && input.files[0];
+  if(!file) return;
+  const r = new FileReader();
+  r.onload = () => { document.getElementById('tb-ia-import-plugin-text').value = r.result; };
+  r.onerror = () => _tbIAImportError('Error leyendo el archivo: '+file.name);
+  r.readAsText(file, 'utf-8');
+}
+
+function _tbIAImportError(msg){
+  const el = document.getElementById('tb-ia-import-plugin-err');
+  el.style.display = 'block';
+  el.textContent = '⚠️ ' + msg;
+}
+
+function tbIAImportarPlugin(){
+  if(!_tbData || !_tbData.length){
+    _tbIAImportError('Espera a que cargue el catálogo Tobisa antes de importar.');
+    return;
+  }
+  const raw = (document.getElementById('tb-ia-import-plugin-text').value || '').trim();
+  if(!raw){ _tbIAImportError('Pega el JSON del plugin o carga el archivo .json.'); return; }
+  let data;
+  try { data = JSON.parse(raw); }
+  catch(e){ _tbIAImportError('JSON inválido: '+e.message); return; }
+  if(!data || data.version !== 'PAU_TOBISA_V1'){
+    _tbIAImportError('El JSON no es del plugin Tobisa (falta version=PAU_TOBISA_V1). Asegúrate de copiar el texto tal cual lo da el plugin.');
+    return;
+  }
+  const modulos = Array.isArray(data.modulos) ? data.modulos : [];
+  if(!modulos.length){
+    _tbIAImportError('El JSON no contiene módulos.');
+    return;
+  }
+
+  // 1) Auto-rellenar config del proyecto si viene en el export
+  if(data.proyecto && typeof data.proyecto === 'object'){
+    const p = data.proyecto;
+    const setIfPresent = (id, val) => {
+      const el = document.getElementById(id);
+      if(el && val !== undefined && val !== null && String(val).length){ el.value = String(val); el.dispatchEvent(new Event('change')); }
+    };
+    // Cliente / proyecto / versión están en los selectores globales del panel Tobisa.
+    // Los selectores de cliente/proyecto se rellenan asincrónicamente — sólo asignamos
+    // si el valor existe como <option>, si no lo dejamos tal cual.
+    const setSelIfExists = (id, val) => {
+      const el = document.getElementById(id);
+      if(!el || val == null || val === '') return;
+      const v = String(val);
+      const match = Array.from(el.options||[]).some(o => o.value === v);
+      if(match){ el.value = v; el.dispatchEvent(new Event('change')); }
+    };
+    setSelIfExists('tb-cliente',  p.cliente);
+    setSelIfExists('tb-proyecto', p.proyecto);
+    setSelIfExists('tb-version',  p.version);
+    setSelIfExists('tb-acabado',  p.acabado);
+    setIfPresent('tb-dto1', p.dto1);
+    setIfPresent('tb-dto2', p.dto2);
+  }
+
+  // 2) Normalizar módulos al formato que espera _tbIAValidarModulos
+  // El plugin usa: {ref, alto, ancho, prof, cant, acabado, nota, fam, sub, desc}
+  // _tbIAValidarModulos usa: {ref, alto, ancho, prof, cant, acabado, nota}
+  const lista = modulos.map(m => ({
+    ref:     (m.ref || '').toString().toUpperCase().trim(),
+    alto:    parseFloat(m.alto)  || null,
+    ancho:   parseFloat(m.ancho) || null,
+    prof:    parseFloat(m.prof)  || null,
+    cant:    parseInt(m.cant)    || 1,
+    acabado: (m.acabado || '').toString().trim(),
+    nota:    (m.nota || '').toString().trim(),
+  }));
+
+  // 3) Pasar por el mismo validador que usa la IA
+  _tbIAModulos = _tbIAValidarModulos(lista);
+  _tbIARenderLista();
+  _tbIASyncLineas();
+
+  // 4) Mostrar observaciones básicas
+  const obs = document.getElementById('tb-ia-obs');
+  if(data.proyecto){
+    const p = data.proyecto;
+    const bits = [];
+    if(p.proyecto) bits.push('<strong>Proyecto:</strong> '+p.proyecto);
+    if(p.cliente)  bits.push('<strong>Cliente:</strong> '+p.cliente);
+    if(p.version)  bits.push('<strong>Versión:</strong> '+p.version);
+    if(p.acabado)  bits.push('<strong>Acabado:</strong> '+p.acabado);
+    if(bits.length){
+      obs.style.display = 'block';
+      obs.innerHTML = '📋 Importado del plugin · ' + bits.join(' · ');
+    }
+  }
+
+  // 5) Ir directo al paso 2
+  document.getElementById('tb-ia-step1').style.display = 'none';
+  document.getElementById('tb-ia-step2').style.display = 'block';
+  document.getElementById('tb-ia-paso-lbl').textContent = 'Paso 2 de 2 — Revisión y ajuste';
+  toast('✅ '+lista.length+' módulos importados del plugin Tobisa (100% fiable)');
 }
 
 function _tbIAGenerarHintCatalogo(){

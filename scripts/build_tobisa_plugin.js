@@ -315,7 +315,78 @@ module PauInteriorismo
         d.execute_script("window._mig_done(#{result[:migrated]}, #{result[:skipped]});")
       end
 
+      # Exportar lista JSON con todos los módulos Tobisa del modelo activo.
+      # Lee directamente los atributos PauTobisa de cada ComponentDefinition —
+      # es 100% fiable, no depende de OCR. Copia al portapapeles y guarda
+      # un .json junto al .skp si el modelo está guardado.
+      dlg.add_action_callback('export') do |d, _p|
+        data = export_lista_json
+        if data.nil?
+          d.execute_script("window._exportResult(null, null, 'No hay modelo activo.');")
+        elsif data[:count] == 0
+          d.execute_script("window._exportResult(null, null, 'No se encontró ningún módulo Tobisa en el modelo. Inserta módulos con el plugin antes de exportar.');")
+        else
+          json_js  = data[:json].to_json  # escape para JS string literal
+          path_js  = (data[:path] || '').to_json
+          err_js   = ''.to_json
+          d.execute_script("window._exportResult(#{json_js}, #{path_js}, #{err_js}, #{data[:count]});")
+        end
+      end
+
       dlg.show
+    end
+
+    # Genera el JSON de exportación leyendo los atributos PauTobisa de cada
+    # definición de componente del modelo. Devuelve hash {json, path, count}
+    # o nil si no hay modelo activo.
+    def self.export_lista_json
+      mod = Sketchup.active_model
+      return nil unless mod
+      modulos = []
+      mod.definitions.each do |d|
+        ref = d.get_attribute('PauTobisa', 'ref', nil)
+        next unless ref
+        inst_count = d.count_instances rescue 0
+        next if inst_count == 0
+        per_inst = (d.get_attribute('PauTobisa', 'cant', 1).to_i rescue 1)
+        per_inst = 1 if per_inst < 1
+        total_cant = per_inst * inst_count
+        modulos << {
+          'ref'     => ref.to_s,
+          'alto'    => (d.get_attribute('PauTobisa', 'alto',    0).to_i rescue 0),
+          'ancho'   => (d.get_attribute('PauTobisa', 'ancho',   0).to_i rescue 0),
+          'prof'    => (d.get_attribute('PauTobisa', 'prof',    0).to_i rescue 0),
+          'cant'    => total_cant,
+          'acabado' => (d.get_attribute('PauTobisa', 'acabado', '').to_s rescue ''),
+          'nota'    => (d.get_attribute('PauTobisa', 'nota',    '').to_s rescue ''),
+          'fam'     => (d.get_attribute('PauTobisa', 'fam',     '').to_s rescue ''),
+          'sub'     => (d.get_attribute('PauTobisa', 'sub',     '').to_s rescue ''),
+          'desc'    => (d.get_attribute('PauTobisa', 'desc',    '').to_s rescue ''),
+        }
+      end
+      cfg = cfg_load
+      out = {
+        'version'     => 'PAU_TOBISA_V1',
+        'exportadoAt' => Time.now.strftime('%Y-%m-%dT%H:%M:%S'),
+        'proyecto'    => cfg,
+        'modulos'     => modulos,
+        'total'       => modulos.length
+      }
+      json = out.to_json
+      out_path = nil
+      begin
+        skp_path = mod.path
+        if skp_path && !skp_path.empty? && File.directory?(File.dirname(skp_path))
+          base = File.basename(skp_path, '.skp')
+          dir  = File.dirname(skp_path)
+          out_path = File.join(dir, "#{base}__tobisa.json")
+          File.open(out_path, 'w:UTF-8') { |f| f.write(json) }
+        end
+      rescue => e
+        puts "Tobisa export_lista_json write error: #{e.message}"
+        out_path = nil
+      end
+      { json: json, path: out_path, count: modulos.length }
     end
 
     # Detecta componentes antiguos (dibujados en el plano XZ) y los rota 90°
@@ -776,6 +847,15 @@ function sfProyecto(){
 
   h += '<div class="hint" style="margin-top:12px;background:#f3e5f5;padding:8px;border-radius:5px;color:#4a148c">✅ El <strong>acabado global</strong> se aplicará a cada módulo. Puedes sobrescribirlo en un módulo concreto si lo necesitas.</div>';
 
+  // ══════════════════════════════════════════════════════════
+  // EXPORTAR LISTA — 100% fiable, sin OCR. Copia al portapapeles + guarda JSON.
+  // ══════════════════════════════════════════════════════════
+  h += '<div class="sep" style="height:1px;background:#e0e0e0;margin:12px 0"></div>';
+  h += '<div style="font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;color:#2e7d32">📋 Exportar lista para la app</div>';
+  h += '<div class="hint">Lee directamente los atributos del modelo (sin OCR). Cópialo o súbelo en la app → <em>Tobisa → Leer plano con IA → 📥 Lista plugin</em>.</div>';
+  h += '<button onclick="exportarLista()" id="exp-btn" style="width:100%;padding:9px;background:linear-gradient(135deg,#43a047,#2e7d32);color:white;border:none;border-radius:5px;font-size:11px;font-weight:bold;cursor:pointer">📋 Exportar lista de módulos</button>';
+  h += '<div id="exp-res" style="margin-top:6px;display:none"></div>';
+
   // Migración XZ→XY (solo útil en proyectos antiguos que se insertaron con la versión frontal)
   h += '<div class="sep" style="height:1px;background:#e0e0e0;margin:10px 0"></div>';
   h += '<div style="font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;color:#555">🔄 Migración de proyecto antiguo</div>';
@@ -784,6 +864,59 @@ function sfProyecto(){
   h += '<div id="mig-res" style="margin-top:6px;font-size:10px;color:#2e7d32;text-align:center"></div>';
 
   document.getElementById("cnt").innerHTML = h;
+}
+
+// Disparar export desde Ruby. Ruby llamará a window._exportResult(json, path, err, count).
+function exportarLista(){
+  var btn = document.getElementById("exp-btn");
+  if(btn){ btn.disabled = true; btn.textContent = "⏳ Exportando…"; }
+  window.location = "skp:export@1";
+}
+
+window._exportResult = function(json, path, err, count){
+  var btn = document.getElementById("exp-btn");
+  if(btn){ btn.disabled = false; btn.textContent = "📋 Exportar lista de módulos"; }
+  var res = document.getElementById("exp-res");
+  if(!res) return;
+  res.style.display = "block";
+  if(err){
+    res.innerHTML =
+      '<div style="padding:8px;background:#ffebee;border:1px solid #ef9a9a;border-radius:4px;color:#b71c1c;font-size:10px;font-weight:600">⚠️ '+String(err).replace(/</g,"&lt;")+'</div>';
+    return;
+  }
+  // Guardar el JSON en un textarea oculto para poder copiarlo
+  var safeJson = String(json||"").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  var html = '<div style="padding:8px;background:#e8f5e9;border:1px solid #81c784;border-radius:4px;color:#1b5e20;font-size:10px">'
+    + '<div style="font-weight:700;margin-bottom:4px">✓ '+count+' módulos exportados</div>';
+  if(path){
+    html += '<div style="font-size:9px;color:#2e7d32;word-break:break-all">💾 Guardado en:<br><code>'+String(path).replace(/</g,"&lt;")+'</code></div>';
+  }
+  html += '<textarea id="exp-json" readonly style="width:100%;height:58px;font-family:monospace;font-size:8px;margin-top:6px;border:1px solid #a5d6a7;border-radius:3px;background:white;padding:4px;resize:none">'+safeJson+'</textarea>'
+    + '<button onclick="copiarExport()" style="width:100%;margin-top:4px;padding:7px;background:#2e7d32;color:white;border:none;border-radius:4px;font-weight:700;font-size:10px;cursor:pointer">📋 Copiar al portapapeles</button>'
+    + '<div id="exp-copy-msg" style="font-size:9px;text-align:center;margin-top:4px;color:#2e7d32;min-height:12px"></div>'
+    + '</div>';
+  res.innerHTML = html;
+};
+
+function copiarExport(){
+  var t = document.getElementById("exp-json");
+  var msg = document.getElementById("exp-copy-msg");
+  if(!t){ return; }
+  try {
+    t.focus();
+    t.select();
+    t.setSelectionRange(0, 999999);
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+    if(msg){
+      msg.textContent = ok
+        ? "✓ Copiado. Pégalo en la app → Tobisa → Leer plano → 📥 Lista plugin."
+        : "Selecciona el texto y pulsa Ctrl+C manualmente.";
+      msg.style.color = ok ? "#2e7d32" : "#b45309";
+    }
+  } catch(e){
+    if(msg){ msg.textContent = "Error: "+e.message; msg.style.color = "#c00"; }
+  }
 }
 
 function migrar(){
