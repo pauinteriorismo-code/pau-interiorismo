@@ -210,19 +210,50 @@ const varD = `var D = {\n  ${orderedTabs.map(tabToJS).join(',\n  ')}\n};`;
 // ══════════════════════════════════════════════════════════
 // Plantilla Ruby del plugin
 // ══════════════════════════════════════════════════════════
-const ruby = String.raw`# TOBISA JUVENIL & ARMARIOS v2.0 - PAU INTERIORISMO
+const ruby = String.raw`# TOBISA JUVENIL & ARMARIOS v3.0 - PAU INTERIORISMO
 # Generado automáticamente desde la tarifa técnica 2.51.2
-# Todas las refs del catálogo (__TOTAL__) organizadas en 6 pestañas
+# Todas las refs del catálogo (__TOTAL__) organizadas en 6 pestañas + Proyecto
 require 'sketchup.rb'
 require 'uri'
+require 'json'
 
 module PauInteriorismo
   module TobisaV20
     PLUGIN_DIR = File.dirname(__FILE__)
+    CFG_DICT = 'PauTobisaProyecto'.freeze
+
+    CFG_DEFAULTS = {
+      'proyecto' => '',
+      'cliente'  => '',
+      'version'  => 'v1',
+      'acabado'  => 'Cotton',
+      'dto1'     => '50',
+      'dto2'     => '8',
+    }.freeze
+
+    def self.cfg_load
+      mod = Sketchup.active_model
+      return CFG_DEFAULTS.dup unless mod
+      out = {}
+      CFG_DEFAULTS.each do |k, v|
+        val = mod.get_attribute(CFG_DICT, k, v)
+        out[k] = val.to_s
+      end
+      out
+    end
+
+    def self.cfg_save(key, val)
+      mod = Sketchup.active_model
+      return unless mod
+      mod.set_attribute(CFG_DICT, key.to_s, val.to_s)
+    rescue => e
+      puts "Tobisa cfg_save error: #{e.message}"
+    end
 
     def self.mostrar_panel
-      dlg = UI::WebDialog.new('Tobisa Juvenil & Armarios', false, 'TobisaV20', 400, 760, 60, 60, true)
+      dlg = UI::WebDialog.new('Tobisa Juvenil & Armarios', false, 'TobisaV30', 400, 780, 60, 60, true)
       dlg.set_html(generar_html)
+
       dlg.add_action_callback('ins') do |d, p|
         arr = p.split('|')
         ref     = arr[0]
@@ -234,32 +265,50 @@ module PauInteriorismo
         desc    = arr[6] ? (URI.decode_www_form_component(arr[6]) rescue arr[6]) : ''
         acabado = arr[7] ? (URI.decode_www_form_component(arr[7]) rescue arr[7]) : ''
         nota    = arr[8] ? (URI.decode_www_form_component(arr[8]) rescue arr[8]) : ''
+        cant    = (arr[9] || '1').to_i
+        cant = 1 if cant < 1
         mod = Sketchup.active_model
         mod.start_operation("#{ref} #{ancho}x#{alto}cm", true)
         begin
-          insertar(mod, ref, ancho, alto, prof, fam, sub, desc, acabado, nota)
+          insertar(mod, ref, ancho, alto, prof, fam, sub, desc, acabado, nota, cant)
           mod.commit_operation
         rescue => e
           mod.abort_operation
           UI.messagebox("Error: #{e.message}")
         end
       end
+
+      dlg.add_action_callback('cfg') do |d, p|
+        idx = p.index('|')
+        if idx
+          k = p[0...idx]
+          v = URI.decode_www_form_component(p[idx+1..-1]) rescue p[idx+1..-1]
+          cfg_save(k, v)
+        end
+      end
+
+      dlg.add_action_callback('ready') do |d, _p|
+        cfg = cfg_load
+        js = "window._PAU_CFG = #{cfg.to_json}; if(typeof onCfgLoaded==='function'){onCfgLoaded();}"
+        d.execute_script(js)
+      end
+
       dlg.show
     end
 
-    def self.insertar(mod, ref, ancho, alto, prof, fam, sub, desc='', acabado='', nota='')
-      # Nombre único por ref+medidas+acabado+nota → cada combinación = componente independiente
-      key = "#{ref}_#{ancho}x#{alto}x#{prof}_#{acabado}_#{nota}".gsub(/[^\w]/, '_')
+    def self.insertar(mod, ref, ancho, alto, prof, fam, sub, desc='', acabado='', nota='', cant=1)
+      # Nombre único por ref+medidas+acabado+cant+nota
+      key = "#{ref}_#{ancho}x#{alto}x#{prof}_#{acabado}_x#{cant}_#{nota}".gsub(/[^\w]/, '_')
       nom = "T_#{key}"
       defs = mod.definitions
       comp = defs[nom]
       unless comp
         comp = defs.add(nom)
         dibujar(comp.entities, ref, ancho.to_f, alto.to_f, fam, sub, mod)
-        # Etiqueta DENTRO del componente: "REF HxLxP acabado nota"
-        # La IA de la app leerá este texto al analizar el plano.
+        # Etiqueta: "REF HxLxP [×N] [=acabado] [nota]"
         etiqueta = "#{ref} #{alto}x#{ancho}x#{prof}"
-        etiqueta += " #{acabado}" unless acabado.nil? || acabado.strip.empty?
+        etiqueta += " ×#{cant}" if cant > 1
+        etiqueta += " =#{acabado}" unless acabado.nil? || acabado.strip.empty?
         etiqueta += " #{nota}" unless nota.nil? || nota.strip.empty?
         begin
           comp.entities.add_text(
@@ -279,10 +328,11 @@ module PauInteriorismo
           comp.set_attribute('PauTobisa', 'sub',     sub)
           comp.set_attribute('PauTobisa', 'acabado', acabado)
           comp.set_attribute('PauTobisa', 'nota',    nota)
+          comp.set_attribute('PauTobisa', 'cant',    cant)
         rescue; end
       end
       inst = mod.active_entities.add_instance(comp, Geom::Transformation.new)
-      inst.name = "#{ref} #{ancho}x#{alto}"
+      inst.name = "#{ref} #{ancho}x#{alto}" + (cant > 1 ? " ×#{cant}" : '')
       inst
     end
 
@@ -488,6 +538,7 @@ select.big{font-family:monospace;font-size:11px}
   <div><div class="ht">PAU Interiorismo</div><div class="hs">Tobisa &mdash; Alzado 2D &mdash; Tarifa 2.51.2</div></div>
 </div>
 <div class="tabs">
+  <div class="tab" id="tb-pro" onclick="sfProyecto()" style="background:#1a1a2e">⚙<br><small>Proyecto</small></div>
   <div class="tab" id="tb-mod" onclick="sf('mod')">Módu-<br><small>los</small></div>
   <div class="tab" id="tb-esc" onclick="sf('esc')">Escri-<br><small>torios</small></div>
   <div class="tab" id="tb-est" onclick="sf('est')">Estan-<br><small>terías</small></div>
@@ -502,6 +553,75 @@ select.big{font-family:monospace;font-size:11px}
 __VAR_D_PLACEHOLDER__
 
 var F=null, TI=-1, IDX=-1, CUR=null;
+// Configuración global del proyecto (pushada desde Ruby al abrir)
+window._PAU_CFG = window._PAU_CFG || {proyecto:'',cliente:'',version:'v1',acabado:'Cotton',dto1:'50',dto2:'8'};
+
+function saveCfg(k, v){
+  window._PAU_CFG[k] = v;
+  window.location = "skp:cfg@" + k + "|" + encodeURIComponent(v||"");
+}
+
+function onCfgLoaded(){
+  Object.keys(window._PAU_CFG).forEach(function(k){
+    var el = document.getElementById("cfg-"+k);
+    if(el) el.value = window._PAU_CFG[k];
+  });
+}
+
+function sfProyecto(){
+  F='pro'; TI=-1; IDX=-1; CUR=null;
+  ["pro","mod","esc","est","cam","arm","otr"].forEach(function(x){
+    var el=document.getElementById("tb-"+x); if(!el)return;
+    if(x==="pro"){el.classList.add("on");el.style.borderBottomColor="#6a1b9a";el.style.color="white";}
+    else{el.classList.remove("on");el.style.borderBottomColor="transparent";el.style.color="#888";}
+  });
+  var cfg = window._PAU_CFG;
+  var h = '<div class="stit" style="color:#6a1b9a">⚙ Configuración del proyecto</div>';
+  h += '<div class="hint" style="margin-bottom:8px">💾 Los cambios se guardan automáticamente en el .skp actual.</div>';
+
+  h += '<span class="lbl">Nombre del proyecto:</span>';
+  h += '<input type="text" id="cfg-proyecto" value="'+(cfg.proyecto||"").replace(/"/g,"&quot;")+'" onchange="saveCfg(\'proyecto\',this.value)">';
+
+  h += '<span class="lbl">Cliente:</span>';
+  h += '<input type="text" id="cfg-cliente" value="'+(cfg.cliente||"").replace(/"/g,"&quot;")+'" onchange="saveCfg(\'cliente\',this.value)">';
+
+  h += '<span class="lbl">Versión del catálogo:</span>';
+  h += '<select id="cfg-version" onchange="saveCfg(\'version\',this.value)">';
+  ['v1','v2','v3','v4','v5','v6','v7','v8'].forEach(function(v){
+    h += '<option value="'+v+'"'+((cfg.version||"v1")===v?' selected':'')+'>'+v+'</option>';
+  });
+  h += '</select>';
+
+  h += '<div class="sep"></div>';
+
+  h += '<span class="lbl">Acabado global:</span>';
+  h += '<select id="cfg-acabado" onchange="saveCfg(\'acabado\',this.value)">';
+  h += '<optgroup label="Acabados base">';
+  ['Cotton','Raw','Gris Coco','Mohave','Okume','Roble Biscuit','Roble Nice','Nogal MN','Eucalipto Victoria'].forEach(function(a){
+    h += '<option value="'+a+'"'+((cfg.acabado||"Cotton")===a?' selected':'')+'>'+a+'</option>';
+  });
+  h += '</optgroup>';
+  h += '<optgroup label="Acabados color">';
+  ['0690 Blanco','2201 Oui','2202 Calm','0696 Gris','0291 Grey','0292 Shade','2203 Chic','0206 Caramel','2209 Camel','2208 Beige','2204 Ocre','2210 Cognac','2207 Ocean','2205 Peach','0801 Caqui','0C15 Grigio','0802 Bebe','0705 Pink','0703 Eucalyptus','0701 Pale Green','0803 Night','2206 Terracota','0208 Brownie','0704 Forest','0264 Midnight','2211 Interdit','0207 Deep','0209 Black'].forEach(function(a){
+    h += '<option value="'+a+'"'+((cfg.acabado||"")===a?' selected':'')+'>'+a+'</option>';
+  });
+  h += '</optgroup>';
+  h += '<optgroup label="Acabados específicos">';
+  ['Equal Raw','Equal Mohave','Equal Roble Biscuit','Equal Eucalipto Victoria','Equal Color','Delinea Color','Textil Linen'].forEach(function(a){
+    h += '<option value="'+a+'"'+((cfg.acabado||"")===a?' selected':'')+'>'+a+'</option>';
+  });
+  h += '</optgroup>';
+  h += '</select>';
+
+  h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+  h += '<div><span class="lbl">Dto1 %:</span><input type="number" id="cfg-dto1" value="'+(cfg.dto1||"50")+'" min="0" max="80" step="0.5" onchange="saveCfg(\'dto1\',this.value)"></div>';
+  h += '<div><span class="lbl">Dto2 %:</span><input type="number" id="cfg-dto2" value="'+(cfg.dto2||"8")+'" min="0" max="50" step="0.5" onchange="saveCfg(\'dto2\',this.value)"></div>';
+  h += '</div>';
+
+  h += '<div class="hint" style="margin-top:12px;background:#f3e5f5;padding:8px;border-radius:5px;color:#4a148c">✅ El <strong>acabado global</strong> se aplicará a cada módulo. Puedes sobrescribirlo en un módulo concreto si lo necesitas.</div>';
+
+  document.getElementById("cnt").innerHTML = h;
+}
 
 function sf(f){
   F=f; TI=-1; IDX=-1; CUR=null;
@@ -573,6 +693,10 @@ function sti(i){
   h+='</select>';
   h+='<input type="text" id="iacab-libre" placeholder="Escribe el acabado libre" style="display:none;margin-top:4px" oninput="updMed()">';
 
+  // Cantidad
+  h+='<span class="lbl">Cantidad:</span>';
+  h+='<input type="number" id="icant" value="1" min="1" max="99" style="width:80px" oninput="updMed()">';
+
   // Nota libre
   h+='<span class="lbl">Nota para proveedor:</span>';
   h+='<input type="text" id="inota" placeholder="Ej: trasera forrada, tirador a la derecha…" oninput="updMed()">';
@@ -629,16 +753,23 @@ function updMed(){
   var h=parseFloat(document.getElementById("ihh").value)||0;
   var l=parseFloat(document.getElementById("ill").value)||0;
   var p=parseFloat(document.getElementById("ipp").value)||0;
+  var cantEl=document.getElementById("icant");
+  var cant=cantEl?Math.max(1,parseInt(cantEl.value)||1):1;
   var pv=document.getElementById("pv"); var bi=document.getElementById("bi");
   if(h>0 && l>0){
     document.getElementById("pr").textContent = CUR.r;
     document.getElementById("pd").textContent = CUR.d;
-    document.getElementById("pm").textContent = "H "+h+" × L "+l+" × P "+p+" cm";
-    // Vista previa de la etiqueta final
+    var dm = "H "+h+" × L "+l+" × P "+p+" cm";
+    if(cant>1) dm += " ×"+cant;
+    document.getElementById("pm").textContent = dm;
+    // Etiqueta final: "REF HxLxP [×N] [=acabado] [nota]"
+    // El acabado solo aparece si difiere del global del proyecto.
     var acab = getAcabado();
+    var acabGlobal = (window._PAU_CFG && window._PAU_CFG.acabado) || "";
     var nota = (document.getElementById("inota").value||"").trim();
     var etiqueta = CUR.r+" "+h+"x"+l+"x"+p;
-    if(acab) etiqueta += " "+acab;
+    if(cant>1) etiqueta += " ×"+cant;
+    if(acab && acab !== acabGlobal) etiqueta += " ="+acab;
     if(nota) etiqueta += " "+nota;
     document.getElementById("pm2").textContent = "🏷️ "+etiqueta;
     pv.classList.remove("hide");
@@ -655,17 +786,27 @@ function ins(){
   var l=parseFloat(document.getElementById("ill").value)||CUR.l;
   var p=parseFloat(document.getElementById("ipp").value)||0;
   if(h<=0 || l<=0){ alert("H y L deben ser mayores que 0"); return; }
+  var cantEl=document.getElementById("icant");
+  var cant=cantEl?Math.max(1,parseInt(cantEl.value)||1):1;
   var ti=D[F].ti[TI];
   var desc=(CUR.d||"").replace(/\|/g,"-");
-  var acab=getAcabado().replace(/\|/g,"-");
+  // Acabado: solo enviarlo si difiere del global (para que la etiqueta lo marque)
+  var acabRaw=getAcabado();
+  var acabGlobal=(window._PAU_CFG && window._PAU_CFG.acabado) || "";
+  var acab=(acabRaw && acabRaw !== acabGlobal) ? acabRaw.replace(/\|/g,"-") : "";
   var nota=((document.getElementById("inota").value||"").trim()).replace(/\|/g,"-");
   window.location = "skp:ins@" + CUR.r + "|" + l + "|" + h + "|" + p + "|" + F + "|" + ti.sub
     + "|" + encodeURIComponent(desc)
     + "|" + encodeURIComponent(acab)
-    + "|" + encodeURIComponent(nota);
+    + "|" + encodeURIComponent(nota)
+    + "|" + cant;
 }
 
-sf("mod");
+// Bootstrap: abre la pestaña Proyecto y pide a Ruby la config del .skp actual
+(function(){
+  sfProyecto();
+  setTimeout(function(){ window.location="skp:ready@1"; }, 80);
+})();
 </script>
 </body></html>
       HTMLEOF
