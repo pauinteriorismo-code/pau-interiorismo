@@ -65,15 +65,19 @@ const tabsConfig = {
       ['caja_puente','Cajas puente',    /^CAJA PUENTE/i,                                      'gen'],
       ['caja',   'Cajas',                /^CAJA /i,                                            'gen'],
       ['mesaux', 'Mesas auxiliares',    /^MESA AUXILIAR/i,                                    'gen'],
-      ['patas',  'Juego de patas',      /^JUEGO DE PATAS/i,                                   'gen'],
     ]
   },
   esc: {
     label: 'Escritorios', color: '#0d47a1',
     subs: [
-      ['escr',  'Escritorios',  /^ESCRITORIO/i,   'escr'],
-      ['enci',  'Encimeras',    /^ENCIMERA/i,     'enci'],
-      ['porter','Porter',       /^PORTER/i,       'porter'],
+      ['escr',      'Escritorios',          /^ESCRITORIO/i,                                  'escr'],
+      ['enci',      'Encimeras',            /^ENCIMERA/i,                                    'enci'],
+      ['porter',    'Porter',               /^PORTER/i,                                      'porter'],
+      ['pata_jgo',  'Juegos de patas',      /^(JUEGO|CONJUNTO)\s*\d*\s*PATAS?/i,             'gen'],
+      ['pata_ind',  'Patas (modelos)',      /^PATA\s+/i,                                     'gen'],
+      ['escuadras', 'Escuadras escritorio', /^(JUEGO|CONJUNTO)?\s*\d*\s*ESCUADRAS?/i,        'gen'],
+      ['sop_esc',   'Soportes escritorio',  /^SOPORTE.*(ESCRIT|ENCIMERA|URBAN|CAMA Y)/i,     'gen'],
+      ['canto',     'Cantos escritorio',    /^CANTO/i,                                       'gen'],
     ]
   },
   est: {
