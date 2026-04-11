@@ -15742,16 +15742,47 @@ function saitraRenderTabla(){
     const mNum = l.modelo || '1';
     const mLabel = '<span style="font-size:9px;font-weight:700;background:'+( mColors[mNum]||'var(--copper)' )+';color:white;padding:1px 4px;border-radius:2px">M'+mNum+'</span>';
     const iaBadge = l.fromIA ? '<span style="font-size:8px;background:#1565c0;color:white;padding:1px 4px;border-radius:3px;margin-right:4px;font-weight:700;letter-spacing:.05em">IA</span>' : '';
+    const manualBadge = l.manual ? '<span style="font-size:8px;background:#2e7d32;color:white;padding:1px 4px;border-radius:3px;margin-right:4px;font-weight:700" title="Editado manualmente">✎</span>' : '';
     return '<tr style="background:'+bg+';border-bottom:1px solid #f0ece5">'
       +'<td style="padding:7px 6px;text-align:center">'+mLabel+'</td>'
-      +'<td style="padding:7px 10px;font-weight:700;color:var(--navy);font-size:11px">'+iaBadge+(iconos[l.tipo]||'')+' '+l.ref+'</td>'
+      +'<td style="padding:7px 10px;font-weight:700;color:var(--navy);font-size:11px">'+iaBadge+manualBadge+(iconos[l.tipo]||'')+' '+l.ref+'</td>'
       +'<td style="padding:7px 10px;font-size:12px">'+escH(l.desc)+(l.notas?'<br><span style="font-size:10px;color:var(--text-soft);font-style:italic">📝 '+escH(l.notas)+'</span>':'')+'</td>'
-      +'<td style="padding:7px 6px;text-align:center;font-size:12px">'+l.cant+'</td>'
-      +'<td style="padding:7px 6px;text-align:right;font-size:11px;color:var(--text-soft)">'+fmtES(l.costeTotal)+'€</td>'
-      +'<td style="padding:7px 6px;text-align:right;font-weight:700;color:#2e7d32;font-size:12px">'+fmtES(l.pvpTotal)+'€</td>'
+      +'<td style="padding:7px 6px;text-align:center"><input type="number" value="'+l.cant+'" min="1" style="width:44px;text-align:center;font-size:12px;border:1px solid var(--border);border-radius:3px;padding:2px" onchange="_saitraEditarCant('+l.id+',this.value)"></td>'
+      +'<td style="padding:7px 6px;text-align:right"><input type="number" value="'+(l.costeTotal||0).toFixed(2)+'" step="0.01" min="0" title="Coste total (editable)" style="width:75px;text-align:right;font-size:11px;border:1px solid var(--border);border-radius:3px;padding:2px 4px;color:var(--text-soft)" onchange="_saitraEditarCoste('+l.id+',this.value)"></td>'
+      +'<td style="padding:7px 6px;text-align:right"><input type="number" value="'+(l.pvpTotal||0).toFixed(2)+'" step="0.01" min="0" title="PVP total (editable)" style="width:75px;text-align:right;font-size:12px;font-weight:700;color:#2e7d32;border:1px solid #c8e6c9;border-radius:3px;padding:2px 4px" onchange="_saitraEditarPvp('+l.id+',this.value)"></td>'
       +'<td style="padding:7px 6px;text-align:center"><button class="btn btn-ghost btn-icon btn-sm" onclick="saitraEliminarLinea('+l.id+')" style="color:var(--danger)">🗑</button></td>'
       +'</tr>';
   }).join('');
+}
+
+function _saitraEditarCant(id, val){
+  const n = parseInt(val); if(!n || n<1) return;
+  const l = saitraLineas.find(x => x.id === id); if(!l) return;
+  l.cant = n;
+  l.costeTotal = (l.costeUnit||0) * n;
+  l.pvpTotal   = (l.pvpUnit||0) * n;
+  saitraRenderTabla();
+  saitraRecalc();
+}
+
+function _saitraEditarCoste(id, val){
+  const total = parseFloat(val); if(isNaN(total) || total<0) return;
+  const l = saitraLineas.find(x => x.id === id); if(!l) return;
+  l.costeTotal = total;
+  l.costeUnit  = total / (l.cant || 1);
+  l.manual = true;
+  saitraRenderTabla();
+  saitraRecalc();
+}
+
+function _saitraEditarPvp(id, val){
+  const total = parseFloat(val); if(isNaN(total) || total<0) return;
+  const l = saitraLineas.find(x => x.id === id); if(!l) return;
+  l.pvpTotal = total;
+  l.pvpUnit  = total / (l.cant || 1);
+  l.manual = true;
+  saitraRenderTabla();
+  saitraRecalc();
 }
 
 // ─── PERSISTENCIA SAITRA (localStorage) ───
@@ -15838,8 +15869,11 @@ function saitraRecalc(){
   let totalCoste=0, totalPvp=0;
   const pvpMx = {'1':0,'2':0,'3':0};
   saitraLineas.forEach(l=>{
-    l.pvpUnit   = saitraCalcPvp(l.costeUnit, margen);
-    l.pvpTotal  = l.pvpUnit * l.cant;
+    // Si la línea fue editada manualmente, no tocar sus precios
+    if(!l.manual){
+      l.pvpUnit   = saitraCalcPvp(l.costeUnit, margen);
+      l.pvpTotal  = l.pvpUnit * l.cant;
+    }
     totalCoste += l.costeTotal;
     totalPvp   += l.pvpTotal;
     const m = l.modelo || '1';
@@ -25910,6 +25944,26 @@ function tbBuscarTexto(){
   tbRenderTabla();
 }
 
+// ─── Soporte productos A METRO LINEAL (M/L) ───
+// Detecta por descripción refs que se cobran por ML y ajusta coste/pvp
+// multiplicando por el largo (L en cm / 100).
+function _tbEsML(p){
+  if(!p) return false;
+  return /\bA\s*M[.\/]?\s*L\b/i.test(p.descripcion || '');
+}
+
+function _tbAjustarML(p, lCm, baseCoste, basePvp){
+  if(!_tbEsML(p) || !lCm || lCm <= 0){
+    return {coste: baseCoste, pvpSinIva: basePvp, ml:false};
+  }
+  const metros = Math.max(0.01, lCm / 100);
+  return {
+    coste: baseCoste * metros,
+    pvpSinIva: basePvp * metros,
+    ml: true
+  };
+}
+
 function tbRenderTabla(){
   const q = (document.getElementById('tb-buscar')?.value||'').trim().toUpperCase();
   const acabado = document.getElementById('tb-acabado')?.value||'base';
@@ -26042,9 +26096,9 @@ function tbConfirmarAnadir(){
   const d = window._tbPendiente;
   if(!d) return;
   const sinMedidas = document.getElementById('tb-m-sinmed')?.checked;
-  const h = sinMedidas ? '' : (document.getElementById('tb-m-h')?.value || '');
-  const l = sinMedidas ? '' : (document.getElementById('tb-m-l')?.value || '');
-  const p = sinMedidas ? '' : (document.getElementById('tb-m-p')?.value || '');
+  const hNum = sinMedidas ? null : (parseFloat(document.getElementById('tb-m-h')?.value) || null);
+  const lNum = sinMedidas ? null : (parseFloat(document.getElementById('tb-m-l')?.value) || null);
+  const pNum = sinMedidas ? null : (parseFloat(document.getElementById('tb-m-p')?.value) || null);
   const acabadoCustom = document.getElementById('tb-m-acabado')?.value?.trim() || '';
   const notaExtra = document.getElementById('tb-m-nota')?.value?.trim() || '';
 
@@ -26053,42 +26107,60 @@ function tbConfirmarAnadir(){
 
   // Construir nota con medidas (solo si no está marcado "sin medidas")
   let medidas = '';
-  if(!sinMedidas && (h || l || p)){
+  if(!sinMedidas && (hNum || lNum || pNum)){
     const parts = [];
-    if(h) parts.push(h+' H');
-    if(l) parts.push(l+' L');
-    if(p) parts.push(p+' P');
+    if(hNum) parts.push(hNum+' H');
+    if(lNum) parts.push(lNum+' L');
+    if(pNum) parts.push(pNum+' P');
     medidas = parts.join(' x ');
   }
   const nota = [medidas, notaExtra].filter(Boolean).join(' — ');
 
+  // Ajuste ML: si la ref se cobra por metro lineal, multiplicar por L/100
+  const pData = _tbData.find(x => x.ref === d.ref);
+  const ajuste = _tbAjustarML(pData, lNum, d.coste, d.pvpSinIva);
+
   const existing = _tbLineas.find(x=>x.ref===d.ref && x.acabado===acabadoFinal && x.nota===nota);
   if(existing){ existing.cant++; }
   else {
-    _tbLineas.push({...d, acabado:acabadoFinal, nota, cant:1});
+    _tbLineas.push({
+      ...d,
+      acabado: acabadoFinal,
+      nota, cant: 1,
+      h: hNum, l: lNum, p: pNum,
+      esML: ajuste.ml,
+      coste: ajuste.coste,
+      pvpSinIva: ajuste.pvpSinIva
+    });
   }
-  tbRecalc();
   _tbGuardarLineas();
-  toast('➕ '+d.ref+' ('+d.acabado+') añadido');
+  _tbRenderBudget();
+  toast('➕ '+d.ref+' ('+d.acabado+')' + (ajuste.ml?' · '+lNum+'cm ML':'') + ' añadido');
   document.getElementById('tb-medidas-modal')?.remove();
   window._tbPendiente = null;
 }
 
 function tbRecalc(){
-  // Recalcular: Coste = Tarifa×(1-Dto1%)×(1-Dto2%) · PVP s/IVA = Tarifa×(1-DtoPVP%)/1,21
+  // Recalcular: Coste = Tarifa×(1-Dto1%)×(1-Dto2%) · PVP s/IVA = Tarifa/1,21
+  // Aplica ajuste M/L si la ref se cobra por metro lineal y la línea tiene L guardada.
+  // NO recalcula líneas marcadas como editadas manualmente (l.manual).
   const dto1 = parseFloat(document.getElementById('tb-dto1')?.value)||0;
   const dto2 = parseFloat(document.getElementById('tb-dto2')?.value)||0;
 
-
   _tbLineas.forEach(l=>{
-    if(l.esSup) return; // suplementos no se recalculan (precio fijo)
+    if(l.esSup) return;    // suplementos no se recalculan (precio fijo)
+    if(l.manual) return;   // línea editada manualmente → respetar el precio del usuario
     const p = _tbData.find(d=>d.ref===l.ref);
     if(!p) return;
     const tipo = l.acabadoTipo || (l.acabado==='base'?'base':'color');
     const tarifa = tipo==='color' ? (p.precio_color??p.precio_base) : (p.precio_base??p.precio_color);
     if(!tarifa) return;
-    l.coste = tarifa * (1 - dto1/100) * (1 - dto2/100);
-    l.pvpSinIva = tarifa / 1.21;
+    const baseCoste = tarifa * (1 - dto1/100) * (1 - dto2/100);
+    const basePvp = tarifa / 1.21;
+    const ajuste = _tbAjustarML(p, l.l, baseCoste, basePvp);
+    l.coste = ajuste.coste;
+    l.pvpSinIva = ajuste.pvpSinIva;
+    l.esML = ajuste.ml;
   });
 
   _tbRenderBudget();
@@ -26114,19 +26186,21 @@ function _tbRenderBudget(){
   lines.innerHTML = _tbLineas.map((l,i) => {
     const bgRow = l.fromIA ? 'background:linear-gradient(90deg,#f3e5f5 0%,transparent 40%);' : '';
     const iaBadge = l.fromIA ? '<span style="font-size:8px;background:#6a1b9a;color:white;padding:1px 4px;border-radius:3px;margin-right:3px;font-weight:700;letter-spacing:.05em">IA</span>' : '';
+    const mlBadge = l.esML ? '<span style="font-size:8px;background:#e65100;color:white;padding:1px 4px;border-radius:3px;margin-right:3px;font-weight:700">ML</span>' : '';
+    const manualBadge = l.manual ? '<span style="font-size:8px;background:#2e7d32;color:white;padding:1px 4px;border-radius:3px;margin-right:3px;font-weight:700" title="Editado manualmente">✎</span>' : '';
     return `
     <div style="display:flex;align-items:center;gap:5px;padding:4px 0;border-bottom:1px solid var(--border);font-size:11px;${bgRow}">
       <input type="checkbox" class="tb-chk" data-idx="${i}" style="margin:0;flex-shrink:0">
-      ${iaBadge}<span style="font-weight:700;width:55px;flex-shrink:0;font-family:monospace;font-size:10px">${l.ref}</span>
+      ${iaBadge}${mlBadge}${manualBadge}<span style="font-weight:700;width:55px;flex-shrink:0;font-family:monospace;font-size:10px">${l.ref}</span>
       <div style="flex:1;overflow:hidden;min-width:0">
         <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-soft)">${l.desc} <span style="font-size:9px;background:var(--bg-main);padding:1px 4px;border-radius:3px">${l.acabado}</span></div>
         ${l.nota ? `<div style="font-size:10px;color:var(--copper);font-style:italic;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${l.nota.replace(/"/g,'&quot;')}">📝 ${l.nota}</div>` : ''}
       </div>
-      <input type="number" value="${l.cant}" min="1" style="width:38px;text-align:center;font-size:10px;border:1px solid var(--border);border-radius:4px;padding:1px" onchange="_tbLineas[${i}].cant=parseInt(this.value)||1;_tbGuardarLineas();_tbRenderBudget()">
-      <span style="font-weight:600;width:60px;text-align:right;font-size:10px">${fE(l.coste*l.cant)}</span>
-      <span style="font-weight:700;width:60px;text-align:right;color:var(--copper);font-size:10px">${fE(l.pvpSinIva*l.cant)}</span>
+      <input type="number" value="${l.cant}" min="1" title="Cantidad" style="width:38px;text-align:center;font-size:10px;border:1px solid var(--border);border-radius:4px;padding:1px" onchange="_tbEditarCant(${i},this.value)">
+      <input type="number" value="${(l.coste*l.cant).toFixed(2)}" step="0.01" min="0" title="Coste total (editable)" style="width:65px;text-align:right;font-size:10px;border:1px solid var(--border);border-radius:4px;padding:1px 3px;font-weight:600" onchange="_tbEditarCoste(${i},this.value)">
+      <input type="number" value="${(l.pvpSinIva*l.cant).toFixed(2)}" step="0.01" min="0" title="PVP total s/IVA (editable)" style="width:65px;text-align:right;font-size:10px;border:1px solid var(--copper);border-radius:4px;padding:1px 3px;font-weight:700;color:var(--copper)" onchange="_tbEditarPvp(${i},this.value)">
       <button class="btn btn-ghost btn-sm" style="font-size:9px;padding:1px 3px;color:var(--copper)" title="Editar nota" onclick="tbEditarNota(${i})">📝</button>
-      <button class="btn btn-ghost btn-sm" style="font-size:9px;padding:1px 3px;color:var(--red)" onclick="_tbLineas.splice(${i},1);_tbGuardarLineas();_tbRenderBudget()">✕</button>
+      <button class="btn btn-ghost btn-sm" style="font-size:9px;padding:1px 3px;color:var(--red)" title="Eliminar" onclick="_tbLineas.splice(${i},1);_tbGuardarLineas();_tbRenderBudget()">✕</button>
     </div>
   `;}).join('');
 
@@ -26136,6 +26210,33 @@ function _tbRenderBudget(){
   document.getElementById('tb-tot-pvp').textContent = fE(totPvp);
   document.getElementById('tb-tot-iva').textContent = fE(totPvp*1.21);
   document.getElementById('tb-tot-mrg').textContent = fE(totPvp-totCoste);
+}
+
+// ── Handlers de edición inline de línea ──
+function _tbEditarCant(idx, val){
+  const l = _tbLineas[idx]; if(!l) return;
+  const n = parseInt(val); if(!n || n < 1) return;
+  l.cant = n;
+  _tbGuardarLineas();
+  _tbRenderBudget();
+}
+
+function _tbEditarCoste(idx, val){
+  const l = _tbLineas[idx]; if(!l) return;
+  const total = parseFloat(val); if(isNaN(total) || total < 0) return;
+  l.coste = total / (l.cant || 1);
+  l.manual = true;  // No recalcular automáticamente
+  _tbGuardarLineas();
+  _tbRenderBudget();
+}
+
+function _tbEditarPvp(idx, val){
+  const l = _tbLineas[idx]; if(!l) return;
+  const total = parseFloat(val); if(isNaN(total) || total < 0) return;
+  l.pvpSinIva = total / (l.cant || 1);
+  l.manual = true;
+  _tbGuardarLineas();
+  _tbRenderBudget();
 }
 
 // ── Selección en lote ──
@@ -26394,11 +26495,13 @@ function tbIAQuitarPendientes(){
 // Sincroniza los módulos IA válidos dentro de _tbLineas con flag fromIA
 function _tbIASyncLineas(){
   const {tipo: tipoGlobal, nombre: acabGlobal} = _tbAcabadoInfo();
-  // 1) Quitar líneas IA previas
-  _tbLineas = _tbLineas.filter(l => !l.fromIA);
+  // 1) Quitar líneas IA previas (solo las que NO hayan sido editadas manualmente)
+  _tbLineas = _tbLineas.filter(l => !l.fromIA || l.manual);
   // 2) Añadir módulos IA válidos y activos
   _tbIAModulos.forEach(m => {
     if(!m.valido || m.activo === false) return;
+    // Si la IA ya fue editada en la valoración, no la re-insertamos
+    if(_tbLineas.find(l => l.manual && l.iaIdx === m.idx)) return;
     const parts = [];
     if(m.alto)  parts.push(m.alto+' H');
     if(m.ancho) parts.push(m.ancho+' L');
@@ -26416,6 +26519,10 @@ function _tbIASyncLineas(){
       coste: m.coste,
       pvpSinIva: m.pvpSinIva,
       nota, cant: m.cant||1,
+      h: parseFloat(m.alto)||null,
+      l: parseFloat(m.ancho)||null,
+      p: parseFloat(m.fondo)||null,
+      esML: m.esML || false,
       fromIA: true,
       iaIdx: m.idx
     });
@@ -26509,20 +26616,33 @@ function _tbIAValidarModulos(lista){
     if(tarifa==null){
       return { ...m, idx, ref, desc:p.descripcion, activo:false, valido:false, error:'Sin precio para el acabado seleccionado' };
     }
-    const coste = tarifa * (1 - dto1/100) * (1 - dto2/100);
-    const pvpSinIva = tarifa / 1.21;
-    // Normalizar nota: si el usuario (o IA) pasa un acabado override, lo metemos
-    // en el campo "acabado" especial en vez de perderlo en la nota.
+    const baseCoste = tarifa * (1 - dto1/100) * (1 - dto2/100);
+    const basePvp = tarifa / 1.21;
+    // Normalizar nota / acabado override
     const notaBase = (m.nota || '').trim();
     const acabadoOverride = (m.acabado || '').trim();
+    // Usar las dimensiones de la etiqueta si están definidas (aunque sean 0
+    // por error), no caer al catálogo porque el catálogo tiene defaults que no
+    // aplican a productos M/L. Solo fallback a catálogo si la IA no devolvió nada.
+    const num = v => { const n = parseFloat(v); return isNaN(n) ? null : n; };
+    const mH = num(m.alto), mL = num(m.ancho), mP = num(m.prof);
+    const anchoF = (mL != null) ? mL : (parseFloat(p.ancho) || null);
+    const altoF  = (mH != null) ? mH : (parseFloat(p.alto)  || null);
+    const profF  = (mP != null) ? mP : (parseFloat(p.fondo) || null);
+    // Ajuste M/L: si el producto se cobra por metro lineal, el precio se
+    // multiplica por L/100
+    const ajuste = _tbAjustarML(p, anchoF, baseCoste, basePvp);
     return {
       ...m, idx, ref, valido:true,
       activo: m.activo !== false,
       desc: p.descripcion || '',
-      tarifa, coste, pvpSinIva,
-      ancho: m.ancho || p.ancho || '',
-      alto: m.alto || p.alto || '',
-      fondo: m.prof || p.fondo || '',
+      tarifa,
+      coste: ajuste.coste,
+      pvpSinIva: ajuste.pvpSinIva,
+      esML: ajuste.ml,
+      ancho: anchoF != null ? anchoF : '',
+      alto:  altoF  != null ? altoF  : '',
+      fondo: profF  != null ? profF  : '',
       acabado: acabadoOverride,
       nota: notaBase,
       cant: m.cant || 1
@@ -26739,6 +26859,14 @@ async function tbIAAnalizar(){
       +'• Leer "Caqui" como "Casal" (atención a las letras manuscritas o de baja resolución).\n'
       +'Si una medida parece absurda (ej: ancho 175cm en un cajón que visualmente es de 51cm),\n'
       +'reconsidera: probablemente hay un separador "x" que no viste.\n\n'
+
+      +'═══ PRODUCTOS A METRO LINEAL (M/L) — CRÍTICO ═══\n'
+      +'Algunos refs se cobran "A M/L" (por metro lineal) — estantes gruesos, arrimaderos,\n'
+      +'zócalos largos… En esos productos la dimensión L (largo) es la que determina el precio.\n'
+      +'SIEMPRE devuelve las 3 medidas H, L, P exactamente como aparecen en la etiqueta,\n'
+      +'NUNCA mezcles ni intercambies H con L. En un estante "5x160x25" el H es 5 (grosor),\n'
+      +'el L es 160 (largo del estante) y el P es 25 (fondo). Si dudas, recuerda: el H es\n'
+      +'siempre el PRIMER número, L el SEGUNDO, P el TERCERO.\n\n'
 
       +'═══ REFERENCIAS TOBISA ═══\n'
       +'Todas empiezan por D + 4 dígitos. No inventes. Si no puedes leer una ref con certeza,\n'
