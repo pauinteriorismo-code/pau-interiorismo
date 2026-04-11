@@ -3077,9 +3077,9 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
                 <div id="saitra-ia-chat-pensando" style="display:none;padding:6px 12px;font-size:10px;color:#1565c0;background:#e3f2fd;border-top:1px solid #90caf9">⚙️ Procesando…</div>
               </div>
               <div style="display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap">
-                <button class="btn btn-ghost btn-sm" onclick="saitraIACerrar()" style="font-size:11px">Cancelar</button>
                 <button class="btn btn-ghost btn-sm" onclick="saitraIAVolverPaso1()" style="border-color:var(--copper);color:var(--copper);font-size:11px">← Cambiar plano</button>
-                <button class="btn btn-primary btn-sm" onclick="saitraIAConfirmar()" style="background:#2e7d32;border:none;font-weight:700;font-size:11px">＋ Añadir al valorador</button>
+                <button class="btn btn-ghost btn-sm" onclick="saitraIAQuitarPendientes()" style="color:var(--danger);font-size:11px">🗑 Descartar IA</button>
+                <button class="btn btn-primary btn-sm" onclick="saitraIACerrar()" style="background:#2e7d32;border:none;font-weight:700;font-size:11px">✓ Listo</button>
               </div>
             </div>
           </div><!-- /saitra-ia-wrap -->
@@ -3759,26 +3759,88 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
             <input class="form-input" id="tb-buscar" placeholder="Buscar ref o descripción…" oninput="tbBuscarTexto()" style="font-size:11px;padding:5px 8px 5px 28px">
           </div>
         </div>
-        <!-- COL DERECHA: Tabla + valoración -->
+        <!-- COL DERECHA: Tabla/IA + valoración -->
         <div style="display:flex;flex-direction:column;gap:6px;overflow:hidden;max-height:calc(100vh - 190px)">
-          <div style="overflow-y:auto;flex:3;min-height:120px;scrollbar-width:thin" id="tb-tabla-wrap">
-            <table class="imex-tbl" style="width:100%;font-size:11px">
-              <thead style="position:sticky;top:0;z-index:1"><tr>
-                <th style="width:80px">REF</th>
-                <th>DESCRIPCIÓN</th>
-                <th style="text-align:right;width:45px">H</th>
-                <th style="text-align:right;width:45px">L</th>
-                <th style="text-align:right;width:45px">P</th>
-                <th style="text-align:right;width:65px">TARIFA</th>
-                <th style="text-align:right;width:65px">COSTE</th>
-                <th style="text-align:right;width:70px">PVP s/IVA</th>
-                <th style="width:35px"></th>
-              </tr></thead>
-              <tbody id="tb-tbody"></tbody>
-            </table>
-            <div id="tb-nor" style="text-align:center;padding:30px;color:var(--text-soft);font-size:13px">Selecciona una familia o busca un producto</div>
+          <!-- Vista catálogo (tabla + paginación) — se oculta cuando IA activo -->
+          <div id="tb-catalog-view" style="display:flex;flex-direction:column;gap:6px;flex:3;min-height:120px;overflow:hidden">
+            <div style="overflow-y:auto;flex:1;min-height:120px;scrollbar-width:thin" id="tb-tabla-wrap">
+              <table class="imex-tbl" style="width:100%;font-size:11px">
+                <thead style="position:sticky;top:0;z-index:1"><tr>
+                  <th style="width:80px">REF</th>
+                  <th>DESCRIPCIÓN</th>
+                  <th style="text-align:right;width:45px">H</th>
+                  <th style="text-align:right;width:45px">L</th>
+                  <th style="text-align:right;width:45px">P</th>
+                  <th style="text-align:right;width:65px">TARIFA</th>
+                  <th style="text-align:right;width:65px">COSTE</th>
+                  <th style="text-align:right;width:70px">PVP s/IVA</th>
+                  <th style="width:35px"></th>
+                </tr></thead>
+                <tbody id="tb-tbody"></tbody>
+              </table>
+              <div id="tb-nor" style="text-align:center;padding:30px;color:var(--text-soft);font-size:13px">Selecciona una familia o busca un producto</div>
+            </div>
+            <div id="tb-paginacion" style="display:flex;justify-content:center;gap:4px;flex-shrink:0"></div>
           </div>
-          <div id="tb-paginacion" style="display:flex;justify-content:center;gap:4px;flex-shrink:0"></div>
+          <!-- LECTOR IA TOBISA (dentro col dcha, convive con catálogo y valoración) -->
+          <div id="tb-ia-wrap" style="display:none;flex:3;min-height:120px;overflow:auto;background:var(--bg);border-radius:8px;border:1px solid #b39ddb;padding:14px">
+            <div style="display:flex;align-items:center;gap:10px;padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:10px">
+              <button class="cat-back" onclick="tbIACerrar()" style="font-size:11px">← Catálogo</button>
+              <span style="font-size:13px;font-weight:700;color:#4a148c">📐 Leer plano con IA · Tobisa</span>
+              <span id="tb-ia-paso-lbl" style="margin-left:auto;font-size:10px;background:#ede7f6;color:#4a148c;padding:2px 8px;border-radius:10px;font-weight:600">Paso 1 de 2 — Subir plano</span>
+            </div>
+            <div id="tb-ia-step1">
+              <div style="background:#ede7f6;border:1px solid #b39ddb;border-radius:6px;padding:9px 12px;font-size:11px;color:#4a148c;margin-bottom:12px">
+                <strong>📌 Cómo funciona:</strong> Sube el plano (JPG, PNG o PDF). La IA leerá las etiquetas con flecha (formato <code>D1001 62cm 39cm</code>) y creará una lista revisable. Puedes seguir añadiendo módulos manualmente desde la tabla del catálogo — todo se suma en la valoración.
+              </div>
+              <div id="tb-ia-dropzone" onclick="document.getElementById('tb-ia-input').click()"
+                style="border:2px dashed #b39ddb;border-radius:8px;padding:22px;text-align:center;cursor:pointer;background:#faf7fc;transition:background .2s;margin-bottom:10px"
+                ondragover="event.preventDefault();this.style.background='#ede7f6'"
+                ondragleave="this.style.background='#faf7fc'"
+                ondrop="tbIAOnDrop(event)">
+                <div style="font-size:26px;margin-bottom:6px">📂</div>
+                <div style="font-size:13px;font-weight:700;color:#6a1b9a">Haz clic o arrastra aquí</div>
+                <div style="font-size:10px;color:#888;margin-top:4px">JPG · PNG · PDF</div>
+                <div id="tb-ia-nombre" style="font-size:11px;color:#2e7d32;margin-top:6px;font-weight:600"></div>
+              </div>
+              <input type="file" id="tb-ia-input" accept="image/jpeg,image/png,application/pdf" style="display:none" onchange="tbIAArchivoSel(this)">
+              <div id="tb-ia-analizando" style="display:none;text-align:center;padding:12px;font-size:11px;color:#6a1b9a">
+                <div style="font-size:22px;animation:spin 1.2s linear infinite;display:inline-block">⚙️</div>
+                <div style="margin-top:4px;font-weight:600">Analizando el plano con IA…</div>
+              </div>
+              <div style="display:flex;justify-content:flex-end;gap:8px">
+                <button class="btn btn-ghost btn-sm" onclick="tbIACerrar()" style="font-size:11px">Cancelar</button>
+                <button class="btn btn-primary btn-sm" id="tb-ia-btn-analizar" onclick="tbIAAnalizar()" style="background:linear-gradient(135deg,#6a1b9a,#4a148c);border:none;font-weight:700;font-size:11px" disabled>🔍 Analizar plano</button>
+              </div>
+            </div>
+            <div id="tb-ia-step2" style="display:none">
+              <div style="font-size:11px;color:var(--text-soft);margin-bottom:6px">Los módulos detectados se sincronizan en tiempo real con la <strong>valoración de abajo</strong> (con una etiqueta <em>IA</em>). Puedes añadir más refs manualmente desde el catálogo izquierdo mientras ajustas.</div>
+              <div id="tb-ia-lista" style="border:1px solid var(--border);border-radius:6px;margin-bottom:8px;overflow:hidden;max-height:300px;overflow-y:auto"></div>
+              <div id="tb-ia-obs" style="display:none;padding:8px 10px;background:#fff8e1;border-radius:6px;border:1px solid #ffe082;font-size:10px;color:#b45309;margin-bottom:8px"></div>
+              <div id="tb-ia-resumen" style="padding:6px 10px;background:#f3e5f5;border-radius:6px;border:1px solid #ce93d8;font-size:11px;font-weight:700;color:#4a148c;display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"></div>
+              <div style="border:1px solid #b39ddb;border-radius:8px;overflow:hidden;margin-bottom:10px">
+                <div style="background:linear-gradient(135deg,#6a1b9a,#4a148c);color:white;padding:6px 10px;font-size:11px;font-weight:700;display:flex;align-items:center;gap:6px">
+                  💬 Chat de refinamiento <span style="font-weight:400;font-size:10px;opacity:.85">— corrige, añade o elimina módulos</span>
+                </div>
+                <div id="tb-ia-chat-hist" style="min-height:50px;max-height:120px;overflow-y:auto;padding:8px;background:#faf7fc;font-size:11px;display:flex;flex-direction:column;gap:6px">
+                  <div id="tb-ia-chat-hint" style="color:#888;font-size:10px;text-align:center;padding:6px 0">💡 <em>"El módulo 3 debería ser D1052"</em> · <em>"Quita el 2"</em></div>
+                </div>
+                <div style="display:flex;gap:0;border-top:1px solid #b39ddb">
+                  <textarea id="tb-ia-chat-input" placeholder="Escribe tu corrección…" rows="2"
+                    style="flex:1;border:none;padding:7px 9px;font-size:11px;resize:none;font-family:inherit;background:#fff;outline:none"
+                    onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();tbIAChatEnviar()}"></textarea>
+                  <button onclick="tbIAChatEnviar()" id="tb-ia-chat-btn"
+                    style="background:linear-gradient(135deg,#6a1b9a,#4a148c);color:white;border:none;padding:0 12px;font-weight:700;font-size:13px;cursor:pointer">↑</button>
+                </div>
+                <div id="tb-ia-chat-pensando" style="display:none;padding:5px 10px;font-size:10px;color:#6a1b9a;background:#ede7f6;border-top:1px solid #b39ddb">⚙️ Procesando…</div>
+              </div>
+              <div style="display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap">
+                <button class="btn btn-ghost btn-sm" onclick="tbIAVolverPaso1()" style="border-color:var(--copper);color:var(--copper);font-size:11px">← Cambiar plano</button>
+                <button class="btn btn-ghost btn-sm" onclick="tbIAQuitarPendientes()" style="color:var(--danger);font-size:11px">🗑 Descartar IA</button>
+                <button class="btn btn-primary btn-sm" onclick="tbIACerrar()" style="background:#2e7d32;border:none;font-weight:700;font-size:11px">✓ Listo</button>
+              </div>
+            </div>
+          </div>
           <!-- VALORACIÓN -->
           <div class="card" style="flex:2;min-height:100px;display:flex;flex-direction:column;border-top:3px solid var(--copper);overflow:hidden">
             <div style="padding:8px 14px 4px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
@@ -3803,66 +3865,6 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
                 <button class="btn btn-ghost btn-sm" onclick="tbLimpiar()">🗑 Vaciar</button>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-      <!-- LECTOR IA TOBISA -->
-      <div id="tb-ia-wrap" style="display:none;flex:1;min-height:0;overflow:auto;background:var(--bg);border-radius:8px;border:1px solid #b39ddb;padding:16px">
-        <div style="display:flex;align-items:center;gap:10px;padding-bottom:12px;border-bottom:1px solid var(--border);margin-bottom:12px">
-          <button class="cat-back" onclick="tbIACerrar()" style="font-size:11px">← Valorador</button>
-          <span style="font-size:13px;font-weight:700;color:#4a148c">📐 Leer plano con IA · Tobisa</span>
-          <span id="tb-ia-paso-lbl" style="margin-left:auto;font-size:10px;background:#ede7f6;color:#4a148c;padding:2px 8px;border-radius:10px;font-weight:600">Paso 1 de 2 — Subir plano</span>
-        </div>
-        <div id="tb-ia-step1">
-          <div style="background:#ede7f6;border:1px solid #b39ddb;border-radius:6px;padding:9px 12px;font-size:11px;color:#4a148c;margin-bottom:12px">
-            <strong>📌 Cómo funciona:</strong> Sube el plano del módulo (JPG, PNG o PDF). La IA leerá las etiquetas con flecha (formato <code>D1001 62cm 39cm</code>) y creará la lista revisable de módulos Tobisa.
-          </div>
-          <div id="tb-ia-dropzone" onclick="document.getElementById('tb-ia-input').click()"
-            style="border:2px dashed #b39ddb;border-radius:8px;padding:28px;text-align:center;cursor:pointer;background:#faf7fc;transition:background .2s;margin-bottom:12px"
-            ondragover="event.preventDefault();this.style.background='#ede7f6'"
-            ondragleave="this.style.background='#faf7fc'"
-            ondrop="tbIAOnDrop(event)">
-            <div style="font-size:30px;margin-bottom:8px">📂</div>
-            <div style="font-size:13px;font-weight:700;color:#6a1b9a">Haz clic o arrastra aquí</div>
-            <div style="font-size:11px;color:#888;margin-top:4px">JPG · PNG · PDF</div>
-            <div id="tb-ia-nombre" style="font-size:11px;color:#2e7d32;margin-top:8px;font-weight:600"></div>
-          </div>
-          <input type="file" id="tb-ia-input" accept="image/jpeg,image/png,application/pdf" style="display:none" onchange="tbIAArchivoSel(this)">
-          <div id="tb-ia-analizando" style="display:none;text-align:center;padding:16px;font-size:12px;color:#6a1b9a">
-            <div style="font-size:24px;animation:spin 1.2s linear infinite;display:inline-block">⚙️</div>
-            <div style="margin-top:6px;font-weight:600">Analizando el plano con IA…</div>
-            <div style="font-size:10px;color:#888;margin-top:3px">Leyendo etiquetas y validando contra catálogo Tobisa</div>
-          </div>
-          <div style="display:flex;justify-content:flex-end;gap:8px">
-            <button class="btn btn-ghost btn-sm" onclick="tbIACerrar()" style="font-size:11px">Cancelar</button>
-            <button class="btn btn-primary btn-sm" id="tb-ia-btn-analizar" onclick="tbIAAnalizar()" style="background:linear-gradient(135deg,#6a1b9a,#4a148c);border:none;font-weight:700;font-size:11px" disabled>🔍 Analizar plano</button>
-          </div>
-        </div>
-        <div id="tb-ia-step2" style="display:none">
-          <div style="font-size:11px;color:var(--text-soft);margin-bottom:8px">Marca/desmarca módulos, corrige refs no válidas y usa el <strong>chat para refinar</strong> antes de confirmar.</div>
-          <div id="tb-ia-lista" style="border:1px solid var(--border);border-radius:6px;margin-bottom:8px;overflow:hidden;max-height:340px;overflow-y:auto"></div>
-          <div id="tb-ia-obs" style="display:none;padding:8px 10px;background:#fff8e1;border-radius:6px;border:1px solid #ffe082;font-size:10px;color:#b45309;margin-bottom:8px"></div>
-          <div id="tb-ia-resumen" style="padding:8px 12px;background:#f3e5f5;border-radius:6px;border:1px solid #ce93d8;font-size:12px;font-weight:700;color:#4a148c;display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"></div>
-          <div style="border:1px solid #b39ddb;border-radius:8px;overflow:hidden;margin-bottom:12px">
-            <div style="background:linear-gradient(135deg,#6a1b9a,#4a148c);color:white;padding:7px 12px;font-size:11px;font-weight:700;display:flex;align-items:center;gap:6px">
-              💬 Chat de refinamiento <span style="font-weight:400;font-size:10px;opacity:.85">— Corrige, añade o elimina módulos</span>
-            </div>
-            <div id="tb-ia-chat-hist" style="min-height:60px;max-height:160px;overflow-y:auto;padding:10px;background:#faf7fc;font-size:11px;display:flex;flex-direction:column;gap:6px">
-              <div id="tb-ia-chat-hint" style="color:#888;font-size:10px;text-align:center;padding:8px 0">💡 <em>"El módulo 3 debería ser D1052"</em> · <em>"Quita el módulo 2"</em> · <em>"Añade un zócalo D1401 de 200cm"</em></div>
-            </div>
-            <div style="display:flex;gap:0;border-top:1px solid #b39ddb">
-              <textarea id="tb-ia-chat-input" placeholder="Escribe tu corrección…" rows="2"
-                style="flex:1;border:none;padding:8px 10px;font-size:11px;resize:none;font-family:inherit;background:#fff;outline:none"
-                onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();tbIAChatEnviar()}"></textarea>
-              <button onclick="tbIAChatEnviar()" id="tb-ia-chat-btn"
-                style="background:linear-gradient(135deg,#6a1b9a,#4a148c);color:white;border:none;padding:0 14px;font-weight:700;font-size:13px;cursor:pointer">↑</button>
-            </div>
-            <div id="tb-ia-chat-pensando" style="display:none;padding:6px 12px;font-size:10px;color:#6a1b9a;background:#ede7f6;border-top:1px solid #b39ddb">⚙️ Procesando…</div>
-          </div>
-          <div style="display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap">
-            <button class="btn btn-ghost btn-sm" onclick="tbIACerrar()" style="font-size:11px">Cancelar</button>
-            <button class="btn btn-ghost btn-sm" onclick="tbIAVolverPaso1()" style="border-color:var(--copper);color:var(--copper);font-size:11px">← Cambiar plano</button>
-            <button class="btn btn-primary btn-sm" onclick="tbIAConfirmar()" style="background:#2e7d32;border:none;font-weight:700;font-size:11px">＋ Añadir al valorador</button>
           </div>
         </div>
       </div>
@@ -15018,13 +15020,52 @@ function saitraAbrirLeerPlano(){
   document.getElementById('saitra-ia-paso-lbl').textContent = 'Paso 1 de 2 — Subir plano';
   document.getElementById('saitra-ia-chat-hist').innerHTML =
     '<div id="saitra-ia-chat-hint" style="color:#888;font-size:10px;text-align:center;padding:8px 0">💡 <em>"El fregadero debería ser de 90cm"</em> · <em>"Quita el módulo 3"</em></div>';
+  // El panel IA aparece pero la valoración y totales siguen visibles debajo
   document.getElementById('saitra-ia-wrap').style.display = 'flex';
-  document.getElementById('saitra-col-contenido').style.display = 'none';
+  // NO ocultamos saitra-col-contenido: queremos ver la valoración+totales mientras trabajamos con IA
 }
 
 function saitraIACerrar(){
   document.getElementById('saitra-ia-wrap').style.display = 'none';
-  document.getElementById('saitra-col-contenido').style.display = 'flex';
+}
+
+// Sincroniza módulos IA válidos dentro de saitraLineas con flag fromIA
+function _saitraIASyncLineas(){
+  // 1) Quitar líneas IA anteriores
+  saitraLineas = saitraLineas.filter(l => !l.fromIA);
+  // 2) Añadir las activas (válidas y checked)
+  _saitraIAModulos.forEach(m => {
+    if(!m.valido) return;
+    if(m.activo === false) return;
+    const cant = m.cant || 1;
+    saitraLineas.push({
+      id: ++saitraIdCnt,
+      tipo: 'modulo',
+      ref: m.ref,
+      modelo: '1',
+      desc: (m.label || '') + ' ' + (m.ancho || '') + 'cm' + (m.nota ? ' · ' + m.nota : ''),
+      notas: '',
+      cant,
+      puntos: m.puntos,
+      costeUnit: m.costeUnit,
+      costeTotal: m.costeUnit * cant,
+      pvpUnit: m.pvpUnit,
+      pvpTotal: m.pvpUnit * cant,
+      fromIA: true,
+      iaIdx: m.idx
+    });
+  });
+  saitraRenderTabla();
+  saitraRecalc();
+}
+
+function saitraIAQuitarPendientes(){
+  if(!confirm('¿Descartar todos los módulos detectados por la IA?')) return;
+  saitraLineas = saitraLineas.filter(l => !l.fromIA);
+  _saitraIAModulos = [];
+  saitraRenderTabla();
+  saitraRecalc();
+  saitraIAVolverPaso1();
 }
 
 function saitraIAVolverPaso1(){
@@ -15228,9 +15269,11 @@ function _saitraIARenderLista(){
     else if(m.metodo==='regla3') badge='<span style="font-size:9px;background:#e8f5e9;color:#2e7d32;padding:1px 5px;border-radius:8px;border:1px solid #a5d6a7">R×3/'+m.anchoUsado+'cm</span>';
     const anchosRef = SAITRA_MOD[m.ref]?Object.keys(SAITRA_MOD[m.ref].anchos).map(a=>parseInt(a)||a).sort((a,b)=>a-b):[];
     const anchosOpts = anchosRef.map(a=>'<option value="'+a+'"'+(parseInt(m.ancho)===a?' selected':'')+'>'+a+'cm</option>').join('');
-    return '<div id="saitraIArow-'+m.idx+'" style="border-bottom:1px solid var(--border);background:'+bg+'">'
+    const activo = m.activo !== false;
+    const rowOpa = activo ? '' : 'opacity:.5';
+    return '<div id="saitraIArow-'+m.idx+'" style="border-bottom:1px solid var(--border);background:'+bg+';'+rowOpa+'">'
       +'<div id="saitraIAview-'+m.idx+'" style="display:flex;align-items:center;gap:8px;padding:7px 10px">'
-      +'<input type="checkbox" id="saitraIAchk-'+m.idx+'" checked style="width:14px;height:14px;flex-shrink:0;cursor:pointer">'
+      +'<input type="checkbox" id="saitraIAchk-'+m.idx+'" '+(activo?'checked':'')+' onchange="_saitraIAToggleActivo('+m.idx+')" title="Incluir en la valoración" style="width:14px;height:14px;flex-shrink:0;cursor:pointer">'
       +'<div style="flex:1;min-width:0">'
       +'<div style="font-size:11px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:5px;flex-wrap:wrap">'
       +'<span style="font-family:monospace;background:#f0f0f0;padding:1px 5px;border-radius:3px;color:#1565c0">'+m.ref+'</span>'
@@ -15362,12 +15405,23 @@ function _saitraIAGuardarEdit(idx){
   const pos=_saitraIAModulos.findIndex(m=>m.idx===idx);
   if(pos!==-1) _saitraIAModulos[pos]=updated;
   _saitraIARenderLista();
+  _saitraIASyncLineas();
   if(!updated.valido) _saitraIAToggleEdit(idx);
 }
 
 function _saitraIAEliminar(idx){
   _saitraIAModulos=_saitraIAModulos.filter(m=>m.idx!==idx);
   _saitraIARenderLista();
+  _saitraIASyncLineas();
+}
+
+// Toggle activo/inactivo de un módulo IA desde la lista (checkbox)
+function _saitraIAToggleActivo(idx){
+  const m = _saitraIAModulos.find(x => x.idx === idx);
+  if(!m) return;
+  m.activo = m.activo === false ? true : false;
+  _saitraIARenderLista();
+  _saitraIASyncLineas();
 }
 
 function _saitraIAañadirManual(tipoAdd){
@@ -15424,6 +15478,7 @@ async function saitraIAAnalizar(){
     if(parsed.observaciones){obs.style.display='block';obs.innerHTML='<strong>📌 Observaciones:</strong> '+parsed.observaciones;}
     else obs.style.display='none';
     _saitraIARenderLista();
+    _saitraIASyncLineas();
     document.getElementById('saitra-ia-step1').style.display='none';
     document.getElementById('saitra-ia-step2').style.display='block';
     document.getElementById('saitra-ia-paso-lbl').textContent='Paso 2 de 2 — Revisión y ajuste';
@@ -15475,6 +15530,7 @@ async function saitraIAChatEnviar(){
     _saitraIAModulos=_saitraIACalcularModulos(parsed.modulos,_saitraIATarifa,_saitraIAMargen);
     if(parsed.extras?.length) _saitraIAAddExtras(parsed.extras);
     _saitraIARenderLista();
+    _saitraIASyncLineas();
     _saitraIAChatAddMsg('ia',parsed.respuesta||'✅ Lista actualizada');
     const obs=document.getElementById('saitra-ia-obs');
     if(parsed.observaciones!==undefined){if(parsed.observaciones){obs.style.display='block';obs.innerHTML='<strong>📌</strong> '+parsed.observaciones;}else obs.style.display='none';}
@@ -15487,22 +15543,13 @@ async function saitraIAChatEnviar(){
   }
 }
 
+// Ya no hace falta confirmación: la sincronización IA↔valoración es en vivo.
+// Dejamos el stub para compatibilidad; simplemente cierra el panel IA.
 function saitraIAConfirmar(){
-  let n=0;
-  _saitraIAModulos.forEach(m=>{
-    if(!m.valido) return;
-    const chk=document.getElementById('saitraIAchk-'+m.idx);
-    if(!chk||!chk.checked) return;
-    const cant=m.cant||1;
-    saitraLineas.push({id:++saitraIdCnt,tipo:'modulo',ref:m.ref,modelo:'1',
-      desc:m.label+' '+m.ancho+'cm'+(m.nota?' · '+m.nota:''),
-      notas:'',cant,puntos:m.puntos,costeUnit:m.costeUnit,costeTotal:m.costeUnit*cant,pvpUnit:m.pvpUnit,pvpTotal:m.pvpUnit*cant});
-    n++;
-  });
+  _saitraIASyncLineas();
   document.getElementById('saitra-ia-wrap').style.display='none';
-  document.getElementById('saitra-col-contenido').style.display='flex';
-  saitraRenderTabla(); saitraRecalc();
-  toast('✅ '+n+' módulos añadidos desde el plano [IA]');
+  const n = _saitraIAModulos.filter(m => m.valido && m.activo !== false).length;
+  toast('✅ '+n+' módulos IA fijados en la valoración Saitra');
 }
 
 
@@ -15611,13 +15658,14 @@ function saitraRenderTabla(){
   if(countEl) countEl.textContent=saitraLineas.length+' partida'+(saitraLineas.length!==1?'s':'');
   const iconos = {modulo:'📦', accesorio:'🔧', zocalo:'⬇', gola:'↔', incremento:'⬆'};
   tbody.innerHTML = saitraLineas.map((l,i)=>{
-    const bg = i%2===0?'white':'#fdfcfa';
+    const bg = l.fromIA ? 'linear-gradient(90deg,#e3f2fd 0%,#fdfcfa 40%)' : (i%2===0?'white':'#fdfcfa');
     const mColors = {'1':'var(--copper)','2':'#1565c0','3':'#2e7d32','4':'#7b5ea7'};
     const mNum = l.modelo || '1';
     const mLabel = '<span style="font-size:9px;font-weight:700;background:'+( mColors[mNum]||'var(--copper)' )+';color:white;padding:1px 4px;border-radius:2px">M'+mNum+'</span>';
+    const iaBadge = l.fromIA ? '<span style="font-size:8px;background:#1565c0;color:white;padding:1px 4px;border-radius:3px;margin-right:4px;font-weight:700;letter-spacing:.05em">IA</span>' : '';
     return '<tr style="background:'+bg+';border-bottom:1px solid #f0ece5">'
       +'<td style="padding:7px 6px;text-align:center">'+mLabel+'</td>'
-      +'<td style="padding:7px 10px;font-weight:700;color:var(--navy);font-size:11px">'+(iconos[l.tipo]||'')+' '+l.ref+'</td>'
+      +'<td style="padding:7px 10px;font-weight:700;color:var(--navy);font-size:11px">'+iaBadge+(iconos[l.tipo]||'')+' '+l.ref+'</td>'
       +'<td style="padding:7px 10px;font-size:12px">'+escH(l.desc)+(l.notas?'<br><span style="font-size:10px;color:var(--text-soft);font-style:italic">📝 '+escH(l.notas)+'</span>':'')+'</td>'
       +'<td style="padding:7px 6px;text-align:center;font-size:12px">'+l.cant+'</td>'
       +'<td style="padding:7px 6px;text-align:right;font-size:11px;color:var(--text-soft)">'+fmtES(l.costeTotal)+'€</td>'
@@ -25988,10 +26036,13 @@ function _tbRenderBudget(){
   }
   cnt.textContent = _tbLineas.length + ' producto' + (_tbLineas.length>1?'s':'');
 
-  lines.innerHTML = _tbLineas.map((l,i) => `
-    <div style="display:flex;align-items:center;gap:5px;padding:4px 0;border-bottom:1px solid var(--border);font-size:11px">
+  lines.innerHTML = _tbLineas.map((l,i) => {
+    const bgRow = l.fromIA ? 'background:linear-gradient(90deg,#f3e5f5 0%,transparent 40%);' : '';
+    const iaBadge = l.fromIA ? '<span style="font-size:8px;background:#6a1b9a;color:white;padding:1px 4px;border-radius:3px;margin-right:3px;font-weight:700;letter-spacing:.05em">IA</span>' : '';
+    return `
+    <div style="display:flex;align-items:center;gap:5px;padding:4px 0;border-bottom:1px solid var(--border);font-size:11px;${bgRow}">
       <input type="checkbox" class="tb-chk" data-idx="${i}" style="margin:0;flex-shrink:0">
-      <span style="font-weight:700;width:55px;flex-shrink:0;font-family:monospace;font-size:10px">${l.ref}</span>
+      ${iaBadge}<span style="font-weight:700;width:55px;flex-shrink:0;font-family:monospace;font-size:10px">${l.ref}</span>
       <div style="flex:1;overflow:hidden;min-width:0">
         <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-soft)">${l.desc} <span style="font-size:9px;background:var(--bg-main);padding:1px 4px;border-radius:3px">${l.acabado}</span></div>
         ${l.nota ? `<div style="font-size:10px;color:var(--copper);font-style:italic;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${l.nota.replace(/"/g,'&quot;')}">📝 ${l.nota}</div>` : ''}
@@ -26002,7 +26053,7 @@ function _tbRenderBudget(){
       <button class="btn btn-ghost btn-sm" style="font-size:9px;padding:1px 3px;color:var(--copper)" title="Editar nota" onclick="tbEditarNota(${i})">📝</button>
       <button class="btn btn-ghost btn-sm" style="font-size:9px;padding:1px 3px;color:var(--red)" onclick="_tbLineas.splice(${i},1);_tbGuardarLineas();_tbRenderBudget()">✕</button>
     </div>
-  `).join('');
+  `;}).join('');
 
   let totCoste=0, totPvp=0;
   _tbLineas.forEach(l=>{ totCoste+=l.coste*l.cant; totPvp+=l.pvpSinIva*l.cant; });
@@ -26244,14 +26295,54 @@ function tbAbrirLeerPlano(){
   document.getElementById('tb-ia-paso-lbl').textContent = 'Paso 1 de 2 — Subir plano';
   document.getElementById('tb-ia-chat-hist').innerHTML =
     '<div id="tb-ia-chat-hint" style="color:#888;font-size:10px;text-align:center;padding:8px 0">💡 <em>"El módulo 3 debería ser D1052"</em> · <em>"Quita el módulo 2"</em></div>';
-  document.getElementById('tb-grid').style.display = 'none';
+  // Toggle catálogo→IA: familias y valoración siguen visibles
+  document.getElementById('tb-catalog-view').style.display = 'none';
   document.getElementById('tb-ia-wrap').style.display = 'flex';
   document.getElementById('tb-ia-wrap').style.flexDirection = 'column';
 }
 
 function tbIACerrar(){
   document.getElementById('tb-ia-wrap').style.display = 'none';
-  document.getElementById('tb-grid').style.display = 'grid';
+  document.getElementById('tb-catalog-view').style.display = 'flex';
+}
+
+// Descarta todas las líneas IA pendientes de la valoración y resetea el análisis
+function tbIAQuitarPendientes(){
+  if(!confirm('¿Descartar todos los módulos detectados por la IA?')) return;
+  _tbLineas = _tbLineas.filter(l => !l.fromIA);
+  _tbIAModulos = [];
+  _tbGuardarLineas();
+  _tbRenderBudget();
+  tbIAVolverPaso1();
+}
+
+// Sincroniza los módulos IA válidos dentro de _tbLineas con flag fromIA
+function _tbIASyncLineas(){
+  const {tipo, nombre} = _tbAcabadoInfo();
+  // 1) Quitar líneas IA previas
+  _tbLineas = _tbLineas.filter(l => !l.fromIA);
+  // 2) Añadir módulos IA válidos y activos
+  _tbIAModulos.forEach(m => {
+    if(!m.valido || m.activo === false) return;
+    const parts = [];
+    if(m.alto) parts.push(m.alto+' H');
+    if(m.ancho) parts.push(m.ancho+' L');
+    const medidas = parts.join(' x ');
+    const nota = [medidas, m.nota||''].filter(Boolean).join(' — ');
+    _tbLineas.push({
+      ref: m.ref,
+      desc: m.desc || '',
+      acabado: nombre,
+      acabadoTipo: tipo,
+      coste: m.coste,
+      pvpSinIva: m.pvpSinIva,
+      nota, cant: m.cant||1,
+      fromIA: true,
+      iaIdx: m.idx
+    });
+  });
+  _tbGuardarLineas();
+  _tbRenderBudget();
 }
 
 function tbIAVolverPaso1(){
@@ -26298,16 +26389,17 @@ function _tbIAValidarModulos(lista){
     const ref = (m.ref||'').toString().toUpperCase().trim();
     const p = ref ? _tbData.find(d => (d.ref||'').toUpperCase() === ref) : null;
     if(!p){
-      return { ...m, idx, ref, valido:false, error: ref ? ('Ref "'+ref+'" no está en el catálogo Tobisa') : 'Sin ref — introduce la referencia manualmente' };
+      return { ...m, idx, ref, activo:false, valido:false, error: ref ? ('Ref "'+ref+'" no está en el catálogo Tobisa') : 'Sin ref — introduce la referencia manualmente' };
     }
     const tarifa = tipo==='color' ? (p.precio_color??p.precio_base) : (p.precio_base??p.precio_color);
     if(tarifa==null){
-      return { ...m, idx, ref, desc:p.descripcion, valido:false, error:'Sin precio para el acabado seleccionado' };
+      return { ...m, idx, ref, desc:p.descripcion, activo:false, valido:false, error:'Sin precio para el acabado seleccionado' };
     }
     const coste = tarifa * (1 - dto1/100) * (1 - dto2/100);
     const pvpSinIva = tarifa / 1.21;
     return {
       ...m, idx, ref, valido:true,
+      activo: m.activo !== false,
       desc: p.descripcion || '',
       tarifa, coste, pvpSinIva,
       ancho: m.ancho || p.ancho || '',
@@ -26333,6 +26425,15 @@ function _tbIAAddExtras(extras){
 function _tbIAEliminar(idx){
   _tbIAModulos = _tbIAModulos.filter(m => m.idx !== idx);
   _tbIARenderLista();
+  _tbIASyncLineas();
+}
+
+function _tbIAToggleActivo(idx){
+  const m = _tbIAModulos.find(x => x.idx === idx);
+  if(!m) return;
+  m.activo = !m.activo;
+  _tbIARenderLista();
+  _tbIASyncLineas();
 }
 
 function _tbIARevalidar(idx){
@@ -26347,6 +26448,7 @@ function _tbIARevalidar(idx){
   const rev = _tbIAValidarModulos([m])[0];
   Object.assign(m, rev);
   _tbIARenderLista();
+  _tbIASyncLineas();
 }
 
 function _tbIARenderLista(){
@@ -26372,26 +26474,38 @@ function _tbIARenderLista(){
         +'<button onclick="_tbIARevalidar('+m.idx+')" style="font-size:11px;padding:4px 10px;background:'+colorTxt+';color:white;border:none;border-radius:3px;cursor:pointer;font-weight:700">✓ Validar</button>'
         +'</div></div>';
     }
-    return '<div id="tbIArow-'+m.idx+'" style="border-bottom:1px solid var(--border);background:'+bg+';padding:7px 10px">'
+    const activo = m.activo !== false;
+    const bgRow = activo ? bg : '#f5f5f5';
+    const opaque = activo ? '1' : '.5';
+    return '<div id="tbIArow-'+m.idx+'" style="border-bottom:1px solid var(--border);background:'+bgRow+';padding:7px 10px;opacity:'+opaque+'">'
       +'<div style="display:flex;align-items:center;gap:6px">'
-      +'<input type="checkbox" id="tbIAchk-'+m.idx+'" checked style="width:14px;height:14px;cursor:pointer">'
+      +'<input type="checkbox" '+(activo?'checked':'')+' onchange="_tbIAToggleActivo('+m.idx+')" title="Incluir en la valoración" style="width:14px;height:14px;cursor:pointer">'
       +'<span style="font-weight:700;font-family:monospace;font-size:11px;color:#6a1b9a;width:55px;flex-shrink:0">'+m.ref+'</span>'
       +'<div style="flex:1;font-size:11px;min-width:0;overflow:hidden">'
       +'<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+(m.desc||'').replace(/"/g,'&quot;')+'">'+(m.desc||'')+'</div>'
       +(m.nota?'<div style="font-size:10px;color:#6a1b9a;font-style:italic">📝 '+m.nota+'</div>':'')
       +'</div>'
       +'<span style="font-size:10px;color:var(--text-soft);width:80px;text-align:right;flex-shrink:0">'+(m.ancho||'?')+'×'+(m.alto||'?')+' cm</span>'
-      +'<input type="number" value="'+(m.cant||1)+'" min="1" max="99" style="width:38px;font-size:10px;padding:2px;text-align:center;border:1px solid var(--border);border-radius:3px;flex-shrink:0" onchange="_tbIAModulos['+i+'].cant=parseInt(this.value)||1;_tbIARenderLista()">'
+      +'<input type="number" value="'+(m.cant||1)+'" min="1" max="99" style="width:38px;font-size:10px;padding:2px;text-align:center;border:1px solid var(--border);border-radius:3px;flex-shrink:0" onchange="_tbIAModulos['+i+'].cant=parseInt(this.value)||1;_tbIARenderLista();_tbIASyncLineas()">'
       +'<span style="width:65px;text-align:right;font-weight:700;font-size:10px;color:var(--copper);flex-shrink:0">'+fE(m.pvpSinIva*(m.cant||1))+'</span>'
       +'<button onclick="_tbIAEliminar('+m.idx+')" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:14px;flex-shrink:0">✕</button>'
       +'</div></div>';
   }).join('');
 
   // Resumen
-  let totalCoste=0, totalPvp=0, validos=0;
-  _tbIAModulos.forEach(m => { if(m.valido){ totalCoste += m.coste*(m.cant||1); totalPvp += m.pvpSinIva*(m.cant||1); validos++; } });
+  let totalCoste=0, totalPvp=0, validos=0, activos=0;
+  _tbIAModulos.forEach(m => {
+    if(m.valido){
+      validos++;
+      if(m.activo !== false){
+        totalCoste += m.coste*(m.cant||1);
+        totalPvp += m.pvpSinIva*(m.cant||1);
+        activos++;
+      }
+    }
+  });
   document.getElementById('tb-ia-resumen').innerHTML =
-    '<span>'+validos+' / '+_tbIAModulos.length+' módulos válidos</span>'
+    '<span>'+activos+' activos · '+validos+' válidos / '+_tbIAModulos.length+' detectados</span>'
     +'<span>Coste: '+fE(totalCoste)+' · PVP s/IVA: '+fE(totalPvp)+'</span>';
 }
 
@@ -26494,6 +26608,7 @@ async function tbIAAnalizar(){
     else obs.style.display='none';
 
     _tbIARenderLista();
+    _tbIASyncLineas();
     document.getElementById('tb-ia-step1').style.display='none';
     document.getElementById('tb-ia-step2').style.display='block';
     document.getElementById('tb-ia-paso-lbl').textContent='Paso 2 de 2 — Revisión y ajuste';
@@ -26563,6 +26678,7 @@ async function tbIAChatEnviar(){
     _tbIAModulos = _tbIAValidarModulos(parsed.modulos);
     if(parsed.extras?.length) _tbIAAddExtras(parsed.extras);
     _tbIARenderLista();
+    _tbIASyncLineas();
     _tbIAChatAddMsg('ia', parsed.respuesta || '✅ Lista actualizada');
 
     const obs = document.getElementById('tb-ia-obs');
@@ -26579,7 +26695,13 @@ async function tbIAChatEnviar(){
   }
 }
 
+// Obsoleto: la sincronización ya es en tiempo real. Dejamos un stub por compatibilidad.
 function tbIAConfirmar(){
+  _tbIASyncLineas();
+  tbIACerrar();
+  toast('✅ Módulos IA añadidos a la valoración');
+  return;
+  // eslint-disable-next-line no-unreachable
   const {tipo, nombre} = _tbAcabadoInfo();
   let n = 0;
   _tbIAModulos.forEach(m => {
