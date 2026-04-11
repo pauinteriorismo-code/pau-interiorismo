@@ -14982,7 +14982,7 @@ function _saitraIASyncLineas(){
       id: ++saitraIdCnt,
       tipo: 'modulo',
       ref: m.ref,
-      modelo: '1',
+      modelo: m.modelo || '1',
       desc: (m.label || '') + ' ' + (m.ancho || '') + 'cm' + (m.nota ? ' · ' + m.nota : ''),
       notas: '',
       cant,
@@ -15054,7 +15054,10 @@ function _saitraIACalcularModulos(lista, tarifaIdx, margen){
       else { pts=Math.round(modDef.anchos[anchoMax][tarifaIdx]*anchoSolicitado/anchoMax); anchoUsado=anchoMax; metodo='regla3'; }
     }
     const costeU=pts*0.99, pvpU=costeU*(1+margen/100);
-    return { ...m, valido:true, idx, puntos:pts, tarifaIdx, margen, anchoUsado, metodo,
+    // Normalizar modelo: aceptar "M1"/"M2"/"M3"/"1"/"2"/"3", default "M1"
+    let modelo = String(m.modelo || '1').toUpperCase().replace(/^M/,'');
+    if(!['1','2','3'].includes(modelo)) modelo = '1';
+    return { ...m, valido:true, idx, modelo, puntos:pts, tarifaIdx, margen, anchoUsado, metodo,
       costeUnit:costeU, pvpUnit:pvpU, costeTotal:costeU*(m.cant||1), pvpTotal:pvpU*(m.cant||1), label:modDef.label };
   });
 }
@@ -15396,7 +15399,67 @@ async function saitraIAAnalizar(){
     const isPdf=_saitraIAFile.type==='application/pdf';
     const mediaType=isPdf?'application/pdf':_saitraIAFile.type;
     const catalog=_saitraIAGenerarCatalogo();
-    const prompt='Eres un técnico experto en el catálogo Saitra. Analiza el plano y genera la lista de módulos usando EXCLUSIVAMENTE las referencias del catálogo oficial.\n\nCATÁLOGO OFICIAL SAITRA:\n'+catalog+'\n\nREGLAS ABSOLUTAS:\n1. "ref" siempre debe ser una clave exacta del catálogo. NUNCA inventes refs.\n2. "ancho" debe existir en los anchos de esa ref. Si no existe, usa el INMEDIATO SUPERIOR disponible.\n3. Si hay elementos sin ref válida pero que son PRODUCTOS VALORABLES (costados, regletas, zócalos, tiradores, etc.), inclúyelos en "extras".\n4. Si hay anotaciones informativas que NO son productos (acabado, tarifa, color casco, notas generales), ponlas en "observaciones".\n\nETIQUETAS CON FLECHA FUERA DEL DIBUJO (CRÍTICO):\nMuchas referencias aparecen como etiquetas FUERA del alzado, con una FLECHA que apunta al módulo correspondiente. El formato es "REFERENCIA ANCHOcm" (ej: "PCH2P221 60cm", "ZOC 240cm", "PC2PP78 90cm"). DEBES escanear los márgenes superiores, inferiores y laterales del plano para encontrarlas. La línea de la flecha indica a qué módulo pertenece la etiqueta.\n\nLETRAS DE ANOTACIÓN EN EL PLANO:\nLos planos de Saitra usan letras junto a cada módulo para indicar accesorios/elementos asociados:\n- C = Costado (panel lateral visto)\n- R = Regleta (tira de relleno / tapajuntas)\n- P = Puerta\nCuando veas estas letras (C, R, P) junto a un módulo, DEBES incluirlas en el campo "nota" de ese módulo indicando posición si es posible. Ejemplos: "C izq.", "R der.", "C izq. + R der.", "2C", "P".\nSi aparecen otras anotaciones o letras en el plano, inclúyelas también en "nota".\n\nGUÍA POR TIPOLOGÍA:\n- "Mod. 1 pta" alto ≤60cm → PCP78; 60-120cm → PC2PP78\n- "Mod. 2 ptas" alto → PC2P78 o PC2PP78 plegables\n- Campana 60cm → PCCEP-h61-60; 90cm → PCCEP-h61-90\n- Frigo/sobrefrigo H.26 → PCSA26; H.39 → PCSA39\n- Lavavajillas → PBLG\n- Fregadero 1P → PBFP; fregadero 2G → PBF2G; fregadero 2P → PBF2P\n- Cacerolero/cajón interior → PB2GC\n- Base 1P ≤60 → PBP; Base 2P ≥70 → PB2P\n- Bajo placa → PBPL2G, PBPL2GC, PBPLHF, PBPLHG2\n\nCOLUMNAS (etiquetas fuera del dibujo, formato "REFERENCIA ANCHOcm"):\n- Horno H.221 → PCH2P221 · Horno+micro H.221 → PCHM2P221 · Despensa H.221 → PCE2P221 · Frigorífico H.221 → PCFPI221\n- Horno H.208 → PCH2P208 · Horno+micro H.208 → PCHM2P208\n- Horno H.195 → PCH2P195 · Horno+micro H.195 → PCHM2P195\n\nCOLGANTES PLEGABLES (etiqueta fuera, formato "REFERENCIA ANCHOcm"):\n- Plegable H.78 → PC2PP78\n- Plegable H.91 → PCPVPP91\n- Plegable H.104 → PCPP104\nAnchos típicos: 60, 70, 80, 90, 100, 110, 120.\n\nZÓCALO (etiqueta fuera, formato "ZOC ANCHOcm", altura fija 10cm):\n- Siempre ref "ZOC" con el ancho que indique la etiqueta (ej: "ZOC 240cm" → {"ref":"ZOC","ancho":240}). El alto no aparece, es siempre 10cm.\n\nCÓMO BUSCAR LAS ETIQUETAS CON FLECHA:\n1. Examina primero el alzado con los módulos dibujados (rectángulos grises).\n2. Luego recorre todo el perímetro del plano: arriba, abajo, izquierda, derecha.\n3. Cada texto con una flecha que apunta al dibujo es una referencia que DEBES incluir.\n4. NO te saltes columnas PCH/PCHM/PCE/PCFPI, colgantes plegables PC2PP/PCPVPP/PCPP ni el zócalo ZOC: suelen estar fuera del alzado principal.\n\nResponde ÚNICAMENTE con JSON (sin markdown, sin backticks):\n{"modulos":[{"ref":"PCP78","ancho":60,"cant":1,"nota":"C izq., R der.","tipo":"alto"}],"extras":[{"desc":"Costado C 62,5x88","cant":1,"medidas":"62,5x88"},{"desc":"Regleta R 79","cant":1,"medidas":"79cm"}],"observaciones":"notas informativas: acabado, tarifa, color casco, etc."}';
+    const prompt='Eres un técnico experto en el catálogo Saitra. Analiza el plano con MÁXIMA ATENCIÓN al OCR y genera la lista de módulos usando EXCLUSIVAMENTE las referencias del catálogo oficial.\n\n'
+      +'═══ FORMATO ESTRICTO DE LAS ETIQUETAS (plugin PAU Interiorismo) ═══\n'
+      +'Cada etiqueta sigue esta sintaxis exacta:\n'
+      +'   REF ANCHOcm MODELO [×N] [DESCRIPCIÓN] [NOTA]\n\n'
+      +'Donde:\n'
+      +'• REF         = código alfanumérico del catálogo Saitra (PBP, PB2P, PCH2P221, ZOC, etc.)\n'
+      +'• ANCHOcm     = ancho del módulo en cm, seguido literalmente de "cm" (ej: "60cm")\n'
+      +'• MODELO      = M1, M2 o M3 (en mayúsculas). Indica a qué modelo de acabado pertenece.\n'
+      +'                Si no aparece, asumir M1.\n'
+      +'• ×N          = cantidad (OPCIONAL). Símbolo multiplicación "×" + número. Si falta, cant=1.\n'
+      +'• DESCRIPCIÓN = texto corto opcional (apertura, sentido, observación técnica).\n'
+      +'• NOTA        = texto libre al final (tirador, gola, etc.).\n\n'
+      +'EJEMPLOS REALES:\n'
+      +'  "PBP 60cm M1"                        → ref:PBP ancho:60 modelo:M1 cant:1\n'
+      +'  "PBF2P 100cm M1 ×2 trasera forrada"  → ref:PBF2P ancho:100 modelo:M1 cant:2 nota:"trasera forrada"\n'
+      +'  "PCH2P221 60cm M1"                   → columna horno M1\n'
+      +'  "ZOC 240cm M1"                       → zócalo 240cm (alto fijo 10cm)\n'
+      +'  "PC2PP78 90cm M2"                    → colgante plegable M2\n\n'
+
+      +'═══ OCR — PRECISIÓN ABSOLUTA ═══\n'
+      +'Mira cada etiqueta DOS VECES antes de decidir. Errores típicos a evitar:\n'
+      +'• Confundir "0" con "O", "1" con "l/I", "4" con "6/9", "8" con "B".\n'
+      +'• Fusionar dígitos: "2 P 78" no es "2P78" salvo que el espacio sea mínimo.\n'
+      +'• No confundir "M1" con "Mi" o "Ml".\n'
+      +'• Si una ref no existe en el catálogo, NO inventes — déjala vacía y pásala como extras.\n\n'
+
+      +'═══ CATÁLOGO OFICIAL SAITRA ═══\n'+catalog+'\n\n'
+
+      +'═══ REGLAS ABSOLUTAS ═══\n'
+      +'1. "ref" SIEMPRE debe ser una clave exacta del catálogo. NUNCA inventes refs.\n'
+      +'2. "ancho" debe existir en los anchos válidos de esa ref. Si el número que lees no existe,\n'
+      +'   usa el INMEDIATO SUPERIOR disponible.\n'
+      +'3. "modelo" se toma del token M1/M2/M3 de la etiqueta. Default M1.\n'
+      +'4. "cant" del token ×N. Default 1.\n'
+      +'5. Si hay productos valorables SIN ref en catálogo (costados C, regletas R, tiradores, etc.)\n'
+      +'   van en "extras" con su descripción.\n'
+      +'6. Notas informativas generales del proyecto (cliente, color casco global) → "observaciones".\n'
+      +'7. NO metas refs reales en "observaciones".\n\n'
+
+      +'═══ ETIQUETAS CON FLECHA FUERA DEL DIBUJO (CRÍTICO) ═══\n'
+      +'Muchas refs aparecen como etiquetas FUERA del alzado con una flecha que apunta al módulo.\n'
+      +'DEBES escanear todo el perímetro (arriba, abajo, izquierda, derecha). Especial atención a:\n'
+      +'• Columnas: PCH2P221/PCHM2P221/PCE2P221/PCFPI221/PCH2P208/PCHM2P208/PCH2P195/PCHM2P195\n'
+      +'• Colgantes plegables: PC2PP78, PCPVPP91, PCPP104 (anchos 60-120)\n'
+      +'• Zócalo: ZOC (alto fijo 10cm)\n\n'
+
+      +'═══ LETRAS DE ANOTACIÓN ═══\n'
+      +'C=Costado, R=Regleta, P=Puerta. Inclúyelas en la nota del módulo con posición\n'
+      +'(ej: "C izq.", "R der.", "C izq. + R der.", "2C").\n\n'
+
+      +'═══ GUÍA POR TIPOLOGÍA ═══\n'
+      +'- Mod. 1 pta alto ≤60 → PCP78; 60-120 → PC2PP78\n'
+      +'- Fregadero 1P → PBFP; 2P → PBF2P\n'
+      +'- Cacerolero → PB2GC · Base 1P → PBP · Base 2P → PB2P\n'
+      +'- Bajo placa → PBPL2G, PBPL2GC, PBPLHF, PBPLHG2\n'
+      +'- Horno H.221 → PCH2P221 · Horno+micro → PCHM2P221\n\n'
+
+      +'Responde ÚNICAMENTE con JSON puro (sin markdown, sin backticks):\n'
+      +'{"modulos":[{"ref":"PBP","ancho":60,"modelo":"M1","cant":1,"nota":"C izq., R der.","tipo":"bajo"}],'
+      +'"extras":[{"desc":"Costado C 62,5x88","cant":1,"medidas":"62,5x88"},{"desc":"Regleta R 79","cant":1,"medidas":"79cm"}],'
+      +'"observaciones":"notas generales: acabado global, cliente, proyecto, etc."}';
     const userContent=isPdf
       ?[{type:'document',source:{type:'base64',media_type:'application/pdf',data:base64}},{type:'text',text:prompt}]
       :[{type:'image',source:{type:'base64',media_type:mediaType,data:base64}},{type:'text',text:prompt}];
@@ -15453,8 +15516,28 @@ async function saitraIAChatEnviar(){
   document.getElementById('saitra-ia-chat-btn').disabled=true;
   try {
     const catalog=_saitraIAGenerarCatalogo();
-    const listaActual=_saitraIAModulos.map((m,i)=>(i+1)+'. ref:'+m.ref+' ancho:'+m.ancho+'cm cant:'+(m.cant||1)+' nota:"'+(m.nota||'')+'"').join('\n');
-    const corrPrompt='Lista actual:\n'+listaActual+'\n\nUsuario pide: "'+msg+'"\n\nREGLAS: Solo refs del catálogo Saitra. Si ancho no existe, usa inmediato superior. Productos sin ref en catálogo (costados, regletas…) van en "extras". Notas informativas (acabado, tarifa, color…) van en "observaciones".\nLETRAS DE ANOTACIÓN: C=Costado, R=Regleta, P=Puerta. Inclúyelas en "nota" de cada módulo indicando posición (ej. "C izq., R der.").\nETIQUETAS FUERA DEL DIBUJO (formato "REFERENCIA ANCHOcm"): columnas PCH2P221/PCHM2P221/PCE2P221/PCFPI221/PCH2P208/PCHM2P208/PCH2P195/PCHM2P195, colgantes plegables PC2PP78/PCPVPP91/PCPP104 y zócalo ZOC (alto fijo 10cm). Búscalas en los márgenes del plano.\n\nCATÁLOGO:\n'+catalog+'\n\nDevuelve ÚNICAMENTE JSON:\n{"modulos":[{"ref":"...","ancho":0,"cant":1,"nota":"...","tipo":"alto|bajo"}],"extras":[{"desc":"...","cant":1,"medidas":"..."}],"respuesta":"explicación breve","observaciones":"notas informativas"}';
+    const listaActual=_saitraIAModulos.map((m,i)=>
+      (i+1)+'. ref:'+m.ref+' ancho:'+m.ancho+'cm modelo:'+(m.modelo||'M1')
+      +(m.cant>1?' ×'+m.cant:'')
+      +(m.nota?' nota:"'+m.nota+'"':'')
+    ).join('\n');
+    const corrPrompt='Lista actual:\n'+listaActual+'\n\n'
+      +'El usuario pide: "'+msg+'"\n\n'
+      +'FORMATO DE LAS ETIQUETAS SAITRA (recordatorio):\n'
+      +'   REF ANCHOcm MODELO [×N] [DESC] [NOTA]\n'
+      +'Donde REF es clave del catálogo Saitra, ANCHO en cm, MODELO = M1/M2/M3 (default M1),\n'
+      +'×N cantidad opcional, DESC descripción adicional, NOTA texto libre.\n\n'
+      +'REGLAS: Solo refs del catálogo Saitra. Si ancho no existe, usa inmediato superior.\n'
+      +'Productos sin ref en catálogo (costados C, regletas R, tiradores…) van en "extras".\n'
+      +'Notas generales del proyecto (acabado global, cliente) van en "observaciones".\n'
+      +'LETRAS DE ANOTACIÓN: C=Costado, R=Regleta, P=Puerta — inclúyelas en "nota" con posición.\n'
+      +'ETIQUETAS FUERA DEL DIBUJO: columnas PCH2P221/PCHM2P221/PCE2P221/PCFPI221/PCH2P208/PCHM2P208/PCH2P195/PCHM2P195, '
+      +'colgantes plegables PC2PP78/PCPVPP91/PCPP104 y zócalo ZOC. Búscalas en los márgenes del plano.\n\n'
+      +'CATÁLOGO:\n'+catalog+'\n\n'
+      +'Devuelve ÚNICAMENTE JSON:\n'
+      +'{"modulos":[{"ref":"...","ancho":0,"modelo":"M1","cant":1,"nota":"...","tipo":"alto|bajo"}],'
+      +'"extras":[{"desc":"...","cant":1,"medidas":"..."}],'
+      +'"respuesta":"explicación breve","observaciones":"notas informativas"}';
     _saitraIAChatHist.push({role:'user',content:corrPrompt});
     const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
       headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
@@ -26254,22 +26337,26 @@ function tbIAQuitarPendientes(){
 
 // Sincroniza los módulos IA válidos dentro de _tbLineas con flag fromIA
 function _tbIASyncLineas(){
-  const {tipo, nombre} = _tbAcabadoInfo();
+  const {tipo: tipoGlobal, nombre: acabGlobal} = _tbAcabadoInfo();
   // 1) Quitar líneas IA previas
   _tbLineas = _tbLineas.filter(l => !l.fromIA);
   // 2) Añadir módulos IA válidos y activos
   _tbIAModulos.forEach(m => {
     if(!m.valido || m.activo === false) return;
     const parts = [];
-    if(m.alto) parts.push(m.alto+' H');
+    if(m.alto)  parts.push(m.alto+' H');
     if(m.ancho) parts.push(m.ancho+' L');
+    if(m.fondo) parts.push(m.fondo+' P');
     const medidas = parts.join(' x ');
     const nota = [medidas, m.nota||''].filter(Boolean).join(' — ');
+    // Si el módulo IA trajo un acabado override (=acabado en la etiqueta),
+    // usarlo. Si no, usar el global del proyecto.
+    const acabadoFinal = (m.acabado && m.acabado.trim()) ? m.acabado.trim() : acabGlobal;
     _tbLineas.push({
       ref: m.ref,
       desc: m.desc || '',
-      acabado: nombre,
-      acabadoTipo: tipo,
+      acabado: acabadoFinal,
+      acabadoTipo: tipoGlobal,
       coste: m.coste,
       pvpSinIva: m.pvpSinIva,
       nota, cant: m.cant||1,
@@ -26333,6 +26420,10 @@ function _tbIAValidarModulos(lista){
     }
     const coste = tarifa * (1 - dto1/100) * (1 - dto2/100);
     const pvpSinIva = tarifa / 1.21;
+    // Normalizar nota: si el usuario (o IA) pasa un acabado override, lo metemos
+    // en el campo "acabado" especial en vez de perderlo en la nota.
+    const notaBase = (m.nota || '').trim();
+    const acabadoOverride = (m.acabado || '').trim();
     return {
       ...m, idx, ref, valido:true,
       activo: m.activo !== false,
@@ -26340,7 +26431,9 @@ function _tbIAValidarModulos(lista){
       tarifa, coste, pvpSinIva,
       ancho: m.ancho || p.ancho || '',
       alto: m.alto || p.alto || '',
-      fondo: p.fondo || '',
+      fondo: m.prof || p.fondo || '',
+      acabado: acabadoOverride,
+      nota: notaBase,
       cant: m.cant || 1
     };
   });
@@ -26481,37 +26574,90 @@ async function tbIAAnalizar(){
     const hintCat = _tbIAGenerarHintCatalogo();
 
     const prompt =
-      'Eres un técnico experto en el catálogo Tobisa (habitaciones juveniles, armarios y vestidores modulares). '
-      +'Analiza el plano de SketchUp y extrae las etiquetas de cada módulo.\n\n'
-      +'FORMATO DE LAS ETIQUETAS (MUY IMPORTANTE):\n'
-      +'Cada módulo tiene una etiqueta con flecha que apunta al módulo, colocada FUERA del dibujo. '
-      +'El formato típico es: "REFERENCIA ANCHOcm ALTOcm".\n'
-      +'Ejemplo: "D1001 62cm 39cm" → ref=D1001, ancho=62, alto=39.\n'
-      +'A veces la etiqueta sólo trae la ref + ancho (p.ej. "D1401 200cm" para un zócalo).\n\n'
-      +'REFERENCIAS TOBISA:\n'
-      +'Todas las refs empiezan por la letra D seguida de 4 dígitos (D1001, D1050, D2401, D3102…). '
-      +'NO inventes refs: extrae literalmente lo que leas. Si no eres capaz de leer una ref, déjala vacía y la persona la corregirá.'
+      'Eres un técnico experto en el catálogo Tobisa (habitaciones juveniles, armarios y vestidores). '
+      +'Analiza el plano de SketchUp con MÁXIMA ATENCIÓN al OCR y extrae cada etiqueta de módulo.\n\n'
+
+      +'═══ FORMATO ESTRICTO DE LAS ETIQUETAS (plugin PAU Interiorismo) ═══\n'
+      +'Cada etiqueta sigue esta sintaxis exacta:\n'
+      +'   REF HxLxP [×N] [=ACABADO] [NOTA]\n\n'
+      +'Donde:\n'
+      +'• REF      = D seguido de 4 dígitos. SIEMPRE.  (D1001, D4449, D8157…)\n'
+      +'• H        = alto (cm)\n'
+      +'• L        = ancho (cm)\n'
+      +'• P        = fondo/profundidad (cm)\n'
+      +'• HxLxP separado por la letra "x" minúscula sin espacios.\n'
+      +'• ×N       = cantidad (OPCIONAL). Empieza por el símbolo multiplicación "×" (U+00D7) o "x".\n'
+      +'            Si no aparece, cant = 1.\n'
+      +'• =ACABADO = OVERRIDE de acabado (OPCIONAL). Empieza por "=". Todo lo que va después\n'
+      +'            del "=" hasta el siguiente espacio o final es el nombre del acabado.\n'
+      +'            Si no aparece, el acabado se hereda del proyecto.\n'
+      +'• NOTA     = texto libre al final (OPCIONAL).\n\n'
+
+      +'EJEMPLOS REALES (estúdialos uno a uno):\n'
+      +'  "D1001 22x49x50"                     → ref:D1001 H:22 L:49 P:50 cant:1\n'
+      +'  "D4418 17x51x113"                    → ref:D4418 H:17 L:51 P:113 cant:1\n'
+      +'  "D4449 55x57x113"                    → ref:D4449 H:55 L:57 P:113 cant:1\n'
+      +'  "D4418 1x108x113"                    → ref:D4418 H:1 L:108 P:113 cant:1\n'
+      +'    ¡¡OJO!! NO mezcles "1x108" como "110". El "x" minúscula es SEPARADOR.\n'
+      +'  "D4079 38x206x113 Para S/ 105 x 190" → ref:D4079 H:38 L:206 P:113 nota:"Para S/ 105 x 190"\n'
+      +'  "D1041 39x41x50 ×4"                  → ref:D1041 H:39 L:41 P:50 cant:4\n'
+      +'  "D8157 116x111x5 =0801 Caqui Gap Led"→ ref:D8157 H:116 L:111 P:5 acabado:"0801 Caqui" nota:"Gap Led"\n'
+      +'  "D1013 39x49x50 ×2 =Roble Biscuit tirador"\n'
+      +'                                        → ref:D1013 H:39 L:49 P:50 cant:2 acabado:"Roble Biscuit" nota:"tirador"\n\n'
+
+      +'═══ REGLAS DE PARSING (CRÍTICAS) ═══\n'
+      +'1. SEPARA la cadena por ESPACIOS. El primer token es la REF. El segundo es HxLxP.\n'
+      +'2. Dentro de HxLxP, SEPARA por la "x" minúscula. Obtendrás exactamente 3 números: H, L, P.\n'
+      +'   NO juntes dígitos de tokens separados: "1x108x113" son tres números (1, 108, 113), NO "110x113".\n'
+      +'   "17x51x113" son tres números (17, 51, 113), NO "175x113".\n'
+      +'3. El siguiente token puede ser "×N" (cantidad). Ej: "×2", "×10".\n'
+      +'4. Luego puede venir "=..." (acabado override). Se extiende hasta el siguiente token que\n'
+      +'   NO empiece por letra ASCII de acabado (heurística: hasta el final del string).\n'
+      +'5. Resto = nota libre.\n'
+      +'6. Si la etiqueta tiene un formato DIFERENTE (más simple, por ejemplo "D1401 200cm"), acéptalo\n'
+      +'   pero devuelve sólo H/L que puedas inferir con seguridad.\n\n'
+
+      +'═══ OCR — PRECISIÓN ABSOLUTA EN LOS NÚMEROS ═══\n'
+      +'Mira cada etiqueta DOS veces antes de decidir el número. Errores comunes que debes EVITAR:\n'
+      +'• Confundir "4" con "6" o "9" (D4079 ≠ D6079 ≠ D9079).\n'
+      +'• Confundir "0" con "8" o "O".\n'
+      +'• Confundir "1" con "l" o "I".\n'
+      +'• Fusionar dos números separados por "x" como si fueran uno.\n'
+      +'• Leer "Caqui" como "Casal" (atención a las letras manuscritas o de baja resolución).\n'
+      +'Si una medida parece absurda (ej: ancho 175cm en un cajón que visualmente es de 51cm),\n'
+      +'reconsidera: probablemente hay un separador "x" que no viste.\n\n'
+
+      +'═══ REFERENCIAS TOBISA ═══\n'
+      +'Todas empiezan por D + 4 dígitos. No inventes. Si no puedes leer una ref con certeza,\n'
+      +'devuélvela vacía ("") y la persona la corregirá después.'
       +hintCat+'\n\n'
-      +'TIPOS DE MÓDULO QUE VERÁS (en alzado frontal 2D con relleno gris):\n'
-      +'- Cajones horizontales: rectángulo dividido en varias franjas horizontales por separadores\n'
-      +'- Contenedor: rectángulo con 1-3 líneas interiores horizontales marcando estantes\n'
-      +'- Puerta abatible: rectángulo con una línea diagonal indicando apertura\n'
-      +'- Diáfano: rectángulo vacío sin líneas interiores\n'
-      +'- Puerta + cajón: rectángulo con una franja inferior de cajón y el resto puerta con diagonal\n'
-      +'- Escritorio: superficie horizontal, a veces con patas o canto\n'
-      +'- Estantería: varios niveles verticales\n'
-      +'- Cama (nido, abatible, singular, literas)\n'
-      +'- Zócalo, trasera, complemento\n\n'
-      +'REGLAS:\n'
-      +'1. "ref" = código DXXXX exacto leído de la etiqueta. Si no lo ves, devuélvelo como "" (string vacío).\n'
-      +'2. "ancho" y "alto" = medidas en cm que aparezcan en la etiqueta o en cotas cercanas.\n'
-      +'3. Altura S (suelo) es la exterior, altura A (apilable) es unos 4cm menor — si ves "S" usa altura exterior; si ves "A" usa la reducida.\n'
-      +'4. Si hay elementos sin ref legible pero son productos valorables (zócalos, costados, traseras…), inclúyelos en "extras".\n'
-      +'5. Notas informativas (acabado, color, cliente, proyecto) van en "observaciones".\n\n'
-      +'Responde ÚNICAMENTE con JSON puro (sin markdown, sin backticks):\n'
-      +'{"modulos":[{"ref":"D1001","ancho":62,"alto":39,"cant":1,"nota":"","tipo":"cajones"}],'
-      +'"extras":[{"desc":"Zócalo","cant":1,"medidas":"200x10cm","ancho":200,"alto":10}],'
-      +'"observaciones":"acabado, color, notas"}';
+
+      +'═══ DÓNDE ESTÁN LAS ETIQUETAS ═══\n'
+      +'Las etiquetas aparecen FUERA del dibujo, conectadas con una línea/flecha al módulo.\n'
+      +'Escanea todo el perímetro del plano: arriba, abajo, izquierda y derecha. No te saltes ninguna,\n'
+      +'ni las etiquetas de arrimaderos/cabeceros/paneles (que suelen ser el fondo de la composición).\n\n'
+
+      +'═══ QUÉ DEVOLVER ═══\n'
+      +'• modulos[] = TODAS las etiquetas con ref DXXXX leída correctamente\n'
+      +'• extras[]  = productos visibles sin ref legible (sólo si estás seguro de que son productos)\n'
+      +'• observaciones = texto libre con notas GENERALES del plano, no info de módulos concretos\n\n'
+
+      +'REGLAS IMPORTANTES:\n'
+      +'1. Arrimaderos/cabeceros/paneles (D8xxx) NO son observaciones — son módulos reales con su ref.\n'
+      +'   Añádelos a "modulos" como cualquier otra pieza.\n'
+      +'2. Si ves "=acabado" en la etiqueta, el acabado va en el campo "acabado" del módulo\n'
+      +'   (NO en la nota ni en observaciones).\n'
+      +'3. Si ves "×N", la cantidad va en "cant".\n'
+      +'4. Nada que tenga una ref DXXXX va a "observaciones". "observaciones" es sólo para texto\n'
+      +'   suelto del plano que NO es una etiqueta de módulo (ej: nombre del proyecto, cliente).\n\n'
+
+      +'Responde ÚNICAMENTE con JSON puro (sin markdown, sin backticks, sin comentarios):\n'
+      +'{"modulos":['
+      +'{"ref":"D1001","ancho":49,"alto":22,"prof":50,"cant":1,"acabado":"","nota":"","tipo":"cajones"}'
+      +'],'
+      +'"extras":[{"desc":"...","cant":1,"medidas":"..."}],'
+      +'"observaciones":"..."}\n\n'
+      +'IMPORTANTE: "ancho"=L (dimensión horizontal del alzado), "alto"=H (dimensión vertical), "prof"=P.';
 
     const userContent = isPdf
       ? [{type:'document', source:{type:'base64', media_type:'application/pdf', data:base64}}, {type:'text', text:prompt}]
@@ -26580,14 +26726,26 @@ async function tbIAChatEnviar(){
   document.getElementById('tb-ia-chat-pensando').style.display = 'block';
   document.getElementById('tb-ia-chat-btn').disabled = true;
   try {
-    const listaActual = _tbIAModulos.map((m,i) => (i+1)+'. ref:'+(m.ref||'?')+' ancho:'+(m.ancho||'?')+' alto:'+(m.alto||'?')+' cant:'+(m.cant||1)+(m.nota?' nota:"'+m.nota+'"':'')).join('\n');
+    const listaActual = _tbIAModulos.map((m,i) =>
+      (i+1)+'. ref:'+(m.ref||'?')
+      +' H:'+(m.alto||'?')+' L:'+(m.ancho||'?')+' P:'+(m.fondo||'?')
+      +(m.cant>1 ? ' ×'+m.cant : '')
+      +(m.acabado ? ' =acab:"'+m.acabado+'"' : '')
+      +(m.nota ? ' nota:"'+m.nota+'"' : '')
+    ).join('\n');
     const corrPrompt = 'Lista actual de módulos Tobisa:\n'+listaActual+'\n\n'
       +'El usuario pide: "'+msg+'"\n\n'
-      +'Devuelve la lista corregida. Las refs Tobisa tienen formato DXXXX (4 dígitos). '
-      +'Si no conoces una ref exacta, deja "ref" vacío y pon una descripción en "nota". '
-      +'Los productos sin ref van en "extras". Notas informativas en "observaciones".\n\n'
-      +'Devuelve ÚNICAMENTE JSON:\n'
-      +'{"modulos":[{"ref":"D1001","ancho":62,"alto":39,"cant":1,"nota":"","tipo":"..."}],'
+      +'FORMATO DE LAS ETIQUETAS TOBISA EN EL PLANO (recordatorio):\n'
+      +'   REF HxLxP [×N] [=ACABADO] [NOTA]\n'
+      +'Donde REF = DXXXX (4 dígitos), H=alto, L=ancho, P=fondo (en cm),\n'
+      +'"x" minúscula separa las tres medidas (NO fusionar "1x108" como "110").\n'
+      +'"×N" = cantidad (opcional), "=ACABADO" = override de acabado del proyecto (opcional).\n\n'
+      +'Devuelve la lista corregida. Si no conoces una ref exacta, deja "ref" vacío y pon\n'
+      +'una descripción en "nota". Los productos sin ref van en "extras". Notas generales del\n'
+      +'proyecto (cliente, color general, etc.) van en "observaciones". ARRIMADEROS, CABECEROS\n'
+      +'y PANELES son módulos normales — van en "modulos", NO en "observaciones".\n\n'
+      +'Devuelve ÚNICAMENTE JSON puro (sin markdown, sin backticks):\n'
+      +'{"modulos":[{"ref":"D1001","ancho":49,"alto":22,"prof":50,"cant":1,"acabado":"","nota":"","tipo":"..."}],'
       +'"extras":[{"desc":"...","cant":1,"medidas":"..."}],'
       +'"respuesta":"explicación breve",'
       +'"observaciones":"..."}';
