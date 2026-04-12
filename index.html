@@ -7932,35 +7932,51 @@ function presCrearPedido(){
     const d = window._pedidoDesdePres;
     if(!d) return;
 
-    // Forzar nuevo pedido (deseleccionar cualquier pedido cargado)
-    const pedSel = document.getElementById('pd-pedido-sel');
-    if(pedSel) pedSel.value = '';
-    nuevoPedidoDoc();
+    // Seleccionar cliente en el desplegable del pedido
+    const cliSel = document.getElementById('filter-cliente-pedido_doc');
+    if(cliSel && d.cliId){
+      cliSel.value = d.cliId;
+      cliSel.dispatchEvent(new Event('change'));
+    }
 
-    // Rellenar líneas
-    window.pdLineas = d.pedLineas;
-    renderPedidoLineas();
+    // Esperar a que se carguen los proyectos del cliente y seleccionar
+    setTimeout(()=>{
+      const proySel = document.getElementById('filter-proyecto-pedido_doc');
+      if(proySel && d.proy){
+        proySel.value = d.proy;
+        proySel.dispatchEvent(new Event('change'));
+      }
 
-    // Generar número de pedido
-    const nextNum = 'PED-'+String((PedC?.length||0)+1).padStart(3,'0');
+      // Forzar nuevo pedido (deseleccionar cualquier pedido cargado)
+      const pedSel = document.getElementById('pd-pedido-sel');
+      if(pedSel) pedSel.value = '';
+      nuevoPedidoDoc();
 
-    // Rellenar campos
-    const set = (id,v) => { const el=document.getElementById(id); if(el && v) el.value=v; };
-    set('pd-num-input', nextNum);
-    set('pd-proyecto-input', d.proy + ' · ' + (d.proyObj.nombre||''));
-    set('pd-prov-input', d.proveedor);
-    set('pd-ref-doc-input', 'Presupuesto ' + d.proy + '-' + d.ver.toUpperCase());
+      // Rellenar líneas
+      window.pdLineas = d.pedLineas;
+      renderPedidoLineas();
 
-    // Cliente
-    set('pd-cliente-nombre-input', d.cli.nombre||'');
-    set('pd-cliente-dir-input', d.cli.direccion||'');
-    set('pd-cliente-tel-input', d.cli.telefono||'');
-    set('pd-cliente-nif-input', d.cli.cif||'');
-    const cliBlock = document.getElementById('pd-cliente-block');
-    if(cliBlock) cliBlock.style.display = d.cli.nombre ? '' : 'none';
+      // Generar número de pedido
+      const nextNum = 'PED-'+String((PedC?.length||0)+1).padStart(3,'0');
 
-    window._pedidoDesdePres = null;
-    toast('📦 Pedido con '+d.numLineas+' líneas listo. Revisa y guarda.');
+      // Rellenar campos
+      const set = (id,v) => { const el=document.getElementById(id); if(el && v) el.value=v; };
+      set('pd-num-input', nextNum);
+      set('pd-proyecto-input', d.proy);
+      set('pd-prov-input', d.proveedor);
+      set('pd-ref-doc-input', 'Presupuesto ' + d.proy + '-' + d.ver.toUpperCase());
+
+      // Cliente
+      set('pd-cliente-nombre-input', d.cli.nombre||'');
+      set('pd-cliente-dir-input', d.cli.direccion||'');
+      set('pd-cliente-tel-input', d.cli.telefono||'');
+      set('pd-cliente-nif-input', d.cli.cif||'');
+      const cliBlock = document.getElementById('pd-cliente-block');
+      if(cliBlock) cliBlock.style.display = d.cli.nombre ? '' : 'none';
+
+      window._pedidoDesdePres = null;
+      toast('📦 Pedido con '+d.numLineas+' líneas listo — '+d.proy+' '+d.ver.toUpperCase()+'. Revisa y guarda.');
+    }, 300);
   }, 400);
 }
 
