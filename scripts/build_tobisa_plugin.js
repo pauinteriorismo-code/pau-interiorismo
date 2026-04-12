@@ -432,11 +432,8 @@ module PauInteriorismo
       unless comp
         comp = defs.add(nom)
         dibujar(comp.entities, ref, ancho.to_f, alto.to_f, fam, sub, mod)
-        # Etiqueta: "REF HxLxP [×N] [=acabado] [nota]"
-        etiqueta = "#{ref} #{alto}x#{ancho}x#{prof}"
-        etiqueta += " ×#{cant}" if cant > 1
-        etiqueta += " =#{acabado}" unless acabado.nil? || acabado.strip.empty?
-        etiqueta += " #{nota}" unless nota.nil? || nota.strip.empty?
+        # Etiqueta corta: solo la referencia (las medidas viajan en los atributos/JSON)
+        etiqueta = ref
         # Anclaje en el borde superior del módulo (plano XY, hacia +Y) + offset 6cm
         begin
           comp.entities.add_text(
