@@ -7962,7 +7962,7 @@ function presCrearPedido(){
       // Rellenar campos
       const set = (id,v) => { const el=document.getElementById(id); if(el && v) el.value=v; };
       set('pd-num-input', nextNum);
-      set('pd-proyecto-input', d.proy);
+      set('pd-proyecto-input', (d.proyObj.nombre || d.proy));
       set('pd-prov-input', d.proveedor);
       set('pd-ref-doc-input', 'Presupuesto ' + d.proy + '-' + d.ver.toUpperCase());
 
@@ -17161,7 +17161,7 @@ async function guardarDocPedido(){
     fecha:        getVal('pd-fecha-input') || new Date().toISOString().split('T')[0],
     proveedor:    getVal('pd-prov-input'),
     // prov_tel removed from UI
-    proyecto_id:  getVal('pd-proyecto-input') || null,
+    proyecto_id:  document.getElementById('filter-proyecto-pedido_doc')?.value || getVal('pd-proyecto-input') || null,
     observaciones:getVal('pd-obs-input'),
     referencia:   getVal('pd-ref-doc-input'),
     lineas:       lineasLimpias,
