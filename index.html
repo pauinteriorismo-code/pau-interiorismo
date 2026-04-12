@@ -25719,7 +25719,7 @@ function _medPDF(){
   const fmtDate = new Date().toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'});
 
   // Generar HTML del PDF
-  let html = `<div id="med-pdf-doc" style="font-family:'Segoe UI',sans-serif;color:#333;padding:15mm;width:210mm;box-sizing:border-box">`;
+  let html = `<div id="med-pdf-doc" style="font-family:'Segoe UI',sans-serif;color:#333;padding:10mm;width:180mm;max-width:180mm;box-sizing:border-box">`;
   // Cabecera
   html += `<div style="display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #b87333;padding-bottom:12px;margin-bottom:20px">`;
   html += `<div><div style="font-size:22px;font-weight:800;color:#4a3728">PAU INTERIORISMO S.L.</div>
