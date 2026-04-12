@@ -25646,13 +25646,161 @@ let _impLineas = null; // datos extraídos pendientes de confirmar
 function abrirImportarMediciones(){
   const proy = document.getElementById('pres-proyecto-sel')?.value;
   if(!proy){ toast('Selecciona un proyecto primero','error'); return; }
-  const json = prompt('Pega aquí el JSON exportado desde PAU Mediciones (SketchUp).\n\nEmpieza por {"version":"PAU_MEDICIONES_V1"...}');
-  if(!json) return;
+  const proyObj = (PC||[]).find(p=>p.proyecto_id===proy);
+  const proyNombre = proyObj?.nombre || proy;
+  const cliId = proyObj?.cliente_id || '';
+  const cli = (CC||[]).find(c=>c.cliente_id===cliId) || {};
+
+  const modal = document.createElement('div');
+  modal.id = 'modal-mediciones';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center';
+  modal.innerHTML = `<div style="background:white;border-radius:12px;padding:20px;width:600px;max-width:95vw;max-height:90vh;overflow:auto;box-shadow:0 10px 40px rgba(0,0,0,.25)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <span style="font-size:15px;font-weight:700;color:#4a3728">📐 Importar mediciones de SketchUp</span>
+      <button onclick="document.getElementById('modal-mediciones').remove()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#999">✕</button>
+    </div>
+    <div style="font-size:11px;color:#666;margin-bottom:8px">Pega el JSON exportado desde PAU Mediciones:</div>
+    <textarea id="med-json-input" rows="8" placeholder='{"version":"PAU_MEDICIONES_V1"...}' style="width:100%;font-family:monospace;font-size:10px;padding:8px;border:1px solid #ccc;border-radius:6px;resize:vertical;box-sizing:border-box"></textarea>
+    <div id="med-preview" style="display:none;margin-top:10px;padding:10px;background:#f7f4ef;border-radius:6px;max-height:200px;overflow:auto"></div>
+    <div id="med-error" style="display:none;margin-top:8px;padding:8px;background:#ffebee;border:1px solid #ef9a9a;border-radius:4px;font-size:11px;color:#b71c1c"></div>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button onclick="_medPreview()" style="flex:1;padding:8px;background:#1565c0;color:white;border:none;border-radius:6px;font-weight:700;font-size:11px;cursor:pointer">👁 Vista previa</button>
+      <button onclick="_medImportar()" style="flex:1;padding:8px;background:#2e7d32;color:white;border:none;border-radius:6px;font-weight:700;font-size:11px;cursor:pointer">📥 Importar al presupuesto</button>
+      <button onclick="_medPDF()" style="flex:1;padding:8px;background:#b87333;color:white;border:none;border-radius:6px;font-weight:700;font-size:11px;cursor:pointer">📄 Generar PDF</button>
+    </div>
+  </div>`;
+  modal.addEventListener('click',e=>{if(e.target===modal)modal.remove();});
+  document.body.appendChild(modal);
+  // Guardar contexto
+  window._medCtx = {proy, proyNombre, cliNombre: cli.nombre||'', cliDir: cli.direccion||''};
+}
+
+function _medParsear(){
+  const json = document.getElementById('med-json-input')?.value?.trim();
+  const errEl = document.getElementById('med-error');
+  if(!json){ errEl.style.display='';errEl.textContent='Pega el JSON primero'; return null; }
   let data;
-  try { data = JSON.parse(json); } catch(e){ toast('JSON no válido','error'); return; }
-  if(!data.version || !data.version.startsWith('PAU_MEDICIONES')){ toast('No es un JSON de PAU Mediciones','error'); return; }
-  if(!data.estancias || !data.estancias.length){ toast('No hay estancias en el JSON','error'); return; }
+  try { data = JSON.parse(json); } catch(e){ errEl.style.display='';errEl.textContent='JSON no válido: '+e.message; return null; }
+  if(!data.version||!data.version.startsWith('PAU_MEDICIONES')){ errEl.style.display='';errEl.textContent='No es un JSON de PAU Mediciones'; return null; }
+  if(!data.estancias||!data.estancias.length){ errEl.style.display='';errEl.textContent='No hay estancias'; return null; }
+  errEl.style.display='none';
+  return data;
+}
+
+function _medPreview(){
+  const data = _medParsear();
+  if(!data) return;
+  const prev = document.getElementById('med-preview');
+  let h = `<div style="font-weight:700;font-size:12px;margin-bottom:8px">${data.estancias.length} estancias</div>`;
+  data.estancias.forEach(e=>{
+    h += `<div style="margin-bottom:8px;padding:6px;background:white;border-radius:4px;border:1px solid #e8e0d4">`;
+    h += `<div style="font-weight:700;color:#4a3728">${e.nombre} <span style="font-weight:400;color:#888">${e.area_m2} m²</span></div>`;
+    h += `<table style="width:100%;font-size:10px;margin-top:4px;border-collapse:collapse">`;
+    (e.partidas||[]).forEach(p=>{
+      h += `<tr><td style="padding:2px 4px">${p.p}</td><td style="text-align:right;font-weight:600">${p.c} ${p.u}</td></tr>`;
+    });
+    h += `</table></div>`;
+  });
+  prev.innerHTML = h;
+  prev.style.display = '';
+}
+
+function _medImportar(){
+  const data = _medParsear();
+  if(!data) return;
+  document.getElementById('modal-mediciones')?.remove();
   importarMediciones(data);
+}
+
+function _medPDF(){
+  const data = _medParsear();
+  if(!data) return;
+  const ctx = window._medCtx || {};
+  const fmtDate = new Date().toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'});
+
+  // Generar HTML del PDF
+  let html = `<div id="med-pdf-doc" style="font-family:'Segoe UI',sans-serif;color:#333;padding:15mm;width:210mm;box-sizing:border-box">`;
+  // Cabecera
+  html += `<div style="display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #b87333;padding-bottom:12px;margin-bottom:20px">`;
+  html += `<div><div style="font-size:22px;font-weight:800;color:#4a3728">PAU INTERIORISMO S.L.</div>
+    <div style="font-size:10px;color:#888">C/ Tomás y Valiente Nº 6 Bajo · 46290 Alcàsser (Valencia)</div>
+    <div style="font-size:10px;color:#888">Tel.: 961 20 01 87 · presupuestos@pauinteriorismo.es</div></div>`;
+  html += `<div style="text-align:right"><div style="font-size:18px;font-weight:700;color:#b87333">MEDICIONES</div>
+    <div style="font-size:11px;color:#666">Fecha: ${fmtDate}</div></div>`;
+  html += `</div>`;
+
+  // Datos proyecto
+  html += `<div style="display:flex;gap:20px;margin-bottom:20px">`;
+  html += `<div style="flex:1;padding:10px;background:#f7f4ef;border-radius:6px;border:1px solid #e8e0d4">
+    <div style="font-size:9px;text-transform:uppercase;color:#b87333;font-weight:700;margin-bottom:4px">Proyecto</div>
+    <div style="font-weight:700">${ctx.proyNombre||''}</div></div>`;
+  html += `<div style="flex:1;padding:10px;background:#f7f4ef;border-radius:6px;border:1px solid #e8e0d4">
+    <div style="font-size:9px;text-transform:uppercase;color:#b87333;font-weight:700;margin-bottom:4px">Cliente</div>
+    <div style="font-weight:700">${ctx.cliNombre||''}</div>
+    <div style="font-size:10px;color:#888">${ctx.cliDir||''}</div></div>`;
+  html += `</div>`;
+
+  // Estancias
+  data.estancias.forEach(e=>{
+    html += `<div style="margin-bottom:16px;page-break-inside:avoid">`;
+    html += `<div style="background:#4a3728;color:white;padding:6px 12px;font-weight:700;font-size:12px;border-radius:4px 4px 0 0">${e.nombre} <span style="float:right;font-weight:400">${e.area_m2} m² · ${e.perim_ml||'-'} ml</span></div>`;
+    html += `<table style="width:100%;border-collapse:collapse;font-size:11px;border:1px solid #e8e0d4">`;
+    html += `<tr style="background:#f7f4ef"><th style="text-align:left;padding:6px;border-bottom:1px solid #e8e0d4;font-size:10px;color:#4a3728">PARTIDA</th><th style="text-align:center;padding:6px;border-bottom:1px solid #e8e0d4;font-size:10px;width:50px">UD.</th><th style="text-align:right;padding:6px;border-bottom:1px solid #e8e0d4;font-size:10px;width:80px">CANTIDAD</th></tr>`;
+    (e.partidas||[]).forEach(p=>{
+      html += `<tr><td style="padding:5px 6px;border-bottom:1px solid #f0ebe4">${p.p}</td><td style="text-align:center;padding:5px;border-bottom:1px solid #f0ebe4">${p.u}</td><td style="text-align:right;padding:5px 6px;border-bottom:1px solid #f0ebe4;font-weight:700;font-family:monospace">${p.c}</td></tr>`;
+    });
+    html += `</table></div>`;
+  });
+
+  // Resumen global
+  const totales = {};
+  data.estancias.forEach(e=>{(e.partidas||[]).forEach(p=>{
+    const k = p.p.replace(/ \(\d+ manos\)/,'').replace(/ \(h=\d+cm\)/,'').replace(/ \[3D\]/,'');
+    if(!totales[k])totales[k]={u:p.u,c:0};
+    totales[k].c += parseFloat(p.c)||0;
+  });});
+  html += `<div style="margin-top:20px;page-break-inside:avoid">`;
+  html += `<div style="background:#b87333;color:white;padding:6px 12px;font-weight:700;font-size:12px;border-radius:4px 4px 0 0">RESUMEN GLOBAL — ${data.estancias.length} estancias</div>`;
+  html += `<table style="width:100%;border-collapse:collapse;font-size:11px;border:1px solid #e8e0d4">`;
+  html += `<tr style="background:#f7f4ef"><th style="text-align:left;padding:6px;border-bottom:1px solid #e8e0d4;font-size:10px">PARTIDA</th><th style="text-align:center;padding:6px;border-bottom:1px solid #e8e0d4;font-size:10px;width:50px">UD.</th><th style="text-align:right;padding:6px;border-bottom:1px solid #e8e0d4;font-size:10px;width:80px">TOTAL</th></tr>`;
+  for(const k in totales){
+    html += `<tr><td style="padding:5px 6px;border-bottom:1px solid #f0ebe4">${k}</td><td style="text-align:center;padding:5px;border-bottom:1px solid #f0ebe4">${totales[k].u}</td><td style="text-align:right;padding:5px 6px;border-bottom:1px solid #f0ebe4;font-weight:700;font-family:monospace">${totales[k].c.toFixed(2)}</td></tr>`;
+  }
+  html += `</table></div>`;
+
+  // Pie
+  html += `<div style="margin-top:30px;text-align:center;font-size:9px;color:#888;border-top:1px solid #e8e0d4;padding-top:8px">
+    PAU INTERIORISMO S.L. · C.I.F. B-56909641 · presupuestos@pauinteriorismo.es · Tel. 961 20 01 87
+  </div>`;
+  html += `</div>`;
+
+  // Crear elemento temporal y generar PDF
+  const container = document.createElement('div');
+  container.innerHTML = html;
+  document.body.appendChild(container);
+  const el = document.getElementById('med-pdf-doc');
+
+  if(typeof html2pdf === 'undefined'){
+    toast('html2pdf no disponible','error');
+    container.remove();
+    return;
+  }
+
+  toast('Generando PDF de mediciones...');
+  html2pdf().set({
+    margin: [10,10,15,10],
+    filename: 'Mediciones_' + (ctx.proyNombre||'proyecto').replace(/[^a-zA-Z0-9]/g,'_') + '.pdf',
+    image: {type:'jpeg',quality:0.95},
+    html2canvas: {scale:2,useCORS:true},
+    jsPDF: {unit:'mm',format:'a4',orientation:'portrait'},
+    pagebreak: {mode:['css','legacy'],avoid:['tr','table']}
+  }).from(el).save().then(()=>{
+    container.remove();
+    toast('📄 PDF de mediciones generado ✅');
+  }).catch(err=>{
+    container.remove();
+    toast('Error generando PDF: '+err.message,'error');
+  });
 }
 
 async function importarMediciones(data){
