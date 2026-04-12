@@ -5263,7 +5263,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="form-group"><label class="form-label">Responsable</label><select class="form-input" id="p-resp"><option value="">Seleccionar…</option><option value="Francisco Gascón Gil">Francisco Gascón Gil</option><option value="Jose Asins Primo">Jose Asins Primo</option><option value="Julio Alemany Fort">Julio Alemany Fort</option><option value="María Paz Primo Iborra">María Paz Primo Iborra</option><option value="Raúl Gascón Gil">Raúl Gascón Gil</option><option value="Salvador Aguado Simó">Salvador Aguado Simó</option></select></div>
       <div class="form-group"><label class="form-label">Fecha inicio</label><input class="form-input" id="p-fecha" type="date"></div>
       <div class="form-group fg-full"><label class="form-label">Dirección de obra</label><input class="form-input" id="p-dir"></div>
-      <div class="form-group fg-full"><label class="form-label">📂 Carpeta Google Drive</label><input class="form-input" id="p-drive" placeholder="https://drive.google.com/drive/folders/..."></div>
+      <div class="form-group fg-full"><label class="form-label">📂 Carpeta Google Drive</label><div style="display:flex;gap:8px;align-items:center"><input class="form-input" id="p-drive" placeholder="https://drive.google.com/drive/folders/..." style="flex:1"><button type="button" class="btn btn-ghost btn-sm" onclick="crearCarpetasDriveDesdeModal()" style="white-space:nowrap;background:#e8f5ee;color:#1b5e20;border:1px solid #a5d6a7;font-size:11px" title="Crear carpeta del proyecto con subcarpetas en Drive (para proyectos antiguos sin carpetas)">📁 Crear carpetas</button></div></div>
       <div class="form-group"><label class="form-label">🏷 Tipo de unidades</label><input class="form-input" id="p-tipo-unidades" placeholder="Viviendas, Trabajos, Locales..."></div>
       <div class="form-group"><label class="form-label">🏗️ Modo certificación</label><select class="form-input" id="p-modo-cert"><option value="simple">🟢 Simple (mobiliario, reformas pequeñas)</option><option value="pro">🔵 Profesional (obra grande, certs parciales)</option></select></div>
       <div class="form-group fg-full"><label class="form-label">Notas</label><textarea class="form-input" id="p-notas" rows="2"></textarea></div>
@@ -9899,6 +9899,21 @@ async function crearCarpetasDrive(proyId, nombre){
     }
   }catch(e){
     console.warn('Drive:',e);
+  }
+}
+
+async function crearCarpetasDriveDesdeModal(){
+  const proyId = document.getElementById('p-id')?.value;
+  const nombre = document.getElementById('p-nombre')?.value?.trim();
+  if(!nombre){ toast('Introduce el nombre del proyecto primero','error'); return; }
+  toast('📁 Creando carpetas en Drive…');
+  await crearCarpetasDrive(proyId || 'PRY', nombre);
+  // Si se creó la URL, rellenar el campo
+  if(proyId){
+    const p = PC.find(x=>x.proyecto_id===proyId);
+    if(p && p.carpeta_drive){
+      document.getElementById('p-drive').value = p.carpeta_drive;
+    }
   }
 }
 
