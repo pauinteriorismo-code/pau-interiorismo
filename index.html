@@ -1624,6 +1624,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
             <div onclick="exportarPresupuestoPDF();this.closest('.pres-dd-menu').classList.remove('pres-dd-open')" style="padding:7px 14px;cursor:pointer;font-size:11px" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background=''">⬇️ Descargar PDF</div>
             <div onclick="window.print();this.closest('.pres-dd-menu').classList.remove('pres-dd-open')" style="padding:7px 14px;cursor:pointer;font-size:11px" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background=''">🖨️ Imprimir</div>
             <div onclick="abrirImportarPDF();this.closest('.pres-dd-menu').classList.remove('pres-dd-open')" style="padding:7px 14px;cursor:pointer;font-size:11px;color:#1a5276" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background=''">📥 Importar PDF</div>
+            <div onclick="abrirImportarMediciones();this.closest('.pres-dd-menu').classList.remove('pres-dd-open')" style="padding:7px 14px;cursor:pointer;font-size:11px;color:#2e7d32" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background=''">📐 Importar mediciones (SketchUp)</div>
             <div style="border-top:1px solid #eee;margin:2px 0"></div>
             <div onclick="abrirCertificarPartidas();this.closest('.pres-dd-menu').classList.remove('pres-dd-open')" style="padding:7px 14px;cursor:pointer;font-size:11px;color:#b87333" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background=''">🏗️ Certificar partidas</div>
             <div onclick="convertirPresupuestoAFactura();this.closest('.pres-dd-menu').classList.remove('pres-dd-open')" style="padding:7px 14px;cursor:pointer;font-size:11px;color:var(--green)" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background=''">🧾 Crear factura</div>
@@ -25638,6 +25639,107 @@ function catAbrir(fab){
 // IMPORTAR PRESUPUESTO DESDE PDF  (IA)
 // ═══════════════════════════════════════════════════════════════
 let _impLineas = null; // datos extraídos pendientes de confirmar
+
+// ═══════════════════════════════════════════════════════════════
+// IMPORTAR MEDICIONES DESDE PAU MEDICIONES (SketchUp)
+// ═══════════════════════════════════════════════════════════════
+function abrirImportarMediciones(){
+  const proy = document.getElementById('pres-proyecto-sel')?.value;
+  if(!proy){ toast('Selecciona un proyecto primero','error'); return; }
+  const json = prompt('Pega aquí el JSON exportado desde PAU Mediciones (SketchUp).\n\nEmpieza por {"version":"PAU_MEDICIONES_V1"...}');
+  if(!json) return;
+  let data;
+  try { data = JSON.parse(json); } catch(e){ toast('JSON no válido','error'); return; }
+  if(!data.version || !data.version.startsWith('PAU_MEDICIONES')){ toast('No es un JSON de PAU Mediciones','error'); return; }
+  if(!data.estancias || !data.estancias.length){ toast('No hay estancias en el JSON','error'); return; }
+  importarMediciones(data);
+}
+
+async function importarMediciones(data){
+  const proy = document.getElementById('pres-proyecto-sel')?.value;
+  const ver = document.getElementById('pres-version-sel')?.value || 'v1';
+  if(!proy){ toast('Selecciona un proyecto primero','error'); return; }
+  const proyObj = (PC||[]).find(p=>p.proyecto_id===proy);
+  const proyFinal = proyObj?.id || proy;
+
+  try{
+    // Obtener orden máximo actual
+    const lineas = await sbGet('presupuesto_lineas',`?proyecto_id=eq.${proyFinal}&version=eq.${ver}&select=orden&order=orden.desc&limit=1`);
+    let orden = (lineas && lineas[0]) ? lineas[0].orden : 0;
+
+    let totalPartidas = 0;
+
+    for(const estancia of data.estancias){
+      // Capítulo por estancia
+      orden++;
+      await sbPost('presupuesto_lineas',{
+        proyecto_id: proyFinal, version: ver,
+        descripcion: estancia.nombre || 'Estancia',
+        es_capitulo: true, orden, cantidad:0, precio_base:0, precio_venta:0, subtotal:0
+      });
+
+      // Partidas
+      for(const p of (estancia.partidas||[])){
+        orden++;
+        const cant = parseFloat(p.c) || 0;
+        const ud = p.u || 'm²';
+        const desc = p.p || 'Partida';
+        // Precio base: buscar en CYPE por coincidencia de descripción
+        let precioBase = 0;
+        let refCype = null;
+        if(typeof CyCache !== 'undefined' && CyCache.length){
+          const match = _buscarPrecioCype(desc, ud);
+          if(match){ precioBase = match.precio; refCype = match.codigo; }
+        }
+        await sbPost('presupuesto_lineas',{
+          proyecto_id: proyFinal, version: ver,
+          descripcion: `${estancia.nombre}: ${desc}`,
+          ref_cype: refCype,
+          unidad: ud, cantidad: cant,
+          precio_base: precioBase,
+          margen_pct: 0,
+          ci_gg_bi_pct: 0,
+          precio_venta: precioBase,
+          subtotal: parseFloat((cant * precioBase).toFixed(4)),
+          iva_pct: '10%',
+          es_capitulo: false, orden
+        });
+        totalPartidas++;
+      }
+    }
+
+    toast(`📐 ${data.estancias.length} estancias · ${totalPartidas} partidas importadas`);
+    await loadPresupuesto();
+  }catch(e){
+    toast('Error importando: '+e.message,'error');
+  }
+}
+
+// Buscar precio aproximado en CYPE por palabras clave
+function _buscarPrecioCype(desc, ud){
+  if(!CyCache || !CyCache.length) return null;
+  const d = desc.toLowerCase();
+  const keywords = {
+    'rodapie': ['rodapie','rodapié','zocalo'],
+    'pladur placa': ['placa','tabique','yeso laminado','pladur','trasdosado'],
+    'encintado': ['encintado','cinta','junta'],
+    'anguleta': ['anguleta','guardavivo','cantonera'],
+    'alicatado': ['alicatado','azulejo','revestimiento ceramico'],
+    'pavimento': ['pavimento','solado','baldosa','suelo'],
+    'pintura': ['pintura','pintado','esmalt'],
+  };
+  for(const [key, terms] of Object.entries(keywords)){
+    if(terms.some(t => d.includes(t))){
+      // Buscar en CYPE con la misma unidad
+      const match = CyCache.find(c => {
+        const cd = c.descripcion.toLowerCase();
+        return terms.some(t => cd.includes(t)) && (c.unidad||'').toLowerCase() === ud.toLowerCase();
+      });
+      if(match) return match;
+    }
+  }
+  return null;
+}
 
 function abrirImportarPDF(){
   // Rellenar selector de proyectos
