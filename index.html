@@ -26501,7 +26501,10 @@ function tbRecalc(){
     if(l.manual) return;   // línea editada manualmente → respetar el precio del usuario
     const p = _tbData.find(d=>d.ref===l.ref);
     if(!p) return;
-    const tipo = l.acabadoTipo || (l.acabado==='base'?'base':'color');
+    // Si la línea tiene un acabado concreto (no base/Cotton), usar precio color
+    const acabado = (l.acabado||'').trim();
+    const esColorLinea = acabado && !/^(base|cotton)$/i.test(acabado);
+    const tipo = esColorLinea ? 'color' : (l.acabadoTipo || (acabado==='base'?'base':'color'));
     const tarifa = tipo==='color' ? (p.precio_color??p.precio_base) : (p.precio_base??p.precio_color);
     if(!tarifa) return;
     const baseCoste = tarifa * (1 - dto1/100) * (1 - dto2/100);
@@ -26965,15 +26968,18 @@ function _tbIAValidarModulos(lista){
     if(!p){
       return { ...m, idx, ref, activo:false, valido:false, error: ref ? ('Ref "'+ref+'" no está en el catálogo Tobisa') : 'Sin ref — introduce la referencia manualmente' };
     }
-    const tarifa = tipo==='color' ? (p.precio_color??p.precio_base) : (p.precio_base??p.precio_color);
+    // Normalizar nota / acabado override
+    const notaBase = (m.nota || '').trim();
+    const acabadoOverride = (m.acabado || '').trim();
+    // Si la línea tiene un acabado concreto (no base/Cotton), usar precio color
+    const esColorLinea = acabadoOverride && !/^(base|cotton)$/i.test(acabadoOverride);
+    const tipoLinea = esColorLinea ? 'color' : tipo;
+    const tarifa = tipoLinea==='color' ? (p.precio_color??p.precio_base) : (p.precio_base??p.precio_color);
     if(tarifa==null){
       return { ...m, idx, ref, desc:p.descripcion, activo:false, valido:false, error:'Sin precio para el acabado seleccionado' };
     }
     const baseCoste = tarifa * (1 - dto1/100) * (1 - dto2/100);
     const basePvp = baseCoste * (1 + margen/100) * (1 - dtoVenta/100);
-    // Normalizar nota / acabado override
-    const notaBase = (m.nota || '').trim();
-    const acabadoOverride = (m.acabado || '').trim();
     // Usar las dimensiones de la etiqueta si están definidas (aunque sean 0
     // por error), no caer al catálogo porque el catálogo tiene defaults que no
     // aplican a productos M/L. Solo fallback a catálogo si la IA no devolvió nada.
