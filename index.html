@@ -1606,6 +1606,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <button class="btn btn-ghost btn-sm no-print" onclick="presToggleInterno()" title="Marcar/desmarcar seleccionadas como solo interno (no aparecen en Doc. Final)" style="font-size:11px;padding:4px 8px">👁 Interno</button>
         <button class="btn btn-ghost btn-sm no-print" onclick="presReimportarACatalogo()" title="Devolver líneas TOBISA seleccionadas al catálogo para re-exportar" style="background:#e8f0f8;color:#1a5276;font-size:11px;padding:4px 8px">📥 Reimportar catálogo</button>
         <button class="btn btn-ghost btn-sm no-print" onclick="presCrearPedido()" title="Crear pedido con las líneas seleccionadas (sin precios)" style="background:#fff3e0;color:#e65100;font-size:11px;padding:4px 8px">📦 Crear pedido</button>
+        <button class="btn btn-ghost btn-sm no-print" onclick="presAplicarMargen()" title="Aplicar margen % sobre precio base a las líneas seleccionadas (o todas si no hay selección)" style="background:#e8f5ee;color:#2e7d32;font-size:11px;padding:4px 8px;font-weight:700">% Margen</button>
         <button class="btn btn-primary" onclick="addLineaPresupuesto()">＋ Línea</button>
         <button class="btn btn-ghost" onclick="addCapituloPresupuesto()">＋ Capítulo</button>
         <button class="btn btn-ghost" style="background:#f5e6ff;color:#7b2fa8;border-color:#d4b3e6" onclick="abrirPresupuestoIA()" title="Generar presupuesto automáticamente con IA">🤖 Generar con IA</button>
@@ -7786,6 +7787,42 @@ async function presToggleInterno(){
       }
     }
     toast(`👁 ${lineas.length} líneas ${accion}`);
+    renderPresupuesto();
+  }catch(e){ toast('Error: '+e.message,'error'); }
+}
+
+// ── Aplicar margen % en lote sobre precio base ──
+async function presAplicarMargen(){
+  const tbody = document.getElementById('pres-tbody');
+  const checkedIds = [...(tbody||document).querySelectorAll('input.pres-chk:checked')].map(c=>c.value);
+  // Si hay selección, aplicar solo a las seleccionadas; si no, a todas las líneas (no capítulos)
+  const lineas = checkedIds.length
+    ? PresC.filter(l=>checkedIds.includes(l.id) && !l.es_capitulo)
+    : PresC.filter(l=>!l.es_capitulo);
+  if(!lineas.length){ toast('No hay líneas de producto','error'); return; }
+
+  const scope = checkedIds.length ? lineas.length+' líneas seleccionadas' : 'TODAS las líneas ('+lineas.length+')';
+  const input = prompt('Aplicar margen % sobre precio base a '+scope+'.\n\nIntroduce el porcentaje de margen (ej: 40 = +40% sobre coste).\nDeja vacío o 0 para quitar el margen.\n\nMargen %:');
+  if(input === null) return; // cancelado
+  const nuevoMargen = parseFloat(input) || 0;
+
+  try{
+    for(const l of lineas){
+      const pb = parseFloat(l.precio_base)||0;
+      const ci = parseFloat(l.ci_gg_bi_pct)||0;
+      let pv = nuevoMargen > 0 ? pb * (1 + nuevoMargen/100) : pb;
+      if(ci > 0) pv = pv * (1 + ci/100);
+      const pvFinal = parseFloat(pv.toFixed(4));
+      await sbPatch('presupuesto_lineas', l.id, {
+        margen_pct: nuevoMargen,
+        precio_venta: pvFinal,
+        subtotal: parseFloat(((l.cantidad||0) * pvFinal).toFixed(4))
+      });
+      l.margen_pct = nuevoMargen;
+      l.precio_venta = pvFinal;
+      l.subtotal = (l.cantidad||0) * pvFinal;
+    }
+    toast('✅ Margen '+nuevoMargen+'% aplicado a '+lineas.length+' líneas');
     renderPresupuesto();
   }catch(e){ toast('Error: '+e.message,'error'); }
 }
