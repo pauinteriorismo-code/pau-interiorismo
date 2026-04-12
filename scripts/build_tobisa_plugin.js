@@ -1092,7 +1092,7 @@ function ins(){
   var h=parseFloat(document.getElementById("ihh").value)||CUR.h;
   var l=parseFloat(document.getElementById("ill").value)||CUR.l;
   var p=parseFloat(document.getElementById("ipp").value)||0;
-  if(h<=0 || l<=0){ alert("H y L deben ser mayores que 0"); return; }
+  if(h<=0 && l<=0){ alert("Al menos H o L deben ser mayores que 0"); return; }
   var cantEl=document.getElementById("icant");
   var cant=cantEl?Math.max(1,parseInt(cantEl.value)||1):1;
   var ti=D[F].ti[TI];
