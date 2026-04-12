@@ -3698,7 +3698,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           </select>
         </div>
         <div style="display:flex;align-items:center;gap:8px;background:#fef3e0;padding:5px 10px;border-radius:6px;border:1px solid #ffe0b2">
-          <span style="font-size:10px;color:#e65100">💰 Coste = Tarifa−Dto1%−Dto2% · PVP = Tarifa/1,21</span>
+          <span style="font-size:10px;color:#e65100">💰 Coste = Tarifa−Dto1%−Dto2% · PVP = Coste×(1+Margen%)</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
           <label style="font-size:12px;font-weight:600;color:var(--text-soft)">Dto1:</label>
@@ -3709,6 +3709,11 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <label style="font-size:12px;font-weight:600;color:var(--text-soft)">Dto2:</label>
           <input type="number" class="form-input" id="tb-dto2" value="8" min="0" max="50" step="0.5" style="width:55px;text-align:center" oninput="tbRecalc()">
           <span style="font-size:11px;color:var(--text-soft)">%</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <label style="font-size:12px;font-weight:600;color:#2e7d32">Margen:</label>
+          <input type="number" class="form-input" id="tb-margen" value="40" min="0" max="300" step="0.5" style="width:55px;text-align:center;border-color:#66bb6a" oninput="tbRecalc()">
+          <span style="font-size:11px;color:#2e7d32">%</span>
         </div>
         <div style="margin-left:auto;display:flex;gap:6px">
           <button class="btn btn-sm" onclick="tbAbrirLeerPlano()" style="background:linear-gradient(135deg,#6a1b9a,#4a148c);color:white;border:none;font-weight:700;display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:4px">📐 Leer plano con IA</button>
@@ -26126,7 +26131,7 @@ function tbRenderTabla(){
   const acabado = document.getElementById('tb-acabado')?.value||'base';
   const dto1 = parseFloat(document.getElementById('tb-dto1')?.value)||0;
   const dto2 = parseFloat(document.getElementById('tb-dto2')?.value)||0;
-
+  const margen = parseFloat(document.getElementById('tb-margen')?.value)||0;
 
   // Filtrar
   if(q.length >= 2){
@@ -26164,7 +26169,7 @@ function tbRenderTabla(){
     const tarifa = acabado==='color' ? (p.precio_color??p.precio_base) : (p.precio_base??p.precio_color);
     if(tarifa===null||tarifa===undefined) return '';
     const coste = tarifa * (1 - dto1/100) * (1 - dto2/100);
-    const pvpSinIva = tarifa / 1.21;
+    const pvpSinIva = coste * (1 + margen/100);
     return `<tr style="cursor:pointer" onmouseenter="this.style.background='var(--bg-main)'" onmouseleave="this.style.background=''">
       <td style="font-weight:700;font-family:monospace;white-space:nowrap">${p.ref}</td>
       <td>${p.descripcion||'—'}</td>
@@ -26205,11 +26210,12 @@ function tbAnadir(idx){
   const {tipo, nombre} = _tbAcabadoInfo();
   const dto1 = parseFloat(document.getElementById('tb-dto1')?.value)||0;
   const dto2 = parseFloat(document.getElementById('tb-dto2')?.value)||0;
+  const margen = parseFloat(document.getElementById('tb-margen')?.value)||0;
 
   const tarifa = tipo==='color' ? (p.precio_color??p.precio_base) : (p.precio_base??p.precio_color);
   if(!tarifa){ toast('Sin precio para este acabado','error'); return; }
   const coste = tarifa * (1 - dto1/100) * (1 - dto2/100);
-  const pvpSinIva = tarifa / 1.21;
+  const pvpSinIva = coste * (1 + margen/100);
 
   // Medidas por defecto del producto (en cm, pueden venir como mm/10)
   const defH = p.alto!=null ? Number(p.alto) : '';
@@ -26298,11 +26304,12 @@ function tbConfirmarAnadir(){
 }
 
 function tbRecalc(){
-  // Recalcular: Coste = Tarifa×(1-Dto1%)×(1-Dto2%) · PVP s/IVA = Tarifa/1,21
+  // Recalcular: Coste = Tarifa×(1-Dto1%)×(1-Dto2%) · PVP = Coste×(1+Margen%)
   // Aplica ajuste M/L si la ref se cobra por metro lineal y la línea tiene L guardada.
   // NO recalcula líneas marcadas como editadas manualmente (l.manual).
   const dto1 = parseFloat(document.getElementById('tb-dto1')?.value)||0;
   const dto2 = parseFloat(document.getElementById('tb-dto2')?.value)||0;
+  const margen = parseFloat(document.getElementById('tb-margen')?.value)||0;
 
   _tbLineas.forEach(l=>{
     if(l.esSup) return;    // suplementos no se recalculan (precio fijo)
@@ -26313,7 +26320,7 @@ function tbRecalc(){
     const tarifa = tipo==='color' ? (p.precio_color??p.precio_base) : (p.precio_base??p.precio_color);
     if(!tarifa) return;
     const baseCoste = tarifa * (1 - dto1/100) * (1 - dto2/100);
-    const basePvp = tarifa / 1.21;
+    const basePvp = baseCoste * (1 + margen/100);
     const ajuste = _tbAjustarML(p, l.l, baseCoste, basePvp);
     l.coste = ajuste.coste;
     l.pvpSinIva = ajuste.pvpSinIva;
@@ -26532,9 +26539,10 @@ function tbAddSuplemento(cat, nombre, precioBase, precioColor, esFijo, precioFij
   const {tipo} = _tbAcabadoInfo();
   const dto1 = parseFloat(document.getElementById('tb-dto1')?.value)||0;
   const dto2 = parseFloat(document.getElementById('tb-dto2')?.value)||0;
+  const margen = parseFloat(document.getElementById('tb-margen')?.value)||0;
   const tarifa = esFijo ? precioFijo : (tipo==='color' ? precioColor : precioBase);
   const coste = tarifa * (1 - dto1/100) * (1 - dto2/100);
-  const pvpSinIva = tarifa / 1.21;
+  const pvpSinIva = coste * (1 + margen/100);
 
   const cant = parseInt(prompt(`Cantidad de "${nombre}":`, '1'))||0;
   if(!cant) return;
@@ -26763,6 +26771,7 @@ function _tbIAValidarModulos(lista){
   const {tipo} = _tbAcabadoInfo();
   const dto1 = parseFloat(document.getElementById('tb-dto1')?.value)||0;
   const dto2 = parseFloat(document.getElementById('tb-dto2')?.value)||0;
+  const margen = parseFloat(document.getElementById('tb-margen')?.value)||0;
   return (lista||[]).map((m,idx) => {
     const ref = (m.ref||'').toString().toUpperCase().trim();
     const p = ref ? _tbData.find(d => (d.ref||'').toUpperCase() === ref) : null;
@@ -26774,7 +26783,7 @@ function _tbIAValidarModulos(lista){
       return { ...m, idx, ref, desc:p.descripcion, activo:false, valido:false, error:'Sin precio para el acabado seleccionado' };
     }
     const baseCoste = tarifa * (1 - dto1/100) * (1 - dto2/100);
-    const basePvp = tarifa / 1.21;
+    const basePvp = baseCoste * (1 + margen/100);
     // Normalizar nota / acabado override
     const notaBase = (m.nota || '').trim();
     const acabadoOverride = (m.acabado || '').trim();
@@ -27008,6 +27017,7 @@ function tbIAImportarPlugin(){
     setSelIfExists('tb-acabado',  p.acabado);
     setIfPresent('tb-dto1', p.dto1);
     setIfPresent('tb-dto2', p.dto2);
+    setIfPresent('tb-margen', p.margen);
   }
 
   // 2) Normalizar módulos al formato que espera _tbIAValidarModulos

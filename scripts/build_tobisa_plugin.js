@@ -233,6 +233,7 @@ module PauInteriorismo
       'acabado'  => 'Cotton',
       'dto1'     => '50',
       'dto2'     => '8',
+      'margen'   => '40',
     }.freeze
 
     def self.cfg_load
@@ -700,7 +701,7 @@ __VAR_D_PLACEHOLDER__
 
 var F=null, TI=-1, IDX=-1, CUR=null;
 // Configuración global del proyecto (pushada desde Ruby al abrir)
-window._PAU_CFG = window._PAU_CFG || {proyecto:'',cliente:'',version:'v1',acabado:'Cotton',dto1:'50',dto2:'8'};
+window._PAU_CFG = window._PAU_CFG || {proyecto:'',cliente:'',version:'v1',acabado:'Cotton',dto1:'50',dto2:'8',margen:'40'};
 
 function saveCfg(k, v){
   window._PAU_CFG[k] = v;
@@ -840,6 +841,7 @@ function sfProyecto(){
   h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
   h += '<div><span class="lbl">Dto1 %:</span><input type="number" id="cfg-dto1" value="'+(cfg.dto1||"50")+'" min="0" max="80" step="0.5" onchange="saveCfg(\'dto1\',this.value)"></div>';
   h += '<div><span class="lbl">Dto2 %:</span><input type="number" id="cfg-dto2" value="'+(cfg.dto2||"8")+'" min="0" max="50" step="0.5" onchange="saveCfg(\'dto2\',this.value)"></div>';
+  h += '<div><span class="lbl">Margen %:</span><input type="number" id="cfg-margen" value="'+(cfg.margen||"40")+'" min="0" max="300" step="0.5" onchange="saveCfg(\'margen\',this.value)"></div>';
   h += '</div>';
 
   h += '<div class="hint" style="margin-top:12px;background:#f3e5f5;padding:8px;border-radius:5px;color:#4a148c">✅ El <strong>acabado global</strong> se aplicará a cada módulo. Puedes sobrescribirlo en un módulo concreto si lo necesitas.</div>';
