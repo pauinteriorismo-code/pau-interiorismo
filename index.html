@@ -3899,6 +3899,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
                 <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px" onclick="tbSelTodos()" title="Seleccionar/deseleccionar todos">☑ Todo</button>
                 <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px" onclick="tbCambiarAcabadoSel()" title="Cambiar acabado a seleccionados">🎨 Acabado</button>
                 <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px" onclick="tbAbrirSuplemento()" title="Añadir suplemento">➕ Suplemento</button>
+                <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px;color:var(--danger)" onclick="tbLimpiarIA()" title="Eliminar todos los productos importados con IA/plugin">🗑 Limpiar IA</button>
                 <span style="font-size:10px;color:var(--text-soft)" id="tb-bud-cnt">Sin productos aún</span>
               </div>
             </div>
@@ -26867,6 +26868,17 @@ function tbIAQuitarPendientes(){
   _tbGuardarLineas();
   _tbRenderBudget();
   tbIAVolverPaso1();
+}
+
+function tbLimpiarIA(){
+  const count = _tbLineas.filter(l => l.fromIA).length;
+  if(!count){ toast('No hay productos importados con IA/plugin','error'); return; }
+  if(!confirm('¿Eliminar los '+count+' productos importados con IA/plugin de la valoración?')) return;
+  _tbLineas = _tbLineas.filter(l => !l.fromIA);
+  _tbIAModulos = [];
+  _tbGuardarLineas();
+  _tbRenderBudget();
+  toast('🗑 '+count+' productos IA eliminados');
 }
 
 // Sincroniza los módulos IA válidos dentro de _tbLineas con flag fromIA
