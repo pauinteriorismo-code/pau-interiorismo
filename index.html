@@ -3745,6 +3745,8 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
               <option value="color" data-nombre="Textil Linen">Textil Linen</option>
             </optgroup>
           </select>
+          <input type="text" class="form-input" id="tb-acabado-custom" placeholder="Otro acabado…" style="width:120px;font-size:11px;display:none" oninput="tbRenderTabla()">
+          <button class="btn btn-ghost btn-sm" onclick="tbToggleAcabadoCustom()" title="Escribir un acabado que no está en el desplegable" style="font-size:10px;padding:2px 6px">✏️</button>
         </div>
         <div style="display:flex;align-items:center;gap:8px;background:#fef3e0;padding:5px 10px;border-radius:6px;border:1px solid #ffe0b2">
           <span style="font-size:10px;color:#e65100">💰 Coste = Tarifa−Dto1%−Dto2% · PVP = Coste×(1+Margen%)×(1−Dto%)</span>
@@ -26380,11 +26382,32 @@ function tbRenderTabla(){
 }
 
 function _tbAcabadoInfo(){
+  const custom = document.getElementById('tb-acabado-custom');
+  const customVal = custom && custom.style.display !== 'none' ? (custom.value||'').trim() : '';
+  if(customVal){
+    // Acabado manual: usar precio color (es un acabado fuera del estándar)
+    return {tipo:'color', nombre: customVal};
+  }
   const sel = document.getElementById('tb-acabado');
   const opt = sel?.selectedOptions[0];
-  const tipo = opt?.value || 'base';                     // 'base' o 'color' (determina columna precio)
-  const nombre = opt?.getAttribute('data-nombre') || (tipo==='color'?'Color':'Cotton'); // nombre concreto
+  const tipo = opt?.value || 'base';
+  const nombre = opt?.getAttribute('data-nombre') || (tipo==='color'?'Color':'Cotton');
   return {tipo, nombre};
+}
+
+function tbToggleAcabadoCustom(){
+  const input = document.getElementById('tb-acabado-custom');
+  const sel = document.getElementById('tb-acabado');
+  if(input.style.display === 'none'){
+    input.style.display = '';
+    sel.style.opacity = '0.4';
+    input.focus();
+  } else {
+    input.style.display = 'none';
+    input.value = '';
+    sel.style.opacity = '';
+    tbRenderTabla();
+  }
 }
 
 function tbAnadir(idx){
