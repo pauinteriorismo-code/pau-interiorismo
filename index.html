@@ -1550,6 +1550,8 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         #view-presupuesto .pres-layout{display:block}
         #view-presupuesto .pres-doc{padding:14px 16px;display:flex;flex-direction:column;gap:12px}
         #view-presupuesto .pres-topbar{padding:10px 16px;background:var(--white);border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;gap:7px;align-items:center;flex-shrink:0}
+        .pres-dd-menu:not(.pres-dd-open){display:none!important}
+        .pres-dd-menu.pres-dd-open{display:block!important}
         /* Panel fuentes */
         .pres-panel{background:var(--white);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
         .pres-panel-tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--sand)}
@@ -1600,41 +1602,66 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <select class="form-input" style="width:220px" id="pres-proyecto-sel" onchange="presProyChanged()"><option value="">📁 Proyecto…</option><option value="PRY-001">PRY-001 · Mobiliario de cocina</option><option value="PRY-002">PRY-002 · Rehabilitación lateral fachada</option><option value="PRY-003">PRY-003 · Pavimento/revestimiento vivienda.</option><option value="PRY-004">PRY-004 · Rehabilitación estudio</option><option value="PRY-005">PRY-005 · Trabajos en terraza</option></select>
         <select class="form-input" style="width:auto;min-width:75px" id="pres-version-sel" onchange="loadPresupuesto();syncPresContext();"><option value="v1">v1</option><option value="v2">v2</option><option value="v3">v3</option><option value="v4">v4</option><option value="v5">v5</option><option value="v6">v6</option><option value="v7">v7</option><option value="v8">v8</option></select>
         <button class="btn btn-ghost btn-sm no-print" onclick="renombrarVersion('pres-version-sel','pres-proyecto-sel')" title="Renombrar versión" style="font-size:11px;padding:4px 8px">✏️ v</button>
-        <button class="btn btn-ghost btn-sm no-print" onclick="eliminarVersionPresupuesto()" title="Eliminar todas las lineas de esta version" style="color:var(--red);border-color:var(--red);font-size:11px;padding:4px 8px">🗑 Versión</button>
-        <button class="btn btn-ghost btn-sm no-print" onclick="presBorrarSeleccion()" title="Borrar líneas seleccionadas" style="color:var(--red);font-size:11px;padding:4px 8px">🗑 Selección</button>
-        <button class="btn btn-ghost btn-sm no-print" onclick="presAgruparCliente()" title="Agrupar líneas seleccionadas en una sola para el cliente (sin detalle de refs)" style="background:#e8f5ee;color:#166534;font-size:11px;padding:4px 8px">📋 Agrupar cliente</button>
-        <button class="btn btn-ghost btn-sm no-print" onclick="presToggleInterno()" title="Marcar/desmarcar seleccionadas como solo interno (no aparecen en Doc. Final)" style="font-size:11px;padding:4px 8px">👁 Interno</button>
-        <button class="btn btn-ghost btn-sm no-print" onclick="presReimportarACatalogo()" title="Devolver líneas TOBISA seleccionadas al catálogo para re-exportar" style="background:#e8f0f8;color:#1a5276;font-size:11px;padding:4px 8px">📥 Reimportar catálogo</button>
-        <button class="btn btn-ghost btn-sm no-print" onclick="presCrearPedido()" title="Crear pedido con las líneas seleccionadas (sin precios)" style="background:#fff3e0;color:#e65100;font-size:11px;padding:4px 8px">📦 Crear pedido</button>
-        <button class="btn btn-ghost btn-sm no-print" onclick="presAplicarMargen()" title="Aplicar margen % sobre precio base a las líneas seleccionadas (o todas si no hay selección)" style="background:#e8f5ee;color:#2e7d32;font-size:11px;padding:4px 8px;font-weight:700">% Margen</button>
-        <button class="btn btn-ghost btn-sm no-print" onclick="presAplicarDescuento()" title="Aplicar descuento % sobre precio de venta a las líneas seleccionadas (o todas si no hay selección)" style="background:#ffebee;color:#c62828;font-size:11px;padding:4px 8px;font-weight:700">% Dto.</button>
-        <button class="btn btn-primary" onclick="addLineaPresupuesto()">＋ Línea</button>
-        <button class="btn btn-ghost" onclick="addCapituloPresupuesto()">＋ Capítulo</button>
-        <button class="btn btn-ghost" style="background:#f5e6ff;color:#7b2fa8;border-color:#d4b3e6" onclick="abrirPresupuestoIA()" title="Generar presupuesto automáticamente con IA">🤖 Generar con IA</button>
         <div id="pres-badge-versiones" style="display:none;padding:4px 10px;background:#fff3e0;color:#8a5a00;border:1px solid #f0d68a;border-radius:10px;font-size:11px;font-weight:700;cursor:pointer" onclick="mostrarCatVersionesDesactualizadas()" title="Hay versiones de catálogo más recientes desde que se creó este presupuesto">⚠️ Precios desactualizados</div>
+        <!-- ═══ DESPLEGABLE: ACCIONES ═══ -->
+        <div class="pres-dropdown no-print" style="position:relative">
+          <button class="btn btn-ghost btn-sm" onclick="this.nextElementSibling.classList.toggle('pres-dd-open')" style="font-size:11px;padding:4px 10px;font-weight:600">⚡ Acciones ▾</button>
+          <div class="pres-dd-menu" style="display:none;position:absolute;top:100%;left:0;background:white;border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:999;min-width:200px;padding:4px 0">
+            <div onclick="presAplicarMargen();this.closest('.pres-dd-menu').classList.remove('pres-dd-open')" style="padding:7px 14px;cursor:pointer;font-size:11px;font-weight:700;color:#2e7d32" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background=''">% Margen — aplicar en lote</div>
+            <div onclick="presAplicarDescuento();this.closest('.pres-dd-menu').classList.remove('pres-dd-open')" style="padding:7px 14px;cursor:pointer;font-size:11px;font-weight:700;color:#c62828" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background=''">% Dto. — aplicar en lote</div>
+            <div style="border-top:1px solid #eee;margin:2px 0"></div>
+            <div onclick="presBorrarSeleccion();this.closest('.pres-dd-menu').classList.remove('pres-dd-open')" style="padding:7px 14px;cursor:pointer;font-size:11px;color:var(--red)" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background=''">🗑 Borrar selección</div>
+            <div onclick="presAgruparCliente();this.closest('.pres-dd-menu').classList.remove('pres-dd-open')" style="padding:7px 14px;cursor:pointer;font-size:11px;color:#166534" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background=''">📋 Agrupar cliente</div>
+            <div onclick="presToggleInterno();this.closest('.pres-dd-menu').classList.remove('pres-dd-open')" style="padding:7px 14px;cursor:pointer;font-size:11px" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background=''">👁 Marcar como interno</div>
+            <div onclick="presCrearPedido();this.closest('.pres-dd-menu').classList.remove('pres-dd-open')" style="padding:7px 14px;cursor:pointer;font-size:11px;color:#e65100" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background=''">📦 Crear pedido</div>
+            <div onclick="presReimportarACatalogo();this.closest('.pres-dd-menu').classList.remove('pres-dd-open')" style="padding:7px 14px;cursor:pointer;font-size:11px;color:#1a5276" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background=''">📥 Reimportar catálogo</div>
+          </div>
+        </div>
+        <!-- ═══ DESPLEGABLE: EXPORTAR ═══ -->
+        <div class="pres-dropdown no-print" style="position:relative">
+          <button class="btn btn-ghost btn-sm" onclick="this.nextElementSibling.classList.toggle('pres-dd-open')" style="font-size:11px;padding:4px 10px;font-weight:600">📤 Exportar ▾</button>
+          <div class="pres-dd-menu" style="display:none;position:absolute;top:100%;left:0;background:white;border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:999;min-width:200px;padding:4px 0">
+            <div onclick="exportarPresupuestoPDF();this.closest('.pres-dd-menu').classList.remove('pres-dd-open')" style="padding:7px 14px;cursor:pointer;font-size:11px" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background=''">⬇️ Descargar PDF</div>
+            <div onclick="window.print();this.closest('.pres-dd-menu').classList.remove('pres-dd-open')" style="padding:7px 14px;cursor:pointer;font-size:11px" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background=''">🖨️ Imprimir</div>
+            <div onclick="abrirImportarPDF();this.closest('.pres-dd-menu').classList.remove('pres-dd-open')" style="padding:7px 14px;cursor:pointer;font-size:11px;color:#1a5276" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background=''">📥 Importar PDF</div>
+            <div style="border-top:1px solid #eee;margin:2px 0"></div>
+            <div onclick="abrirCertificarPartidas();this.closest('.pres-dd-menu').classList.remove('pres-dd-open')" style="padding:7px 14px;cursor:pointer;font-size:11px;color:#b87333" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background=''">🏗️ Certificar partidas</div>
+            <div onclick="convertirPresupuestoAFactura();this.closest('.pres-dd-menu').classList.remove('pres-dd-open')" style="padding:7px 14px;cursor:pointer;font-size:11px;color:var(--green)" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background=''">🧾 Crear factura</div>
+          </div>
+        </div>
+        <!-- ═══ DESPLEGABLE: MÁS ═══ -->
+        <div class="pres-dropdown no-print" style="position:relative">
+          <button class="btn btn-ghost btn-sm" onclick="this.nextElementSibling.classList.toggle('pres-dd-open')" style="font-size:11px;padding:4px 10px;font-weight:600">⋯ Más ▾</button>
+          <div class="pres-dd-menu" style="display:none;position:absolute;top:100%;right:0;background:white;border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:999;min-width:220px;padding:4px 0">
+            <div onclick="eliminarVersionPresupuesto();this.closest('.pres-dd-menu').classList.remove('pres-dd-open')" style="padding:7px 14px;cursor:pointer;font-size:11px;color:var(--red)" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background=''">🗑 Eliminar versión</div>
+            <div style="border-top:1px solid #eee;margin:2px 0"></div>
+            <div onclick="abrirModalPlantillas();this.closest('.pres-dd-menu').classList.remove('pres-dd-open')" style="padding:7px 14px;cursor:pointer;font-size:11px" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background=''">📋 Cargar plantilla</div>
+            <div onclick="guardarPlantilla();this.closest('.pres-dd-menu').classList.remove('pres-dd-open')" style="padding:7px 14px;cursor:pointer;font-size:11px" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background=''">💾 Guardar como plantilla</div>
+            <div onclick="abrirPresupuestoIA();this.closest('.pres-dd-menu').classList.remove('pres-dd-open')" style="padding:7px 14px;cursor:pointer;font-size:11px;color:#7b2fa8" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background=''">🤖 Generar con IA</div>
+            <div style="border-top:1px solid #eee;margin:2px 0"></div>
+            <div style="padding:7px 14px;font-size:11px;display:flex;align-items:center;gap:8px">
+              <span>🔎 Filtrar:</span>
+              <select class="form-input" id="pres-filtro-estado" onchange="setPresFiltroEstado(this.value)" title="Filtrar por estado" style="flex:1;font-size:10px;padding:2px 4px">
+                <option value="todos">Todos</option>
+                <option value="pendiente">⚪ Pendientes</option>
+                <option value="ejecucion">🔵 En ejecución</option>
+                <option value="terminada">🟡 Terminadas</option>
+                <option value="certificada">🟢 Certificadas</option>
+              </select>
+            </div>
+            <div style="padding:7px 14px;font-size:11px;display:flex;align-items:center;gap:8px">
+              <div class="ci-toggle" id="ci-toggle-btn" onclick="toggleCI()" title="CI+GG+BI en partidas nuevas" style="margin:0">
+                <div class="ci-dot"></div>
+                <span id="ci-toggle-lbl">CI+GG+BI off</span>
+              </div>
+            </div>
+          </div>
+        </div>
         <button class="btn btn-ghost" id="btn-comparativa" style="display:none" onclick="abrirComparativa()">⚖️ Comparar</button>
-        <select class="form-input" id="pres-filtro-estado" onchange="setPresFiltroEstado(this.value)" title="Filtrar por estado de certificación" style="width:auto;min-width:135px;font-size:11px;padding:4px 6px">
-          <option value="todos">🔎 Todos los estados</option>
-          <option value="pendiente">⚪ Pendientes</option>
-          <option value="ejecucion">🔵 En ejecución</option>
-          <option value="terminada">🟡 Terminadas</option>
-          <option value="certificada">🟢 Certificadas</option>
-        </select>
-        <!-- Plantillas -->
-        <div style="display:flex;gap:4px;border-left:1px solid var(--border);padding-left:8px;margin-left:2px">
-          <button class="btn btn-ghost btn-sm no-print" onclick="abrirModalPlantillas()" title="Cargar plantilla de capítulos" style="font-size:11px">📋 Plantillas</button>
-          <button class="btn btn-ghost btn-sm no-print" onclick="guardarPlantilla()" title="Guardar presupuesto actual como plantilla" style="font-size:11px">💾 Guardar plantilla</button>
-        </div>
-        <button class="btn btn-ghost no-print" onclick="abrirCertificarPartidas()" style="background:#fff4e5;color:#b87333;border-color:#e8b87a;font-weight:600" title="Generar certificación a partir de las partidas seleccionadas/terminadas">🏗️ Certificar</button>
-        <button class="btn btn-ghost no-print" onclick="convertirPresupuestoAFactura()" style="background:#e8f5ee;color:var(--green);border-color:#b8dfc8;font-weight:600" title="Crear factura de venta a partir de este presupuesto">🧾 Crear factura</button><button class="btn btn-ghost no-print" onclick="exportarPresupuestoPDF()">⬇️ PDF</button>
-        <button class="btn btn-ghost no-print" onclick="window.print()">🖨️ Imprimir</button>
-        <button class="btn btn-ghost no-print" onclick="abrirImportarPDF()" style="background:#e8f0f8;color:#1a5276;border-color:#aac8e8;font-weight:600" title="Importar presupuesto desde PDF">📥 Importar PDF</button>
-        <button class="btn btn-ghost no-print" onclick="irPresupuestoFinal()" style="background:#f0faf2;color:#166534;border-color:#86efac;font-weight:700;border-left:2px solid #166534" title="Ver documento final para el cliente">📄 Doc. Final</button>
+        <button class="btn btn-primary btn-sm" onclick="addLineaPresupuesto()" style="font-size:11px">＋ Línea</button>
+        <button class="btn btn-ghost btn-sm" onclick="addCapituloPresupuesto()" style="font-size:11px">＋ Capítulo</button>
+        <button class="btn btn-ghost btn-sm no-print" onclick="irPresupuestoFinal()" style="background:#f0faf2;color:#166534;border-color:#86efac;font-weight:700" title="Ver documento final para el cliente">📄 Doc. Final</button>
         <div id="pres-total-lbl" style="margin-left:auto;font-size:13px;font-weight:700;color:var(--navy)"></div>
-        <div class="ci-toggle" id="ci-toggle-btn" onclick="toggleCI()" title="Activar/desactivar CI+GG+BI en partidas nuevas">
-          <div class="ci-dot"></div>
-          <span id="ci-toggle-lbl">CI+GG+BI off</span>
-        </div>
       </div>
       <div id="pres-resumen" style="display:none">
         <div class="kpi-grid" style="margin-bottom:12px">
@@ -7349,6 +7376,12 @@ if(document.readyState==='loading'){
 } else {
   arrancar();
 }
+// Cerrar desplegables de presupuesto al hacer clic fuera
+document.addEventListener('click', function(e){
+  if(!e.target.closest('.pres-dropdown')){
+    document.querySelectorAll('.pres-dd-menu.pres-dd-open').forEach(function(m){m.classList.remove('pres-dd-open');});
+  }
+});
 
 // ═══════════════════════════════════════════
 // SUPABASE
