@@ -27239,13 +27239,15 @@ function tbIAImportarPlugin(){
   // 2) Normalizar módulos al formato que espera _tbIAValidarModulos
   // El plugin usa: {ref, alto, ancho, prof, cant, acabado, nota, fam, sub, desc}
   // _tbIAValidarModulos usa: {ref, alto, ancho, prof, cant, acabado, nota}
+  // Si el módulo tiene acabado vacío, usar el acabado global del proyecto
+  const acabadoProyecto = (data.proyecto?.acabado || '').toString().trim();
   const lista = modulos.map(m => ({
     ref:     (m.ref || '').toString().toUpperCase().trim(),
     alto:    parseFloat(m.alto)  || null,
     ancho:   parseFloat(m.ancho) || null,
     prof:    parseFloat(m.prof)  || null,
     cant:    parseInt(m.cant)    || 1,
-    acabado: (m.acabado || '').toString().trim(),
+    acabado: (m.acabado || '').toString().trim() || acabadoProyecto,
     nota:    (m.nota || '').toString().trim(),
   }));
 
