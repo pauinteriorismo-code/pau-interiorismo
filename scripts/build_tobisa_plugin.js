@@ -233,7 +233,7 @@ module PauInteriorismo
       'acabado'  => 'Cotton',
       'dto1'     => '50',
       'dto2'     => '8',
-      'margen'   => '40',
+      'margen'   => '100',
     }.freeze
 
     def self.cfg_load
@@ -701,7 +701,7 @@ __VAR_D_PLACEHOLDER__
 
 var F=null, TI=-1, IDX=-1, CUR=null;
 // Configuración global del proyecto (pushada desde Ruby al abrir)
-window._PAU_CFG = window._PAU_CFG || {proyecto:'',cliente:'',version:'v1',acabado:'Cotton',dto1:'50',dto2:'8',margen:'40'};
+window._PAU_CFG = window._PAU_CFG || {proyecto:'',cliente:'',version:'v1',acabado:'Cotton',dto1:'50',dto2:'8',margen:'100'};
 
 function saveCfg(k, v){
   window._PAU_CFG[k] = v;
