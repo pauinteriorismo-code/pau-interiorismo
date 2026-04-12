@@ -10407,12 +10407,14 @@ async function subirAlbaranDrive(id){
 async function subirDocPedidoDrive(){
   const pedId=document.getElementById('pd-pedido-sel')?.value;
   const ped=(PedC||[]).find(p=>String(p.id)===String(pedId));
-  const proyId=ped?.proyecto_id;
-  if(!proyId){toast('Selecciona un pedido primero','error');return;}
+  // Buscar proyecto_id: primero del selector, luego del pedido guardado, luego del campo de texto
+  const proyId=document.getElementById('filter-proyecto-pedido_doc')?.value || ped?.proyecto_id || document.getElementById('pd-proyecto-input')?.value;
+  if(!proyId){toast('Guarda el pedido primero y selecciona un proyecto','error');return;}
   const _numPed=document.getElementById('pd-num-input')?.value||'pedido';
-  const _provPed=_safeNombre(ped?.proveedor||'');
+  const _prov=document.getElementById('pd-prov-input')?.value || ped?.proveedor || '';
+  const _provPed=_safeNombre(_prov);
   const nombre=_numPed+(_provPed?'_'+_provPed:'')+'.pdf';
-  await subirPDFaDrive('pd-doc',nombre,proyId,DRIVE_SUB.proveedores,null,{tipoDoc:'Pedidos',proveedor:ped?.proveedor||'Sin proveedor'});
+  await subirPDFaDrive('pd-doc',nombre,proyId,DRIVE_SUB.proveedores,null,{tipoDoc:'Pedidos',proveedor:_prov||'Sin proveedor'});
 }
 
 async function subirPresupuestoDrive(){
