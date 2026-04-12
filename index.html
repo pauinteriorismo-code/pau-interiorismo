@@ -17193,13 +17193,8 @@ async function guardarDocPedido(){
       const sel=document.getElementById('pd-pedido-sel');
       if(sel) sel.value = window.pdPedidoId;
     }
-    // Auto-subida a Google Drive (carpeta del proyecto · 06 Subcontratas)
-    if(d.proyecto_id){
-      // Pequeña espera para que el DOM del documento esté listo
-      setTimeout(()=>{
-        subirDocPedidoDrive().catch(err=>{ toast('Error subiendo a Drive: '+err.message,'error'); });
-      }, 200);
-    }
+    // Ya no se sube automáticamente a Drive: el usuario puede editar
+    // la referencia del proyecto antes y subirlo con el botón "Drive".
   }catch(e){ toast('Error: '+e.message,'error'); }
 }
 
