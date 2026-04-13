@@ -25808,7 +25808,7 @@ async function importarMediciones(data){
   const ver = document.getElementById('pres-version-sel')?.value || 'v1';
   if(!proy){ toast('Selecciona un proyecto primero','error'); return; }
   const proyObj = (PC||[]).find(p=>p.proyecto_id===proy);
-  const proyFinal = proyObj?.id || proy;
+  const proyFinal = proy;
 
   try{
     // Obtener orden máximo actual
