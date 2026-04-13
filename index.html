@@ -10480,10 +10480,10 @@ async function initPresupuesto(){
   if(!PC.length)PC=await sbGet('proyectos').catch(()=>[]);
   if(!TC.length)TC=await sbGet('tarifario').catch(()=>[]);
   if(!CyCache.length)CyCache=await sbGet('precios_cype','?order=codigo.asc').catch(()=>[]);
-  populateSelects();populateIntCatalog();
+  await populateSelects();await populateIntCatalog();
   // Restaurar último proyecto seleccionado
   const lp=sessionStorage.getItem('pres_last_proy');
-  const lv=sessionStorage.getItem('pres_last_ver');
+  const lv=sessionStorage.getItem('pres_last_ver')||sessionStorage.getItem('pres_activo_ver');
   const lc=sessionStorage.getItem('pres_activo_cli');
   // Restaurar cliente primero (filtra proyectos)
   if(lc){
@@ -10504,12 +10504,11 @@ async function initPresupuesto(){
       for(let o of vSel.options){ if(o.value===lv){ vSel.value=lv; break; } }
     }
     await presProyChanged();
-    // Tras cargar unidades, la versión guardada puede ser una unidad: si lv
-    // sigue existiendo en el select reconstruido, asegurarla y recargar.
-    if(lv&&vSel){
-      let ok=false;
-      for(let o of vSel.options){ if(o.value===lv){ vSel.value=lv; ok=true; break; } }
-      if(ok && vSel.value!==lv){ vSel.value=lv; loadPresupuesto(); }
+    // Tras cargar unidades, asegurar que la versión guardada se restaura
+    // (presProyChanged reconstruye el select y podría haber perdido la versión)
+    if(lv&&vSel&&vSel.value!==lv){
+      for(let o of vSel.options){ if(o.value===lv){ vSel.value=lv; break; } }
+      if(vSel.value===lv) await loadPresupuesto();
     }
   }
 }
@@ -10574,11 +10573,16 @@ function renombrarVersion(selId, proySelId){
 // Shared: load units into any version selector
 async function _loadUnitsIntoSelector(proyId, verSel){
   const curVer = verSel.value;
+  // Marcar con un token único para detectar si otra llamada concurrente nos ha pisado
+  const token = Math.random().toString(36);
+  verSel.dataset._luisToken = token;
   verSel.innerHTML = '<option value="v1">v1</option><option value="v2">v2</option><option value="v3">v3</option><option value="v4">v4</option><option value="v5">v5</option><option value="v6">v6</option><option value="v7">v7</option><option value="v8">v8</option>';
   if(!proyId){ return; }
   updateVersionLabels(proyId, verSel);
   try {
     const units = await sbGet('proyecto_unidades','?proyecto_id=eq.'+encodeURIComponent(proyId)+'&order=orden,ref_unidad');
+    // Si otra llamada concurrente ya reconstruyó el selector, abortar esta
+    if(verSel.dataset._luisToken !== token) return;
     if(units && units.length > 0){
       const p = PC.find(x=>x.proyecto_id===proyId);
       const label = (p && p.tipo_unidades) ? p.tipo_unidades : 'Unidades / Trabajos';
@@ -16276,14 +16280,15 @@ async function saitraExportarPresupuesto(){
   const verSelEl = document.getElementById('s-version-exp');
   const verRaw = verSelEl ? verSelEl.value : (prompt('¿A qué versión del presupuesto exportar? (1-8)', '1')||'1');
   if(!verRaw) return;
-  const ver = verRaw.startsWith('v') ? verRaw : 'v'+verRaw;
+  // Si es un número suelto (1-8) añadir prefijo 'v', si ya es 'v1','VIV-4F' etc. usar tal cual
+  const ver = /^\d+$/.test(verRaw) ? 'v'+verRaw : verRaw;
 
   const margen   = parseFloat(document.getElementById('s-margen')?.value)||0;
   const ivaGlobal = (document.getElementById('s-iva-global')?.value||'21')+'%';
   const totalPvp = saitraLineas.reduce((s,l)=>s+l.pvpTotal, 0);
 
   if(!confirm(
-    `Se añadirán al presupuesto del proyecto "${proy}" v${ver}:\n\n` +
+    `Se añadirán al presupuesto del proyecto "${proy}" ${ver}:\n\n` +
     `📄 Capítulo "Mobiliario de Cocina"\n` +
     `📄 ${saitraLineas.length} líneas · Total PVP: ${fmtES(totalPvp)}€\n\n¿Confirmar?`
   )) return;
@@ -16359,17 +16364,16 @@ async function saitraExportarPresupuesto(){
 
     toast(`✅ ${saitraLineas.length} líneas exportadas al presupuesto`);
 
-    // Navegar al presupuesto y cargar el proyecto
-    setTimeout(()=>{
-      document.querySelector('[data-view="presupuesto"]')?.click();
-      setTimeout(()=>{
-        const ps = document.getElementById('pres-proyecto-sel');
-        const vs = document.getElementById('pres-version-sel');
-        if(ps) ps.value = proy;
-        if(vs) vs.value = ver;
-        if(ps) loadPresupuesto();
-      }, 400);
-    }, 800);
+    // Guardar contexto en sessionStorage para que initPresupuesto lo restaure
+    const proyObj = (PC||[]).find(p=>p.proyecto_id===proy);
+    if(proyObj && proyObj.cliente_id){
+      sessionStorage.setItem('pres_activo_cli', proyObj.cliente_id);
+    }
+    sessionStorage.setItem('pres_last_proy', proy);
+    sessionStorage.setItem('pres_last_ver', ver);
+
+    // Navegar al presupuesto — initPresupuesto() restaurará cliente+proyecto+version
+    document.querySelector('[data-view="presupuesto"]')?.click();
 
   }catch(e){
     toast('Error: '+e.message, 'error');
@@ -20725,7 +20729,7 @@ document.addEventListener('click', e=>{
 const loaders={
   gerencia:loadGerencia,agenda:loadAgenda,clientes:loadClientes,proyectos:loadProyectos,
   catalogos:()=>{ loadCatVersiones(); },
-  presupuesto:()=>{initPresupuesto();const _pProy=document.getElementById('pres-proyecto-sel')?.value;const _pVer=document.getElementById('pres-version-sel')?.value;if(_pProy&&_pVer)loadPfObs();if(typeof checkPresupuestoDesactualizado==='function') setTimeout(checkPresupuestoDesactualizado,500);},
+  presupuesto:async()=>{await initPresupuesto();const _pProy=document.getElementById('pres-proyecto-sel')?.value;const _pVer=document.getElementById('pres-version-sel')?.value;if(_pProy&&_pVer)loadPfObs();if(typeof checkPresupuestoDesactualizado==='function') setTimeout(checkPresupuestoDesactualizado,500);},
   comparativa:()=>{initComparativa();if(document.getElementById('comp-proyecto-sel').value)loadComparativa();},
   tarifario:loadTarifario,cype:loadCype,interiorismo:loadInteriorismo,
   saitra:()=>{ initSaitra(); },
