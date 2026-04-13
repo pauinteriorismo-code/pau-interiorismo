@@ -10496,20 +10496,15 @@ async function initPresupuesto(){
   const pSel=document.getElementById('pres-proyecto-sel');
   if(lp&&pSel&&PC.some(p=>p.proyecto_id===lp)){
     pSel.value=lp;
-    // Pre-restaurar versión en el select ANTES de cargar unidades+presupuesto,
-    // para que _loadUnitsIntoSelector preserve la versión guardada (ej. v2)
-    // y loadPresupuesto se lance con la versión correcta.
     const vSel=document.getElementById('pres-version-sel');
+    // Primero cargar unidades/viviendas en el selector de versión (añade opciones VIV-*)
+    await _loadUnitsIntoSelector(pSel.value, vSel);
+    // Ahora que TODAS las opciones existen (v1-v8 + VIV-*), restaurar la versión guardada
     if(lv&&vSel){
       for(let o of vSel.options){ if(o.value===lv){ vSel.value=lv; break; } }
     }
-    await presProyChanged();
-    // Tras cargar unidades, asegurar que la versión guardada se restaura
-    // (presProyChanged reconstruye el select y podría haber perdido la versión)
-    if(lv&&vSel&&vSel.value!==lv){
-      for(let o of vSel.options){ if(o.value===lv){ vSel.value=lv; break; } }
-      if(vSel.value===lv) await loadPresupuesto();
-    }
+    // Cargar presupuesto UNA sola vez con la versión correcta
+    await loadPresupuesto();
   }
 }
 // ── Renombrado de versiones ──────────────────────────────────────────────────
@@ -16304,18 +16299,20 @@ async function saitraExportarPresupuesto(){
       if(existing && existing.length) ordenBase = existing[0].orden || 0;
     }catch(e){ ordenBase = 0; }
 
-    // Recoger acabados configurados (una sola vez para la cabecera)
+    // Recoger acabados configurados (solo si hay al menos un frente seleccionado)
     const acabParts = [];
     const _m1frente = document.getElementById('s-frente-1')?.value||'';
     if(_m1frente) acabParts.push('Frente: '+_m1frente.split('|')[0]);
-    const _casco = document.getElementById('s-casco')?.value||'';
-    if(_casco) acabParts.push('Casco: '+_casco);
-    const _cajones = document.getElementById('s-cajones')?.value||'';
-    if(_cajones) acabParts.push('Cajón: '+_cajones);
-    const _vitrina = document.getElementById('s-vitrina')?.value||'';
-    if(_vitrina) acabParts.push('Vitrina: '+_vitrina);
-    const _cascoInt = document.getElementById('s-casco-int')?.value||'';
-    if(_cascoInt) acabParts.push('Interior casco: '+_cascoInt);
+    if(_m1frente){
+      const _casco = document.getElementById('s-casco')?.value||'';
+      if(_casco) acabParts.push('Casco: '+_casco);
+      const _cajones = document.getElementById('s-cajones')?.value||'';
+      if(_cajones) acabParts.push('Cajón: '+_cajones);
+      const _vitrina = document.getElementById('s-vitrina')?.value||'';
+      if(_vitrina) acabParts.push('Vitrina: '+_vitrina);
+      const _cascoInt = document.getElementById('s-casco-int')?.value||'';
+      if(_cascoInt) acabParts.push('Interior casco: '+_cascoInt);
+    }
     const acabadosDesc = acabParts.length ? acabParts.join(' · ') : '';
 
     // Crear capítulo
