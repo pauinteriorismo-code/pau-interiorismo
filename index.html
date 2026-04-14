@@ -6969,24 +6969,58 @@ if('serviceWorker' in navigator){
   if(driveOpts && driveOpts.folderId){
     const _fi=driveOpts.folderId, _sc=driveOpts.subCarpeta||'', _nom=(filename||titulo||'documento')+'.pdf';
     const _extras={tipoDoc:driveOpts.tipoDoc||null, proveedor:driveOpts.proveedor||null};
-    // Guardamos referencia al elemento del DOM padre que se usó para generar la vista previa
-    const _srcEl = doc; // el elemento original (fac-preview-doc) en la ventana padre
+    // Inyectar html2pdf.js en el popup para capturar su propio #vp-doc (que SÍ es visible y está estilado)
     setTimeout(function(){
+      try{
+        const sc=w.document.createElement('script');
+        sc.src='https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+        w.document.head.appendChild(sc);
+      }catch(e){ console.warn('No se pudo inyectar html2pdf en el popup:',e); }
       const tb=w.document.querySelector('.toolbar'), pb=w.document.querySelector('.btn-print');
       if(tb&&pb){
         const btn=w.document.createElement('button');
         btn.textContent='☁️ Drive';
         btn.style.cssText='padding:8px 16px;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;background:#1a73e8;color:white';
-        btn.onclick=function(){
-          // Llamar a subirPDFaDrive en la ventana PADRE usando el elemento original
+        btn.onclick=async function(){
           btn.disabled=true; btn.textContent='Subiendo...';
-          subirPDFaDrive(_srcEl, _nom, null, _sc, _fi, _extras)
-            .then(function(){
+          try{
+            // Esperar a que html2pdf esté disponible en el popup
+            for(let i=0; i<50 && !w.html2pdf; i++) await new Promise(r=>setTimeout(r,100));
+            if(!w.html2pdf) throw new Error('html2pdf no cargó en el popup');
+            const vpDoc=w.document.getElementById('vp-doc');
+            if(!vpDoc) throw new Error('#vp-doc no encontrado en el popup');
+            // Generar PDF en el popup (elemento VISIBLE)
+            const opt={
+              margin:[10,10,15,10],
+              filename:_nom,
+              image:{type:'jpeg',quality:1.0},
+              pagebreak:{mode:['css','legacy'],avoid:['tr','thead','tfoot','.cap-row','.capitulo-row']},
+              html2canvas:{scale:3,useCORS:true,letterRendering:true,allowTaint:false,imageTimeout:0,
+                onclone:function(cdoc){
+                  cdoc.querySelectorAll('.no-print,[data-noprint],.toolbar').forEach(function(el){el.style.display='none';});
+                  cdoc.querySelectorAll('tr,thead,tfoot').forEach(function(el){el.style.pageBreakInside='avoid';el.style.breakInside='avoid';});
+                  var d=cdoc.getElementById('vp-doc');
+                  if(d){ d.style.width='794px'; d.style.maxWidth='794px'; d.style.padding='12mm 15mm 12mm 15mm'; d.style.boxSizing='border-box'; d.style.boxShadow='none'; }
+                }
+              },
+              jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
+            };
+            const base64=await w.html2pdf().set(opt).from(vpDoc).output('datauristring');
+            // Subir desde el padre
+            const res=await fetch(DRIVE_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
+              body:JSON.stringify({action:'uploadFile',fileData:base64,fileName:_nom,mimeType:'application/pdf',folderId:_fi,subCarpeta:_sc||null,tipoDoc:_extras.tipoDoc,proveedor:_extras.proveedor})});
+            const json=await res.json().catch(()=>({}));
+            if(json.ok){
               btn.textContent='✅ Subido';
-            })
-            .catch(function(e){
-              btn.textContent='☁️ Drive'; btn.disabled=false;
-            });
+              try{ toast('☁️ Subido a Drive ✅'); }catch(e){}
+            } else {
+              throw new Error(json.error||'subida fallida');
+            }
+          }catch(err){
+            console.error('Error Drive (popup):',err);
+            btn.textContent='☁️ Drive'; btn.disabled=false;
+            try{ toast('Error Drive: '+err.message,'error'); }catch(e){ alert('Error Drive: '+err.message); }
+          }
         };
         pb.after(btn);
       }
