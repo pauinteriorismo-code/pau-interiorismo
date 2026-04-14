@@ -9926,11 +9926,9 @@ const DRIVE_SUB = {
   comparativas: '11 Comparativas'
 };
 
-async function crearCarpetasDrive(proyId, nombre, folderIdExistente){
+async function crearCarpetasDrive(proyId, nombre){
   const carpeta=proyId+' '+nombre;
   const body = {nombre:carpeta, carpetas:DRIVE_FOLDER_NAMES};
-  // Si ya existe una carpeta en Drive, pasamos su ID para crear subcarpetas dentro de ella
-  if(folderIdExistente) body.parentId = folderIdExistente;
   try{
     const r=await fetch(DRIVE_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(body)});
     const json=await r.json().catch(()=>({}));
@@ -9951,20 +9949,10 @@ async function crearCarpetasDriveDesdeModal(){
   const nombre = document.getElementById('p-nombre')?.value?.trim();
   if(!nombre){ toast('Introduce el nombre del proyecto primero','error'); return; }
 
-  // Comprobar si ya tiene una carpeta de Drive (del campo o de la DB)
-  const driveUrl = document.getElementById('p-drive')?.value?.trim() || '';
-  const m = driveUrl.match(/folders\/([a-zA-Z0-9_-]+)/);
-  const folderIdExistente = m ? m[1] : null;
+  toast('📁 Creando carpeta y subcarpetas en Drive…');
+  await crearCarpetasDrive(proyId || 'PRY', nombre);
 
-  if(folderIdExistente){
-    toast('📁 Creando subcarpetas en la carpeta existente…');
-  } else {
-    toast('📁 Creando carpeta y subcarpetas en Drive…');
-  }
-
-  await crearCarpetasDrive(proyId || 'PRY', nombre, folderIdExistente);
-
-  // Si se creó la URL, rellenar el campo
+  // Si se creó la URL, rellenar el campo automáticamente
   if(proyId){
     const p = PC.find(x=>x.proyecto_id===proyId);
     if(p && p.carpeta_drive){
