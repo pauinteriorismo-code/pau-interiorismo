@@ -1258,24 +1258,32 @@
         loadApiKey();
 
         // Llamar directamente a Anthropic desde el navegador (sin proxy Vercel)
-        async function callClaude(body) {
+        // Con reintentos automaticos para 529 (Overloaded)
+        async function callClaude(body, maxRetries = 3) {
             if (!_ANTHROPIC_KEY) throw new Error('API Key no configurada. Ve a Configuracion en la app principal.');
-            const res = await fetch('https://api.anthropic.com/v1/messages', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-api-key': _ANTHROPIC_KEY,
-                    'anthropic-version': '2023-06-01',
-                    'anthropic-dangerous-direct-browser-access': 'true'
-                },
-                body: JSON.stringify(body)
-            });
-            if (!res.ok) {
-                let m = 'Error API ' + res.status;
-                try { const e = await res.json(); m = e?.error?.message || m; } catch (e) {}
-                throw new Error(m);
+            for (let attempt = 0; attempt <= maxRetries; attempt++) {
+                const res = await fetch('https://api.anthropic.com/v1/messages', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': _ANTHROPIC_KEY,
+                        'anthropic-version': '2023-06-01',
+                        'anthropic-dangerous-direct-browser-access': 'true'
+                    },
+                    body: JSON.stringify(body)
+                });
+                if (res.status === 529 && attempt < maxRetries) {
+                    // Servidor sobrecargado, esperar y reintentar
+                    await new Promise(r => setTimeout(r, 2000 * (attempt + 1)));
+                    continue;
+                }
+                if (!res.ok) {
+                    let m = 'Error API ' + res.status;
+                    try { const e = await res.json(); m = e?.error?.message || m; } catch (e) {}
+                    throw new Error(m);
+                }
+                return res.json();
             }
-            return res.json();
         }
 
         // ══════════════════════════════════════════════════
@@ -1525,7 +1533,7 @@
             try {
                 const b64 = await toBase64(file);
                 const data = await callClaude({
-                    model: 'claude-sonnet-4-20250514',
+                    model: 'claude-haiku-4-5-20251001',
                     max_tokens: 4000,
                     system: `Eres un asistente que extrae lineas de presupuesto de documentos de construccion e interiorismo espanol. Devuelve SOLO un array JSON valido, sin texto adicional ni markdown. Formato: [{"desc":"descripcion completa de la partida","qty":numero,"price":numero}] - desc: descripcion completa de la linea (incluyendo capitulo si es relevante) - qty: cantidad numerica (1 si no se especifica) - price: precio unitario sin IVA como numero - Ignora lineas de subtotal, total, IVA, descuentos y encabezados - Si hay capitulos/apartados, incluyelos como prefijo en desc: "01.Demoliciones - Desmontaje lavabo"`,
                     messages: [{
@@ -1814,7 +1822,7 @@
 
                 const [b64pres, b64ext] = await Promise.all([toBase64(filePres), toBase64(fileExt)]);
                 const data = await callClaude({
-                    model: 'claude-sonnet-4-20250514',
+                    model: 'claude-haiku-4-5-20251001',
                     max_tokens: 2000,
                     system: `Eres un asistente financiero para PAU Interiorismo S.L., empresa espanola de construccion e interiorismo en Alcasser (Valencia). Analiza los documentos y devuelve SOLO un objeto JSON valido, sin texto adicional ni markdown. Campos exactos: { "cliente": "nombre completo del cliente", "referencia": "numero o referencia del presupuesto", "fecha_presupuesto": "dd/mm/aaaa o null", "total_presupuesto": numero, "pagos_banco": [{"fecha":"dd/mm/aaaa","concepto":"descripcion del movimiento","importe":numero}], "total_banco": numero, "total_efectivo": numero, "total_pagado": numero, "saldo_pendiente": numero, "detalle": "parrafo explicativo de la situacion de cobro" }`,
                     messages: [{

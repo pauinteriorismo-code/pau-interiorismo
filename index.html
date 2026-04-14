@@ -7360,6 +7360,9 @@ function arrancar(){
     if(app) app.style.display='flex';
     setUserDisplay(savedUser);
     aplicarPermisos();
+    // Navegacion desde herramienta_pau.html: ?v=seccion (ejecutar antes de init)
+    const _vParam = new URLSearchParams(window.location.search).get('v');
+    if(_vParam) { setTimeout(()=>navTo(_vParam), 50); window.history.replaceState({}, '', 'index.html'); }
     init().catch(e=>{ console.error('INIT ERROR:',e); });
     return;
   }
@@ -20883,10 +20886,6 @@ async function init(){
   poblarClientesDocumentos();
 
   await loadPieFactura();
-
-  // Navegacion desde herramienta_pau.html: ?v=seccion
-  const urlV = new URLSearchParams(window.location.search).get('v');
-  if(urlV) { navTo(urlV); window.history.replaceState({}, '', 'index.html'); }
 }
 
 
