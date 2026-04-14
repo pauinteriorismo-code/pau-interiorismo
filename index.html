@@ -6979,10 +6979,13 @@ if('serviceWorker' in navigator){
         btn.onclick=async function(){
           btn.disabled=true; btn.textContent='Subiendo...';
           try{
-            // Usar el mismo flujo que presupuestos/pedidos/contratos (probado y funcional).
-            // Si el elemento está oculto (display:none o offsetWidth===0), subirPDFaDrive
-            // lo mueve on-screen con overlay, captura y restaura automáticamente.
-            await subirPDFaDrive(_srcEl, _nom, null, _sc, _fi, _extras);
+            if(_srcEl && _srcEl.id === 'fac-preview-doc'){
+              // Factura: usar función específica que clona #fpdf a un wrapper visible
+              await subirFacturaPdfDrive(_nom, {folderId:_fi, subCarpeta:_sc, tipoDoc:_extras.tipoDoc, proveedor:_extras.proveedor});
+            } else {
+              // Presupuesto/pedido/contrato: flujo tradicional
+              await subirPDFaDrive(_srcEl, _nom, null, _sc, _fi, _extras);
+            }
             btn.textContent='✅ Subido';
           }catch(err){
             console.error('Error Drive:',err);
@@ -6996,39 +6999,45 @@ if('serviceWorker' in navigator){
   }
 }
 
-// Sube el PDF de factura a Drive renderizándolo on-screen temporalmente
-// detrás de un overlay opaco (evita CSP al usar html2pdf ya cargado del padre
-// y asegura que html2canvas mida el layout correctamente).
-async function subirPDFDesdeHtmlIframe(fullHtml, fileName, driveOpts){
+// Sube el PDF de factura a Drive clonando el #fpdf (el contenedor interno de la factura
+// con todos los estilos inline) a un wrapper visible temporal. No toca el DOM original.
+async function subirFacturaPdfDrive(fileName, driveOpts){
   if(!driveOpts || !driveOpts.folderId){
     toast('Sin carpeta Drive','error');
     throw new Error('sin-folder');
   }
   if(typeof html2pdf === 'undefined'){
-    throw new Error('html2pdf no está cargado en la app');
+    throw new Error('html2pdf no está cargado');
   }
-  const el = document.getElementById('fac-preview-doc');
-  if(!el) throw new Error('No existe fac-preview-doc en el DOM');
+  const facEl = document.getElementById('fac-preview-doc');
+  const fpdfEl = facEl ? facEl.querySelector('#fpdf') : null;
+  if(!fpdfEl) throw new Error('No se encontró #fpdf en fac-preview-doc');
   toast('☁️ Generando PDF…');
-  // Overlay opaco para tapar al usuario mientras renderizamos on-screen
+  // Overlay blanco opaco para tapar al usuario
   const overlay = document.createElement('div');
   overlay.style.cssText = 'position:fixed;inset:0;background:#fff;z-index:999998;display:flex;align-items:center;justify-content:center;font-family:Inter,sans-serif;font-size:16px;color:#4a3728;font-weight:700';
   overlay.textContent = '☁️ Generando PDF para Drive…';
   document.body.appendChild(overlay);
-  const prevCss = el.style.cssText;
-  // Mover el elemento on-screen con ancho real (820px). Detrás del overlay (z-index menor).
-  el.style.cssText = 'position:fixed;left:0;top:0;width:820px;background:#fff;z-index:999997;overflow:visible';
-  // Forzar reflow y esperar frames de pintado
-  el.getBoundingClientRect();
+  // Wrapper on-screen detrás del overlay
+  const wrapper = document.createElement('div');
+  wrapper.style.cssText = 'position:fixed;left:0;top:0;width:820px;background:#fff;z-index:999997;padding:0';
+  // Clonar el #fpdf (no tocar el original). El clon tiene todos los estilos inline.
+  const clone = fpdfEl.cloneNode(true);
+  // Asegurar que el clon tenga su ancho completo
+  clone.style.margin = '0 auto';
+  clone.style.maxWidth = '794px';
+  clone.style.width = '794px';
+  wrapper.appendChild(clone);
+  document.body.appendChild(wrapper);
+  // Forzar reflow + 2 frames de pintado
+  clone.getBoundingClientRect();
   await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
-  // Esperar fuentes e imágenes
+  // Esperar fuentes y imágenes del clon
   try{ if(document.fonts && document.fonts.ready) await document.fonts.ready; }catch(e){}
-  const imgs = el.querySelectorAll('img');
+  const imgs = clone.querySelectorAll('img');
   await Promise.all(Array.from(imgs).map(img => img.complete ? Promise.resolve() : new Promise(r=>{img.onload=img.onerror=r;})));
-  await new Promise(r => setTimeout(r, 250));
+  await new Promise(r => setTimeout(r, 300));
   try{
-    // Capturar #fpdf (el contenedor principal de la factura) si existe
-    const target = el.querySelector('#fpdf') || el;
     const opt = {
       margin:[10,10,15,10],
       filename:fileName,
@@ -7040,13 +7049,11 @@ async function subirPDFDesdeHtmlIframe(fullHtml, fileName, driveOpts){
         letterRendering:true,
         allowTaint:true,
         imageTimeout:0,
-        backgroundColor:'#ffffff',
-        windowWidth:820
+        backgroundColor:'#ffffff'
       },
       jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
     };
-    const base64 = await html2pdf().set(opt).from(target).output('datauristring');
-    // Subir a Drive
+    const base64 = await html2pdf().set(opt).from(clone).output('datauristring');
     const res = await fetch(DRIVE_SCRIPT_URL, {
       method:'POST', headers:{'Content-Type':'text/plain'},
       body:JSON.stringify({
@@ -7061,7 +7068,7 @@ async function subirPDFDesdeHtmlIframe(fullHtml, fileName, driveOpts){
     if(json.ok){ toast('☁️ Subido a Drive ✅'); return json; }
     throw new Error(json.error||'subida fallida');
   } finally {
-    el.style.cssText = prevCss;
+    if(wrapper.parentNode) wrapper.parentNode.removeChild(wrapper);
     if(overlay.parentNode) overlay.parentNode.removeChild(overlay);
   }
 }
@@ -10393,8 +10400,6 @@ async function subirPDFaDrive(elementId, nombreArchivo, proyId, subCarpeta, fold
   if(!folderId){toast('Sin carpeta Drive para este proyecto. Abre el expediente y añade el enlace de Drive.','error');return;}
   const el=(typeof elementId==='string')?document.getElementById(elementId):elementId;
   if(!el){toast('Elemento no encontrado','error');return;}
-  const _dbg=(typeof elementId==='string'?elementId:(el.id||'?'));
-  console.log('[Drive PDF]', _dbg, 'INICIO · display=',el.style.display,'offsetW=',el.offsetWidth,'offsetH=',el.offsetHeight,'innerHTML len=',(el.innerHTML||'').length);
   toast('☁️ Preparando para Drive…');
   const opt={
     margin:[10,10,15,10],
@@ -10458,33 +10463,9 @@ async function subirPDFaDrive(elementId, nombreArchivo, proyId, subCarpeta, fold
     // eslint-disable-next-line no-unused-expressions
     el.getBoundingClientRect();
     await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
-    // Esperar fuentes e imágenes
-    try{ if(document.fonts && document.fonts.ready) await document.fonts.ready; }catch(e){}
-    const _imgs = el.querySelectorAll('img');
-    await Promise.all(Array.from(_imgs).map(img => img.complete ? Promise.resolve() : new Promise(r=>{img.onload=img.onerror=r;})));
-    await new Promise(r => setTimeout(r, 250));
-    console.log('[Drive PDF]', _dbg, 'DESPUÉS de mover · offsetW=',el.offsetWidth,'offsetH=',el.offsetHeight,'rect=',el.getBoundingClientRect(),'imgs=',_imgs.length);
   }
   try{
-    console.log('[Drive PDF]', _dbg, 'A1 · typeof html2canvas=',typeof html2canvas,'typeof html2pdf=',typeof html2pdf);
-    // Debug: capturar canvas con html2canvas directo (con timeout 15s para no colgar)
-    if(typeof html2canvas !== 'undefined'){
-      console.log('[Drive PDF]', _dbg, 'A2 · llamando html2canvas...');
-      try{
-        const _canvasP = html2canvas(el, {scale:1, useCORS:true, allowTaint:true, backgroundColor:'#ffffff', logging:true});
-        const _timeout = new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout 15s')),15000));
-        const _canvas = await Promise.race([_canvasP, _timeout]);
-        console.log('[Drive PDF]', _dbg, 'A3 · CANVAS · w=',_canvas.width,'h=',_canvas.height);
-        try{
-          window._lastCanvasDataUri = _canvas.toDataURL('image/png');
-          console.log('[Drive PDF] A4 · canvas PNG length=',window._lastCanvasDataUri.length);
-        }catch(eT){ console.warn('[Drive PDF] A4 · canvas taint:', eT.message); }
-      }catch(eC){ console.warn('[Drive PDF] A3 · html2canvas falló:', eC.message, eC); }
-    }
-    console.log('[Drive PDF]', _dbg, 'B1 · llamando html2pdf...');
     const base64=await html2pdf().set(opt).from(el).output('datauristring');
-    window._lastPdfDataUri = base64;
-    console.log('[Drive PDF]', _dbg, 'B2 · PDF generado · length=',base64.length);
     const res=await fetch(DRIVE_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
       body:JSON.stringify({action:'uploadFile',fileData:base64,fileName:nombreArchivo,mimeType:'application/pdf',folderId,subCarpeta:subCarpeta||null,tipoDoc:(extras&&extras.tipoDoc)||null,proveedor:(extras&&extras.proveedor)||null})});
     const json=await res.json().catch(()=>({}));
@@ -19950,10 +19931,10 @@ function previsualizarFactura(opts){
     ? {folderId:_folderId, subCarpeta:DRIVE_SUB.proveedores, tipoDoc:'Facturas', proveedor:d.contra||'Sin proveedor'}
     : {folderId:_folderId, subCarpeta:'08 Facturas'}) : null;
   if(_silent){
-    // Modo auto-Drive: subir sin abrir popup de preview
+    // Modo auto-Drive: subir sin abrir popup de preview (usa la función específica de factura)
     if(_driveOpts && _driveOpts.folderId){
       setTimeout(()=>{
-        subirPDFaDrive('fac-preview-doc', _fn+'.pdf', null, _driveOpts.subCarpeta, _driveOpts.folderId, {tipoDoc:_driveOpts.tipoDoc||null, proveedor:_driveOpts.proveedor||null})
+        subirFacturaPdfDrive(_fn+'.pdf', {folderId:_driveOpts.folderId, subCarpeta:_driveOpts.subCarpeta, tipoDoc:_driveOpts.tipoDoc||null, proveedor:_driveOpts.proveedor||null})
           .catch(err=>toast('Error subiendo a Drive: '+err.message,'error'));
       }, 200);
     }
