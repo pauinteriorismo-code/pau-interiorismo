@@ -937,6 +937,7 @@
             min-width: 180px;
         }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
 <body>
 
@@ -1475,46 +1476,45 @@
             setTimeout(() => t.remove(), isError ? 4000 : 2800);
         }
 
-        const MAX_PDF_MB = 3;
+        // Extraer texto de PDF en el navegador con pdf.js
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        async function extractPdfText(file) {
+            const buf = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+            const pages = [];
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const content = await page.getTextContent();
+                pages.push(content.items.map(item => item.str).join(' '));
+            }
+            return pages.join('\n\n');
+        }
+
         async function importarPDF(presId, input) {
             const file = input.files[0];
             if (!file) return;
             const lbl = document.getElementById(`pdf-lbl-${presId}`);
             const zone = document.getElementById(`pdf-zone-${presId}`);
-            if (file.size > MAX_PDF_MB * 1024 * 1024) {
-                if (lbl) lbl.innerHTML = `<span style="color:var(--red)">\u274C PDF demasiado grande (max ${MAX_PDF_MB}MB)</span>`;
-                if (zone) zone.style.borderColor = 'var(--red)';
-                showToast(`Error: PDF supera ${MAX_PDF_MB}MB. Reduce el tamano del archivo.`, true);
-                input.value = '';
-                return;
-            }
-            if (lbl) lbl.textContent = '\u23F3 Analizando PDF con IA\u2026';
+            if (lbl) lbl.textContent = '\u23F3 Extrayendo texto del PDF\u2026';
             if (zone) zone.style.borderColor = 'var(--copper)';
             try {
-                const b64 = await toBase64(file);
+                // Paso 1: extraer texto del PDF en el navegador (sin limite de tamano)
+                const pdfText = await extractPdfText(file);
+                if (!pdfText || pdfText.trim().length < 20) throw new Error('No se pudo extraer texto del PDF. Comprueba que no es un PDF escaneado.');
+                if (lbl) lbl.textContent = '\u23F3 Analizando con IA\u2026';
+
+                // Paso 2: enviar solo el texto a la IA
                 const res = await fetch('/api/herramienta-proxy', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         model: 'claude-sonnet-4-20250514',
                         max_tokens: 4000,
-                        system: `Eres un asistente que extrae lineas de presupuesto de documentos PDF de construccion e interiorismo espanol. Devuelve SOLO un array JSON valido, sin texto adicional ni markdown. Formato: [{"desc":"descripcion completa de la partida","qty":numero,"price":numero}] - desc: descripcion completa de la linea (incluyendo capitulo si es relevante) - qty: cantidad numerica (1 si no se especifica) - price: precio unitario sin IVA como numero - Ignora lineas de subtotal, total, IVA, descuentos y encabezados - Si hay capitulos/apartados, incluyelos como prefijo en desc: "01.Demoliciones - Desmontaje lavabo"`,
+                        system: `Eres un asistente que extrae lineas de presupuesto de documentos de construccion e interiorismo espanol. Devuelve SOLO un array JSON valido, sin texto adicional ni markdown. Formato: [{"desc":"descripcion completa de la partida","qty":numero,"price":numero}] - desc: descripcion completa de la linea (incluyendo capitulo si es relevante) - qty: cantidad numerica (1 si no se especifica) - price: precio unitario sin IVA como numero - Ignora lineas de subtotal, total, IVA, descuentos y encabezados - Si hay capitulos/apartados, incluyelos como prefijo en desc: "01.Demoliciones - Desmontaje lavabo"`,
                         messages: [{
                             role: 'user',
-                            content: [
-                                {
-                                    type: 'document',
-                                    source: {
-                                        type: 'base64',
-                                        media_type: 'application/pdf',
-                                        data: b64
-                                    }
-                                },
-                                {
-                                    type: 'text',
-                                    text: 'Extrae todas las lineas de partida de este presupuesto. Devuelve solo el array JSON.'
-                                }
-                            ]
+                            content: `Este es el texto extraido de un presupuesto en PDF. Extrae todas las lineas de partida y devuelve solo el array JSON.\n\n${pdfText}`
                         }]
                     })
                 });
@@ -1789,52 +1789,34 @@
         async function analizarLiquidacion() {
             if (!filePres) { alert('Sube el presupuesto en PDF'); return; }
             if (!fileExt) { alert('Sube el extracto bancario en PDF'); return; }
-            const totalSize = (filePres?.size || 0) + (fileExt?.size || 0);
-            if (totalSize > MAX_PDF_MB * 1024 * 1024) {
-                showToast(`Error: Los PDFs combinados superan ${MAX_PDF_MB}MB. Reduce el tamano.`, true);
-                return;
-            }
             const nombre = (document.getElementById('liq-nombre').value || '').trim();
             if (!nombre) { alert('Escribe el nombre a buscar en el extracto'); return; }
             const body = document.getElementById('liq-result-body');
-            body.innerHTML = `<div class="loading-wrap"><div class="spinner"></div><span>Analizando documentos con IA\u2026</span></div>`;
+            body.innerHTML = `<div class="loading-wrap"><div class="spinner"></div><span>Extrayendo texto de los PDFs\u2026</span></div>`;
             try {
-                const [b64pres, b64ext] = await Promise.all([toBase64(filePres), toBase64(fileExt)]);
+                // Paso 1: extraer texto de ambos PDFs en el navegador
+                const [textPres, textExt] = await Promise.all([extractPdfText(filePres), extractPdfText(fileExt)]);
+                if (!textPres || textPres.trim().length < 20) throw new Error('No se pudo extraer texto del presupuesto. Comprueba que no es un PDF escaneado.');
+                if (!textExt || textExt.trim().length < 20) throw new Error('No se pudo extraer texto del extracto bancario.');
+
+                body.innerHTML = `<div class="loading-wrap"><div class="spinner"></div><span>Analizando con IA\u2026</span></div>`;
+
                 const totalEfectivo = pagosEfectivo.reduce((s, p) => s + (p.importe || 0), 0);
                 const efectivoDesc = pagosEfectivo.length
                     ? `\n\nPAGOS EN EFECTIVO YA REGISTRADOS:\n${pagosEfectivo.map(p => `- ${p.fecha || 's/f'}: ${p.concepto} \u2192 ${p.importe}\u20AC`).join('\n')}\nTotal efectivo: ${totalEfectivo}\u20AC`
                     : '';
+
+                // Paso 2: enviar solo texto a la IA
                 const res = await fetch('/api/herramienta-proxy', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         model: 'claude-sonnet-4-20250514',
                         max_tokens: 2000,
-                        system: `Eres un asistente financiero para PAU Interiorismo S.L., empresa espanola de construccion e interiorismo en Alcasser (Valencia). Analiza los documentos y devuelve SOLO un objeto JSON valido, sin texto adicional ni markdown. Campos exactos: { "cliente": "nombre completo del cliente", "referencia": "numero o referencia del presupuesto", "fecha_presupuesto": "dd/mm/aaaa o null", "total_presupuesto": numero, "pagos_banco": [{"fecha":"dd/mm/aaaa","concepto":"descripcion del movimiento","importe":numero}], "total_banco": numero, "total_efectivo": numero, "total_pagado": numero, "saldo_pendiente": numero, "detalle": "parrafo explicativo de la situacion de cobro" }`,
+                        system: `Eres un asistente financiero para PAU Interiorismo S.L., empresa espanola de construccion e interiorismo en Alcasser (Valencia). Analiza los textos extraidos de documentos PDF y devuelve SOLO un objeto JSON valido, sin texto adicional ni markdown. Campos exactos: { "cliente": "nombre completo del cliente", "referencia": "numero o referencia del presupuesto", "fecha_presupuesto": "dd/mm/aaaa o null", "total_presupuesto": numero, "pagos_banco": [{"fecha":"dd/mm/aaaa","concepto":"descripcion del movimiento","importe":numero}], "total_banco": numero, "total_efectivo": numero, "total_pagado": numero, "saldo_pendiente": numero, "detalle": "parrafo explicativo de la situacion de cobro" }`,
                         messages: [{
                             role: 'user',
-                            content: [
-                                {
-                                    type: 'document',
-                                    source: {
-                                        type: 'base64',
-                                        media_type: 'application/pdf',
-                                        data: b64pres
-                                    }
-                                },
-                                {
-                                    type: 'document',
-                                    source: {
-                                        type: 'base64',
-                                        media_type: 'application/pdf',
-                                        data: b64ext
-                                    }
-                                },
-                                {
-                                    type: 'text',
-                                    text: `Documento 1: presupuesto del cliente. Documento 2: extracto bancario. Busca en el extracto bancario UNICAMENTE los ingresos/movimientos que correspondan al cliente o referencia: "${nombre}". Ignora cualquier otro movimiento que no sea de este cliente. Extrae: importe total del presupuesto (con IVA si lo incluye), lista de pagos del cliente encontrados en el extracto con fecha, concepto e importe.${efectivoDesc} Total efectivo a sumar al total pagado: ${totalEfectivo}\u20AC (ya registrados manualmente, no busques estos en el extracto). Calcula: total_pagado = total_banco + ${totalEfectivo} (efectivo). Saldo_pendiente = total_presupuesto - total_pagado. Devuelve solo JSON.`
-                                }
-                            ]
+                            content: `DOCUMENTO 1 - PRESUPUESTO DEL CLIENTE:\n${textPres}\n\nDOCUMENTO 2 - EXTRACTO BANCARIO:\n${textExt}\n\nBusca en el extracto bancario UNICAMENTE los ingresos/movimientos que correspondan al cliente o referencia: "${nombre}". Ignora cualquier otro movimiento que no sea de este cliente. Extrae: importe total del presupuesto (con IVA si lo incluye), lista de pagos del cliente encontrados en el extracto con fecha, concepto e importe.${efectivoDesc} Total efectivo a sumar al total pagado: ${totalEfectivo}\u20AC (ya registrados manualmente, no busques estos en el extracto). Calcula: total_pagado = total_banco + ${totalEfectivo} (efectivo). Saldo_pendiente = total_presupuesto - total_pagado. Devuelve solo JSON.`
                         }]
                     })
                 });
