@@ -19790,12 +19790,17 @@ function previsualizarFactura(opts){
 </body></html>`;
 
   // Render in-page for crisp text (same as presupuesto)
+  // IMPORTANTE: NO usar display:none — html2canvas no renderiza elementos ocultos (PDF saldría en blanco).
+  // Posicionar fuera de pantalla para que tenga layout real.
   let facDocEl = document.getElementById('fac-preview-doc');
   if(!facDocEl){
     facDocEl = document.createElement('div');
     facDocEl.id = 'fac-preview-doc';
-    facDocEl.style.display = 'none';
+    facDocEl.style.cssText = 'position:absolute;left:-99999px;top:0;width:820px;background:#fff';
     document.body.appendChild(facDocEl);
+  } else {
+    // Por si quedó con display:none de versiones anteriores
+    facDocEl.style.cssText = 'position:absolute;left:-99999px;top:0;width:820px;background:#fff';
   }
   // Extract body content (strip <html><head> wrapper and toolbar)
   const _bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/);
