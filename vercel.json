@@ -1,8 +1,0 @@
-{
-  "functions": {
-    "api/herramienta-proxy.js": {
-      "maxDuration": 60,
-      "memory": 1024
-    }
-  }
-}
