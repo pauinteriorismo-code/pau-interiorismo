@@ -1,0 +1,14 @@
+{
+  "functions": {
+    "api/herramienta-proxy.js": {
+      "maxDuration": 60
+    }
+  },
+  "routes": [
+    {
+      "src": "/api/herramienta-proxy",
+      "methods": ["POST", "OPTIONS"],
+      "dest": "/api/herramienta-proxy.js"
+    }
+  ]
+}
