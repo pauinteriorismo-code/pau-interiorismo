@@ -5968,7 +5968,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 
 <!-- ═══ EXPEDIENTE DE PROYECTO (Vista unificada) ═══ -->
 <div class="overlay" id="m-expediente">
-  <div class="modal" style="width:min(900px,97vw);max-height:94vh;display:flex;flex-direction:column">
+  <div class="modal" style="width:min(1080px,97vw);max-height:94vh;display:flex;flex-direction:column">
     <div class="modal-head" style="flex-shrink:0">
       <div>
         <div class="modal-title" id="exp-title">📁 Expediente de proyecto</div>
@@ -6020,18 +6020,18 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     </div>
 
     <!-- Tabs -->
-    <div style="display:flex;border-bottom:1px solid var(--border);flex-shrink:0;background:#fff">
-      <button class="exp-tab active" onclick="expTab('resumen')" data-tab="resumen" style="padding:10px 16px;border:none;background:none;cursor:pointer;font-size:12px;font-weight:600;color:var(--navy);border-bottom:2px solid var(--navy)">📊 Resumen</button>
-      <button class="exp-tab" onclick="expTab('rentabilidad')" data-tab="rentabilidad" style="padding:10px 16px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-mid);border-bottom:2px solid transparent">📈 Rentabilidad</button>
-      <button class="exp-tab" onclick="expTab('gantt')" data-tab="gantt" style="padding:10px 16px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-mid);border-bottom:2px solid transparent">📅 Planificación</button>
-      <button class="exp-tab" onclick="expTab('compras')" data-tab="compras" style="padding:10px 16px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-mid);border-bottom:2px solid transparent">🛒 Compras</button>
-      <button class="exp-tab" onclick="expTab('facturas')" data-tab="facturas" style="padding:10px 16px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-mid);border-bottom:2px solid transparent">🧾 Facturas</button>
-      <button class="exp-tab" onclick="expTab('hitos')" data-tab="hitos" style="padding:10px 16px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-mid);border-bottom:2px solid transparent">💰 Hitos</button>
-      <button class="exp-tab" onclick="expTab('subcontratas')" data-tab="subcontratas" style="padding:10px 16px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-mid);border-bottom:2px solid transparent">👷 Subcontratas</button>
-      <button class="exp-tab" onclick="expTab('horas')" data-tab="horas" style="padding:10px 16px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-mid);border-bottom:2px solid transparent">⏱ Horas</button>
-      <button class="exp-tab" onclick="expTab('notas')" data-tab="notas" style="padding:10px 16px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-mid);border-bottom:2px solid transparent">📝 Notas</button><button class="exp-tab" onclick="expTab('fotos')" data-tab="fotos" style="padding:10px 16px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-mid);border-bottom:2px solid transparent">📷 Fotos</button>
-      <button class="exp-tab" onclick="expTab('docs')" data-tab="docs" style="padding:10px 16px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-mid);border-bottom:2px solid transparent">📂 Docs</button>
-      <button class="exp-tab" onclick="expTab('unidades')" data-tab="unidades" style="padding:10px 16px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-mid);border-bottom:2px solid transparent">🏠 Unidades</button>
+    <div style="display:flex;border-bottom:1px solid var(--border);flex-shrink:0;background:#fff;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:thin">
+      <button class="exp-tab active" onclick="expTab('resumen')" data-tab="resumen" style="padding:10px 12px;border:none;background:none;cursor:pointer;font-size:12px;font-weight:600;color:var(--navy);border-bottom:2px solid var(--navy);white-space:nowrap;flex-shrink:0">📊 Resumen</button>
+      <button class="exp-tab" onclick="expTab('rentabilidad')" data-tab="rentabilidad" style="padding:10px 12px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-mid);border-bottom:2px solid transparent;white-space:nowrap;flex-shrink:0">📈 Rentabilidad</button>
+      <button class="exp-tab" onclick="expTab('gantt')" data-tab="gantt" style="padding:10px 12px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-mid);border-bottom:2px solid transparent;white-space:nowrap;flex-shrink:0">📅 Planificación</button>
+      <button class="exp-tab" onclick="expTab('compras')" data-tab="compras" style="padding:10px 12px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-mid);border-bottom:2px solid transparent;white-space:nowrap;flex-shrink:0">🛒 Compras</button>
+      <button class="exp-tab" onclick="expTab('facturas')" data-tab="facturas" style="padding:10px 12px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-mid);border-bottom:2px solid transparent;white-space:nowrap;flex-shrink:0">🧾 Facturas</button>
+      <button class="exp-tab" onclick="expTab('hitos')" data-tab="hitos" style="padding:10px 12px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-mid);border-bottom:2px solid transparent;white-space:nowrap;flex-shrink:0">💰 Hitos</button>
+      <button class="exp-tab" onclick="expTab('subcontratas')" data-tab="subcontratas" style="padding:10px 12px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-mid);border-bottom:2px solid transparent;white-space:nowrap;flex-shrink:0">👷 Subcontratas</button>
+      <button class="exp-tab" onclick="expTab('horas')" data-tab="horas" style="padding:10px 12px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-mid);border-bottom:2px solid transparent;white-space:nowrap;flex-shrink:0">⏱ Horas</button>
+      <button class="exp-tab" onclick="expTab('notas')" data-tab="notas" style="padding:10px 12px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-mid);border-bottom:2px solid transparent;white-space:nowrap;flex-shrink:0">📝 Notas</button><button class="exp-tab" onclick="expTab('fotos')" data-tab="fotos" style="padding:10px 12px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-mid);border-bottom:2px solid transparent;white-space:nowrap;flex-shrink:0">📷 Fotos</button>
+      <button class="exp-tab" onclick="expTab('docs')" data-tab="docs" style="padding:10px 12px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-mid);border-bottom:2px solid transparent;white-space:nowrap;flex-shrink:0">📂 Docs</button>
+      <button class="exp-tab" onclick="expTab('unidades')" data-tab="unidades" style="padding:10px 12px;border:none;background:none;cursor:pointer;font-size:12px;color:var(--text-mid);border-bottom:2px solid transparent;white-space:nowrap;flex-shrink:0">🏠 Unidades</button>
     </div>
 
     <!-- Tab content -->
@@ -9882,7 +9882,11 @@ async function saveProyecto(){
       d.proyecto_id=genId('PRY',PC,'proyecto_id');
       await sbPost('proyectos',d);
       toast('Proyecto creado ✅');
-      crearCarpetasDrive(d.proyecto_id,nombre);
+      // Si el usuario introdujo una URL de carpeta Drive, extraer su ID para crear subcarpetas dentro
+      const _driveUrlNuevo = d.carpeta_drive || '';
+      const _mDrive = _driveUrlNuevo.match(/folders\/([a-zA-Z0-9_-]+)/);
+      const _folderIdNuevo = _mDrive ? _mDrive[1] : null;
+      crearCarpetasDrive(d.proyecto_id, nombre, _folderIdNuevo);
       crearTareasAutoProyecto(d.proyecto_id,d.tipo,d.fecha_inicio);
     }
     closeModal('m-proyecto');
