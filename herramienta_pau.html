@@ -3,37 +3,35 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Herramientas PAU Interiorismo</title>
+<title>Control de cobros · PAU Interiorismo</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
-
 :root {
   --navy: #1a2a3a;
-  --navy2: #253545;
-  --navy3: #304558;
-  --copper: #c5963a;
-  --copper2: #d4a84a;
-  --sand: #f5f0e8;
-  --sand2: #ece6da;
+  --navy2: #27405b;
+  --navy3: #3d5a78;
+  --copper: #b87333;
+  --copper2: #c5843f;
+  --cream: #f7f4ef;
+  --sand: #ede8df;
   --white: #ffffff;
-  --green: #2a7a50;
-  --green-s: #e8f5ee;
-  --red: #b83232;
-  --red-s: #fde8e8;
-  --amber: #b87820;
-  --amber-s: #fef5e0;
+  --green: #1e6b3d;
+  --green-s: #d5e8d4;
+  --red: #7b241c;
+  --red-s: #fce8e6;
+  --amber: #7d6608;
+  --amber-s: #fff2cc;
   --blue: #1a3d7a;
-  --blue-s: #e8eef8;
-  --border: #e0d8cc;
-  --text: #1a2430;
-  --soft: #8a8a7a;
-  --mono: 'DM Mono', monospace;
-  --sans: 'DM Sans', sans-serif;
-  --title: 'Syne', sans-serif;
+  --blue-s: #e8f4ff;
+  --border: #dce6f0;
+  --text: #1a2a3a;
+  --soft: #8a9aaa;
+  --mono: 'SF Mono', 'Consolas', monospace;
+  --sans: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --title: 'Inter', 'Segoe UI', system-ui, sans-serif;
 }
 
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--sans);background:var(--sand);color:var(--text);min-height:100vh;font-size:13px}
+body{font-family:var(--sans);background:var(--cream);color:var(--text);min-height:100vh;font-size:13px;-webkit-font-smoothing:antialiased}
 
 /* ── HEADER ── */
 .hdr{background:var(--navy);display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:54px;border-bottom:2px solid var(--copper)}
@@ -53,7 +51,7 @@ body{font-family:var(--sans);background:var(--sand);color:var(--text);min-height
 
 /* ── CARDS ── */
 .card{background:var(--white);border-radius:10px;border:1px solid var(--border);overflow:hidden;margin-bottom:14px}
-.card-head{padding:10px 14px;background:#f5f2ed;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-head{padding:10px 14px;background:#f5f3ee;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
 .card-title{font-family:var(--title);font-size:13px;font-weight:700;display:flex;align-items:center;gap:7px}
 .card-sub{font-size:10px;color:var(--soft)}
 
@@ -85,28 +83,28 @@ textarea{resize:vertical}
 .pres-card-head{padding:9px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
 .pres-color-bar{height:3px;width:100%}
 
-.pres-import{padding:10px 12px;border-bottom:1px solid var(--border);background:#f9f7f4}
+.pres-import{padding:10px 12px;border-bottom:1px solid var(--border);background:#f7f4ef}
 .pres-import textarea{width:100%;height:72px;font-family:var(--mono);font-size:10px}
 .pres-hint{font-size:10px;color:var(--soft);margin-top:4px}
 
-.pres-manual{display:grid;grid-template-columns:1fr 64px 90px 30px;gap:5px;padding:8px 12px;border-bottom:1px solid var(--border);background:#f5f2ed;align-items:end}
+.pres-manual{display:grid;grid-template-columns:1fr 64px 90px 30px;gap:5px;padding:8px 12px;border-bottom:1px solid var(--border);background:#f5f3ee;align-items:end}
 .pres-manual label{font-size:10px;color:var(--soft);font-weight:600;display:block;margin-bottom:2px}
 .pres-manual input{width:100%}
 .add-line-btn{background:var(--navy);color:white;border:none;border-radius:5px;font-size:17px;line-height:1;cursor:pointer;padding:5px 7px;height:30px;display:flex;align-items:center;justify-content:center}
 
 .pres-table-wrap{max-height:260px;overflow-y:auto}
 .pres-table{width:100%;border-collapse:collapse;font-size:11px}
-.pres-table th{padding:5px 8px;text-align:left;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--soft);background:#f5f2ed;border-bottom:1px solid var(--border);position:sticky;top:0}
+.pres-table th{padding:5px 8px;text-align:left;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--soft);background:#f5f3ee;border-bottom:1px solid var(--border);position:sticky;top:0}
 .pres-table th.r{text-align:right}
-.pres-table td{padding:5px 8px;border-bottom:1px solid #f0ece6}
-.pres-table tr:hover td{background:#faf8f5}
+.pres-table td{padding:5px 8px;border-bottom:1px solid #eae6df}
+.pres-table tr:hover td{background:#f7f4ef}
 .pres-table tr:last-child td{border-bottom:none}
 .pres-table td.r{text-align:right;font-family:var(--mono);font-weight:600}
 .pres-table td.ctr{text-align:center}
 .delbtn{background:none;border:none;cursor:pointer;color:#ccc;font-size:13px;transition:color .1s;padding:0 2px}
 .delbtn:hover{color:var(--red)}
 
-.pres-foot{padding:7px 12px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:#f5f2ed;font-size:11px}
+.pres-foot{padding:7px 12px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:#f5f3ee;font-size:11px}
 .pres-foot-total{font-family:var(--mono);font-weight:700;font-size:13px}
 
 .no-lines{text-align:center;padding:24px;color:var(--soft);font-size:11px}
@@ -155,7 +153,7 @@ textarea{resize:vertical}
 ══════════════════════════════════ */
 .liq-layout{display:grid;grid-template-columns:340px 1fr;gap:14px;align-items:flex-start}
 
-.upload-zone{border:2px dashed var(--border);border-radius:8px;padding:18px;text-align:center;cursor:pointer;transition:all .2s;background:#faf8f5}
+.upload-zone{border:2px dashed var(--border);border-radius:8px;padding:18px;text-align:center;cursor:pointer;transition:all .2s;background:#f7f4ef}
 .upload-zone:hover{border-color:var(--copper);background:rgba(184,115,51,.04)}
 .upload-zone.has-file{border-color:var(--green);background:var(--green-s);border-style:solid}
 .upload-zone .uz-ico{font-size:24px;display:block;margin-bottom:6px}
@@ -186,9 +184,9 @@ textarea{resize:vertical}
 .pi-bank{background:var(--blue-s);color:var(--blue)}
 .pi-cash{background:var(--green-s);color:var(--green)}
 
-.detalle-txt{padding:14px 18px;background:#f9f7f4;border-top:1px solid var(--border);font-size:12px;line-height:1.6;color:#3a4a5a}
+.detalle-txt{padding:14px 18px;background:#f7f4ef;border-top:1px solid var(--border);font-size:12px;line-height:1.6;color:#3a4a5a}
 
-.liq-actions{padding:12px 18px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;background:#f5f2ed}
+.liq-actions{padding:12px 18px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;background:#f5f3ee}
 
 .loading-wrap{display:flex;align-items:center;justify-content:center;gap:10px;padding:40px;color:var(--soft)}
 .spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--navy);border-radius:50%;animation:spin .8s linear infinite}
@@ -245,7 +243,7 @@ textarea{resize:vertical}
       <!-- Detalle ranuras borde -->
       <ellipse cx="21" cy="21" rx="17.5" ry="17.5" fill="none" stroke="#c07828" stroke-width="0.6" stroke-dasharray="3 4" opacity="0.5"/>
     </svg>
-    PAU <span>Herramientas</span>
+    PAU <span>Control de cobros</span>
   </div>
   <span class="hdr-ver">v1.0</span>
 </div>
@@ -488,7 +486,7 @@ function renderPresCard(p){
         <div style="font-size:10px;font-weight:700;color:var(--soft);margin-bottom:6px">IMPORTAR LÍNEAS</div>
         <!-- PDF Upload -->
         <div id="pdf-zone-${p.id}" onclick="document.getElementById('pdf-file-${p.id}').click()"
-          style="border:1.5px dashed var(--border);border-radius:6px;padding:8px 10px;text-align:center;cursor:pointer;background:#faf8f5;margin-bottom:8px;transition:all .2s"
+          style="border:1.5px dashed var(--border);border-radius:6px;padding:8px 10px;text-align:center;cursor:pointer;background:#f7f4ef;margin-bottom:8px;transition:all .2s"
           onmouseover="this.style.borderColor='var(--copper)';this.style.background='rgba(197,150,58,.05)'"
           onmouseout="this.style.borderColor='var(--border)';this.style.background='#faf8f5'">
           <span style="font-size:16px">📄</span>
