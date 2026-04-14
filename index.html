@@ -6519,6 +6519,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
     <div style="display:flex;gap:8px">
     <button class="btn btn-ghost" onclick="_hitoPendienteFactura=null;closeModal(&#39;m-factura&#39;)">Cancelar</button>
     <button class="btn btn-ghost" onclick="previsualizarFactura()" style="border:1px solid var(--border)">👁 Vista previa</button>
+    <button class="btn btn-ghost" id="f-btn-drive" onclick="subirFacturaADriveDirecto()" style="border:1px solid #1a73e8;color:#1a73e8">☁️ Drive</button>
     <button class="btn btn-primary" onclick="saveFactura()">💾 Guardar</button>
     </div>
   </div>
@@ -6996,6 +6997,32 @@ if('serviceWorker' in navigator){
         pb.after(btn);
       }
     },400);
+  }
+}
+
+// Handler del botón ☁️ Drive del modal de factura.
+// Genera la factura en fac-preview-doc (sin abrir popup) y la sube a Drive.
+// Flujo similar al de presupuesto donde el botón Drive está en la página principal.
+async function subirFacturaADriveDirecto(){
+  const proyId = document.getElementById('f-proyecto')?.value;
+  if(!proyId){ toast('Selecciona un proyecto primero','error'); return; }
+  const folderId = _driveFolderId(proyId);
+  if(!folderId){ toast('Sin carpeta Drive para este proyecto. Abre el expediente y añade el enlace de Drive.','error'); return; }
+  const btn = document.getElementById('f-btn-drive');
+  const _prevTxt = btn ? btn.textContent : '';
+  if(btn){ btn.disabled=true; btn.textContent='Subiendo...'; }
+  try{
+    // Generar la factura en fac-preview-doc sin abrir popup
+    previsualizarFactura({silentDriveUpload:true});
+    // La función previsualizarFactura con silent=true ya llama a subirFacturaPdfDrive internamente
+    // después de un setTimeout de 200ms. No hay que hacer nada más aquí.
+    // Pero para dar feedback inmediato al usuario, esperamos y restauramos el botón.
+    await new Promise(r => setTimeout(r, 2500));
+    if(btn){ btn.textContent='✅ Subido'; setTimeout(()=>{ if(btn){ btn.textContent=_prevTxt||'☁️ Drive'; btn.disabled=false; } }, 2000); }
+  }catch(err){
+    console.error('Error Drive factura:',err);
+    if(btn){ btn.textContent=_prevTxt||'☁️ Drive'; btn.disabled=false; }
+    toast('Error Drive: '+err.message,'error');
   }
 }
 
