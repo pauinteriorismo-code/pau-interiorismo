@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Herramientas PAU Interiorismo</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+:root {
+  --navy: #1a2a3a;
+  --navy2: #253545;
+  --navy3: #304558;
+  --copper: #c5963a;
+  --copper2: #d4a84a;
+  --sand: #f5f0e8;
+  --sand2: #ece6da;
+  --white: #ffffff;
+  --green: #2a7a50;
+  --green-s: #e8f5ee;
+  --red: #b83232;
+  --red-s: #fde8e8;
+  --amber: #b87820;
+  --amber-s: #fef5e0;
+  --blue: #1a3d7a;
+  --blue-s: #e8eef8;
+  --border: #e0d8cc;
+  --text: #1a2430;
+  --soft: #8a8a7a;
+  --mono: 'DM Mono', monospace;
+  --sans: 'DM Sans', sans-serif;
+  --title: 'Syne', sans-serif;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--sand);color:var(--text);min-height:100vh;font-size:13px}
+
+/* ── HEADER ── */
+.hdr{background:var(--navy);display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:54px;border-bottom:2px solid var(--copper)}
+.hdr-brand{font-family:var(--title);color:white;font-size:15px;font-weight:800;letter-spacing:.3px;display:flex;align-items:center;gap:12px}.hdr-brand svg{filter:drop-shadow(0 2px 4px rgba(0,0,0,.4));flex-shrink:0}
+.hdr-brand span{color:var(--copper)}
+.hdr-ver{font-size:10px;background:var(--copper);color:white;padding:2px 8px;border-radius:10px;font-weight:700;font-family:var(--mono)}
+
+/* ── TABS ── */
+.tabs{background:var(--navy2);display:flex;padding:0 24px;gap:2px}
+.tab{padding:11px 20px;font-size:12px;font-weight:600;color:rgba(255,255,255,.5);cursor:pointer;border-bottom:3px solid transparent;transition:all .2s;letter-spacing:.2px;font-family:var(--sans)}
+.tab:hover{color:rgba(255,255,255,.8)}
+.tab.active{color:white;border-bottom-color:var(--copper);background:rgba(255,255,255,.05)}
+
+/* ── MAIN CONTENT ── */
+.page{display:none;padding:18px 20px;max-width:1500px;margin:0 auto}
+.page.active{display:block}
+
+/* ── CARDS ── */
+.card{background:var(--white);border-radius:10px;border:1px solid var(--border);overflow:hidden;margin-bottom:14px}
+.card-head{padding:10px 14px;background:#f5f2ed;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-title{font-family:var(--title);font-size:13px;font-weight:700;display:flex;align-items:center;gap:7px}
+.card-sub{font-size:10px;color:var(--soft)}
+
+/* ── BUTTONS ── */
+.btn{font-family:var(--sans);font-size:12px;font-weight:600;padding:6px 13px;border-radius:6px;border:1px solid var(--border);cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:5px}
+.btn-primary{background:var(--navy);color:white;border-color:var(--navy)}
+.btn-primary:hover{background:var(--navy2)}
+.btn-copper{background:var(--copper);color:white;border-color:var(--copper)}
+.btn-copper:hover{background:var(--copper2)}
+.btn-ghost{background:white;color:var(--text)}
+.btn-ghost:hover{background:var(--sand)}
+.btn-danger{background:var(--red-s);color:var(--red);border-color:#f5cccc}
+.btn-danger:hover{background:#fbdddd}
+.btn-sm{padding:4px 9px;font-size:11px}
+.btn-icon{padding:4px 6px}
+
+/* ── INPUTS ── */
+input,select,textarea{font-family:var(--sans);font-size:12px;border:1px solid var(--border);border-radius:6px;padding:6px 9px;background:white;color:var(--text);outline:none;transition:border .15s}
+input:focus,select:focus,textarea:focus{border-color:var(--navy)}
+textarea{resize:vertical}
+
+/* ══════════════════════════════════
+   TAB 1 — COMPARADOR
+══════════════════════════════════ */
+.pres-grid{display:flex;gap:12px;align-items:flex-start;overflow-x:auto;padding-bottom:4px}
+.pres-col{min-width:300px;width:300px;flex-shrink:0}
+
+.pres-card{background:var(--white);border-radius:10px;border:1px solid var(--border);overflow:hidden}
+.pres-card-head{padding:9px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.pres-color-bar{height:3px;width:100%}
+
+.pres-import{padding:10px 12px;border-bottom:1px solid var(--border);background:#f9f7f4}
+.pres-import textarea{width:100%;height:72px;font-family:var(--mono);font-size:10px}
+.pres-hint{font-size:10px;color:var(--soft);margin-top:4px}
+
+.pres-manual{display:grid;grid-template-columns:1fr 64px 90px 30px;gap:5px;padding:8px 12px;border-bottom:1px solid var(--border);background:#f5f2ed;align-items:end}
+.pres-manual label{font-size:10px;color:var(--soft);font-weight:600;display:block;margin-bottom:2px}
+.pres-manual input{width:100%}
+.add-line-btn{background:var(--navy);color:white;border:none;border-radius:5px;font-size:17px;line-height:1;cursor:pointer;padding:5px 7px;height:30px;display:flex;align-items:center;justify-content:center}
+
+.pres-table-wrap{max-height:260px;overflow-y:auto}
+.pres-table{width:100%;border-collapse:collapse;font-size:11px}
+.pres-table th{padding:5px 8px;text-align:left;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--soft);background:#f5f2ed;border-bottom:1px solid var(--border);position:sticky;top:0}
+.pres-table th.r{text-align:right}
+.pres-table td{padding:5px 8px;border-bottom:1px solid #f0ece6}
+.pres-table tr:hover td{background:#faf8f5}
+.pres-table tr:last-child td{border-bottom:none}
+.pres-table td.r{text-align:right;font-family:var(--mono);font-weight:600}
+.pres-table td.ctr{text-align:center}
+.delbtn{background:none;border:none;cursor:pointer;color:#ccc;font-size:13px;transition:color .1s;padding:0 2px}
+.delbtn:hover{color:var(--red)}
+
+.pres-foot{padding:7px 12px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:#f5f2ed;font-size:11px}
+.pres-foot-total{font-family:var(--mono);font-weight:700;font-size:13px}
+
+.no-lines{text-align:center;padding:24px;color:var(--soft);font-size:11px}
+
+/* Row states in comparison */
+.row-ok{}
+.row-only{background:#fff0e8!important}
+.row-match-diff{background:#fffae0!important}
+
+/* Add presupuesto button */
+.add-pres-col{min-width:200px;width:200px;flex-shrink:0;display:flex;align-items:flex-start;justify-content:center;padding-top:12px}
+.add-pres-btn{width:100%;padding:20px;border:2px dashed var(--border);border-radius:10px;background:transparent;cursor:pointer;color:var(--soft);font-family:var(--title);font-size:13px;font-weight:700;text-align:center;transition:all .2s}
+.add-pres-btn:hover{border-color:var(--copper);color:var(--copper);background:rgba(184,115,51,.05)}
+
+/* Comparison result */
+.cmp-result{background:var(--white);border-radius:10px;border:1px solid var(--border);overflow:hidden}
+.cmp-result-head{background:var(--navy);color:white;padding:12px 16px;display:flex;align-items:center;justify-content:space-between}
+.cmp-result-head h2{font-family:var(--title);font-size:14px;font-weight:700}
+
+.kpi-strip{display:flex;border-bottom:1px solid var(--border);overflow-x:auto}
+.kpi-cell{padding:12px 18px;text-align:center;border-right:1px solid var(--border);flex:1;min-width:110px}
+.kpi-cell:last-child{border-right:none}
+.kpi-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--soft)}
+.kpi-val{font-family:var(--mono);font-size:18px;font-weight:700;margin-top:4px}
+.kv-blue{color:var(--blue)}.kv-green{color:var(--green)}.kv-red{color:var(--red)}.kv-amber{color:var(--amber)}
+
+.diff-body{padding:16px}
+.diff-section{margin-bottom:16px}
+.diff-section h3{font-family:var(--title);font-size:12px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.diff-items{display:flex;flex-direction:column;gap:4px}
+.ditem{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-radius:7px;gap:10px}
+.ditem.only{background:var(--amber-s);border-left:3px solid var(--amber)}
+.ditem.pdiff{background:var(--blue-s);border-left:3px solid var(--blue)}
+.ditem-left{flex:1;min-width:0}
+.ditem-desc{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ditem-sub{font-size:10px;color:var(--soft);margin-top:2px}
+.ditem-tags{display:flex;flex-wrap:wrap;gap:3px;margin-top:3px}
+.tag{font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;text-transform:uppercase;letter-spacing:.3px}
+.ditem-val{font-family:var(--mono);font-size:11px;font-weight:700;white-space:nowrap}
+
+.empty-cmp{text-align:center;padding:36px;color:var(--soft)}
+.empty-ico{font-size:36px;display:block;margin-bottom:8px}
+
+/* ══════════════════════════════════
+   TAB 2 — LIQUIDACIÓN
+══════════════════════════════════ */
+.liq-layout{display:grid;grid-template-columns:340px 1fr;gap:14px;align-items:flex-start}
+
+.upload-zone{border:2px dashed var(--border);border-radius:8px;padding:18px;text-align:center;cursor:pointer;transition:all .2s;background:#faf8f5}
+.upload-zone:hover{border-color:var(--copper);background:rgba(184,115,51,.04)}
+.upload-zone.has-file{border-color:var(--green);background:var(--green-s);border-style:solid}
+.upload-zone .uz-ico{font-size:24px;display:block;margin-bottom:6px}
+.upload-zone .uz-text{font-size:12px;color:var(--soft)}
+.upload-zone .uz-file{font-size:11px;color:var(--green);font-weight:600;font-family:var(--mono)}
+
+.pagos-manuales{display:flex;flex-direction:column;gap:6px}
+.pago-row{display:grid;grid-template-columns:100px 1fr 1fr auto;gap:6px;align-items:center}
+.pago-row input{width:100%}
+
+.liq-result{background:var(--white);border-radius:10px;border:1px solid var(--border);overflow:hidden}
+.liq-result-head{background:var(--navy);color:white;padding:14px 18px;display:flex;align-items:center;gap:10px}
+.liq-result-head h2{font-family:var(--title);font-size:16px;font-weight:800}
+
+.liq-kpis{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--border)}
+.liq-kpi{padding:16px 20px;text-align:center;border-right:1px solid var(--border)}
+.liq-kpi:last-child{border-right:none}
+.liq-kpi-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--soft)}
+.liq-kpi-val{font-family:var(--mono);font-size:26px;font-weight:700;margin-top:6px}
+
+.pagos-list{padding:16px 18px}
+.pagos-list h3{font-family:var(--title);font-size:13px;font-weight:700;margin-bottom:10px}
+.pago-item{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:7px;margin-bottom:5px;border:1px solid var(--border);font-size:12px}
+.pi-date{font-family:var(--mono);font-size:11px;color:var(--soft);width:80px}
+.pi-concept{flex:1;margin:0 12px}
+.pi-amount{font-family:var(--mono);font-weight:700;color:var(--green)}
+.pi-type{font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px}
+.pi-bank{background:var(--blue-s);color:var(--blue)}
+.pi-cash{background:var(--green-s);color:var(--green)}
+
+.detalle-txt{padding:14px 18px;background:#f9f7f4;border-top:1px solid var(--border);font-size:12px;line-height:1.6;color:#3a4a5a}
+
+.liq-actions{padding:12px 18px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;background:#f5f2ed}
+
+.loading-wrap{display:flex;align-items:center;justify-content:center;gap:10px;padding:40px;color:var(--soft)}
+.spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--navy);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.error-box{background:var(--red-s);border:1px solid #f5b8b8;border-radius:8px;padding:12px 14px;color:var(--red);font-size:12px;margin:12px 0}
+
+/* Colores por presupuesto */
+.pc-0{background:#1a3d7a}.pc-1{background:#1a6b46}.pc-2{background:#7a1a6b}.pc-3{background:#a06010}.pc-4{background:#1a6b6b}.pc-5{background:#6b1a1a}
+.tc-0{color:#1a3d7a}.tc-1{color:#1a6b46}.tc-2{color:#7a1a6b}.tc-3{color:#a06010}.tc-4{color:#1a6b6b}.tc-5{color:#6b1a1a}
+.sc-0{background:#e8eef8;color:#1a3d7a}.sc-1{background:var(--green-s);color:var(--green)}.sc-2{background:#f5e8f5;color:#7a1a6b}.sc-3{background:var(--amber-s);color:var(--amber)}.sc-4{background:#e8f5f5;color:#1a6b6b}.sc-5{background:#f5e8e8;color:#6b1a1a}
+
+.tbl-head-row th:first-child{min-width:180px}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-brand">
+    <svg width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="coinFace" cx="38%" cy="32%" r="65%">
+          <stop offset="0%" stop-color="#e8a84a"/>
+          <stop offset="40%" stop-color="#c47b28"/>
+          <stop offset="100%" stop-color="#8a4f10"/>
+        </radialGradient>
+        <radialGradient id="coinEdge" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#d4903a"/>
+          <stop offset="100%" stop-color="#7a4010"/>
+        </radialGradient>
+        <filter id="coinShadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="1" dy="2" stdDeviation="2" flood-color="#3a1a00" flood-opacity="0.5"/>
+        </filter>
+      </defs>
+      <!-- Sombra/grosor de la moneda (efecto 3D) -->
+      <ellipse cx="22" cy="24" rx="18" ry="5" fill="#6a3008" opacity="0.4"/>
+      <!-- Borde lateral moneda -->
+      <ellipse cx="22" cy="22" rx="18" ry="18" fill="url(#coinEdge)" filter="url(#coinShadow)"/>
+      <!-- Cara frontal moneda -->
+      <ellipse cx="21" cy="21" rx="17" ry="17" fill="url(#coinFace)"/>
+      <!-- Anillo interior grabado -->
+      <ellipse cx="21" cy="21" rx="14" ry="14" fill="none" stroke="#a06820" stroke-width="1.2" opacity="0.6"/>
+      <!-- Brillo superior izquierdo -->
+      <ellipse cx="15" cy="14" rx="5" ry="3" fill="white" opacity="0.18" transform="rotate(-30 15 14)"/>
+      <!-- Símbolo € grabado -->
+      <text x="21" y="27" text-anchor="middle"
+        font-family="Georgia, 'Times New Roman', serif"
+        font-size="18" font-weight="700"
+        fill="#7a4010" opacity="0.5">€</text>
+      <text x="20.5" y="26.5" text-anchor="middle"
+        font-family="Georgia, 'Times New Roman', serif"
+        font-size="18" font-weight="700"
+        fill="#f5d080">€</text>
+      <!-- Detalle ranuras borde -->
+      <ellipse cx="21" cy="21" rx="17.5" ry="17.5" fill="none" stroke="#c07828" stroke-width="0.6" stroke-dasharray="3 4" opacity="0.5"/>
+    </svg>
+    PAU <span>Herramientas</span>
+  </div>
+  <span class="hdr-ver">v1.0</span>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab(0)">📄 Comparador de presupuestos</div>
+  <div class="tab" onclick="switchTab(1)">💶 Liquidación de cobros</div>
+</div>
+
+<!-- ══════════ TAB 1: COMPARADOR ══════════ -->
+<div class="page active" id="tab-0">
+
+  <!-- Presupuestos (scrollable row) -->
+  <div style="margin-bottom:14px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div>
+        <div style="font-family:var(--title);font-size:15px;font-weight:800">Presupuestos a comparar</div>
+        <div style="font-size:11px;color:var(--soft);margin-top:2px">Añade todos los que necesites · Las diferencias aparecen abajo automáticamente</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost btn-sm" onclick="cargarDatosPrueba()" title="Carga datos de ejemplo para ver cómo funciona">🧪 Prueba demo</button>
+        <button class="btn btn-ghost btn-sm" onclick="compararTodo()">🔍 Comparar</button>
+        <button class="btn btn-copper btn-sm" onclick="agregarPresupuesto()">＋ Añadir presupuesto</button>
+      </div>
+    </div>
+
+    <div class="pres-grid" id="pres-grid">
+      <!-- Presupuestos se renderizan aquí -->
+    </div>
+  </div>
+
+  <!-- Resultado comparación -->
+  <div class="cmp-result">
+    <div class="cmp-result-head">
+      <h2>📊 Resultado de la comparación</h2>
+      <span style="font-size:11px;opacity:.6" id="cmp-subtitle">Añade presupuestos para comparar</span>
+    </div>
+    <div class="kpi-strip" id="cmp-kpis">
+      <div class="kpi-cell"><div class="kpi-label">Presupuestos</div><div class="kpi-val kv-blue" id="k-npres">0</div></div>
+      <div class="kpi-cell"><div class="kpi-label">Líneas totales</div><div class="kpi-val kv-blue" id="k-nlines">0</div></div>
+      <div class="kpi-cell"><div class="kpi-label">Líneas con diferencias</div><div class="kpi-val kv-amber" id="k-ndiffs">0</div></div>
+      <div class="kpi-cell"><div class="kpi-label">Diferencia de totales</div><div class="kpi-val kv-red" id="k-difftotal">—</div></div>
+    </div>
+    <div id="cmp-body">
+      <div class="empty-cmp">
+        <span class="empty-ico">📋</span>
+        Importa líneas en los presupuestos para ver el análisis comparativo
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ TAB 2: LIQUIDACIÓN ══════════ -->
+<div class="page" id="tab-1">
+  <div class="liq-layout">
+
+    <!-- LEFT: Inputs -->
+    <div>
+      <!-- Presupuesto PDF -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">📄 Presupuesto del cliente</div>
+          <span class="card-sub">PDF obligatorio</span>
+        </div>
+        <div style="padding:12px">
+          <div class="upload-zone" id="zone-pres" onclick="document.getElementById('file-pres').click()">
+            <span class="uz-ico">📎</span>
+            <div class="uz-text">Haz clic para subir el presupuesto en PDF</div>
+            <div class="uz-file" id="lbl-pres" style="display:none"></div>
+          </div>
+          <input type="file" id="file-pres" accept="application/pdf" style="display:none" onchange="onFilePres(this)">
+        </div>
+      </div>
+
+      <!-- Extracto bancario PDF -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">🏦 Extracto bancario</div>
+          <span class="card-sub">PDF obligatorio</span>
+        </div>
+        <div style="padding:12px">
+          <div class="upload-zone" id="zone-ext" onclick="document.getElementById('file-ext').click()">
+            <span class="uz-ico">📊</span>
+            <div class="uz-text">Haz clic para subir el extracto bancario en PDF</div>
+            <div class="uz-file" id="lbl-ext" style="display:none"></div>
+          </div>
+          <input type="file" id="file-ext" accept="application/pdf" style="display:none" onchange="onFileExt(this)">
+          <div style="margin-top:10px">
+            <label style="font-size:11px;font-weight:700;color:var(--soft);display:block;margin-bottom:4px">🔍 NOMBRE A BUSCAR EN EL EXTRACTO</label>
+            <input type="text" id="liq-nombre" placeholder="Ej: García López · Obra Calle Mayor…" style="width:100%">
+            <div style="font-size:10px;color:var(--soft);margin-top:4px">Nombre del cliente o referencia tal como aparece en los movimientos bancarios</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pagos en efectivo -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">💵 Pagos en efectivo <span style="font-weight:400;font-size:11px;color:var(--soft)">(opcional)</span></div>
+          <button class="btn btn-ghost btn-sm" onclick="addPagoEfectivo()">＋ Añadir</button>
+        </div>
+        <div style="padding:12px" id="efectivo-list">
+          <div style="text-align:center;padding:16px;color:var(--soft);font-size:11px" id="efectivo-empty">Sin pagos en efectivo añadidos</div>
+        </div>
+      </div>
+
+      <!-- Botón analizar -->
+      <button class="btn btn-primary" style="width:100%;justify-content:center;padding:10px;font-size:13px" onclick="analizarLiquidacion()">
+        🔍 Analizar con IA
+      </button>
+    </div>
+
+    <!-- RIGHT: Resultado -->
+    <div>
+      <div class="liq-result" id="liq-result-panel">
+        <div class="liq-result-head">
+          <h2>💶 Liquidación</h2>
+          <span style="font-size:11px;opacity:.6">Sube los documentos y pulsa Analizar</span>
+        </div>
+        <div id="liq-result-body">
+          <div class="empty-cmp" style="padding:60px">
+            <span class="empty-ico">💶</span>
+            <div style="font-size:13px">Sube el presupuesto y el extracto bancario<br>para calcular el saldo pendiente</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════
+// SHARED UTILS
+// ══════════════════════════════════════════════════
+const fmt = n => {
+  if(n===null||n===undefined||isNaN(n)) return '—';
+  return n.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
+};
+
+const parseNum = s => {
+  if(s===null||s===undefined||s==='') return 0;
+  const str = String(s).trim().replace(/[€$\s]/g,'');
+  if(/\d\.\d{3},/.test(str)||(/,\d{1,2}$/.test(str)&&str.includes('.')))
+    return parseFloat(str.replace(/\./g,'').replace(',','.'))||0;
+  return parseFloat(str.replace(',','.'))||0;
+};
+
+const norm = s => String(s).toLowerCase()
+  .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+  .replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();
+
+function similarity(a,b){
+  const na=norm(a), nb=norm(b);
+  if(na===nb) return 1;
+  if(na.includes(nb)||nb.includes(na)) return 0.9;
+  const wa=new Set(na.split(' ').filter(w=>w.length>2));
+  const wb=new Set(nb.split(' ').filter(w=>w.length>2));
+  const inter=[...wa].filter(w=>wb.has(w)).length;
+  const union=new Set([...wa,...wb]).size;
+  return union>0?inter/union:0;
+}
+
+function toBase64(file){
+  return new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=()=>res(r.result.split(',')[1]);
+    r.onerror=()=>rej(new Error('Error leyendo archivo'));
+    r.readAsDataURL(file);
+  });
+}
+
+function switchTab(n){
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',i===n));
+  document.querySelectorAll('.page').forEach((p,i)=>p.classList.toggle('active',i===n));
+}
+
+// ══════════════════════════════════════════════════
+// TAB 1 — COMPARADOR
+// ══════════════════════════════════════════════════
+let presupuestos = [];
+let presIdCounter = 0;
+let lineIdCounter = 0;
+
+const PRES_COLORS = ['#1a3d7a','#1a6b46','#7a1a6b','#a06010','#1a6b6b','#6b1a1a'];
+const PRES_NAMES  = ['Presupuesto 1','Presupuesto 2','Presupuesto 3','Presupuesto 4','Presupuesto 5','Presupuesto 6'];
+
+function agregarPresupuesto(){
+  const idx = presupuestos.length;
+  if(idx>=6){alert('Máximo 6 presupuestos');return;}
+  const id = ++presIdCounter;
+  presupuestos.push({id, name:PRES_NAMES[idx]||`Pres. ${idx+1}`, lines:[], colorIdx:idx});
+  renderPresGrid();
+}
+
+function eliminarPresupuesto(id){
+  if(!confirm('¿Eliminar este presupuesto?')) return;
+  presupuestos = presupuestos.filter(p=>p.id!==id);
+  // Re-asignar índices de color
+  presupuestos.forEach((p,i)=>p.colorIdx=i);
+  renderPresGrid();
+  compararTodo();
+}
+
+function renderPresGrid(){
+  const grid = document.getElementById('pres-grid');
+  if(!presupuestos.length){
+    grid.innerHTML=`<div style="padding:40px;text-align:center;color:var(--soft);width:100%">
+      <div style="font-size:32px;margin-bottom:8px">📋</div>
+      <div style="font-size:13px">Pulsa <strong>+ Añadir presupuesto</strong> para empezar</div>
+    </div>`;
+    return;
+  }
+  grid.innerHTML = presupuestos.map(p=>renderPresCard(p)).join('');
+}
+
+function renderPresCard(p){
+  const color = PRES_COLORS[p.colorIdx]||'#333';
+  const total = p.lines.reduce((s,l)=>s+l.qty*l.price,0);
+  const rows = p.lines.length
+    ? p.lines.map(l=>`
+        <tr id="lrow-${p.id}-${l.id}">
+          <td title="${l.desc}" style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.desc}</td>
+          <td class="ctr">${l.qty}</td>
+          <td class="r">${fmt(l.price)}</td>
+          <td class="r">${fmt(l.qty*l.price)}</td>
+          <td><button class="delbtn" onclick="eliminarLinea(${p.id},${l.id})">×</button></td>
+        </tr>`).join('')
+    : `<tr><td colspan="5" class="no-lines">Sin líneas</td></tr>`;
+
+  return `<div class="pres-col">
+    <div class="pres-card">
+      <div class="pres-color-bar" style="background:${color}"></div>
+      <div class="pres-card-head">
+        <input type="text" value="${p.name}" style="font-family:var(--title);font-weight:700;font-size:12px;border:none;background:transparent;padding:0;width:120px;outline:none;color:var(--text)"
+          onchange="presupuestos.find(x=>x.id===${p.id}).name=this.value; compararTodo()">
+        <button class="btn btn-danger btn-icon btn-sm" onclick="eliminarPresupuesto(${p.id})">🗑</button>
+      </div>
+
+      <div class="pres-import">
+        <div style="font-size:10px;font-weight:700;color:var(--soft);margin-bottom:6px">IMPORTAR LÍNEAS</div>
+        <!-- PDF Upload -->
+        <div id="pdf-zone-${p.id}" onclick="document.getElementById('pdf-file-${p.id}').click()"
+          style="border:1.5px dashed var(--border);border-radius:6px;padding:8px 10px;text-align:center;cursor:pointer;background:#faf8f5;margin-bottom:8px;transition:all .2s"
+          onmouseover="this.style.borderColor='var(--copper)';this.style.background='rgba(197,150,58,.05)'"
+          onmouseout="this.style.borderColor='var(--border)';this.style.background='#faf8f5'">
+          <span style="font-size:16px">📄</span>
+          <div style="font-size:10px;color:var(--soft);margin-top:2px" id="pdf-lbl-${p.id}">Subir PDF (presupuesto)</div>
+        </div>
+        <input type="file" id="pdf-file-${p.id}" accept="application/pdf" style="display:none"
+          onchange="importarPDF(${p.id}, this)">
+        <!-- CSV paste -->
+        <div style="font-size:10px;font-weight:600;color:var(--soft);margin-bottom:4px">O PEGAR TEXTO / CSV</div>
+        <textarea id="csv-${p.id}" placeholder="descripción;cantidad;precio&#10;Ej: Mueble salón;1;2500" style="width:100%;height:60px;font-family:var(--mono);font-size:10px"></textarea>
+        <div class="pres-hint">Separador: ; o tabulador · desc · cant · precio</div>
+        <div style="display:flex;gap:5px;margin-top:6px">
+          <button class="btn btn-primary btn-sm" onclick="importarCSV(${p.id})">⬆ Importar texto</button>
+          <button class="btn btn-ghost btn-sm" onclick="limpiarPres(${p.id})">🗑</button>
+        </div>
+      </div>
+
+      <div class="pres-manual">
+        <div><label>Descripción</label><input type="text" id="md-${p.id}" placeholder="Descripción"></div>
+        <div><label>Cant.</label><input type="number" id="mq-${p.id}" value="1" min="0.01" step="0.01"></div>
+        <div><label>Precio €</label><input type="number" id="mp-${p.id}" placeholder="0.00" step="0.01"></div>
+        <button class="add-line-btn" onclick="addLinea(${p.id})" title="Añadir línea">＋</button>
+      </div>
+
+      <div class="pres-table-wrap">
+        <table class="pres-table">
+          <thead><tr>
+            <th>Descripción</th>
+            <th class="ctr">Cant</th>
+            <th class="r">P.Unit</th>
+            <th class="r">Total</th>
+            <th></th>
+          </tr></thead>
+          <tbody id="ptbody-${p.id}">${rows}</tbody>
+        </table>
+      </div>
+
+      <div class="pres-foot">
+        <span style="color:var(--soft)">${p.lines.length} línea${p.lines.length!==1?'s':''}</span>
+        <span class="pres-foot-total" style="color:${color}">${fmt(total)}</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+function addLinea(presId){
+  const p = presupuestos.find(x=>x.id===presId);
+  if(!p) return;
+  const desc = (document.getElementById(`md-${presId}`)?.value||'').trim();
+  const qty  = parseNum(document.getElementById(`mq-${presId}`)?.value)||1;
+  const price= parseNum(document.getElementById(`mp-${presId}`)?.value)||0;
+  if(!desc){alert('Escribe una descripción');return;}
+  p.lines.push({id:++lineIdCounter, desc, qty, price});
+  renderPresGrid();
+  compararTodo();
+}
+
+function eliminarLinea(presId, lineId){
+  const p = presupuestos.find(x=>x.id===presId);
+  if(!p) return;
+  p.lines = p.lines.filter(l=>l.id!==lineId);
+  renderPresGrid();
+  compararTodo();
+}
+
+function limpiarPres(presId){
+  const p = presupuestos.find(x=>x.id===presId);
+  if(!p||(!p.lines.length)||confirm('¿Limpiar todas las líneas?')){
+    if(p) p.lines=[];
+    renderPresGrid();
+    compararTodo();
+  }
+}
+
+function importarCSV(presId){
+  const p = presupuestos.find(x=>x.id===presId);
+  if(!p) return;
+  const raw = (document.getElementById(`csv-${presId}`)?.value||'').trim();
+  if(!raw){return;}
+  const added=[];
+  raw.split('\n').forEach(row=>{
+    const r=row.trim();
+    if(!r||r.startsWith('#')) return;
+    const sep=r.includes('\t')?'\t':';';
+    const cols=r.split(sep).map(c=>c.trim().replace(/^["']|["']$/g,''));
+    if(!cols[0]) return;
+    let desc=cols[0], qty=1, price=0;
+    if(cols.length===1){desc=cols[0];}
+    else if(cols.length===2){desc=cols[0];price=parseNum(cols[1]);}
+    else{
+      desc=cols[0];
+      const nums=cols.slice(1).map(parseNum).filter(n=>!isNaN(n));
+      if(nums.length>=2){qty=nums[nums.length-2]||1;price=nums[nums.length-1];}
+      else if(nums.length===1){price=nums[0];}
+    }
+    added.push({id:++lineIdCounter, desc, qty:qty||1, price});
+  });
+  if(!added.length){alert('No se pudo interpretar el formato.\nUsa: descripción;cantidad;precio');return;}
+  p.lines.push(...added);
+  if(document.getElementById(`csv-${presId}`)) document.getElementById(`csv-${presId}`).value='';
+  renderPresGrid();
+  compararTodo();
+  // Small toast
+  showToast(`✅ ${added.length} línea${added.length!==1?'s':''} importada${added.length!==1?'s':''} en ${p.name}`);
+}
+
+function showToast(msg, isError=false){
+  const t=document.createElement('div');
+  t.textContent=msg;
+  t.style.cssText=`position:fixed;bottom:20px;right:20px;background:${isError?'#8a2020':'#1a2e42'};color:white;padding:10px 16px;border-radius:8px;font-size:12px;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.3)`;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),isError?4000:2800);
+}
+
+async function importarPDF(presId, input){
+  const file = input.files[0];
+  if(!file) return;
+  const lbl = document.getElementById(`pdf-lbl-${presId}`);
+  const zone = document.getElementById(`pdf-zone-${presId}`);
+  if(lbl) lbl.textContent = '⏳ Analizando PDF con IA…';
+  if(zone) zone.style.borderColor = 'var(--copper)';
+
+  try{
+    const b64 = await toBase64(file);
+    const res = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:4000,
+        system:`Eres un asistente que extrae líneas de presupuesto de documentos PDF de construcción e interiorismo español. 
+Devuelve SOLO un array JSON válido, sin texto adicional ni markdown. Formato:
+[{"desc":"descripción completa de la partida","qty":número,"price":número}]
+- desc: descripción completa de la línea (incluyendo capítulo si es relevante)
+- qty: cantidad numérica (1 si no se especifica)
+- price: precio unitario sin IVA como número
+- Ignora líneas de subtotal, total, IVA, descuentos y encabezados
+- Si hay capítulos/apartados, inclúyelos como prefijo en desc: "01.Demoliciones · Desmontaje lavabo"`,
+        messages:[{role:'user',content:[
+          {type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}},
+          {type:'text',text:'Extrae todas las líneas de partida de este presupuesto. Devuelve solo el array JSON.'}
+        ]}]
+      })
+    });
+
+    if(!res.ok){
+      const err = await res.json().catch(()=>({error:{message:res.statusText}}));
+      throw new Error(err?.error?.message||`Error HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    const raw = data.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+    const clean = raw.replace(/```json|```/g,'').trim();
+    const lines = JSON.parse(clean);
+
+    if(!Array.isArray(lines)||!lines.length) throw new Error('No se encontraron líneas en el PDF');
+
+    const p = presupuestos.find(x=>x.id===presId);
+    if(!p) throw new Error('Presupuesto no encontrado');
+
+    lines.forEach(l=>{
+      if(l.desc) p.lines.push({
+        id:++lineIdCounter,
+        desc: String(l.desc).trim(),
+        qty: parseFloat(l.qty)||1,
+        price: parseFloat(l.price)||0
+      });
+    });
+
+    if(lbl){ lbl.innerHTML=`<span style="color:var(--green)">✓ ${lines.length} líneas importadas · ${file.name}</span>`; }
+    if(zone){ zone.style.borderColor='var(--green)'; zone.style.background='rgba(42,122,80,.05)'; }
+    renderPresGrid();
+    compararTodo();
+    showToast(`✅ ${lines.length} líneas importadas desde ${file.name}`);
+
+  }catch(e){
+    if(lbl){ lbl.innerHTML=`<span style="color:var(--red)">❌ ${e.message.substring(0,60)}</span>`; }
+    if(zone){ zone.style.borderColor='var(--red)'; zone.style.background='rgba(184,50,50,.05)'; }
+    showToast('Error: '+e.message.substring(0,80), true);
+  }
+  // Reset file input
+  input.value='';
+}
+
+function cargarDatosPrueba(){
+  // Load realistic demo data for testing
+  const demo = [
+    {name:'PAU App (PRY-028-V1)', lines:[
+      {desc:'Reja vallado parcela malla simple torsión galvanizado',qty:1,price:440},
+      {desc:'Pavimento hormigón impreso 240m² juntas 10cm',qty:240,price:26},
+      {desc:'Desmontaje lavabo empotrar bajo encimera',qty:1,price:3800},
+      {desc:'Trasdosado directo W624 KNAUF 71,5mm',qty:84.44,price:46},
+      {desc:'Tabique múltiple W112 Drystar KNAUF',qty:10.5,price:52},
+      {desc:'Techo inclinado dos aguas',qty:55,price:34},
+      {desc:'Puerta interior aluminio 210x90 cerradura 3 puntos',qty:2,price:1500},
+      {desc:'Malla plegada blanca para anclar en muro 16ml',qty:1,price:1100},
+      {desc:'Ayudas fontanería repercusión por m²',qty:64,price:7},
+    ]},
+    {name:'Factusol (importado)', lines:[
+      {desc:'Reja vallado parcela malla simple torsión galvanizado',qty:1,price:440},
+      {desc:'Pavimento hormigón impreso 240m² juntas',qty:240,price:26},
+      {desc:'Desmontaje lavabo empotrar',qty:1,price:3800},
+      {desc:'Trasdosado W624 KNAUF',qty:84.44,price:46},
+      {desc:'Tabique múltiple W112 KNAUF',qty:10.5,price:52},
+      {desc:'Techo inclinado',qty:55,price:34},
+      {desc:'Puerta interior aluminio 210x90',qty:2,price:1500},
+      // Falta malla plegada — para demo de diferencia
+      {desc:'Ayudas fontanería m²',qty:64,price:7},
+      {desc:'Instalación aislante XPS 3cm espesor',qty:55,price:15}, // línea extra
+    ]}
+  ];
+
+  // Reset
+  presupuestos = [];
+  presIdCounter = 0;
+  lineIdCounter = 0;
+
+  demo.forEach((d,i)=>{
+    const id=++presIdCounter;
+    presupuestos.push({
+      id, name:d.name, colorIdx:i,
+      lines: d.lines.map(l=>({id:++lineIdCounter, desc:l.desc, qty:l.qty, price:l.price}))
+    });
+  });
+
+  renderPresGrid();
+  compararTodo();
+  showToast('✅ Datos de prueba cargados — verás las diferencias abajo');
+}
+
+// ── COMPARAR ──
+function compararTodo(){
+  document.getElementById('k-npres').textContent = presupuestos.length;
+  const totalLines = presupuestos.reduce((s,p)=>s+p.lines.length,0);
+  document.getElementById('k-nlines').textContent = totalLines;
+
+  if(presupuestos.length<2||!totalLines){
+    document.getElementById('k-ndiffs').textContent='—';
+    document.getElementById('k-difftotal').textContent='—';
+    document.getElementById('cmp-body').innerHTML=`<div class="empty-cmp"><span class="empty-ico">📋</span>Añade al menos 2 presupuestos con líneas para comparar</div>`;
+    document.getElementById('cmp-subtitle').textContent='Añade presupuestos para comparar';
+    return;
+  }
+
+  // Totals comparison
+  const totals = presupuestos.map(p=>p.lines.reduce((s,l)=>s+l.qty*l.price,0));
+  const maxTot=Math.max(...totals), minTot=Math.min(...totals);
+  const diffTot=maxTot-minTot;
+  document.getElementById('k-difftotal').textContent = diffTot<0.01?'✅ Iguales':fmt(diffTot);
+  document.getElementById('k-difftotal').style.color = diffTot<0.01?'var(--green)':'var(--red)';
+
+  // Cross-match all lines across all presupuestos
+  // Build unified line list with presence per presupuesto
+  const allDescs = new Map(); // normalized desc → {desc, byPres: {presId: [lines]}}
+
+  presupuestos.forEach(p=>{
+    p.lines.forEach(l=>{
+      // Find if this line matches any existing entry
+      let bestKey=null, bestScore=0;
+      for(const [key] of allDescs){
+        const sc=similarity(l.desc, key);
+        if(sc>bestScore&&sc>=0.65){bestScore=sc;bestKey=key;}
+      }
+      const useKey=bestKey||norm(l.desc);
+      if(!allDescs.has(useKey)) allDescs.set(useKey,{desc:l.desc,byPres:{}});
+      const entry=allDescs.get(useKey);
+      if(!entry.byPres[p.id]) entry.byPres[p.id]=[];
+      entry.byPres[p.id].push(l);
+      if(bestScore<1) entry.desc=l.desc; // use latest desc
+    });
+  });
+
+  // Classify each unified line
+  const missing=[]; // lines not present in all presupuestos
+  const priceDiffs=[]; // lines present but with diff amounts
+  const matched=[]; // fully matching
+
+  for(const [,entry] of allDescs){
+    const presentIn=Object.keys(entry.byPres).map(Number);
+    const missingIn=presupuestos.filter(p=>!entry.byPres[p.id]).map(p=>p.id);
+    
+    if(missingIn.length>0){
+      missing.push({entry, presentIn, missingIn});
+    } else {
+      // Present in all — check price consistency
+      const tots=presupuestos.map(p=>{
+        const ls=entry.byPres[p.id]||[];
+        return ls.reduce((s,l)=>s+l.qty*l.price,0);
+      });
+      const maxT=Math.max(...tots), minT=Math.min(...tots);
+      if(maxT-minT>0.01){
+        priceDiffs.push({entry, tots});
+      } else {
+        matched.push(entry);
+      }
+    }
+  }
+
+  document.getElementById('k-ndiffs').textContent = missing.length+priceDiffs.length;
+  document.getElementById('cmp-subtitle').textContent = 
+    `${presupuestos.length} presupuestos · ${[...allDescs].length} líneas únicas`;
+
+  // Render
+  let html='<div class="diff-body">';
+
+  // Totals table
+  html+=`<div class="diff-section">
+    <h3>💰 Comparativa de totales</h3>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">`;
+  presupuestos.forEach((p,i)=>{
+    const tot=totals[i];
+    html+=`<div style="padding:10px 16px;border-radius:8px;border:2px solid ${PRES_COLORS[p.colorIdx]};background:white;min-width:150px">
+      <div style="font-size:10px;font-weight:700;color:${PRES_COLORS[p.colorIdx]}">${p.name.toUpperCase()}</div>
+      <div style="font-family:var(--mono);font-size:18px;font-weight:700;margin-top:4px">${fmt(tot)}</div>
+    </div>`;
+  });
+  html+='</div></div>';
+
+  // Missing lines
+  if(missing.length){
+    html+=`<div class="diff-section"><h3 style="color:var(--amber)">⚠️ Líneas que faltan en algún presupuesto (${missing.length})</h3><div class="diff-items">`;
+    missing.forEach(({entry,presentIn,missingIn})=>{
+      const presentNames=presentIn.map(id=>presupuestos.find(p=>p.id===id)?.name||id);
+      const missingNames=missingIn.map(id=>presupuestos.find(p=>p.id===id)?.name||id);
+      const totByPres=presentIn.map(id=>{
+        const ls=entry.byPres[id]||[];
+        return ls.reduce((s,l)=>s+l.qty*l.price,0);
+      });
+      html+=`<div class="ditem only">
+        <div class="ditem-left">
+          <div class="ditem-desc">${entry.desc}</div>
+          <div class="ditem-tags">
+            ${presentIn.map((id,i)=>{const p=presupuestos.find(x=>x.id===id);return`<span class="tag sc-${p?.colorIdx||0}">✓ ${p?.name||id}</span>`}).join('')}
+            ${missingIn.map(id=>{const p=presupuestos.find(x=>x.id===id);return`<span class="tag" style="background:#fde;color:var(--red)">✗ ${p?.name||id}</span>`}).join('')}
+          </div>
+        </div>
+        <div class="ditem-val">${fmt(Math.max(...totByPres))}</div>
+      </div>`;
+    });
+    html+='</div></div>';
+  }
+
+  // Price differences
+  if(priceDiffs.length){
+    html+=`<div class="diff-section"><h3 style="color:var(--blue)">🔵 Misma línea, precio distinto (${priceDiffs.length})</h3><div class="diff-items">`;
+    priceDiffs.forEach(({entry,tots})=>{
+      html+=`<div class="ditem pdiff">
+        <div class="ditem-left">
+          <div class="ditem-desc">${entry.desc}</div>
+          <div class="ditem-tags">
+            ${presupuestos.map((p,i)=>`<span class="tag sc-${p.colorIdx}">${p.name}: ${fmt(tots[i])}</span>`).join('')}
+          </div>
+        </div>
+        <div class="ditem-val" style="color:var(--amber)">Δ ${fmt(Math.max(...tots)-Math.min(...tots))}</div>
+      </div>`;
+    });
+    html+='</div></div>';
+  }
+
+  // All OK
+  if(!missing.length&&!priceDiffs.length){
+    html+=`<div style="text-align:center;padding:32px;color:var(--green)">
+      <div style="font-size:40px;margin-bottom:8px">✅</div>
+      <div style="font-family:var(--title);font-size:16px;font-weight:800">Todos los presupuestos cuadran</div>
+      <div style="font-size:12px;color:var(--soft);margin-top:4px">${matched.length} líneas idénticas en todos los presupuestos</div>
+    </div>`;
+  }
+
+  html+='</div>';
+  document.getElementById('cmp-body').innerHTML=html;
+}
+
+// ══════════════════════════════════════════════════
+// TAB 2 — LIQUIDACIÓN
+// ══════════════════════════════════════════════════
+let filePres=null, fileExt=null;
+let pagosEfectivo=[];
+let peIdCounter=0;
+
+function onFilePres(input){
+  filePres=input.files[0]||null;
+  const zone=document.getElementById('zone-pres');
+  const lbl=document.getElementById('lbl-pres');
+  if(filePres){
+    zone.classList.add('has-file');
+    lbl.style.display='block';
+    lbl.textContent=filePres.name;
+    zone.querySelector('.uz-text').textContent='✓ Archivo cargado';
+  }
+}
+
+function onFileExt(input){
+  fileExt=input.files[0]||null;
+  const zone=document.getElementById('zone-ext');
+  const lbl=document.getElementById('lbl-ext');
+  if(fileExt){
+    zone.classList.add('has-file');
+    lbl.style.display='block';
+    lbl.textContent=fileExt.name;
+    zone.querySelector('.uz-text').textContent='✓ Archivo cargado';
+  }
+}
+
+function addPagoEfectivo(){
+  const id=++peIdCounter;
+  pagosEfectivo.push({id, fecha:'', concepto:'Pago en efectivo', importe:0});
+  renderEfectivo();
+}
+
+function renderEfectivo(){
+  const el=document.getElementById('efectivo-list');
+  const empty=document.getElementById('efectivo-empty');
+  if(!pagosEfectivo.length){
+    empty&&(empty.style.display='block');
+    if(el) el.innerHTML=`<div style="text-align:center;padding:16px;color:var(--soft);font-size:11px">Sin pagos en efectivo añadidos</div>`;
+    return;
+  }
+  el.innerHTML=pagosEfectivo.map(pe=>`
+    <div style="display:grid;grid-template-columns:100px 1fr 100px 28px;gap:5px;margin-bottom:6px;align-items:center">
+      <input type="date" value="${pe.fecha}" style="font-size:11px" onchange="pagosEfectivo.find(x=>x.id===${pe.id}).fecha=this.value">
+      <input type="text" value="${pe.concepto}" style="font-size:11px" onchange="pagosEfectivo.find(x=>x.id===${pe.id}).concepto=this.value">
+      <input type="number" value="${pe.importe||''}" placeholder="0.00" step="0.01" style="font-size:11px;text-align:right" onchange="pagosEfectivo.find(x=>x.id===${pe.id}).importe=parseFloat(this.value)||0">
+      <button class="delbtn" style="font-size:16px" onclick="pagosEfectivo=pagosEfectivo.filter(x=>x.id!==${pe.id});renderEfectivo()">×</button>
+    </div>`).join('');
+}
+
+async function analizarLiquidacion(){
+  if(!filePres){alert('Sube el presupuesto en PDF');return;}
+  if(!fileExt){alert('Sube el extracto bancario en PDF');return;}
+  const nombre=(document.getElementById('liq-nombre').value||'').trim();
+  if(!nombre){alert('Escribe el nombre a buscar en el extracto');return;}
+
+  const body=document.getElementById('liq-result-body');
+  body.innerHTML=`<div class="loading-wrap"><div class="spinner"></div><span>Analizando documentos con IA…</span></div>`;
+
+  try{
+    const [b64pres,b64ext]=await Promise.all([toBase64(filePres),toBase64(fileExt)]);
+
+    const totalEfectivo=pagosEfectivo.reduce((s,p)=>s+(p.importe||0),0);
+    const efectivoDesc=pagosEfectivo.length
+      ? `\n\nPAGOS EN EFECTIVO YA REGISTRADOS:\n${pagosEfectivo.map(p=>`- ${p.fecha||'s/f'}: ${p.concepto} → ${p.importe}€`).join('\n')}\nTotal efectivo: ${totalEfectivo}€`
+      : '';
+
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:2000,
+        system:`Eres un asistente financiero para PAU Interiorismo S.L., empresa española de construcción e interiorismo en Alcàsser (Valencia). Analiza los documentos y devuelve SOLO un objeto JSON válido, sin texto adicional ni markdown. Campos exactos:
+{
+  "cliente": "nombre completo del cliente",
+  "referencia": "número o referencia del presupuesto",
+  "fecha_presupuesto": "dd/mm/aaaa o null",
+  "total_presupuesto": número,
+  "pagos_banco": [{"fecha":"dd/mm/aaaa","concepto":"descripción del movimiento","importe":número}],
+  "total_banco": número,
+  "total_efectivo": número,
+  "total_pagado": número,
+  "saldo_pendiente": número,
+  "detalle": "párrafo explicativo de la situación de cobro"
+}`,
+        messages:[{role:'user',content:[
+          {type:'document',source:{type:'base64',media_type:'application/pdf',data:b64pres}},
+          {type:'document',source:{type:'base64',media_type:'application/pdf',data:b64ext}},
+          {type:'text',text:`Documento 1: presupuesto del cliente. Documento 2: extracto bancario.
+
+Busca en el extracto bancario ÚNICAMENTE los ingresos/movimientos que correspondan al cliente o referencia: "${nombre}". Ignora cualquier otro movimiento que no sea de este cliente.
+
+Extrae: importe total del presupuesto (con IVA si lo incluye), lista de pagos del cliente encontrados en el extracto con fecha, concepto e importe.${efectivoDesc}
+
+Total efectivo a sumar al total pagado: ${totalEfectivo}€ (ya registrados manualmente, no busques estos en el extracto).
+
+Calcula: total_pagado = total_banco + ${totalEfectivo} (efectivo). Saldo_pendiente = total_presupuesto - total_pagado.
+
+Devuelve solo JSON.`}
+        ]}]
+      })
+    });
+
+    if(!res.ok){
+      const err=await res.json().catch(()=>({error:{message:res.statusText}}));
+      throw new Error(err?.error?.message||`Error HTTP ${res.status}`);
+    }
+
+    const data=await res.json();
+    const rawText=data.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+    const clean=rawText.replace(/```json|```/g,'').trim();
+    const json=JSON.parse(clean);
+
+    renderLiquidacionResult(json);
+
+  }catch(e){
+    body.innerHTML=`<div class="error-box">❌ Error: ${e.message}</div>
+      <div style="padding:16px;font-size:11px;color:var(--soft)">
+        Comprueba que los PDFs son legibles y vuelve a intentarlo.
+      </div>`;
+  }
+}
+
+function renderLiquidacionResult(d){
+  const body=document.getElementById('liq-result-body');
+  const pend=d.saldo_pendiente||0;
+  const pendColor=pend<0.01?'var(--green)':pend>0?'var(--red)':'var(--text)';
+  const pendLabel=pend<0.01?'✅ LIQUIDADO':pend>0?'PENDIENTE DE COBRO':'SALDADO';
+
+  const pagos=d.pagos_banco||[];
+  const totalEf=d.total_efectivo||0;
+  const efectivoRows=pagosEfectivo.filter(p=>p.importe>0).map(p=>`
+    <div class="pago-item">
+      <span class="pi-date">${p.fecha||'—'}</span>
+      <span class="pi-concept">${p.concepto}</span>
+      <span class="pi-amount">${fmt(p.importe)}</span>
+      <span class="pi-type pi-cash">💵 Efectivo</span>
+    </div>`).join('');
+
+  body.innerHTML=`
+    <!-- KPIs -->
+    <div class="liq-kpis">
+      <div class="liq-kpi" style="border-top:3px solid var(--navy)">
+        <div class="liq-kpi-label">Total presupuesto</div>
+        <div class="liq-kpi-val" style="color:var(--navy)">${fmt(d.total_presupuesto)}</div>
+        <div style="font-size:10px;color:var(--soft);margin-top:4px">${d.referencia||''}</div>
+      </div>
+      <div class="liq-kpi" style="border-top:3px solid var(--green)">
+        <div class="liq-kpi-label">Total pagado</div>
+        <div class="liq-kpi-val" style="color:var(--green)">${fmt(d.total_pagado)}</div>
+        <div style="font-size:10px;color:var(--soft);margin-top:4px">${pagos.length} transferencias${totalEf>0?` + ${fmt(totalEf)} efectivo`:''}</div>
+      </div>
+      <div class="liq-kpi" style="border-top:3px solid ${pendColor}">
+        <div class="liq-kpi-label">${pendLabel}</div>
+        <div class="liq-kpi-val" style="color:${pendColor}">${fmt(Math.abs(pend))}</div>
+        <div style="font-size:10px;color:var(--soft);margin-top:4px">${d.cliente||''}</div>
+      </div>
+    </div>
+
+    <!-- Pagos -->
+    <div class="pagos-list">
+      <h3>Pagos recibidos</h3>
+      ${pagos.map(p=>`
+        <div class="pago-item">
+          <span class="pi-date">${p.fecha||'—'}</span>
+          <span class="pi-concept">${p.concepto||'—'}</span>
+          <span class="pi-amount">${fmt(p.importe)}</span>
+          <span class="pi-type pi-bank">🏦 Banco</span>
+        </div>`).join('')}
+      ${efectivoRows}
+      ${!pagos.length&&!efectivoRows?'<div style="color:var(--soft);font-size:12px;padding:8px">No se encontraron pagos</div>':''}
+      <div style="display:flex;justify-content:flex-end;margin-top:10px;padding-top:8px;border-top:1px solid var(--border)">
+        <span style="font-family:var(--mono);font-weight:700;font-size:14px;color:var(--green)">Total: ${fmt(d.total_pagado)}</span>
+      </div>
+    </div>
+
+    <!-- Detalle IA -->
+    <div class="detalle-txt">
+      <strong style="display:block;margin-bottom:5px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--soft)">Análisis</strong>
+      ${d.detalle||'—'}
+    </div>
+
+    <!-- Actions -->
+    <div class="liq-actions">
+      <button class="btn btn-ghost btn-sm" onclick="exportarLiquidacion(${JSON.stringify(d).replace(/"/g,'&quot;')})">📥 Exportar TXT</button>
+      <button class="btn btn-copper btn-sm" onclick="generarPDFLiquidacion()">📄 Generar PDF</button>
+    </div>`;
+
+  // Store for PDF
+  window._liqData = d;
+}
+
+function exportarLiquidacion(d){
+  if(!d) d=window._liqData;
+  if(!d){alert('No hay datos para exportar');return;}
+  let txt=`LIQUIDACIÓN DE COBROS · PAU INTERIORISMO S.L.\n`;
+  txt+=`Fecha: ${new Date().toLocaleDateString('es-ES')}\n\n`;
+  txt+=`Cliente: ${d.cliente||'—'}\nReferencia: ${d.referencia||'—'}\n\n`;
+  txt+=`Total presupuesto:   ${fmt(d.total_presupuesto)}\n`;
+  txt+=`Total pagado:        ${fmt(d.total_pagado)}\n`;
+  txt+=`SALDO PENDIENTE:     ${fmt(d.saldo_pendiente)}\n\n`;
+  txt+=`PAGOS RECIBIDOS:\n`;
+  (d.pagos_banco||[]).forEach(p=>txt+=`  ${p.fecha||'—'}  ${p.concepto||'—'}  ${fmt(p.importe)}\n`);
+  pagosEfectivo.filter(p=>p.importe>0).forEach(p=>txt+=`  ${p.fecha||'—'}  ${p.concepto} (efectivo)  ${fmt(p.importe)}\n`);
+  txt+=`\nANÁLISIS:\n${d.detalle||'—'}`;
+  const blob=new Blob([txt],{type:'text/plain;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`liquidacion_${(d.cliente||'cliente').replace(/\s+/g,'_')}_${new Date().toISOString().split('T')[0]}.txt`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function generarPDFLiquidacion(){
+  const d=window._liqData;
+  if(!d){alert('Analiza primero los documentos');return;}
+  // Build printable HTML and trigger print
+  const printWin=window.open('','_blank','width=800,height=900');
+  if(!printWin){alert('Permite las ventanas emergentes para generar el PDF');return;}
+  const pend=d.saldo_pendiente||0;
+  const pagosRows=(d.pagos_banco||[]).map(p=>`<tr><td>${p.fecha||'—'}</td><td>${p.concepto||'—'}</td><td style="text-align:right;font-weight:600">+${fmt(p.importe)}</td><td>Transferencia bancaria</td></tr>`).join('');
+  const efRows=pagosEfectivo.filter(p=>p.importe>0).map(p=>`<tr><td>${p.fecha||'—'}</td><td>${p.concepto}</td><td style="text-align:right;font-weight:600">+${fmt(p.importe)}</td><td>Efectivo</td></tr>`).join('');
+  printWin.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Liquidación</title>
+  <style>
+    body{font-family:Arial,sans-serif;font-size:12px;color:#222;margin:0;padding:0}
+    .header{background:#0f1e2d;color:white;padding:20px 28px;display:flex;justify-content:space-between;align-items:center}
+    .header h1{font-size:18px;font-weight:700;margin:0}
+    .header .sub{font-size:11px;opacity:.7;margin-top:3px}
+    .copper{color:#b87333}
+    .body{padding:24px 28px}
+    .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#ddd;border:1px solid #ddd;border-radius:6px;overflow:hidden;margin-bottom:20px}
+    .kpi{background:white;padding:14px 16px;text-align:center}
+    .kpi-label{font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:#888;font-weight:700}
+    .kpi-val{font-size:22px;font-weight:700;margin-top:5px}
+    table{width:100%;border-collapse:collapse;margin-bottom:16px}
+    th{background:#0f1e2d;color:white;padding:7px 10px;text-align:left;font-size:11px}
+    td{padding:7px 10px;border-bottom:1px solid #eee;font-size:12px}
+    .total-row td{font-weight:700;background:#f5f5f5}
+    .detalle{background:#f8f8f8;border-radius:6px;padding:14px;font-size:12px;line-height:1.6;color:#444;margin-top:8px}
+    .footer{margin-top:28px;padding-top:10px;border-top:1px solid #ddd;font-size:10px;color:#888;text-align:center}
+    @media print{.no-print{display:none}}
+  </style></head><body>
+  <div class="header">
+    <div><h1>PAU INTERIORISMO S.L. <span class="copper">·</span> Liquidación de cobros</h1><div class="sub">Alcàsser, Valencia · ${new Date().toLocaleDateString('es-ES')}</div></div>
+    <div style="text-align:right"><div style="font-size:13px;font-weight:700">${d.cliente||'—'}</div><div style="font-size:11px;opacity:.7">${d.referencia||''}</div></div>
+  </div>
+  <div class="body">
+    <div class="kpis">
+      <div class="kpi"><div class="kpi-label">Total presupuesto</div><div class="kpi-val" style="color:#0f1e2d">${fmt(d.total_presupuesto)}</div></div>
+      <div class="kpi"><div class="kpi-label">Total pagado</div><div class="kpi-val" style="color:#1a6b46">${fmt(d.total_pagado)}</div></div>
+      <div class="kpi"><div class="kpi-label">${pend<0.01?'✅ Liquidado':'Pendiente de cobro'}</div><div class="kpi-val" style="color:${pend<0.01?'#1a6b46':'#a82828'}">${fmt(Math.abs(pend))}</div></div>
+    </div>
+    <table>
+      <thead><tr><th>Fecha</th><th>Concepto</th><th style="text-align:right">Importe</th><th>Tipo</th></tr></thead>
+      <tbody>
+        ${pagosRows}${efRows}
+        <tr class="total-row"><td colspan="2">TOTAL PAGADO</td><td style="text-align:right">${fmt(d.total_pagado)}</td><td></td></tr>
+      </tbody>
+    </table>
+    <div class="detalle"><strong>Análisis:</strong><br>${d.detalle||'—'}</div>
+    <div class="footer">PAU INTERIORISMO S.L. · Tomàs i Valiente, 6 · 46290 Alcàsser (Valencia) · Documento generado el ${new Date().toLocaleDateString('es-ES')}</div>
+    <div class="no-print" style="margin-top:20px;text-align:center">
+      <button onclick="window.print()" style="padding:10px 24px;background:#0f1e2d;color:white;border:none;border-radius:6px;cursor:pointer;font-size:14px">🖨 Imprimir / Guardar PDF</button>
+    </div>
+  </div>
+  </body></html>`);
+  printWin.document.close();
+}
+
+// Init
+agregarPresupuesto();
+agregarPresupuesto();
+</script>
+</body>
+</html>
