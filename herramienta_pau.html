@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>💶 Control de cobros · PAU Interiorismo</title>
+    <title>PAU INTERIORISMO - Gestion</title>
     <style>
         :root {
             --navy: #1a2a3a;
@@ -1545,8 +1545,21 @@
                     }]
                 });
                 const raw = data.content.filter(b => b.type === 'text').map(b => b.text).join('');
-                const clean = raw.replace(/```json|```/g, '').trim();
-                const lines = JSON.parse(clean);
+                // Parseo robusto: quitar markdown, extraer array JSON
+                let clean = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+                // Si el JSON esta cortado, intentar cerrar el array
+                if (clean.startsWith('[') && !clean.endsWith(']')) {
+                    // Buscar el ultimo objeto completo (terminado en })
+                    const lastBrace = clean.lastIndexOf('}');
+                    if (lastBrace > 0) clean = clean.substring(0, lastBrace + 1) + ']';
+                }
+                let lines;
+                try { lines = JSON.parse(clean); } catch (e) {
+                    // Intentar extraer el array con regex
+                    const m = clean.match(/\[[\s\S]*\]/);
+                    if (m) { try { lines = JSON.parse(m[0]); } catch (e2) {} }
+                    if (!lines) throw new Error('Error parseando respuesta de la IA. Reintenta.');
+                }
                 if (!Array.isArray(lines) || !lines.length) throw new Error('No se encontraron lineas en el PDF');
                 const p = presupuestos.find(x => x.id === presId);
                 if (!p) throw new Error('Presupuesto no encontrado');
