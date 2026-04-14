@@ -1082,6 +1082,26 @@
                 <div class="tab" onclick="switchTab(2)">🏦 Conciliación bancaria (IA)</div>
             </div>
 
+            <!-- GLOBAL CLIENTE/PROYECTO SELECTOR (compartido por las 3 pestañas) -->
+            <div style="background:#fff;border-bottom:1px solid var(--border);padding:10px 20px;display:grid;grid-template-columns:auto 1fr 1fr auto;gap:12px;align-items:end">
+                <div style="font-size:11px;color:var(--copper);font-weight:700;text-transform:uppercase;letter-spacing:.3px;padding-bottom:8px;white-space:nowrap">
+                    🔗 Proyecto activo
+                </div>
+                <div>
+                    <label style="display:block;font-size:10px;color:var(--soft);font-weight:700;margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px">Cliente</label>
+                    <select id="pc-cliente" onchange="onPcClienteChange()" style="width:100%;font-size:12px;padding:7px 8px;border:1px solid var(--border);border-radius:4px;background:#fff">
+                        <option value="">— Selecciona cliente —</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="display:block;font-size:10px;color:var(--soft);font-weight:700;margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px">Proyecto</label>
+                    <select id="pc-proyecto" onchange="onPcProyectoChange()" style="width:100%;font-size:12px;padding:7px 8px;border:1px solid var(--border);border-radius:4px;background:#fff">
+                        <option value="">— Selecciona proyecto —</option>
+                    </select>
+                </div>
+                <button class="btn btn-ghost btn-sm" onclick="recargarDatosPC()" style="padding:8px 14px;white-space:nowrap">🔄 Actualizar</button>
+            </div>
+
             <!-- CONTENT -->
             <div class="content-scroll">
 
@@ -1150,31 +1170,10 @@
 
                 <!-- PAGE 2: PENDIENTE POR CERTIFICAR -->
                 <div class="page">
-                    <div class="card">
-                        <div class="card-head">
-                            <div class="card-title">🏗 Pendiente por certificar</div>
-                        </div>
-                        <div style="padding:14px;display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:end">
-                            <div>
-                                <label style="display:block;font-size:11px;color:var(--soft);font-weight:700;margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px">Cliente</label>
-                                <select id="pc-cliente" onchange="onPcClienteChange()" style="width:100%;font-size:12px;padding:7px 8px;border:1px solid var(--border);border-radius:4px;background:#fff">
-                                    <option value="">— Selecciona cliente —</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label style="display:block;font-size:11px;color:var(--soft);font-weight:700;margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px">Proyecto</label>
-                                <select id="pc-proyecto" onchange="onPcProyectoChange()" style="width:100%;font-size:12px;padding:7px 8px;border:1px solid var(--border);border-radius:4px;background:#fff">
-                                    <option value="">— Selecciona proyecto —</option>
-                                </select>
-                            </div>
-                            <button class="btn btn-copper btn-sm" onclick="recargarDatosPC()" style="padding:8px 14px;white-space:nowrap">🔄 Actualizar</button>
-                        </div>
-                    </div>
-
                     <div id="pc-body">
                         <div style="padding:40px;text-align:center;color:var(--soft)">
                             <div style="font-size:48px;margin-bottom:8px">🏗</div>
-                            <div style="font-size:13px">Selecciona un cliente y un proyecto para ver el estado de facturación y cobros</div>
+                            <div style="font-size:13px">Selecciona un cliente y un proyecto <strong>en el selector superior</strong> para ver el estado de facturación y cobros</div>
                             <div style="font-size:11px;margin-top:6px">Todos los importes se muestran <strong>sin IVA</strong></div>
                         </div>
                     </div>
@@ -1187,6 +1186,10 @@
                         <div style="padding:14px;font-size:11px;color:var(--soft);line-height:1.5">
                             Sube uno o varios PDFs de presupuesto y el extracto bancario. La IA detecta los pagos del cliente en el extracto y calcula el saldo pendiente.
                             Puedes excluir pagos con un clic, añadir pagos manuales y editar las observaciones antes de generar el PDF.
+                            <br>Si seleccionas un proyecto en el selector superior, podrás <strong>guardar las entregas detectadas directamente en ese proyecto</strong> para que aparezcan en "Pendiente por certificar".
+                        </div>
+                        <div id="conc-proyecto-info" style="padding:10px 14px;background:linear-gradient(90deg,var(--sand),#fff);border-top:1px solid var(--border);font-size:11px;display:none">
+                            🔗 Trabajando con el proyecto <strong style="color:var(--copper);font-family:var(--mono)" id="conc-proyecto-id"></strong> · <strong id="conc-proyecto-nombre"></strong> · Cliente: <strong id="conc-proyecto-cliente"></strong>
                         </div>
                     </div>
 
@@ -1878,6 +1881,8 @@
                         }
                     }
                 } catch (e) {}
+                // Sincronizar Tab 3 por si hay selección previa
+                syncTab3ProyectoInfo();
             } catch (e) {
                 console.warn('Error cargando clientes/proyectos:', e);
                 const body = document.getElementById('pc-body');
@@ -1903,15 +1908,45 @@
         function onPcProyectoChange() {
             savePcSel();
             const proyId = document.getElementById('pc-proyecto').value;
+            syncTab3ProyectoInfo();
             if (!proyId) {
                 document.getElementById('pc-body').innerHTML = `
                     <div style="padding:40px;text-align:center;color:var(--soft)">
                         <div style="font-size:48px;margin-bottom:8px">🏗</div>
                         <div style="font-size:13px">Selecciona un proyecto para ver el estado de facturación y cobros</div>
                     </div>`;
+                // Re-render Tab 3 si hay resultado para ocultar/mostrar botón guardar
+                if (_concCurrentData) renderConcResult(_concCurrentData);
                 return;
             }
             cargarDatosProyectoPC(proyId);
+            // Re-render Tab 3 para que aparezca el botón de guardar
+            if (_concCurrentData) renderConcResult(_concCurrentData);
+        }
+
+        // Sincroniza el indicador de proyecto activo en Tab 3 + prefijo de conc-nombre
+        function syncTab3ProyectoInfo() {
+            const cliId = document.getElementById('pc-cliente')?.value || '';
+            const proyId = document.getElementById('pc-proyecto')?.value || '';
+            const info = document.getElementById('conc-proyecto-info');
+            if (!info) return;
+            if (!proyId) {
+                info.style.display = 'none';
+                return;
+            }
+            const proy = _pcProyectos.find(p => String(p.proyecto_id) === String(proyId)) || {};
+            const cli = _pcClientes.find(c => String(c.cliente_id || c.id) === String(cliId)) || {};
+            const cliNombre = cli.nombre || cli.razon_social || '—';
+            document.getElementById('conc-proyecto-id').textContent = proyId;
+            document.getElementById('conc-proyecto-nombre').textContent = proy.nombre || '—';
+            document.getElementById('conc-proyecto-cliente').textContent = cliNombre;
+            info.style.display = 'block';
+            // Auto-rellenar el campo "nombre a buscar" si está vacío
+            const nomEl = document.getElementById('conc-nombre');
+            if (nomEl && !nomEl.value.trim()) {
+                nomEl.value = `${cliNombre} / ${proyId}`;
+                saveConcState();
+            }
         }
 
         function savePcSel() {
@@ -2538,7 +2573,10 @@ Devuelve SOLO un JSON válido (sin markdown, sin texto adicional), con este form
                             <div style="font-size:11px;color:var(--soft);margin-top:2px">Ref. ${d.referencia || '—'}</div>
                             <div style="display:inline-block;margin-top:8px;padding:4px 10px;border-radius:12px;background:${estado.bg};color:${estado.c};font-size:11px;font-weight:700">${estado.t}</div>
                         </div>
-                        <button class="btn btn-copper" onclick="generarPDFConciliacion()" style="padding:8px 18px;font-size:12px">📄 Generar PDF</button>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap">
+                            ${document.getElementById('pc-proyecto')?.value ? `<button class="btn btn-ghost" onclick="guardarEntregasEnProyecto()" style="padding:8px 14px;font-size:12px;border-color:var(--green);color:var(--green)" title="Guarda las entregas detectadas en Supabase para que aparezcan en 'Pendiente por certificar'">💾 Guardar entregas en proyecto</button>` : ''}
+                            <button class="btn btn-copper" onclick="generarPDFConciliacion()" style="padding:8px 18px;font-size:12px">📄 Generar PDF</button>
+                        </div>
                     </div>
 
                     <div style="margin-bottom:6px;display:flex;justify-content:space-between;font-size:11px;color:var(--soft)">
@@ -2608,6 +2646,102 @@ Devuelve SOLO un JSON válido (sin markdown, sin texto adicional), con este form
             } else if (focusInfo && focusInfo.id === 'conc-obs') {
                 const el = document.getElementById('conc-obs');
                 if (el) { el.focus(); try { el.setSelectionRange(focusInfo.selStart, focusInfo.selEnd); } catch (e) {} }
+            }
+        }
+
+        // Convierte "dd/mm/aaaa" o "dd-mm-aaaa" a "aaaa-mm-dd" (ISO). Si ya es ISO, lo devuelve tal cual.
+        function _concParseFechaIso(fecha) {
+            if (!fecha) return null;
+            const s = String(fecha).trim();
+            if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+            const m = s.match(/(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})/);
+            if (!m) return null;
+            const d = m[1].padStart(2, '0');
+            const mo = m[2].padStart(2, '0');
+            let y = m[3]; if (y.length === 2) y = (parseInt(y, 10) > 50 ? '19' : '20') + y;
+            return `${y}-${mo}-${d}`;
+        }
+
+        async function guardarEntregasEnProyecto() {
+            const proyId = document.getElementById('pc-proyecto')?.value;
+            if (!proyId) { alert('Selecciona un proyecto en el selector superior para poder guardar'); return; }
+            if (!_concCurrentData) { alert('Analiza primero los documentos'); return; }
+
+            // Recolectar entregas activas (no excluidas) + pagos manuales con importe válido
+            const entregasAuto = (_concCurrentData.entregas || [])
+                .map((e, i) => ({ e, i }))
+                .filter(({ e, i }) => !concExcluidos.has(i) && (parseFloat(e.importe) || 0) > 0);
+            const pagosMan = concPagosManual.filter(p => (parseFloat(p.importe) || 0) > 0 && p.fecha);
+
+            const candidatas = [
+                ...entregasAuto.map(({ e }) => ({
+                    fechaIso: _concParseFechaIso(e.fecha),
+                    importe: parseFloat(e.importe) || 0,
+                    concepto: (e.concepto || '').trim(),
+                    origen: 'IA'
+                })),
+                ...pagosMan.map(p => ({
+                    fechaIso: _concParseFechaIso(p.fecha),
+                    importe: parseFloat(p.importe) || 0,
+                    concepto: (p.concepto || '').trim(),
+                    origen: 'Manual'
+                }))
+            ].filter(x => x.fechaIso && x.importe > 0);
+
+            if (!candidatas.length) { alert('No hay entregas válidas para guardar'); return; }
+
+            // Leer entregas ya existentes en Supabase para deduplicar por fecha + importe
+            let existentes = [];
+            try {
+                existentes = await sbFetch(`entregas_cuenta?proyecto_id=eq.${encodeURIComponent(proyId)}&select=fecha,importe`);
+            } catch (e) {
+                console.warn('No se pudieron leer entregas existentes para dedupe:', e);
+            }
+            const claveExistentes = new Set((existentes || []).map(e => {
+                const f = _concParseFechaIso(e.fecha) || e.fecha;
+                const imp = (parseFloat(e.importe) || 0).toFixed(2);
+                return `${f}__${imp}`;
+            }));
+
+            const nuevas = candidatas.filter(n => !claveExistentes.has(`${n.fechaIso}__${n.importe.toFixed(2)}`));
+            const duplicadas = candidatas.length - nuevas.length;
+
+            if (!nuevas.length) {
+                alert(`Todas las ${candidatas.length} entregas ya están registradas en el proyecto ${proyId}. No se ha guardado nada.`);
+                return;
+            }
+
+            const msgDup = duplicadas > 0 ? `\n(${duplicadas} ya existían y se omitirán)` : '';
+            if (!confirm(`Se van a guardar ${nuevas.length} entregas en el proyecto ${proyId}.${msgDup}\n\n¿Continuar?`)) return;
+
+            try {
+                const rows = nuevas.map(n => ({
+                    proyecto_id: proyId,
+                    fecha: n.fechaIso,
+                    importe: n.importe,
+                    concepto: n.concepto || 'Entrega detectada por conciliación IA',
+                    tipo: 'Entrega a cuenta'
+                }));
+                const res = await fetch(`${SB_URL}/rest/v1/entregas_cuenta`, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': SB_KEY,
+                        'Authorization': 'Bearer ' + SB_KEY,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=minimal'
+                    },
+                    body: JSON.stringify(rows)
+                });
+                if (!res.ok) {
+                    const errText = await res.text();
+                    throw new Error('HTTP ' + res.status + ' · ' + errText);
+                }
+                alert(`✅ ${nuevas.length} entrega${nuevas.length > 1 ? 's' : ''} guardada${nuevas.length > 1 ? 's' : ''} en ${proyId}${duplicadas > 0 ? ` (${duplicadas} duplicada${duplicadas > 1 ? 's' : ''} omitida${duplicadas > 1 ? 's' : ''})` : ''}.\n\nAbre la pestaña "Pendiente por certificar" para verlas.`);
+                // Refrescar datos del proyecto en Tab 2
+                await cargarDatosProyectoPC(proyId);
+            } catch (e) {
+                console.error(e);
+                alert('❌ Error guardando entregas: ' + e.message);
             }
         }
 
