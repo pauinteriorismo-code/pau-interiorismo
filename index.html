@@ -9882,11 +9882,7 @@ async function saveProyecto(){
       d.proyecto_id=genId('PRY',PC,'proyecto_id');
       await sbPost('proyectos',d);
       toast('Proyecto creado ✅');
-      // Si el usuario introdujo una URL de carpeta Drive, extraer su ID para crear subcarpetas dentro
-      const _driveUrlNuevo = d.carpeta_drive || '';
-      const _mDrive = _driveUrlNuevo.match(/folders\/([a-zA-Z0-9_-]+)/);
-      const _folderIdNuevo = _mDrive ? _mDrive[1] : null;
-      crearCarpetasDrive(d.proyecto_id, nombre, _folderIdNuevo);
+      crearCarpetasDrive(d.proyecto_id, nombre);
       crearTareasAutoProyecto(d.proyecto_id,d.tipo,d.fecha_inicio);
     }
     closeModal('m-proyecto');
