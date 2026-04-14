@@ -10466,9 +10466,19 @@ async function subirPDFaDrive(elementId, nombreArchivo, proyId, subCarpeta, fold
     console.log('[Drive PDF]', _dbg, 'DESPUÉS de mover · offsetW=',el.offsetWidth,'offsetH=',el.offsetHeight,'rect=',el.getBoundingClientRect(),'imgs=',_imgs.length);
   }
   try{
-    const base64=await html2pdf().set(opt).from(el).output('datauristring');
+    // Paso intermedio: obtener el canvas directamente para debug
+    const _worker = html2pdf().set(opt).from(el);
+    const _canvas = await _worker.toCanvas();
+    console.log('[Drive PDF]', _dbg, 'CANVAS · w=',_canvas.width,'h=',_canvas.height);
+    try{
+      window._lastCanvasDataUri = _canvas.toDataURL('image/png');
+      console.log('[Drive PDF] canvas PNG length=',window._lastCanvasDataUri.length,'· abre: window.open(window._lastCanvasDataUri)');
+    }catch(e){ console.warn('[Drive PDF] canvas taint:', e.message); }
+    // Continuar generando el PDF
+    const _pdfObj = await _worker.toPdf();
+    const base64 = _pdfObj.output('datauristring');
     window._lastPdfDataUri = base64;
-    console.log('[Drive PDF]', _dbg, 'PDF generado · length=',base64.length,'· abre en consola: window.open(window._lastPdfDataUri)');
+    console.log('[Drive PDF]', _dbg, 'PDF generado · length=',base64.length,'· abre: window.open(window._lastPdfDataUri)');
     const res=await fetch(DRIVE_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
       body:JSON.stringify({action:'uploadFile',fileData:base64,fileName:nombreArchivo,mimeType:'application/pdf',folderId,subCarpeta:subCarpeta||null,tipoDoc:(extras&&extras.tipoDoc)||null,proveedor:(extras&&extras.proveedor)||null})});
     const json=await res.json().catch(()=>({}));
