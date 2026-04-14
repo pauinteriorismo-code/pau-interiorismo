@@ -10393,6 +10393,8 @@ async function subirPDFaDrive(elementId, nombreArchivo, proyId, subCarpeta, fold
   if(!folderId){toast('Sin carpeta Drive para este proyecto. Abre el expediente y añade el enlace de Drive.','error');return;}
   const el=(typeof elementId==='string')?document.getElementById(elementId):elementId;
   if(!el){toast('Elemento no encontrado','error');return;}
+  const _dbg=(typeof elementId==='string'?elementId:(el.id||'?'));
+  console.log('[Drive PDF]', _dbg, 'INICIO · display=',el.style.display,'offsetW=',el.offsetWidth,'offsetH=',el.offsetHeight,'innerHTML len=',(el.innerHTML||'').length);
   toast('☁️ Preparando para Drive…');
   const opt={
     margin:[10,10,15,10],
@@ -10456,9 +10458,17 @@ async function subirPDFaDrive(elementId, nombreArchivo, proyId, subCarpeta, fold
     // eslint-disable-next-line no-unused-expressions
     el.getBoundingClientRect();
     await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+    // Esperar fuentes e imágenes
+    try{ if(document.fonts && document.fonts.ready) await document.fonts.ready; }catch(e){}
+    const _imgs = el.querySelectorAll('img');
+    await Promise.all(Array.from(_imgs).map(img => img.complete ? Promise.resolve() : new Promise(r=>{img.onload=img.onerror=r;})));
+    await new Promise(r => setTimeout(r, 250));
+    console.log('[Drive PDF]', _dbg, 'DESPUÉS de mover · offsetW=',el.offsetWidth,'offsetH=',el.offsetHeight,'rect=',el.getBoundingClientRect(),'imgs=',_imgs.length);
   }
   try{
     const base64=await html2pdf().set(opt).from(el).output('datauristring');
+    window._lastPdfDataUri = base64;
+    console.log('[Drive PDF]', _dbg, 'PDF generado · length=',base64.length,'· abre en consola: window.open(window._lastPdfDataUri)');
     const res=await fetch(DRIVE_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
       body:JSON.stringify({action:'uploadFile',fileData:base64,fileName:nombreArchivo,mimeType:'application/pdf',folderId,subCarpeta:subCarpeta||null,tipoDoc:(extras&&extras.tipoDoc)||null,proveedor:(extras&&extras.proveedor)||null})});
     const json=await res.json().catch(()=>({}));
