@@ -6998,56 +6998,39 @@ if('serviceWorker' in navigator){
   }
 }
 
-// Sube un PDF a Drive renderizando el HTML completo dentro de un iframe visible
-// (técnica más fiable: el iframe tiene su propio documento con <head><style> completo,
-//  garantizando layout correcto y renderizado sin problemas).
+// Sube el PDF de factura a Drive renderizándolo on-screen temporalmente
+// detrás de un overlay opaco (evita CSP al usar html2pdf ya cargado del padre
+// y asegura que html2canvas mida el layout correctamente).
 async function subirPDFDesdeHtmlIframe(fullHtml, fileName, driveOpts){
   if(!driveOpts || !driveOpts.folderId){
     toast('Sin carpeta Drive','error');
     throw new Error('sin-folder');
   }
+  if(typeof html2pdf === 'undefined'){
+    throw new Error('html2pdf no está cargado en la app');
+  }
+  const el = document.getElementById('fac-preview-doc');
+  if(!el) throw new Error('No existe fac-preview-doc en el DOM');
   toast('☁️ Generando PDF…');
-  // Crear iframe con dimensiones reales (A4 a ~820px ancho)
-  const iframe = document.createElement('iframe');
-  iframe.style.cssText = 'position:fixed;left:0;top:0;width:820px;height:1200px;border:0;z-index:-9999;background:#fff;pointer-events:none;opacity:0.01';
-  document.body.appendChild(iframe);
+  // Overlay opaco para tapar al usuario mientras renderizamos on-screen
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:#fff;z-index:999998;display:flex;align-items:center;justify-content:center;font-family:Inter,sans-serif;font-size:16px;color:#4a3728;font-weight:700';
+  overlay.textContent = '☁️ Generando PDF para Drive…';
+  document.body.appendChild(overlay);
+  const prevCss = el.style.cssText;
+  // Mover el elemento on-screen con ancho real (820px). Detrás del overlay (z-index menor).
+  el.style.cssText = 'position:fixed;left:0;top:0;width:820px;background:#fff;z-index:999997;overflow:visible';
+  // Forzar reflow y esperar frames de pintado
+  el.getBoundingClientRect();
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+  // Esperar fuentes e imágenes
+  try{ if(document.fonts && document.fonts.ready) await document.fonts.ready; }catch(e){}
+  const imgs = el.querySelectorAll('img');
+  await Promise.all(Array.from(imgs).map(img => img.complete ? Promise.resolve() : new Promise(r=>{img.onload=img.onerror=r;})));
+  await new Promise(r => setTimeout(r, 250));
   try{
-    const idoc = iframe.contentDocument || iframe.contentWindow.document;
-    const iwin = iframe.contentWindow;
-    // Eliminar la toolbar y INYECTAR html2pdf.js dentro del propio iframe
-    // (así html2canvas se ejecuta en el window correcto y mide el layout bien)
-    let htmlMod = fullHtml.replace(/<div class="toolbar"[\s\S]*?<\/div>\s*/i, '');
-    const scriptTag = '<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"><\/script>';
-    if(/<\/head>/i.test(htmlMod)){
-      htmlMod = htmlMod.replace(/<\/head>/i, scriptTag + '</head>');
-    } else {
-      htmlMod = scriptTag + htmlMod;
-    }
-    idoc.open();
-    idoc.write(htmlMod);
-    idoc.close();
-    // Esperar load del documento
-    await new Promise((resolve) => {
-      if(idoc.readyState === 'complete') resolve();
-      else iframe.addEventListener('load', resolve, {once:true});
-    });
-    // Esperar a que html2pdf se cargue DENTRO del iframe (timeout 10s)
-    const t0 = Date.now();
-    while(!iwin.html2pdf && Date.now()-t0 < 10000){
-      await new Promise(r => setTimeout(r, 100));
-    }
-    if(!iwin.html2pdf) throw new Error('html2pdf no se cargó en el iframe');
-    // Esperar fuentes
-    try{ if(idoc.fonts && idoc.fonts.ready) await idoc.fonts.ready; }catch(e){}
-    // Esperar imágenes
-    const imgs = idoc.querySelectorAll('img');
-    await Promise.all(Array.from(imgs).map(img => img.complete ? Promise.resolve() : new Promise(r=>{img.onload=img.onerror=r;})));
-    // Dar margen extra para layout
-    await new Promise(r => setTimeout(r, 400));
-    // Capturar el contenedor #fpdf (o body)
-    const target = idoc.getElementById('fpdf') || idoc.body;
-    if(!target) throw new Error('No se encontró contenido en el iframe');
-    // Generar PDF usando el html2pdf del IFRAME (html2canvas medirá el iframe correctamente)
+    // Capturar #fpdf (el contenedor principal de la factura) si existe
+    const target = el.querySelector('#fpdf') || el;
     const opt = {
       margin:[10,10,15,10],
       filename:fileName,
@@ -7059,12 +7042,13 @@ async function subirPDFDesdeHtmlIframe(fullHtml, fileName, driveOpts){
         letterRendering:true,
         allowTaint:true,
         imageTimeout:0,
-        backgroundColor:'#ffffff'
+        backgroundColor:'#ffffff',
+        windowWidth:820
       },
       jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
     };
-    const base64 = await iwin.html2pdf().set(opt).from(target).output('datauristring');
-    // Subir
+    const base64 = await html2pdf().set(opt).from(target).output('datauristring');
+    // Subir a Drive
     const res = await fetch(DRIVE_SCRIPT_URL, {
       method:'POST', headers:{'Content-Type':'text/plain'},
       body:JSON.stringify({
@@ -7079,7 +7063,8 @@ async function subirPDFDesdeHtmlIframe(fullHtml, fileName, driveOpts){
     if(json.ok){ toast('☁️ Subido a Drive ✅'); return json; }
     throw new Error(json.error||'subida fallida');
   } finally {
-    if(iframe.parentNode) iframe.parentNode.removeChild(iframe);
+    el.style.cssText = prevCss;
+    if(overlay.parentNode) overlay.parentNode.removeChild(overlay);
   }
 }
 
