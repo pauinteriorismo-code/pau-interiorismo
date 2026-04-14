@@ -7026,8 +7026,9 @@ async function subirFacturaADriveDirecto(){
   }
 }
 
-// Sube el PDF de factura a Drive clonando el #fpdf (el contenedor interno de la factura
-// con todos los estilos inline) a un wrapper visible temporal. No toca el DOM original.
+// Sube el PDF de factura a Drive usando EXACTAMENTE el mismo patrón que subirPDFaDrive
+// (que funciona bien para presupuestos). Usa fac-preview-doc como elemento raíz,
+// lo muestra on-screen con overlay, y deja que html2pdf haga la captura normal.
 async function subirFacturaPdfDrive(fileName, driveOpts){
   if(!driveOpts || !driveOpts.folderId){
     toast('Sin carpeta Drive','error');
@@ -7036,61 +7037,77 @@ async function subirFacturaPdfDrive(fileName, driveOpts){
   if(typeof html2pdf === 'undefined'){
     throw new Error('html2pdf no está cargado');
   }
-  const facEl = document.getElementById('fac-preview-doc');
-  const fpdfEl = facEl ? facEl.querySelector('#fpdf') : null;
-  if(!fpdfEl) throw new Error('No se encontró #fpdf en fac-preview-doc');
+  const el = document.getElementById('fac-preview-doc');
+  if(!el) throw new Error('No se encontró fac-preview-doc');
   toast('☁️ Generando PDF…');
-  // Overlay blanco opaco para tapar al usuario
-  const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;background:#fff;z-index:999998;display:flex;align-items:center;justify-content:center;font-family:Inter,sans-serif;font-size:16px;color:#4a3728;font-weight:700';
-  overlay.textContent = '☁️ Generando PDF para Drive…';
-  document.body.appendChild(overlay);
-  // Wrapper on-screen detrás del overlay (ancho A4 = 794px para que el clon encaje centrado)
-  const wrapper = document.createElement('div');
-  wrapper.style.cssText = 'position:fixed;left:0;top:0;width:794px;background:#fff;z-index:999997;padding:0;margin:0';
-  // Clonar el #fpdf (no tocar el original). El clon tiene todos los estilos inline.
-  const clone = fpdfEl.cloneNode(true);
-  // Aplicar los MISMOS estilos que el onclone de subirPDFaDrive usa para presupuesto
-  // (que ya está probado y funciona correctamente centrado en A4).
-  clone.style.position = 'static';
-  clone.style.left = 'auto';
-  clone.style.top = 'auto';
-  clone.style.display = 'block';
-  clone.style.visibility = 'visible';
-  clone.style.opacity = '1';
-  clone.style.width = '794px';
-  clone.style.maxWidth = '794px';
-  clone.style.margin = '0 auto';
-  clone.style.padding = '12mm 15mm 12mm 15mm';
-  clone.style.boxSizing = 'border-box';
-  clone.style.boxShadow = 'none';
-  wrapper.appendChild(clone);
-  document.body.appendChild(wrapper);
-  // Forzar reflow + 2 frames de pintado
-  clone.getBoundingClientRect();
-  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
-  // Esperar fuentes y imágenes del clon
-  try{ if(document.fonts && document.fonts.ready) await document.fonts.ready; }catch(e){}
-  const imgs = clone.querySelectorAll('img');
-  await Promise.all(Array.from(imgs).map(img => img.complete ? Promise.resolve() : new Promise(r=>{img.onload=img.onerror=r;})));
-  await new Promise(r => setTimeout(r, 300));
+  const opt = {
+    margin:[10,10,15,10],
+    filename:fileName,
+    image:{type:'jpeg',quality:1.0},
+    pagebreak:{mode:['css','legacy'],avoid:['tr','thead','tfoot']},
+    html2canvas:{
+      scale:3,
+      useCORS:true,
+      letterRendering:true,
+      allowTaint:false,
+      imageTimeout:0,
+      onclone:function(doc){
+        doc.querySelectorAll('.no-print,[data-noprint]').forEach(function(el){el.style.display='none';});
+        doc.querySelectorAll('tr,thead,tfoot').forEach(function(el){
+          el.style.pageBreakInside='avoid';
+          el.style.breakInside='avoid';
+        });
+        doc.querySelectorAll('table').forEach(function(tbl){
+          var thead=tbl.querySelector('thead');
+          if(!thead||!thead.rows.length) return;
+          thead.style.display='table-header-group';
+        });
+        // Contenedor raíz: actúa como envoltura transparente (sin padding propio).
+        // El padding visual lo aporta el #fpdf interno que conserva su diseño original.
+        var docEl=doc.getElementById('fac-preview-doc');
+        if(docEl){
+          docEl.style.position='static';
+          docEl.style.left='auto';
+          docEl.style.top='auto';
+          docEl.style.display='block';
+          docEl.style.visibility='visible';
+          docEl.style.opacity='1';
+          docEl.style.width='794px';
+          docEl.style.maxWidth='794px';
+          docEl.style.margin='0';
+          docEl.style.padding='0';
+          docEl.style.boxSizing='border-box';
+          docEl.style.background='#fff';
+        }
+        // #fpdf: normalizar ancho/padding igual que pf-doc del presupuesto
+        var fpdfEl=doc.getElementById('fpdf');
+        if(fpdfEl){
+          fpdfEl.style.width='794px';
+          fpdfEl.style.maxWidth='794px';
+          fpdfEl.style.margin='0';
+          fpdfEl.style.padding='12mm 15mm 12mm 15mm';
+          fpdfEl.style.boxSizing='border-box';
+          fpdfEl.style.boxShadow='none';
+        }
+      }
+    },
+    jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
+  };
+  // Mostrar on-screen con overlay blanco para que el usuario no vea el flash (igual que subirPDFaDrive)
+  const _prevCss = el.style.cssText;
+  const _needsShow = el.style.display === 'none' || el.offsetWidth === 0 || el.offsetHeight === 0;
+  let _overlay = null;
+  if(_needsShow){
+    el.style.cssText = 'position:fixed;left:0;top:0;width:820px;background:#fff;pointer-events:none';
+    _overlay = document.createElement('div');
+    _overlay.style.cssText = 'position:fixed;inset:0;background:rgba(255,255,255,.98);z-index:999998;display:flex;align-items:center;justify-content:center;font:600 14px system-ui,sans-serif;color:#4a3728';
+    _overlay.textContent = '☁️ Generando PDF para Drive…';
+    document.body.appendChild(_overlay);
+    el.getBoundingClientRect();
+    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+  }
   try{
-    const opt = {
-      margin:[10,10,15,10],
-      filename:fileName,
-      image:{type:'jpeg',quality:1.0},
-      pagebreak:{mode:['css','legacy'],avoid:['tr','thead','tfoot']},
-      html2canvas:{
-        scale:3,
-        useCORS:true,
-        letterRendering:true,
-        allowTaint:false,
-        imageTimeout:0,
-        backgroundColor:'#ffffff'
-      },
-      jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
-    };
-    const base64 = await html2pdf().set(opt).from(clone).output('datauristring');
+    const base64 = await html2pdf().set(opt).from(el).output('datauristring');
     const res = await fetch(DRIVE_SCRIPT_URL, {
       method:'POST', headers:{'Content-Type':'text/plain'},
       body:JSON.stringify({
@@ -7105,8 +7122,10 @@ async function subirFacturaPdfDrive(fileName, driveOpts){
     if(json.ok){ toast('☁️ Subido a Drive ✅'); return json; }
     throw new Error(json.error||'subida fallida');
   } finally {
-    if(wrapper.parentNode) wrapper.parentNode.removeChild(wrapper);
-    if(overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    if(_needsShow){
+      el.style.cssText = _prevCss;
+      if(_overlay && _overlay.parentNode) _overlay.parentNode.removeChild(_overlay);
+    }
   }
 }
 
