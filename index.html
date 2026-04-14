@@ -6969,13 +6969,8 @@ if('serviceWorker' in navigator){
   if(driveOpts && driveOpts.folderId){
     const _fi=driveOpts.folderId, _sc=driveOpts.subCarpeta||'', _nom=(filename||titulo||'documento')+'.pdf';
     const _extras={tipoDoc:driveOpts.tipoDoc||null, proveedor:driveOpts.proveedor||null};
-    // Inyectar html2pdf.js en el popup para capturar su propio #vp-doc (que SÍ es visible y está estilado)
+    const _srcEl = doc;
     setTimeout(function(){
-      try{
-        const sc=w.document.createElement('script');
-        sc.src='https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-        w.document.head.appendChild(sc);
-      }catch(e){ console.warn('No se pudo inyectar html2pdf en el popup:',e); }
       const tb=w.document.querySelector('.toolbar'), pb=w.document.querySelector('.btn-print');
       if(tb&&pb){
         const btn=w.document.createElement('button');
@@ -6984,40 +6979,15 @@ if('serviceWorker' in navigator){
         btn.onclick=async function(){
           btn.disabled=true; btn.textContent='Subiendo...';
           try{
-            // Esperar a que html2pdf esté disponible en el popup
-            for(let i=0; i<50 && !w.html2pdf; i++) await new Promise(r=>setTimeout(r,100));
-            if(!w.html2pdf) throw new Error('html2pdf no cargó en el popup');
-            const vpDoc=w.document.getElementById('vp-doc');
-            if(!vpDoc) throw new Error('#vp-doc no encontrado en el popup');
-            // Generar PDF en el popup (elemento VISIBLE)
-            const opt={
-              margin:[10,10,15,10],
-              filename:_nom,
-              image:{type:'jpeg',quality:1.0},
-              pagebreak:{mode:['css','legacy'],avoid:['tr','thead','tfoot','.cap-row','.capitulo-row']},
-              html2canvas:{scale:3,useCORS:true,letterRendering:true,allowTaint:false,imageTimeout:0,
-                onclone:function(cdoc){
-                  cdoc.querySelectorAll('.no-print,[data-noprint],.toolbar').forEach(function(el){el.style.display='none';});
-                  cdoc.querySelectorAll('tr,thead,tfoot').forEach(function(el){el.style.pageBreakInside='avoid';el.style.breakInside='avoid';});
-                  var d=cdoc.getElementById('vp-doc');
-                  if(d){ d.style.width='794px'; d.style.maxWidth='794px'; d.style.padding='12mm 15mm 12mm 15mm'; d.style.boxSizing='border-box'; d.style.boxShadow='none'; }
-                }
-              },
-              jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
-            };
-            const base64=await w.html2pdf().set(opt).from(vpDoc).output('datauristring');
-            // Subir desde el padre
-            const res=await fetch(DRIVE_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
-              body:JSON.stringify({action:'uploadFile',fileData:base64,fileName:_nom,mimeType:'application/pdf',folderId:_fi,subCarpeta:_sc||null,tipoDoc:_extras.tipoDoc,proveedor:_extras.proveedor})});
-            const json=await res.json().catch(()=>({}));
-            if(json.ok){
-              btn.textContent='✅ Subido';
-              try{ toast('☁️ Subido a Drive ✅'); }catch(e){}
+            // Si es la factura y tenemos el HTML completo guardado, usar el enfoque iframe (el más fiable)
+            if(_srcEl && _srcEl.id === 'fac-preview-doc' && window._facturaFullHtml){
+              await subirPDFDesdeHtmlIframe(window._facturaFullHtml, _nom, {folderId:_fi, subCarpeta:_sc, tipoDoc:_extras.tipoDoc, proveedor:_extras.proveedor});
             } else {
-              throw new Error(json.error||'subida fallida');
+              await subirPDFaDrive(_srcEl, _nom, null, _sc, _fi, _extras);
             }
+            btn.textContent='✅ Subido';
           }catch(err){
-            console.error('Error Drive (popup):',err);
+            console.error('Error Drive:',err);
             btn.textContent='☁️ Drive'; btn.disabled=false;
             try{ toast('Error Drive: '+err.message,'error'); }catch(e){ alert('Error Drive: '+err.message); }
           }
@@ -7025,6 +6995,79 @@ if('serviceWorker' in navigator){
         pb.after(btn);
       }
     },400);
+  }
+}
+
+// Sube un PDF a Drive renderizando el HTML completo dentro de un iframe visible
+// (técnica más fiable: el iframe tiene su propio documento con <head><style> completo,
+//  garantizando layout correcto y renderizado sin problemas).
+async function subirPDFDesdeHtmlIframe(fullHtml, fileName, driveOpts){
+  if(!driveOpts || !driveOpts.folderId){
+    toast('Sin carpeta Drive','error');
+    throw new Error('sin-folder');
+  }
+  toast('☁️ Generando PDF…');
+  // Crear iframe fuera de vista pero con dimensiones reales
+  const iframe = document.createElement('iframe');
+  iframe.style.cssText = 'position:fixed;left:0;top:0;width:820px;height:1200px;border:0;z-index:-9999;background:#fff;pointer-events:none;opacity:0.01';
+  document.body.appendChild(iframe);
+  try{
+    // Escribir HTML en el iframe (mismo origen: accesible)
+    const idoc = iframe.contentDocument || iframe.contentWindow.document;
+    // Eliminar la toolbar del HTML para que no aparezca en el PDF
+    const htmlSinToolbar = fullHtml.replace(/<div class="toolbar"[\s\S]*?<\/div>\s*/i, '');
+    idoc.open();
+    idoc.write(htmlSinToolbar);
+    idoc.close();
+    // Esperar al load + fuentes + imágenes
+    await new Promise((resolve) => {
+      if(idoc.readyState === 'complete') resolve();
+      else iframe.addEventListener('load', resolve, {once:true});
+    });
+    // Esperar fuentes
+    try{ if(idoc.fonts && idoc.fonts.ready) await idoc.fonts.ready; }catch(e){}
+    // Esperar imágenes
+    const imgs = idoc.querySelectorAll('img');
+    await Promise.all(Array.from(imgs).map(img => img.complete ? Promise.resolve() : new Promise(r=>{img.onload=img.onerror=r;})));
+    // Frame extra para que el layout se asiente
+    await new Promise(r => setTimeout(r, 300));
+    // Capturar el #fpdf (el contenedor principal de la factura) o el body entero
+    const target = idoc.getElementById('fpdf') || idoc.body;
+    if(!target) throw new Error('No se encontró contenido en el iframe');
+    // Generar PDF con parent's html2pdf (el iframe es same-origin, elementos accesibles)
+    const opt = {
+      margin:[10,10,15,10],
+      filename:fileName,
+      image:{type:'jpeg',quality:1.0},
+      pagebreak:{mode:['css','legacy'],avoid:['tr','thead','tfoot']},
+      html2canvas:{
+        scale:2,
+        useCORS:true,
+        letterRendering:true,
+        allowTaint:true,
+        imageTimeout:0,
+        windowWidth:820,
+        backgroundColor:'#ffffff'
+      },
+      jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
+    };
+    const base64 = await html2pdf().set(opt).from(target).output('datauristring');
+    // Subir
+    const res = await fetch(DRIVE_SCRIPT_URL, {
+      method:'POST', headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify({
+        action:'uploadFile', fileData:base64, fileName, mimeType:'application/pdf',
+        folderId:driveOpts.folderId,
+        subCarpeta:driveOpts.subCarpeta||null,
+        tipoDoc:driveOpts.tipoDoc||null,
+        proveedor:driveOpts.proveedor||null
+      })
+    });
+    const json = await res.json().catch(()=>({}));
+    if(json.ok){ toast('☁️ Subido a Drive ✅'); return json; }
+    throw new Error(json.error||'subida fallida');
+  } finally {
+    if(iframe.parentNode) iframe.parentNode.removeChild(iframe);
   }
 }
 
@@ -19875,6 +19918,8 @@ function previsualizarFactura(opts){
   // Remove toolbar (abrirVistaPrevia has its own)
   const _tb = facDocEl.querySelector('.toolbar');
   if(_tb) _tb.remove();
+  // Guardamos el HTML completo (con <head><style>) para el botón Drive (enfoque iframe, fiable)
+  window._facturaFullHtml = html;
   const _fn = d.num ? 'Factura_' + d.num.replace(/[^a-zA-Z0-9_-]/g,'_') + '_' + _safeNombre(d.contra||'') + '_PAU' : 'Factura';
   const _proyDrive = document.getElementById('f-proyecto')?.value || '';
   const _folderId = _proyDrive ? _driveFolderId(_proyDrive) : null;
