@@ -1070,6 +1070,9 @@
                     <span class="topbar-title">💶 Control de cobros</span>
                     <span class="topbar-sub">Comparador de presupuestos · Liquidacion de cobros</span>
                 </div>
+                <div style="margin-left:auto">
+                    <button onclick="clearSavedState()" title="Borrar trabajo guardado y empezar de cero" style="background:#fff;border:1px solid #ddd;padding:6px 12px;border-radius:6px;font-size:11px;cursor:pointer;color:#666">🗑 Limpiar</button>
+                </div>
             </div>
 
             <!-- TABS -->
@@ -1197,7 +1200,7 @@
                                     <div style="font-size: 11px; color: var(--soft); margin-bottom: 6px;">
                                         Nombre del cliente o referencia tal como aparece en los movimientos bancarios
                                     </div>
-                                    <input type="text" id="liq-nombre" placeholder="Ej: Antonio Martinez / PRY-028" style="width: 100%; font-size: 12px;">
+                                    <input type="text" id="liq-nombre" placeholder="Ej: Antonio Martinez / PRY-028" style="width: 100%; font-size: 12px;" onchange="saveState()" oninput="saveState()">
                                 </div>
                             </div>
 
@@ -1257,6 +1260,8 @@
             } catch (e) { console.warn('No se pudo cargar API key:', e); }
         }
         loadApiKey();
+        // Restaurar estado guardado al cargar la página
+        window.addEventListener('DOMContentLoaded', () => { try { loadState(); } catch(e) { console.warn(e); } });
 
         // Llamar directamente a Anthropic desde el navegador (sin proxy Vercel)
         // Con reintentos automaticos para 529 (Overloaded)
@@ -1336,6 +1341,76 @@
         function switchTab(n) {
             document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === n));
             document.querySelectorAll('.page').forEach((p, i) => p.classList.toggle('active', i === n));
+            try { localStorage.setItem('cc_activeTab', String(n)); } catch(e) {}
+        }
+
+        // ══════════════════════════════════════════════════
+        // PERSISTENCIA DE ESTADO (localStorage)
+        // ══════════════════════════════════════════════════
+        const CC_STORAGE_KEY = 'cc_state_v1';
+
+        function saveState() {
+            try {
+                const state = {
+                    presupuestos: (typeof presupuestos !== 'undefined') ? presupuestos : [],
+                    presIdCounter: (typeof presIdCounter !== 'undefined') ? presIdCounter : 0,
+                    lineIdCounter: (typeof lineIdCounter !== 'undefined') ? lineIdCounter : 0,
+                    pagosEfectivo: (typeof pagosEfectivo !== 'undefined') ? pagosEfectivo : [],
+                    peIdCounter: (typeof peIdCounter !== 'undefined') ? peIdCounter : 0,
+                    liqData: window._liqData || null,
+                    liqNombre: document.getElementById('liq-nombre')?.value || '',
+                    filePresName: (typeof filePres !== 'undefined' && filePres) ? filePres.name : '',
+                    fileExtName: (typeof fileExt !== 'undefined' && fileExt) ? fileExt.name : '',
+                    savedAt: Date.now()
+                };
+                localStorage.setItem(CC_STORAGE_KEY, JSON.stringify(state));
+            } catch(e) { console.warn('No se pudo guardar estado:', e); }
+        }
+
+        function loadState() {
+            try {
+                const raw = localStorage.getItem(CC_STORAGE_KEY);
+                if (!raw) return;
+                const state = JSON.parse(raw);
+                if (Array.isArray(state.presupuestos)) {
+                    presupuestos = state.presupuestos;
+                    presIdCounter = state.presIdCounter || 0;
+                    lineIdCounter = state.lineIdCounter || 0;
+                    if (typeof renderPresGrid === 'function') renderPresGrid(true);
+                    if (presupuestos.length >= 2 && typeof compararTodo === 'function') compararTodo();
+                }
+                if (Array.isArray(state.pagosEfectivo)) {
+                    pagosEfectivo = state.pagosEfectivo;
+                    peIdCounter = state.peIdCounter || 0;
+                    if (typeof renderEfectivo === 'function') renderEfectivo(true);
+                }
+                if (state.liqData) {
+                    window._liqData = state.liqData;
+                    if (typeof renderLiquidacionResult === 'function') renderLiquidacionResult(state.liqData, true);
+                }
+                if (state.liqNombre) {
+                    const el = document.getElementById('liq-nombre');
+                    if (el) el.value = state.liqNombre;
+                }
+                // Mostrar nombres de archivos previos (aunque los File objects ya no existan)
+                if (state.filePresName) {
+                    const lbl = document.getElementById('lbl-pres');
+                    if (lbl) { lbl.style.display = 'block'; lbl.textContent = state.filePresName + ' (recárgalo para analizar)'; }
+                }
+                if (state.fileExtName) {
+                    const lbl = document.getElementById('lbl-ext');
+                    if (lbl) { lbl.style.display = 'block'; lbl.textContent = state.fileExtName + ' (recárgalo para analizar)'; }
+                }
+                // Restaurar pestaña activa
+                const tab = localStorage.getItem('cc_activeTab');
+                if (tab !== null) switchTab(parseInt(tab, 10) || 0);
+            } catch(e) { console.warn('No se pudo cargar estado:', e); }
+        }
+
+        function clearSavedState() {
+            if (!confirm('¿Borrar todo el trabajo guardado (presupuestos, liquidación, pagos)?')) return;
+            try { localStorage.removeItem(CC_STORAGE_KEY); localStorage.removeItem('cc_activeTab'); } catch(e) {}
+            location.reload();
         }
 
         // ══════════════════════════════════════════════════
@@ -1369,16 +1444,18 @@
             compararTodo();
         }
 
-        function renderPresGrid() {
+        function renderPresGrid(skipSave) {
             const grid = document.getElementById('pres-grid');
             if (!presupuestos.length) {
                 grid.innerHTML = `<div style="padding:40px;text-align:center;color:var(--soft);width:100%">
                     <div style="font-size:32px;margin-bottom:8px">📋</div>
                     <div style="font-size:13px">Pulsa <strong>+ Anadir presupuesto</strong> para empezar</div>
                 </div>`;
+                if (!skipSave) saveState();
                 return;
             }
             grid.innerHTML = presupuestos.map(p => renderPresCard(p)).join('');
+            if (!skipSave) saveState();
         }
 
         function renderPresCard(p) {
@@ -1806,19 +1883,21 @@
             renderEfectivo();
         }
 
-        function renderEfectivo() {
+        function renderEfectivo(skipSave) {
             const el = document.getElementById('efectivo-list');
             if (!pagosEfectivo.length) {
                 el.innerHTML = `<div style="text-align:center;padding:16px;color:var(--soft);font-size:11px">Sin pagos en efectivo anadidos</div>`;
+                if (!skipSave) saveState();
                 return;
             }
             el.innerHTML = pagosEfectivo.map(pe => `
                 <div style="display:grid;grid-template-columns:100px 1fr 100px 28px;gap:5px;margin-bottom:6px;align-items:center">
-                    <input type="date" value="${pe.fecha}" style="font-size:11px" onchange="pagosEfectivo.find(x=>x.id===${pe.id}).fecha=this.value">
-                    <input type="text" value="${pe.concepto}" style="font-size:11px" onchange="pagosEfectivo.find(x=>x.id===${pe.id}).concepto=this.value">
-                    <input type="number" value="${pe.importe || ''}" placeholder="0.00" step="0.01" style="font-size:11px;text-align:right" onchange="pagosEfectivo.find(x=>x.id===${pe.id}).importe=parseFloat(this.value)||0">
+                    <input type="date" value="${pe.fecha}" style="font-size:11px" onchange="pagosEfectivo.find(x=>x.id===${pe.id}).fecha=this.value;saveState()">
+                    <input type="text" value="${pe.concepto}" style="font-size:11px" onchange="pagosEfectivo.find(x=>x.id===${pe.id}).concepto=this.value;saveState()">
+                    <input type="number" value="${pe.importe || ''}" placeholder="0.00" step="0.01" style="font-size:11px;text-align:right" onchange="pagosEfectivo.find(x=>x.id===${pe.id}).importe=parseFloat(this.value)||0;saveState()">
                     <button class="delbtn" style="font-size:16px" onclick="pagosEfectivo=pagosEfectivo.filter(x=>x.id!==${pe.id});renderEfectivo()">x</button>
                 </div>`).join('');
+            if (!skipSave) saveState();
         }
 
         async function analizarLiquidacion() {
@@ -1860,7 +1939,7 @@
             }
         }
 
-        function renderLiquidacionResult(d) {
+        function renderLiquidacionResult(d, skipSave) {
             const body = document.getElementById('liq-result-body');
             const pend = d.saldo_pendiente || 0;
             const pendColor = pend < 0.01 ? 'var(--green)' : pend > 0 ? 'var(--red)' : 'var(--text)';
@@ -1920,6 +1999,7 @@
                     <button class="btn btn-copper btn-sm" onclick="generarPDFLiquidacion()">📄 Generar PDF</button>
                 </div>`;
             window._liqData = d;
+            if (!skipSave) saveState();
         }
 
         function exportarLiquidacion() {
