@@ -1068,7 +1068,7 @@
             <div class="topbar">
                 <div style="display: flex; align-items: center;">
                     <span class="topbar-title">💶 Control de cobros</span>
-                    <span class="topbar-sub">Comparador de presupuestos · Liquidacion de cobros</span>
+                    <span class="topbar-sub">Comparador presupuestos · Pendiente certificar · Conciliación bancaria (IA)</span>
                 </div>
                 <div style="margin-left:auto">
                     <button onclick="clearSavedState()" title="Borrar trabajo guardado y empezar de cero" style="background:#fff;border:1px solid #ddd;padding:6px 12px;border-radius:6px;font-size:11px;cursor:pointer;color:#666">🗑 Limpiar</button>
@@ -1078,7 +1078,8 @@
             <!-- TABS -->
             <div class="tabs">
                 <div class="tab active" onclick="switchTab(0)">📄 Comparador de presupuestos</div>
-                <div class="tab" onclick="switchTab(1)">💶 Liquidacion de cobros</div>
+                <div class="tab" onclick="switchTab(1)">🏗 Pendiente por certificar</div>
+                <div class="tab" onclick="switchTab(2)">🏦 Conciliación bancaria (IA)</div>
             </div>
 
             <!-- CONTENT -->
@@ -1147,95 +1148,100 @@
                     </div>
                 </div>
 
-                <!-- PAGE 2: LIQUIDACION -->
+                <!-- PAGE 2: PENDIENTE POR CERTIFICAR -->
                 <div class="page">
                     <div class="card">
                         <div class="card-head">
-                            <div class="card-title">📄 Presupuesto del cliente</div>
+                            <div class="card-title">🏗 Pendiente por certificar</div>
+                        </div>
+                        <div style="padding:14px;display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:end">
+                            <div>
+                                <label style="display:block;font-size:11px;color:var(--soft);font-weight:700;margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px">Cliente</label>
+                                <select id="pc-cliente" onchange="onPcClienteChange()" style="width:100%;font-size:12px;padding:7px 8px;border:1px solid var(--border);border-radius:4px;background:#fff">
+                                    <option value="">— Selecciona cliente —</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display:block;font-size:11px;color:var(--soft);font-weight:700;margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px">Proyecto</label>
+                                <select id="pc-proyecto" onchange="onPcProyectoChange()" style="width:100%;font-size:12px;padding:7px 8px;border:1px solid var(--border);border-radius:4px;background:#fff">
+                                    <option value="">— Selecciona proyecto —</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-copper btn-sm" onclick="recargarDatosPC()" style="padding:8px 14px;white-space:nowrap">🔄 Actualizar</button>
                         </div>
                     </div>
 
-                    <div class="liq-layout">
-                        <!-- LEFT COLUMN: INPUTS -->
-                        <div>
-                            <div class="card">
-                                <div class="card-head">
-                                    <div class="card-title">📄 Presupuesto del cliente</div>
-                                </div>
-                                <div style="padding: 12px;">
-                                    <div style="font-size: 11px; color: var(--soft); font-weight: 700; margin-bottom: 6px;">
-                                        PDF obligatorio
-                                    </div>
-                                    <div id="zone-pres" class="upload-zone" onclick="document.getElementById('file-pres').click()">
-                                        <span class="uz-ico">📎</span>
-                                        <div class="uz-text">Haz clic para subir el presupuesto en PDF</div>
-                                        <div id="lbl-pres" class="uz-file" style="display: none;"></div>
-                                    </div>
-                                    <input type="file" id="file-pres" accept="application/pdf" style="display: none;" onchange="onFilePres(this)">
-                                </div>
-                            </div>
-
-                            <div class="card">
-                                <div class="card-head">
-                                    <div class="card-title">🏦 Extracto bancario</div>
-                                </div>
-                                <div style="padding: 12px;">
-                                    <div style="font-size: 11px; color: var(--soft); font-weight: 700; margin-bottom: 6px;">
-                                        PDF obligatorio
-                                    </div>
-                                    <div id="zone-ext" class="upload-zone" onclick="document.getElementById('file-ext').click()">
-                                        <span class="uz-ico">📊</span>
-                                        <div class="uz-text">Haz clic para subir el extracto bancario en PDF</div>
-                                        <div id="lbl-ext" class="uz-file" style="display: none;"></div>
-                                    </div>
-                                    <input type="file" id="file-ext" accept="application/pdf" style="display: none;" onchange="onFileExt(this)">
-                                </div>
-                            </div>
-
-                            <div class="card">
-                                <div class="card-head">
-                                    <div class="card-title">🔍 NOMBRE A BUSCAR EN EL EXTRACTO</div>
-                                </div>
-                                <div style="padding: 12px;">
-                                    <div style="font-size: 11px; color: var(--soft); margin-bottom: 6px;">
-                                        Nombre del cliente o referencia tal como aparece en los movimientos bancarios
-                                    </div>
-                                    <input type="text" id="liq-nombre" placeholder="Ej: Antonio Martinez / PRY-028" style="width: 100%; font-size: 12px;" onchange="saveState()" oninput="saveState()">
-                                </div>
-                            </div>
-
-                            <div class="card">
-                                <div class="card-head">
-                                    <div class="card-title">💵 Pagos en efectivo (opcional)</div>
-                                </div>
-                                <div style="padding: 12px;">
-                                    <button class="btn btn-ghost btn-sm" onclick="addPagoEfectivo()">+ Anadir</button>
-                                    <div id="efectivo-list" style="margin-top: 8px;">
-                                        <div id="efectivo-empty" style="text-align: center; padding: 16px; color: var(--soft); font-size: 11px;">
-                                            Sin pagos en efectivo anadidos
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <button class="btn btn-copper" style="width: 100%; margin-top: 12px; padding: 12px; font-size: 13px; justify-content: center;" onclick="analizarLiquidacion()">
-                                🔍 Analizar con IA
-                            </button>
+                    <div id="pc-body">
+                        <div style="padding:40px;text-align:center;color:var(--soft)">
+                            <div style="font-size:48px;margin-bottom:8px">🏗</div>
+                            <div style="font-size:13px">Selecciona un cliente y un proyecto para ver el estado de facturación y cobros</div>
+                            <div style="font-size:11px;margin-top:6px">Todos los importes se muestran <strong>sin IVA</strong></div>
                         </div>
+                    </div>
+                </div>
 
-                        <!-- RIGHT COLUMN: RESULT -->
-                        <div>
-                            <div class="card" style="margin-bottom: 0;">
-                                <div class="card-head">
-                                    <div class="card-title">💶 Liquidacion</div>
-                                </div>
-                                <div id="liq-result-body" style="padding: 16px; text-align: center; color: var(--soft);">
-                                    <div style="font-size: 48px; margin-bottom: 8px;">💶</div>
-                                    <div style="font-size: 13px;">Sube el presupuesto y el extracto bancario<br>para calcular el saldo pendiente</div>
-                                </div>
+                <!-- PAGE 3: CONCILIACIÓN BANCARIA (IA) -->
+                <div class="page">
+                    <div class="card">
+                        <div class="card-head"><div class="card-title">🏦 Conciliación con extracto bancario (IA)</div></div>
+                        <div style="padding:14px;font-size:11px;color:var(--soft);line-height:1.5">
+                            Sube uno o varios PDFs de presupuesto y el extracto bancario. La IA detecta los pagos del cliente en el extracto y calcula el saldo pendiente.
+                            Puedes excluir pagos con un clic, añadir pagos manuales y editar las observaciones antes de generar el PDF.
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div style="padding:14px;display:grid;grid-template-columns:120px 1fr;gap:14px;align-items:center">
+                            <label style="font-size:11px;color:var(--soft);font-weight:700;text-transform:uppercase;letter-spacing:.3px">Logo PDF:</label>
+                            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+                                <button class="btn btn-ghost btn-sm" onclick="document.getElementById('conc-logo-file').click()" id="conc-logo-status">📎 Subir logo</button>
+                                <input type="file" id="conc-logo-file" accept="image/*" style="display:none" onchange="onConcLogoSubir(this)">
+                                <img id="conc-logo-preview" style="height:36px;max-width:140px;display:none;border-radius:4px;border:1px solid var(--border);background:#fff;padding:2px" />
+                                <span id="conc-logo-name" style="font-size:11px;color:var(--soft)"></span>
+                                <button class="btn btn-ghost btn-sm" onclick="eliminarConcLogo()" id="conc-logo-del" style="display:none">🗑 Eliminar logo</button>
                             </div>
                         </div>
                     </div>
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+                        <div class="card">
+                            <div class="card-head"><div class="card-title">📎 Presupuesto(s) PDF — puedes subir varios</div></div>
+                            <div style="padding:12px">
+                                <div id="conc-zone-pres" class="upload-zone" onclick="document.getElementById('conc-file-pres').click()">
+                                    <span class="uz-ico">📎</span>
+                                    <div class="uz-text">Haz clic para subir uno o varios PDFs de presupuesto</div>
+                                </div>
+                                <input type="file" id="conc-file-pres" accept="application/pdf" multiple style="display:none" onchange="onConcFilePres(this)">
+                                <div id="conc-pres-list" style="margin-top:10px"></div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-head"><div class="card-title">🏦 Extracto bancario PDF</div></div>
+                            <div style="padding:12px">
+                                <div id="conc-zone-ext" class="upload-zone" onclick="document.getElementById('conc-file-ext').click()">
+                                    <span class="uz-ico">📊</span>
+                                    <div class="uz-text">Haz clic para subir el extracto bancario en PDF</div>
+                                </div>
+                                <input type="file" id="conc-file-ext" accept="application/pdf" style="display:none" onchange="onConcFileExt(this)">
+                                <div id="conc-ext-name" style="margin-top:10px;font-size:11px"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div style="padding:14px">
+                            <label style="display:block;font-size:11px;color:var(--soft);font-weight:700;margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px">Nombre del cliente / referencia a buscar en el extracto</label>
+                            <input type="text" id="conc-nombre" placeholder="Ej: Ana María Palau Sastre / PRY-024" style="width:100%;font-size:12px;padding:8px;border:1px solid var(--border);border-radius:4px" oninput="saveConcState()">
+                            <label style="display:block;font-size:11px;color:var(--soft);font-weight:700;margin:14px 0 4px;text-transform:uppercase;letter-spacing:.3px">Instrucciones adicionales para la IA (opcional)</label>
+                            <textarea id="conc-instrucciones" rows="2" placeholder="Ej: No contabilices el ingreso de 3.200 € del 15/03 porque es de otro proyecto. / Hay dos presupuestos, suma sus totales." style="width:100%;font-size:12px;padding:8px;border:1px solid var(--border);border-radius:4px;font-family:var(--sans);resize:vertical" oninput="saveConcState()"></textarea>
+                            <div style="margin-top:12px;display:flex;gap:8px">
+                                <button class="btn btn-copper" onclick="analizarConciliacion()" style="padding:10px 20px;font-size:13px">🔍 Analizar documentos</button>
+                                <button class="btn btn-ghost btn-sm" onclick="limpiarConciliacion()">🗑 Limpiar</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="conc-result"></div>
                 </div>
 
             </div>
@@ -1355,12 +1361,6 @@
                     presupuestos: (typeof presupuestos !== 'undefined') ? presupuestos : [],
                     presIdCounter: (typeof presIdCounter !== 'undefined') ? presIdCounter : 0,
                     lineIdCounter: (typeof lineIdCounter !== 'undefined') ? lineIdCounter : 0,
-                    pagosEfectivo: (typeof pagosEfectivo !== 'undefined') ? pagosEfectivo : [],
-                    peIdCounter: (typeof peIdCounter !== 'undefined') ? peIdCounter : 0,
-                    liqData: window._liqData || null,
-                    liqNombre: document.getElementById('liq-nombre')?.value || '',
-                    filePresName: (typeof filePres !== 'undefined' && filePres) ? filePres.name : '',
-                    fileExtName: (typeof fileExt !== 'undefined' && fileExt) ? fileExt.name : '',
                     savedAt: Date.now()
                 };
                 localStorage.setItem(CC_STORAGE_KEY, JSON.stringify(state));
@@ -1379,28 +1379,6 @@
                     if (typeof renderPresGrid === 'function') renderPresGrid(true);
                     if (presupuestos.length >= 2 && typeof compararTodo === 'function') compararTodo();
                 }
-                if (Array.isArray(state.pagosEfectivo)) {
-                    pagosEfectivo = state.pagosEfectivo;
-                    peIdCounter = state.peIdCounter || 0;
-                    if (typeof renderEfectivo === 'function') renderEfectivo(true);
-                }
-                if (state.liqData) {
-                    window._liqData = state.liqData;
-                    if (typeof renderLiquidacionResult === 'function') renderLiquidacionResult(state.liqData, true);
-                }
-                if (state.liqNombre) {
-                    const el = document.getElementById('liq-nombre');
-                    if (el) el.value = state.liqNombre;
-                }
-                // Mostrar nombres de archivos previos (aunque los File objects ya no existan)
-                if (state.filePresName) {
-                    const lbl = document.getElementById('lbl-pres');
-                    if (lbl) { lbl.style.display = 'block'; lbl.textContent = state.filePresName + ' (recárgalo para analizar)'; }
-                }
-                if (state.fileExtName) {
-                    const lbl = document.getElementById('lbl-ext');
-                    if (lbl) { lbl.style.display = 'block'; lbl.textContent = state.fileExtName + ' (recárgalo para analizar)'; }
-                }
                 // Restaurar pestaña activa
                 const tab = localStorage.getItem('cc_activeTab');
                 if (tab !== null) switchTab(parseInt(tab, 10) || 0);
@@ -1408,8 +1386,12 @@
         }
 
         function clearSavedState() {
-            if (!confirm('¿Borrar todo el trabajo guardado (presupuestos, liquidación, pagos)?')) return;
-            try { localStorage.removeItem(CC_STORAGE_KEY); localStorage.removeItem('cc_activeTab'); } catch(e) {}
+            if (!confirm('¿Borrar todo el trabajo guardado (presupuestos comparados y selección de proyecto)?')) return;
+            try {
+                localStorage.removeItem(CC_STORAGE_KEY);
+                localStorage.removeItem('cc_activeTab');
+                localStorage.removeItem('cc_pc_sel');
+            } catch(e) {}
             location.reload();
         }
 
@@ -1641,6 +1623,9 @@
                 if (!Array.isArray(lines) || !lines.length) throw new Error('No se encontraron lineas en el PDF');
                 const p = presupuestos.find(x => x.id === presId);
                 if (!p) throw new Error('Presupuesto no encontrado');
+                // Asignar el nombre del PDF (sin extensión) como nombre del presupuesto
+                const nombreArchivo = (file.name || '').replace(/\.pdf$/i, '').trim();
+                if (nombreArchivo) p.name = nombreArchivo;
                 lines.forEach(l => {
                     if (l.desc) p.lines.push({
                         id: ++lineIdCounter,
@@ -1846,232 +1831,892 @@
         }
 
         // ══════════════════════════════════════════════════
-        // TAB 2 — LIQUIDACION
+        // TAB 2 — PENDIENTE POR CERTIFICAR (datos Supabase)
         // ══════════════════════════════════════════════════
 
-        let filePres = null, fileExt = null;
-        let pagosEfectivo = [];
-        let peIdCounter = 0;
+        let _pcClientes = [];
+        let _pcProyectos = [];
+        let _pcCurrentData = null;
 
-        function onFilePres(input) {
-            filePres = input.files[0] || null;
-            const zone = document.getElementById('zone-pres');
-            const lbl = document.getElementById('lbl-pres');
-            if (filePres) {
-                zone.classList.add('has-file');
-                lbl.style.display = 'block';
-                lbl.textContent = filePres.name;
-                zone.querySelector('.uz-text').textContent = '\u2713 Archivo cargado';
+        // Helper Supabase GET
+        async function sbFetch(path) {
+            const res = await fetch(`${SB_URL}/rest/v1/${path}`, {
+                headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
+            });
+            if (!res.ok) throw new Error('Supabase ' + res.status + ' · ' + path);
+            return res.json();
+        }
+
+        async function loadClientesProyectosPC() {
+            try {
+                const [cli, proy] = await Promise.all([
+                    sbFetch('clientes?order=nombre.asc'),
+                    sbFetch('proyectos?order=proyecto_id.desc')
+                ]);
+                _pcClientes = cli || [];
+                _pcProyectos = proy || [];
+                const sel = document.getElementById('pc-cliente');
+                if (!sel) return;
+                sel.innerHTML = '<option value="">— Selecciona cliente —</option>' +
+                    _pcClientes.map(c => {
+                        const id = c.cliente_id || c.id;
+                        const nombre = c.nombre || c.razon_social || id;
+                        return `<option value="${id}">${nombre}</option>`;
+                    }).join('');
+                // Restaurar selección guardada
+                try {
+                    const s = JSON.parse(localStorage.getItem('cc_pc_sel') || '{}');
+                    if (s.cliente) {
+                        sel.value = s.cliente;
+                        onPcClienteChange();
+                        if (s.proyecto) {
+                            const selP = document.getElementById('pc-proyecto');
+                            if (selP) {
+                                selP.value = s.proyecto;
+                                onPcProyectoChange();
+                            }
+                        }
+                    }
+                } catch (e) {}
+            } catch (e) {
+                console.warn('Error cargando clientes/proyectos:', e);
+                const body = document.getElementById('pc-body');
+                if (body) body.innerHTML = `<div class="error-box">❌ No se pudieron cargar clientes/proyectos: ${e.message}</div>`;
             }
         }
 
-        function onFileExt(input) {
-            fileExt = input.files[0] || null;
-            const zone = document.getElementById('zone-ext');
-            const lbl = document.getElementById('lbl-ext');
-            if (fileExt) {
-                zone.classList.add('has-file');
-                lbl.style.display = 'block';
-                lbl.textContent = fileExt.name;
-                zone.querySelector('.uz-text').textContent = '\u2713 Archivo cargado';
-            }
-        }
-
-        function addPagoEfectivo() {
-            const id = ++peIdCounter;
-            pagosEfectivo.push({ id, fecha: '', concepto: 'Pago en efectivo', importe: 0 });
-            renderEfectivo();
-        }
-
-        function renderEfectivo(skipSave) {
-            const el = document.getElementById('efectivo-list');
-            if (!pagosEfectivo.length) {
-                el.innerHTML = `<div style="text-align:center;padding:16px;color:var(--soft);font-size:11px">Sin pagos en efectivo anadidos</div>`;
-                if (!skipSave) saveState();
+        function onPcClienteChange() {
+            const cliId = document.getElementById('pc-cliente').value;
+            const sel = document.getElementById('pc-proyecto');
+            if (!cliId) {
+                sel.innerHTML = '<option value="">— Selecciona proyecto —</option>';
+                savePcSel();
                 return;
             }
-            el.innerHTML = pagosEfectivo.map(pe => `
-                <div style="display:grid;grid-template-columns:100px 1fr 100px 28px;gap:5px;margin-bottom:6px;align-items:center">
-                    <input type="date" value="${pe.fecha}" style="font-size:11px" onchange="pagosEfectivo.find(x=>x.id===${pe.id}).fecha=this.value;saveState()">
-                    <input type="text" value="${pe.concepto}" style="font-size:11px" onchange="pagosEfectivo.find(x=>x.id===${pe.id}).concepto=this.value;saveState()">
-                    <input type="number" value="${pe.importe || ''}" placeholder="0.00" step="0.01" style="font-size:11px;text-align:right" onchange="pagosEfectivo.find(x=>x.id===${pe.id}).importe=parseFloat(this.value)||0;saveState()">
-                    <button class="delbtn" style="font-size:16px" onclick="pagosEfectivo=pagosEfectivo.filter(x=>x.id!==${pe.id});renderEfectivo()">x</button>
-                </div>`).join('');
-            if (!skipSave) saveState();
+            const filtrados = _pcProyectos.filter(p => String(p.cliente_id) === String(cliId));
+            filtrados.sort((a, b) => (a.proyecto_id || '').localeCompare(b.proyecto_id || '', 'es', { numeric: true }));
+            sel.innerHTML = '<option value="">— Selecciona proyecto —</option>' +
+                filtrados.map(p => `<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre || ''}</option>`).join('');
+            savePcSel();
         }
 
-        async function analizarLiquidacion() {
-            if (!filePres) { alert('Sube el presupuesto en PDF'); return; }
-            if (!fileExt) { alert('Sube el extracto bancario en PDF'); return; }
-            const nombre = (document.getElementById('liq-nombre').value || '').trim();
-            if (!nombre) { alert('Escribe el nombre a buscar en el extracto'); return; }
-            const bodyEl = document.getElementById('liq-result-body');
-            bodyEl.innerHTML = `<div class="loading-wrap"><div class="spinner"></div><span>Analizando PDFs con IA\u2026</span></div>`;
-            try {
-                const totalEfectivo = pagosEfectivo.reduce((s, p) => s + (p.importe || 0), 0);
-                const efectivoDesc = pagosEfectivo.length
-                    ? `\n\nPAGOS EN EFECTIVO YA REGISTRADOS:\n${pagosEfectivo.map(p => `- ${p.fecha || 's/f'}: ${p.concepto} \u2192 ${p.importe}\u20AC`).join('\n')}\nTotal efectivo: ${totalEfectivo}\u20AC`
-                    : '';
-
-                const [b64pres, b64ext] = await Promise.all([toBase64(filePres), toBase64(fileExt)]);
-                const data = await callClaude({
-                    model: 'claude-haiku-4-5-20251001',
-                    max_tokens: 2000,
-                    system: `Eres un asistente financiero para PAU Interiorismo S.L., empresa espanola de construccion e interiorismo en Alcasser (Valencia). Analiza los documentos y devuelve SOLO un objeto JSON valido, sin texto adicional ni markdown. Campos exactos: { "cliente": "nombre completo del cliente", "referencia": "numero o referencia del presupuesto", "fecha_presupuesto": "dd/mm/aaaa o null", "total_presupuesto": numero, "pagos_banco": [{"fecha":"dd/mm/aaaa","concepto":"descripcion del movimiento","importe":numero}], "total_banco": numero, "total_efectivo": numero, "total_pagado": numero, "saldo_pendiente": numero, "detalle": "parrafo explicativo de la situacion de cobro" }`,
-                    messages: [{
-                        role: 'user',
-                        content: [
-                            { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: b64pres } },
-                            { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: b64ext } },
-                            { type: 'text', text: `Documento 1: presupuesto del cliente. Documento 2: extracto bancario. Busca en el extracto bancario UNICAMENTE los ingresos/movimientos que correspondan al cliente o referencia: "${nombre}". Ignora cualquier otro movimiento que no sea de este cliente. Extrae: importe total del presupuesto (con IVA si lo incluye), lista de pagos del cliente encontrados en el extracto con fecha, concepto e importe.${efectivoDesc} Total efectivo a sumar al total pagado: ${totalEfectivo}\u20AC (ya registrados manualmente, no busques estos en el extracto). Calcula: total_pagado = total_banco + ${totalEfectivo} (efectivo). Saldo_pendiente = total_presupuesto - total_pagado. Devuelve solo JSON.` }
-                        ]
-                    }]
-                });
-                const rawText = data.content.filter(b => b.type === 'text').map(b => b.text).join('');
-                const clean = rawText.replace(/```json|```/g, '').trim();
-                const json = JSON.parse(clean);
-                renderLiquidacionResult(json);
-            } catch (e) {
-                bodyEl.innerHTML = `<div class="error-box">\u274C Error: ${e.message}</div>
-                    <div style="padding:16px;font-size:11px;color:var(--soft)">
-                        Comprueba que los PDFs son legibles y vuelve a intentarlo.
+        function onPcProyectoChange() {
+            savePcSel();
+            const proyId = document.getElementById('pc-proyecto').value;
+            if (!proyId) {
+                document.getElementById('pc-body').innerHTML = `
+                    <div style="padding:40px;text-align:center;color:var(--soft)">
+                        <div style="font-size:48px;margin-bottom:8px">🏗</div>
+                        <div style="font-size:13px">Selecciona un proyecto para ver el estado de facturación y cobros</div>
                     </div>`;
+                return;
+            }
+            cargarDatosProyectoPC(proyId);
+        }
+
+        function savePcSel() {
+            try {
+                localStorage.setItem('cc_pc_sel', JSON.stringify({
+                    cliente: document.getElementById('pc-cliente')?.value || '',
+                    proyecto: document.getElementById('pc-proyecto')?.value || ''
+                }));
+            } catch (e) {}
+        }
+
+        function recargarDatosPC() {
+            const proyId = document.getElementById('pc-proyecto').value;
+            if (!proyId) { alert('Selecciona un proyecto'); return; }
+            cargarDatosProyectoPC(proyId);
+        }
+
+        async function cargarDatosProyectoPC(proyId) {
+            const body = document.getElementById('pc-body');
+            body.innerHTML = `<div class="loading-wrap"><div class="spinner"></div><span>Cargando datos del proyecto…</span></div>`;
+            try {
+                const enc = encodeURIComponent(proyId);
+                const [proyArr, lineas, facts, entregas] = await Promise.all([
+                    sbFetch(`proyectos?proyecto_id=eq.${enc}`),
+                    sbFetch(`presupuesto_lineas?proyecto_id=eq.${enc}&es_capitulo=eq.false`),
+                    sbFetch(`facturas?proyecto_id=eq.${enc}&tipo_factura=eq.Venta&order=fecha.asc`).catch(() => []),
+                    sbFetch(`entregas_cuenta?proyecto_id=eq.${enc}&order=fecha.asc`).catch(() => [])
+                ]);
+                const proy = proyArr?.[0] || { proyecto_id: proyId };
+                const cli = _pcClientes.find(c => String(c.cliente_id || c.id) === String(proy.cliente_id)) || {};
+                _pcCurrentData = { proy, cli, lineas: lineas || [], facts: facts || [], entregas: entregas || [] };
+                renderPendientePorCertificar(_pcCurrentData);
+            } catch (e) {
+                body.innerHTML = `<div class="error-box">❌ Error cargando datos: ${e.message}</div>`;
             }
         }
 
-        function renderLiquidacionResult(d, skipSave) {
-            const body = document.getElementById('liq-result-body');
-            const pend = d.saldo_pendiente || 0;
-            const pendColor = pend < 0.01 ? 'var(--green)' : pend > 0 ? 'var(--red)' : 'var(--text)';
-            const pendLabel = pend < 0.01 ? '\u2705 LIQUIDADO' : pend > 0 ? 'PENDIENTE DE COBRO' : 'SALDADO';
-            const pagos = d.pagos_banco || [];
-            const totalEf = d.total_efectivo || 0;
-            const efectivoRows = pagosEfectivo.filter(p => p.importe > 0).map(p => `
-                <div class="pago-item">
-                    <span class="pi-date">${p.fecha || '\u2014'}</span>
-                    <span class="pi-concept">${p.concepto}</span>
-                    <span class="pi-amount">${fmt(p.importe)}</span>
-                    <span class="pi-type pi-cash">💵 Efectivo</span>
-                </div>`).join('');
-            body.innerHTML = `
-                <!-- KPIs -->
-                <div class="liq-kpis">
-                    <div class="liq-kpi" style="border-top:3px solid var(--navy)">
-                        <div class="liq-kpi-label">Total presupuesto</div>
-                        <div class="liq-kpi-val" style="color:var(--navy)">${fmt(d.total_presupuesto)}</div>
-                        <div style="font-size:10px;color:var(--soft);margin-top:4px">${d.referencia || ''}</div>
-                    </div>
-                    <div class="liq-kpi" style="border-top:3px solid var(--green)">
-                        <div class="liq-kpi-label">Total pagado</div>
-                        <div class="liq-kpi-val" style="color:var(--green)">${fmt(d.total_pagado)}</div>
-                        <div style="font-size:10px;color:var(--soft);margin-top:4px">${pagos.length} transferencias${totalEf > 0 ? ` + ${fmt(totalEf)} efectivo` : ''}</div>
-                    </div>
-                    <div class="liq-kpi" style="border-top:3px solid ${pendColor}">
-                        <div class="liq-kpi-label">${pendLabel}</div>
-                        <div class="liq-kpi-val" style="color:${pendColor}">${fmt(Math.abs(pend))}</div>
-                        <div style="font-size:10px;color:var(--soft);margin-top:4px">${d.cliente || ''}</div>
-                    </div>
-                </div>
-                <!-- Pagos -->
-                <div class="pagos-list">
-                    <h3>Pagos recibidos</h3>
-                    ${pagos.map(p => `
-                        <div class="pago-item">
-                            <span class="pi-date">${p.fecha || '\u2014'}</span>
-                            <span class="pi-concept">${p.concepto || '\u2014'}</span>
-                            <span class="pi-amount">${fmt(p.importe)}</span>
-                            <span class="pi-type pi-bank">🏦 Banco</span>
-                        </div>`).join('')}
-                    ${efectivoRows}
-                    ${!pagos.length && !efectivoRows ? '<div style="color:var(--soft);font-size:12px;padding:8px">No se encontraron pagos</div>' : ''}
-                    <div style="display:flex;justify-content:flex-end;margin-top:10px;padding-top:8px;border-top:1px solid var(--border)">
-                        <span style="font-family:var(--mono);font-weight:700;font-size:14px;color:var(--green)">Total: ${fmt(d.total_pagado)}</span>
-                    </div>
-                </div>
-                <!-- Detalle IA -->
-                <div class="detalle-txt">
-                    <strong style="display:block;margin-bottom:5px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--soft)">Analisis</strong>
-                    ${d.detalle || '\u2014'}
-                </div>
-                <!-- Actions -->
-                <div class="liq-actions">
-                    <button class="btn btn-ghost btn-sm" onclick="exportarLiquidacion()">📥 Exportar TXT</button>
-                    <button class="btn btn-copper btn-sm" onclick="generarPDFLiquidacion()">📄 Generar PDF</button>
-                </div>`;
-            window._liqData = d;
-            if (!skipSave) saveState();
+        function _pcCalc(d) {
+            const presPorVersion = {};
+            d.lineas.forEach(l => {
+                const pv = l.precio_venta || 0, ci = l.ci_gg_bi_pct || 0;
+                const sub = (l.cantidad || 0) * pv;
+                const imp = ci > 0 ? sub * (1 + ci / 100) : sub;
+                const ver = l.version || 'v1';
+                presPorVersion[ver] = (presPorVersion[ver] || 0) + imp;
+            });
+            const presAprobado = Object.values(presPorVersion).reduce((s, v) => s + v, 0);
+            const facturado = d.facts.reduce((s, f) => s + (f.base_imponible || 0), 0);
+            const pendienteCertificar = presAprobado - facturado;
+            const facturasCobradas = d.facts.filter(f => {
+                const e = (f.estado || '').toLowerCase();
+                return e.includes('cobrad') || e.includes('pagad');
+            });
+            const cobradoPorFacturas = facturasCobradas.reduce((s, f) => s + (f.base_imponible || 0), 0);
+            const cobradoPorEntregas = d.entregas.reduce((s, e) => s + (parseFloat(e.importe) || 0), 0);
+            const cobradoTotal = cobradoPorFacturas + cobradoPorEntregas;
+            const ingresosTotales = facturado + cobradoPorEntregas;
+            const pendienteCobrarTotal = Math.max(0, presAprobado - cobradoTotal);
+            const pendienteCobroFacturas = Math.max(0, facturado - cobradoPorFacturas);
+            return {
+                presPorVersion, presAprobado, facturado, pendienteCertificar,
+                cobradoPorFacturas, cobradoPorEntregas, cobradoTotal,
+                ingresosTotales, pendienteCobrarTotal, pendienteCobroFacturas
+            };
         }
 
-        function exportarLiquidacion() {
-            const d = window._liqData;
-            if (!d) { alert('No hay datos para exportar'); return; }
-            let txt = `LIQUIDACION DE COBROS - PAU INTERIORISMO S.L.\n`;
-            txt += `Fecha: ${new Date().toLocaleDateString('es-ES')}\n\n`;
-            txt += `Cliente: ${d.cliente || '\u2014'}\nReferencia: ${d.referencia || '\u2014'}\n\n`;
-            txt += `Total presupuesto: ${fmt(d.total_presupuesto)}\n`;
-            txt += `Total pagado: ${fmt(d.total_pagado)}\n`;
-            txt += `SALDO PENDIENTE: ${fmt(d.saldo_pendiente)}\n\n`;
-            txt += `PAGOS RECIBIDOS:\n`;
-            (d.pagos_banco || []).forEach(p => txt += ` ${p.fecha || '\u2014'} ${p.concepto || '\u2014'} ${fmt(p.importe)}\n`);
-            pagosEfectivo.filter(p => p.importe > 0).forEach(p => txt += ` ${p.fecha || '\u2014'} ${p.concepto} (efectivo) ${fmt(p.importe)}\n`);
-            txt += `\nANALISIS:\n${d.detalle || '\u2014'}`;
-            const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = `liquidacion_${(d.cliente || 'cliente').replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.txt`;
-            a.click();
-            URL.revokeObjectURL(a.href);
+        function renderPendientePorCertificar(d) {
+            const { proy, cli, facts, entregas } = d;
+            const k = _pcCalc(d);
+            const versiones = Object.keys(k.presPorVersion).sort();
+
+            const html = `
+            <!-- Cabecera proyecto -->
+            <div class="card">
+                <div style="padding:14px;display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
+                    <div><div style="font-size:10px;color:var(--soft);text-transform:uppercase;letter-spacing:.5px;font-weight:700">Proyecto</div>
+                        <div style="font-weight:700;font-size:13px;margin-top:2px">${proy.proyecto_id || ''}</div></div>
+                    <div><div style="font-size:10px;color:var(--soft);text-transform:uppercase;letter-spacing:.5px;font-weight:700">Nombre</div>
+                        <div style="font-weight:700;font-size:13px;margin-top:2px">${proy.nombre || '—'}</div></div>
+                    <div><div style="font-size:10px;color:var(--soft);text-transform:uppercase;letter-spacing:.5px;font-weight:700">Cliente</div>
+                        <div style="font-weight:700;font-size:13px;margin-top:2px">${cli.nombre || '—'}</div></div>
+                    <div><div style="font-size:10px;color:var(--soft);text-transform:uppercase;letter-spacing:.5px;font-weight:700">Estado</div>
+                        <div style="font-weight:700;font-size:13px;margin-top:2px">${proy.estado || '—'}</div></div>
+                </div>
+            </div>
+
+            <!-- KPIs -->
+            <div class="liq-kpis" style="grid-template-columns:repeat(5,1fr)">
+                <div class="liq-kpi" style="border-top:3px solid var(--navy)">
+                    <div class="liq-kpi-label">Presupuesto aprobado</div>
+                    <div class="liq-kpi-val" style="color:var(--navy)">${fmt(k.presAprobado)}</div>
+                    <div style="font-size:10px;color:var(--soft);margin-top:4px">Sin IVA${versiones.length ? ' · ' + versiones.join('+') : ''}</div>
+                </div>
+                <div class="liq-kpi" style="border-top:3px solid var(--blue)">
+                    <div class="liq-kpi-label">Certificado / Facturado</div>
+                    <div class="liq-kpi-val" style="color:var(--blue)">${fmt(k.facturado)}</div>
+                    <div style="font-size:10px;color:var(--soft);margin-top:4px">${facts.length} facturas · s/IVA</div>
+                </div>
+                <div class="liq-kpi" style="border-top:3px solid var(--copper)">
+                    <div class="liq-kpi-label">Pendiente certificar</div>
+                    <div class="liq-kpi-val" style="color:var(--copper)">${fmt(k.pendienteCertificar)}</div>
+                    <div style="font-size:10px;color:var(--soft);margin-top:4px">Presup. − Facturado</div>
+                </div>
+                <div class="liq-kpi" style="border-top:3px solid var(--green)">
+                    <div class="liq-kpi-label">Cobrado</div>
+                    <div class="liq-kpi-val" style="color:var(--green)">${fmt(k.cobradoTotal)}</div>
+                    <div style="font-size:10px;color:var(--soft);margin-top:4px">Fact. cobradas + entregas</div>
+                </div>
+                <div class="liq-kpi" style="border-top:3px solid var(--red)">
+                    <div class="liq-kpi-label">Pendiente cobro</div>
+                    <div class="liq-kpi-val" style="color:var(--red)">${fmt(k.pendienteCobrarTotal)}</div>
+                    <div style="font-size:10px;color:var(--soft);margin-top:4px">Presup. − Cobrado</div>
+                </div>
+            </div>
+
+            <!-- Facturas -->
+            <div class="card">
+                <div class="card-head"><div class="card-title">🧾 Facturas emitidas (${facts.length})</div></div>
+                <div style="padding:12px">
+                    ${facts.length ? `
+                    <table style="width:100%;border-collapse:collapse;font-size:12px">
+                        <thead><tr style="background:var(--navy);color:#fff">
+                            <th style="padding:8px;text-align:left">Fecha</th>
+                            <th style="padding:8px;text-align:left">Nº Factura</th>
+                            <th style="padding:8px;text-align:left">Concepto</th>
+                            <th style="padding:8px;text-align:right">Base s/IVA</th>
+                            <th style="padding:8px;text-align:center">Estado</th>
+                        </tr></thead>
+                        <tbody>
+                        ${facts.map(f => {
+                            const e = (f.estado || '').toLowerCase();
+                            const cobrada = e.includes('cobrad') || e.includes('pagad');
+                            return `<tr style="border-bottom:1px solid var(--border)">
+                                <td style="padding:8px">${f.fecha || '—'}</td>
+                                <td style="padding:8px;font-family:var(--mono);font-weight:600">${f.num_factura || f.numero || '—'}</td>
+                                <td style="padding:8px">${f.concepto || f.descripcion || '—'}</td>
+                                <td style="padding:8px;text-align:right;font-family:var(--mono);font-weight:600">${fmt(f.base_imponible || 0)}</td>
+                                <td style="padding:8px;text-align:center"><span style="padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;background:${cobrada ? 'var(--green-s)' : 'var(--amber-s)'};color:${cobrada ? 'var(--green)' : 'var(--amber)'}">${cobrada ? '✅ Cobrada' : '⏳ ' + (f.estado || 'Pendiente')}</span></td>
+                            </tr>`;
+                        }).join('')}
+                        </tbody>
+                        <tfoot><tr style="background:var(--sand);font-weight:700">
+                            <td colspan="3" style="padding:8px;text-align:right">TOTAL CERTIFICADO (s/IVA)</td>
+                            <td style="padding:8px;text-align:right;font-family:var(--mono)">${fmt(k.facturado)}</td>
+                            <td></td>
+                        </tr></tfoot>
+                    </table>` : `<div style="padding:16px;text-align:center;color:var(--soft);font-size:12px">Sin facturas emitidas</div>`}
+                </div>
+            </div>
+
+            <!-- Entregas -->
+            <div class="card">
+                <div class="card-head"><div class="card-title">💵 Entregas a cuenta / cobros directos (${entregas.length})</div></div>
+                <div style="padding:12px">
+                    ${entregas.length ? `
+                    <table style="width:100%;border-collapse:collapse;font-size:12px">
+                        <thead><tr style="background:var(--navy);color:#fff">
+                            <th style="padding:8px;text-align:left">Fecha</th>
+                            <th style="padding:8px;text-align:left">Concepto</th>
+                            <th style="padding:8px;text-align:left">Tipo</th>
+                            <th style="padding:8px;text-align:right">Importe</th>
+                        </tr></thead>
+                        <tbody>
+                        ${entregas.map(e => `<tr style="border-bottom:1px solid var(--border)">
+                            <td style="padding:8px">${e.fecha || '—'}</td>
+                            <td style="padding:8px">${e.concepto || '—'}</td>
+                            <td style="padding:8px">${e.tipo || 'Entrega a cuenta'}</td>
+                            <td style="padding:8px;text-align:right;font-family:var(--mono);font-weight:600">${fmt(e.importe || 0)}</td>
+                        </tr>`).join('')}
+                        </tbody>
+                        <tfoot><tr style="background:var(--sand);font-weight:700">
+                            <td colspan="3" style="padding:8px;text-align:right">TOTAL ENTREGAS</td>
+                            <td style="padding:8px;text-align:right;font-family:var(--mono)">${fmt(k.cobradoPorEntregas)}</td>
+                        </tr></tfoot>
+                    </table>` : `<div style="padding:16px;text-align:center;color:var(--soft);font-size:12px">Sin entregas a cuenta registradas</div>`}
+                </div>
+            </div>
+
+            <!-- Resumen final -->
+            <div class="card" style="background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);color:#fff;border:none">
+                <div style="padding:18px">
+                    <div style="font-size:14px;font-weight:700;margin-bottom:12px;color:#fff">📊 Resumen económico del proyecto (sin IVA)</div>
+                    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;font-size:12px">
+                        <div><div style="opacity:.65;font-size:10px;text-transform:uppercase;letter-spacing:.3px">Presupuesto total aprobado</div>
+                            <div style="font-size:18px;font-weight:700;color:var(--copper2);font-family:var(--mono);margin-top:3px">${fmt(k.presAprobado)}</div></div>
+                        <div><div style="opacity:.65;font-size:10px;text-transform:uppercase;letter-spacing:.3px">Ingresos totales recibidos</div>
+                            <div style="font-size:18px;font-weight:700;font-family:var(--mono);margin-top:3px">${fmt(k.ingresosTotales)}</div></div>
+                        <div><div style="opacity:.65;font-size:10px;text-transform:uppercase;letter-spacing:.3px">Pendiente por certificar (emitir factura)</div>
+                            <div style="font-size:18px;font-weight:700;color:${k.pendienteCertificar > 0 ? 'var(--copper2)' : '#88d488'};font-family:var(--mono);margin-top:3px">${fmt(k.pendienteCertificar)}</div></div>
+                        <div><div style="opacity:.65;font-size:10px;text-transform:uppercase;letter-spacing:.3px">Pendiente por cobrar al cliente</div>
+                            <div style="font-size:18px;font-weight:700;color:${k.pendienteCobrarTotal > 0 ? '#ff9b9b' : '#88d488'};font-family:var(--mono);margin-top:3px">${fmt(k.pendienteCobrarTotal)}</div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Acciones -->
+            <div class="liq-actions" style="margin-top:12px">
+                <button class="btn btn-copper" onclick="generarPDFInformeCliente()" style="padding:10px 20px;font-size:13px">📄 Generar informe PDF para cliente</button>
+            </div>`;
+
+            document.getElementById('pc-body').innerHTML = html;
         }
 
-        function generarPDFLiquidacion() {
-            const d = window._liqData;
-            if (!d) { alert('Analiza primero los documentos'); return; }
-            const printWin = window.open('', '_blank', 'width=800,height=900');
+        function generarPDFInformeCliente() {
+            if (!_pcCurrentData) { alert('Selecciona primero un proyecto'); return; }
+            const { proy, cli, facts, entregas } = _pcCurrentData;
+            const k = _pcCalc(_pcCurrentData);
+            const hoy = new Date().toLocaleDateString('es-ES');
+            const printWin = window.open('', '_blank', 'width=900,height=1100');
             if (!printWin) { alert('Permite las ventanas emergentes para generar el PDF'); return; }
-            const pend = d.saldo_pendiente || 0;
-            const pagosRows = (d.pagos_banco || []).map(p => `<tr><td>${p.fecha || '\u2014'}</td><td>${p.concepto || '\u2014'}</td><td style="text-align:right;font-weight:600">+${fmt(p.importe)}</td><td>Transferencia bancaria</td></tr>`).join('');
-            const efRows = pagosEfectivo.filter(p => p.importe > 0).map(p => `<tr><td>${p.fecha || '\u2014'}</td><td>${p.concepto}</td><td style="text-align:right;font-weight:600">+${fmt(p.importe)}</td><td>Efectivo</td></tr>`).join('');
-            printWin.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Liquidacion</title>
+
+            const factRows = facts.length
+                ? facts.map(f => {
+                    const e = (f.estado || '').toLowerCase();
+                    const cobrada = e.includes('cobrad') || e.includes('pagad');
+                    return `<tr><td>${f.fecha || '—'}</td><td>${f.num_factura || f.numero || '—'}</td><td>${f.concepto || f.descripcion || '—'}</td><td class="r">${fmt(f.base_imponible || 0)}</td><td>${cobrada ? '✅ Cobrada' : '⏳ Pendiente'}</td></tr>`;
+                }).join('')
+                : '<tr><td colspan="5" style="text-align:center;color:#888;padding:14px">Sin facturas emitidas</td></tr>';
+            const entRows = entregas.length
+                ? entregas.map(e => `<tr><td>${e.fecha || '—'}</td><td>${e.concepto || '—'}</td><td>${e.tipo || 'Entrega a cuenta'}</td><td class="r">${fmt(e.importe || 0)}</td></tr>`).join('')
+                : '<tr><td colspan="4" style="text-align:center;color:#888;padding:14px">Sin entregas registradas</td></tr>';
+
+            printWin.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Informe ${proy.proyecto_id || ''} · PAU Interiorismo</title>
                 <style>
-                    body{font-family:Arial,sans-serif;font-size:12px;color:#222;margin:0;padding:0}
-                    .header{background:#0f1e2d;color:white;padding:20px 28px;display:flex;justify-content:space-between;align-items:center}
-                    .header h1{font-size:18px;font-weight:700;margin:0}
-                    .header .sub{font-size:11px;opacity:.7;margin-top:3px}
-                    .copper{color:#b87333}
-                    .body{padding:24px 28px}
-                    .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#ddd;border:1px solid #ddd;border-radius:6px;overflow:hidden;margin-bottom:20px}
-                    .kpi{background:white;padding:14px 16px;text-align:center}
-                    .kpi-label{font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:#888;font-weight:700}
-                    .kpi-val{font-size:22px;font-weight:700;margin-top:5px}
-                    table{width:100%;border-collapse:collapse;margin-bottom:16px}
-                    th{background:#0f1e2d;color:white;padding:7px 10px;text-align:left;font-size:11px}
-                    td{padding:7px 10px;border-bottom:1px solid #eee;font-size:12px}
-                    .total-row td{font-weight:700;background:#f5f5f5}
-                    .detalle{background:#f8f8f8;border-radius:6px;padding:14px;font-size:12px;line-height:1.6;color:#444;margin-top:8px}
-                    .footer{margin-top:28px;padding-top:10px;border-top:1px solid #ddd;font-size:10px;color:#888;text-align:center}
-                    @media print{.no-print{display:none}}
+                    *{box-sizing:border-box}
+                    body{font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:#1a2a3a;margin:0;padding:0;background:#fff}
+                    .header{background:#1a2a3a;color:#fff;padding:22px 32px;display:flex;justify-content:space-between;align-items:center}
+                    .header h1{font-size:17px;font-weight:700;margin:0;letter-spacing:.3px}
+                    .header .copper{color:#b87333}
+                    .header .sub{font-size:10px;opacity:.7;margin-top:4px;letter-spacing:.5px}
+                    .page{padding:24px 32px;max-width:210mm;margin:0 auto}
+                    h2{font-size:13px;color:#1a2a3a;margin:18px 0 10px;padding-bottom:6px;border-bottom:2px solid #b87333;text-transform:uppercase;letter-spacing:.5px}
+                    .info-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px 24px;background:#f7f4ef;border-left:3px solid #b87333;padding:14px 16px;margin-bottom:14px;font-size:11px}
+                    .info-grid div{line-height:1.5}
+                    .info-grid b{color:#888;font-weight:600;display:inline-block;min-width:90px}
+                    .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:#dce6f0;border:1px solid #dce6f0;border-radius:4px;overflow:hidden;margin-bottom:14px}
+                    .kpi{background:#fff;padding:12px 10px;text-align:center}
+                    .kpi-label{font-size:8.5px;text-transform:uppercase;letter-spacing:.3px;color:#888;font-weight:700;margin-bottom:6px}
+                    .kpi-val{font-size:14px;font-weight:700;font-family:'Consolas',monospace}
+                    .kpi.navy .kpi-val{color:#1a2a3a}
+                    .kpi.blue .kpi-val{color:#1a3d7a}
+                    .kpi.copper .kpi-val{color:#b87333}
+                    .kpi.green .kpi-val{color:#1e6b3d}
+                    .kpi.red .kpi-val{color:#7b241c}
+                    table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:11px}
+                    th{background:#1a2a3a;color:#fff;padding:8px 10px;text-align:left;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.3px}
+                    td{padding:7px 10px;border-bottom:1px solid #eee}
+                    td.r,th.r{text-align:right;font-family:'Consolas',monospace;font-weight:600}
+                    tfoot td{font-weight:700;background:#f7f4ef;color:#1a2a3a;border-top:2px solid #b87333}
+                    .resumen{background:linear-gradient(135deg,#1a2a3a,#27405b);color:#fff;padding:18px 22px;border-radius:4px;margin-top:14px}
+                    .resumen .t{font-size:12px;font-weight:700;margin-bottom:12px;letter-spacing:.3px}
+                    .resumen-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;font-size:11px}
+                    .resumen-grid .l{opacity:.7;font-size:9px;text-transform:uppercase;letter-spacing:.3px}
+                    .resumen-grid .v{font-size:16px;font-weight:700;font-family:'Consolas',monospace;margin-top:3px}
+                    .copper-v{color:#d9945a}
+                    .green-v{color:#88d488}
+                    .red-v{color:#ff9b9b}
+                    .footer{margin-top:26px;padding-top:10px;border-top:1px solid #ddd;font-size:9px;color:#888;text-align:center;line-height:1.6}
+                    .no-print{margin-top:20px;text-align:center}
+                    .btn-print{padding:10px 24px;background:#1a2a3a;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:13px;font-weight:600}
+                    .btn-print:hover{background:#27405b}
+                    @media print{.no-print{display:none}body{margin:0}}
                 </style></head><body>
                 <div class="header">
-                    <div><h1>PAU INTERIORISMO S.L. <span class="copper">\u00B7</span> Liquidacion de cobros</h1><div class="sub">Alcasser, Valencia \u00B7 ${new Date().toLocaleDateString('es-ES')}</div></div>
-                    <div style="text-align:right"><div style="font-size:13px;font-weight:700">${d.cliente || '\u2014'}</div><div style="font-size:11px;opacity:.7">${d.referencia || ''}</div></div>
-                </div>
-                <div class="body">
-                    <div class="kpis">
-                        <div class="kpi"><div class="kpi-label">Total presupuesto</div><div class="kpi-val" style="color:#0f1e2d">${fmt(d.total_presupuesto)}</div></div>
-                        <div class="kpi"><div class="kpi-label">Total pagado</div><div class="kpi-val" style="color:#1a6b46">${fmt(d.total_pagado)}</div></div>
-                        <div class="kpi"><div class="kpi-label">${pend < 0.01 ? '\u2705 Liquidado' : 'Pendiente de cobro'}</div><div class="kpi-val" style="color:${pend < 0.01 ? '#1a6b46' : '#a82828'}">${fmt(Math.abs(pend))}</div></div>
+                    <div>
+                        <h1>PAU INTERIORISMO S.L. <span class="copper">·</span> Informe de proyecto</h1>
+                        <div class="sub">Tomás i Valiente, 6 · 46290 Alcàsser (Valencia) · ${hoy}</div>
                     </div>
+                    <div style="text-align:right">
+                        <div style="font-size:13px;font-weight:700">${proy.proyecto_id || ''}</div>
+                        <div style="font-size:10px;opacity:.7">${proy.nombre || ''}</div>
+                    </div>
+                </div>
+                <div class="page">
+                    <h2>Datos del proyecto</h2>
+                    <div class="info-grid">
+                        <div><b>Cliente:</b> ${cli.nombre || '—'}</div>
+                        <div><b>Proyecto:</b> ${proy.nombre || '—'}</div>
+                        <div><b>Referencia:</b> ${proy.proyecto_id || '—'}</div>
+                        <div><b>Dirección:</b> ${proy.direccion_obra || '—'}</div>
+                        <div><b>Estado:</b> ${proy.estado || '—'}</div>
+                        <div><b>Fecha informe:</b> ${hoy}</div>
+                    </div>
+
+                    <h2>Estado económico (importes sin IVA)</h2>
+                    <div class="kpis">
+                        <div class="kpi navy"><div class="kpi-label">Presupuesto</div><div class="kpi-val">${fmt(k.presAprobado)}</div></div>
+                        <div class="kpi blue"><div class="kpi-label">Certificado</div><div class="kpi-val">${fmt(k.facturado)}</div></div>
+                        <div class="kpi copper"><div class="kpi-label">Pte. certificar</div><div class="kpi-val">${fmt(k.pendienteCertificar)}</div></div>
+                        <div class="kpi green"><div class="kpi-label">Cobrado</div><div class="kpi-val">${fmt(k.cobradoTotal)}</div></div>
+                        <div class="kpi red"><div class="kpi-label">Pte. cobro</div><div class="kpi-val">${fmt(k.pendienteCobrarTotal)}</div></div>
+                    </div>
+
+                    <h2>Facturas emitidas</h2>
                     <table>
-                        <thead><tr><th>Fecha</th><th>Concepto</th><th style="text-align:right">Importe</th><th>Tipo</th></tr></thead>
-                        <tbody>
-                            ${pagosRows}${efRows}
-                            <tr class="total-row"><td colspan="2">TOTAL PAGADO</td><td style="text-align:right">${fmt(d.total_pagado)}</td><td></td></tr>
-                        </tbody>
+                        <thead><tr><th>Fecha</th><th>Nº factura</th><th>Concepto</th><th class="r">Base s/IVA</th><th>Estado</th></tr></thead>
+                        <tbody>${factRows}</tbody>
+                        <tfoot><tr><td colspan="3" style="text-align:right">TOTAL CERTIFICADO</td><td class="r">${fmt(k.facturado)}</td><td></td></tr></tfoot>
                     </table>
-                    <div class="detalle"><strong>Analisis:</strong><br>${d.detalle || '\u2014'}</div>
-                    <div class="footer">PAU INTERIORISMO S.L. \u00B7 Tomas i Valiente, 6 \u00B7 46290 Alcasser (Valencia) \u00B7 Documento generado el ${new Date().toLocaleDateString('es-ES')}</div>
-                    <div class="no-print" style="margin-top:20px;text-align:center">
-                        <button onclick="window.print()" style="padding:10px 24px;background:#0f1e2d;color:white;border:none;border-radius:6px;cursor:pointer;font-size:14px">🖨 Imprimir / Guardar PDF</button>
+
+                    <h2>Entregas a cuenta / cobros directos</h2>
+                    <table>
+                        <thead><tr><th>Fecha</th><th>Concepto</th><th>Tipo</th><th class="r">Importe</th></tr></thead>
+                        <tbody>${entRows}</tbody>
+                        <tfoot><tr><td colspan="3" style="text-align:right">TOTAL ENTREGAS</td><td class="r">${fmt(k.cobradoPorEntregas)}</td></tr></tfoot>
+                    </table>
+
+                    <div class="resumen">
+                        <div class="t">📊 Resumen final de liquidación (sin IVA)</div>
+                        <div class="resumen-grid">
+                            <div><div class="l">Importe total aprobado</div><div class="v copper-v">${fmt(k.presAprobado)}</div></div>
+                            <div><div class="l">Total ingresos actuales</div><div class="v">${fmt(k.ingresosTotales)}</div></div>
+                            <div><div class="l">Pendiente por certificar (emitir factura)</div><div class="v ${k.pendienteCertificar > 0 ? 'copper-v' : 'green-v'}">${fmt(k.pendienteCertificar)}</div></div>
+                            <div><div class="l">Pendiente por cobrar</div><div class="v ${k.pendienteCobrarTotal > 0 ? 'red-v' : 'green-v'}">${fmt(k.pendienteCobrarTotal)}</div></div>
+                        </div>
+                    </div>
+
+                    <div class="footer">
+                        PAU INTERIORISMO S.L. · Tomás i Valiente, 6 · 46290 Alcàsser (Valencia)
+                        <br>Informe generado automáticamente el ${hoy}
+                    </div>
+
+                    <div class="no-print">
+                        <button class="btn-print" onclick="window.print()">🖨 Imprimir / Guardar como PDF</button>
+                    </div>
+                </div>
+            </body></html>`);
+            printWin.document.close();
+        }
+
+        // ══════════════════════════════════════════════════
+        // TAB 3 — CONCILIACIÓN BANCARIA (IA)
+        // ══════════════════════════════════════════════════
+        const CONC_STATE_KEY = 'cc_conc_state_v1';
+        const CONC_LOGO_KEY = 'cc_conc_logo_v1';
+        let concFilesPres = [];
+        let concFileExt = null;
+        let concPagosManual = [];
+        let concExcluidos = new Set();
+        let concPagoManId = 0;
+        let _concCurrentData = null;
+        let _concObsValue = null;
+        let concLogo = null;
+
+        function saveConcState() {
+            try {
+                const s = {
+                    nombre: document.getElementById('conc-nombre')?.value || '',
+                    instrucciones: document.getElementById('conc-instrucciones')?.value || '',
+                    pagosManual: concPagosManual,
+                    concPagoManId: concPagoManId,
+                    excluidos: Array.from(concExcluidos),
+                    data: _concCurrentData,
+                    observaciones: _concObsValue
+                };
+                localStorage.setItem(CONC_STATE_KEY, JSON.stringify(s));
+            } catch (e) { console.warn('saveConcState:', e); }
+        }
+
+        function loadConcState() {
+            try {
+                concLogo = localStorage.getItem(CONC_LOGO_KEY) || null;
+                renderConcLogo();
+                const raw = localStorage.getItem(CONC_STATE_KEY);
+                if (!raw) return;
+                const s = JSON.parse(raw);
+                const nomEl = document.getElementById('conc-nombre');
+                const insEl = document.getElementById('conc-instrucciones');
+                if (nomEl && s.nombre) nomEl.value = s.nombre;
+                if (insEl && s.instrucciones) insEl.value = s.instrucciones;
+                concPagosManual = Array.isArray(s.pagosManual) ? s.pagosManual : [];
+                concPagoManId = s.concPagoManId || concPagosManual.reduce((m, p) => Math.max(m, p.id || 0), 0);
+                concExcluidos = new Set(Array.isArray(s.excluidos) ? s.excluidos : []);
+                _concObsValue = (s.observaciones !== undefined) ? s.observaciones : null;
+                if (s.data) {
+                    _concCurrentData = s.data;
+                    renderConcResult(s.data);
+                }
+            } catch (e) { console.warn('loadConcState:', e); }
+        }
+
+        function renderConcLogo() {
+            const prev = document.getElementById('conc-logo-preview');
+            const name = document.getElementById('conc-logo-name');
+            const del = document.getElementById('conc-logo-del');
+            const status = document.getElementById('conc-logo-status');
+            if (!prev) return;
+            if (concLogo) {
+                prev.src = concLogo;
+                prev.style.display = 'inline-block';
+                name.textContent = 'Logo guardado permanentemente';
+                name.style.color = 'var(--green)';
+                del.style.display = '';
+                status.innerHTML = '✓ Logo guardado';
+                status.style.borderColor = 'var(--green)';
+                status.style.color = 'var(--green)';
+            } else {
+                prev.style.display = 'none';
+                name.textContent = '';
+                del.style.display = 'none';
+                status.innerHTML = '📎 Subir logo';
+                status.style.borderColor = '';
+                status.style.color = '';
+            }
+        }
+
+        function onConcLogoSubir(input) {
+            const f = input.files[0];
+            if (!f) return;
+            const r = new FileReader();
+            r.onload = () => {
+                concLogo = r.result;
+                try { localStorage.setItem(CONC_LOGO_KEY, concLogo); }
+                catch (e) { alert('Logo demasiado grande para guardar en este navegador'); }
+                renderConcLogo();
+            };
+            r.readAsDataURL(f);
+        }
+
+        function eliminarConcLogo() {
+            if (!confirm('¿Eliminar el logo guardado?')) return;
+            concLogo = null;
+            localStorage.removeItem(CONC_LOGO_KEY);
+            renderConcLogo();
+        }
+
+        function onConcFilePres(input) {
+            concFilesPres = Array.from(input.files || []);
+            renderConcFilesPres();
+        }
+
+        function renderConcFilesPres() {
+            const el = document.getElementById('conc-pres-list');
+            const zone = document.getElementById('conc-zone-pres');
+            if (!concFilesPres.length) {
+                el.innerHTML = '';
+                zone.classList.remove('has-file');
+                zone.querySelector('.uz-text').textContent = 'Haz clic para subir uno o varios PDFs de presupuesto';
+                return;
+            }
+            zone.classList.add('has-file');
+            zone.querySelector('.uz-text').textContent = `✓ ${concFilesPres.length} PDF${concFilesPres.length > 1 ? 's' : ''} cargado${concFilesPres.length > 1 ? 's' : ''}`;
+            el.innerHTML = concFilesPres.map((f, i) => `
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--sand);border-radius:4px;margin-bottom:4px;font-size:11px">
+                    <span>📎 ${f.name}</span>
+                    <button onclick="concFilesPres.splice(${i},1);renderConcFilesPres()" style="background:transparent;border:none;cursor:pointer;color:var(--red);font-size:14px">✕</button>
+                </div>`).join('');
+        }
+
+        function onConcFileExt(input) {
+            concFileExt = input.files[0] || null;
+            const zone = document.getElementById('conc-zone-ext');
+            const name = document.getElementById('conc-ext-name');
+            if (concFileExt) {
+                zone.classList.add('has-file');
+                zone.querySelector('.uz-text').textContent = '✓ Archivo cargado';
+                name.innerHTML = `<span style="color:var(--green)">📄 ${concFileExt.name}</span>`;
+            } else {
+                zone.classList.remove('has-file');
+                zone.querySelector('.uz-text').textContent = 'Haz clic para subir el extracto bancario en PDF';
+                name.innerHTML = '';
+            }
+        }
+
+        function limpiarConciliacion() {
+            if (!confirm('¿Limpiar todo el análisis actual? (el logo se mantiene guardado)')) return;
+            concFilesPres = [];
+            concFileExt = null;
+            concPagosManual = [];
+            concExcluidos = new Set();
+            _concCurrentData = null;
+            _concObsValue = null;
+            concPagoManId = 0;
+            const nomEl = document.getElementById('conc-nombre');
+            const insEl = document.getElementById('conc-instrucciones');
+            if (nomEl) nomEl.value = '';
+            if (insEl) insEl.value = '';
+            document.getElementById('conc-result').innerHTML = '';
+            renderConcFilesPres();
+            onConcFileExt({ files: [] });
+            localStorage.removeItem(CONC_STATE_KEY);
+        }
+
+        async function analizarConciliacion() {
+            if (!concFilesPres.length) { alert('Sube al menos un PDF de presupuesto'); return; }
+            if (!concFileExt) { alert('Sube el extracto bancario en PDF'); return; }
+            const nombre = (document.getElementById('conc-nombre').value || '').trim();
+            if (!nombre) { alert('Escribe el nombre del cliente o referencia a buscar en el extracto'); return; }
+            const instrucciones = (document.getElementById('conc-instrucciones').value || '').trim();
+            const result = document.getElementById('conc-result');
+            result.innerHTML = `<div class="loading-wrap"><div class="spinner"></div><span>Analizando ${concFilesPres.length} presupuesto${concFilesPres.length > 1 ? 's' : ''} + extracto bancario con IA…</span></div>`;
+            try {
+                const [presB64s, extB64] = await Promise.all([
+                    Promise.all(concFilesPres.map(f => toBase64(f))),
+                    toBase64(concFileExt)
+                ]);
+                const contents = [];
+                presB64s.forEach(b64 => contents.push({ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: b64 } }));
+                contents.push({ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: extB64 } });
+                contents.push({
+                    type: 'text',
+                    text: `Tengo ${concFilesPres.length} documento(s) de presupuesto y 1 extracto bancario.
+
+OBJETIVO: Encontrar TODOS los pagos del cliente "${nombre}" en el extracto bancario. Sé EXHAUSTIVO, no dejes fuera ninguno. El nombre puede aparecer parcial, con iniciales, con variaciones de acentos o mayúsculas, o con referencias al proyecto/obra (ej: "Fra Fecha 26/03/2024", "Pago Factura 23", "Certificación Obra", "PRY-024"). Incluye también pagos a cuenta, transferencias, ingresos y recibos relacionados con el cliente.
+
+${concFilesPres.length > 1 ? 'SUMA los totales de TODOS los presupuestos adjuntos en "total_presupuesto" (usa el total con IVA si aparece, o base imponible si no).' : 'Extrae el total del presupuesto adjunto (total con IVA si aparece, o base imponible si no).'}
+${instrucciones ? '\nINSTRUCCIONES ADICIONALES DEL USUARIO (respétalas estrictamente):\n' + instrucciones : ''}
+
+Devuelve SOLO un JSON válido (sin markdown, sin texto adicional), con este formato EXACTO:
+{
+  "cliente": "nombre completo del cliente",
+  "referencia": "referencia del presupuesto (ej: PRY-024-V1)",
+  "total_presupuesto": numero,
+  "entregas": [
+    {"fecha":"dd/mm/aaaa","concepto":"descripción del movimiento tal como aparece en el extracto","importe":numero}
+  ],
+  "total_entregas": numero,
+  "pendiente": numero,
+  "observaciones": "Se han identificado N pagos realizados por [cliente] en el extracto bancario, correspondientes a [descripción breve] (Presupuesto [referencia])."
+}`
+                });
+                const data = await callClaude({
+                    model: 'claude-haiku-4-5-20251001',
+                    max_tokens: 4000,
+                    system: 'Eres un asistente financiero experto para PAU Interiorismo S.L., una empresa española de construcción e interiorismo en Alcàsser (Valencia). Analizas presupuestos y extractos bancarios con máxima precisión y exhaustividad. Nunca omites un pago del cliente indicado. Devuelves únicamente JSON válido sin texto adicional ni markdown.',
+                    messages: [{ role: 'user', content: contents }]
+                });
+                const rawText = data.content.filter(b => b.type === 'text').map(b => b.text).join('');
+                let clean = rawText.replace(/```json|```/g, '').trim();
+                const m = clean.match(/\{[\s\S]*\}/);
+                if (m) clean = m[0];
+                const json = JSON.parse(clean);
+                // Inicializar excluidos/manuales limpios y observaciones = IA
+                concExcluidos = new Set();
+                concPagosManual = [];
+                concPagoManId = 0;
+                _concObsValue = null;
+                _concCurrentData = json;
+                renderConcResult(json);
+                saveConcState();
+            } catch (e) {
+                result.innerHTML = `<div class="error-box">❌ Error: ${e.message}</div>
+                    <div style="padding:12px;font-size:11px;color:var(--soft)">Comprueba que los PDFs son legibles y que la API Key está configurada.</div>`;
+            }
+        }
+
+        function toggleConcExcl(i) {
+            if (concExcluidos.has(i)) concExcluidos.delete(i);
+            else concExcluidos.add(i);
+            renderConcResult(_concCurrentData);
+            saveConcState();
+        }
+
+        function addConcPagoManual() {
+            concPagosManual.push({ id: ++concPagoManId, fecha: '', concepto: '', importe: 0 });
+            renderConcResult(_concCurrentData);
+            saveConcState();
+        }
+
+        function concPagoManUpd(id, field, value) {
+            const p = concPagosManual.find(x => x.id === id);
+            if (!p) return;
+            p[field] = (field === 'importe') ? (parseFloat(value) || 0) : value;
+            // No re-renderizar todo (mantener foco); actualizar totales sólo
+            renderConcResult(_concCurrentData, true);
+            saveConcState();
+        }
+
+        function concPagoManDel(id) {
+            concPagosManual = concPagosManual.filter(x => x.id !== id);
+            renderConcResult(_concCurrentData);
+            saveConcState();
+        }
+
+        function renderConcResult(d, preserveFocus) {
+            if (!d) return;
+            const focusInfo = preserveFocus && document.activeElement ? {
+                id: document.activeElement.id,
+                dataId: document.activeElement.getAttribute('data-pm-id'),
+                field: document.activeElement.getAttribute('data-pm-field'),
+                selStart: document.activeElement.selectionStart,
+                selEnd: document.activeElement.selectionEnd
+            } : null;
+
+            const entregasArr = d.entregas || [];
+            const totalEntregasAuto = entregasArr.reduce((s, e, i) => concExcluidos.has(i) ? s : s + (parseFloat(e.importe) || 0), 0);
+            const totalManuales = concPagosManual.reduce((s, p) => s + (parseFloat(p.importe) || 0), 0);
+            const totalEntregado = totalEntregasAuto + totalManuales;
+            const totalPres = parseFloat(d.total_presupuesto) || 0;
+            const pendiente = Math.max(0, totalPres - totalEntregado);
+            const pct = totalPres > 0 ? Math.min(100, (totalEntregado / totalPres) * 100) : 0;
+            const estado = pendiente <= 0.01
+                ? { t: '✅ Cobrado íntegro', c: 'var(--green)', bg: 'var(--green-s)' }
+                : totalEntregado > 0
+                    ? { t: `Cobro parcial · Pendiente ${fmt(pendiente)}`, c: 'var(--amber)', bg: 'var(--amber-s)' }
+                    : { t: 'Pendiente de cobro', c: 'var(--red)', bg: 'var(--red-s)' };
+
+            const entregasRows = entregasArr.length ? entregasArr.map((e, i) => {
+                const excl = concExcluidos.has(i);
+                return `<div onclick="toggleConcExcl(${i})" style="display:grid;grid-template-columns:100px 1fr 120px 28px;gap:8px;padding:8px 10px;border-bottom:1px solid var(--border);cursor:pointer;align-items:center;${excl ? 'opacity:.35;text-decoration:line-through' : ''}" title="${excl ? 'Clic para INCLUIR' : 'Clic para EXCLUIR este pago'}">
+                    <span style="font-family:var(--mono);font-size:11px">${e.fecha || '—'}</span>
+                    <span style="font-size:11px">${e.concepto || '—'}</span>
+                    <span style="text-align:right;font-family:var(--mono);font-weight:600;font-size:11px">${fmt(e.importe)}</span>
+                    <span style="text-align:center;color:var(--red);font-size:13px">✕</span>
+                </div>`;
+            }).join('') : '<div style="padding:14px;color:var(--soft);font-size:11px;text-align:center">No se han detectado entregas automáticamente. Puedes añadirlas manualmente abajo.</div>';
+
+            const manRows = concPagosManual.map(p => `
+                <div style="display:grid;grid-template-columns:120px 1fr 110px 28px;gap:8px;margin-bottom:5px;align-items:center">
+                    <input type="date" value="${p.fecha || ''}" style="font-size:11px;padding:5px;border:1px solid var(--border);border-radius:3px" data-pm-id="${p.id}" data-pm-field="fecha" id="pm-${p.id}-fecha" oninput="concPagoManUpd(${p.id},'fecha',this.value)">
+                    <input type="text" value="${p.concepto || ''}" placeholder="Descripción del pago" style="font-size:11px;padding:5px;border:1px solid var(--border);border-radius:3px" data-pm-id="${p.id}" data-pm-field="concepto" id="pm-${p.id}-concepto" oninput="concPagoManUpd(${p.id},'concepto',this.value)">
+                    <input type="number" value="${p.importe || ''}" placeholder="0.00" step="0.01" style="font-size:11px;padding:5px;border:1px solid var(--border);border-radius:3px;text-align:right;font-family:var(--mono)" data-pm-id="${p.id}" data-pm-field="importe" id="pm-${p.id}-importe" oninput="concPagoManUpd(${p.id},'importe',this.value)">
+                    <button onclick="concPagoManDel(${p.id})" style="background:transparent;border:none;cursor:pointer;color:var(--red);font-size:14px">✕</button>
+                </div>`).join('');
+
+            const obsInicial = (_concObsValue !== null) ? _concObsValue : (d.observaciones || '');
+
+            document.getElementById('conc-result').innerHTML = `
+            <div class="card">
+                <div style="padding:16px">
+                    <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:14px;gap:12px;flex-wrap:wrap">
+                        <div>
+                            <div style="font-size:16px;font-weight:700;color:var(--text)">${d.cliente || '—'}</div>
+                            <div style="font-size:11px;color:var(--soft);margin-top:2px">Ref. ${d.referencia || '—'}</div>
+                            <div style="display:inline-block;margin-top:8px;padding:4px 10px;border-radius:12px;background:${estado.bg};color:${estado.c};font-size:11px;font-weight:700">${estado.t}</div>
+                        </div>
+                        <button class="btn btn-copper" onclick="generarPDFConciliacion()" style="padding:8px 18px;font-size:12px">📄 Generar PDF</button>
+                    </div>
+
+                    <div style="margin-bottom:6px;display:flex;justify-content:space-between;font-size:11px;color:var(--soft)">
+                        <span style="color:var(--copper);font-weight:700">${pct.toFixed(0)}% cobrado</span>
+                        <span>${fmt(totalEntregado)} de ${fmt(totalPres)}</span>
+                    </div>
+                    <div style="height:10px;background:var(--sand);border-radius:5px;overflow:hidden">
+                        <div style="width:${pct}%;height:100%;background:linear-gradient(90deg,var(--copper),var(--copper2));transition:width .3s"></div>
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:4px;overflow:hidden;margin-top:16px">
+                        <div style="background:#fff;padding:14px 12px;text-align:center">
+                            <div style="font-size:10px;color:var(--soft);text-transform:uppercase;letter-spacing:.3px;font-weight:700">Total presupuesto</div>
+                            <div style="font-size:18px;font-weight:700;color:var(--navy);font-family:var(--mono);margin-top:4px">${fmt(totalPres)}</div>
+                        </div>
+                        <div style="background:#fff;padding:14px 12px;text-align:center">
+                            <div style="font-size:10px;color:var(--soft);text-transform:uppercase;letter-spacing:.3px;font-weight:700">Entregado a cuenta</div>
+                            <div style="font-size:18px;font-weight:700;color:var(--green);font-family:var(--mono);margin-top:4px">${fmt(totalEntregado)}</div>
+                        </div>
+                        <div style="background:#fff;padding:14px 12px;text-align:center">
+                            <div style="font-size:10px;color:var(--soft);text-transform:uppercase;letter-spacing:.3px;font-weight:700">Pendiente de cobro</div>
+                            <div style="font-size:18px;font-weight:700;color:${pendiente > 0 ? 'var(--red)' : 'var(--green)'};font-family:var(--mono);margin-top:4px">${fmt(pendiente)}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-head" style="display:flex;align-items:center;justify-content:space-between">
+                    <div class="card-title">Detalle de entregas a cuenta (${entregasArr.length - concExcluidos.size}/${entregasArr.length})</div>
+                    <span style="font-size:10px;color:var(--soft);padding-right:12px">Clic en fila para excluir · clic de nuevo para incluir</span>
+                </div>
+                <div style="padding:4px 10px 10px">
+                    <div style="display:grid;grid-template-columns:100px 1fr 120px 28px;gap:8px;padding:6px 10px;font-size:10px;color:var(--soft);text-transform:uppercase;letter-spacing:.3px;font-weight:700;border-bottom:1px solid var(--border)">
+                        <span>Fecha</span><span>Concepto</span><span style="text-align:right">Importe</span><span></span>
+                    </div>
+                    ${entregasRows}
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-head"><div class="card-title">Añadir pago manualmente</div></div>
+                <div style="padding:12px">
+                    <div style="display:grid;grid-template-columns:120px 1fr 110px 28px;gap:8px;font-size:10px;color:var(--soft);text-transform:uppercase;letter-spacing:.3px;font-weight:700;margin-bottom:6px">
+                        <span>Fecha</span><span>Concepto</span><span style="text-align:right">Importe (€)</span><span></span>
+                    </div>
+                    ${manRows}
+                    <button class="btn btn-ghost btn-sm" onclick="addConcPagoManual()" style="margin-top:6px">+ Añadir pago</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-head"><div class="card-title">Observaciones</div></div>
+                <div style="padding:12px">
+                    <textarea id="conc-obs" rows="3" style="width:100%;font-size:12px;padding:8px;border:1px solid var(--border);border-radius:4px;font-family:var(--sans);resize:vertical" oninput="_concObsValue=this.value;saveConcState()">${obsInicial.replace(/</g, '&lt;')}</textarea>
+                    <div style="font-size:10px;color:var(--soft);margin-top:4px">Puedes editar el texto o añadir cualquier nota adicional — este texto saldrá en el PDF.</div>
+                </div>
+            </div>`;
+
+            // Restaurar foco a input manual si aplicaba
+            if (focusInfo && focusInfo.dataId) {
+                const newEl = document.getElementById(`pm-${focusInfo.dataId}-${focusInfo.field}`);
+                if (newEl) {
+                    newEl.focus();
+                    try { newEl.setSelectionRange(focusInfo.selStart, focusInfo.selEnd); } catch (e) {}
+                }
+            } else if (focusInfo && focusInfo.id === 'conc-obs') {
+                const el = document.getElementById('conc-obs');
+                if (el) { el.focus(); try { el.setSelectionRange(focusInfo.selStart, focusInfo.selEnd); } catch (e) {} }
+            }
+        }
+
+        function generarPDFConciliacion() {
+            if (!_concCurrentData) { alert('Analiza primero los documentos'); return; }
+            const d = _concCurrentData;
+            const entregasActivas = (d.entregas || []).filter((e, i) => !concExcluidos.has(i));
+            const totalEntregasAuto = entregasActivas.reduce((s, e) => s + (parseFloat(e.importe) || 0), 0);
+            const pagosManActivos = concPagosManual.filter(p => (parseFloat(p.importe) || 0) > 0);
+            const totalManuales = pagosManActivos.reduce((s, p) => s + (parseFloat(p.importe) || 0), 0);
+            const totalEntregado = totalEntregasAuto + totalManuales;
+            const totalPres = parseFloat(d.total_presupuesto) || 0;
+            const pendiente = Math.max(0, totalPres - totalEntregado);
+            const pct = totalPres > 0 ? Math.min(100, (totalEntregado / totalPres) * 100) : 0;
+            const obs = (_concObsValue !== null ? _concObsValue : (d.observaciones || '')).trim();
+            const hoy = new Date().toLocaleDateString('es-ES');
+
+            const entRows = [
+                ...entregasActivas.map(e => `<tr><td>${e.fecha || '—'}</td><td>${(e.concepto || '—').replace(/</g, '&lt;')}</td><td class="r">${fmt(e.importe)}</td></tr>`),
+                ...pagosManActivos.map(p => `<tr><td>${p.fecha || '—'}</td><td>${(p.concepto || '—').replace(/</g, '&lt;')} <em style="color:#888;font-size:10px">(manual)</em></td><td class="r">${fmt(p.importe)}</td></tr>`)
+            ].join('') || '<tr><td colspan="3" style="text-align:center;color:#888;padding:14px">Sin entregas registradas</td></tr>';
+
+            const logoHTML = concLogo
+                ? `<img src="${concLogo}" style="max-height:60px;max-width:180px;background:#fff;padding:4px;border-radius:4px" />`
+                : `<div style="font-size:13px;font-weight:700">${d.referencia || ''}</div><div style="font-size:10px;opacity:.7">${d.cliente || ''}</div>`;
+
+            const estadoStr = pendiente <= 0.01 ? '✅ Cobrado íntegro'
+                : totalEntregado > 0 ? 'Cobro parcial' : 'Pendiente de cobro';
+
+            const printWin = window.open('', '_blank', 'width=900,height=1100');
+            if (!printWin) { alert('Permite las ventanas emergentes para generar el PDF'); return; }
+            printWin.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Conciliación ${d.referencia || ''} · PAU Interiorismo</title>
+                <style>
+                    *{box-sizing:border-box}
+                    body{font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:#1a2a3a;margin:0;padding:0;background:#fff}
+                    .header{background:#1a2a3a;color:#fff;padding:22px 32px;display:flex;justify-content:space-between;align-items:center}
+                    .header h1{font-size:17px;font-weight:700;margin:0;letter-spacing:.3px}
+                    .header .copper{color:#b87333}
+                    .header .sub{font-size:10px;opacity:.7;margin-top:4px;letter-spacing:.5px}
+                    .page{padding:24px 32px;max-width:210mm;margin:0 auto}
+                    h2{font-size:13px;color:#1a2a3a;margin:18px 0 10px;padding-bottom:6px;border-bottom:2px solid #b87333;text-transform:uppercase;letter-spacing:.5px}
+                    .info-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px 24px;background:#f7f4ef;border-left:3px solid #b87333;padding:14px 16px;margin-bottom:14px;font-size:11px}
+                    .info-grid b{color:#888;font-weight:600;display:inline-block;min-width:120px}
+                    .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#dce6f0;border:1px solid #dce6f0;border-radius:4px;overflow:hidden;margin-bottom:10px}
+                    .kpi{background:#fff;padding:14px;text-align:center}
+                    .kpi-label{font-size:9px;text-transform:uppercase;letter-spacing:.3px;color:#888;font-weight:700;margin-bottom:6px}
+                    .kpi-val{font-size:18px;font-weight:700;font-family:'Consolas',monospace}
+                    .kpi.navy .kpi-val{color:#1a2a3a}
+                    .kpi.green .kpi-val{color:#1e6b3d}
+                    .kpi.red .kpi-val{color:#7b241c}
+                    .progress-wrap{margin:8px 0 4px}
+                    .progress{background:#ede8df;height:10px;border-radius:5px;overflow:hidden}
+                    .progress>div{background:linear-gradient(90deg,#b87333,#c5843f);height:100%}
+                    .progress-label{display:flex;justify-content:space-between;font-size:10px;color:#888;margin-top:4px;margin-bottom:10px}
+                    .progress-label .pct{color:#b87333;font-weight:700}
+                    table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:11px}
+                    th{background:#1a2a3a;color:#fff;padding:8px 10px;text-align:left;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.3px}
+                    td{padding:7px 10px;border-bottom:1px solid #eee}
+                    td.r,th.r{text-align:right;font-family:'Consolas',monospace;font-weight:600}
+                    tfoot td{font-weight:700;background:#f7f4ef;color:#1a2a3a;border-top:2px solid #b87333}
+                    .obs{background:#f7f4ef;border-left:3px solid #b87333;padding:14px 16px;font-size:11px;line-height:1.6;margin-top:6px;white-space:pre-wrap}
+                    .footer{margin-top:26px;padding-top:10px;border-top:1px solid #ddd;font-size:9px;color:#888;text-align:center;line-height:1.6}
+                    .no-print{margin-top:20px;text-align:center}
+                    .btn-print{padding:10px 24px;background:#1a2a3a;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:13px;font-weight:600}
+                    .btn-print:hover{background:#27405b}
+                    @media print{.no-print{display:none}body{margin:0}}
+                </style></head><body>
+                <div class="header">
+                    <div>
+                        <h1>PAU INTERIORISMO S.L. <span class="copper">·</span> Liquidación de cobros</h1>
+                        <div class="sub">Tomás i Valiente, 6 · 46290 Alcàsser (Valencia) · ${hoy}</div>
+                    </div>
+                    <div style="text-align:right">${logoHTML}</div>
+                </div>
+                <div class="page">
+                    <h2>Datos del cliente</h2>
+                    <div class="info-grid">
+                        <div><b>Cliente:</b> ${d.cliente || '—'}</div>
+                        <div><b>Referencia:</b> ${d.referencia || '—'}</div>
+                        <div><b>Fecha informe:</b> ${hoy}</div>
+                        <div><b>Estado:</b> ${estadoStr}</div>
+                    </div>
+
+                    <h2>Resumen económico</h2>
+                    <div class="kpis">
+                        <div class="kpi navy"><div class="kpi-label">Total presupuesto</div><div class="kpi-val">${fmt(totalPres)}</div></div>
+                        <div class="kpi green"><div class="kpi-label">Entregado a cuenta</div><div class="kpi-val">${fmt(totalEntregado)}</div></div>
+                        <div class="kpi red"><div class="kpi-label">Pendiente de cobro</div><div class="kpi-val">${fmt(pendiente)}</div></div>
+                    </div>
+                    <div class="progress-wrap">
+                        <div class="progress"><div style="width:${pct.toFixed(1)}%"></div></div>
+                        <div class="progress-label"><span class="pct">${pct.toFixed(0)}% cobrado</span><span>${fmt(totalEntregado)} de ${fmt(totalPres)}</span></div>
+                    </div>
+
+                    <h2>Detalle de entregas a cuenta</h2>
+                    <table>
+                        <thead><tr><th>Fecha</th><th>Concepto</th><th class="r">Importe</th></tr></thead>
+                        <tbody>${entRows}</tbody>
+                        <tfoot><tr><td colspan="2" style="text-align:right">TOTAL ENTREGADO</td><td class="r">${fmt(totalEntregado)}</td></tr></tfoot>
+                    </table>
+
+                    ${obs ? `<h2>Observaciones</h2><div class="obs">${obs.replace(/</g, '&lt;')}</div>` : ''}
+
+                    <div class="footer">
+                        PAU INTERIORISMO S.L. · Tomás i Valiente, 6 · 46290 Alcàsser (Valencia)
+                        <br>Documento generado automáticamente el ${hoy}
+                    </div>
+                    <div class="no-print">
+                        <button class="btn-print" onclick="window.print()">🖨 Imprimir / Guardar como PDF</button>
                     </div>
                 </div>
             </body></html>`);
@@ -2081,6 +2726,8 @@
         // Init
         agregarPresupuesto();
         agregarPresupuesto();
+        loadClientesProyectosPC();
+        loadConcState();
     </script>
 
 </body>
