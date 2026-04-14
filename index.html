@@ -10350,6 +10350,13 @@ async function subirPDFaDrive(elementId, nombreArchivo, proyId, subCarpeta, fold
         });
         var docEl=doc.getElementById(typeof elementId==='string'?elementId:(el.id||''));
         if(docEl){
+          // Forzar visible/en-pantalla en el clon (fac-preview-doc vive fuera de pantalla en el padre)
+          docEl.style.position='static';
+          docEl.style.left='auto';
+          docEl.style.top='auto';
+          docEl.style.display='block';
+          docEl.style.visibility='visible';
+          docEl.style.opacity='1';
           docEl.style.width='794px';
           docEl.style.maxWidth='794px';
           docEl.style.padding='12mm 15mm 12mm 15mm';
@@ -10359,6 +10366,13 @@ async function subirPDFaDrive(elementId, nombreArchivo, proyId, subCarpeta, fold
     },
     jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
   };
+  // Si el elemento está fuera de pantalla (p.ej. fac-preview-doc se crea off-screen),
+  // html2canvas puede fallar al medir. Lo restauramos a posición visible temporalmente.
+  const _prevCss = el.style.cssText;
+  const _wasOffscreen = /left:\s*-\d{3,}/.test(_prevCss) || el.style.display === 'none';
+  if(_wasOffscreen){
+    el.style.cssText = 'position:absolute;left:0;top:0;width:820px;background:#fff;z-index:-1;opacity:0;pointer-events:none';
+  }
   try{
     const base64=await html2pdf().set(opt).from(el).output('datauristring');
     const res=await fetch(DRIVE_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},
@@ -10367,6 +10381,9 @@ async function subirPDFaDrive(elementId, nombreArchivo, proyId, subCarpeta, fold
     if(json.ok){toast('☁️ Subido a Drive ✅');}
     else{toast('Error Drive: '+(json.error||'desconocido'),'error');}
   }catch(e){toast('Error: '+e.message,'error');}
+  finally{
+    if(_wasOffscreen) el.style.cssText = _prevCss;
+  }
 }
 
 // Sube un PDF en base64 ya existente (sin generar desde DOM) a Drive.
