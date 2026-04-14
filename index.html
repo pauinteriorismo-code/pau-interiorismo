@@ -7045,15 +7045,25 @@ async function subirFacturaPdfDrive(fileName, driveOpts){
   overlay.style.cssText = 'position:fixed;inset:0;background:#fff;z-index:999998;display:flex;align-items:center;justify-content:center;font-family:Inter,sans-serif;font-size:16px;color:#4a3728;font-weight:700';
   overlay.textContent = '☁️ Generando PDF para Drive…';
   document.body.appendChild(overlay);
-  // Wrapper on-screen detrás del overlay
+  // Wrapper on-screen detrás del overlay (ancho A4 = 794px para que el clon encaje centrado)
   const wrapper = document.createElement('div');
-  wrapper.style.cssText = 'position:fixed;left:0;top:0;width:820px;background:#fff;z-index:999997;padding:0';
+  wrapper.style.cssText = 'position:fixed;left:0;top:0;width:794px;background:#fff;z-index:999997;padding:0;margin:0';
   // Clonar el #fpdf (no tocar el original). El clon tiene todos los estilos inline.
   const clone = fpdfEl.cloneNode(true);
-  // Asegurar que el clon tenga su ancho completo
-  clone.style.margin = '0 auto';
-  clone.style.maxWidth = '794px';
+  // Aplicar los MISMOS estilos que el onclone de subirPDFaDrive usa para presupuesto
+  // (que ya está probado y funciona correctamente centrado en A4).
+  clone.style.position = 'static';
+  clone.style.left = 'auto';
+  clone.style.top = 'auto';
+  clone.style.display = 'block';
+  clone.style.visibility = 'visible';
+  clone.style.opacity = '1';
   clone.style.width = '794px';
+  clone.style.maxWidth = '794px';
+  clone.style.margin = '0 auto';
+  clone.style.padding = '12mm 15mm 12mm 15mm';
+  clone.style.boxSizing = 'border-box';
+  clone.style.boxShadow = 'none';
   wrapper.appendChild(clone);
   document.body.appendChild(wrapper);
   // Forzar reflow + 2 frames de pintado
@@ -7071,10 +7081,10 @@ async function subirFacturaPdfDrive(fileName, driveOpts){
       image:{type:'jpeg',quality:1.0},
       pagebreak:{mode:['css','legacy'],avoid:['tr','thead','tfoot']},
       html2canvas:{
-        scale:2,
+        scale:3,
         useCORS:true,
         letterRendering:true,
-        allowTaint:true,
+        allowTaint:false,
         imageTimeout:0,
         backgroundColor:'#ffffff'
       },
