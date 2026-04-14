@@ -6939,7 +6939,7 @@ function abrirVistaPrevia(docId, titulo, autoPrint=false, filename=null, driveOp
         while(node){const next=node.nextSibling;body.appendChild(node);node=next;}
         docEl.appendChild(body);
       }
-      if(autoPrint){ setTimeout(function(){ window.print(); }, 600); }
+      if(${autoPrint?'true':'false'}){ setTimeout(function(){ window.print(); }, 600); }
     });
   \u003c/script>\n  
 
@@ -7007,34 +7007,47 @@ async function subirPDFDesdeHtmlIframe(fullHtml, fileName, driveOpts){
     throw new Error('sin-folder');
   }
   toast('☁️ Generando PDF…');
-  // Crear iframe fuera de vista pero con dimensiones reales
+  // Crear iframe con dimensiones reales (A4 a ~820px ancho)
   const iframe = document.createElement('iframe');
   iframe.style.cssText = 'position:fixed;left:0;top:0;width:820px;height:1200px;border:0;z-index:-9999;background:#fff;pointer-events:none;opacity:0.01';
   document.body.appendChild(iframe);
   try{
-    // Escribir HTML en el iframe (mismo origen: accesible)
     const idoc = iframe.contentDocument || iframe.contentWindow.document;
-    // Eliminar la toolbar del HTML para que no aparezca en el PDF
-    const htmlSinToolbar = fullHtml.replace(/<div class="toolbar"[\s\S]*?<\/div>\s*/i, '');
+    const iwin = iframe.contentWindow;
+    // Eliminar la toolbar y INYECTAR html2pdf.js dentro del propio iframe
+    // (así html2canvas se ejecuta en el window correcto y mide el layout bien)
+    let htmlMod = fullHtml.replace(/<div class="toolbar"[\s\S]*?<\/div>\s*/i, '');
+    const scriptTag = '<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"><\/script>';
+    if(/<\/head>/i.test(htmlMod)){
+      htmlMod = htmlMod.replace(/<\/head>/i, scriptTag + '</head>');
+    } else {
+      htmlMod = scriptTag + htmlMod;
+    }
     idoc.open();
-    idoc.write(htmlSinToolbar);
+    idoc.write(htmlMod);
     idoc.close();
-    // Esperar al load + fuentes + imágenes
+    // Esperar load del documento
     await new Promise((resolve) => {
       if(idoc.readyState === 'complete') resolve();
       else iframe.addEventListener('load', resolve, {once:true});
     });
+    // Esperar a que html2pdf se cargue DENTRO del iframe (timeout 10s)
+    const t0 = Date.now();
+    while(!iwin.html2pdf && Date.now()-t0 < 10000){
+      await new Promise(r => setTimeout(r, 100));
+    }
+    if(!iwin.html2pdf) throw new Error('html2pdf no se cargó en el iframe');
     // Esperar fuentes
     try{ if(idoc.fonts && idoc.fonts.ready) await idoc.fonts.ready; }catch(e){}
     // Esperar imágenes
     const imgs = idoc.querySelectorAll('img');
     await Promise.all(Array.from(imgs).map(img => img.complete ? Promise.resolve() : new Promise(r=>{img.onload=img.onerror=r;})));
-    // Frame extra para que el layout se asiente
-    await new Promise(r => setTimeout(r, 300));
-    // Capturar el #fpdf (el contenedor principal de la factura) o el body entero
+    // Dar margen extra para layout
+    await new Promise(r => setTimeout(r, 400));
+    // Capturar el contenedor #fpdf (o body)
     const target = idoc.getElementById('fpdf') || idoc.body;
     if(!target) throw new Error('No se encontró contenido en el iframe');
-    // Generar PDF con parent's html2pdf (el iframe es same-origin, elementos accesibles)
+    // Generar PDF usando el html2pdf del IFRAME (html2canvas medirá el iframe correctamente)
     const opt = {
       margin:[10,10,15,10],
       filename:fileName,
@@ -7046,12 +7059,11 @@ async function subirPDFDesdeHtmlIframe(fullHtml, fileName, driveOpts){
         letterRendering:true,
         allowTaint:true,
         imageTimeout:0,
-        windowWidth:820,
         backgroundColor:'#ffffff'
       },
       jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
     };
-    const base64 = await html2pdf().set(opt).from(target).output('datauristring');
+    const base64 = await iwin.html2pdf().set(opt).from(target).output('datauristring');
     // Subir
     const res = await fetch(DRIVE_SCRIPT_URL, {
       method:'POST', headers:{'Content-Type':'text/plain'},
