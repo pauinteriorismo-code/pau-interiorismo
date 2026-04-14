@@ -9945,19 +9945,24 @@ async function crearCarpetasDrive(proyId, nombre){
 }
 
 async function crearCarpetasDriveDesdeModal(){
-  const proyId = document.getElementById('p-id')?.value;
+  const dbId = document.getElementById('p-id')?.value;
   const nombre = document.getElementById('p-nombre')?.value?.trim();
   if(!nombre){ toast('Introduce el nombre del proyecto primero','error'); return; }
 
-  toast('📁 Creando carpeta y subcarpetas en Drive…');
-  await crearCarpetasDrive(proyId || 'PRY', nombre);
+  // Obtener el proyecto_id real (PRY-xxx) desde la base de datos, no el UUID del campo p-id
+  let proyId = 'PRY';
+  if(dbId){
+    const p = PC.find(x=>x.id===dbId);
+    if(p && p.proyecto_id) proyId = p.proyecto_id;
+  }
 
-  // Si se creó la URL, rellenar el campo automáticamente
-  if(proyId){
-    const p = PC.find(x=>x.proyecto_id===proyId);
-    if(p && p.carpeta_drive){
-      document.getElementById('p-drive').value = p.carpeta_drive;
-    }
+  toast('📁 Creando carpeta y subcarpetas en Drive…');
+  await crearCarpetasDrive(proyId, nombre);
+
+  // Rellenar el campo con la URL creada
+  const p = PC.find(x=>x.proyecto_id===proyId);
+  if(p && p.carpeta_drive){
+    document.getElementById('p-drive').value = p.carpeta_drive;
   }
 }
 
