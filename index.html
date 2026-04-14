@@ -6979,12 +6979,10 @@ if('serviceWorker' in navigator){
         btn.onclick=async function(){
           btn.disabled=true; btn.textContent='Subiendo...';
           try{
-            // Si es la factura y tenemos el HTML completo guardado, usar el enfoque iframe (el más fiable)
-            if(_srcEl && _srcEl.id === 'fac-preview-doc' && window._facturaFullHtml){
-              await subirPDFDesdeHtmlIframe(window._facturaFullHtml, _nom, {folderId:_fi, subCarpeta:_sc, tipoDoc:_extras.tipoDoc, proveedor:_extras.proveedor});
-            } else {
-              await subirPDFaDrive(_srcEl, _nom, null, _sc, _fi, _extras);
-            }
+            // Usar el mismo flujo que presupuestos/pedidos/contratos (probado y funcional).
+            // Si el elemento está oculto (display:none o offsetWidth===0), subirPDFaDrive
+            // lo mueve on-screen con overlay, captura y restaura automáticamente.
+            await subirPDFaDrive(_srcEl, _nom, null, _sc, _fi, _extras);
             btn.textContent='✅ Subido';
           }catch(err){
             console.error('Error Drive:',err);
@@ -19895,18 +19893,19 @@ function previsualizarFactura(opts){
 </div>
 </body></html>`;
 
-  // Render in-page for crisp text (same as presupuesto)
-  // IMPORTANTE: NO usar display:none — html2canvas no renderiza elementos ocultos (PDF saldría en blanco).
-  // Posicionar fuera de pantalla para que tenga layout real.
+  // Render in-page igual que pf-doc (presupuesto): elemento oculto con display:none y
+  // estilo idéntico a pf-doc. La función subirPDFaDrive detecta offsetWidth===0 (_needsShow)
+  // y lo mueve on-screen con overlay para capturarlo. Así funciona el MISMO flujo probado
+  // de presupuestos/pedidos/contratos.
+  const _facDocCss = 'display:none;background:white;max-width:794px;width:794px;margin:0 auto;padding:20mm 20mm 12mm 20mm;font-family:\'Inter\',\'Segoe UI\',Arial,sans-serif;font-size:12px';
   let facDocEl = document.getElementById('fac-preview-doc');
   if(!facDocEl){
     facDocEl = document.createElement('div');
     facDocEl.id = 'fac-preview-doc';
-    facDocEl.style.cssText = 'position:absolute;left:-99999px;top:0;width:820px;background:#fff';
+    facDocEl.style.cssText = _facDocCss;
     document.body.appendChild(facDocEl);
   } else {
-    // Por si quedó con display:none de versiones anteriores
-    facDocEl.style.cssText = 'position:absolute;left:-99999px;top:0;width:820px;background:#fff';
+    facDocEl.style.cssText = _facDocCss;
   }
   // Extract body content (strip <html><head> wrapper and toolbar)
   const _bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/);
