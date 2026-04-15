@@ -10069,11 +10069,14 @@ const DRIVE_SUB = {
   comparativas: '11 Comparativas'
 };
 
-async function crearCarpetasDrive(proyId, nombre, parentFolderId){
+async function crearCarpetasDrive(proyId, nombre, parentFolderId, crearProjectFolderDentro){
   const carpeta=proyId+' '+nombre;
   const body = {nombre:carpeta, carpetas:DRIVE_FOLDER_NAMES};
-  // parentFolderId: si se pasa, crea subcarpetas DENTRO de esa carpeta existente
+  // parentFolderId: si se pasa, crea subcarpetas DENTRO de esa carpeta existente.
+  // crearProjectFolderDentro: si true, primero crea la carpeta del proyecto (carpeta)
+  //   dentro de parentFolderId, y después crea las subcarpetas dentro de esa nueva carpeta.
   if(parentFolderId) body.parentId = parentFolderId;
+  if(crearProjectFolderDentro) body.createProjectFolderInside = true;
   try{
     const r=await fetch(DRIVE_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(body)});
     const json=await r.json().catch(()=>({}));
@@ -10101,19 +10104,33 @@ async function crearCarpetasDriveDesdeModal(){
     if(p && p.proyecto_id) proyId = p.proyecto_id;
   }
 
-  // Si el usuario ya tiene una carpeta de Drive (la del proyecto, NO la de Proyectos padre),
-  // crear subcarpetas dentro de ella. Si no, crear todo desde cero.
+  // Si el usuario ya tiene una URL en el campo Drive, preguntamos si es la carpeta
+  // padre "Proyectos" (contenedora) o la específica del proyecto. Esto permite
+  // a proyectos antiguos que solo tienen la URL de la carpeta padre crear correctamente
+  // la carpeta del proyecto DENTRO, con subcarpetas anidadas.
   const driveUrl = document.getElementById('p-drive')?.value?.trim() || '';
   const m = driveUrl.match(/folders\/([a-zA-Z0-9_-]+)/);
   const parentFolderId = m ? m[1] : null;
 
+  let crearProjectFolderDentro = false;
   if(parentFolderId){
-    toast('📁 Creando subcarpetas en la carpeta existente…');
+    crearProjectFolderDentro = confirm(
+      `📁 Crear carpetas en Drive\n\n` +
+      `¿La URL que has pegado es la carpeta general "Proyectos" (contenedora de todos los proyectos)?\n\n` +
+      `✅ ACEPTAR: Crearé "${proyId} ${nombre}" dentro de esa carpeta y meteré las subcarpetas dentro.\n\n` +
+      `❌ CANCELAR: La URL ya es la carpeta específica del proyecto → solo crearé las subcarpetas dentro de ella.`
+    );
+  }
+
+  if(parentFolderId){
+    toast(crearProjectFolderDentro
+      ? `📁 Creando "${proyId} ${nombre}" dentro de Proyectos…`
+      : '📁 Creando subcarpetas en la carpeta existente…');
   } else {
     toast('📁 Creando carpeta y subcarpetas en Drive…');
   }
 
-  await crearCarpetasDrive(proyId, nombre, parentFolderId);
+  await crearCarpetasDrive(proyId, nombre, parentFolderId, crearProjectFolderDentro);
 
   // Rellenar el campo con la URL creada
   const p = PC.find(x=>x.proyecto_id===proyId);
