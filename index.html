@@ -10025,7 +10025,20 @@ async function saveProyecto(){
       d.proyecto_id=genId('PRY',PC,'proyecto_id');
       await sbPost('proyectos',d);
       toast('Proyecto creado ✅');
-      crearCarpetasDrive(d.proyecto_id, nombre);
+      // Crear la carpeta del proyecto DENTRO de la carpeta padre "Proyectos" de Drive.
+      // La primera vez que se crea un proyecto se pide al usuario la URL/ID de esa
+      // carpeta, se guarda en localStorage y se reutiliza para siguientes proyectos.
+      let _proyectosParentId = getDriveProyectosParentId();
+      if(!_proyectosParentId){
+        _proyectosParentId = askDriveProyectosParentId();
+      }
+      if(_proyectosParentId){
+        crearCarpetasDrive(d.proyecto_id, nombre, _proyectosParentId, true);
+      } else {
+        // Fallback: crear sin parent (caerá en la raíz de Drive / ROOT_FOLDER_ID del Apps Script)
+        toast('⚠ Sin carpeta Proyectos configurada — se creará en la raíz de Drive','error');
+        crearCarpetasDrive(d.proyecto_id, nombre);
+      }
       crearTareasAutoProyecto(d.proyecto_id,d.tipo,d.fecha_inicio);
     }
     closeModal('m-proyecto');
@@ -10068,6 +10081,42 @@ const DRIVE_SUB = {
   facturas:     '08 Facturas',
   comparativas: '11 Comparativas'
 };
+
+// ─── Carpeta padre "Proyectos" en Drive ───
+// Se almacena en localStorage para no tener que volver a pedirla.
+// Si no está guardada, la app la pide al usuario la primera vez que crea un proyecto.
+const _DRIVE_PROYECTOS_KEY = 'pau_drive_proyectos_parent_id';
+
+function _extractDriveFolderId(url){
+  if(!url) return null;
+  const m = String(url).match(/folders\/([a-zA-Z0-9_-]+)/);
+  return m ? m[1] : (String(url).match(/^[a-zA-Z0-9_-]{20,}$/) ? url : null);
+}
+
+function getDriveProyectosParentId(){
+  try { return localStorage.getItem(_DRIVE_PROYECTOS_KEY) || null; } catch(e){ return null; }
+}
+
+function setDriveProyectosParentId(id){
+  try { localStorage.setItem(_DRIVE_PROYECTOS_KEY, id); } catch(e){}
+}
+
+function askDriveProyectosParentId(){
+  const url = prompt(
+    '📁 Configuración inicial de Drive\n\n' +
+    'Para que los proyectos nuevos se creen automáticamente dentro de tu carpeta "Proyectos" de Google Drive, pega aquí la URL (o el ID) de esa carpeta:\n\n' +
+    'Ejemplo: https://drive.google.com/drive/folders/1AbCdEf...\n\n' +
+    '(Solo se te pedirá una vez, se guarda en este navegador.)'
+  );
+  if(!url) return null;
+  const id = _extractDriveFolderId(url.trim());
+  if(!id){
+    toast('URL de carpeta inválida','error');
+    return null;
+  }
+  setDriveProyectosParentId(id);
+  return id;
+}
 
 async function crearCarpetasDrive(proyId, nombre, parentFolderId, crearProjectFolderDentro){
   const carpeta=proyId+' '+nombre;
