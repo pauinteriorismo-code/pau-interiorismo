@@ -10115,8 +10115,24 @@ function askDriveProyectosParentId(){
     return null;
   }
   setDriveProyectosParentId(id);
+  console.log('[Drive] Carpeta padre Proyectos configurada:', id);
   return id;
 }
+
+// Helper de depuración accesible desde la consola:
+//   resetearCarpetaProyectosDrive()  → borra la URL guardada, se volverá a preguntar.
+//   verCarpetaProyectosDrive()       → muestra la URL/ID guardada.
+window.resetearCarpetaProyectosDrive = function(){
+  try { localStorage.removeItem(_DRIVE_PROYECTOS_KEY); } catch(e){}
+  console.log('[Drive] Carpeta padre Proyectos borrada. Se volverá a pedir al crear un proyecto.');
+  toast('📁 Configuración de carpeta Proyectos reseteada');
+};
+window.verCarpetaProyectosDrive = function(){
+  const id = getDriveProyectosParentId();
+  console.log('[Drive] ID actual de carpeta padre Proyectos:', id);
+  if(id) toast('📁 Carpeta Proyectos guardada: '+id); else toast('⚠ Sin configurar','error');
+  return id;
+};
 
 async function crearCarpetasDrive(proyId, nombre, parentFolderId, crearProjectFolderDentro){
   const carpeta=proyId+' '+nombre;
@@ -10126,18 +10142,25 @@ async function crearCarpetasDrive(proyId, nombre, parentFolderId, crearProjectFo
   //   dentro de parentFolderId, y después crea las subcarpetas dentro de esa nueva carpeta.
   if(parentFolderId) body.parentId = parentFolderId;
   if(crearProjectFolderDentro) body.createProjectFolderInside = true;
+  console.log('[Drive] crearCarpetasDrive request →', body);
   try{
     const r=await fetch(DRIVE_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(body)});
-    const json=await r.json().catch(()=>({}));
+    const rawText = await r.text();
+    console.log('[Drive] crearCarpetasDrive response ←', r.status, rawText);
+    let json = {};
+    try { json = JSON.parse(rawText); } catch(_){ json = {}; }
     if(json.ok && json.url){
       const p=PC.find(x=>x.proyecto_id===proyId);
       if(p){await sbPatch('proyectos',p.id,{carpeta_drive:json.url});p.carpeta_drive=json.url;}
-      setTimeout(()=>toast('📁 Carpetas Drive creadas ✅'),1500);
+      setTimeout(()=>toast('📁 Carpeta Drive creada: '+carpeta+' ✅'),1500);
     }else{
-      setTimeout(()=>toast('📁 Carpetas Drive creadas: '+carpeta),1500);
+      const errMsg = json.error || ('Respuesta inesperada: '+rawText.substring(0,120));
+      console.error('[Drive] Error creando carpeta:', errMsg, 'request=', body);
+      setTimeout(()=>toast('❌ No se pudo crear carpeta Drive: '+errMsg,'error'),1500);
     }
   }catch(e){
-    console.warn('Drive:',e);
+    console.error('[Drive] Fallo fetch crearCarpetasDrive:',e);
+    setTimeout(()=>toast('❌ Fallo red al crear carpeta Drive: '+e.message,'error'),1500);
   }
 }
 
