@@ -7043,21 +7043,36 @@ async function subirFacturaPdfDrive(fileName, driveOpts){
   const fpdfEl = facEl ? facEl.querySelector('#fpdf') : null;
   if(!fpdfEl) throw new Error('No se encontró #fpdf en fac-preview-doc');
   toast('☁️ Generando PDF…');
-  // Mostrar fac-preview-doc on-screen (estaba display:none) con overlay blanco para tapar al usuario
+
+  // ─── Gestión centralizada de overlay + facEl (GARANTIZA limpieza siempre) ───
   const _prevFacCss = facEl.style.cssText;
-  facEl.style.cssText = 'position:fixed;left:0;top:0;width:820px;background:#fff;z-index:999997;padding:0;margin:0;pointer-events:none';
-  const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;background:#fff;z-index:999998;display:flex;align-items:center;justify-content:center;font-family:Inter,sans-serif;font-size:16px;color:#4a3728;font-weight:700';
-  overlay.textContent = '☁️ Generando PDF para Drive…';
-  document.body.appendChild(overlay);
-  // Forzar reflow + 2 frames de pintado
-  facEl.getBoundingClientRect();
-  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
-  try{ if(document.fonts && document.fonts.ready) await document.fonts.ready; }catch(e){}
-  const imgs = fpdfEl.querySelectorAll('img');
-  await Promise.all(Array.from(imgs).map(img => img.complete ? Promise.resolve() : new Promise(r=>{img.onload=img.onerror=r;})));
-  await new Promise(r => setTimeout(r, 300));
+  let overlay = null;
+  let _uiClean = false;
+  const cleanupUI = () => {
+    if(_uiClean) return;
+    _uiClean = true;
+    try{ facEl.style.cssText = _prevFacCss; }catch(e){}
+    try{ if(overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay); }catch(e){}
+    overlay = null;
+  };
+  // Timer de seguridad: si algo queda colgado, limpiar UI tras 25s
+  const _safetyTimer = setTimeout(cleanupUI, 25000);
+
   try{
+    // Mostrar fac-preview-doc on-screen (estaba display:none)
+    facEl.style.cssText = 'position:fixed;left:0;top:0;width:820px;background:#fff;z-index:999997;padding:0;margin:0;pointer-events:none';
+    overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:#fff;z-index:999998;display:flex;align-items:center;justify-content:center;font-family:Inter,sans-serif;font-size:16px;color:#4a3728;font-weight:700';
+    overlay.textContent = '☁️ Generando PDF para Drive…';
+    document.body.appendChild(overlay);
+    // Forzar reflow + 2 frames de pintado
+    facEl.getBoundingClientRect();
+    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+    try{ if(document.fonts && document.fonts.ready) await document.fonts.ready; }catch(e){}
+    const imgs = fpdfEl.querySelectorAll('img');
+    await Promise.all(Array.from(imgs).map(img => img.complete ? Promise.resolve() : new Promise(r=>{img.onload=img.onerror=r;})));
+    await new Promise(r => setTimeout(r, 300));
+
     const opt = {
       margin:[10,10,15,10],
       filename:fileName,
@@ -7075,17 +7090,20 @@ async function subirFacturaPdfDrive(fileName, driveOpts){
             el.style.pageBreakInside='avoid';
             el.style.breakInside='avoid';
           });
-          // Normalizar el #fpdf en el clon: quitar box-shadow y centrar
           var fpdf = doc.getElementById('fpdf');
-          if(fpdf){
-            fpdf.style.boxShadow = 'none';
-            fpdf.style.margin = '0';
-          }
+          if(fpdf){ fpdf.style.boxShadow = 'none'; fpdf.style.margin = '0'; }
         }
       },
       jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
     };
     const base64 = await html2pdf().set(opt).from(fpdfEl).output('datauristring');
+
+    // ─── PDF ya generado: LIMPIAR UI AHORA para no bloquear al usuario ───
+    // El fetch a Drive puede tardar segundos, pero la UI ya está liberada.
+    cleanupUI();
+    clearTimeout(_safetyTimer);
+
+    // Fetch a Drive (en "background" desde la perspectiva de la UI)
     const res = await fetch(DRIVE_SCRIPT_URL, {
       method:'POST', headers:{'Content-Type':'text/plain'},
       body:JSON.stringify({
@@ -7099,9 +7117,14 @@ async function subirFacturaPdfDrive(fileName, driveOpts){
     const json = await res.json().catch(()=>({}));
     if(json.ok){ toast('☁️ Subido a Drive ✅'); return json; }
     throw new Error(json.error||'subida fallida');
+  } catch(err){
+    cleanupUI();
+    clearTimeout(_safetyTimer);
+    throw err;
   } finally {
-    facEl.style.cssText = _prevFacCss;
-    if(overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    // Doble seguro: limpiar aunque ya esté limpio
+    cleanupUI();
+    clearTimeout(_safetyTimer);
   }
 }
 
