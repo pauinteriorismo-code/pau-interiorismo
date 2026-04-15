@@ -7042,7 +7042,10 @@ async function subirFacturaPdfDrive(fileName, driveOpts){
   const facEl = document.getElementById('fac-preview-doc');
   const fpdfEl = facEl ? facEl.querySelector('#fpdf') : null;
   if(!fpdfEl) throw new Error('No se encontró #fpdf en fac-preview-doc');
-  toast('☁️ Generando PDF…');
+  // En modo silent (auto-subida tras guardar) no mostramos el toast inicial
+  // para no saturar al usuario (ya vio "Factura guardada ✅").
+  const _silentToast = !!(driveOpts && driveOpts.silent);
+  if(!_silentToast) toast('☁️ Generando PDF…');
 
   // ─── Gestión centralizada de overlay + facEl (GARANTIZA limpieza siempre) ───
   const _prevFacCss = facEl.style.cssText;
@@ -7059,12 +7062,18 @@ async function subirFacturaPdfDrive(fileName, driveOpts){
   const _safetyTimer = setTimeout(cleanupUI, 25000);
 
   try{
-    // Mostrar fac-preview-doc on-screen (estaba display:none)
-    facEl.style.cssText = 'position:fixed;left:0;top:0;width:820px;background:#fff;z-index:999997;padding:0;margin:0;pointer-events:none';
-    overlay = document.createElement('div');
-    overlay.style.cssText = 'position:fixed;inset:0;background:#fff;z-index:999998;display:flex;align-items:center;justify-content:center;font-family:Inter,sans-serif;font-size:16px;color:#4a3728;font-weight:700';
-    overlay.textContent = '☁️ Generando PDF para Drive…';
-    document.body.appendChild(overlay);
+    // Mostrar fac-preview-doc on-screen (estaba display:none).
+    // En modo silent, lo colocamos fuera del viewport (off-screen) en vez de encima,
+    // para que la auto-subida tras guardar no tape la navegación del usuario.
+    if(_silentToast){
+      facEl.style.cssText = 'position:fixed;left:-10000px;top:0;width:820px;background:#fff;z-index:-1;padding:0;margin:0;pointer-events:none';
+    } else {
+      facEl.style.cssText = 'position:fixed;left:0;top:0;width:820px;background:#fff;z-index:999997;padding:0;margin:0;pointer-events:none';
+      overlay = document.createElement('div');
+      overlay.style.cssText = 'position:fixed;inset:0;background:#fff;z-index:999998;display:flex;align-items:center;justify-content:center;font-family:Inter,sans-serif;font-size:16px;color:#4a3728;font-weight:700';
+      overlay.textContent = '☁️ Generando PDF para Drive…';
+      document.body.appendChild(overlay);
+    }
     // Forzar reflow + 2 frames de pintado
     facEl.getBoundingClientRect();
     await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
@@ -7115,7 +7124,7 @@ async function subirFacturaPdfDrive(fileName, driveOpts){
       })
     });
     const json = await res.json().catch(()=>({}));
-    if(json.ok){ toast('☁️ Subido a Drive ✅'); return json; }
+    if(json.ok){ toast(_silentToast ? '☁️ Factura sincronizada con Drive ✅' : '☁️ Subido a Drive ✅'); return json; }
     throw new Error(json.error||'subida fallida');
   } catch(err){
     cleanupUI();
@@ -19989,7 +19998,7 @@ function previsualizarFactura(opts){
     // Modo auto-Drive: subir sin abrir popup de preview (usa la función específica de factura)
     if(_driveOpts && _driveOpts.folderId){
       setTimeout(()=>{
-        subirFacturaPdfDrive(_fn+'.pdf', {folderId:_driveOpts.folderId, subCarpeta:_driveOpts.subCarpeta, tipoDoc:_driveOpts.tipoDoc||null, proveedor:_driveOpts.proveedor||null})
+        subirFacturaPdfDrive(_fn+'.pdf', {folderId:_driveOpts.folderId, subCarpeta:_driveOpts.subCarpeta, tipoDoc:_driveOpts.tipoDoc||null, proveedor:_driveOpts.proveedor||null, silent:true})
           .catch(err=>toast('Error subiendo a Drive: '+err.message,'error'));
       }, 200);
     }
