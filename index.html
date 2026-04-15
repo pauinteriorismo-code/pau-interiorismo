@@ -10499,6 +10499,17 @@ async function subirPDFaDrive(elementId, nombreArchivo, proyId, subCarpeta, fold
         doc.querySelectorAll('.no-print,[data-noprint]').forEach(function(el){el.style.display='none';});
         var obs=doc.getElementById('pf-obs');
         if(obs){obs.style.border='none';obs.style.outline='none';}
+        // Eliminar filas vacías del pedido para que el PDF no ocupe páginas extra
+        // con líneas en blanco reservadas para rellenar en pantalla.
+        var pdBody=doc.getElementById('pd-lineas-body');
+        if(pdBody){
+          Array.from(pdBody.querySelectorAll('tr')).forEach(function(tr){
+            var inputs=tr.querySelectorAll('input,textarea');
+            var hasContent=false;
+            inputs.forEach(function(inp){ if((inp.value||'').trim()) hasContent=true; });
+            if(!hasContent) tr.remove();
+          });
+        }
         doc.querySelectorAll('tr,thead,tfoot').forEach(function(el){
           el.style.pageBreakInside='avoid';
           el.style.breakInside='avoid';
@@ -17648,6 +17659,17 @@ async function exportarPDF(elementId, nombreArchivo){
       allowTaint: false,
       imageTimeout: 0,
       onclone: function(doc) {
+        // Eliminar filas vacías del pedido para que el PDF no ocupe páginas extra
+        // con líneas en blanco reservadas para rellenar en pantalla.
+        var pdBody = doc.getElementById('pd-lineas-body');
+        if(pdBody){
+          Array.from(pdBody.querySelectorAll('tr')).forEach(function(tr){
+            var inputs = tr.querySelectorAll('input,textarea');
+            var hasContent = false;
+            inputs.forEach(function(inp){ if((inp.value||'').trim()) hasContent = true; });
+            if(!hasContent) tr.remove();
+          });
+        }
         // Convertir inputs y textareas a elementos de texto para mejor nitidez
         doc.querySelectorAll('input[type="text"],input:not([type]),input[type="date"],textarea').forEach(function(inp){
           if(inp.closest('.no-print')) return;
