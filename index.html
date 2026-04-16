@@ -416,9 +416,16 @@ tbody td{padding:7px 10px;vertical-align:middle}
 }
 
 /* ══════════════════════════════
+   DOCUMENTO DE PEDIDO — inputs visibles
+══════════════════════════════ */
+.pd-doc-input:hover { background:#fffaf2 !important; border-color:#b87333 !important; }
+.pd-doc-input:focus { outline:none; background:#fff !important; border:1px solid #b87333 !important; box-shadow:0 0 0 2px #b8733333; }
+
+/* ══════════════════════════════
    PRINT STYLES
 ══════════════════════════════ */
 @media print {
+  .pd-doc-input { border:none !important; background:transparent !important; padding:0 !important; }
   .no-print { display: none !important; }
   #pf-obs { border: none !important; outline: none !important; }
   #pf-obs-wrap .no-print { display: none !important; }
@@ -1130,13 +1137,14 @@ if(window.MutationObserver){
         <!-- PROVEEDOR / PROYECTO / CLIENTE -->
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px">
           <div style="background:#f7f4ef;padding:10px;border-radius:4px">
-            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#b87333;margin-bottom:5px">PROVEEDOR / EMPRESA</div>
-            <input id="pd-prov-input" style="border:none;background:transparent;width:100%;font-weight:700;font-size:12px" placeholder="Nombre proveedor">
+            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#b87333;margin-bottom:5px">PROVEEDOR / EMPRESA <span class="no-print" style="font-weight:500;color:#b87333aa;text-transform:none;letter-spacing:0">— escribe para buscar</span></div>
+            <input id="pd-prov-input" list="pd-prov-datalist" autocomplete="off" class="pd-doc-input" style="border:1px dashed #c9a37a;background:#fff;width:100%;font-weight:700;font-size:12px;padding:4px 6px;border-radius:3px" placeholder="Click aquí para escribir el proveedor…" oninput="pdProvCompletar(this)">
+            <datalist id="pd-prov-datalist"></datalist>
           </div>
           <div style="background:#f7f4ef;padding:10px;border-radius:4px">
             <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#b87333;margin-bottom:5px">PROYECTO / REFERENCIA</div>
-            <input id="pd-proyecto-input" style="border:none;background:transparent;width:100%;font-weight:700;font-size:12px" placeholder="Nombre o referencia del proyecto">
-            <input id="pd-ref-doc-input" style="border:none;background:transparent;width:100%;color:#b87333;font-size:11px;font-weight:600;margin-top:3px" placeholder="Referencia del pedido (ej: Azulejo baño modelo X)">
+            <input id="pd-proyecto-input" class="pd-doc-input" style="border:none;background:transparent;width:100%;font-weight:700;font-size:12px" placeholder="Nombre o referencia del proyecto">
+            <input id="pd-ref-doc-input" class="pd-doc-input" style="border:1px dashed #c9a37a;background:#fff;width:100%;color:#b87333;font-size:11px;font-weight:600;margin-top:3px;padding:4px 6px;border-radius:3px" placeholder="Referencia del pedido (ej: Azulejo baño modelo X)">
           </div>
         </div>
         <!-- TABLA DE LÍNEAS -->
@@ -8159,7 +8167,16 @@ function presCrearPedido(){
       if(cliBlock) cliBlock.style.display = d.cli.nombre ? '' : 'none';
 
       window._pedidoDesdePres = null;
-      toast('📦 Pedido con '+d.numLineas+' líneas listo — '+d.proy+' '+d.ver.toUpperCase()+'. Revisa y guarda.');
+      toast('📦 '+d.numLineas+' líneas importadas. 👉 Completa PROVEEDOR y REFERENCIA antes de guardar.');
+      // Resaltar el campo proveedor para que el usuario sepa que es editable
+      const provInput = document.getElementById('pd-prov-input');
+      if(provInput){
+        const previo = provInput.style.boxShadow;
+        provInput.style.transition = 'box-shadow .25s';
+        provInput.style.boxShadow = '0 0 0 4px #b8733366';
+        provInput.scrollIntoView({behavior:'smooth', block:'center'});
+        setTimeout(()=>{ provInput.style.boxShadow = previo; if(!provInput.value) provInput.focus(); }, 1800);
+      }
     }, 300);
   }, 400);
 }
@@ -17467,6 +17484,29 @@ function abrirDocPedido(pedidoId){
   }, 100);
 }
 
+// Pobla el datalist de proveedores para autocompletar en el documento
+function pdPoblarProvDatalist(){
+  const dl = document.getElementById('pd-prov-datalist');
+  if(!dl) return;
+  if(!window.ProvC || !ProvC.length){
+    // Cargar proveedores si no están en memoria
+    sbGet('proveedores','?order=nombre.asc').then(r=>{ ProvC=r||[]; pdPoblarProvDatalist(); }).catch(()=>{});
+    return;
+  }
+  dl.innerHTML = ProvC.map(p=>`<option value="${(p.nombre||'').replace(/"/g,'&quot;')}">`).join('');
+}
+
+// Cuando el usuario escribe/elige un proveedor, autorrellena el teléfono si lo hay
+function pdProvCompletar(input){
+  const nombre = (input?.value||'').trim();
+  if(!nombre) return;
+  const prov = (window.ProvC||[]).find(p=>p.nombre===nombre);
+  if(prov){
+    const tel = document.getElementById('pd-prov-tel-input');
+    if(tel && prov.telefono) tel.value = prov.telefono;
+  }
+}
+
 // Nuevo pedido en blanco
 function nuevoPedidoDoc(){
   window.pdLineas = Array.from({length:20}, ()=>({cant:'',ref:'',desc:''}));
@@ -18565,12 +18605,14 @@ async function plEliminarTarea(id){
 async function loadPedidos(){
   // Siempre cargar proveedores para tenerlos listos
   try{ ProvC=await sbGet('proveedores','?order=nombre.asc'); }catch(e){ ProvC=[]; }
+  // Asegurar que PC esté disponible para el botón Drive en la tabla
+  if(!PC || !PC.length){ try{ PC=await sbGet('proyectos','?order=created_at.desc'); }catch(e){ PC=PC||[]; } }
   const tb=document.getElementById('pedidos-tbody');
   try{
     PedC=await sbGet('pedidos','?order=fecha.desc');
     document.getElementById('pedidos-count').textContent=PedC.length+' pedidos';
     if(!PedC.length){tb.innerHTML=`<tr><td colspan="9"><div class="empty"><div class="empty-icon">📦</div><div class="empty-text">Sin pedidos</div><button class="btn btn-primary" onclick="openModal('m-pedido')">＋ Nuevo</button></div></td></tr>`;return;}
-    tb.innerHTML=PedC.map(p=>`<tr data-search="${(p.num_pedido+p.proyecto_id+p.proveedor+p.tipo).toLowerCase()}"><td class="td-mono" style="font-weight:700">${p.num_pedido||'—'}</td><td>${fmtD(p.fecha)}</td><td class="td-mono" style="color:var(--text-soft)">${p.proyecto_id||'—'}</td><td><span class="badge b-blue">${p.tipo||'—'}</span></td><td>${p.proveedor||'—'}</td><td class="td-mono" style="font-weight:700">${fmt(p.importe)}</td><td>${bE(p.estado)}</td><td style="color:var(--text-soft)">${p.referencia?`<span style="font-weight:600;color:var(--navy)">${p.referencia}</span>`:''} ${p.observaciones||''}</td><td style="display:flex;gap:4px">${_badgeEnviado('pedido',p.id)}${(()=>{try{const a=p.adjuntos?JSON.parse(p.adjuntos):[];return a.length?`<button class="btn btn-ghost btn-icon btn-sm" onclick="pedVerAdjById('${p.id}')" title="${a.length} adjunto(s)" style="font-size:11px;color:var(--navy)">📎 ${a.length}</button>`:''}catch(e){return'';}})()}<button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="editPedido('${p.id}')">Editar</button><button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="abrirDocPedido('${p.id}')">📋 Doc.</button>${(()=>{const proy=(PC||[]).find(x=>x.proyecto_id===p.proyecto_id);const tieneDrive=!!(proy&&proy.carpeta_drive);return tieneDrive?`<button class="btn btn-ghost btn-icon btn-sm" onclick="abrirCarpetaProyectoDrive('${p.proyecto_id}')" title="Abrir carpeta del proyecto en Drive" style="font-size:11px">📁</button>`:`<button class="btn btn-ghost btn-icon btn-sm" disabled title="Sin carpeta Drive en el proyecto" style="font-size:11px;opacity:.35;cursor:not-allowed">📁</button>`;})()}<button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('pedidos','${p.id}','${(p.num_pedido||'pedido').replace(/'/g,"\\'")}')">🗑</button></td></tr>`).join('');
+    tb.innerHTML=PedC.map(p=>`<tr data-search="${(p.num_pedido+p.proyecto_id+p.proveedor+p.tipo).toLowerCase()}"><td class="td-mono" style="font-weight:700">${p.num_pedido||'—'}</td><td>${fmtD(p.fecha)}</td><td class="td-mono" style="color:var(--text-soft)">${p.proyecto_id||'—'}</td><td><span class="badge b-blue">${p.tipo||'—'}</span></td><td>${p.proveedor||'—'}</td><td class="td-mono" style="font-weight:700">${fmt(p.importe)}</td><td>${bE(p.estado)}</td><td style="color:var(--text-soft)">${p.referencia?`<span style="font-weight:600;color:var(--navy)">${p.referencia}</span>`:''} ${p.observaciones||''}</td><td style="display:flex;gap:4px">${_badgeEnviado('pedido',p.id)}${(()=>{try{const a=p.adjuntos?JSON.parse(p.adjuntos):[];return a.length?`<button class="btn btn-ghost btn-icon btn-sm" onclick="pedVerAdjById('${p.id}')" title="${a.length} adjunto(s)" style="font-size:11px;color:var(--navy)">📎 ${a.length}</button>`:''}catch(e){return'';}})()}<button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="editPedido('${p.id}')">Editar</button><button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="abrirDocPedido('${p.id}')">📋 Doc.</button>${(()=>{const proy=(PC||[]).find(x=>x.proyecto_id===p.proyecto_id);const tieneDrive=!!(proy&&proy.carpeta_drive);return tieneDrive?`<button class="btn btn-ghost btn-sm" onclick="abrirCarpetaProyectoDrive('${p.proyecto_id}')" title="Abrir carpeta del proyecto en Drive en una pestaña nueva" style="font-size:11px;color:#1a73e8;font-weight:600">📁 Drive</button>`:`<button class="btn btn-ghost btn-sm" disabled title="Este proyecto no tiene carpeta Drive asociada" style="font-size:11px;opacity:.4;cursor:not-allowed">📁 Drive</button>`;})()}<button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('pedidos','${p.id}','${(p.num_pedido||'pedido').replace(/'/g,"\\'")}')">🗑</button></td></tr>`).join('');
   }catch(e){tb.innerHTML=`<tr><td colspan="9" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
   // Re-apply project filter after load
   filtrarModuloPorProyecto('pedidos');
@@ -21122,6 +21164,9 @@ const loaders={
   },
   pedido_doc:async()=>{
     PedC = await sbGet('pedidos','?order=fecha.desc').catch(()=>PedC||[]);
+    // Cargar proveedores para autocompletar
+    try{ ProvC = await sbGet('proveedores','?order=nombre.asc'); }catch(e){ ProvC = ProvC||[]; }
+    pdPoblarProvDatalist();
     poblarClientesDocumentos();
     // Poblar selector de pedidos guardados
     poblarSelectorDocPedido();
