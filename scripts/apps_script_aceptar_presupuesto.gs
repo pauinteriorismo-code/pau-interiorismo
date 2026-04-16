@@ -105,6 +105,7 @@ function _consultarTokenAceptacion(data) {
         ref:               row.presupuesto_ref,
         proyecto_id:       row.proyecto_id,
         cliente_email:     row.cliente_email,
+        sender_email:      row.sender_email,
         snapshot_html:     row.snapshot_html || '',
         snapshot_total:    row.snapshot_total,
         expires_at:        row.expires_at,
@@ -172,7 +173,13 @@ function _aceptarPresupuesto(data, e) {
         accepted_user_agent: userAgent || null
       });
 
-    // Notificación al cliente (confirmación)
+    // Determinar el alias del remitente original (el que envió el presupuesto).
+    // Si no se guardó (registros antiguos), usar el correo interno por defecto.
+    var senderEmail = (row.sender_email && String(row.sender_email).trim())
+                        ? String(row.sender_email).trim()
+                        : INTERNAL_NOTIF_EMAIL;
+
+    // Notificación al cliente (confirmación) — desde el mismo alias que envió el presupuesto
     try {
       var htmlCliente =
         '<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#333;">' +
@@ -196,12 +203,12 @@ function _aceptarPresupuesto(data, e) {
         {
           htmlBody: htmlCliente,
           name:     'Pau Interiorismo',
-          from:     INTERNAL_NOTIF_EMAIL,
-          replyTo:  INTERNAL_NOTIF_EMAIL
+          from:     senderEmail,
+          replyTo:  senderEmail
         });
     } catch (err) { Logger.log('No se pudo enviar email cliente: ' + err); }
 
-    // Notificación interna
+    // Notificación interna — al MISMO alias desde el que se envió el presupuesto
     try {
       var htmlInterno =
         '<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#333;">' +
@@ -209,6 +216,7 @@ function _aceptarPresupuesto(data, e) {
         '<p><b>Referencia:</b> ' + _escapeHtml(row.presupuesto_ref) + '<br>' +
         '<b>Proyecto:</b> ' + _escapeHtml(row.proyecto_id) + '<br>' +
         '<b>Cliente email:</b> ' + _escapeHtml(row.cliente_email) + '<br>' +
+        '<b>Enviado desde:</b> ' + _escapeHtml(senderEmail) + '<br>' +
         '<b>Aceptado por:</b> ' + _escapeHtml(nombre) + ' (DNI: ' + _escapeHtml(dni.toUpperCase()) + ')<br>' +
         '<b>Fecha:</b> ' + new Date(nowIso).toLocaleString('es-ES') + '<br>' +
         '<b>IP:</b> ' + _escapeHtml(ip || '—') + '<br>' +
@@ -218,13 +226,13 @@ function _aceptarPresupuesto(data, e) {
           : '') +
         '</div>';
 
-      GmailApp.sendEmail(INTERNAL_NOTIF_EMAIL,
+      GmailApp.sendEmail(senderEmail,
         '[ACEPTADO] ' + row.presupuesto_ref + ' · ' + row.proyecto_id,
         '',
         {
           htmlBody: htmlInterno,
           name:     'Pau Interiorismo · Sistema',
-          from:     INTERNAL_NOTIF_EMAIL
+          from:     senderEmail
         });
     } catch (err) { Logger.log('No se pudo enviar email interno: ' + err); }
 

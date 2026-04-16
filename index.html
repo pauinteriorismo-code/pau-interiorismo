@@ -36560,6 +36560,7 @@ async function ejecutarEnvioEmail(){
           proyectoId:     proyId,
           presupuestoRef: docRef,
           clienteEmail:   para,
+          senderEmail:    desde,
           snapshotHtml:   snapshotHtml,
           snapshotTotal:  snapshotTotal
         });
@@ -36848,7 +36849,7 @@ function extraerTotalPresupuesto(docEl){
 
 // Crea un registro en presupuesto_aceptaciones y devuelve { token, url, expiresAt }.
 // Si Supabase falla, devuelve null y el envío del email continúa sin botón.
-async function crearAceptacionPresupuesto({proyectoId, presupuestoRef, clienteEmail, snapshotHtml, snapshotTotal}){
+async function crearAceptacionPresupuesto({proyectoId, presupuestoRef, clienteEmail, senderEmail, snapshotHtml, snapshotTotal}){
   if(typeof sb !== 'function') return null;
   const token = generarTokenAceptacion();
   const ahora = new Date();
@@ -36857,6 +36858,7 @@ async function crearAceptacionPresupuesto({proyectoId, presupuestoRef, clienteEm
     proyecto_id:     proyectoId || '',
     presupuesto_ref: presupuestoRef || '',
     cliente_email:   clienteEmail || '',
+    sender_email:    senderEmail || null,
     token:           token,
     created_at:      ahora.toISOString(),
     expires_at:      expira.toISOString(),
