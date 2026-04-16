@@ -285,6 +285,138 @@ const fetchStub = async (url, opts) => {
   test('filter-proyecto-pedidos = PRY-022', () => proyFil && proyFil.value === 'PRY-022');
   test('_pedidoRecienGuardado se consume (queda null)', () => win._pedidoRecienGuardado === null);
 
+  console.log('\n═══ Test 10: constantes de email ═══');
+  test('EMPRESA está definida con NIF y dirección', () => {
+    const e = win.eval('typeof EMPRESA !== "undefined" ? EMPRESA : null');
+    return e && e.nif === 'B56909641' && e.telefono === '961 20 01 87';
+  });
+  test('EMAIL_ALIASES contiene los 3 alias', () => {
+    const a = win.eval('typeof EMAIL_ALIASES !== "undefined" ? EMAIL_ALIASES : null');
+    return Array.isArray(a) && a.length === 3 &&
+      a.includes('presupuestos@pauinteriorismo.es') &&
+      a.includes('administracion@pauinteriorismo.es') &&
+      a.includes('info@pauinteriorismo.es');
+  });
+  test('EMAIL_FIRMAS tiene firma para cada alias', () => {
+    const f = win.eval('typeof EMAIL_FIRMAS !== "undefined" ? EMAIL_FIRMAS : null');
+    return f &&
+      f['presupuestos@pauinteriorismo.es']?.nombre === 'Jose Asins Primo' &&
+      f['administracion@pauinteriorismo.es']?.nombre === 'Jose Asins Primo' &&
+      f['info@pauinteriorismo.es']?.nombre === 'Maria Paz Primo Iborra';
+  });
+  test('EMAIL_DEFAULT_FROM mapea pedido → info@', () => {
+    const d = win.eval('typeof EMAIL_DEFAULT_FROM !== "undefined" ? EMAIL_DEFAULT_FROM : null');
+    return d && d.pedido === 'info@pauinteriorismo.es' &&
+      d.presupuesto === 'presupuestos@pauinteriorismo.es' &&
+      d.factura === 'administracion@pauinteriorismo.es';
+  });
+  test('EMAIL_SCRIPT_URL = DRIVE_SCRIPT_URL', () => {
+    return win.eval('typeof EMAIL_SCRIPT_URL !== "undefined" && EMAIL_SCRIPT_URL === DRIVE_SCRIPT_URL');
+  });
+
+  console.log('\n═══ Test 11: buildFirmaHtml por alias ═══');
+  test('buildFirmaHtml está definida', () => typeof win.buildFirmaHtml === 'function');
+  test('firma presupuestos@ contiene Jose Asins y 677 970 074', () => {
+    const h = win.buildFirmaHtml('presupuestos@pauinteriorismo.es');
+    return h.includes('Jose Asins Primo') && h.includes('677 970 074') && h.includes('Departamento presupuestos');
+  });
+  test('firma info@ contiene Maria Paz y 628 716 815', () => {
+    const h = win.buildFirmaHtml('info@pauinteriorismo.es');
+    return h.includes('Maria Paz Primo Iborra') && h.includes('628 716 815') && h.includes('Departamento información');
+  });
+  test('firma incluye datos de empresa (NIF, dirección)', () => {
+    const h = win.buildFirmaHtml('administracion@pauinteriorismo.es');
+    return h.includes('B56909641') && h.includes('Tomás y Valiente') && h.includes('Alcàsser');
+  });
+  test('alias desconocido cae al default presupuestos', () => {
+    const h = win.buildFirmaHtml('desconocido@xyz.com');
+    return h.includes('Jose Asins Primo') && h.includes('Departamento presupuestos');
+  });
+
+  console.log('\n═══ Test 12: modal m-enviar-email tiene los campos nuevos ═══');
+  test('selector em-from-email existe (es <select>)', () => {
+    const el = doc.getElementById('em-from-email');
+    return el && el.tagName === 'SELECT' && el.querySelectorAll('option').length === 3;
+  });
+  test('campo em-cc existe', () => !!doc.getElementById('em-cc'));
+  test('campo em-bcc existe', () => !!doc.getElementById('em-bcc'));
+  test('em-firma-preview existe', () => !!doc.getElementById('em-firma-preview'));
+  test('botón em-btn-send sigue llamando a ejecutarEnvioEmail', () => {
+    const b = doc.getElementById('em-btn-send');
+    return b && (b.getAttribute('onclick')||'').includes('ejecutarEnvioEmail');
+  });
+
+  console.log('\n═══ Test 13: openEmailModal aplica defaults por tipo ═══');
+  test('openEmailModal está definida', () => typeof win.openEmailModal === 'function');
+  win.openEmailModal({ docType:'pedido', docRef:'PED-038', defaultTo:'prov@example.com', subject:'X', mensaje:'Y', htmlBody:'' });
+  test('para pedido, alias por defecto = info@', () => doc.getElementById('em-from-email').value === 'info@pauinteriorismo.es');
+  test('em-to se rellena con defaultTo', () => doc.getElementById('em-to').value === 'prov@example.com');
+  test('preview de firma muestra Maria Paz', () => {
+    const p = doc.getElementById('em-firma-preview');
+    return p && p.innerHTML.includes('Maria Paz Primo Iborra');
+  });
+  win.openEmailModal({ docType:'presupuesto', docRef:'PF-1-v1', defaultTo:'cli@example.com', subject:'X', mensaje:'Y', htmlBody:'' });
+  test('para presupuesto, alias por defecto = presupuestos@', () => doc.getElementById('em-from-email').value === 'presupuestos@pauinteriorismo.es');
+  win.openEmailModal({ docType:'factura', docRef:'F-1', defaultTo:'cli@example.com', subject:'X', mensaje:'Y', htmlBody:'' });
+  test('para factura, alias por defecto = administracion@', () => doc.getElementById('em-from-email').value === 'administracion@pauinteriorismo.es');
+
+  console.log('\n═══ Test 14: ejecutarEnvioEmail llama a Apps Script (no Resend) ═══');
+  test('ejecutarEnvioEmail está definida', () => typeof win.ejecutarEnvioEmail === 'function');
+  // Preparar modal sin PDF (sin _emailDocEl) para evitar html2pdf en jsdom
+  win.eval('_emailDocEl = null; _emailFilename = "Test_doc.pdf"; _emailDocTipo = "pedido";');
+  win.openEmailModal({ docType:'pedido', docRef:'PED-038', proyectoId:'PRY-013',
+    defaultTo:'destinatario@proveedor.com', subject:'Pedido prueba', mensaje:'Texto del mensaje', htmlBody:'' });
+  doc.getElementById('em-cc').value  = 'cc1@x.com, cc2@x.com';
+  doc.getElementById('em-bcc').value = 'oculto@x.com';
+  // Cambiar alias manualmente a administracion@
+  doc.getElementById('em-from-email').value = 'administracion@pauinteriorismo.es';
+  win.actualizarFirmaEmail();
+  // Capturar llamada Apps Script
+  appsScriptResponse = { ok:true, messageId:'msg-abc-123' };
+  lastAppsScriptBody = null;
+  // Espiar fetch para verificar URL
+  const fetchUrlsBefore = lastFetchUrls.length;
+  await win.ejecutarEnvioEmail();
+  await new Promise(r=>setTimeout(r,200));
+  const newUrls = lastFetchUrls.slice(fetchUrlsBefore);
+  test('ejecutarEnvioEmail NO llama a api.resend.com', () => !newUrls.some(u => u.includes('resend.com')));
+  test('ejecutarEnvioEmail llama al Apps Script', () => newUrls.some(u => /script\.google\.com\/macros/.test(u)));
+  test('payload action = "sendEmail"', () => lastAppsScriptBody && lastAppsScriptBody.action === 'sendEmail');
+  test('payload from = alias seleccionado (administracion@)', () => lastAppsScriptBody && lastAppsScriptBody.from === 'administracion@pauinteriorismo.es');
+  test('payload to = destinatario', () => lastAppsScriptBody && lastAppsScriptBody.to === 'destinatario@proveedor.com');
+  test('payload cc = "cc1@x.com, cc2@x.com"', () => lastAppsScriptBody && lastAppsScriptBody.cc === 'cc1@x.com, cc2@x.com');
+  test('payload bcc = "oculto@x.com"', () => lastAppsScriptBody && lastAppsScriptBody.bcc === 'oculto@x.com');
+  test('payload subject = "Pedido prueba"', () => lastAppsScriptBody && lastAppsScriptBody.subject === 'Pedido prueba');
+  test('htmlBody contiene el mensaje del usuario', () => lastAppsScriptBody && lastAppsScriptBody.htmlBody.includes('Texto del mensaje'));
+  test('htmlBody incluye firma del alias seleccionado (Jose Asins · administración)', () => {
+    const h = lastAppsScriptBody && lastAppsScriptBody.htmlBody;
+    return h && h.includes('Jose Asins Primo') && h.includes('Departamento administración');
+  });
+
+  console.log('\n═══ Test 15: validaciones de ejecutarEnvioEmail ═══');
+  // Reset modal a estado vacío de "to"
+  win.openEmailModal({ docType:'pedido', docRef:'X', defaultTo:'', subject:'X', mensaje:'X', htmlBody:'' });
+  // toast es global (no rompe), pero ejecutarEnvioEmail debe retornar sin llamar fetch
+  const urlsBefore2 = lastFetchUrls.length;
+  await win.ejecutarEnvioEmail();
+  test('sin "to", NO se hace fetch al Apps Script', () => {
+    const newU = lastFetchUrls.slice(urlsBefore2);
+    return !newU.some(u => /script\.google\.com\/macros/.test(u));
+  });
+  // Email inválido (sin @)
+  doc.getElementById('em-to').value = 'no-es-email';
+  const urlsBefore3 = lastFetchUrls.length;
+  await win.ejecutarEnvioEmail();
+  test('con email inválido, NO se hace fetch', () => {
+    const newU = lastFetchUrls.slice(urlsBefore3);
+    return !newU.some(u => /script\.google\.com\/macros/.test(u));
+  });
+
+  console.log('\n═══ Test 16: limpieza de código muerto ═══');
+  test('enviarDocumentoEmail YA NO existe (código muerto eliminado)', () => typeof win.enviarDocumentoEmail !== 'function');
+  test('Resend API key NO está en el HTML', () => !html.includes('re_CURadbN3'));
+  test('api.resend.com NO está en el HTML', () => !html.includes('api.resend.com'));
+
   console.log('\n═══ RESULTADO ═══');
   console.log(`  ✓ ${pass} pasados`);
   console.log(`  ✗ ${fail} fallados`);
