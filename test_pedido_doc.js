@@ -23,11 +23,23 @@ const mockProyectos = [
   { id:'p2', proyecto_id: 'PRY-013', nombre: 'Reforma baño', cliente_id: 'CLI-H026', carpeta_drive: 'https://drive.google.com/drive/folders/abc123' }
 ];
 const mockPedidos = [
-  { id:1, num_pedido:'PED-037', fecha:'2026-04-16', proyecto_id:'PRY-022', tipo:'Material', proveedor:'Genexia', importe:0, estado:'Pendiente', observaciones:'Test', cliente_id:'CLI-H026', cliente_nombre:'Ana Maria', adjuntos:null }
+  { id:1, num_pedido:'PED-037', fecha:'2026-04-16', proyecto_id:'PRY-022', tipo:'Material', proveedor:'Genexia', importe:0, estado:'Pendiente', observaciones:'Test', cliente_id:'CLI-H026', cliente_nombre:'Ana Maria', adjuntos:null },
+  { id:2, num_pedido:'PED-038', fecha:'2026-04-16', proyecto_id:'PRY-013', tipo:'Material', proveedor:'Genexia', importe:0, estado:'Pendiente', cliente_id:'CLI-H026', adjuntos:null }
 ];
+// Capturas para tests del Apps Script
+let lastAppsScriptBody = null;
+let appsScriptResponse = null; // si se asigna, sobreescribe la respuesta por defecto
 const fetchStub = async (url, opts) => {
   fetchCalls++;
   lastFetchUrls.push(url);
+  // Apps Script (Drive): URL del tipo script.google.com/macros/.../exec
+  if(/script\.google\.com\/macros/.test(url)){
+    try{ lastAppsScriptBody = JSON.parse(opts && opts.body); }catch(_){ lastAppsScriptBody = null; }
+    const respObj = appsScriptResponse || { ok:true, url:'https://drive.google.com/drive/folders/SUB_DEFAULT' };
+    const respTxt = JSON.stringify(respObj);
+    return { ok:true, status:200, headers:new Map(),
+      json: async()=>respObj, text: async()=>respTxt };
+  }
   let data = [];
   if(url.includes('/rest/v1/proveedores')) data = mockProveedores;
   else if(url.includes('/rest/v1/proyectos')) data = mockProyectos;
@@ -194,6 +206,37 @@ const fetchStub = async (url, opts) => {
   test('confirm aceptado → crearCarpetasDrive se llama', () => createCalled);
   test('tras crear carpeta, abre la nueva URL', () => openedUrl && openedUrl.includes('CREATED_PRY-022'));
 
+  console.log('\n═══ Test 7c: abrirCarpetaPedidoDrive navega a 06 Proveedores/{Prov}/Pedidos ═══');
+  test('abrirCarpetaPedidoDrive está definida', () => typeof win.abrirCarpetaPedidoDrive === 'function');
+  test('_resolveDriveSubFolderUrl está definida', () => typeof win._resolveDriveSubFolderUrl === 'function');
+  // Asegurar PC con proyecto que tiene carpeta_drive
+  win.eval("PC = [{id:'p2', proyecto_id:'PRY-013', nombre:'Reforma baño', cliente_id:'CLI-H026', carpeta_drive:'https://drive.google.com/drive/folders/abc123'}]");
+  // Stub respuesta Apps Script con URL de subcarpeta
+  appsScriptResponse = { ok:true, url:'https://drive.google.com/drive/folders/SUB_GENEXIA_PEDIDOS', folderId:'SUB_GENEXIA_PEDIDOS' };
+  lastAppsScriptBody = null;
+  openedUrl = null;
+  await win.abrirCarpetaPedidoDrive('PRY-013', 'Genexia');
+  test('llamó al Apps Script con action=getSubFolderUrl', () => lastAppsScriptBody && lastAppsScriptBody.action === 'getSubFolderUrl');
+  test('rootFolderId extraído correctamente de carpeta_drive', () => lastAppsScriptBody && lastAppsScriptBody.rootFolderId === 'abc123');
+  test('path = ["06 Proveedores","Genexia","Pedidos"]', () => lastAppsScriptBody && JSON.stringify(lastAppsScriptBody.path) === '["06 Proveedores","Genexia","Pedidos"]');
+  test('abrió la URL de subcarpeta devuelta por Apps Script', () => openedUrl === 'https://drive.google.com/drive/folders/SUB_GENEXIA_PEDIDOS');
+
+  console.log('\n═══ Test 7d: sin proveedor → solo navega a 06 Proveedores ═══');
+  appsScriptResponse = { ok:true, url:'https://drive.google.com/drive/folders/SUB_06_PROV' };
+  lastAppsScriptBody = null;
+  openedUrl = null;
+  await win.abrirCarpetaPedidoDrive('PRY-013', '');
+  test('path solo contiene "06 Proveedores"', () => lastAppsScriptBody && JSON.stringify(lastAppsScriptBody.path) === '["06 Proveedores"]');
+  test('abrió la URL devuelta', () => openedUrl === 'https://drive.google.com/drive/folders/SUB_06_PROV');
+
+  console.log('\n═══ Test 7e: fallback a raíz si Apps Script no responde bien ═══');
+  appsScriptResponse = { ok:false, error:'getSubFolderUrl no implementada' };
+  openedUrl = null;
+  await win.abrirCarpetaPedidoDrive('PRY-013', 'Genexia');
+  test('fallback abre la raíz del proyecto', () => openedUrl === 'https://drive.google.com/drive/folders/abc123');
+  // restaurar para no contaminar tests siguientes
+  appsScriptResponse = null;
+
   console.log('\n═══ Test 8: render de la tabla pedidos incluye botón Drive ═══');
   // Escenario realista: el usuario acaba de guardar un pedido y aterriza en
   // la página de pedidos. _pedidoRecienGuardado activa el filtro de proyecto
@@ -213,17 +256,27 @@ const fetchStub = async (url, opts) => {
   }
   // Verificamos que existe al menos una fila REAL (data-search), no solo el empty state
   test('tabla pedidos tiene una fila de datos', () => tb && tb.querySelectorAll('tr[data-search]').length >= 1);
-  test('fila contiene botón con onclick abrirCarpetaProyectoDrive', () => tb && tb.innerHTML.includes("abrirCarpetaProyectoDrive('PRY-022')"));
+  // El proyecto p1 NO tiene carpeta_drive en mockProyectos → debe mostrar botón "Crear"
+  // que sigue usando abrirCarpetaProyectoDrive (no el helper de pedido)
+  test('fila contiene botón con onclick abrirCarpetaProyectoDrive (sin carpeta)', () => tb && tb.innerHTML.includes("abrirCarpetaProyectoDrive('PRY-022')"));
   test('botón Drive (sin carpeta) muestra "Crear"', () => tb && tb.innerHTML.includes('📁 Crear'));
 
+  console.log('\n═══ Test 8b: cuando el proyecto SÍ tiene carpeta, botón usa abrirCarpetaPedidoDrive ═══');
+  // Vaciar caches para forzar re-fetch desde stub (que ya incluye PED-038 con PRY-013)
+  win.eval('PC = []; PedC = [];');
+  win._pedidoRecienGuardado = { id:2, cliente_id:'CLI-H026', proyecto_id:'PRY-013' };
+  win.pdPedidoId = null;
+  await win.loadPedidos();
+  await new Promise(r=>setTimeout(r,100));
+  test('botón usa abrirCarpetaPedidoDrive con proveedor', () => tb && tb.innerHTML.includes("abrirCarpetaPedidoDrive('PRY-013','Genexia')"));
+  test('botón Drive (con carpeta) muestra "📁 Drive"', () => tb && tb.innerHTML.includes('📁 Drive'));
+
   console.log('\n═══ Test 9: loadPedidos fija filtros tras guardar ═══');
-  // Simular pedido recién guardado
-  win.PC = [
-    { id:'p1', proyecto_id: 'PRY-022', nombre: 'Espejos', cliente_id: 'CLI-H026' }
-  ];
-  win.PedC = [];
+  // PC y PedC son `let` en el script (no window.PC), por eso usamos win.eval
+  // para sobrescribir la variable real. Ponemos PC vacío para que loadPedidos
+  // re-fetch via stub (mockProyectos incluye PRY-022 y PRY-013).
+  win.eval('PC = []; PedC = [];');
   win._pedidoRecienGuardado = { id:1, cliente_id:'CLI-H026', proyecto_id:'PRY-022' };
-  // Asegurar opción de cliente disponible (ya está en el HTML)
   await win.loadPedidos();
   await new Promise(r => setTimeout(r, 100));
   const cliFil = doc.getElementById('filter-cliente-pedidos');

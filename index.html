@@ -10567,11 +10567,38 @@ function _driveFolderId(proyId){
   return m?m[1]:null;
 }
 
+// Resuelve la URL de una subcarpeta dentro del proyecto en Drive vía Apps Script.
+// path = ['06 Proveedores', 'Genexia', 'Pedidos']
+// Si alguna subcarpeta no existe, devuelve la URL de la última que SÍ existe
+// (nunca crea carpetas vacías). Si el endpoint Apps Script no está actualizado
+// (acción aún no soportada), devuelve null y el caller hace fallback a la raíz.
+async function _resolveDriveSubFolderUrl(rootFolderUrl, path){
+  const rootId = _extractDriveFolderId(rootFolderUrl);
+  if(!rootId || !path || !path.length) return null;
+  try{
+    const r = await fetch(DRIVE_SCRIPT_URL, {
+      method: 'POST',
+      headers: {'Content-Type':'text/plain'},
+      body: JSON.stringify({action:'getSubFolderUrl', rootFolderId: rootId, path})
+    });
+    const txt = await r.text();
+    let json = {};
+    try { json = JSON.parse(txt); } catch(_){ json = {}; }
+    if(json.ok && json.url) return json.url;
+    console.warn('[Drive] getSubFolderUrl sin URL útil:', txt.slice(0,200));
+    return null;
+  }catch(e){
+    console.warn('[Drive] getSubFolderUrl falló:', e.message);
+    return null;
+  }
+}
+
 // Abre la carpeta del proyecto en Drive en una pestaña nueva.
-// Desde ahí el usuario llega a 06 Proveedores → {proveedor} → Pedidos
-// en pocos clics (3 en vez de 7 desde la raíz).
+// Acepta opciones.subPath para navegar a una subcarpeta concreta vía Apps Script.
 // Si el proyecto no tiene carpeta_drive aún, ofrece crearla en el momento.
-async function abrirCarpetaProyectoDrive(proyId){
+// Si subPath se pasa pero el Apps Script no responde (o no tiene el endpoint
+// nuevo desplegado), abre la raíz como fallback (no se rompe nada).
+async function abrirCarpetaProyectoDrive(proyId, opciones){
   let p=(PC||[]).find(x=>x.proyecto_id===proyId);
   if(!p){
     // Intentar recargar PC por si está vacío
@@ -10602,7 +10629,30 @@ async function abrirCarpetaProyectoDrive(proyId){
     setTimeout(()=>window.open(p.carpeta_drive, '_blank', 'noopener,noreferrer'), 800);
     return;
   }
+  // Si se pidió una subcarpeta concreta, intentar resolverla
+  const subPath = opciones && opciones.subPath;
+  if(subPath && subPath.length){
+    const subUrl = await _resolveDriveSubFolderUrl(p.carpeta_drive, subPath);
+    if(subUrl){
+      window.open(subUrl, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    // Fallback silencioso a la raíz si Apps Script no respondió
+    toast('📁 Abriendo carpeta del proyecto (subcarpeta no localizada)','info');
+  }
   window.open(p.carpeta_drive, '_blank', 'noopener,noreferrer');
+}
+
+// Helper para botón "📁 Drive" de la tabla pedidos: navega directo a
+// 06 Proveedores → {Proveedor} → Pedidos. Si no hay proveedor, va a 06 Proveedores.
+async function abrirCarpetaPedidoDrive(proyId, proveedorNombre){
+  const subPath = ['06 Proveedores'];
+  const prov = (proveedorNombre||'').trim();
+  if(prov){
+    subPath.push(prov);
+    subPath.push('Pedidos');
+  }
+  return abrirCarpetaProyectoDrive(proyId, {subPath});
 }
 
 async function subirPDFaDrive(elementId, nombreArchivo, proyId, subCarpeta, folderIdOverride, extras){
@@ -18689,7 +18739,7 @@ async function loadPedidos(){
     PedC=await sbGet('pedidos','?order=fecha.desc');
     document.getElementById('pedidos-count').textContent=PedC.length+' pedidos';
     if(!PedC.length){tb.innerHTML=`<tr><td colspan="9"><div class="empty"><div class="empty-icon">📦</div><div class="empty-text">Sin pedidos</div><button class="btn btn-primary" onclick="openModal('m-pedido')">＋ Nuevo</button></div></td></tr>`;return;}
-    tb.innerHTML=PedC.map(p=>`<tr data-search="${(p.num_pedido+p.proyecto_id+p.proveedor+p.tipo).toLowerCase()}"><td class="td-mono" style="font-weight:700">${p.num_pedido||'—'}</td><td>${fmtD(p.fecha)}</td><td class="td-mono" style="color:var(--text-soft)">${p.proyecto_id||'—'}</td><td><span class="badge b-blue">${p.tipo||'—'}</span></td><td>${p.proveedor||'—'}</td><td class="td-mono" style="font-weight:700">${fmt(p.importe)}</td><td>${bE(p.estado)}</td><td style="color:var(--text-soft)">${p.referencia?`<span style="font-weight:600;color:var(--navy)">${p.referencia}</span>`:''} ${p.observaciones||''}</td><td style="display:flex;gap:4px">${_badgeEnviado('pedido',p.id)}${(()=>{try{const a=p.adjuntos?JSON.parse(p.adjuntos):[];return a.length?`<button class="btn btn-ghost btn-icon btn-sm" onclick="pedVerAdjById('${p.id}')" title="${a.length} adjunto(s)" style="font-size:11px;color:var(--navy)">📎 ${a.length}</button>`:''}catch(e){return'';}})()}<button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="editPedido('${p.id}')">Editar</button><button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="abrirDocPedido('${p.id}')">📋 Doc.</button>${(()=>{const proy=(PC||[]).find(x=>x.proyecto_id===p.proyecto_id);const tieneDrive=!!(proy&&proy.carpeta_drive);return tieneDrive?`<button class="btn btn-ghost btn-sm" onclick="abrirCarpetaProyectoDrive('${p.proyecto_id}')" title="Abrir carpeta del proyecto en Drive en una pestaña nueva" style="font-size:11px;color:#1a73e8;font-weight:600">📁 Drive</button>`:`<button class="btn btn-ghost btn-sm" onclick="abrirCarpetaProyectoDrive('${p.proyecto_id}')" title="Crear carpeta de Drive para este proyecto" style="font-size:11px;color:#b87333;font-weight:600">📁 Crear</button>`;})()}<button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('pedidos','${p.id}','${(p.num_pedido||'pedido').replace(/'/g,"\\'")}')">🗑</button></td></tr>`).join('');
+    tb.innerHTML=PedC.map(p=>`<tr data-search="${(p.num_pedido+p.proyecto_id+p.proveedor+p.tipo).toLowerCase()}"><td class="td-mono" style="font-weight:700">${p.num_pedido||'—'}</td><td>${fmtD(p.fecha)}</td><td class="td-mono" style="color:var(--text-soft)">${p.proyecto_id||'—'}</td><td><span class="badge b-blue">${p.tipo||'—'}</span></td><td>${p.proveedor||'—'}</td><td class="td-mono" style="font-weight:700">${fmt(p.importe)}</td><td>${bE(p.estado)}</td><td style="color:var(--text-soft)">${p.referencia?`<span style="font-weight:600;color:var(--navy)">${p.referencia}</span>`:''} ${p.observaciones||''}</td><td style="display:flex;gap:4px">${_badgeEnviado('pedido',p.id)}${(()=>{try{const a=p.adjuntos?JSON.parse(p.adjuntos):[];return a.length?`<button class="btn btn-ghost btn-icon btn-sm" onclick="pedVerAdjById('${p.id}')" title="${a.length} adjunto(s)" style="font-size:11px;color:var(--navy)">📎 ${a.length}</button>`:''}catch(e){return'';}})()}<button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="editPedido('${p.id}')">Editar</button><button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="abrirDocPedido('${p.id}')">📋 Doc.</button>${(()=>{const proy=(PC||[]).find(x=>x.proyecto_id===p.proyecto_id);const tieneDrive=!!(proy&&proy.carpeta_drive);const provEsc=(p.proveedor||'').replace(/'/g,"\\'");return tieneDrive?`<button class="btn btn-ghost btn-sm" onclick="abrirCarpetaPedidoDrive('${p.proyecto_id}','${provEsc}')" title="Abrir carpeta 06 Proveedores → ${provEsc||'(sin proveedor)'} → Pedidos en Drive" style="font-size:11px;color:#1a73e8;font-weight:600">📁 Drive</button>`:`<button class="btn btn-ghost btn-sm" onclick="abrirCarpetaProyectoDrive('${p.proyecto_id}')" title="Crear carpeta de Drive para este proyecto" style="font-size:11px;color:#b87333;font-weight:600">📁 Crear</button>`;})()}<button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('pedidos','${p.id}','${(p.num_pedido||'pedido').replace(/'/g,"\\'")}')">🗑</button></td></tr>`).join('');
   }catch(e){tb.innerHTML=`<tr><td colspan="9" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
   // Si el usuario acaba de guardar un pedido en el documento, fijar los
   // filtros de cliente y proyecto para que su fila sea visible directamente.
