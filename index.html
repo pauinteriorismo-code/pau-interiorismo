@@ -1137,9 +1137,11 @@ if(window.MutationObserver){
         <!-- PROVEEDOR / PROYECTO / CLIENTE -->
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px">
           <div style="background:#f7f4ef;padding:10px;border-radius:4px">
-            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#b87333;margin-bottom:5px">PROVEEDOR / EMPRESA <span class="no-print" style="font-weight:500;color:#b87333aa;text-transform:none;letter-spacing:0">— escribe para buscar</span></div>
-            <input id="pd-prov-input" list="pd-prov-datalist" autocomplete="off" class="pd-doc-input" style="border:1px dashed #c9a37a;background:#fff;width:100%;font-weight:700;font-size:12px;padding:4px 6px;border-radius:3px" placeholder="Click aquí para escribir el proveedor…" oninput="pdProvCompletar(this)">
-            <datalist id="pd-prov-datalist"></datalist>
+            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#b87333;margin-bottom:5px">PROVEEDOR / EMPRESA <span class="no-print" style="font-weight:500;color:#b87333aa;text-transform:none;letter-spacing:0">— click para elegir o escribe para buscar</span></div>
+            <div style="position:relative">
+              <input id="pd-prov-input" autocomplete="off" class="pd-doc-input" style="border:1px dashed #c9a37a;background:#fff;width:100%;font-weight:700;font-size:12px;padding:4px 6px;border-radius:3px" placeholder="Click aquí para elegir un proveedor…" oninput="pdProvBuildDd()" onfocus="pdProvBuildDd()" onblur="setTimeout(()=>cerrarSearchDd('pd-prov-dd'),200)">
+              <div id="pd-prov-dd" class="search-dd no-print" style="display:none"></div>
+            </div>
           </div>
           <div style="background:#f7f4ef;padding:10px;border-radius:4px">
             <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#b87333;margin-bottom:5px">PROYECTO / REFERENCIA</div>
@@ -10568,10 +10570,36 @@ function _driveFolderId(proyId){
 // Abre la carpeta del proyecto en Drive en una pestaña nueva.
 // Desde ahí el usuario llega a 06 Proveedores → {proveedor} → Pedidos
 // en pocos clics (3 en vez de 7 desde la raíz).
-function abrirCarpetaProyectoDrive(proyId){
-  const p=(PC||[]).find(x=>x.proyecto_id===proyId);
-  if(!p || !p.carpeta_drive){
-    toast('Este proyecto no tiene carpeta Drive asociada','error');
+// Si el proyecto no tiene carpeta_drive aún, ofrece crearla en el momento.
+async function abrirCarpetaProyectoDrive(proyId){
+  let p=(PC||[]).find(x=>x.proyecto_id===proyId);
+  if(!p){
+    // Intentar recargar PC por si está vacío
+    try{ PC = await sbGet('proyectos','?order=created_at.desc'); }catch(e){}
+    p=(PC||[]).find(x=>x.proyecto_id===proyId);
+  }
+  if(!p){ toast('Proyecto no encontrado','error'); return; }
+  if(!p.carpeta_drive){
+    const ok = confirm(
+      `📁 ${p.proyecto_id} ${p.nombre||''}\n\n`+
+      `Este proyecto no tiene carpeta de Drive todavía.\n\n`+
+      `¿Quieres CREAR ahora la carpeta dentro de tu carpeta "Proyectos" de Drive?\n\n`+
+      `Aceptar → se crea la carpeta + subcarpetas y se abre en una pestaña nueva.\n`+
+      `Cancelar → no se hace nada.`
+    );
+    if(!ok) return;
+    let parentId = getDriveProyectosParentId();
+    if(!parentId) parentId = askDriveProyectosParentId();
+    if(!parentId){ toast('Sin carpeta padre Proyectos configurada','error'); return; }
+    toast('📁 Creando carpeta del proyecto en Drive…');
+    await crearCarpetasDrive(p.proyecto_id, p.nombre||'', parentId, true);
+    // Refrescar p desde memoria (crearCarpetasDrive actualiza PC)
+    p = (PC||[]).find(x=>x.proyecto_id===proyId);
+    if(!p || !p.carpeta_drive){
+      toast('No se pudo obtener la URL de Drive recién creada','error');
+      return;
+    }
+    setTimeout(()=>window.open(p.carpeta_drive, '_blank', 'noopener,noreferrer'), 800);
     return;
   }
   window.open(p.carpeta_drive, '_blank', 'noopener,noreferrer');
@@ -17484,26 +17512,57 @@ function abrirDocPedido(pedidoId){
   }, 100);
 }
 
-// Pobla el datalist de proveedores para autocompletar en el documento
-function pdPoblarProvDatalist(){
-  const dl = document.getElementById('pd-prov-datalist');
-  if(!dl) return;
+// Construye el dropdown de proveedores filtrado por lo que escribe el usuario
+function pdProvBuildDd(){
+  const inp = document.getElementById('pd-prov-input');
+  const dd  = document.getElementById('pd-prov-dd');
+  if(!inp || !dd) return;
+  // Si no hay proveedores cargados, cargarlos y reintentar
   if(!window.ProvC || !ProvC.length){
-    // Cargar proveedores si no están en memoria
-    sbGet('proveedores','?order=nombre.asc').then(r=>{ ProvC=r||[]; pdPoblarProvDatalist(); }).catch(()=>{});
+    sbGet('proveedores','?order=nombre.asc').then(r=>{ ProvC=r||[]; pdProvBuildDd(); }).catch(()=>{});
     return;
   }
-  dl.innerHTML = ProvC.map(p=>`<option value="${(p.nombre||'').replace(/"/g,'&quot;')}">`).join('');
+  const q = (inp.value||'').toLowerCase().trim();
+  const norm = s => (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'');
+  const qNorm = norm(q);
+  const arr = (ProvC||[]).slice().sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||'','es'));
+  const items = q ? arr.filter(p => {
+    const n = (p.nombre||'').toLowerCase();
+    return n.includes(q) || norm(p.nombre).includes(qNorm);
+  }) : arr;
+  if(!items.length){
+    dd.innerHTML = `<div class="search-dd-empty">Sin proveedores ${q?`para "${q}"`:'registrados'}</div>`;
+    dd.style.display = 'block';
+    return;
+  }
+  dd.innerHTML = items.slice(0,80).map(p => {
+    const lbl  = (p.nombre||'—').replace(/'/g,"\\'");
+    const tel  = (p.telefono||'').replace(/'/g,"\\'");
+    const sub  = p.tipo ? `<span style="color:var(--text-soft);font-size:11px"> · ${p.tipo}</span>` : '';
+    const subTel = p.telefono ? `<span style="color:var(--text-soft);font-size:11px"> · ${p.telefono}</span>` : '';
+    return `<div class="search-dd-item" onmousedown="pdProvSelect('${lbl}','${tel}')"><strong>${p.nombre||'—'}</strong>${sub}${subTel}</div>`;
+  }).join('');
+  dd.style.display = 'block';
 }
 
-// Cuando el usuario escribe/elige un proveedor, autorrellena el teléfono si lo hay
+// Selecciona un proveedor del dropdown: rellena nombre y teléfono
+function pdProvSelect(nombre, tel){
+  const inp = document.getElementById('pd-prov-input');
+  if(inp) inp.value = nombre;
+  const telInp = document.getElementById('pd-prov-tel-input');
+  if(telInp && tel) telInp.value = tel;
+  cerrarSearchDd('pd-prov-dd');
+}
+
+// Mantengo este alias para compatibilidad con código que aún lo llame
+function pdPoblarProvDatalist(){ /* ya no se usa, dropdown se construye on-demand */ }
 function pdProvCompletar(input){
   const nombre = (input?.value||'').trim();
   if(!nombre) return;
   const prov = (window.ProvC||[]).find(p=>p.nombre===nombre);
   if(prov){
-    const tel = document.getElementById('pd-prov-tel-input');
-    if(tel && prov.telefono) tel.value = prov.telefono;
+    const telEl = document.getElementById('pd-prov-tel-input');
+    if(telEl && prov.telefono) telEl.value = prov.telefono;
   }
 }
 
@@ -18612,8 +18671,34 @@ async function loadPedidos(){
     PedC=await sbGet('pedidos','?order=fecha.desc');
     document.getElementById('pedidos-count').textContent=PedC.length+' pedidos';
     if(!PedC.length){tb.innerHTML=`<tr><td colspan="9"><div class="empty"><div class="empty-icon">📦</div><div class="empty-text">Sin pedidos</div><button class="btn btn-primary" onclick="openModal('m-pedido')">＋ Nuevo</button></div></td></tr>`;return;}
-    tb.innerHTML=PedC.map(p=>`<tr data-search="${(p.num_pedido+p.proyecto_id+p.proveedor+p.tipo).toLowerCase()}"><td class="td-mono" style="font-weight:700">${p.num_pedido||'—'}</td><td>${fmtD(p.fecha)}</td><td class="td-mono" style="color:var(--text-soft)">${p.proyecto_id||'—'}</td><td><span class="badge b-blue">${p.tipo||'—'}</span></td><td>${p.proveedor||'—'}</td><td class="td-mono" style="font-weight:700">${fmt(p.importe)}</td><td>${bE(p.estado)}</td><td style="color:var(--text-soft)">${p.referencia?`<span style="font-weight:600;color:var(--navy)">${p.referencia}</span>`:''} ${p.observaciones||''}</td><td style="display:flex;gap:4px">${_badgeEnviado('pedido',p.id)}${(()=>{try{const a=p.adjuntos?JSON.parse(p.adjuntos):[];return a.length?`<button class="btn btn-ghost btn-icon btn-sm" onclick="pedVerAdjById('${p.id}')" title="${a.length} adjunto(s)" style="font-size:11px;color:var(--navy)">📎 ${a.length}</button>`:''}catch(e){return'';}})()}<button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="editPedido('${p.id}')">Editar</button><button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="abrirDocPedido('${p.id}')">📋 Doc.</button>${(()=>{const proy=(PC||[]).find(x=>x.proyecto_id===p.proyecto_id);const tieneDrive=!!(proy&&proy.carpeta_drive);return tieneDrive?`<button class="btn btn-ghost btn-sm" onclick="abrirCarpetaProyectoDrive('${p.proyecto_id}')" title="Abrir carpeta del proyecto en Drive en una pestaña nueva" style="font-size:11px;color:#1a73e8;font-weight:600">📁 Drive</button>`:`<button class="btn btn-ghost btn-sm" disabled title="Este proyecto no tiene carpeta Drive asociada" style="font-size:11px;opacity:.4;cursor:not-allowed">📁 Drive</button>`;})()}<button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('pedidos','${p.id}','${(p.num_pedido||'pedido').replace(/'/g,"\\'")}')">🗑</button></td></tr>`).join('');
+    tb.innerHTML=PedC.map(p=>`<tr data-search="${(p.num_pedido+p.proyecto_id+p.proveedor+p.tipo).toLowerCase()}"><td class="td-mono" style="font-weight:700">${p.num_pedido||'—'}</td><td>${fmtD(p.fecha)}</td><td class="td-mono" style="color:var(--text-soft)">${p.proyecto_id||'—'}</td><td><span class="badge b-blue">${p.tipo||'—'}</span></td><td>${p.proveedor||'—'}</td><td class="td-mono" style="font-weight:700">${fmt(p.importe)}</td><td>${bE(p.estado)}</td><td style="color:var(--text-soft)">${p.referencia?`<span style="font-weight:600;color:var(--navy)">${p.referencia}</span>`:''} ${p.observaciones||''}</td><td style="display:flex;gap:4px">${_badgeEnviado('pedido',p.id)}${(()=>{try{const a=p.adjuntos?JSON.parse(p.adjuntos):[];return a.length?`<button class="btn btn-ghost btn-icon btn-sm" onclick="pedVerAdjById('${p.id}')" title="${a.length} adjunto(s)" style="font-size:11px;color:var(--navy)">📎 ${a.length}</button>`:''}catch(e){return'';}})()}<button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="editPedido('${p.id}')">Editar</button><button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="abrirDocPedido('${p.id}')">📋 Doc.</button>${(()=>{const proy=(PC||[]).find(x=>x.proyecto_id===p.proyecto_id);const tieneDrive=!!(proy&&proy.carpeta_drive);return tieneDrive?`<button class="btn btn-ghost btn-sm" onclick="abrirCarpetaProyectoDrive('${p.proyecto_id}')" title="Abrir carpeta del proyecto en Drive en una pestaña nueva" style="font-size:11px;color:#1a73e8;font-weight:600">📁 Drive</button>`:`<button class="btn btn-ghost btn-sm" onclick="abrirCarpetaProyectoDrive('${p.proyecto_id}')" title="Crear carpeta de Drive para este proyecto" style="font-size:11px;color:#b87333;font-weight:600">📁 Crear</button>`;})()}<button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('pedidos','${p.id}','${(p.num_pedido||'pedido').replace(/'/g,"\\'")}')">🗑</button></td></tr>`).join('');
   }catch(e){tb.innerHTML=`<tr><td colspan="9" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
+  // Si el usuario viene de guardar/editar un pedido en el documento, fijar
+  // los filtros de la página al cliente/proyecto de ese pedido para que la fila
+  // sea visible directamente sin tener que reseleccionar nada.
+  if(window.pdPedidoId){
+    const ped = (PedC||[]).find(x=>String(x.id)===String(window.pdPedidoId));
+    if(ped){
+      const cliSel = document.getElementById('filter-cliente-pedidos');
+      const proySel= document.getElementById('filter-proyecto-pedidos');
+      if(cliSel && ped.cliente_id){
+        cliSel.value = ped.cliente_id;
+        // Repoblar proyectos según cliente y aplicar selección
+        cascadaClienteProyecto('pedidos');
+        if(proySel && ped.proyecto_id){
+          proySel.value = ped.proyecto_id;
+          filtrarModuloPorProyecto('pedidos');
+        }
+        return;
+      }
+      // Si no hay cliente_id pero sí proyecto_id, fijar solo proyecto
+      if(proySel && ped.proyecto_id){
+        proySel.value = ped.proyecto_id;
+        filtrarModuloPorProyecto('pedidos');
+        return;
+      }
+    }
+  }
   // Re-apply project filter after load
   filtrarModuloPorProyecto('pedidos');
 }
