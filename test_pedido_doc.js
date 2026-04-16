@@ -417,6 +417,120 @@ const fetchStub = async (url, opts) => {
   test('Resend API key NO está en el HTML', () => !html.includes('re_CURadbN3'));
   test('api.resend.com NO está en el HTML', () => !html.includes('api.resend.com'));
 
+  // ════════════════════════════════════════════════════════════════════
+  //  FIRMA DIGITAL DE PRESUPUESTOS
+  // ════════════════════════════════════════════════════════════════════
+
+  console.log('\n═══ Test 17: constantes y archivos de aceptación ═══');
+  test('APP_PUBLIC_URL definido y https', () => {
+    const v = win.eval('typeof APP_PUBLIC_URL!=="undefined"?APP_PUBLIC_URL:null');
+    return typeof v === 'string' && v.startsWith('https://');
+  });
+  test('ACEPTACION_DIAS_VALIDEZ es número >0', () => {
+    const v = win.eval('typeof ACEPTACION_DIAS_VALIDEZ!=="undefined"?ACEPTACION_DIAS_VALIDEZ:null');
+    return typeof v === 'number' && v > 0;
+  });
+  test('archivo aceptar.html existe', () => fs.existsSync(path.join(__dirname, 'aceptar.html')));
+  test('archivo SQL del esquema existe', () => fs.existsSync(path.join(__dirname, 'scripts', 'presupuesto_aceptaciones_schema.sql')));
+  test('archivo Apps Script de aceptación existe', () => fs.existsSync(path.join(__dirname, 'scripts', 'apps_script_aceptar_presupuesto.gs')));
+
+  console.log('\n═══ Test 18: helpers de aceptación ═══');
+  test('generarTokenAceptacion devuelve 32 chars hex', () => {
+    const t = win.generarTokenAceptacion();
+    return typeof t === 'string' && /^[0-9a-f]{32}$/.test(t);
+  });
+  test('generarTokenAceptacion produce tokens distintos', () => {
+    return win.generarTokenAceptacion() !== win.generarTokenAceptacion();
+  });
+  test('buildBotonAceptarHtml incluye la URL pasada', () => {
+    const html = win.buildBotonAceptarHtml('https://x.test/aceptar.html?token=abc', new Date(Date.now()+86400000).toISOString());
+    return html.includes('https://x.test/aceptar.html?token=abc') && html.includes('Aceptar presupuesto');
+  });
+  test('buildBotonAceptarHtml devuelve "" si url es vacío', () => win.buildBotonAceptarHtml('') === '');
+  test('extraerTotalPresupuesto null si docEl es null', () => win.extraerTotalPresupuesto(null) === null);
+  test('extraerTotalPresupuesto lee desde #pf-total', () => {
+    const div = doc.createElement('div');
+    div.innerHTML = '<div id="pf-total">12.345,67 €</div>';
+    return win.extraerTotalPresupuesto(div) === 12345.67;
+  });
+  test('extraerTotalPresupuesto lee desde celda "Total" + sibling', () => {
+    const div = doc.createElement('div');
+    div.innerHTML = '<table><tr><td>Total</td><td>3.500,00 €</td></tr></table>';
+    return win.extraerTotalPresupuesto(div) === 3500;
+  });
+
+  console.log('\n═══ Test 19: badges de aceptación ═══');
+  test('renderBadgeAceptacion("") cuando row es null', () => win.renderBadgeAceptacion(null) === '');
+  test('renderBadgeAceptacion muestra "Aceptado" con accepted_at', () => {
+    const h = win.renderBadgeAceptacion({ accepted_at: '2026-04-15T10:00:00Z', accepted_by_name: 'Juan' });
+    return h.includes('Aceptado') && h.includes('Juan');
+  });
+  test('renderBadgeAceptacion muestra "Caducado" si expires_at < now', () => {
+    const h = win.renderBadgeAceptacion({ accepted_at: null, expires_at: '2020-01-01T00:00:00Z' });
+    return h.includes('Caducado');
+  });
+  test('renderBadgeAceptacion muestra "Pendiente" en caso normal', () => {
+    const h = win.renderBadgeAceptacion({ accepted_at: null, expires_at: new Date(Date.now()+86400000).toISOString() });
+    return h.includes('Pendiente');
+  });
+
+  console.log('\n═══ Test 20: cache PAC y emailBadge mejorado ═══');
+  test('PAC existe y es array', () => Array.isArray(win.eval('typeof PAC!=="undefined"?PAC:null')));
+  // Inyectar datos en PAC y DEC para simular un envío con aceptación
+  win.eval(`
+    DEC = [{ proyecto_id:'PRY-01', doc_type:'presupuesto', doc_ref:'PRES-T1', recipient_email:'x@y.com', sender_email:'p@p.es', subject:'X', sent_at:'2026-04-15T10:00:00Z' }];
+    PAC = [{ presupuesto_ref:'PRES-T1', accepted_at:'2026-04-16T11:00:00Z', accepted_by_name:'Ana', expires_at:'2026-05-15T00:00:00Z' }];
+  `);
+  test('aceptacionFromCache devuelve la fila correcta', () => {
+    const r = win.aceptacionFromCache('PRES-T1');
+    return r && r.accepted_by_name === 'Ana';
+  });
+  test('aceptacionFromCache devuelve null si no hay match', () => win.aceptacionFromCache('NO_EXISTE') === null);
+  test('emailBadge para presupuesto enchufa badge "Aceptado"', () => {
+    const b = win.emailBadge('PRY-01','presupuesto','PRES-T1');
+    return b.includes('✉️') || b.includes('📬');  // base envío
+  });
+  test('emailBadge para presupuesto contiene texto de aceptación cuando está aceptado', () => {
+    const b = win.emailBadge('PRY-01','presupuesto','PRES-T1');
+    return b.includes('Aceptado');
+  });
+  test('emailBadge para pedido NO incluye texto de aceptación', () => {
+    win.eval(`DEC.push({ proyecto_id:'PRY-01', doc_type:'pedido', doc_ref:'PED-X', recipient_email:'x@y.com', sender_email:'p@p.es', subject:'X', sent_at:'2026-04-15T10:00:00Z' });`);
+    const b = win.emailBadge('PRY-01','pedido','PED-X');
+    return !b.includes('Aceptado') && !b.includes('Pendiente') && !b.includes('Caducado');
+  });
+
+  console.log('\n═══ Test 21: crearAceptacionPresupuesto integra con sb ═══');
+  // Reset captura de URLs
+  const urlsBeforeAcept = lastFetchUrls.length;
+  const info = await win.crearAceptacionPresupuesto({
+    proyectoId:'PRY-99', presupuestoRef:'PRES-99-v1', clienteEmail:'cli@test.es',
+    snapshotHtml:'<div>snap</div>', snapshotTotal: 1234.5
+  });
+  const newUrlsAcept = lastFetchUrls.slice(urlsBeforeAcept);
+  test('llamada a Supabase /rest/v1/presupuesto_aceptaciones', () => {
+    return newUrlsAcept.some(u => /\/rest\/v1\/presupuesto_aceptaciones/.test(u));
+  });
+  test('crearAceptacionPresupuesto devuelve {token,url,expiresAt}', () => {
+    return info && /^[0-9a-f]{32}$/.test(info.token) &&
+           info.url.includes('/aceptar.html?token=') &&
+           !!info.expiresAt;
+  });
+  test('URL de aceptación usa APP_PUBLIC_URL', () => {
+    const base = win.eval('APP_PUBLIC_URL');
+    return info && info.url.startsWith(base);
+  });
+
+  console.log('\n═══ Test 22: aceptar.html básico ═══');
+  const acceptarHtml = fs.readFileSync(path.join(__dirname, 'aceptar.html'), 'utf8');
+  test('aceptar.html define APPS_SCRIPT_URL', () => acceptarHtml.includes('APPS_SCRIPT_URL'));
+  test('aceptar.html llama action consultarTokenAceptacion', () => acceptarHtml.includes('consultarTokenAceptacion'));
+  test('aceptar.html llama action aceptarPresupuesto', () => acceptarHtml.includes('aceptarPresupuesto'));
+  test('aceptar.html captura IP via api.ipify.org', () => acceptarHtml.includes('api.ipify.org'));
+  test('aceptar.html usa Content-Type text/plain (sin preflight CORS)', () => acceptarHtml.includes("text/plain"));
+  test('aceptar.html valida formato DNI/NIE', () => /\[XYZ\]\[0-9\]\{7\}/.test(acceptarHtml));
+  test('aceptar.html tiene meta noindex (no debe indexarse)', () => acceptarHtml.includes('noindex'));
+
   console.log('\n═══ RESULTADO ═══');
   console.log(`  ✓ ${pass} pasados`);
   console.log(`  ✗ ${fail} fallados`);

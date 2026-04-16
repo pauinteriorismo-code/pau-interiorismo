@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Aceptar presupuesto · Pau Interiorismo</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1f2937;background:#f3f4f6}
+  .wrap{max-width:880px;margin:0 auto;padding:24px 16px 80px}
+  header{display:flex;align-items:center;gap:12px;padding:8px 0 24px;border-bottom:1px solid #e5e7eb;margin-bottom:24px}
+  header .logo{font-size:22px;font-weight:700;color:#111827}
+  header .sub{margin-left:auto;font-size:12px;color:#6b7280}
+  .card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:24px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+  h1{font-size:22px;margin:0 0 8px;color:#111827}
+  h2{font-size:16px;margin:24px 0 8px;color:#374151}
+  p{line-height:1.5;margin:8px 0;color:#374151}
+  .meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;font-size:14px;margin:8px 0}
+  .meta .item{background:#f9fafb;padding:10px 12px;border-radius:8px}
+  .meta .lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#6b7280;margin-bottom:2px}
+  .meta .val{font-weight:600;color:#111827}
+  .doc-frame{background:#fafafa;border:1px solid #e5e7eb;border-radius:8px;padding:16px;max-height:560px;overflow:auto;font-size:13px}
+  .doc-frame img{max-width:100%}
+  label{display:block;font-size:13px;font-weight:600;color:#374151;margin:14px 0 6px}
+  input[type=text]{width:100%;padding:11px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:15px;background:#fff;color:#111827}
+  input[type=text]:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.15)}
+  .check{display:flex;gap:10px;align-items:flex-start;margin:18px 0;font-size:14px;color:#374151}
+  .check input{margin-top:3px;width:18px;height:18px;cursor:pointer}
+  .check label{margin:0;font-weight:400;cursor:pointer}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:8px;border:none;font-size:15px;font-weight:600;cursor:pointer;transition:all .15s;width:100%}
+  .btn-primary{background:#16a34a;color:#fff}
+  .btn-primary:hover:not(:disabled){background:#15803d}
+  .btn-primary:disabled{background:#9ca3af;cursor:not-allowed}
+  .alert{padding:14px 16px;border-radius:8px;margin:12px 0;font-size:14px}
+  .alert-info   {background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af}
+  .alert-warn   {background:#fef3c7;border:1px solid #fcd34d;color:#92400e}
+  .alert-error  {background:#fee2e2;border:1px solid #fca5a5;color:#991b1b}
+  .alert-success{background:#dcfce7;border:1px solid #86efac;color:#166534}
+  .spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .hidden{display:none!important}
+  .terms{font-size:12px;color:#6b7280;background:#f9fafb;padding:12px;border-radius:8px;border:1px solid #e5e7eb;line-height:1.5;margin:14px 0}
+  .footer{text-align:center;font-size:12px;color:#9ca3af;margin-top:28px}
+  .ok-summary{text-align:center;padding:32px 16px}
+  .ok-summary .icon{font-size:64px;margin-bottom:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">Pau Interiorismo</div>
+    <div class="sub">Aceptación de presupuesto</div>
+  </header>
+
+  <div id="loading" class="card">
+    <p style="text-align:center;color:#6b7280;">Cargando presupuesto…</p>
+  </div>
+
+  <div id="error-state" class="card hidden">
+    <div class="alert alert-error" id="error-msg"></div>
+    <p style="font-size:13px;color:#6b7280;margin-top:16px;">
+      Si crees que es un error, contacta con nosotros en
+      <a href="mailto:administracion@pauinteriorismo.es">administracion@pauinteriorismo.es</a>.
+    </p>
+  </div>
+
+  <div id="already-accepted" class="card hidden">
+    <div class="alert alert-info">
+      Este presupuesto ya fue aceptado por <b id="already-by"></b> el <b id="already-when"></b>.
+    </div>
+  </div>
+
+  <div id="form-state" class="hidden">
+
+    <div class="card">
+      <h1>Tu presupuesto</h1>
+      <div class="meta">
+        <div class="item"><span class="lbl">Referencia</span><span class="val" id="meta-ref">—</span></div>
+        <div class="item"><span class="lbl">Proyecto</span><span class="val" id="meta-proy">—</span></div>
+        <div class="item"><span class="lbl">Importe</span><span class="val" id="meta-total">—</span></div>
+        <div class="item"><span class="lbl">Válido hasta</span><span class="val" id="meta-exp">—</span></div>
+      </div>
+      <h2>Documento</h2>
+      <div class="doc-frame" id="doc-frame">—</div>
+    </div>
+
+    <div class="card">
+      <h1>Aceptación digital</h1>
+      <p>Para aceptar este presupuesto introduce tus datos y marca la casilla de conformidad. Esta aceptación queda registrada con valor legal.</p>
+
+      <label for="f-nombre">Nombre y apellidos *</label>
+      <input type="text" id="f-nombre" autocomplete="name" placeholder="Ej: María García López">
+
+      <label for="f-dni">DNI / NIE *</label>
+      <input type="text" id="f-dni" autocomplete="off" placeholder="Ej: 12345678Z" maxlength="12" style="text-transform:uppercase;">
+
+      <div class="terms" id="terms-text">
+        Al aceptar este presupuesto declaro: (a) que soy mayor de edad y tengo capacidad legal para contratar; (b) que he leído y acepto el presupuesto en todos sus términos, importes y condiciones; (c) que esta aceptación tiene valor de firma electrónica conforme al Reglamento (UE) 910/2014 (eIDAS) y la Ley 6/2020 española; (d) que autorizo a Pau Interiorismo S.L. (B56909641) al tratamiento de mis datos personales para la ejecución del proyecto, conforme a su política de privacidad.
+      </div>
+
+      <div class="check">
+        <input type="checkbox" id="f-acepto">
+        <label for="f-acepto">He leído y acepto el presupuesto y las condiciones expuestas arriba.</label>
+      </div>
+
+      <div id="form-error" class="alert alert-error hidden"></div>
+
+      <button class="btn btn-primary" id="btn-enviar" disabled>
+        <span id="btn-label">Aceptar presupuesto</span>
+      </button>
+    </div>
+  </div>
+
+  <div id="success-state" class="card hidden">
+    <div class="ok-summary">
+      <div class="icon">✅</div>
+      <h1>Presupuesto aceptado</h1>
+      <p>Hemos registrado tu aceptación correctamente.<br>
+         Te hemos enviado una confirmación por email.</p>
+      <p style="margin-top:24px;font-size:13px;color:#6b7280;">
+         Referencia: <b id="ok-ref"></b><br>
+         Aceptado por: <b id="ok-name"></b><br>
+         Fecha: <b id="ok-when"></b>
+      </p>
+    </div>
+  </div>
+
+  <div class="footer">Pau Interiorismo S.L. · B56909641 · pauinteriorismo.com</div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  // ⚠️ EDITAR si cambia la URL del Apps Script
+  var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxsSebGjLyu0VecIKtBMk7adJ_8ki4j_y8Xb62IDVgPWV7DY5ZkX1kdSM88bKPU4nln4g/exec';
+
+  // ───────────────────────────────────────────────
+  //  1) Leer token de la URL
+  // ───────────────────────────────────────────────
+  var params = new URLSearchParams(window.location.search);
+  var token = (params.get('token') || '').trim();
+
+  var $ = function(id){ return document.getElementById(id); };
+
+  function show(id){ $(id).classList.remove('hidden'); }
+  function hide(id){ $(id).classList.add('hidden'); }
+  function fail(msg){
+    hide('loading');
+    show('error-state');
+    $('error-msg').textContent = msg;
+  }
+
+  function fmtDate(iso){
+    if(!iso) return '—';
+    try{ return new Date(iso).toLocaleString('es-ES',{dateStyle:'long',timeStyle:'short'}); }
+    catch(_){ return iso; }
+  }
+  function fmtMoney(n){
+    if(n == null || isNaN(n)) return '—';
+    return Number(n).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' €';
+  }
+
+  // ───────────────────────────────────────────────
+  //  2) Llamadas a Apps Script
+  // ───────────────────────────────────────────────
+  function callScript(payload){
+    return fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      // text/plain evita CORS preflight (Apps Script lo acepta igual)
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    }).then(function(r){ return r.json(); });
+  }
+
+  // ───────────────────────────────────────────────
+  //  3) Cargar presupuesto al abrir
+  // ───────────────────────────────────────────────
+  if(!token){
+    fail('No se ha proporcionado un token. Revisa el enlace recibido por email.');
+    return;
+  }
+
+  callScript({ action:'consultarTokenAceptacion', token: token })
+    .then(function(res){
+      hide('loading');
+      if(!res || !res.ok){
+        fail((res && res.error) || 'No se pudo cargar el presupuesto');
+        return;
+      }
+      var p = res.presupuesto;
+
+      // Si ya fue aceptado, mostrar mensaje
+      if(p.accepted_at){
+        show('already-accepted');
+        $('already-by').textContent = p.accepted_by_name || '—';
+        $('already-when').textContent = fmtDate(p.accepted_at);
+        return;
+      }
+
+      // Mostrar formulario
+      show('form-state');
+      $('meta-ref').textContent   = p.ref || '—';
+      $('meta-proy').textContent  = p.proyecto_id || '—';
+      $('meta-total').textContent = fmtMoney(p.snapshot_total);
+      $('meta-exp').textContent   = fmtDate(p.expires_at);
+      $('doc-frame').innerHTML    = p.snapshot_html || '<i>Sin vista previa disponible. El detalle del presupuesto está en el PDF que recibiste por email.</i>';
+    })
+    .catch(function(err){
+      fail('Error de red: ' + (err && err.message ? err.message : err));
+    });
+
+  // ───────────────────────────────────────────────
+  //  4) Habilitar botón solo cuando todo esté ok
+  // ───────────────────────────────────────────────
+  function validar(){
+    var nombre = $('f-nombre').value.trim();
+    var dni    = $('f-dni').value.trim().replace(/[\s-]/g,'').toUpperCase();
+    var acepto = $('f-acepto').checked;
+    var dniOk  = /^([0-9]{8}[A-Z]|[XYZ][0-9]{7}[A-Z])$/.test(dni);
+    $('btn-enviar').disabled = !(nombre.length >= 3 && dniOk && acepto);
+  }
+  ['f-nombre','f-dni','f-acepto'].forEach(function(id){
+    $(id).addEventListener('input', validar);
+    $(id).addEventListener('change', validar);
+  });
+
+  // ───────────────────────────────────────────────
+  //  5) Capturar IP del cliente (vía servicio público)
+  // ───────────────────────────────────────────────
+  var clientIp = '';
+  fetch('https://api.ipify.org?format=json')
+    .then(function(r){ return r.json(); })
+    .then(function(d){ clientIp = (d && d.ip) || ''; })
+    .catch(function(){ /* ignorar, el server registrará lo que llegue */ });
+
+  // ───────────────────────────────────────────────
+  //  6) Submit
+  // ───────────────────────────────────────────────
+  $('btn-enviar').addEventListener('click', function(){
+    var btn = $('btn-enviar');
+    var lbl = $('btn-label');
+    var nombre = $('f-nombre').value.trim();
+    var dni    = $('f-dni').value.trim().replace(/[\s-]/g,'').toUpperCase();
+
+    btn.disabled = true;
+    lbl.innerHTML = '<span class="spinner"></span> Procesando…';
+    hide('form-error');
+
+    callScript({
+      action:    'aceptarPresupuesto',
+      token:     token,
+      nombre:    nombre,
+      dni:       dni,
+      ip:        clientIp,
+      userAgent: navigator.userAgent || ''
+    }).then(function(res){
+      if(!res || !res.ok){
+        $('form-error').textContent = (res && res.error) || 'Error desconocido';
+        show('form-error');
+        btn.disabled = false;
+        lbl.textContent = 'Aceptar presupuesto';
+        return;
+      }
+      // OK
+      hide('form-state');
+      show('success-state');
+      $('ok-ref').textContent  = $('meta-ref').textContent;
+      $('ok-name').textContent = nombre;
+      $('ok-when').textContent = fmtDate(res.aceptado_at);
+    }).catch(function(err){
+      $('form-error').textContent = 'Error de red: ' + (err && err.message ? err.message : err);
+      show('form-error');
+      btn.disabled = false;
+      lbl.textContent = 'Aceptar presupuesto';
+    });
+  });
+
+})();
+</script>
+</body>
+</html>

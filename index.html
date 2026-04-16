@@ -8385,6 +8385,8 @@ function filterTable(tbId,inId){const q=document.getElementById(inId)?.value.toL
 let connTimeout;
 let CC=[],PC=[],TC=[],ProvC=[],IntC=[],CoC=[],ScC=[],HC=[],FC=[],PedC=[],CmpC=[],PresC=[],CyCache=[];
 var DEC=[];
+// PAC = Presupuesto_Aceptaciones Cache (filas más recientes por presupuesto_ref)
+var PAC=[];
 let TRABAJADORES=['Paco','Raúl','Boro','Julio','Pau','Jose Asins'];
 let LISTAS={
   estados_proyecto:['Nuevo lead','Presupuesto enviado','Aprobado','En ejecución','Finalizado','Facturado','Cobrado','Cancelado'],
@@ -10077,6 +10079,11 @@ async function saveProyecto(){
 const DRIVE_SCRIPT_URL='https://script.google.com/macros/s/AKfycbxsSebGjLyu0VecIKtBMk7adJ_8ki4j_y8Xb62IDVgPWV7DY5ZkX1kdSM88bKPU4nln4g/exec';
 // El mismo Apps Script gestiona también el envío de email vía Gmail (action:'sendEmail')
 const EMAIL_SCRIPT_URL = DRIVE_SCRIPT_URL;
+// URL pública donde se sirve aceptar.html (cara al cliente).
+// ⚠️ EDITAR cuando despleguemos: debe terminar SIN barra final.
+const APP_PUBLIC_URL = 'https://pau-interiorismo.vercel.app';
+// Días de vigencia del enlace de aceptación de presupuesto
+const ACEPTACION_DIAS_VALIDEZ = 30;
 
 // ─── Datos de empresa y firmas por alias ───
 const EMPRESA = {
@@ -36541,18 +36548,42 @@ async function ejecutarEnvioEmail(){
       });
     }
 
+    // 2.5. Si es presupuesto, generar token de aceptación y guardarlo en BD
+    let aceptacionInfo = null;
+    if(docType === 'presupuesto'){
+      try {
+        if(btnEnviar) btnEnviar.textContent='⏳ Generando enlace de firma…';
+        setStatus('Generando enlace de aceptación…','info');
+        const snapshotHtml = _emailDocEl ? _emailDocEl.outerHTML : '';
+        const snapshotTotal = extraerTotalPresupuesto(_emailDocEl);
+        aceptacionInfo = await crearAceptacionPresupuesto({
+          proyectoId:     proyId,
+          presupuestoRef: docRef,
+          clienteEmail:   para,
+          snapshotHtml:   snapshotHtml,
+          snapshotTotal:  snapshotTotal
+        });
+      } catch(err){
+        console.warn('Aceptación: error al generar token, continúo sin botón:', err);
+      }
+    }
+
     if(btnEnviar) btnEnviar.textContent='⏳ Enviando…';
     setStatus('Enviando vía Gmail ('+desde+')…','info');
 
     // 3. Construir cuerpo HTML con firma del alias seleccionado
     const cuerpoEsc = cuerpo.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
     const firmaHtml = buildFirmaHtml(desde);
+    const botonAceptarHtml = (docType === 'presupuesto' && aceptacionInfo)
+      ? buildBotonAceptarHtml(aceptacionInfo.url, aceptacionInfo.expiresAt)
+      : '';
     const htmlBody = `<div style="font-family:'Segoe UI',Arial,sans-serif;max-width:640px;margin:0 auto;color:#333">
       <div style="background:#1a3a5c;padding:14px 24px">
         <span style="color:#b87333;font-size:18px;font-weight:800;letter-spacing:.5px">PAU INTERIORISMO</span>
       </div>
       <div style="padding:22px 24px;background:#fff;border:1px solid #e8e0d4">
         <div style="font-size:13px;color:#333;line-height:1.6">${cuerpoEsc}</div>
+        ${botonAceptarHtml}
         ${firmaHtml}
       </div>
     </div>`;
@@ -36590,7 +36621,8 @@ async function ejecutarEnvioEmail(){
         recipient_email: para,
         sender_email: desde,
         subject: asunto,
-        sent_at: new Date().toISOString()
+        sent_at: new Date().toISOString(),
+        aceptacion_token: (aceptacionInfo && aceptacionInfo.token) || null
       };
       if(typeof sb === 'function'){ await sb('document_emails','POST',reg).catch(()=>{}); }
       if(typeof DEC !== 'undefined' && Array.isArray(DEC)){ DEC.unshift(reg); }
@@ -36682,6 +36714,17 @@ function vpGuardarPDF(){
 async function loadAllEmailStatus(){
   try{ DEC = await sbGet('document_emails','?order=sent_at.desc&limit=500') || []; }
   catch(e){ DEC=[]; }
+  try{ PAC = await sbGet('presupuesto_aceptaciones','?order=created_at.desc&limit=500') || []; }
+  catch(e){ PAC=[]; }
+}
+
+// Devuelve la fila de aceptación más reciente para un presupuesto_ref dado, desde cache PAC.
+function aceptacionFromCache(presupuestoRef){
+  if(!presupuestoRef || !Array.isArray(PAC)) return null;
+  for(let i=0;i<PAC.length;i++){
+    if(PAC[i].presupuesto_ref===presupuestoRef) return PAC[i]; // PAC ya viene ordenado desc
+  }
+  return null;
 }
 
 function emailBadge(proyectoId, docType, docRef){
@@ -36691,8 +36734,17 @@ function emailBadge(proyectoId, docType, docRef){
     (!docRef||e.doc_ref===docRef)
   );
   if(!emails.length) return '';
-  if(emails.some(e=>e.read_at)) return '<span title="Leído por el cliente" style="cursor:default;font-size:14px">📬</span>';
-  return '<span title="Enviado, sin leer aún" style="cursor:default;font-size:14px">✉️</span>';
+  // Badge base de envío/lectura
+  let base = emails.some(e=>e.read_at)
+    ? '<span title="Leído por el cliente" style="cursor:default;font-size:14px">📬</span>'
+    : '<span title="Enviado, sin leer aún" style="cursor:default;font-size:14px">✉️</span>';
+  // Si es presupuesto, anexar badge de aceptación
+  if(docType === 'presupuesto'){
+    const acept = aceptacionFromCache(docRef);
+    const aceptHtml = renderBadgeAceptacion(acept);
+    if(aceptHtml) base += ' ' + aceptHtml;
+  }
+  return base;
 }
 
 function buildEmailWrapper(titulo, nombreCliente, referencia, importeStr, mensaje, bodyExtra){
@@ -36745,6 +36797,126 @@ function openEmailModal({docType, docRef, proyectoId, defaultTo, subject, fromEm
 }
 
 // Construye el bloque HTML de la firma según el alias seleccionado
+// ═══════════════════════════════════════════════════════
+// ACEPTACIÓN DIGITAL DE PRESUPUESTOS
+// (Helpers usados desde ejecutarEnvioEmail cuando docType==='presupuesto')
+// ═══════════════════════════════════════════════════════
+
+// Genera un token criptográficamente fuerte (32 chars hex = 128 bits)
+function generarTokenAceptacion(){
+  try {
+    if(window.crypto && crypto.getRandomValues){
+      const a = new Uint8Array(16);
+      crypto.getRandomValues(a);
+      return Array.from(a).map(b=>b.toString(16).padStart(2,'0')).join('');
+    }
+  } catch(_){}
+  // Fallback (no usar en producción real, pero suficiente como respaldo)
+  return (Date.now().toString(36) + Math.random().toString(36).slice(2)
+        + Math.random().toString(36).slice(2)).slice(0,32);
+}
+
+// Intenta localizar el importe total dentro del documento renderizado del presupuesto.
+// Devuelve un Number o null. Defensivo: si no encuentra nada devuelve null.
+function extraerTotalPresupuesto(docEl){
+  if(!docEl) return null;
+  try {
+    // Busca por id típicos primero
+    const ids = ['pf-total','pf-total-base','pf-importe-total'];
+    for(const id of ids){
+      const el = docEl.querySelector('#'+id);
+      if(el){
+        const n = parseFloat((el.textContent||'').replace(/[^\d,.-]/g,'').replace(/\./g,'').replace(',','.'));
+        if(!isNaN(n)) return n;
+      }
+    }
+    // Busca por texto "Total" en celdas de tabla
+    const cells = docEl.querySelectorAll('td,th,div,span');
+    for(let i=0;i<cells.length;i++){
+      const t = (cells[i].textContent||'').trim().toLowerCase();
+      if(t==='total' || t==='total presupuesto' || t==='total a pagar'){
+        const sib = cells[i].nextElementSibling;
+        if(sib){
+          const n = parseFloat((sib.textContent||'').replace(/[^\d,.-]/g,'').replace(/\./g,'').replace(',','.'));
+          if(!isNaN(n)) return n;
+        }
+      }
+    }
+  } catch(_){}
+  return null;
+}
+
+// Crea un registro en presupuesto_aceptaciones y devuelve { token, url, expiresAt }.
+// Si Supabase falla, devuelve null y el envío del email continúa sin botón.
+async function crearAceptacionPresupuesto({proyectoId, presupuestoRef, clienteEmail, snapshotHtml, snapshotTotal}){
+  if(typeof sb !== 'function') return null;
+  const token = generarTokenAceptacion();
+  const ahora = new Date();
+  const expira = new Date(ahora.getTime() + ACEPTACION_DIAS_VALIDEZ*24*60*60*1000);
+  const payload = {
+    proyecto_id:     proyectoId || '',
+    presupuesto_ref: presupuestoRef || '',
+    cliente_email:   clienteEmail || '',
+    token:           token,
+    created_at:      ahora.toISOString(),
+    expires_at:      expira.toISOString(),
+    snapshot_html:   snapshotHtml || null,
+    snapshot_total:  (snapshotTotal!=null && !isNaN(snapshotTotal)) ? snapshotTotal : null
+  };
+  try {
+    await sb('presupuesto_aceptaciones','POST',payload);
+    return {
+      token:     token,
+      url:       APP_PUBLIC_URL.replace(/\/+$/,'') + '/aceptar.html?token=' + encodeURIComponent(token),
+      expiresAt: expira.toISOString()
+    };
+  } catch(err){
+    console.warn('No se pudo crear token de aceptación:', err);
+    return null;
+  }
+}
+
+// HTML del botón verde "Aceptar presupuesto" que se inyecta en el email
+function buildBotonAceptarHtml(url, expiresIso){
+  if(!url) return '';
+  let textoCad = '';
+  if(expiresIso){
+    try { textoCad = 'Enlace válido hasta el ' + new Date(expiresIso).toLocaleDateString('es-ES',{day:'2-digit',month:'long',year:'numeric'}) + '.'; }
+    catch(_){}
+  }
+  return `<div style="margin:24px 0;padding:18px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;text-align:center">
+    <div style="font-size:13px;color:#15803d;margin-bottom:10px;font-weight:600">¿Conforme con el presupuesto?</div>
+    <a href="${url}" style="display:inline-block;background:#16a34a;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:700;font-size:14px">✅ Aceptar presupuesto online</a>
+    <div style="font-size:11px;color:#64748b;margin-top:10px">${textoCad}</div>
+  </div>`;
+}
+
+// Consulta el estado de aceptación más reciente de un presupuesto por su ref.
+// Devuelve la fila o null.
+async function consultarAceptacionPresupuesto(presupuestoRef){
+  if(typeof sb !== 'function' || !presupuestoRef) return null;
+  try {
+    const rows = await sb('presupuesto_aceptaciones','GET',null,null,
+      `?presupuesto_ref=eq.${encodeURIComponent(presupuestoRef)}&order=created_at.desc&limit=1`);
+    return (Array.isArray(rows) && rows.length) ? rows[0] : null;
+  } catch(_){ return null; }
+}
+
+// Devuelve un fragmento HTML con el badge correspondiente al estado de la fila
+// devuelta por consultarAceptacionPresupuesto. Si row es null devuelve string vacío.
+function renderBadgeAceptacion(row){
+  if(!row) return '';
+  if(row.accepted_at){
+    const fecha = new Date(row.accepted_at).toLocaleDateString('es-ES');
+    const quien = (row.accepted_by_name||'').replace(/[<>]/g,'');
+    return `<span style="display:inline-block;background:#dcfce7;color:#166534;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600" title="Aceptado por ${quien} el ${fecha}">✅ Aceptado</span>`;
+  }
+  if(row.expires_at && new Date(row.expires_at) < new Date()){
+    return `<span style="display:inline-block;background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">⌛ Caducado</span>`;
+  }
+  return `<span style="display:inline-block;background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">⏳ Pendiente firma</span>`;
+}
+
 function buildFirmaHtml(alias){
   const f = EMAIL_FIRMAS[alias] || EMAIL_FIRMAS['presupuestos@pauinteriorismo.es'];
   return `<div style="margin-top:18px;padding-top:14px;border-top:1px solid #e0d8c8;font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:#4a3728;line-height:1.5">
