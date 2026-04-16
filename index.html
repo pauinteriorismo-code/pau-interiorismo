@@ -17513,19 +17513,30 @@ function abrirDocPedido(pedidoId){
 }
 
 // Construye el dropdown de proveedores filtrado por lo que escribe el usuario
+// IMPORTANTE: ProvC se declara con `let` (línea ~8386) así que NO es window.ProvC.
+// Hay que comprobar la variable directamente, no a través de window.
 function pdProvBuildDd(){
   const inp = document.getElementById('pd-prov-input');
   const dd  = document.getElementById('pd-prov-dd');
   if(!inp || !dd) return;
   // Si no hay proveedores cargados, cargarlos y reintentar
-  if(!window.ProvC || !ProvC.length){
-    sbGet('proveedores','?order=nombre.asc').then(r=>{ ProvC=r||[]; pdProvBuildDd(); }).catch(()=>{});
+  if(!ProvC || !ProvC.length){
+    if(window._pdProvLoading) return; // evitar fetches duplicados
+    window._pdProvLoading = true;
+    sbGet('proveedores','?order=nombre.asc').then(r=>{
+      ProvC = r||[];
+      window._pdProvLoading = false;
+      // Solo rellenar si el campo sigue activo
+      if(document.activeElement === inp) pdProvBuildDd();
+    }).catch(()=>{ window._pdProvLoading = false; });
+    dd.innerHTML = '<div class="search-dd-empty">Cargando proveedores…</div>';
+    dd.style.display = 'block';
     return;
   }
   const q = (inp.value||'').toLowerCase().trim();
   const norm = s => (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'');
   const qNorm = norm(q);
-  const arr = (ProvC||[]).slice().sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||'','es'));
+  const arr = ProvC.slice().sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||'','es'));
   const items = q ? arr.filter(p => {
     const n = (p.nombre||'').toLowerCase();
     return n.includes(q) || norm(p.nombre).includes(qNorm);
@@ -17554,12 +17565,12 @@ function pdProvSelect(nombre, tel){
   cerrarSearchDd('pd-prov-dd');
 }
 
-// Mantengo este alias para compatibilidad con código que aún lo llame
-function pdPoblarProvDatalist(){ /* ya no se usa, dropdown se construye on-demand */ }
+// Stubs para compatibilidad
+function pdPoblarProvDatalist(){ /* ya no se usa */ }
 function pdProvCompletar(input){
   const nombre = (input?.value||'').trim();
   if(!nombre) return;
-  const prov = (window.ProvC||[]).find(p=>p.nombre===nombre);
+  const prov = (ProvC||[]).find(p=>p.nombre===nombre);
   if(prov){
     const telEl = document.getElementById('pd-prov-tel-input');
     if(telEl && prov.telefono) telEl.value = prov.telefono;
@@ -17681,6 +17692,13 @@ async function guardarDocPedido(){
     // Refresh PedC cache and selector
     PedC = await sbGet('pedidos','?order=fecha.desc').catch(()=>PedC);
     poblarSelectorDocPedido();
+    // Marca explícita para que loadPedidos sepa qué cliente/proyecto fijar
+    // en sus filtros cuando el usuario navegue a la página de Pedidos.
+    window._pedidoRecienGuardado = {
+      id: window.pdPedidoId,
+      cliente_id: clienteId,
+      proyecto_id: d.proyecto_id
+    };
     // ─── P4: dejar el pedido recién creado/guardado seleccionado y recargado en la misma vista ───
     if(window.pdPedidoId){
       const sel=document.getElementById('pd-pedido-sel');
@@ -18673,31 +18691,38 @@ async function loadPedidos(){
     if(!PedC.length){tb.innerHTML=`<tr><td colspan="9"><div class="empty"><div class="empty-icon">📦</div><div class="empty-text">Sin pedidos</div><button class="btn btn-primary" onclick="openModal('m-pedido')">＋ Nuevo</button></div></td></tr>`;return;}
     tb.innerHTML=PedC.map(p=>`<tr data-search="${(p.num_pedido+p.proyecto_id+p.proveedor+p.tipo).toLowerCase()}"><td class="td-mono" style="font-weight:700">${p.num_pedido||'—'}</td><td>${fmtD(p.fecha)}</td><td class="td-mono" style="color:var(--text-soft)">${p.proyecto_id||'—'}</td><td><span class="badge b-blue">${p.tipo||'—'}</span></td><td>${p.proveedor||'—'}</td><td class="td-mono" style="font-weight:700">${fmt(p.importe)}</td><td>${bE(p.estado)}</td><td style="color:var(--text-soft)">${p.referencia?`<span style="font-weight:600;color:var(--navy)">${p.referencia}</span>`:''} ${p.observaciones||''}</td><td style="display:flex;gap:4px">${_badgeEnviado('pedido',p.id)}${(()=>{try{const a=p.adjuntos?JSON.parse(p.adjuntos):[];return a.length?`<button class="btn btn-ghost btn-icon btn-sm" onclick="pedVerAdjById('${p.id}')" title="${a.length} adjunto(s)" style="font-size:11px;color:var(--navy)">📎 ${a.length}</button>`:''}catch(e){return'';}})()}<button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="editPedido('${p.id}')">Editar</button><button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="abrirDocPedido('${p.id}')">📋 Doc.</button>${(()=>{const proy=(PC||[]).find(x=>x.proyecto_id===p.proyecto_id);const tieneDrive=!!(proy&&proy.carpeta_drive);return tieneDrive?`<button class="btn btn-ghost btn-sm" onclick="abrirCarpetaProyectoDrive('${p.proyecto_id}')" title="Abrir carpeta del proyecto en Drive en una pestaña nueva" style="font-size:11px;color:#1a73e8;font-weight:600">📁 Drive</button>`:`<button class="btn btn-ghost btn-sm" onclick="abrirCarpetaProyectoDrive('${p.proyecto_id}')" title="Crear carpeta de Drive para este proyecto" style="font-size:11px;color:#b87333;font-weight:600">📁 Crear</button>`;})()}<button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('pedidos','${p.id}','${(p.num_pedido||'pedido').replace(/'/g,"\\'")}')">🗑</button></td></tr>`).join('');
   }catch(e){tb.innerHTML=`<tr><td colspan="9" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
-  // Si el usuario viene de guardar/editar un pedido en el documento, fijar
-  // los filtros de la página al cliente/proyecto de ese pedido para que la fila
-  // sea visible directamente sin tener que reseleccionar nada.
-  if(window.pdPedidoId){
+  // Si el usuario acaba de guardar un pedido en el documento, fijar los
+  // filtros de cliente y proyecto para que su fila sea visible directamente.
+  // Usamos el marcador _pedidoRecienGuardado (creado en guardarDocPedido)
+  // como fuente principal, con fallback a window.pdPedidoId.
+  let cliId=null, proyId=null;
+  if(window._pedidoRecienGuardado){
+    cliId  = window._pedidoRecienGuardado.cliente_id || null;
+    proyId = window._pedidoRecienGuardado.proyecto_id || null;
+    // Consumimos la marca para no volver a aplicarla en navegaciones futuras
+    window._pedidoRecienGuardado = null;
+  } else if(window.pdPedidoId){
     const ped = (PedC||[]).find(x=>String(x.id)===String(window.pdPedidoId));
-    if(ped){
-      const cliSel = document.getElementById('filter-cliente-pedidos');
-      const proySel= document.getElementById('filter-proyecto-pedidos');
-      if(cliSel && ped.cliente_id){
-        cliSel.value = ped.cliente_id;
-        // Repoblar proyectos según cliente y aplicar selección
-        cascadaClienteProyecto('pedidos');
-        if(proySel && ped.proyecto_id){
-          proySel.value = ped.proyecto_id;
-          filtrarModuloPorProyecto('pedidos');
-        }
-        return;
-      }
-      // Si no hay cliente_id pero sí proyecto_id, fijar solo proyecto
-      if(proySel && ped.proyecto_id){
-        proySel.value = ped.proyecto_id;
-        filtrarModuloPorProyecto('pedidos');
-        return;
-      }
+    if(ped){ cliId = ped.cliente_id||null; proyId = ped.proyecto_id||null; }
+  }
+  if(cliId || proyId){
+    const cliSel = document.getElementById('filter-cliente-pedidos');
+    const proySel= document.getElementById('filter-proyecto-pedidos');
+    if(cliSel && cliId) cliSel.value = cliId;
+    // Repoblar dropdown de proyecto según cliente, fijar valor y filtrar UNA
+    // sola vez. NO llamamos a cascadaClienteProyecto porque su llamada interna
+    // a filtrarModuloPorProyecto borraría las filas recién renderizadas con un
+    // empty state antes de poder fijar el valor de proyecto.
+    if(proySel){
+      const proyectosFiltrados = cliId
+        ? (PC||[]).filter(p=>p.cliente_id===cliId)
+        : (PC||[]);
+      proySel.innerHTML = '<option value="">📁 Proyecto…</option>'
+        + proyectosFiltrados.map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
+      if(proyId) proySel.value = proyId;
     }
+    filtrarModuloPorProyecto('pedidos');
+    return;
   }
   // Re-apply project filter after load
   filtrarModuloPorProyecto('pedidos');
