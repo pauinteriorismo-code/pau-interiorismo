@@ -10548,6 +10548,18 @@ function _driveFolderId(proyId){
   return m?m[1]:null;
 }
 
+// Abre la carpeta del proyecto en Drive en una pestaña nueva.
+// Desde ahí el usuario llega a 06 Proveedores → {proveedor} → Pedidos
+// en pocos clics (3 en vez de 7 desde la raíz).
+function abrirCarpetaProyectoDrive(proyId){
+  const p=(PC||[]).find(x=>x.proyecto_id===proyId);
+  if(!p || !p.carpeta_drive){
+    toast('Este proyecto no tiene carpeta Drive asociada','error');
+    return;
+  }
+  window.open(p.carpeta_drive, '_blank', 'noopener,noreferrer');
+}
+
 async function subirPDFaDrive(elementId, nombreArchivo, proyId, subCarpeta, folderIdOverride, extras){
   const folderId=folderIdOverride||_driveFolderId(proyId);
   if(!folderId){toast('Sin carpeta Drive para este proyecto. Abre el expediente y añade el enlace de Drive.','error');return;}
@@ -17511,11 +17523,36 @@ function cargarPedidoEnDoc(){
 async function guardarDocPedido(){
   const getVal = id => { const el=document.getElementById(id); return el?el.value:''; };
   const lineasLimpias = (window.pdLineas||[]).filter(l=>l.cant||l.desc||l.ref);
+
+  // ─── P3: Recoger cliente desde el selector superior ───
+  // Si el selector está vacío y estamos editando, conservamos el cliente del pedido
+  // original (evita que un edit "pierda" el cliente si el filtro no está sincronizado).
+  const cliSelVal = document.getElementById('filter-cliente-pedido_doc')?.value || '';
+  let clienteId = cliSelVal || null;
+  let clienteNombre = null;
+  if(clienteId){
+    const cliObj = (CC||[]).find(c=>String(c.cliente_id)===String(clienteId)||String(c.id)===String(clienteId));
+    clienteNombre = cliObj?.nombre || null;
+  } else if(window.pdPedidoId){
+    const pedActual = (PedC||[]).find(x=>String(x.id)===String(window.pdPedidoId));
+    if(pedActual){ clienteId = pedActual.cliente_id||null; clienteNombre = pedActual.cliente_nombre||null; }
+  }
+  // Fallback: si tenemos el nombre del cliente en el documento pero no id, intentar resolverlo
+  if(!clienteId){
+    const nomDoc = getVal('pd-cliente-nombre-input');
+    if(nomDoc){
+      const cliObj = (CC||[]).find(c=>c.nombre===nomDoc);
+      if(cliObj){ clienteId = cliObj.cliente_id||cliObj.id||null; clienteNombre = cliObj.nombre; }
+      else clienteNombre = nomDoc;
+    }
+  }
+
   const d = {
     num_pedido:   getVal('pd-num-input'),
     fecha:        getVal('pd-fecha-input') || new Date().toISOString().split('T')[0],
     proveedor:    getVal('pd-prov-input'),
-    // prov_tel removed from UI
+    cliente_id:   clienteId,
+    cliente_nombre: clienteNombre,
     proyecto_id:  document.getElementById('filter-proyecto-pedido_doc')?.value || getVal('pd-proyecto-input') || null,
     observaciones:getVal('pd-obs-input'),
     referencia:   getVal('pd-ref-doc-input'),
@@ -17525,6 +17562,7 @@ async function guardarDocPedido(){
     importe:      0,
   };
   try{
+    const esNuevo = !window.pdPedidoId;
     if(window.pdPedidoId){
       // UPDATE
       await sb('pedidos','PATCH',d,null,`?id=eq.${window.pdPedidoId}`);
@@ -17539,14 +17577,19 @@ async function guardarDocPedido(){
       if(!res.ok) throw new Error(await res.text());
       const created = await res.json();
       if(created&&created[0]) window.pdPedidoId = created[0].id;
-      toast('Pedido creado y guardado ✅');
+      toast('Pedido creado ✅ — puedes seguir editándolo aquí mismo');
     }
     // Refresh PedC cache and selector
     PedC = await sbGet('pedidos','?order=fecha.desc').catch(()=>PedC);
     poblarSelectorDocPedido();
+    // ─── P4: dejar el pedido recién creado/guardado seleccionado y recargado en la misma vista ───
     if(window.pdPedidoId){
       const sel=document.getElementById('pd-pedido-sel');
-      if(sel) sel.value = window.pdPedidoId;
+      if(sel){
+        sel.value = String(window.pdPedidoId);
+        // Recargar el documento desde BD para refrescar bloque de cliente, etc.
+        cargarPedidoEnDoc();
+      }
     }
     // Ya no se sube automáticamente a Drive: el usuario puede editar
     // la referencia del proyecto antes y subirlo con el botón "Drive".
@@ -18527,7 +18570,7 @@ async function loadPedidos(){
     PedC=await sbGet('pedidos','?order=fecha.desc');
     document.getElementById('pedidos-count').textContent=PedC.length+' pedidos';
     if(!PedC.length){tb.innerHTML=`<tr><td colspan="9"><div class="empty"><div class="empty-icon">📦</div><div class="empty-text">Sin pedidos</div><button class="btn btn-primary" onclick="openModal('m-pedido')">＋ Nuevo</button></div></td></tr>`;return;}
-    tb.innerHTML=PedC.map(p=>`<tr data-search="${(p.num_pedido+p.proyecto_id+p.proveedor+p.tipo).toLowerCase()}"><td class="td-mono" style="font-weight:700">${p.num_pedido||'—'}</td><td>${fmtD(p.fecha)}</td><td class="td-mono" style="color:var(--text-soft)">${p.proyecto_id||'—'}</td><td><span class="badge b-blue">${p.tipo||'—'}</span></td><td>${p.proveedor||'—'}</td><td class="td-mono" style="font-weight:700">${fmt(p.importe)}</td><td>${bE(p.estado)}</td><td style="color:var(--text-soft)">${p.referencia?`<span style="font-weight:600;color:var(--navy)">${p.referencia}</span>`:''} ${p.observaciones||''}</td><td style="display:flex;gap:4px">${_badgeEnviado('pedido',p.id)}${(()=>{try{const a=p.adjuntos?JSON.parse(p.adjuntos):[];return a.length?`<button class="btn btn-ghost btn-icon btn-sm" onclick="pedVerAdjById('${p.id}')" title="${a.length} adjunto(s)" style="font-size:11px;color:var(--navy)">📎 ${a.length}</button>`:''}catch(e){return'';}})()}<button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="editPedido('${p.id}')">Editar</button><button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="abrirDocPedido('${p.id}')">📋 Doc.</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('pedidos','${p.id}','${(p.num_pedido||'pedido').replace(/'/g,"\\'")}')">🗑</button></td></tr>`).join('');
+    tb.innerHTML=PedC.map(p=>`<tr data-search="${(p.num_pedido+p.proyecto_id+p.proveedor+p.tipo).toLowerCase()}"><td class="td-mono" style="font-weight:700">${p.num_pedido||'—'}</td><td>${fmtD(p.fecha)}</td><td class="td-mono" style="color:var(--text-soft)">${p.proyecto_id||'—'}</td><td><span class="badge b-blue">${p.tipo||'—'}</span></td><td>${p.proveedor||'—'}</td><td class="td-mono" style="font-weight:700">${fmt(p.importe)}</td><td>${bE(p.estado)}</td><td style="color:var(--text-soft)">${p.referencia?`<span style="font-weight:600;color:var(--navy)">${p.referencia}</span>`:''} ${p.observaciones||''}</td><td style="display:flex;gap:4px">${_badgeEnviado('pedido',p.id)}${(()=>{try{const a=p.adjuntos?JSON.parse(p.adjuntos):[];return a.length?`<button class="btn btn-ghost btn-icon btn-sm" onclick="pedVerAdjById('${p.id}')" title="${a.length} adjunto(s)" style="font-size:11px;color:var(--navy)">📎 ${a.length}</button>`:''}catch(e){return'';}})()}<button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="editPedido('${p.id}')">Editar</button><button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="abrirDocPedido('${p.id}')">📋 Doc.</button>${(()=>{const proy=(PC||[]).find(x=>x.proyecto_id===p.proyecto_id);const tieneDrive=!!(proy&&proy.carpeta_drive);return tieneDrive?`<button class="btn btn-ghost btn-icon btn-sm" onclick="abrirCarpetaProyectoDrive('${p.proyecto_id}')" title="Abrir carpeta del proyecto en Drive" style="font-size:11px">📁</button>`:`<button class="btn btn-ghost btn-icon btn-sm" disabled title="Sin carpeta Drive en el proyecto" style="font-size:11px;opacity:.35;cursor:not-allowed">📁</button>`;})()}<button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('pedidos','${p.id}','${(p.num_pedido||'pedido').replace(/'/g,"\\'")}')">🗑</button></td></tr>`).join('');
   }catch(e){tb.innerHTML=`<tr><td colspan="9" style="color:var(--red);text-align:center;padding:20px">Error: ${e.message}</td></tr>`;}
   // Re-apply project filter after load
   filtrarModuloPorProyecto('pedidos');
