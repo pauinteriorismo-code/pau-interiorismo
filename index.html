@@ -10162,19 +10162,19 @@ const EMAIL_FIRMAS = {
   'presupuestos@pauinteriorismo.es': {
     nombre: 'Jose Asins Primo',
     cargo: 'Departamento presupuestos',
-    telefono: '677 970 074',
+    telefono: '961 20 01 87',
     email: 'presupuestos@pauinteriorismo.es'
   },
   'administracion@pauinteriorismo.es': {
     nombre: 'Jose Asins Primo',
     cargo: 'Departamento administración',
-    telefono: '677 970 074',
+    telefono: '961 20 01 87',
     email: 'administracion@pauinteriorismo.es'
   },
   'info@pauinteriorismo.es': {
     nombre: 'Maria Paz Primo Iborra',
     cargo: 'Departamento información y proveedores',
-    telefono: '628 716 815',
+    telefono: '961 20 01 87',
     email: 'info@pauinteriorismo.es'
   }
 };
@@ -36523,7 +36523,10 @@ function abrirEnviarEmail(tipo){
     if(!docEl || !docEl.querySelector('#pf-lineas')?.children.length){ toast('Carga un presupuesto primero','error'); return; }
     const proy = document.getElementById('pf-proyecto-sel')?.value||'';
     const ver  = document.getElementById('pf-version-sel')?.value||'v1';
-    const num  = document.getElementById('pf-num')?.textContent||'';
+    // pf-num puede traer algo como "Presupuesto Nº: PRY-027-VIV-4G". Limpiamos el
+    // prefijo "Presupuesto Nº:" para que luego no quede duplicado en el asunto.
+    const numRaw = (document.getElementById('pf-num')?.textContent||'').trim();
+    const num = numRaw.replace(/^Presupuesto\s*N[º°o]?\.?\s*:?\s*/i,'').trim();
     filename     = ('Presupuesto_'+proy+'_'+ver+'_'+new Date().toISOString().split('T')[0]+'.pdf').replace(/\s+/g,'_');
     titulo       = 'Presupuesto N.\u00ba '+(num||proy);
     proyId       = proy;
@@ -36531,7 +36534,7 @@ function abrirEnviarEmail(tipo){
     const cli    = (typeof CC!=='undefined') ? (CC.find(c=>c.cliente_id===cliId)||{}) : {};
     destEmail = cli.email||'';
     asunto = empresa+' \u2013 '+titulo;
-    cuerpo = 'Estimado/a '+(cli.nombre||'cliente')+',\n\nAdjunto encontrar\xe1 el '+titulo.toLowerCase()+' que nos solicit\xf3.\n\nQuedamos a su disposici\xf3n para cualquier consulta o modificaci\xf3n.';
+    cuerpo = 'Estimado/a '+(cli.nombre||'cliente')+',\n\nAdjunto encontrar\xe1 el presupuesto n.\xba '+(num||proy)+' que nos solicit\xf3.\n\nQuedamos a su disposici\xf3n para cualquier consulta o modificaci\xf3n.';
 
   } else if(tipo==='pedido'){
     docEl = document.getElementById('pd-doc');
