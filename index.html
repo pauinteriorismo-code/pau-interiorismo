@@ -21039,6 +21039,18 @@ function _refreshEnviadoPres(){
 
 function _enviadoKey(tipo, id){ return 'enviado_'+tipo+'_'+id; }
 function _getEnviado(tipo, id){
+  // Para pedidos, preferimos el registro automático de document_emails (DEC),
+  // que se rellena al enviar desde la app → sobrevive a cambios de dispositivo.
+  if(tipo==='pedido' && typeof DEC !== 'undefined' && Array.isArray(DEC)){
+    const ped = (typeof PedC!=='undefined') ? PedC.find(p=>String(p.id)===String(id)) : null;
+    const ref = ped && ped.num_pedido;
+    if(ref){
+      const sent = DEC.find(e => e.doc_type==='pedido' && e.doc_ref===ref && e.sent_at);
+      if(sent){
+        return { fecha: (sent.sent_at||'').split('T')[0], auto: true };
+      }
+    }
+  }
   try{ return JSON.parse(localStorage.getItem(_enviadoKey(tipo,id))||'null'); }catch(e){ return null; }
 }
 function _setEnviado(tipo, id){
@@ -21052,6 +21064,10 @@ function _clearEnviado(tipo, id){
 function marcarEnviado(tipo, id, label){
   const ya = _getEnviado(tipo, id);
   if(ya){
+    if(ya.auto){
+      toast('Este '+(label||'documento').toLowerCase()+' se envió por email desde la app ('+fmtD(ya.fecha)+'), no se puede desmarcar','info');
+      return;
+    }
     if(!confirm('Ya marcado como enviado el '+fmtD(ya.fecha)+'.\n¿Desmarcar?')) return;
     _clearEnviado(tipo, id);
     toast('Marcado como no enviado');
@@ -21067,7 +21083,10 @@ function marcarEnviado(tipo, id, label){
 function _badgeEnviado(tipo, id){
   const e = _getEnviado(tipo, id);
   if(!e) return '<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px;color:var(--text-mid)" onclick="marcarEnviado(\''+tipo+'\',\''+id+'\',\'Documento\')" title="Marcar como enviado">📤</button>';
-  return '<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px;color:var(--green);font-weight:700" onclick="marcarEnviado(\''+tipo+'\',\''+id+'\',\'Documento\')" title="Enviado el '+fmtD(e.fecha)+'\nPulsa para desmarcar">📤 '+fmtD(e.fecha)+'</button>';
+  const titulo = e.auto
+    ? 'Enviado automáticamente por email el '+fmtD(e.fecha)
+    : 'Enviado el '+fmtD(e.fecha)+'\nPulsa para desmarcar';
+  return '<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px;color:var(--green);font-weight:700" onclick="marcarEnviado(\''+tipo+'\',\''+id+'\',\'Documento\')" title="'+titulo+'">📤 '+fmtD(e.fecha)+'</button>';
 }
 
 
@@ -36709,6 +36728,11 @@ async function ejecutarEnvioEmail(){
           try{ renderFacturas(); }catch(_){}
         }
       }catch(_){}
+    }
+
+    // 6b. Si es pedido, refrescar la tabla de pedidos para que se vea el badge 📤 verde
+    if(docType==='pedido'){
+      try{ if(typeof loadPedidos === 'function') loadPedidos(); }catch(_){}
     }
 
     setStatus('✅ Enviado correctamente a '+para,'ok');
