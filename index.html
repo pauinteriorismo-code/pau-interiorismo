@@ -6831,6 +6831,12 @@ async function pfAbrirContrato(){
     const ctSel=document.getElementById('ct-proyecto-sel');
     if(!ctSel) return;
     const p=(PC||[]).find(x=>x.proyecto_id===proy)||{};
+    // Pre-seleccionar también el cliente para que el filtro no aparezca vacío
+    const ctCli=document.getElementById('filter-cliente-contrato');
+    if(ctCli && p.cliente_id){
+      ctCli.value = p.cliente_id;
+      try{ cascadaModulo('contrato','ct-proyecto-sel',null); }catch(_){}
+    }
     if(!Array.from(ctSel.options).some(o=>o.value===proy)){
       const opt=document.createElement('option'); opt.value=proy; opt.textContent=proy+' · '+(p.nombre||''); ctSel.appendChild(opt);
     }
@@ -21443,6 +21449,22 @@ const loaders={
       PC=await sbGet('proyectos','?order=created_at.desc');
       CC=await sbGet('clientes');
       sel.innerHTML='<option value="">Seleccionar proyecto…</option>'+[...PC].sort((a,b)=>a.proyecto_id.localeCompare(b.proyecto_id,'es',{numeric:true})).map(p=>`<option value="${p.proyecto_id}">${p.proyecto_id} · ${p.nombre}</option>`).join('');
+      // Sincronizar cliente y proyecto desde el contexto activo (si el usuario viene
+      // del presupuesto o acaba de abrir "Generar contrato"), para no tener que volver
+      // a seleccionarlos.
+      if(typeof PRES_ACTIVO !== 'undefined' && PRES_ACTIVO.clienteId){
+        const ctCli=document.getElementById('filter-cliente-contrato');
+        if(ctCli){
+          ctCli.value=PRES_ACTIVO.clienteId;
+          cascadaModulo('contrato','ct-proyecto-sel',null);
+        }
+        setTimeout(()=>{
+          if(PRES_ACTIVO.proyectoId && Array.from(sel.options).some(o=>o.value===PRES_ACTIVO.proyectoId)){
+            sel.value = PRES_ACTIVO.proyectoId;
+            if(typeof loadContrato === 'function') loadContrato();
+          }
+        }, 100);
+      }
     }catch(e){
       sel.innerHTML='<option value="">Error: '+e.message+'</option>';
     }
