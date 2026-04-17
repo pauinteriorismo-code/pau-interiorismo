@@ -6785,8 +6785,7 @@ function _pfActualizarBannerAceptado(p, ver){
     banner.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
       <span>${aceptadaVer
         ? `✅ Versión aceptada del proyecto: <strong style="color:var(--green)">${aceptadaVer.toUpperCase()}</strong> · estás viendo ${ver.toUpperCase()}`
-        : `📋 Versión <strong>${ver.toUpperCase()}</strong> · pendiente de aceptar por el cliente`}</span>
-      <button class="btn btn-primary btn-sm no-print" onclick="pfMarcarAceptado()">✅ Marcar ${ver.toUpperCase()} como aceptada</button>
+        : `⏳ Versión <strong>${ver.toUpperCase()}</strong> · pendiente de firma del cliente desde el email`}</span>
     </div>`;
     return;
   }
@@ -6814,37 +6813,6 @@ function _pfActualizarBannerAceptado(p, ver){
       <button class="btn btn-ghost btn-sm no-print" onclick="pfRegenerarContrato()" title="Regenerar contrato">🔄</button>
     </div>
   </div>`;
-}
-
-async function pfMarcarAceptado(){
-  const proy=document.getElementById('pf-proyecto-sel')?.value;
-  const ver=document.getElementById('pf-version-sel')?.value;
-  if(!proy||!ver){ toast('Selecciona proyecto y versión','error'); return; }
-  const p=(PC||[]).find(x=>x.proyecto_id===proy);
-  if(!p){ toast('Proyecto no encontrado','error'); return; }
-  if(!confirm(`¿Marcar ${ver.toUpperCase()} como versión aceptada?\nEl proyecto pasará automáticamente al estado "Aprobado".`)) return;
-  try{
-    const patch={
-      presupuesto_aceptado_version: ver,
-      presupuesto_aceptado_fecha:   new Date().toISOString(),
-      estado: 'Aprobado'
-    };
-    await sbPatch('proyectos', p.id, patch);
-    Object.assign(p, patch);
-    toast('✅ '+ver.toUpperCase()+' aceptada · Proyecto Aprobado');
-    _pfActualizarBannerAceptado(p, ver);
-    // Auto-subida del presupuesto aceptado a Drive (carpeta 04 Presupuestos)
-    const folderId = _driveFolderId(proy);
-    if(folderId){
-      const filename = `${proy}-${ver}_Presupuesto_ACEPTADO.pdf`;
-      setTimeout(()=>{
-        subirPDFaDrive('pf-doc', filename, null, '04 Presupuestos', folderId)
-          .catch(err=>toast('Error subiendo presupuesto aceptado a Drive: '+err.message,'error'));
-      }, 200);
-    } else {
-      toast('⚠ El proyecto no tiene carpeta Drive configurada — no se ha subido','warning');
-    }
-  }catch(e){ toast('Error: '+e.message,'error'); }
 }
 
 async function pfAbrirContrato(){
