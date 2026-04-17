@@ -1029,10 +1029,11 @@ if(window.MutationObserver){
         <select class="form-input" style="width:220px" id="ct-proyecto-sel" onchange="loadContrato()"><option value="">📁 Proyecto…</option></select>
         <select class="form-input" style="width:180px" id="ct-pres-sel"><option value="">Presupuesto vinculado…</option></select>
         <button class="btn btn-ghost no-print" onclick="window.print()">🖨️ Imprimir</button>
+        <button class="btn btn-primary no-print" id="ct-btn-save" onclick="ctGuardarContrato()" title="Guarda los cambios del contrato en la base de datos">💾 Guardar contrato</button>
         <button class="btn btn-primary no-print" id="ct-btn-pdf" onclick="ctGuardarPDF()">📥 Guardar PDF</button>
         <button class="btn btn-ghost no-print" onclick="subirContratoDrive()" title="Subir contrato a Google Drive">☁️ Drive</button>
       </div>
-      <div class="no-print" style="max-width:794px;margin:0 auto 8px;padding:8px 12px;background:#fffbea;border:1px solid #fde68a;border-radius:6px;font-size:11px;color:#78350f">✏ Puedes editar cualquier texto directamente. Los cambios se aplicarán al PDF que generes, pero no se guardan al cambiar de proyecto.</div>
+      <div class="no-print" style="max-width:794px;margin:0 auto 8px;padding:8px 12px;background:#fffbea;border:1px solid #fde68a;border-radius:6px;font-size:11px;color:#78350f">✏ Puedes editar cualquier texto directamente. Pulsa <strong>💾 Guardar contrato</strong> para conservar los cambios en este proyecto.</div>
       <div id="ct-doc" contenteditable="true" spellcheck="true" style="background:white;max-width:794px;width:794px;margin:0 auto;padding:20mm 20mm;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;line-height:1.7;font-family:'Inter','Segoe UI',Arial,sans-serif;outline:none">
         <!-- Cabecera empresa - repeat en todas las páginas -->
         <div class="doc-repeat-header" style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;padding-bottom:14px;border-bottom:2px solid #b87333">
@@ -7214,12 +7215,29 @@ function ctGuardarPDF(){
     if(btn){btn.textContent='Guardar PDF';btn.disabled=false;}
   });
 }
+// Guarda el HTML base de la plantilla del contrato la primera vez que se carga,
+// para poder "volver a la plantilla" si hace falta.
+let _ctPlantillaBase = null;
+
 async function loadContrato(){
   const proyId=document.getElementById('ct-proyecto-sel').value;
   if(!proyId)return;
+  const ctDoc = document.getElementById('ct-doc');
+  if(ctDoc && _ctPlantillaBase === null) _ctPlantillaBase = ctDoc.innerHTML;
   try{
     const proyArr=await sbGet('proyectos',`?proyecto_id=eq.${proyId}`);
     const p=proyArr[0]||{};
+    // Si el proyecto ya tiene un contrato editado guardado, cargarlo tal cual
+    // y no tocar los placeholders: el usuario es dueño del texto.
+    if(p.contrato_html && p.contrato_html.trim() && ctDoc){
+      ctDoc.innerHTML = p.contrato_html;
+      // Guardamos el id del proyecto en el propio div para usarlo al guardar
+      ctDoc.dataset.proyectoId = String(p.id || '');
+      return;
+    }
+    // Restaurar plantilla por si el ct-doc había sido sobreescrito por otro proyecto
+    if(ctDoc && _ctPlantillaBase !== null) ctDoc.innerHTML = _ctPlantillaBase;
+    if(ctDoc) ctDoc.dataset.proyectoId = String(p.id || '');
     // Usar la versión aceptada del proyecto; fallback a v1 si no hay
     const verUsar = p.presupuesto_aceptado_version || 'v1';
     const lineas=await sbGet('presupuesto_lineas',`?proyecto_id=eq.${proyId}&version=eq.${verUsar}&es_capitulo=eq.false`);
@@ -7244,6 +7262,25 @@ async function loadContrato(){
     // Populate presupuesto selector
     document.getElementById('ct-pres-sel').innerHTML=`<option value="${verUsar}">${proyId}-${verUsar} · ${fmtES(totalIVA)}€ c/IVA</option>`;
   }catch(e){toast('Error: '+e.message,'error');}
+}
+
+async function ctGuardarContrato(){
+  const proyId = document.getElementById('ct-proyecto-sel')?.value;
+  if(!proyId){ toast('Selecciona un proyecto primero','error'); return; }
+  const ctDoc = document.getElementById('ct-doc');
+  if(!ctDoc){ toast('No se encuentra el contrato','error'); return; }
+  const btn = document.getElementById('ct-btn-save');
+  const proyRowId = ctDoc.dataset.proyectoId;
+  if(!proyRowId){ toast('Proyecto no cargado correctamente','error'); return; }
+  if(btn){ btn.disabled = true; btn.textContent = '⏳ Guardando…'; }
+  try{
+    await sbPatch('proyectos', proyRowId, { contrato_html: ctDoc.innerHTML });
+    toast('✅ Contrato guardado');
+  }catch(e){
+    toast('Error al guardar: '+e.message,'error');
+  }finally{
+    if(btn){ btn.disabled = false; btn.textContent = '💾 Guardar contrato'; }
+  }
 }
 
 // ═══════════════════════════════════════════
