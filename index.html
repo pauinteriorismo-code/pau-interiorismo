@@ -36824,7 +36824,7 @@ function openEmailModal({docType, docRef, proyectoId, defaultTo, subject, fromEm
       document.getElementById('em-anticipo-pct').value = '50';
       document.getElementById('em-anticipo-importe').value = '';
       document.getElementById('em-anticipo-serie').value = '1';
-      // Concepto sugerido auto: "Anticipo presupuesto PRY-022 V1".
+      // Concepto sugerido auto: "Anticipo presupuesto PRY-022-V1" (formato igual al Nº de la cabecera del PDF).
       // docRef llega con formato "Presupuesto_PRY-022_v1_2026-04-17"; extraemos proyecto + versión.
       (function(){
         var conceptoEl = document.getElementById('em-anticipo-concepto');
@@ -36834,7 +36834,9 @@ function openEmailModal({docType, docRef, proyectoId, defaultTo, subject, fromEm
         var proy = (partes[0] || '').trim();        // ej. "PRY-022"
         var ver  = (partes[1] || '').trim().toUpperCase();  // ej. "V1"
         if(proy){
-          conceptoEl.value = 'Anticipo presupuesto ' + proy + (ver ? (' ' + ver) : '');
+          // Formato "PRY-022-V1" (con guion entre proyecto y versión, igual que la cabecera)
+          var numPresup = proy + (ver ? ('-' + ver) : '');
+          conceptoEl.value = 'Anticipo presupuesto ' + numPresup;
         } else {
           conceptoEl.value = '';
         }
@@ -37011,15 +37013,287 @@ async function consultarAceptacionPresupuesto(presupuestoRef){
 // devuelta por consultarAceptacionPresupuesto. Si row es null devuelve string vacío.
 function renderBadgeAceptacion(row){
   if(!row) return '';
+  // ── Estado base de la firma ──
+  let html = '';
   if(row.accepted_at){
     const fecha = new Date(row.accepted_at).toLocaleDateString('es-ES');
     const quien = (row.accepted_by_name||'').replace(/[<>]/g,'');
-    return `<span style="display:inline-block;background:#dcfce7;color:#166534;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600" title="Aceptado por ${quien} el ${fecha}">✅ Aceptado</span>`;
-  }
-  if(row.expires_at && new Date(row.expires_at) < new Date()){
+    html = `<span style="display:inline-block;background:#dcfce7;color:#166534;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600" title="Aceptado por ${quien} el ${fecha}">✅ Aceptado</span>`;
+  } else if(row.expires_at && new Date(row.expires_at) < new Date()){
     return `<span style="display:inline-block;background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">⌛ Caducado</span>`;
+  } else {
+    return `<span style="display:inline-block;background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">⏳ Pendiente firma</span>`;
   }
-  return `<span style="display:inline-block;background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">⏳ Pendiente firma</span>`;
+  // ── Badge adicional de anticipo (solo si firmado y hay anticipo configurado) ──
+  if(row.anticipo_porcentaje && Number(row.anticipo_porcentaje) > 0){
+    if(row.paid_at){
+      const numFac = row.factura_num || 'sin nº';
+      const fechaCobro = row.paid_at ? new Date(row.paid_at).toLocaleDateString('es-ES') : '';
+      html += ` <span style="display:inline-block;background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600" title="Anticipo cobrado el ${fechaCobro} · Factura ${numFac}">💰 Cobrado · ${numFac}</span>`;
+    } else {
+      const importe = Number(row.anticipo_importe||0);
+      const importeStr = importe.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2});
+      const tokenEsc = String(row.token||'').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+      html += ` <span style="display:inline-flex;align-items:center;gap:4px;background:#fff8f0;color:#b87333;border:1px solid #e8c99a;padding:1px 4px 1px 8px;border-radius:10px;font-size:11px;font-weight:600">⏳ Pdte. cobro ${importeStr} €<button onclick="event.stopPropagation();abrirRegistrarCobro('${tokenEsc}')" title="Marcar como cobrado y crear factura" style="background:#b87333;color:#fff;border:none;padding:2px 7px;border-radius:8px;font-size:10px;font-weight:700;cursor:pointer">💰 Cobrado</button></span>`;
+    }
+  }
+  return html;
+}
+
+// ═══════════════════════════════════════════════════════
+// COBRO DE ANTICIPO Y CREACIÓN AUTOMÁTICA DE FACTURA
+// ═══════════════════════════════════════════════════════
+
+// Abre el modal "Registrar cobro de anticipo" pre-rellenando los datos.
+async function abrirRegistrarCobro(token){
+  try {
+    if(!token){ toast('Falta token','error'); return; }
+    // Buscar fila en cache PAC; si no está, ir a BD
+    let row = (typeof PAC !== 'undefined' && Array.isArray(PAC)) ? PAC.find(p=>p.token===token) : null;
+    if(!row){
+      const rows = await sb('presupuesto_aceptaciones','GET',null,null,
+        `?token=eq.${encodeURIComponent(token)}&limit=1`);
+      row = (Array.isArray(rows)&&rows.length) ? rows[0] : null;
+    }
+    if(!row){ toast('No se encontró el registro de aceptación','error'); return; }
+    if(!row.anticipo_porcentaje || Number(row.anticipo_porcentaje)<=0){
+      toast('Este presupuesto no tiene anticipo configurado','error'); return;
+    }
+    if(row.paid_at){
+      toast('Este anticipo ya fue cobrado el '+new Date(row.paid_at).toLocaleDateString('es-ES'),'warn');
+      return;
+    }
+
+    // Rellenar info del modal
+    document.getElementById('ca-token').value = token;
+    document.getElementById('ca-info-ref').textContent  = row.presupuesto_ref || '—';
+
+    // Cliente: buscar a través del proyecto
+    let cliInfo = row.cliente_email || '—';
+    try {
+      if(typeof PRO !== 'undefined' && Array.isArray(PRO)){
+        const proy = PRO.find(p=>p.proyecto_id === row.proyecto_id);
+        if(proy && proy.cliente_id && typeof CC !== 'undefined' && Array.isArray(CC)){
+          const cli = CC.find(c=>c.cliente_id===proy.cliente_id || c.id===proy.cliente_id);
+          if(cli){
+            const nom = cli.nombre || cli.razon_social || '';
+            cliInfo = nom + (cli.email?(' · '+cli.email):'') || cliInfo;
+          }
+        }
+      }
+    } catch(_){}
+    document.getElementById('ca-info-cli').textContent = cliInfo;
+
+    const pct = Number(row.anticipo_porcentaje||0);
+    const imp = Number(row.anticipo_importe||0);
+    document.getElementById('ca-info-anticipo').textContent =
+      pct + '% · ' + imp.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' €';
+
+    const serie = Number(row.factura_serie||1);
+    document.getElementById('ca-info-serie').textContent =
+      serie===1 ? 'Serie 1 · Construcción' : (serie===2 ? 'Serie 2 · Interiorismo' : 'Serie '+serie);
+
+    document.getElementById('ca-fecha').value         = new Date().toISOString().split('T')[0];
+    document.getElementById('ca-importe').value       = imp.toFixed(2);
+    document.getElementById('ca-referencia').value    = '';
+    document.getElementById('ca-observaciones').value = '';
+    const st = document.getElementById('ca-status'); st.style.display='none'; st.textContent='';
+    document.getElementById('ca-btn-confirm').disabled = false;
+
+    openModal('m-cobro-anticipo');
+  } catch(err){
+    console.error(err);
+    toast('Error abriendo modal de cobro: '+(err.message||err),'error');
+  }
+}
+
+// Confirma el cobro: crea la factura de anticipo con desglose de IVA proporcional
+// y vincula el cobro en la fila de presupuesto_aceptaciones.
+async function confirmarCobroAnticipo(){
+  const btn = document.getElementById('ca-btn-confirm');
+  const st  = document.getElementById('ca-status');
+  function setStatus(msg, kind){
+    st.style.display='block';
+    st.textContent = msg;
+    st.style.background = kind==='ok' ? '#dcfce7' : kind==='err' ? '#fee2e2' : '#eff6ff';
+    st.style.color      = kind==='ok' ? '#166534' : kind==='err' ? '#991b1b' : '#1e40af';
+  }
+
+  try {
+    const token        = document.getElementById('ca-token').value;
+    const fecha        = document.getElementById('ca-fecha').value;
+    const importe      = parseFloat(document.getElementById('ca-importe').value);
+    const referencia   = (document.getElementById('ca-referencia').value||'').trim();
+    const observaciones= (document.getElementById('ca-observaciones').value||'').trim();
+
+    if(!token)             throw new Error('Falta token');
+    if(!fecha)             throw new Error('Falta fecha de cobro');
+    if(!importe||importe<=0) throw new Error('Importe no válido');
+
+    btn.disabled = true;
+    setStatus('Cargando datos del presupuesto…','info');
+
+    // 1. Cargar fila de aceptación actualizada
+    const acRows = await sb('presupuesto_aceptaciones','GET',null,null,
+      `?token=eq.${encodeURIComponent(token)}&limit=1`);
+    if(!Array.isArray(acRows) || !acRows.length) throw new Error('Aceptación no encontrada');
+    const acept = acRows[0];
+    if(acept.paid_at) throw new Error('Este anticipo ya fue cobrado');
+
+    const proyId   = acept.proyecto_id;
+    const presRef  = acept.presupuesto_ref || '';
+    const verMatch = presRef.match(/_v(\d+)/i);
+    const ver      = verMatch ? ('v'+verMatch[1]) : 'v1';
+    const pct      = Number(acept.anticipo_porcentaje||0);
+    const serie    = Number(acept.factura_serie||1);
+
+    // 2. Cargar líneas no-capítulo del presupuesto y agruparlas por tipo de IVA
+    const lineas = await sb('presupuesto_lineas','GET',null,null,
+      `?proyecto_id=eq.${encodeURIComponent(proyId)}&version=eq.${encodeURIComponent(ver)}&es_capitulo=eq.false`);
+    if(!Array.isArray(lineas) || !lineas.length){
+      throw new Error('No se encontraron líneas del presupuesto '+proyId+' '+ver);
+    }
+    const desglose = {};  // { '10%': baseTotalSinIVA, '21%': ... }
+    for(const l of lineas){
+      const tipo = l.iva_pct || '10%';
+      const sub  = Number(l.subtotal||0);
+      if(!desglose[tipo]) desglose[tipo] = 0;
+      desglose[tipo] += sub;
+    }
+    if(!Object.keys(desglose).length) throw new Error('El presupuesto no tiene importe imponible');
+
+    setStatus('Generando factura…','info');
+
+    // 3. Construir líneas de la factura aplicando el % del anticipo a cada tipo de IVA
+    const factor      = pct / 100;
+    const proyShort   = String(proyId||'').toUpperCase();        // "PRY-022"
+    const verShort    = ver.toUpperCase();                        // "V1"
+    const numPresup   = proyShort + '-' + verShort;
+    const lineasFactura = [];
+    let baseTotal = 0;
+    let ivaTotal  = 0;
+    let maxBase   = 0;
+    let ivaCabecera = '10%';
+    Object.keys(desglose).forEach(function(tipo){
+      const baseOriginal = desglose[tipo];
+      if(baseOriginal <= 0) return;
+      const baseAnt   = Math.round(baseOriginal * factor * 100) / 100;
+      const pctNum    = (typeof ivaPct==='function') ? ivaPct(tipo) : (parseFloat(tipo)||0);
+      const ivaImp    = Math.round(baseAnt * pctNum) / 100;
+      // Formato compatible con el modal de factura (claves desc/ud/cantidad/precio/dto/iva)
+      lineasFactura.push({
+        desc:     'Anticipo ' + pct + '% s/ presupuesto ' + numPresup + ' (IVA ' + tipo + ')',
+        ud:       'Ud',
+        cantidad: 1,
+        precio:   baseAnt,
+        dto:      0,
+        iva:      tipo
+      });
+      baseTotal += baseAnt;
+      ivaTotal  += ivaImp;
+      if(baseOriginal > maxBase){ maxBase = baseOriginal; ivaCabecera = tipo; }
+    });
+    baseTotal = Math.round(baseTotal*100)/100;
+    ivaTotal  = Math.round(ivaTotal*100)/100;
+
+    // 4. Asignar nº correlativo (replica de autoNumFactura)
+    const year   = new Date(fecha+'T12:00:00').getFullYear();
+    const FCArr  = (typeof FC !== 'undefined' && Array.isArray(FC)) ? FC : [];
+    const seqs   = FCArr
+      .filter(f => (f.tipo_factura||'Venta')==='Venta' && Number(f.serie||1)===serie)
+      .map(f => {
+        const m = String(f.num_factura||'').match(/^\d+-?(\d+)\//);
+        return m ? parseInt(m[1]) : 0;
+      });
+    const sig        = (seqs.length ? Math.max.apply(null,seqs) : 0) + 1;
+    const numFactura = serie + '-' + String(sig).padStart(3,'0') + '/' + year;
+
+    // 5. Cliente: deducir vía proyecto si está disponible
+    let clienteId = null;
+    try {
+      if(typeof PRO !== 'undefined' && Array.isArray(PRO)){
+        const proy = PRO.find(p => p.proyecto_id === proyId);
+        if(proy && proy.cliente_id) clienteId = proy.cliente_id;
+      }
+    } catch(_){}
+
+    // 6. Crear factura en BD
+    const conceptoFac = 'Anticipo ' + pct + '% s/ presupuesto ' + numPresup;
+    const facturaPayload = {
+      tipo_factura:      'Venta',
+      num_factura:       numFactura,
+      serie:             serie,
+      fecha_emision:     fecha,
+      cliente_id:        clienteId,
+      proyecto_id:       proyId,
+      base_imponible:    baseTotal,
+      iva_pct:           ivaCabecera,
+      forma_pago:        'Transferencia',
+      fecha_vencimiento: fecha,
+      estado:            'Cobrada',
+      importe_cobrado:   importe,
+      concepto:          conceptoFac,
+      observaciones:     observaciones || ('Anticipo cobrado por transferencia.' + (referencia ? (' Ref: '+referencia) : '')),
+      pago1_fecha:       fecha,
+      pago1_importe:     importe,
+      lineas_json:       JSON.stringify(lineasFactura)
+    };
+
+    const facCreated = await sb('facturas','POST',facturaPayload);
+    const facId      = (Array.isArray(facCreated) && facCreated.length) ? facCreated[0].id : null;
+
+    // 7. Actualizar fila de aceptación con los datos del cobro y la factura
+    const paidIso = new Date(fecha+'T12:00:00').toISOString();
+    await sb('presupuesto_aceptaciones','PATCH',
+      {
+        paid_at:        paidIso,
+        paid_amount:    importe,
+        paid_reference: referencia || null,
+        paid_method:    'manual',
+        factura_id:     facId,
+        factura_num:    numFactura
+      },
+      null,
+      `?token=eq.${encodeURIComponent(token)}`);
+
+    // 8. Refrescar caches en memoria
+    if(typeof FC !== 'undefined' && Array.isArray(FC) && Array.isArray(facCreated) && facCreated.length){
+      FC.unshift(facCreated[0]);
+    }
+    if(typeof PAC !== 'undefined' && Array.isArray(PAC)){
+      const idx = PAC.findIndex(p=>p.token===token);
+      if(idx>=0){
+        PAC[idx].paid_at        = paidIso;
+        PAC[idx].paid_amount    = importe;
+        PAC[idx].paid_reference = referencia || null;
+        PAC[idx].paid_method    = 'manual';
+        PAC[idx].factura_id     = facId;
+        PAC[idx].factura_num    = numFactura;
+      }
+    }
+
+    setStatus('✅ Factura ' + numFactura + ' creada correctamente. Abriendo para revisión…','ok');
+    toast('💰 Cobro registrado · Factura ' + numFactura + ' creada','success');
+
+    // 9. Cerrar modal cobro, refrescar vistas y abrir modal de factura para revisar/imprimir/enviar
+    setTimeout(function(){
+      try{ closeModal('m-cobro-anticipo'); }catch(_){}
+      try{ if(typeof renderFacturas==='function') renderFacturas(); }catch(_){}
+      try{ if(typeof renderPresupuesto==='function') renderPresupuesto(); }catch(_){}
+      try{ if(typeof renderProyectos==='function') renderProyectos(); }catch(_){}
+      // Abrir modal de la factura recién creada para que el usuario la revise
+      try{
+        if(facId && typeof editFactura === 'function'){
+          setTimeout(function(){ editFactura(facId); }, 200);
+        }
+      } catch(err){ console.warn('No se pudo abrir modal de factura:', err); }
+    }, 900);
+
+  } catch(err){
+    console.error('confirmarCobroAnticipo:', err);
+    setStatus('❌ Error: ' + (err && err.message ? err.message : err), 'err');
+    btn.disabled = false;
+  }
 }
 
 function buildFirmaHtml(alias){
@@ -37378,6 +37652,51 @@ renderPresupuesto=function(){
 </div>
 
 <!-- ═══ MODAL ENVÍO EMAIL ═══ -->
+<!-- ═══ MODAL: Registrar cobro de anticipo ═══ -->
+<div class="overlay" id="m-cobro-anticipo" onclick="if(event.target===this)closeModal('m-cobro-anticipo')">
+<div class="modal" style="max-width:560px">
+  <div class="modal-header">
+    <div class="modal-title">💰 Registrar cobro de anticipo</div>
+    <button class="modal-close" onclick="closeModal('m-cobro-anticipo')">×</button>
+  </div>
+  <div class="modal-body">
+    <input type="hidden" id="ca-token">
+    <div style="background:#fff8f0;padding:12px 14px;border-left:3px solid #b87333;border-radius:0 6px 6px 0;font-size:12px;color:#4a3728;margin-bottom:14px;line-height:1.7">
+      <div><strong style="color:#9c7a4d">Presupuesto:</strong> <span id="ca-info-ref">—</span></div>
+      <div><strong style="color:#9c7a4d">Cliente:</strong> <span id="ca-info-cli">—</span></div>
+      <div><strong style="color:#9c7a4d">Anticipo solicitado:</strong> <span id="ca-info-anticipo" style="font-weight:700;color:#b87333">—</span></div>
+      <div><strong style="color:#9c7a4d">Serie factura:</strong> <span id="ca-info-serie">—</span></div>
+    </div>
+    <div class="form-grid" style="grid-template-columns:1fr 1fr;gap:10px">
+      <div class="form-group" style="margin:0">
+        <label class="form-label">Fecha cobro *</label>
+        <input type="date" class="form-input" id="ca-fecha">
+      </div>
+      <div class="form-group" style="margin:0">
+        <label class="form-label">Importe recibido (€) *</label>
+        <input type="number" step="0.01" min="0" class="form-input" id="ca-importe">
+      </div>
+      <div class="form-group" style="grid-column:1/-1;margin:0">
+        <label class="form-label">Referencia <span style="color:var(--text-soft);font-weight:400;font-size:10px">(opcional, ej. "Transferencia 17/04 18:32")</span></label>
+        <input type="text" class="form-input" id="ca-referencia" placeholder="Transferencia 17/04">
+      </div>
+      <div class="form-group" style="grid-column:1/-1;margin:0">
+        <label class="form-label">Observaciones <span style="color:var(--text-soft);font-weight:400;font-size:10px">(opcional, irán al campo Observaciones de la factura)</span></label>
+        <textarea class="form-input" id="ca-observaciones" rows="2" style="resize:vertical"></textarea>
+      </div>
+    </div>
+    <div style="font-size:11px;color:#6b7280;margin-top:12px;line-height:1.5;padding:10px;background:#f9fafb;border-radius:6px">
+      ℹ️ Al confirmar se generará automáticamente la factura de anticipo con número correlativo, aplicando el IVA proporcional de las líneas del presupuesto original (10%, 21% o mixto). El cobro quedará registrado como Pago 1.
+    </div>
+    <div id="ca-status" style="display:none;padding:10px;border-radius:6px;font-size:12px;text-align:center;margin-top:10px"></div>
+  </div>
+  <div class="modal-footer" style="justify-content:flex-end;gap:8px">
+    <button class="btn btn-ghost" onclick="closeModal('m-cobro-anticipo')">Cancelar</button>
+    <button class="btn btn-primary" id="ca-btn-confirm" onclick="confirmarCobroAnticipo()" style="background:#b87333;border-color:#b87333">💰 Crear factura ➜</button>
+  </div>
+</div>
+</div>
+
 <div class="overlay" id="m-enviar-email" onclick="if(event.target===this)closeModal('m-enviar-email')">
 <div class="modal" style="max-width:540px">
   <div class="modal-header">
