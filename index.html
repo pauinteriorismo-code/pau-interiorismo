@@ -6743,7 +6743,9 @@ function _pfActualizarBannerAceptado(p, ver){
   try {
     if(typeof PAC !== 'undefined' && Array.isArray(PAC)){
       const verNum  = ver.replace(/^v/i,'');
-      const verRegex = new RegExp('_v'+verNum+'(_|$)','i');
+      // presupuesto_ref tiene el formato "PF-PRY-042-v1" (guiones), pero aceptamos
+      // también "_v1" por si hubiera refs antiguos con underscores.
+      const verRegex = new RegExp('[-_]v'+verNum+'([-_]|$)','i');
       // PAC viene ordenado created_at desc → la primera coincidencia es la más reciente
       aceptOnline = PAC.find(a =>
         a.proyecto_id === p.proyecto_id &&
@@ -37181,7 +37183,7 @@ async function confirmarCobroAnticipo(){
 
     const proyId   = acept.proyecto_id;
     const presRef  = acept.presupuesto_ref || '';
-    const verMatch = presRef.match(/_v(\d+)/i);
+    const verMatch = presRef.match(/[-_]v(\d+)/i);
     const ver      = verMatch ? ('v'+verMatch[1]) : 'v1';
     const pct      = Number(acept.anticipo_porcentaje||0);
     const serie    = Number(acept.factura_serie||1);
