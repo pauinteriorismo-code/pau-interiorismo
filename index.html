@@ -6730,11 +6730,50 @@ function _pfActualizarBannerAceptado(p, ver){
   const banner=document.getElementById('pf-aceptado-banner');
   if(!banner) return;
   if(!p || !p.proyecto_id){ banner.style.display='none'; return; }
-  const aceptadaVer   = p.presupuesto_aceptado_version || '';
-  const aceptadaFecha = p.presupuesto_aceptado_fecha   || '';
+  let aceptadaVer   = p.presupuesto_aceptado_version || '';
+  let aceptadaFecha = p.presupuesto_aceptado_fecha   || '';
   const contratoFecha = p.contrato_generado_fecha      || '';
   const contratoVer   = p.contrato_generado_version    || '';
   const fmtFecha = f => { try{ return new Date(f).toLocaleDateString('es-ES'); }catch(e){ return f||''; } };
+
+  // ─── NUEVO: considerar también firmas online del cliente (presupuesto_aceptaciones) ───
+  // Si el cliente firmó online esta versión, sincronizamos los campos del proyecto en background
+  // para que el banner refleje la aceptación sin requerir el clic manual de "Marcar como aceptada".
+  let aceptOnline = null;
+  try {
+    if(typeof PAC !== 'undefined' && Array.isArray(PAC)){
+      const verNum  = ver.replace(/^v/i,'');
+      const verRegex = new RegExp('_v'+verNum+'(_|$)','i');
+      // PAC viene ordenado created_at desc → la primera coincidencia es la más reciente
+      aceptOnline = PAC.find(a =>
+        a.proyecto_id === p.proyecto_id &&
+        a.accepted_at &&
+        a.presupuesto_ref &&
+        verRegex.test(a.presupuesto_ref)
+      ) || null;
+    }
+  } catch(_){}
+
+  // Si la versión aceptada del proyecto está vacía PERO hay firma online, usarla
+  if((!aceptadaVer || aceptadaVer!==ver) && aceptOnline){
+    aceptadaVer   = ver;
+    aceptadaFecha = aceptOnline.accepted_at;
+    // Persistir en background (no bloquear UI). Sin confirm: la firma online ya es vinculante.
+    if(p.presupuesto_aceptado_version !== ver){
+      const patch = {
+        presupuesto_aceptado_version: ver,
+        presupuesto_aceptado_fecha:   aceptOnline.accepted_at,
+        estado: (p.estado === 'Borrador' || p.estado === 'Enviado') ? 'Aprobado' : (p.estado || 'Aprobado')
+      };
+      try {
+        sbPatch('proyectos', p.id, patch).then(()=>{
+          Object.assign(p, patch);
+          console.log('Sincronizado proyecto con firma online:', p.proyecto_id, ver);
+        }).catch(err => console.warn('No se pudo sincronizar firma online con proyecto:', err));
+      } catch(_){}
+    }
+  }
+
   // Caso 1 — esta versión NO es la aceptada (o aún no hay aceptada)
   if(!aceptadaVer || aceptadaVer!==ver){
     banner.style.display='block';
