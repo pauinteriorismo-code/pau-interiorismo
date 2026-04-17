@@ -36551,6 +36551,22 @@ async function ejecutarEnvioEmail(){
     // 2.5. Si es presupuesto, generar token de aceptación y guardarlo en BD
     let aceptacionInfo = null;
     if(docType === 'presupuesto'){
+      // Validación previa del bloque anticipo (si está activado).
+      // Estos errores DEBEN detener el envío para evitar mandar un email sin pago configurado bien.
+      let anticipoConfig = null;
+      const chkAnt = document.getElementById('em-anticipo-on');
+      if(chkAnt && chkAnt.checked){
+        const pct  = parseFloat(document.getElementById('em-anticipo-pct')?.value);
+        const ser  = document.getElementById('em-anticipo-serie')?.value;
+        const iban = (document.getElementById('em-anticipo-iban')?.value || '').trim();
+        const conc = (document.getElementById('em-anticipo-concepto')?.value || '').trim();
+        if(!pct || pct<=0 || pct>100) throw new Error('Porcentaje de anticipo no válido (debe estar entre 1 y 100)');
+        if(!iban) throw new Error('Falta el IBAN para el cobro del anticipo');
+        const snapTotal = extraerTotalPresupuesto(_emailDocEl);
+        const importe = (snapTotal!=null && !isNaN(snapTotal)) ? (snapTotal * pct / 100) : null;
+        anticipoConfig = { porcentaje: pct, importe: importe, iban: iban, concepto: conc, serie: ser };
+      }
+      // Crear token (los fallos de Supabase no bloquean: el email se envía sin botón pero el cliente al menos recibe el PDF)
       try {
         if(btnEnviar) btnEnviar.textContent='⏳ Generando enlace de firma…';
         setStatus('Generando enlace de aceptación…','info');
@@ -36562,7 +36578,8 @@ async function ejecutarEnvioEmail(){
           clienteEmail:   para,
           senderEmail:    desde,
           snapshotHtml:   snapshotHtml,
-          snapshotTotal:  snapshotTotal
+          snapshotTotal:  snapshotTotal,
+          anticipo:       anticipoConfig
         });
       } catch(err){
         console.warn('Aceptación: error al generar token, continúo sin botón:', err);
@@ -36794,7 +36811,73 @@ function openEmailModal({docType, docRef, proyectoId, defaultTo, subject, fromEm
   document.getElementById('m-email-title').textContent = '\u{1F4E7} Enviar ' + (labels[docType]||docType||'documento');
   const st=document.getElementById('em-status'); st.style.display='none'; st.textContent='';
   const btn=document.getElementById('em-btn-send'); btn.disabled=false; btn.textContent='\u{1F4E4} Enviar';
+
+  // ─── Bloque anticipo: solo visible para presupuesto ───
+  const blkAnt = document.getElementById('em-anticipo-block');
+  if(blkAnt){
+    if(docType === 'presupuesto'){
+      blkAnt.style.display = 'block';
+      // Reset por defecto: anticipo desmarcado, valores limpios
+      const chk = document.getElementById('em-anticipo-on');
+      if(chk){ chk.checked = false; }
+      document.getElementById('em-anticipo-fields').style.display = 'none';
+      document.getElementById('em-anticipo-pct').value = '50';
+      document.getElementById('em-anticipo-importe').value = '';
+      document.getElementById('em-anticipo-serie').value = '1';
+      // Concepto sugerido auto: "Anticipo s/ presupuesto <REF>"
+      document.getElementById('em-anticipo-concepto').value =
+        docRef ? ('Anticipo s/ presupuesto ' + docRef) : '';
+      // IBAN: se carga asíncronamente desde Configuración (pie_iban)
+      cargarIbanParaAnticipo();
+    } else {
+      blkAnt.style.display = 'none';
+    }
+  }
+
   openModal('m-enviar-email');
+}
+
+// Toggle del bloque de anticipo (mostrar/ocultar campos)
+function onToggleAnticipo(){
+  const chk = document.getElementById('em-anticipo-on');
+  const fld = document.getElementById('em-anticipo-fields');
+  if(!chk || !fld) return;
+  fld.style.display = chk.checked ? 'block' : 'none';
+  if(chk.checked) recalcAnticipoImporte();
+}
+
+// Recalcula el importe del anticipo en base al % y al snapshot total del presupuesto.
+// El total se obtiene de la variable global _emailDocEl (extraerTotalPresupuesto).
+function recalcAnticipoImporte(){
+  const inp = document.getElementById('em-anticipo-importe');
+  const pctEl = document.getElementById('em-anticipo-pct');
+  if(!inp || !pctEl) return;
+  let total = null;
+  try { total = (typeof _emailDocEl !== 'undefined') ? extraerTotalPresupuesto(_emailDocEl) : null; } catch(_){}
+  const pct = parseFloat(pctEl.value);
+  if(total!=null && !isNaN(total) && !isNaN(pct) && pct>0 && pct<=100){
+    const importe = (total * pct / 100);
+    inp.value = importe.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' €';
+  } else {
+    inp.value = '—';
+  }
+}
+
+// Carga el IBAN desde la tabla configuracion (clave pie_iban) en el campo del anticipo.
+async function cargarIbanParaAnticipo(){
+  const inp = document.getElementById('em-anticipo-iban');
+  if(!inp) return;
+  // Si ya hay valor (escrito por el usuario), no sobrescribir
+  if(inp.value && inp.value.trim()) return;
+  try {
+    if(typeof sb !== 'function') return;
+    const rows = await sb('configuracion','GET',null,null,'?clave=eq.pie_iban&select=valor&limit=1');
+    if(Array.isArray(rows) && rows.length && rows[0].valor){
+      inp.value = String(rows[0].valor).trim();
+    }
+  } catch(err){
+    console.warn('No se pudo cargar IBAN para anticipo:', err);
+  }
 }
 
 // Construye el bloque HTML de la firma según el alias seleccionado
@@ -36849,7 +36932,7 @@ function extraerTotalPresupuesto(docEl){
 
 // Crea un registro en presupuesto_aceptaciones y devuelve { token, url, expiresAt }.
 // Si Supabase falla, devuelve null y el envío del email continúa sin botón.
-async function crearAceptacionPresupuesto({proyectoId, presupuestoRef, clienteEmail, senderEmail, snapshotHtml, snapshotTotal}){
+async function crearAceptacionPresupuesto({proyectoId, presupuestoRef, clienteEmail, senderEmail, snapshotHtml, snapshotTotal, anticipo}){
   if(typeof sb !== 'function') return null;
   const token = generarTokenAceptacion();
   const ahora = new Date();
@@ -36865,6 +36948,14 @@ async function crearAceptacionPresupuesto({proyectoId, presupuestoRef, clienteEm
     snapshot_html:   snapshotHtml || null,
     snapshot_total:  (snapshotTotal!=null && !isNaN(snapshotTotal)) ? snapshotTotal : null
   };
+  // Datos del anticipo (si se solicita). Si anticipo es null/undefined, las columnas quedan en NULL.
+  if(anticipo && anticipo.porcentaje > 0){
+    payload.anticipo_porcentaje = Number(anticipo.porcentaje);
+    payload.anticipo_importe    = (anticipo.importe!=null && !isNaN(anticipo.importe)) ? Number(anticipo.importe) : null;
+    payload.anticipo_iban       = anticipo.iban     || null;
+    payload.anticipo_concepto   = anticipo.concepto || null;
+    payload.factura_serie       = anticipo.serie    ? Number(anticipo.serie) : null;
+  }
   try {
     await sb('presupuesto_aceptaciones','POST',payload);
     return {
@@ -37314,6 +37405,43 @@ renderPresupuesto=function(){
       <div class="form-group" style="grid-column:1/-1">
         <label class="form-label">Mensaje personalizado</label>
         <textarea class="form-input" id="em-mensaje" rows="4" placeholder="Estimado/a cliente, adjunto le enviamos..." style="resize:vertical"></textarea>
+      </div>
+      <!-- ═══ BLOQUE ANTICIPO (solo visible si docType === 'presupuesto') ═══ -->
+      <div class="form-group" id="em-anticipo-block" style="grid-column:1/-1;display:none;background:#fff8f0;border:1px solid #e8c99a;border-radius:8px;padding:14px;margin-top:4px">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:700;color:#b87333;font-size:13px;margin:0">
+          <input type="checkbox" id="em-anticipo-on" onchange="onToggleAnticipo()" style="width:16px;height:16px;cursor:pointer">
+          💰 Solicitar anticipo a la aceptación
+        </label>
+        <div id="em-anticipo-fields" style="display:none;margin-top:12px">
+          <div class="form-grid" style="grid-template-columns:1fr 1fr;gap:10px">
+            <div class="form-group" style="margin:0">
+              <label class="form-label" style="font-size:11px">Porcentaje (%) *</label>
+              <input type="number" class="form-input" id="em-anticipo-pct" min="1" max="100" step="1" value="50" oninput="recalcAnticipoImporte()">
+            </div>
+            <div class="form-group" style="margin:0">
+              <label class="form-label" style="font-size:11px">Importe calculado (€)</label>
+              <input type="text" class="form-input" id="em-anticipo-importe" readonly style="background:#f5f5f5;font-weight:700;color:#b87333">
+            </div>
+            <div class="form-group" style="margin:0">
+              <label class="form-label" style="font-size:11px">Serie de la factura *</label>
+              <select class="form-input" id="em-anticipo-serie">
+                <option value="1">Serie 1 · Construcción (IVA 10%)</option>
+                <option value="2">Serie 2 · Interiorismo (IVA 21%)</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin:0">
+              <label class="form-label" style="font-size:11px">IBAN de cobro *</label>
+              <input type="text" class="form-input" id="em-anticipo-iban" placeholder="ES00 0000 0000 0000 0000 0000">
+            </div>
+            <div class="form-group" style="grid-column:1/-1;margin:0">
+              <label class="form-label" style="font-size:11px">Concepto bancario sugerido</label>
+              <input type="text" class="form-input" id="em-anticipo-concepto">
+            </div>
+          </div>
+          <div style="font-size:10px;color:#9c7a4d;margin-top:8px;line-height:1.4">
+            ℹ️ El cliente verá estos datos en la pantalla de aceptación y en el email de confirmación. Cuando recibas la transferencia podrás generar la factura automáticamente con un clic.
+          </div>
+        </div>
       </div>
       <div class="form-group" style="grid-column:1/-1">
         <label class="form-label" style="color:var(--text-soft);font-size:11px">Vista previa de la firma</label>
