@@ -6726,7 +6726,7 @@ async function loadPresupuestoFinal(){
 }
 
 // ─── Flujo presupuesto aceptado → contrato ───
-function _pfActualizarBannerAceptado(p, ver){
+async function _pfActualizarBannerAceptado(p, ver){
   const banner=document.getElementById('pf-aceptado-banner');
   if(!banner) return;
   if(!p || !p.proyecto_id){ banner.style.display='none'; return; }
@@ -6736,23 +6736,29 @@ function _pfActualizarBannerAceptado(p, ver){
   const contratoVer   = p.contrato_generado_version    || '';
   const fmtFecha = f => { try{ return new Date(f).toLocaleDateString('es-ES'); }catch(e){ return f||''; } };
 
-  // ─── NUEVO: considerar también firmas online del cliente (presupuesto_aceptaciones) ───
-  // Si el cliente firmó online esta versión, sincronizamos los campos del proyecto en background
-  // para que el banner refleje la aceptación sin requerir el clic manual de "Marcar como aceptada".
+  // ─── Detección de firma online del cliente (presupuesto_aceptaciones) ───
+  // Consultamos la BD directamente en lugar del cache PAC, porque PAC solo se carga
+  // al arrancar la app y no se refresca — si el cliente firma después, PAC queda obsoleta.
   let aceptOnline = null;
   try {
-    if(typeof PAC !== 'undefined' && Array.isArray(PAC)){
-      const verNum  = ver.replace(/^v/i,'');
-      // presupuesto_ref tiene el formato "PF-PRY-042-v1" (guiones), pero aceptamos
-      // también "_v1" por si hubiera refs antiguos con underscores.
-      const verRegex = new RegExp('[-_]v'+verNum+'([-_]|$)','i');
-      // PAC viene ordenado created_at desc → la primera coincidencia es la más reciente
-      aceptOnline = PAC.find(a =>
-        a.proyecto_id === p.proyecto_id &&
+    const verNum  = ver.replace(/^v/i,'');
+    // Match _v1_, -v1-, -v1 (fin de string), etc. Cubre distintos formatos históricos.
+    const verRegex = new RegExp('[-_]v'+verNum+'([-_]|$)','i');
+    const rows = await sb('presupuesto_aceptaciones','GET',null,null,
+      '?proyecto_id=eq.'+encodeURIComponent(p.proyecto_id)+'&order=created_at.desc&limit=20');
+    if(Array.isArray(rows)){
+      aceptOnline = rows.find(a =>
         a.accepted_at &&
         a.presupuesto_ref &&
         verRegex.test(a.presupuesto_ref)
       ) || null;
+      // Merge en PAC para mantener otras partes de la app (badges, etc.) coherentes
+      if(typeof PAC !== 'undefined' && Array.isArray(PAC)){
+        for(const r of rows){
+          const idx = PAC.findIndex(x => x.id === r.id);
+          if(idx >= 0) PAC[idx] = r; else PAC.unshift(r);
+        }
+      }
     }
   } catch(_){}
 
