@@ -36990,6 +36990,22 @@ function recalcAnticipoImporte(){
   } else {
     inp.value = '—';
   }
+  // Aviso visual + concepto "Pago total" cuando el usuario pide el 100%
+  const aviso = document.getElementById('em-aviso-pago-total');
+  const conceptoEl = document.getElementById('em-anticipo-concepto');
+  const esPagoTotal = (pct === 100);
+  if(aviso) aviso.style.display = esPagoTotal ? 'block' : 'none';
+  if(conceptoEl){
+    const actual = (conceptoEl.value || '').trim();
+    // Solo auto-ajustar si el concepto no ha sido editado manualmente
+    const mAnt = actual.match(/^Anticipo presupuesto\s+(.+)$/i);
+    const mTot = actual.match(/^Pago total presupuesto\s+(.+)$/i);
+    if(esPagoTotal && mAnt){
+      conceptoEl.value = 'Pago total presupuesto ' + mAnt[1];
+    } else if(!esPagoTotal && mTot){
+      conceptoEl.value = 'Anticipo presupuesto ' + mTot[1];
+    }
+  }
 }
 
 // Carga el IBAN desde la tabla configuracion (clave pie_iban) en el campo del anticipo.
@@ -37871,8 +37887,8 @@ renderPresupuesto=function(){
             <div class="form-group" style="margin:0">
               <label class="form-label" style="font-size:11px">Serie de la factura *</label>
               <select class="form-input" id="em-anticipo-serie">
-                <option value="1">Serie 1 · Construcción (IVA 10%)</option>
-                <option value="2">Serie 2 · Interiorismo (IVA 21%)</option>
+                <option value="1">Serie 1 · Construcción</option>
+                <option value="2">Serie 2 · Interiorismo</option>
               </select>
             </div>
             <div class="form-group" style="margin:0">
@@ -37883,6 +37899,9 @@ renderPresupuesto=function(){
               <label class="form-label" style="font-size:11px">Concepto bancario sugerido</label>
               <input type="text" class="form-input" id="em-anticipo-concepto">
             </div>
+          </div>
+          <div id="em-aviso-pago-total" style="display:none;font-size:11px;background:#fff4e5;border:1px solid #f59e0b;color:#78350f;border-radius:6px;padding:8px 10px;margin-top:10px;line-height:1.4">
+            ⚠️ Al solicitar el <strong>100%</strong>, el cliente verá un mensaje indicando que este pago es requerido para iniciar el proyecto. El concepto bancario se ajusta automáticamente.
           </div>
           <div style="font-size:10px;color:#9c7a4d;margin-top:8px;line-height:1.4">
             ℹ️ El cliente verá estos datos en la pantalla de aceptación y en el email de confirmación. Cuando recibas la transferencia podrás generar la factura automáticamente con un clic.

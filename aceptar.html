@@ -185,10 +185,12 @@
     var importe  = fmtMoney(anticipoData.importe);
     var pct      = anticipoData.porcentaje ? Number(anticipoData.porcentaje) : null;
     var iban     = String(anticipoData.iban || '').trim();
-    var concepto = String(anticipoData.concepto || '').trim() || 'Anticipo presupuesto';
-    var pctTxt   = (pct!=null) ? (' (' + pct + '% del total)') : '';
+    var esPagoTotal = (pct === 100);
+    var concepto = String(anticipoData.concepto || '').trim() || (esPagoTotal ? 'Pago total presupuesto' : 'Anticipo presupuesto');
+    var pctTxt   = esPagoTotal ? ' (pago total)' : ((pct!=null) ? (' (' + pct + '% del total)') : '');
+    var titulo   = esPagoTotal ? '💰 Pago requerido para iniciar el proyecto' : '💰 Datos para realizar el pago';
     return ''
-      + '<h2>💰 Datos para realizar el pago</h2>'
+      + '<h2>' + titulo + '</h2>'
       + '<div class="pay-row">'
         + '<span class="pay-lbl">Importe a transferir</span>'
         + '<span class="pay-val amount">' + importe + pctTxt + '</span>'

@@ -348,12 +348,15 @@ function _hasAnticipo(row) {
 function _buildPayInfoHtmlCliente(row) {
   if (!_hasAnticipo(row)) return '';
   var importe  = _formatEUR(row.anticipo_importe);
-  var pct      = row.anticipo_porcentaje ? (' (' + Number(row.anticipo_porcentaje) + '% del total)') : '';
+  var pctNum   = row.anticipo_porcentaje ? Number(row.anticipo_porcentaje) : null;
+  var esPagoTotal = (pctNum === 100);
+  var pct      = esPagoTotal ? ' (pago total)' : (pctNum!=null ? ' (' + pctNum + '% del total)' : '');
   var iban     = String(row.anticipo_iban || '').trim();
-  var concepto = String(row.anticipo_concepto || '').trim() || 'Anticipo presupuesto';
+  var concepto = String(row.anticipo_concepto || '').trim() || (esPagoTotal ? 'Pago total presupuesto' : 'Anticipo presupuesto');
+  var titulo   = esPagoTotal ? '💰 Pago requerido para iniciar el proyecto' : '💰 Datos para realizar el pago';
   return ''
     + '<div style="margin:18px 0;padding:16px;background:#fff8f0;border:1px solid #e8c99a;border-radius:8px;">'
-    +   '<div style="font-weight:700;color:#b87333;font-size:14px;margin-bottom:10px;">💰 Datos para realizar el pago</div>'
+    +   '<div style="font-weight:700;color:#b87333;font-size:14px;margin-bottom:10px;">' + titulo + '</div>'
     +   '<table cellpadding="0" cellspacing="0" border="0" style="width:100%;font-size:13px;color:#4a3728;">'
     +     '<tr><td style="padding:4px 0;color:#9c7a4d;width:140px;">Importe a transferir:</td>'
     +         '<td style="padding:4px 0;font-weight:700;color:#b87333;font-size:15px;">' + importe + pct + '</td></tr>'
