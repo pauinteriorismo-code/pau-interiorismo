@@ -36579,8 +36579,8 @@ async function ejecutarEnvioEmail(){
       ? buildBotonAceptarHtml(aceptacionInfo.url, aceptacionInfo.expiresAt)
       : '';
     const htmlBody = `<div style="font-family:'Segoe UI',Arial,sans-serif;max-width:640px;margin:0 auto;color:#333">
-      <div style="background:#1a3a5c;padding:14px 24px">
-        <span style="color:#b87333;font-size:18px;font-weight:800;letter-spacing:.5px">PAU INTERIORISMO</span>
+      <div style="background:#b87333;padding:14px 24px">
+        <span style="color:#fff;font-size:18px;font-weight:800;letter-spacing:.5px">PAU INTERIORISMO</span>
       </div>
       <div style="padding:22px 24px;background:#fff;border:1px solid #e8e0d4">
         <div style="font-size:13px;color:#333;line-height:1.6">${cuerpoEsc}</div>
@@ -36925,8 +36925,8 @@ function buildFirmaHtml(alias){
   <div style="font-weight:700;color:#1a3a5c;font-size:13px">${f.nombre}</div>
   <div style="color:#888;font-size:11px;margin-bottom:6px">${f.cargo}</div>
   <div style="color:#b87333;font-weight:700;font-size:13px;margin-bottom:4px">PAU INTERIORISMO</div>
-  <div style="font-size:11px;color:#555">📞 ${f.telefono} · ☎ ${EMPRESA.telefono}</div>
-  <div style="font-size:11px;color:#555">✉ <a href="mailto:${f.email}" style="color:#1a3a5c;text-decoration:none">${f.email}</a></div>
+  <div style="font-size:11px;color:#555">Tel: ${EMPRESA.telefono}</div>
+  <div style="font-size:11px;color:#555"><a href="mailto:${f.email}" style="color:#1a3a5c;text-decoration:none">${f.email}</a></div>
   <div style="font-size:10px;color:#999;margin-top:6px">${EMPRESA.nombre} · CIF ${EMPRESA.nif}<br>${EMPRESA.direccion} · ${EMPRESA.ciudad}</div>
 </div>`;
 }
