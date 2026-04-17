@@ -21051,7 +21051,12 @@ function _getEnviado(tipo, id){
     const ped = (typeof PedC!=='undefined') ? PedC.find(p=>String(p.id)===String(id)) : null;
     const ref = ped && ped.num_pedido;
     if(ref){
-      const sent = DEC.find(e => e.doc_type==='pedido' && e.doc_ref===ref && e.sent_at);
+      // Match exacto (formato nuevo) o que contenga el num_pedido (formatos
+      // antiguos como "Pedido_PED-020_2026-04-17").
+      const sent = DEC.find(e =>
+        e.doc_type==='pedido' && e.sent_at && e.doc_ref &&
+        (e.doc_ref===ref || e.doc_ref.includes(ref))
+      );
       if(sent){
         return { fecha: (sent.sent_at||'').split('T')[0], auto: true };
       }
@@ -36576,9 +36581,16 @@ function abrirEnviarEmail(tipo){
   // Genera el HTML del documento para referencia (no se usa como cuerpo: la firma se construye por alias)
   const htmlBody = docEl ? docEl.outerHTML : '';
 
+  // Para pedidos, usamos el num_pedido como docRef para que _getEnviado pueda
+  // casarlo directamente con la fila de PedC.
+  let docRefFinal = filename.replace('.pdf','');
+  if(tipo==='pedido'){
+    const num = document.getElementById('pd-num-input')?.value||'';
+    if(num) docRefFinal = num;
+  }
   openEmailModal({
     docType:    tipo,
-    docRef:     filename.replace('.pdf',''),
+    docRef:     docRefFinal,
     proyectoId: proyId,
     fromEmail:  defaultDesde,
     defaultTo:  destEmail,
@@ -36736,9 +36748,13 @@ async function ejecutarEnvioEmail(){
         sent_at: new Date().toISOString(),
         aceptacion_token: (aceptacionInfo && aceptacionInfo.token) || null
       };
-      if(typeof sb === 'function'){ await sb('document_emails','POST',reg).catch(()=>{}); }
+      if(typeof sb === 'function'){
+        await sb('document_emails','POST',reg).catch(err=>{
+          console.error('No se pudo registrar el envío en document_emails:', err, reg);
+        });
+      }
       if(typeof DEC !== 'undefined' && Array.isArray(DEC)){ DEC.unshift(reg); }
-    } catch(_){}
+    } catch(e){ console.error('Error registrando document_emails:', e); }
 
     // 6. Si es factura, marcarla como enviada
     if(docType==='factura' && docRef){
