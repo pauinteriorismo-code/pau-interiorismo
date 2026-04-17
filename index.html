@@ -37533,6 +37533,17 @@ function actualizarFirmaEmail(){
       `📞 ${f.telefono} · ✉ ${f.email}<br>` +
       `<span style="color:#999">${EMPRESA.nombre} · ${EMPRESA.web||'pauinteriorismo.com'}</span>`;
   }
+  // Auto-rellenar CCO con el mismo alias del remitente para que quede copia
+  // automática en ese buzón. Respetamos lo que haya escrito el usuario si no
+  // es uno de nuestros alias conocidos.
+  const bccEl = document.getElementById('em-bcc');
+  if(bccEl){
+    const actual = (bccEl.value||'').trim().toLowerCase();
+    const esAlias = Array.isArray(EMAIL_ALIASES) && EMAIL_ALIASES.some(a=>a.toLowerCase()===actual);
+    if(!actual || esAlias){
+      bccEl.value = alias;
+    }
+  }
 }
 
 // (enviarDocumentoEmail removed - dead code, no callers)
