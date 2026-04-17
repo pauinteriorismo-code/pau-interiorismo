@@ -6803,7 +6803,7 @@ async function _pfActualizarBannerAceptado(p, ver){
     banner.style.color='#1b5e20';
     banner.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
       <span>✅ Presupuesto <strong>${ver.toUpperCase()}</strong> aceptado el ${fmtFecha(aceptadaFecha)}</span>
-      <button class="btn btn-primary btn-sm no-print" onclick="pfGenerarContrato()">📄 Generar contrato</button>
+      <button class="btn btn-ghost btn-sm no-print" onclick="pfGenerarContrato()" title="Opcional · recomendado para importes grandes">📄 Generar contrato (opcional)</button>
     </div>`;
     return;
   }
