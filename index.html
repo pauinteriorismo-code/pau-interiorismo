@@ -21591,6 +21591,9 @@ async function init(){
   ['co-fecha','sc-fecha','h-fecha','f-fecha','ped-fecha'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=today;});
   await loadUmbrales();
   await loadGerencia();
+  // Cargar historial de envíos de email (document_emails) para que los botones
+  // "📤 <fecha>" y los badges de envío muestren la última fecha real desde Supabase.
+  try{ await loadAllEmailStatus(); }catch(e){}
   // Cargar proveedores al inicio para tenerlos siempre disponibles
   try{ ProvC=await sbGet('proveedores','?order=nombre.asc'); }catch(e){ ProvC=[]; }
   // Cargar trabajadores personalizados desde Supabase
