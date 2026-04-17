@@ -44,6 +44,18 @@
   .footer{text-align:center;font-size:12px;color:#9ca3af;margin-top:28px}
   .ok-summary{text-align:center;padding:32px 16px}
   .ok-summary .icon{font-size:64px;margin-bottom:12px}
+  /* Bloque de instrucciones de pago */
+  .pay-block{margin-top:24px;background:#fff8f0;border:1px solid #e8c99a;border-radius:10px;padding:20px;text-align:left}
+  .pay-block h2{margin:0 0 16px;color:#b87333;font-size:16px;display:flex;align-items:center;gap:8px}
+  .pay-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px dashed #e8c99a}
+  .pay-row:last-of-type{border-bottom:none}
+  .pay-lbl{font-size:12px;color:#9c7a4d;font-weight:600;text-transform:uppercase;letter-spacing:.04em;flex-shrink:0}
+  .pay-val{font-size:14px;color:#4a3728;font-weight:600;text-align:right;word-break:break-word}
+  .pay-val.amount{color:#b87333;font-size:18px}
+  .pay-copy{display:inline-flex;align-items:center;gap:4px;background:#fff;border:1px solid #e8c99a;color:#b87333;font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;cursor:pointer;transition:all .15s;margin-left:8px;white-space:nowrap}
+  .pay-copy:hover{background:#b87333;color:#fff;border-color:#b87333}
+  .pay-copy.copied{background:#16a34a;color:#fff;border-color:#16a34a}
+  .pay-note{margin-top:14px;padding:10px 12px;background:#fff;border-radius:6px;font-size:12px;color:#6b7280;line-height:1.5;border-left:3px solid #b87333}
 </style>
 </head>
 <body>
@@ -69,6 +81,7 @@
     <div class="alert alert-info">
       Este presupuesto ya fue aceptado por <b id="already-by"></b> el <b id="already-when"></b>.
     </div>
+    <div id="already-pay-block" class="pay-block hidden"></div>
   </div>
 
   <div id="form-state" class="hidden">
@@ -124,6 +137,7 @@
          Fecha: <b id="ok-when"></b>
       </p>
     </div>
+    <div id="success-pay-block" class="pay-block hidden"></div>
   </div>
 
   <div class="footer">Pau Interiorismo S.L. · B56909641 · pauinteriorismo.com</div>
@@ -162,6 +176,93 @@
     return Number(n).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' €';
   }
 
+  // Estado: datos del anticipo recibidos del backend (si los hay)
+  var anticipoData = null;
+
+  // Construye el HTML del bloque de pago a partir de anticipoData. Devuelve '' si no hay anticipo.
+  function buildPayBlockHtml(){
+    if(!anticipoData || !anticipoData.iban) return '';
+    var importe  = fmtMoney(anticipoData.importe);
+    var pct      = anticipoData.porcentaje ? Number(anticipoData.porcentaje) : null;
+    var iban     = String(anticipoData.iban || '').trim();
+    var concepto = String(anticipoData.concepto || '').trim() || 'Anticipo presupuesto';
+    var pctTxt   = (pct!=null) ? (' (' + pct + '% del total)') : '';
+    return ''
+      + '<h2>💰 Datos para realizar el pago</h2>'
+      + '<div class="pay-row">'
+        + '<span class="pay-lbl">Importe a transferir</span>'
+        + '<span class="pay-val amount">' + importe + pctTxt + '</span>'
+      + '</div>'
+      + '<div class="pay-row">'
+        + '<span class="pay-lbl">Beneficiario</span>'
+        + '<span class="pay-val">Pau Interiorismo S.L.</span>'
+      + '</div>'
+      + '<div class="pay-row">'
+        + '<span class="pay-lbl">IBAN</span>'
+        + '<span class="pay-val" style="font-family:monospace;letter-spacing:.5px">'
+          + iban
+          + '<button class="pay-copy" data-copy="' + escAttr(iban) + '">📋 Copiar</button>'
+        + '</span>'
+      + '</div>'
+      + '<div class="pay-row">'
+        + '<span class="pay-lbl">Concepto</span>'
+        + '<span class="pay-val">'
+          + escHtml(concepto)
+          + '<button class="pay-copy" data-copy="' + escAttr(concepto) + '">📋 Copiar</button>'
+        + '</span>'
+      + '</div>'
+      + '<div class="pay-note">'
+        + 'En cuanto recibamos tu transferencia te enviaremos el recibo / factura del pago por email. Si tienes cualquier duda escríbenos a '
+        + '<a href="mailto:administracion@pauinteriorismo.es" style="color:#b87333;text-decoration:none;font-weight:600">administracion@pauinteriorismo.es</a>.'
+      + '</div>';
+  }
+
+  function escHtml(s){ return String(s||'').replace(/[&<>]/g,function(c){return ({'&':'&amp;','<':'&lt;','>':'&gt;'})[c];}); }
+  function escAttr(s){ return String(s||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+  // Conecta los botones "Copiar" del bloque de pago (delegación).
+  function bindCopyButtons(rootId){
+    var root = document.getElementById(rootId);
+    if(!root) return;
+    root.addEventListener('click', function(ev){
+      var btn = ev.target.closest('.pay-copy');
+      if(!btn) return;
+      var txt = btn.getAttribute('data-copy') || '';
+      var done = function(){
+        var prev = btn.textContent;
+        btn.textContent = '✓ Copiado';
+        btn.classList.add('copied');
+        setTimeout(function(){ btn.textContent = prev; btn.classList.remove('copied'); }, 1600);
+      };
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(txt).then(done).catch(function(){ legacyCopy(txt); done(); });
+      } else {
+        legacyCopy(txt); done();
+      }
+    });
+  }
+  function legacyCopy(txt){
+    try {
+      var ta = document.createElement('textarea');
+      ta.value = txt; ta.style.position='fixed'; ta.style.opacity='0';
+      document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    } catch(_){}
+  }
+
+  // Renderiza el bloque de pago en el contenedor indicado (si hay datos).
+  function renderPayBlock(containerId){
+    var html = buildPayBlockHtml();
+    var el = document.getElementById(containerId);
+    if(!el) return;
+    if(html){
+      el.innerHTML = html;
+      el.classList.remove('hidden');
+      bindCopyButtons(containerId);
+    } else {
+      el.classList.add('hidden');
+    }
+  }
+
   // ───────────────────────────────────────────────
   //  2) Llamadas a Apps Script
   // ───────────────────────────────────────────────
@@ -191,11 +292,22 @@
       }
       var p = res.presupuesto;
 
-      // Si ya fue aceptado, mostrar mensaje
+      // Capturar datos del anticipo (si vienen) para mostrar instrucciones de pago tras aceptar.
+      if(p.anticipo_porcentaje && Number(p.anticipo_porcentaje) > 0){
+        anticipoData = {
+          porcentaje: p.anticipo_porcentaje,
+          importe:    p.anticipo_importe,
+          iban:       p.anticipo_iban,
+          concepto:   p.anticipo_concepto
+        };
+      }
+
+      // Si ya fue aceptado, mostrar mensaje (y datos de pago si los hay)
       if(p.accepted_at){
         show('already-accepted');
         $('already-by').textContent = p.accepted_by_name || '—';
         $('already-when').textContent = fmtDate(p.accepted_at);
+        renderPayBlock('already-pay-block');
         return;
       }
 
@@ -269,6 +381,7 @@
       $('ok-ref').textContent  = $('meta-ref').textContent;
       $('ok-name').textContent = nombre;
       $('ok-when').textContent = fmtDate(res.aceptado_at);
+      renderPayBlock('success-pay-block');
     }).catch(function(err){
       $('form-error').textContent = 'Error de red: ' + (err && err.message ? err.message : err);
       show('form-error');

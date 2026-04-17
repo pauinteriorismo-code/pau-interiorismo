@@ -102,15 +102,21 @@ function _consultarTokenAceptacion(data) {
     return {
       ok: true,
       presupuesto: {
-        ref:               row.presupuesto_ref,
-        proyecto_id:       row.proyecto_id,
-        cliente_email:     row.cliente_email,
-        sender_email:      row.sender_email,
-        snapshot_html:     row.snapshot_html || '',
-        snapshot_total:    row.snapshot_total,
-        expires_at:        row.expires_at,
-        accepted_at:       row.accepted_at,
-        accepted_by_name:  row.accepted_by_name
+        ref:                  row.presupuesto_ref,
+        proyecto_id:          row.proyecto_id,
+        cliente_email:        row.cliente_email,
+        sender_email:         row.sender_email,
+        snapshot_html:        row.snapshot_html || '',
+        snapshot_total:       row.snapshot_total,
+        expires_at:           row.expires_at,
+        accepted_at:          row.accepted_at,
+        accepted_by_name:     row.accepted_by_name,
+        // Datos del anticipo (si se solicitó al enviar). Si no, vendrán null.
+        anticipo_porcentaje:  row.anticipo_porcentaje,
+        anticipo_importe:     row.anticipo_importe,
+        anticipo_iban:        row.anticipo_iban,
+        anticipo_concepto:    row.anticipo_concepto,
+        factura_serie:        row.factura_serie
       }
     };
   } catch (err) {
@@ -179,6 +185,11 @@ function _aceptarPresupuesto(data, e) {
                         ? String(row.sender_email).trim()
                         : INTERNAL_NOTIF_EMAIL;
 
+    // Bloque HTML con los datos del anticipo (si se solicitó al enviar el presupuesto).
+    // Devuelve '' si no hay anticipo configurado.
+    var payInfoCliente = _buildPayInfoHtmlCliente(row);
+    var payInfoInterno = _buildPayInfoHtmlInterno(row);
+
     // Notificación al cliente (confirmación) — desde el mismo alias que envió el presupuesto
     try {
       var htmlCliente =
@@ -194,6 +205,7 @@ function _aceptarPresupuesto(data, e) {
           '<li>DNI/NIE: ' + _escapeHtml(dni.toUpperCase()) + '</li>' +
           '<li>Fecha: ' + new Date(nowIso).toLocaleString('es-ES') + '</li>' +
         '</ul>' +
+        payInfoCliente +
         '<p>Un saludo,<br>Pau Interiorismo</p>' +
         '</div>';
 
@@ -222,8 +234,9 @@ function _aceptarPresupuesto(data, e) {
         '<b>IP:</b> ' + _escapeHtml(ip || '—') + '<br>' +
         '<b>Navegador:</b> ' + _escapeHtml(userAgent || '—') + '</p>' +
         (row.snapshot_total != null
-          ? '<p><b>Importe:</b> ' + Number(row.snapshot_total).toFixed(2) + ' €</p>'
+          ? '<p><b>Importe presupuesto:</b> ' + _formatEUR(row.snapshot_total) + '</p>'
           : '') +
+        payInfoInterno +
         '</div>';
 
       GmailApp.sendEmail(senderEmail,
@@ -312,6 +325,72 @@ function _escapeHtml(s) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+}
+
+// Formatea un importe numérico como string en formato EUR ("1.234,56 €").
+function _formatEUR(n) {
+  if (n == null || isNaN(n)) return '—';
+  var v = Number(n).toFixed(2);
+  // Separador de miles . y decimal ,
+  var parts = v.split('.');
+  var intPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return intPart + ',' + parts[1] + ' €';
+}
+
+// Devuelve true si el registro tiene un anticipo configurado válido.
+function _hasAnticipo(row) {
+  return row && row.anticipo_porcentaje && Number(row.anticipo_porcentaje) > 0
+              && row.anticipo_iban && String(row.anticipo_iban).trim();
+}
+
+// Bloque HTML "datos para el pago" que se inyecta en el email AL CLIENTE.
+// Estilo coherente con aceptar.html (cajetín dorado).
+function _buildPayInfoHtmlCliente(row) {
+  if (!_hasAnticipo(row)) return '';
+  var importe  = _formatEUR(row.anticipo_importe);
+  var pct      = row.anticipo_porcentaje ? (' (' + Number(row.anticipo_porcentaje) + '% del total)') : '';
+  var iban     = String(row.anticipo_iban || '').trim();
+  var concepto = String(row.anticipo_concepto || '').trim() || 'Anticipo presupuesto';
+  return ''
+    + '<div style="margin:18px 0;padding:16px;background:#fff8f0;border:1px solid #e8c99a;border-radius:8px;">'
+    +   '<div style="font-weight:700;color:#b87333;font-size:14px;margin-bottom:10px;">💰 Datos para realizar el pago</div>'
+    +   '<table cellpadding="0" cellspacing="0" border="0" style="width:100%;font-size:13px;color:#4a3728;">'
+    +     '<tr><td style="padding:4px 0;color:#9c7a4d;width:140px;">Importe a transferir:</td>'
+    +         '<td style="padding:4px 0;font-weight:700;color:#b87333;font-size:15px;">' + importe + pct + '</td></tr>'
+    +     '<tr><td style="padding:4px 0;color:#9c7a4d;">Beneficiario:</td>'
+    +         '<td style="padding:4px 0;font-weight:600;">Pau Interiorismo S.L.</td></tr>'
+    +     '<tr><td style="padding:4px 0;color:#9c7a4d;">IBAN:</td>'
+    +         '<td style="padding:4px 0;font-family:Consolas,Monaco,monospace;font-weight:600;letter-spacing:.5px;">' + _escapeHtml(iban) + '</td></tr>'
+    +     '<tr><td style="padding:4px 0;color:#9c7a4d;">Concepto:</td>'
+    +         '<td style="padding:4px 0;font-weight:600;">' + _escapeHtml(concepto) + '</td></tr>'
+    +   '</table>'
+    +   '<div style="margin-top:10px;padding-top:10px;border-top:1px dashed #e8c99a;font-size:12px;color:#6b7280;line-height:1.5;">'
+    +     'En cuanto recibamos tu transferencia te enviaremos el recibo / factura del pago por email.'
+    +   '</div>'
+    + '</div>';
+}
+
+// Bloque HTML "datos del cobro pendiente" que se inyecta en el email INTERNO.
+// Más compacto que el del cliente, orientado a información de gestión.
+function _buildPayInfoHtmlInterno(row) {
+  if (!_hasAnticipo(row)) return '';
+  var importe  = _formatEUR(row.anticipo_importe);
+  var pct      = row.anticipo_porcentaje ? Number(row.anticipo_porcentaje) : null;
+  var iban     = String(row.anticipo_iban || '').trim();
+  var concepto = String(row.anticipo_concepto || '').trim();
+  var serie    = row.factura_serie ? Number(row.factura_serie) : null;
+  var serieTxt = serie === 1 ? 'Serie 1 · Construcción' : (serie === 2 ? 'Serie 2 · Interiorismo' : '—');
+  return ''
+    + '<div style="margin-top:14px;padding:12px;background:#fff8f0;border-left:4px solid #b87333;border-radius:4px;">'
+    +   '<div style="font-weight:700;color:#b87333;font-size:13px;margin-bottom:6px;">⏳ Anticipo pendiente de cobro</div>'
+    +   '<p style="margin:4px 0;font-size:13px;">'
+    +     '<b>Importe:</b> ' + importe + (pct!=null ? ' (' + pct + '%)' : '') + '<br>'
+    +     '<b>IBAN cobro:</b> ' + _escapeHtml(iban) + '<br>'
+    +     '<b>Concepto:</b> ' + _escapeHtml(concepto || '—') + '<br>'
+    +     '<b>Serie factura:</b> ' + serieTxt
+    +   '</p>'
+    +   '<div style="font-size:11px;color:#9c7a4d;margin-top:6px;">Cuando llegue la transferencia, márcala como cobrada en la app para emitir la factura automáticamente.</div>'
+    + '</div>';
 }
 
 
