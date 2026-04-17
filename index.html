@@ -36534,7 +36534,7 @@ function abrirEnviarEmail(tipo){
     const cli    = (typeof CC!=='undefined') ? (CC.find(c=>c.cliente_id===cliId)||{}) : {};
     destEmail = cli.email||'';
     asunto = empresa+' \u2013 '+titulo;
-    cuerpo = 'Estimado/a '+(cli.nombre||'cliente')+',\n\nAdjunto encontrar\xe1 el presupuesto n.\xba '+(num||proy)+' que nos solicit\xf3.\n\nQuedamos a su disposici\xf3n para cualquier consulta o modificaci\xf3n.';
+    cuerpo = 'Hola '+(cli.nombre||'')+',\n\nAdjunto encontrar\xe1 el presupuesto n.\xba '+(num||proy)+' que nos solicit\xf3.\n\nQuedamos a su disposici\xf3n para cualquier consulta o modificaci\xf3n.\n\nUn saludo,';
 
   } else if(tipo==='pedido'){
     docEl = document.getElementById('pd-doc');
@@ -36547,35 +36547,35 @@ function abrirEnviarEmail(tipo){
     const prov    = (typeof ProvC!=='undefined') ? (ProvC.find(p=>p.nombre===provNom)||{}) : {};
     destEmail     = prov.email||'';
     asunto = empresa+' \u2013 '+titulo;
-    cuerpo = 'Estimados,\n\nAdjuntamos el '+titulo.toLowerCase()+' para su revisi\xf3n y confirmaci\xf3n.\n\nRogamos confirmen la recepci\xf3n del pedido, plazo de entrega y disponibilidad de los art\xedculos.\n\nGracias.';
+    cuerpo = 'Hola,\n\nAdjuntamos el '+titulo.toLowerCase()+' para su revisi\xf3n y confirmaci\xf3n.\n\nRogamos confirmen la recepci\xf3n del pedido, plazo de entrega y disponibilidad de los art\xedculos.\n\nUn saludo,';
 
   } else if(tipo==='factura'){
     docEl    = document.getElementById('fa-doc')||document.getElementById('pf-doc');
     titulo   = 'Factura';
     filename = 'Factura_'+new Date().toISOString().split('T')[0]+'.pdf';
     asunto = empresa+' \u2013 Factura';
-    cuerpo = 'Estimado/a cliente,\n\nAdjunto encontrar\xe1 la factura correspondiente.\n\nQuedamos a su disposici\xf3n para cualquier consulta.';
+    cuerpo = 'Hola,\n\nAdjunto encontrar\xe1 la factura correspondiente.\n\nQuedamos a su disposici\xf3n para cualquier consulta.\n\nUn saludo,';
 
   } else if(tipo==='albaran'){
     docEl    = document.getElementById('al-doc')||document.getElementById('pf-doc');
     titulo   = 'Albar\xe1n';
     filename = 'Albaran_'+new Date().toISOString().split('T')[0]+'.pdf';
     asunto = empresa+' \u2013 Albar\xe1n';
-    cuerpo = 'Estimado/a cliente,\n\nAdjunto encontrar\xe1 el albar\xe1n correspondiente. Por favor, confirme la recepci\xf3n.';
+    cuerpo = 'Hola,\n\nAdjunto encontrar\xe1 el albar\xe1n correspondiente. Por favor, confirme la recepci\xf3n.\n\nUn saludo,';
 
   } else if(tipo==='contrato'){
     docEl    = document.getElementById('ct-doc')||document.getElementById('pf-doc');
     titulo   = 'Contrato';
     filename = 'Contrato_'+new Date().toISOString().split('T')[0]+'.pdf';
     asunto = empresa+' \u2013 Contrato';
-    cuerpo = 'Estimado/a cliente,\n\nAdjunto encontrar\xe1 el contrato de obra para su revisi\xf3n y firma.\n\nPor favor, rev\xedselo y cont\xe1ctenos para cualquier consulta.';
+    cuerpo = 'Hola,\n\nAdjunto encontrar\xe1 el contrato de obra para su revisi\xf3n y firma.\n\nPor favor, rev\xedselo y cont\xe1ctenos para cualquier consulta.\n\nUn saludo,';
 
   } else {
     docEl    = document.getElementById('ct-doc')||document.getElementById('pf-doc');
     titulo   = tipo.charAt(0).toUpperCase()+tipo.slice(1);
     filename = tipo+'_'+new Date().toISOString().split('T')[0]+'.pdf';
     asunto = empresa+' \u2013 '+titulo;
-    cuerpo = 'Estimado/a cliente,\n\nAdjunto encontrar\xe1 el documento solicitado.';
+    cuerpo = 'Hola,\n\nAdjunto encontrar\xe1 el documento solicitado.\n\nUn saludo,';
   }
 
   _emailDocEl    = docEl;
@@ -36895,7 +36895,7 @@ function buildEmailWrapper(titulo, nombreCliente, referencia, importeStr, mensaj
   </div>
   <div style="padding:28px 32px">
     <h2 style="margin:0 0 18px;color:#1a3a5c;font-size:16px">${titulo}</h2>
-    <p style="margin:0 0 16px;color:#444;line-height:1.6">Estimado/a <strong>${nombreCliente||'cliente'}</strong>,</p>
+    <p style="margin:0 0 16px;color:#444;line-height:1.6">Hola <strong>${nombreCliente||''}</strong>,</p>
     <p style="margin:0 0 20px;color:#444;line-height:1.6">${mensaje}</p>
     ${box}
     ${bodyExtra||''}
@@ -37869,7 +37869,7 @@ renderPresupuesto=function(){
       </div>
       <div class="form-group" style="grid-column:1/-1">
         <label class="form-label">Mensaje personalizado</label>
-        <textarea class="form-input" id="em-mensaje" rows="4" placeholder="Estimado/a cliente, adjunto le enviamos..." style="resize:vertical"></textarea>
+        <textarea class="form-input" id="em-mensaje" rows="4" placeholder="Hola, adjunto le enviamos..." style="resize:vertical"></textarea>
       </div>
       <!-- ═══ BLOQUE ANTICIPO (solo visible si docType === 'presupuesto') ═══ -->
       <div class="form-group" id="em-anticipo-block" style="grid-column:1/-1;display:none;background:#fff8f0;border:1px solid #e8c99a;border-radius:8px;padding:14px;margin-top:4px">
