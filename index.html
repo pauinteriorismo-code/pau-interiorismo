@@ -21062,7 +21062,32 @@ function _getEnviado(tipo, id){
       }
     }
   }
-  try{ return JSON.parse(localStorage.getItem(_enviadoKey(tipo,id))||'null'); }catch(e){ return null; }
+  // Para presupuesto, buscar el último envío real en DEC (prefijo
+  // "Presupuesto_<proy>_<ver>_..."). id llega como "PRY-027-VIV-4G_v1".
+  let autoFecha = null;
+  if(tipo==='presupuesto' && typeof DEC !== 'undefined' && Array.isArray(DEC)){
+    const idStr = String(id||'');
+    const idxUS = idStr.lastIndexOf('_');
+    if(idxUS > 0){
+      const proy = idStr.slice(0, idxUS);
+      const ver  = idStr.slice(idxUS + 1).toLowerCase();
+      const pref = ('Presupuesto_' + proy + '_' + ver + '_').toLowerCase();
+      let ultimo = null;
+      for(const e of DEC){
+        if(e.doc_type !== 'presupuesto' || !e.sent_at || typeof e.doc_ref !== 'string') continue;
+        if(!e.doc_ref.toLowerCase().startsWith(pref)) continue;
+        if(!ultimo || (e.sent_at||'') > (ultimo.sent_at||'')) ultimo = e;
+      }
+      if(ultimo) autoFecha = (ultimo.sent_at||'').split('T')[0];
+    }
+  }
+  let lsData = null;
+  try{ lsData = JSON.parse(localStorage.getItem(_enviadoKey(tipo,id))||'null'); }catch(e){ lsData = null; }
+  // Si hay fecha automática (de DEC) y es más reciente que la manual, usarla.
+  if(autoFecha && (!lsData || !lsData.fecha || autoFecha >= lsData.fecha)){
+    return { fecha: autoFecha, auto: true };
+  }
+  return lsData;
 }
 function _setEnviado(tipo, id){
   const data = { fecha: new Date().toISOString().split('T')[0] };
@@ -36774,6 +36799,11 @@ async function ejecutarEnvioEmail(){
     // 6b. Si es pedido, refrescar la tabla de pedidos para que se vea el badge 📤 verde
     if(docType==='pedido'){
       try{ if(typeof loadPedidos === 'function') loadPedidos(); }catch(_){}
+    }
+
+    // 6c. Si es presupuesto, refrescar el botón 📤 del documento con la nueva fecha
+    if(docType==='presupuesto'){
+      try{ if(typeof _refreshEnviadoPres === 'function') _refreshEnviadoPres(); }catch(_){}
     }
 
     setStatus('✅ Enviado correctamente a '+para,'ok');
