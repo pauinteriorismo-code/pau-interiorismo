@@ -37452,7 +37452,7 @@ function actualizarFirmaEmail(){
   if(prev){
     prev.innerHTML = `<strong>${f.nombre}</strong> · ${f.cargo}<br>` +
       `📞 ${f.telefono} · ✉ ${f.email}<br>` +
-      `<span style="color:#999">${EMPRESA.nombre} · ${EMPRESA.telefono}</span>`;
+      `<span style="color:#999">${EMPRESA.nombre} · ${EMPRESA.web||'pauinteriorismo.com'}</span>`;
   }
 }
 
