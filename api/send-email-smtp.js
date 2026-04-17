@@ -67,7 +67,14 @@ export default async function handler(req, res) {
       auth: { user: from, pass },
       tls: { rejectUnauthorized: false }
     });
-    const sendInfo = await transporter.sendMail(mailOptions);
+    let sendInfo;
+    try {
+      sendInfo = await transporter.sendMail(mailOptions);
+    } catch (e) {
+      // Adjuntar info de diagnóstico al error para poder afinar host/puerto desde consola.
+      const diag = ` [smtp=${SMTP_HOST}:${SMTP_PORT} user=${from}]`;
+      return res.status(500).json({ ok:false, error: (e.message||'SMTP error') + diag, smtpHost: SMTP_HOST, smtpPort: SMTP_PORT });
+    }
 
     // 2) Construir el raw MIME y guardar copia en Enviados vía IMAP APPEND
     let appendedFolder = null;
