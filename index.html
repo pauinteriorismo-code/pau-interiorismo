@@ -36824,9 +36824,21 @@ function openEmailModal({docType, docRef, proyectoId, defaultTo, subject, fromEm
       document.getElementById('em-anticipo-pct').value = '50';
       document.getElementById('em-anticipo-importe').value = '';
       document.getElementById('em-anticipo-serie').value = '1';
-      // Concepto sugerido auto: "Anticipo s/ presupuesto <REF>"
-      document.getElementById('em-anticipo-concepto').value =
-        docRef ? ('Anticipo s/ presupuesto ' + docRef) : '';
+      // Concepto sugerido auto: "Anticipo presupuesto PRY-022 V1".
+      // docRef llega con formato "Presupuesto_PRY-022_v1_2026-04-17"; extraemos proyecto + versión.
+      (function(){
+        var conceptoEl = document.getElementById('em-anticipo-concepto');
+        if(!conceptoEl) return;
+        var ref = String(docRef||'').replace(/^Presupuesto_/i,'');
+        var partes = ref.split('_');
+        var proy = (partes[0] || '').trim();        // ej. "PRY-022"
+        var ver  = (partes[1] || '').trim().toUpperCase();  // ej. "V1"
+        if(proy){
+          conceptoEl.value = 'Anticipo presupuesto ' + proy + (ver ? (' ' + ver) : '');
+        } else {
+          conceptoEl.value = '';
+        }
+      })();
       // IBAN: se carga asíncronamente desde Configuración (pie_iban)
       cargarIbanParaAnticipo();
     } else {
