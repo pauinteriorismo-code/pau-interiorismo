@@ -36927,6 +36927,52 @@ function openEmailModal({docType, docRef, proyectoId, defaultTo, subject, fromEm
   actualizarFirmaEmail();
   const labels = {presupuesto:'Presupuesto',contrato:'Contrato',pedido:'Pedido',factura:'Factura',albaran:'Albarán'};
   document.getElementById('m-email-title').textContent = '\u{1F4E7} Enviar ' + (labels[docType]||docType||'documento');
+
+  // ─── Bloque info previo: versión + último envío ─────────────────
+  (function(){
+    const infoEl = document.getElementById('em-info-previo');
+    if(!infoEl) return;
+    const partes = [];
+    let proyRef = '', verRef = '';
+    if(docType === 'presupuesto' && docRef){
+      // docRef esperado: "Presupuesto_PRY-027-VIV-4G_v1_2026-04-17"
+      const trozos = String(docRef).split('_');
+      proyRef = trozos[1] || '';
+      verRef  = (trozos[2] || '').toLowerCase();
+      if(verRef) partes.push('📋 Versión: <strong>' + verRef.toUpperCase() + '</strong>');
+    }
+    // Buscar último envío previo en DEC (cualquier docType)
+    let ultimo = null;
+    if(typeof DEC !== 'undefined' && Array.isArray(DEC)){
+      for(const e of DEC){
+        if(e.doc_type !== docType) continue;
+        let coincide = false;
+        if(docType === 'presupuesto' && proyRef && verRef){
+          const pref = ('Presupuesto_' + proyRef + '_' + verRef + '_').toLowerCase();
+          coincide = typeof e.doc_ref === 'string' && e.doc_ref.toLowerCase().startsWith(pref);
+        } else if(docRef){
+          coincide = e.doc_ref === docRef;
+        } else if(proyectoId){
+          coincide = e.proyecto_id === proyectoId;
+        }
+        if(!coincide) continue;
+        if(!ultimo || (e.sent_at||'') > (ultimo.sent_at||'')) ultimo = e;
+      }
+    }
+    if(ultimo){
+      const fecha = (ultimo.sent_at||'').split('T')[0];
+      const fechaFmt = (typeof fmtD === 'function') ? fmtD(fecha) : fecha;
+      partes.push('📤 Último envío: <strong>' + fechaFmt + '</strong>' + (ultimo.recipient_email ? ' → ' + ultimo.recipient_email : ''));
+    } else if(docType === 'presupuesto'){
+      partes.push('<span style="color:#777">📤 Sin envíos previos de esta versión</span>');
+    }
+    if(partes.length){
+      infoEl.innerHTML = partes.join(' &nbsp;·&nbsp; ');
+      infoEl.style.display = 'block';
+    } else {
+      infoEl.style.display = 'none';
+    }
+  })();
   const st=document.getElementById('em-status'); st.style.display='none'; st.textContent='';
   const btn=document.getElementById('em-btn-send'); btn.disabled=false; btn.textContent='\u{1F4E4} Enviar';
 
@@ -37842,6 +37888,7 @@ renderPresupuesto=function(){
     <input type="hidden" id="em-doc-ref">
     <input type="hidden" id="em-proyecto-id">
     <input type="hidden" id="em-html-body">
+    <div id="em-info-previo" style="display:none;margin:0 0 14px;padding:10px 12px;background:#f0f6fa;border-left:3px solid #1a3a5c;border-radius:0 6px 6px 0;font-size:12px;color:#1a3a5c;line-height:1.6"></div>
     <div class="form-grid">
       <div class="form-group" style="grid-column:1/-1">
         <label class="form-label">Remitente (De) *</label>
