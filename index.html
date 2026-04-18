@@ -1766,7 +1766,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <div id="pp-body-libre" class="pres-panel-body" style="display:none">
           <div class="pp-libre">
             <label>Descripción *</label>
-            <input type="text" id="pp-l-desc" placeholder="Descripción de la partida…">
+            <textarea id="pp-l-desc" placeholder="Descripción de la partida…" rows="4" style="resize:vertical;min-height:90px;font-family:inherit;line-height:1.4;width:100%"></textarea>
             <div class="pp-libre-grid">
               <div><label>Precio base (€)</label><input type="number" id="pp-l-precio" step="0.01" value="0" oninput="ppLibreCalc()"></div>
               <div><label>Margen %</label><input type="number" id="pp-l-margen" step="0.1" value="0" oninput="ppLibreCalc()"></div>
@@ -5338,7 +5338,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       </select>
     </div>
     <div class="form-grid">
-      <div class="form-group fg-full"><label class="form-label">Descripción *</label><input class="form-input" id="pl-desc"></div>
+      <div class="form-group fg-full"><label class="form-label">Descripción * <span style="font-weight:400;color:var(--text-soft);font-size:10px">· pulsa Enter para saltos de línea</span></label><textarea class="form-input" id="pl-desc" rows="4" style="resize:vertical;min-height:90px;font-family:inherit;line-height:1.4" placeholder="Línea 1 del concepto&#10;Línea 2 con más detalle…&#10;Línea 3 de observaciones"></textarea></div>
       <div class="form-group"><label class="form-label">Unidad</label><select class="form-input" id="pl-ud"><option>h</option><option>kg</option><option>m</option><option>ml</option><option>m²</option><option>m³</option><option>PA</option><option>Ud</option></select></div>
       <div class="form-group"><label class="form-label">Cantidad</label><input class="form-input" id="pl-cant" type="number" step="0.01" value="1" oninput="calcLineaPres()"></div>
       <div class="form-group"><label class="form-label">Precio Base (coste)</label><input class="form-input" id="pl-precio" type="number" step="0.01" oninput="calcLineaPres()"></div>
@@ -5353,6 +5353,85 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
   </div>
   <input type="hidden" id="pl-insert-orden" value="">
   <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal(&#39;m-pres-linea&#39;)">Cancelar</button><button class="btn btn-primary" onclick="saveLineaPresupuesto()">💾 Guardar</button></div>
+</div></div>
+
+<!-- RESUMEN IA PARA CLIENTE -->
+<div class="overlay" id="m-pres-resumen-ia"><div class="modal" style="width:680px;max-width:96vw">
+  <div class="modal-head">
+    <div class="modal-title">📋 Agrupar líneas para el cliente</div>
+    <button class="modal-close" onclick="closeModal('m-pres-resumen-ia')">×</button>
+  </div>
+  <div class="modal-body">
+    <!-- Resumen de las líneas seleccionadas -->
+    <div style="background:#f7f4ef;border:1px solid #e8e0d4;border-radius:8px;padding:10px 12px;margin-bottom:14px">
+      <div style="font-size:10px;font-weight:700;color:#b87333;text-transform:uppercase;margin-bottom:6px;letter-spacing:.05em">Líneas seleccionadas</div>
+      <div id="ria-lista" style="max-height:140px;overflow-y:auto;font-size:11px;color:#4a3728;line-height:1.55"></div>
+      <div style="display:flex;justify-content:space-between;gap:10px;margin-top:8px;padding-top:8px;border-top:1px solid #e8e0d4;font-size:12px;font-weight:700;color:#4a3728">
+        <span><span id="ria-cont">0</span> líneas</span>
+        <span>Coste: <span id="ria-coste" style="color:var(--text-soft)">0,00 €</span></span>
+        <span>PVP: <span id="ria-pvp" style="color:var(--navy)">0,00 €</span></span>
+        <span id="ria-dto-wrap" style="display:none;color:#c62828">Dto: <span id="ria-dto">0</span>%</span>
+      </div>
+    </div>
+
+    <!-- Modo: IA / Manual -->
+    <div class="form-group" style="margin-bottom:12px">
+      <label class="form-label">Modo de descripción</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <label style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:2px solid var(--navy);border-radius:8px;cursor:pointer;background:#f0f4fa" id="ria-modo-ia-lbl">
+          <input type="radio" name="ria-modo" value="ia" checked onchange="riaSetModo('ia')">
+          <div>
+            <div style="font-weight:700;font-size:12px;color:var(--navy)">🤖 Generar con IA</div>
+            <div style="font-size:10px;color:var(--text-soft)">Claude redacta 2-3 frases elegantes</div>
+          </div>
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:2px solid var(--border);border-radius:8px;cursor:pointer" id="ria-modo-man-lbl">
+          <input type="radio" name="ria-modo" value="manual" onchange="riaSetModo('manual')">
+          <div>
+            <div style="font-weight:700;font-size:12px;color:var(--text)">✍️ Escribir manual</div>
+            <div style="font-size:10px;color:var(--text-soft)">Redactas tú la descripción</div>
+          </div>
+        </label>
+      </div>
+    </div>
+
+    <!-- Botón generar (modo IA) -->
+    <div id="ria-ia-controls" style="margin-bottom:12px">
+      <button class="btn btn-primary" id="ria-btn-generar" onclick="riaGenerarIA()" style="width:100%;background:var(--navy)">🤖 Generar descripción con IA</button>
+      <div id="ria-ia-status" style="font-size:11px;color:var(--text-soft);margin-top:6px;text-align:center"></div>
+    </div>
+
+    <!-- Descripción generada/editable -->
+    <div class="form-group" style="margin-bottom:12px">
+      <label class="form-label">Descripción para el cliente <span style="font-weight:400;color:var(--text-soft);font-size:10px">· editable antes de guardar</span></label>
+      <textarea class="form-input" id="ria-desc" rows="5" style="resize:vertical;min-height:110px;font-family:inherit;line-height:1.45" placeholder="La descripción aparecerá aquí. Puedes editarla libremente."></textarea>
+    </div>
+
+    <!-- Qué hacer con las líneas de detalle -->
+    <div class="form-group">
+      <label class="form-label">Líneas de detalle</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <label style="display:flex;align-items:flex-start;gap:8px;padding:10px 12px;border:2px solid #7b3fa0;border-radius:8px;cursor:pointer;background:#f5f0ff" id="ria-acc-int-lbl">
+          <input type="radio" name="ria-accion" value="interno" checked onchange="riaSetAccion('interno')">
+          <div>
+            <div style="font-weight:700;font-size:12px;color:#7b3fa0">👁 Marcar como INTERNAS</div>
+            <div style="font-size:10px;color:var(--text-soft)">Se ocultan al cliente en Doc. Final pero quedan visibles internamente (pedidos, compras…)</div>
+          </div>
+        </label>
+        <label style="display:flex;align-items:flex-start;gap:8px;padding:10px 12px;border:2px solid var(--border);border-radius:8px;cursor:pointer" id="ria-acc-del-lbl">
+          <input type="radio" name="ria-accion" value="borrar" onchange="riaSetAccion('borrar')">
+          <div>
+            <div style="font-weight:700;font-size:12px;color:#c62828">🗑 Eliminar detalle</div>
+            <div style="font-size:10px;color:var(--text-soft)">Solo queda la línea resumen, se borran las originales</div>
+          </div>
+        </label>
+      </div>
+    </div>
+  </div>
+  <div class="modal-foot">
+    <button class="btn btn-ghost" onclick="closeModal('m-pres-resumen-ia')">Cancelar</button>
+    <button class="btn btn-primary" id="ria-btn-guardar" onclick="riaConfirmar()">💾 Crear línea resumen</button>
+  </div>
 </div></div>
 
 <!-- ENTREGA A CUENTA -->
@@ -5887,7 +5966,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="form-group"><label class="form-label">Proyecto *</label><select class="form-input" id="i-proyecto"><option value="">Seleccionar…</option><option value="PRY-001">PRY-001 · Mobiliario de cocina</option><option value="PRY-002">PRY-002 · Rehabilitación lateral fachada</option><option value="PRY-003">PRY-003 · Pavimento/revestimiento vivienda.</option><option value="PRY-004">PRY-004 · Rehabilitación estudio</option><option value="PRY-005">PRY-005 · Trabajos en terraza</option></select></div>
       <div class="form-group"><label class="form-label">Estancia</label><select class="form-input" id="i-estancia"><option value="">Seleccionar…</option><option value="Baño">Baño</option><option value="Cocina">Cocina</option><option value="Comedor">Comedor</option><option value="Despacho">Despacho</option><option value="Dormitorio">Dormitorio</option><option value="Entrada">Entrada</option><option value="Otros">Otros</option><option value="Pasillo">Pasillo</option><option value="Salón">Salón</option><option value="Terraza">Terraza</option></select></div>
       <div class="form-group"><label class="form-label">Ref. Tarifario</label><select class="form-input" id="i-ref" onchange="loadTarifarioItem()"><option value="">— descripción libre —</option><option value="be0b88a6-47d5-46e2-8911-408eff64ca38">79B000RL10 · REJILLA AIRZONE LINEAL LAMA FIJA 1000X100 BLANCO CON REGULACION</option><option value="6c08d760-3e93-4764-90b6-551bfeee2bf9">RL00060010BKRT · REJILLA AIRZONE LINEAL LAMA FIJA 600X100 BLANCO CON REGULACION</option><option value="12861e98-87d9-4d59-8aaa-4701535670d0">RL00080010BKRT · REJILLA AIRZONE LINEAL LAMA FIJA 800X100 BLANCO CON REGULACION</option><option value="3081dc03-900a-4741-8fa6-4ebea580a14b">RL00100010BKX · REJILLA AIRZONE LINEAL LAMA FIJA 1000X100 BLANCO</option><option value="9a9cbb45-7acb-4099-91dd-05fe5d1b4f12">RL00150010BKX · REJILLA AIRZONE LINEAL LAMA FIJA 1500X100 BLANCO</option><option value="d231d767-b51f-4122-9942-59a7b7686849">RL00200010BKX · REJILLA AIRZONE LINEAL LAMA FIJA 2000X100 BLANCO</option></select></div>
-      <div class="form-group"><label class="form-label">Descripción</label><input class="form-input" id="i-desc"></div>
+      <div class="form-group fg-full"><label class="form-label">Descripción</label><textarea class="form-input" id="i-desc" rows="4" style="resize:vertical;min-height:90px;font-family:inherit;line-height:1.4"></textarea></div>
       <div class="form-group"><label class="form-label">Marca</label><input class="form-input" id="i-marca"></div>
       <div class="form-group"><label class="form-label">Acabado</label><input class="form-input" id="i-acabado"></div>
       <div class="form-group"><label class="form-label">Cantidad</label><input class="form-input" id="i-cant" type="number" value="1" step="0.01" oninput="calcIntPvp()"></div>
@@ -6198,7 +6277,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="form-group"><label class="form-label">Trabajador</label><select class="form-input" id="h-trab"><option value="">Seleccionar…</option><option value="Francisco Gascón Gil">Francisco Gascón Gil</option><option value="Jose Asins Primo">Jose Asins Primo</option><option value="Julio Alemany Fort">Julio Alemany Fort</option><option value="María Paz Primo Iborra">María Paz Primo Iborra</option><option value="Raúl Gascón Gil">Raúl Gascón Gil</option><option value="Salvador Aguado Simó">Salvador Aguado Simó</option></select></div>
       <div class="form-group"><label class="form-label">Horas</label><input class="form-input" id="h-horas" type="number" step="0.5" placeholder="8"></div>
       <div class="form-group"><label class="form-label">€/hora</label><input class="form-input" id="h-coste" type="number" value="18"></div>
-      <div class="form-group fg-full"><label class="form-label">Descripción</label><input class="form-input" id="h-desc"></div>
+      <div class="form-group fg-full"><label class="form-label">Descripción</label><textarea class="form-input" id="h-desc" rows="4" style="resize:vertical;min-height:90px;font-family:inherit;line-height:1.4"></textarea></div>
     </div>
   </div>
   <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('m-hora')">Cancelar</button><button class="btn btn-primary" onclick="saveHora()">💾 Guardar</button></div>
@@ -6242,7 +6321,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         </div>
       </div>
 
-      <div class="form-group fg-full"><label class="form-label">Referencia / Descripción</label><input class="form-input" id="ped-ref" placeholder="Ej: Azulejo baño modelo X, Mueble cocina ref.123..."></div>
+      <div class="form-group fg-full"><label class="form-label">Referencia / Descripción</label><textarea class="form-input" id="ped-ref" placeholder="Ej: Azulejo baño modelo X, Mueble cocina ref.123..." rows="4" style="resize:vertical;min-height:90px;font-family:inherit;line-height:1.4"></textarea></div>
       <div class="form-group"><label class="form-label">Importe €</label><input class="form-input" id="ped-importe" type="number" step="0.01"></div>
       <div class="form-group"><label class="form-label">Estado</label><select class="form-input" id="ped-estado"><option>Cancelado</option><option selected>Confirmado</option><option>En tránsito</option><option>Pagado</option><option>Pendiente</option><option>Recibido parcialmente</option><option>Recibido completamente</option><option>Recibido</option><option>Solicitado</option></select></div>
       <div class="form-group fg-full"><label class="form-label">Observaciones</label><input class="form-input" id="ped-obs"></div>
@@ -6270,7 +6349,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
   <div class="modal-body">
     <input type="hidden" id="ag-id">
     <div class="form-grid">
-      <div class="form-group fg-full"><label class="form-label">Descripción *</label><input class="form-input" id="ag-desc" placeholder="Descripción del aviso…"></div>
+      <div class="form-group fg-full"><label class="form-label">Descripción *</label><textarea class="form-input" id="ag-desc" placeholder="Descripción del aviso…" rows="4" style="resize:vertical;min-height:90px;font-family:inherit;line-height:1.4"></textarea></div>
       <div class="form-group"><label class="form-label">Fecha *</label><input class="form-input" type="date" id="ag-fecha"></div>
       <div class="form-group"><label class="form-label">Hora</label><input class="form-input" type="time" id="ag-hora"></div>
       <div class="form-group"><label class="form-label">Tipo</label>
@@ -6686,7 +6765,7 @@ async function loadPresupuestoFinal(){
     const lineasCliente = lineas.filter(l=>l.categoria!=='interno');
     const _pfCapTotals={};let _pfCurCap=null;lineasCliente.forEach(l=>{if(l.es_capitulo){_pfCurCap=l.id;_pfCapTotals[_pfCurCap]=0;}else if(_pfCurCap){const _pv=l.precio_venta||0,_ci=l.ci_gg_bi_pct||0,_s=(l.cantidad||0)*_pv,_sCI=_ci>0?_s*(1+_ci/100):_s;_pfCapTotals[_pfCurCap]+=_sCI;}});
     tbody.innerHTML=lineasCliente.map((l,i)=>{
-      if(l.es_capitulo){const _pfSub=_pfCapTotals[l.id]||0;const _pfShow=l.partida&&l.partida.includes('Σ');return`<tr><td colspan="7" style="padding:10px 8px;font-weight:700;background:#f7f4ef;color:#4a3728;font-size:12px;border-bottom:1px solid #b87333">${l.descripcion}${_pfShow&&_pfSub>0?`<span style="float:right;color:#b87333">${fmtES(_pfSub)}€</span>`:''}</td></tr>`;}
+      if(l.es_capitulo){const _pfSub=_pfCapTotals[l.id]||0;const _pfShow=l.partida&&l.partida.includes('Σ');return`<tr><td colspan="7" style="padding:10px 8px;font-weight:700;background:#f7f4ef;color:#4a3728;font-size:12px;border-bottom:1px solid #b87333;line-height:1.5">${(l.descripcion||'').replace(/\n/g,'<br>')}${_pfShow&&_pfSub>0?`<span style="float:right;color:#b87333">${fmtES(_pfSub)}€</span>`:''}</td></tr>`;}
       const pv=l.precio_venta||0,ci=l.ci_gg_bi_pct||0,pvConCI=pv*(ci>0?(1+ci/100):1);
       const _pb=parseFloat(l.precio_base)||0,_mg=parseFloat(l.margen_pct)||0;
       let _pvSinDto=_mg>0?_pb*(1+_mg/100):_pb;if(ci>0)_pvSinDto=_pvSinDto*(1+ci/100);
@@ -6703,7 +6782,7 @@ async function loadPresupuestoFinal(){
       const ivaLabel=(tipoIva==='Exento'||tipoIva===0||tipoIva==='0')?'<span style="font-size:9px;background:#f0f8f0;color:#2d7a52;border-radius:3px;padding:1px 4px;font-weight:600">Exento</span>':'<span style="font-size:9px;color:#666">'+tipoIva+'</span>';
       const pvCell=_dto>0?`<span style="text-decoration:line-through;color:#aaa;font-size:10px">${fmtES(_pvSinDto)}€</span><br><span style="color:#c62828;font-weight:700">${fmtES(pvConCI)}€</span>`:fmtES(pvConCI)+'€';
       const dtoCell=_dto>0?`<span style="color:#c62828;font-weight:700">-${_dto.toFixed(1)}%</span>`:'—';
-      return`<tr style="background:${bg};border-bottom:1px solid #eee"><td style="padding:7px 8px">${l.descripcion}</td><td style="padding:7px 8px;text-align:center">${l.unidad||''}</td><td style="padding:7px 8px;text-align:right">${l.cantidad||0}</td><td style="padding:7px 8px;text-align:right;line-height:1.4">${pvCell}</td><td style="padding:7px 8px;text-align:center">${dtoCell}</td><td style="padding:7px 8px;text-align:center">${ivaLabel}</td><td style="padding:7px 8px;text-align:right;font-weight:600">${fmtES(sub)}€</td></tr>`;
+      return`<tr style="background:${bg};border-bottom:1px solid #eee"><td style="padding:7px 8px;line-height:1.5">${(l.descripcion||'').replace(/\n/g,'<br>')}</td><td style="padding:7px 8px;text-align:center">${l.unidad||''}</td><td style="padding:7px 8px;text-align:right">${l.cantidad||0}</td><td style="padding:7px 8px;text-align:right;line-height:1.4">${pvCell}</td><td style="padding:7px 8px;text-align:center">${dtoCell}</td><td style="padding:7px 8px;text-align:center">${ivaLabel}</td><td style="padding:7px 8px;text-align:right;font-weight:600">${fmtES(sub)}€</td></tr>`;
     }).join('');
     const totalIva = Object.values(ivaDesglose).reduce((s,v)=>s+v.base*v.pct/100, 0);
     const total=totalBase+totalIva;
@@ -8276,16 +8355,16 @@ function presReimportarACatalogo(){
 }
 
 // ── Agrupar líneas para cliente (sin detalle de refs/precios unitarios) ──
-async function presAgruparCliente(){
+let _riaCtx = null; // {ids, lineas, totCoste, totPvp, totPvpSinDto, dtoDetectado}
+
+function presAgruparCliente(){
   const tbody = document.getElementById('pres-tbody');
   const ids = [...(tbody||document).querySelectorAll('input.pres-chk:checked')].map(c=>c.value);
   if(!ids.length){ toast('Selecciona las líneas a agrupar con los checkboxes','error'); return; }
 
-  // Recoger datos de las líneas seleccionadas
   const lineas = PresC.filter(l=>ids.includes(l.id) && !l.es_capitulo);
   if(!lineas.length){ toast('No hay líneas de producto seleccionadas','error'); return; }
 
-  // Calcular totales (con y sin descuento)
   let totCoste=0, totPvp=0, totPvpSinDto=0;
   lineas.forEach(l=>{
     const pv=l.precio_venta||0, cant=l.cantidad||0;
@@ -8293,76 +8372,135 @@ async function presAgruparCliente(){
     const sub=cant*pv, subCI=ci>0?sub*(1+ci/100):sub;
     totCoste += cant*(l.precio_base||0);
     totPvp += subCI;
-    // Reconstruir PVP sin descuento: base*(1+margen%)
     const pb=parseFloat(l.precio_base)||0, mg=parseFloat(l.margen_pct)||0;
     const pvSinDto = mg>0 ? pb*(1+mg/100) : pb;
     totPvpSinDto += cant * (ci>0 ? pvSinDto*(1+ci/100) : pvSinDto);
   });
-  // Detectar descuento global
   const dtoDetectado = totPvpSinDto>0.01 && totPvp<(totPvpSinDto-0.01) ? Math.round((1-totPvp/totPvpSinDto)*1000)/10 : 0;
 
-  // Pedir modo: con IA o manual
-  const modo = confirm(
-    `📋 Agrupar ${lineas.length} líneas para el cliente\n\n` +
-    `Total PVP: ${totPvp.toFixed(2)}€\n\n` +
-    `¿Generar descripción automática con IA?\n\n` +
-    `[Aceptar] = Descripción con IA\n[Cancelar] = Escribir descripción manual`
-  );
+  _riaCtx = {ids, lineas, totCoste, totPvp, totPvpSinDto, dtoDetectado};
 
-  let descripcion = '';
+  // Rellenar UI del modal
+  document.getElementById('ria-cont').textContent = lineas.length;
+  document.getElementById('ria-coste').textContent = totCoste.toFixed(2).replace('.',',')+' €';
+  document.getElementById('ria-pvp').textContent = totPvp.toFixed(2).replace('.',',')+' €';
+  const dtoWrap = document.getElementById('ria-dto-wrap');
+  if(dtoDetectado>0){ dtoWrap.style.display=''; document.getElementById('ria-dto').textContent = dtoDetectado.toFixed(1); }
+  else dtoWrap.style.display='none';
 
-  if(modo){
-    // Generar con IA
-    const key = window._ANTHROPIC_KEY||'';
-    if(!key){ toast('Configura tu API Key de Anthropic en Configuración','error'); return; }
+  // Lista de líneas
+  document.getElementById('ria-lista').innerHTML = lineas.map(l=>{
+    const d = (l.descripcion||'').replace(/\n/g,' · ').substring(0,110);
+    const cant = l.cantidad||1;
+    const pv = (l.precio_venta||0).toFixed(2).replace('.',',');
+    return `<div style="display:flex;gap:8px;padding:3px 0;border-bottom:1px dashed #e8e0d4">
+      <span style="flex:1">${d.replace(/</g,'&lt;')}</span>
+      <span style="color:var(--text-soft);white-space:nowrap;font-variant-numeric:tabular-nums">${cant} × ${pv}€</span>
+    </div>`;
+  }).join('');
 
-    toast('🤖 Generando descripción con IA…');
-    const resumen = lineas.map(l=>`- ${l.descripcion} (${l.cantidad||1} ud)`).join('\n');
+  // Reset modo y descripción
+  document.querySelector('input[name="ria-modo"][value="ia"]').checked = true;
+  document.querySelector('input[name="ria-accion"][value="interno"]').checked = true;
+  document.getElementById('ria-desc').value = '';
+  document.getElementById('ria-ia-status').textContent = '';
+  riaSetModo('ia');
 
-    try{
-      const resp = await fetch('https://api.anthropic.com/v1/messages',{
-        method:'POST',
-        headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-        body:JSON.stringify({
-          model:'claude-sonnet-4-20250514',
-          max_tokens:300,
-          system:`Eres un interiorista profesional. Genera una descripción breve y elegante (2-3 frases) para un presupuesto de cliente, resumiendo los productos/mobiliario listados. NO menciones referencias de producto, códigos, ni precios unitarios. Usa un tono profesional y atractivo. Responde SOLO con la descripción, sin comillas ni formato extra.`,
-          messages:[{role:'user',content:`Resume estas ${lineas.length} partidas de mobiliario/interiorismo para presentar al cliente:\n\n${resumen}`}]
-        })
-      });
-      if(!resp.ok) throw new Error('Error API '+resp.status);
-      const data = await resp.json();
-      descripcion = data.content.filter(b=>b.type==='text').map(b=>b.text).join('').trim();
-    }catch(e){
-      toast('Error IA: '+e.message+'. Escribe manualmente.','error');
-      descripcion = prompt('Descripción para el cliente:','Mobiliario y equipamiento según diseño');
-      if(!descripcion) return;
-    }
+  openModal('m-pres-resumen-ia');
+}
+
+function riaSetModo(modo){
+  const ctrl = document.getElementById('ria-ia-controls');
+  const iaLbl = document.getElementById('ria-modo-ia-lbl');
+  const manLbl = document.getElementById('ria-modo-man-lbl');
+  if(modo==='ia'){
+    ctrl.style.display = '';
+    iaLbl.style.borderColor = 'var(--navy)';
+    iaLbl.style.background = '#f0f4fa';
+    manLbl.style.borderColor = 'var(--border)';
+    manLbl.style.background = '';
   } else {
-    descripcion = prompt('Descripción para el cliente:','Mobiliario y equipamiento según diseño');
-    if(!descripcion) return;
+    ctrl.style.display = 'none';
+    manLbl.style.borderColor = 'var(--navy)';
+    manLbl.style.background = '#f0f4fa';
+    iaLbl.style.borderColor = 'var(--border)';
+    iaLbl.style.background = '';
+    document.getElementById('ria-desc').focus();
   }
+}
 
-  // Preguntar qué hacer con las líneas detalladas
-  const mantener = confirm(
-    `Descripción generada:\n"${descripcion}"\n\nPrecio total: ${totPvp.toFixed(2)}€\n\n` +
-    `¿Mantener las líneas detalladas como INTERNAS?\n\n` +
-    `[Aceptar] = Mantener detalle como interno (pedidos) + línea resumen (cliente)\n[Cancelar] = Eliminar detalle, dejar solo resumen`
-  );
+function riaSetAccion(accion){
+  const intLbl = document.getElementById('ria-acc-int-lbl');
+  const delLbl = document.getElementById('ria-acc-del-lbl');
+  if(accion==='interno'){
+    intLbl.style.borderColor = '#7b3fa0';
+    intLbl.style.background = '#f5f0ff';
+    delLbl.style.borderColor = 'var(--border)';
+    delLbl.style.background = '';
+  } else {
+    delLbl.style.borderColor = '#c62828';
+    delLbl.style.background = '#fff0f0';
+    intLbl.style.borderColor = 'var(--border)';
+    intLbl.style.background = '';
+  }
+}
 
-  // Obtener proyecto y versión actuales
+async function riaGenerarIA(){
+  if(!_riaCtx){ toast('Contexto perdido','error'); return; }
+  const key = window._ANTHROPIC_KEY||'';
+  if(!key){ toast('Configura tu API Key de Anthropic en Configuración','error'); return; }
+
+  const btn = document.getElementById('ria-btn-generar');
+  const status = document.getElementById('ria-ia-status');
+  btn.disabled = true;
+  btn.innerHTML = '⏳ Generando…';
+  status.textContent = 'Consultando a Claude…';
+
+  const resumen = _riaCtx.lineas.map(l=>`- ${(l.descripcion||'').replace(/\n/g,' ')} (${l.cantidad||1} ud)`).join('\n');
+
+  try{
+    const resp = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:400,
+        system:`Eres un interiorista profesional. Genera una descripción breve y elegante (2-3 frases) para un presupuesto de cliente, resumiendo los productos/mobiliario listados. NO menciones referencias de producto, códigos, ni precios unitarios. Usa un tono profesional y atractivo. Responde SOLO con la descripción, sin comillas ni formato extra.`,
+        messages:[{role:'user',content:`Resume estas ${_riaCtx.lineas.length} partidas de mobiliario/interiorismo para presentar al cliente:\n\n${resumen}`}]
+      })
+    });
+    if(!resp.ok) throw new Error('API '+resp.status);
+    const data = await resp.json();
+    const txt = data.content.filter(b=>b.type==='text').map(b=>b.text).join('').trim();
+    document.getElementById('ria-desc').value = txt;
+    status.innerHTML = '<span style="color:#2e7d32">✅ Generado. Puedes editarlo antes de guardar.</span>';
+  }catch(e){
+    status.innerHTML = '<span style="color:#c62828">❌ Error: '+e.message+'</span>';
+  }finally{
+    btn.disabled = false;
+    btn.innerHTML = '🤖 Regenerar con IA';
+  }
+}
+
+async function riaConfirmar(){
+  if(!_riaCtx){ toast('Contexto perdido','error'); return; }
+  const descripcion = document.getElementById('ria-desc').value.trim();
+  if(!descripcion){ toast('Escribe o genera una descripción antes de guardar','error'); return; }
+  const accion = document.querySelector('input[name="ria-accion"]:checked').value;
+
   const proy = document.getElementById('pres-proyecto-sel')?.value;
   const ver = document.getElementById('pres-version-sel')?.value || 'v1';
   if(!proy){ toast('No hay proyecto seleccionado','error'); return; }
 
-  try{
-    // Obtener orden máximo
-    const maxOrden = PresC.reduce((m,l)=>Math.max(m,l.orden||0),0);
+  const btn = document.getElementById('ria-btn-guardar');
+  btn.disabled = true;
+  btn.innerHTML = '⏳ Guardando…';
 
-    // Margen sobre PVP SIN descuento (para que el Doc. Final detecte el dto)
+  try{
+    const {ids, totCoste, totPvp, totPvpSinDto, dtoDetectado, lineas} = _riaCtx;
+    const maxOrden = PresC.reduce((m,l)=>Math.max(m,l.orden||0),0);
     const margenPct = totCoste>0 ? ((totPvpSinDto-totCoste)/totCoste*100) : 0;
 
-    // Crear línea resumen para el cliente (con dto visible)
     await sbPost('presupuesto_lineas',{
       proyecto_id:proy, version:ver,
       descripcion:descripcion,
@@ -8376,8 +8514,7 @@ async function presAgruparCliente(){
       orden:maxOrden+1
     });
 
-    if(mantener){
-      // Marcar las líneas detalladas como internas automáticamente
+    if(accion==='interno'){
       for(const id of ids){
         const l = PresC.find(x=>x.id===id);
         if(l && !l.es_capitulo){
@@ -8387,15 +8524,22 @@ async function presAgruparCliente(){
       }
       toast('📋 Resumen creado + '+lineas.length+' líneas marcadas como internas');
     } else {
-      // Borrar las líneas originales
       for(const id of ids){
         const l = PresC.find(x=>x.id===id);
         if(l && !l.es_capitulo) await sbDelete('presupuesto_lineas', id);
       }
-      toast('📋 Línea resumen creada, detalle eliminado');
+      toast('📋 Resumen creado, detalle eliminado');
     }
+
+    closeModal('m-pres-resumen-ia');
+    _riaCtx = null;
     loadPresupuesto();
-  }catch(e){ toast('Error: '+e.message,'error'); }
+  }catch(e){
+    toast('Error: '+e.message,'error');
+  }finally{
+    btn.disabled = false;
+    btn.innerHTML = '💾 Crear línea resumen';
+  }
 }
 
 async function eliminarProyectoCompleto(proyId){
@@ -31696,7 +31840,7 @@ renderPresupuesto=function(){
              <span>${fmt(ss.cert)} / ${fmt(ss.sub)}</span>
            </div>`
         : '';
-      return `<tr draggable="true" data-id="${l.id}" data-orden="${l.orden}" style="background:#f7f4ef"><td style="width:28px"></td><td style="padding:4px 3px;cursor:grab;color:#bbb;text-align:center;font-size:14px;user-select:none" title="Arrastrar">⠿</td><td colspan="${ciActivo?10:9}" style="padding:9px 10px;font-weight:700;font-size:12px;color:#4a3728;border-bottom:2px solid #b87333">${l.descripcion}${_showSub&&_capSub>0?`<span style="float:right;font-size:12px;color:#b87333;font-weight:700">${fmt(_capSub)}</span>`:''}${infoCap}</td><td></td><td><div style="display:flex;gap:3px"><button class="btn btn-icon btn-sm" style="background:${_showSub?'#b87333':'#f0ebe4'};border:none;color:${_showSub?'#fff':'#8a7a6a'};font-size:11px;padding:3px 7px;font-weight:700" title="${_showSub?'Ocultar subtotal capítulo':'Mostrar subtotal capítulo'}" onclick="toggleCapSubtotal('${l.id}')">Σ</button><button class="btn btn-icon btn-sm" style="background:#e8f0e8;border:none;color:#2d6a2d;font-size:13px;padding:3px 8px" title="Editar capítulo" onclick="editCapitulo('${l.id}')" >✏️</button><button class="btn btn-icon btn-sm" style="background:#e8e0d4;border:none;color:#4a3728;font-size:10px;padding:3px 7px;white-space:nowrap" title="Duplicar capítulo completo" onclick="duplicarCapituloCompleto('${l.id}')">📋 Dup.</button><button class="btn btn-icon btn-sm" style="background:#fde8e8;border:none;color:#c62828" onclick="confirmDelete('presupuesto_lineas','${l.id}','${(l.descripcion||'').replace(/'/g,'')}')">🗑</button></div></td></tr>`;
+      return `<tr draggable="true" data-id="${l.id}" data-orden="${l.orden}" style="background:#f7f4ef"><td style="width:28px"></td><td style="padding:4px 3px;cursor:grab;color:#bbb;text-align:center;font-size:14px;user-select:none" title="Arrastrar">⠿</td><td colspan="${ciActivo?10:9}" style="padding:9px 10px;font-weight:700;font-size:12px;color:#4a3728;border-bottom:2px solid #b87333;line-height:1.5">${(l.descripcion||'').replace(/\n/g,'<br>')}${_showSub&&_capSub>0?`<span style="float:right;font-size:12px;color:#b87333;font-weight:700">${fmt(_capSub)}</span>`:''}${infoCap}</td><td></td><td><div style="display:flex;gap:3px"><button class="btn btn-icon btn-sm" style="background:${_showSub?'#b87333':'#f0ebe4'};border:none;color:${_showSub?'#fff':'#8a7a6a'};font-size:11px;padding:3px 7px;font-weight:700" title="${_showSub?'Ocultar subtotal capítulo':'Mostrar subtotal capítulo'}" onclick="toggleCapSubtotal('${l.id}')">Σ</button><button class="btn btn-icon btn-sm" style="background:#e8f0e8;border:none;color:#2d6a2d;font-size:13px;padding:3px 8px" title="Editar capítulo" onclick="editCapitulo('${l.id}')" >✏️</button><button class="btn btn-icon btn-sm" style="background:#e8e0d4;border:none;color:#4a3728;font-size:10px;padding:3px 7px;white-space:nowrap" title="Duplicar capítulo completo" onclick="duplicarCapituloCompleto('${l.id}')">📋 Dup.</button><button class="btn btn-icon btn-sm" style="background:#fde8e8;border:none;color:#c62828" onclick="confirmDelete('presupuesto_lineas','${l.id}','${(l.descripcion||'').replace(/'/g,'')}')">🗑</button></div></td></tr>`;
     }
     const pv=l.precio_venta||0,ci=l.ci_gg_bi_pct||0,sub=(l.cantidad||0)*pv,subCI=ci>0?sub*(1+ci/100):sub;
     const ivaPctNum=ivaPct(l.iva_pct),ivaImporte=subCI*ivaPctNum/100;
@@ -31708,7 +31852,7 @@ renderPresupuesto=function(){
     const rowStyle = esInterno?'background:#f5f0ff;opacity:0.7;':(ec.rowBg?`background:${ec.rowBg};`:'');
     const internoBadge = esInterno?'<span style="font-size:8px;background:#e0d4f0;color:#6a3fa0;padding:1px 4px;border-radius:3px;margin-left:4px;font-weight:600" title="Solo interno — no aparece en Doc. Final">👁 INTERNO</span>':'';
     const badge = `<span onclick="cyclePresEstado('${l.id}',event)" title="Click: cambiar estado (${ec.txt})" style="display:inline-block;cursor:pointer;user-select:none;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:700;background:${ec.badgeBg};color:${ec.color};margin-right:6px;vertical-align:middle">${ec.lbl} ${ec.txt}</span>`;
-    return `<tr draggable="true" data-id="${l.id}" data-orden="${l.orden}" data-search="${(l.descripcion||'').toLowerCase()}" style="${rowStyle}"><td style="text-align:center;width:28px;padding:4px"><input type="checkbox" class="pres-chk" value="${l.id}" style="width:15px;height:15px;cursor:pointer"></td><td style="padding:4px 3px;cursor:grab;color:#bbb;text-align:center;font-size:14px;user-select:none" title="Arrastrar para reordenar">⠿</td><td style="color:var(--text-soft);font-size:11px">${i+1}</td><td>${badge}<strong>${l.descripcion||'—'}</strong>${internoBadge}${l.ref_cype?`<br><span style="font-size:9px;color:var(--text-soft)">${l.ref_cype}</span>`:''}</td><td style="text-align:center">${l.unidad||'—'}</td><td class="td-mono">${l.cantidad||0}</td><td class="td-mono">${fmt(l.precio_base)}</td><td class="td-mono" style="color:var(--green)">${l.margen_pct>0?fmtP(l.margen_pct):'—'}</td><td class="td-mono" style="color:var(--amber)">${ci>0?fmtP(ci):'—'}</td><td class="td-mono" style="font-weight:700">${fmt(pv)}</td><td class="td-mono" style="font-weight:700;color:var(--navy)">${fmt(subCI)}</td><td style="text-align:center;vertical-align:middle"><span class="badge b-gray">${l.iva_pct||'10%'}</span></td><td class="td-mono" style="font-weight:700;color:var(--copper)">${esExento?'<span style="color:var(--text-soft);font-size:10px">Exento</span>':fmt(subCI+ivaImporte)}</td><td><div class="td-actions"><button class="btn btn-ghost btn-icon btn-sm" title="Duplicar" onclick="duplicarLineaPresupuesto('${l.id}')">⧉</button><button class="btn btn-ghost btn-icon btn-sm" onclick="editLineaPresupuesto('${l.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('presupuesto_lineas','${l.id}','${(l.descripcion||'').replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`;
+    return `<tr draggable="true" data-id="${l.id}" data-orden="${l.orden}" data-search="${(l.descripcion||'').toLowerCase()}" style="${rowStyle}"><td style="text-align:center;width:28px;padding:4px"><input type="checkbox" class="pres-chk" value="${l.id}" style="width:15px;height:15px;cursor:pointer"></td><td style="padding:4px 3px;cursor:grab;color:#bbb;text-align:center;font-size:14px;user-select:none" title="Arrastrar para reordenar">⠿</td><td style="color:var(--text-soft);font-size:11px">${i+1}</td><td style="line-height:1.5">${badge}<strong>${(l.descripcion||'—').replace(/\n/g,'<br>')}</strong>${internoBadge}${l.ref_cype?`<br><span style="font-size:9px;color:var(--text-soft)">${l.ref_cype}</span>`:''}</td><td style="text-align:center">${l.unidad||'—'}</td><td class="td-mono">${l.cantidad||0}</td><td class="td-mono">${fmt(l.precio_base)}</td><td class="td-mono" style="color:var(--green)">${l.margen_pct>0?fmtP(l.margen_pct):'—'}</td><td class="td-mono" style="color:var(--amber)">${ci>0?fmtP(ci):'—'}</td><td class="td-mono" style="font-weight:700">${fmt(pv)}</td><td class="td-mono" style="font-weight:700;color:var(--navy)">${fmt(subCI)}</td><td style="text-align:center;vertical-align:middle"><span class="badge b-gray">${l.iva_pct||'10%'}</span></td><td class="td-mono" style="font-weight:700;color:var(--copper)">${esExento?'<span style="color:var(--text-soft);font-size:10px">Exento</span>':fmt(subCI+ivaImporte)}</td><td><div class="td-actions"><button class="btn btn-ghost btn-icon btn-sm" title="Duplicar" onclick="duplicarLineaPresupuesto('${l.id}')">⧉</button><button class="btn btn-ghost btn-icon btn-sm" onclick="editLineaPresupuesto('${l.id}')">✏️</button><button class="btn btn-ghost btn-icon btn-sm" onclick="confirmDelete('presupuesto_lineas','${l.id}','${(l.descripcion||'').replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`;
   }).join('');
   // Reaplica CI+GG+BI hide a los TDs nuevos
   tbody.querySelectorAll('td:nth-child(7)').forEach(td=>{ td.style.display = ciActivo ? '' : 'none'; });
