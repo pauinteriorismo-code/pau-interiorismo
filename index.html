@@ -1648,6 +1648,8 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
             <div style="border-top:1px solid #eee;margin:2px 0"></div>
             <div onclick="abrirCertificarPartidas();this.closest('.pres-dd-menu').classList.remove('pres-dd-open')" style="padding:7px 14px;cursor:pointer;font-size:11px;color:#b87333" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background=''">🏗️ Certificar partidas</div>
             <div onclick="convertirPresupuestoAFactura();this.closest('.pres-dd-menu').classList.remove('pres-dd-open')" style="padding:7px 14px;cursor:pointer;font-size:11px;color:var(--green)" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background=''">🧾 Crear factura</div>
+            <div style="border-top:1px solid #eee;margin:2px 0"></div>
+            <div onclick="generarEstadoCuentaCliente();this.closest('.pres-dd-menu').classList.remove('pres-dd-open')" style="padding:7px 14px;cursor:pointer;font-size:11px;color:#7b3fa0;font-weight:700" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background=''">📊 Estado de cuenta del cliente</div>
           </div>
         </div>
         <!-- ═══ DESPLEGABLE: MÁS ═══ -->
@@ -11035,6 +11037,246 @@ function _driveFolderId(proyId){
   const url=p?.carpeta_drive||'';
   const m=url.match(/folders\/([a-zA-Z0-9_-]+)/);
   return m?m[1]:null;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// ESTADO DE CUENTA DEL CLIENTE
+// Documento CLIENTE-FACING con detalle de:
+//   · Facturado (transferencia, con IVA) + estado de cobro
+//   · Cobrado en efectivo (notas sin factura, sin IVA)
+//   · Total cobrado y pendiente
+// Se dispara desde el dropdown Exportar de Presupuesto.
+// ═══════════════════════════════════════════════════════════════════
+async function generarEstadoCuentaCliente(){
+  const proyId = document.getElementById('pres-proyecto-sel')?.value;
+  if(!proyId){ toast('Selecciona un proyecto primero','error'); return; }
+  const p = (PC||[]).find(x=>x.proyecto_id===proyId);
+  if(!p){ toast('Proyecto no encontrado','error'); return; }
+  const jsPDF = window.jspdf?.jsPDF;
+  if(!jsPDF){ toast('jsPDF no disponible','error'); return; }
+
+  toast('📊 Generando estado de cuenta…');
+
+  const cli = (CC||[]).find(c=>String(c.id)===String(p.cliente_id)||c.cliente_id===p.cliente_id) || {};
+  // Facturas de venta
+  if(typeof FC==='undefined' || !FC){ try{ FC = await sbGet('facturas','?order=fecha_emision.asc'); }catch(e){ FC=[]; } }
+  const facturas = (FC||[])
+    .filter(f=>f.proyecto_id===proyId && (f.tipo_factura||'Venta')==='Venta')
+    .sort((a,b)=>String(a.fecha_emision||'').localeCompare(String(b.fecha_emision||'')));
+  // Entregas a cuenta / notas sin factura
+  if(typeof EAC==='undefined' || !EAC){ try{ EAC = await sbGet('entregas_cuenta','?order=fecha.asc'); }catch(e){ EAC=[]; } }
+  const entregas = (EAC||[])
+    .filter(e=>e.proyecto_id===proyId)
+    .sort((a,b)=>String(a.fecha||'').localeCompare(String(b.fecha||'')));
+  // Presupuesto aprobado (aceptado si existe, si no la última versión cargada)
+  let presLineas=[];
+  try{ presLineas = await sbGet('presupuesto_lineas',`?proyecto_id=eq.${proyId}&es_capitulo=eq.false`); }catch(e){ presLineas=[]; }
+  const verAprobada = p.presupuesto_aceptado_version || document.getElementById('pres-version-sel')?.value || 'v1';
+  const lineasVer = presLineas.filter(l=> (l.version||'v1')===verAprobada && l.categoria!=='interno');
+  let presBase=0, presIvaImp=0;
+  lineasVer.forEach(l=>{
+    const pv=l.precio_venta||0, ci=l.ci_gg_bi_pct||0;
+    const sub=(l.cantidad||0)*pv, subCI=ci>0?sub*(1+ci/100):sub;
+    presBase += subCI;
+    const pctIva = ivaPct(l.iva_pct);
+    if(pctIva>0) presIvaImp += subCI*pctIva/100;
+  });
+  const presTotal = presBase + presIvaImp;
+
+  // Facturado: totales y cobrado
+  const ESTADOS_PAGADO = ['Pagada','Cobrada','Pagado','Cobrado'];
+  let facturadoBase=0, facturadoIva=0, facturadoTotal=0;
+  let cobradoFact=0, pendienteFact=0;
+  facturas.forEach(f=>{
+    const base = parseFloat(f.base_imponible)||0;
+    const pct = ivaPct(f.iva_pct);
+    const iva = base*pct/100;
+    const tot = base + iva;
+    facturadoBase += base; facturadoIva += iva; facturadoTotal += tot;
+    if(ESTADOS_PAGADO.includes(f.estado)) cobradoFact += tot;
+    else pendienteFact += tot;
+  });
+  const cobradoEfectivo = entregas.reduce((s,e)=>s+(parseFloat(e.importe)||0),0);
+  const totalCobrado = cobradoFact + cobradoEfectivo;
+  const pendienteTotal = Math.max(0, presTotal - totalCobrado);
+
+  // ─── PDF ───
+  const pdf = new jsPDF('p','mm','a4');
+  const pW=210, pH=297, mX=14;
+  let y=14;
+  let cfg={}; try{ cfg=await getCfg(); }catch(e){}
+
+  // Logo + cabecera
+  try{ pdf.addImage(PAU_LOGO,'PNG',mX,y,50,25); }catch(e){}
+  pdf.setFontSize(9); pdf.setTextColor(100); pdf.setFont(undefined,'normal');
+  pdf.text(cfg.razon_social||'PAU INTERIORISMO S.L.', mX+54, y+5);
+  pdf.text(cfg.direccion||'', mX+54, y+9);
+  pdf.text(`CIF: ${cfg.cif||''}  ·  Tel: ${cfg.telefono||''}`, mX+54, y+13);
+  if(cfg.email) pdf.text(cfg.email, mX+54, y+17);
+
+  pdf.setFontSize(16); pdf.setTextColor(30,60,100); pdf.setFont(undefined,'bold');
+  pdf.text('ESTADO DE CUENTA', pW-mX, y+6, {align:'right'});
+  pdf.setFontSize(9); pdf.setTextColor(100); pdf.setFont(undefined,'normal');
+  const hoy = new Date().toISOString().split('T')[0];
+  pdf.text(`Fecha: ${fmtD(hoy)}`, pW-mX, y+13, {align:'right'});
+  pdf.text(`Ref. ${p.proyecto_id||''}`, pW-mX, y+17, {align:'right'});
+  y+=26; pdf.setDrawColor(184,115,51); pdf.setLineWidth(0.6); pdf.line(mX,y,pW-mX,y); y+=8;
+
+  // ─── DATOS CLIENTE / PROYECTO ───
+  pdf.setFontSize(10); pdf.setTextColor(40); pdf.setFont(undefined,'bold');
+  pdf.text('Cliente:', mX, y);
+  pdf.setFont(undefined,'normal'); pdf.text(cli.nombre||p.cliente_id||'—', mX+24, y); y+=5;
+  if(cli.cif||cli.dni){ pdf.setFont(undefined,'bold'); pdf.text('CIF/NIF:', mX, y); pdf.setFont(undefined,'normal'); pdf.text(cli.cif||cli.dni||'—', mX+24, y); y+=5; }
+  pdf.setFont(undefined,'bold'); pdf.text('Proyecto:', mX, y);
+  pdf.setFont(undefined,'normal'); pdf.text(`${p.proyecto_id||''} · ${p.nombre||''}`, mX+24, y); y+=5;
+  if(p.direccion_obra){ pdf.setFont(undefined,'bold'); pdf.text('Dirección:', mX, y); pdf.setFont(undefined,'normal'); pdf.text(p.direccion_obra, mX+24, y); y+=5; }
+  y+=4;
+
+  // ─── RESUMEN ───
+  pdf.setFillColor(30,60,100); pdf.setTextColor(255); pdf.setFont(undefined,'bold'); pdf.setFontSize(11);
+  pdf.rect(mX,y,pW-2*mX,8,'F'); pdf.text('RESUMEN ECONÓMICO', mX+3, y+5.5); y+=12;
+  pdf.setFontSize(10); pdf.setTextColor(40); pdf.setFont(undefined,'normal');
+
+  const rowResumen = (lbl, val, opts={})=>{
+    if(opts.bg){ pdf.setFillColor(...opts.bg); pdf.rect(mX, y-4, pW-2*mX, 6, 'F'); }
+    pdf.setFont(undefined, opts.bold?'bold':'normal');
+    if(opts.color) pdf.setTextColor(...opts.color); else pdf.setTextColor(40);
+    pdf.text(lbl, mX+3, y);
+    pdf.text(val, pW-mX-3, y, {align:'right'});
+    pdf.setTextColor(40);
+    y+=6;
+  };
+
+  rowResumen('Presupuesto aprobado (base imponible)', fmt(presBase));
+  if(presIvaImp>0) rowResumen('IVA del presupuesto', fmt(presIvaImp));
+  rowResumen('Presupuesto aprobado TOTAL', fmt(presTotal), {bold:true, bg:[245,247,250]});
+  y+=2;
+  rowResumen('Facturado por transferencia (con IVA)', fmt(facturadoTotal));
+  rowResumen('  · Cobrado', fmt(cobradoFact), {color:[46,125,50]});
+  if(pendienteFact>0) rowResumen('  · Pendiente de cobro', fmt(pendienteFact), {color:[198,40,40]});
+  y+=1;
+  rowResumen('Cobrado en efectivo (sin factura, sin IVA)', fmt(cobradoEfectivo), {color:[46,125,50]});
+  y+=2;
+  rowResumen('TOTAL COBRADO HASTA LA FECHA', fmt(totalCobrado), {bold:true, bg:[230,245,230], color:[30,90,30]});
+  rowResumen('PENDIENTE DEL PRESUPUESTO', fmt(pendienteTotal), {bold:true, bg:[255,240,225], color:[180,80,20]});
+  y+=4;
+
+  // ─── FACTURAS EMITIDAS ───
+  if(y>230){ pdf.addPage(); y=20; }
+  pdf.setFillColor(30,60,100); pdf.setTextColor(255); pdf.setFont(undefined,'bold'); pdf.setFontSize(11);
+  pdf.rect(mX,y,pW-2*mX,8,'F'); pdf.text(`FACTURAS EMITIDAS (${facturas.length})`, mX+3, y+5.5);
+  pdf.setFontSize(8); pdf.setFont(undefined,'normal');
+  pdf.text('Pago por transferencia · IVA incluido', pW-mX-3, y+5.5, {align:'right'});
+  y+=11;
+  pdf.setFontSize(8); pdf.setTextColor(100); pdf.setFont(undefined,'bold');
+  pdf.text('Nº', mX+1, y);
+  pdf.text('Fecha', mX+26, y);
+  pdf.text('Concepto', mX+48, y);
+  pdf.text('Base', pW-mX-56, y, {align:'right'});
+  pdf.text('IVA', pW-mX-40, y, {align:'right'});
+  pdf.text('Total', pW-mX-22, y, {align:'right'});
+  pdf.text('Estado', pW-mX-3, y, {align:'right'});
+  y+=2; pdf.setDrawColor(200); pdf.line(mX,y,pW-mX,y); y+=4;
+  pdf.setFont(undefined,'normal'); pdf.setTextColor(40);
+  facturas.forEach((f,i)=>{
+    if(y>275){ pdf.addPage(); y=20; }
+    if(i%2===0){ pdf.setFillColor(250,251,253); pdf.rect(mX,y-3.5,pW-2*mX,5.5,'F'); }
+    const base = parseFloat(f.base_imponible)||0;
+    const pct = ivaPct(f.iva_pct);
+    const iva = base*pct/100;
+    const tot = base + iva;
+    const concepto = (f.concepto||'—');
+    const concT = concepto.length>30?concepto.substring(0,28)+'…':concepto;
+    pdf.text(String(f.num_factura||'—'), mX+1, y);
+    pdf.text(fmtD(f.fecha_emision)||'—', mX+26, y);
+    pdf.text(concT, mX+48, y);
+    pdf.text(fmt(base), pW-mX-56, y, {align:'right'});
+    pdf.text(fmt(iva), pW-mX-40, y, {align:'right'});
+    pdf.setFont(undefined,'bold'); pdf.text(fmt(tot), pW-mX-22, y, {align:'right'}); pdf.setFont(undefined,'normal');
+    const pagado = ESTADOS_PAGADO.includes(f.estado);
+    pdf.setTextColor(pagado?46:198, pagado?125:40, pagado?50:40);
+    pdf.text(pagado?'Pagada':(f.estado||'Pendiente'), pW-mX-3, y, {align:'right'});
+    pdf.setTextColor(40);
+    y+=5.5;
+  });
+  if(!facturas.length){ pdf.setTextColor(150); pdf.text('Sin facturas emitidas', mX+3, y); y+=6; }
+  // Total facturado
+  pdf.setDrawColor(200); pdf.line(mX,y,pW-mX,y); y+=4;
+  pdf.setFont(undefined,'bold'); pdf.setTextColor(30,60,100);
+  pdf.text('Total facturado', mX+1, y);
+  pdf.text(fmt(facturadoBase), pW-mX-56, y, {align:'right'});
+  pdf.text(fmt(facturadoIva), pW-mX-40, y, {align:'right'});
+  pdf.text(fmt(facturadoTotal), pW-mX-22, y, {align:'right'});
+  pdf.setFont(undefined,'normal'); pdf.setTextColor(40);
+  y+=8;
+
+  // ─── COBROS EN EFECTIVO ───
+  if(y>240){ pdf.addPage(); y=20; }
+  pdf.setFillColor(123,58,168); pdf.setTextColor(255); pdf.setFont(undefined,'bold'); pdf.setFontSize(11);
+  pdf.rect(mX,y,pW-2*mX,8,'F'); pdf.text(`COBROS EN EFECTIVO (${entregas.length})`, mX+3, y+5.5);
+  pdf.setFontSize(8); pdf.setFont(undefined,'normal');
+  pdf.text('Sin factura · sin IVA', pW-mX-3, y+5.5, {align:'right'});
+  y+=11;
+  pdf.setFontSize(8); pdf.setTextColor(100); pdf.setFont(undefined,'bold');
+  pdf.text('Fecha', mX+1, y);
+  pdf.text('Tipo', mX+25, y);
+  pdf.text('Concepto', mX+62, y);
+  pdf.text('Importe', pW-mX-3, y, {align:'right'});
+  y+=2; pdf.setDrawColor(200); pdf.line(mX,y,pW-mX,y); y+=4;
+  pdf.setFont(undefined,'normal'); pdf.setTextColor(40);
+  entregas.forEach((e,i)=>{
+    if(y>275){ pdf.addPage(); y=20; }
+    if(i%2===0){ pdf.setFillColor(250,248,253); pdf.rect(mX,y-3.5,pW-2*mX,5.5,'F'); }
+    const conc = e.concepto||'—';
+    const concT = conc.length>60?conc.substring(0,57)+'…':conc;
+    const tipo = (e.tipo||'Entrega a cuenta').replace('Nota sin factura','Efectivo');
+    pdf.text(fmtD(e.fecha)||'—', mX+1, y);
+    pdf.text(tipo.substring(0,17), mX+25, y);
+    pdf.text(concT, mX+62, y);
+    pdf.setFont(undefined,'bold'); pdf.text(fmt(parseFloat(e.importe)||0), pW-mX-3, y, {align:'right'}); pdf.setFont(undefined,'normal');
+    y+=5.5;
+  });
+  if(!entregas.length){ pdf.setTextColor(150); pdf.text('Sin cobros en efectivo registrados', mX+3, y); y+=6; }
+  pdf.setDrawColor(200); pdf.line(mX,y,pW-mX,y); y+=4;
+  pdf.setFont(undefined,'bold'); pdf.setTextColor(123,58,168);
+  pdf.text('Total en efectivo', mX+1, y);
+  pdf.text(fmt(cobradoEfectivo), pW-mX-3, y, {align:'right'});
+  pdf.setFont(undefined,'normal'); pdf.setTextColor(40);
+  y+=10;
+
+  // ─── CIERRE / FIRMAS ───
+  if(y>240){ pdf.addPage(); y=20; }
+  pdf.setFillColor(245,230,215); pdf.rect(mX, y, pW-2*mX, 18, 'F');
+  pdf.setFont(undefined,'bold'); pdf.setFontSize(12); pdf.setTextColor(180,80,20);
+  pdf.text('TOTAL PAGADO POR EL CLIENTE', mX+3, y+7);
+  pdf.setFontSize(14); pdf.text(fmt(totalCobrado), pW-mX-3, y+7, {align:'right'});
+  pdf.setFontSize(10); pdf.setFont(undefined,'normal'); pdf.setTextColor(120);
+  pdf.text('Pendiente del presupuesto', mX+3, y+14);
+  pdf.setFont(undefined,'bold'); pdf.setTextColor(180,80,20);
+  pdf.text(fmt(pendienteTotal), pW-mX-3, y+14, {align:'right'});
+  y+=24;
+
+  // Firmas
+  if(y>265){ pdf.addPage(); y=30; } else y+=10;
+  pdf.setFont(undefined,'normal'); pdf.setFontSize(9); pdf.setTextColor(100);
+  pdf.text('Firma de conformidad del cliente', mX, y);
+  pdf.text('PAU INTERIORISMO S.L.', pW-mX-60, y);
+  y+=14; pdf.setDrawColor(150); pdf.line(mX, y, mX+60, y); pdf.line(pW-mX-60, y, pW-mX, y);
+
+  // ─── PIE ───
+  const totalPaginas = pdf.internal.getNumberOfPages();
+  for(let i=1;i<=totalPaginas;i++){
+    pdf.setPage(i);
+    pdf.setFontSize(8); pdf.setTextColor(140);
+    pdf.text(`Estado de cuenta · ${p.proyecto_id} · ${cli.nombre||p.cliente_id||''} · Generado ${fmtD(hoy)}`, mX, pH-8);
+    pdf.text(`Página ${i} de ${totalPaginas}`, pW-mX, pH-8, {align:'right'});
+  }
+
+  // Guardar
+  const safe = (typeof _safeNombre==='function' ? _safeNombre(p.nombre||'') : (p.nombre||'').replace(/[^a-zA-Z0-9_\-]/g,'_'));
+  const fileName = `Estado_Cuenta_${p.proyecto_id}_${safe}_${hoy}.pdf`;
+  pdf.save(fileName);
+  toast('📊 Estado de cuenta descargado ✅');
 }
 
 // Resuelve la URL de una subcarpeta dentro del proyecto en Drive vía Apps Script.
