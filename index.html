@@ -8545,10 +8545,26 @@ async function riaGenerarIA(){
   const p = (typeof PC!=='undefined' ? PC.find(x=>x.proyecto_id===proyId) : null) || {};
   const cli = (typeof CC!=='undefined' ? CC.find(x=>x.cliente_id===cliId || x.cliente_id===p.cliente_id) : null) || {};
 
-  const {lineas, totCoste, totPvp, totPvpSinDto, dtoDetectado} = _riaCtx;
+  const {lineas, ids, totCoste, totPvp, totPvpSinDto, dtoDetectado} = _riaCtx;
 
-  // Detalle de cada línea con cantidad, unidad y PVP total
-  const detalle = lineas.map(l=>{
+  // ═══ CONTEXTO AMPLIADO ═══
+  // La línea puede ser ya un resumen. Para que la IA pueda describir técnicamente,
+  // le pasamos TODAS las líneas del presupuesto (incluidas las marcadas como internas)
+  // como "detalle técnico completo del conjunto".
+  const ver = document.getElementById('pres-version-sel')?.value || 'v1';
+  const todasLineas = (typeof PresC!=='undefined' ? PresC : [])
+    .filter(l => l.version===ver && !l.es_capitulo && !ids.includes(l.id));
+
+  // Línea principal = la(s) seleccionada(s)
+  const detalleSeleccion = lineas.map(l=>{
+    const d = (l.descripcion||'').replace(/\n/g,' — ').trim();
+    const cant = l.cantidad||1;
+    const ud = l.unidad||'Ud';
+    return `- ${d} · ${cant} ${ud}`;
+  }).join('\n');
+
+  // Detalle técnico completo (para que la IA sepa qué hay realmente)
+  const detalleTecnico = todasLineas.map(l=>{
     const d = (l.descripcion||'').replace(/\n/g,' — ').trim();
     const cant = l.cantidad||1;
     const ud = l.unidad||'Ud';
@@ -8559,41 +8575,50 @@ async function riaGenerarIA(){
     cli.nombre ? `Cliente: ${cli.nombre}` : null,
     p.nombre ? `Proyecto: ${p.nombre}` : null,
     p.tipo ? `Tipo de proyecto: ${p.tipo}` : null,
-    `Nº de partidas a agrupar: ${lineas.length}`,
     `PVP total del conjunto: ${totPvp.toFixed(2)} €`,
-    dtoDetectado>0 ? `Descuento aplicado: ${dtoDetectado.toFixed(1)}%` : null
+    dtoDetectado>0 ? `Descuento comercial aplicado: ${dtoDetectado.toFixed(1)}%` : null
   ].filter(Boolean).join('\n');
 
-  const esUnica = lineas.length===1;
+  const systemPrompt = `Eres un interiorista profesional senior con 20 años de experiencia redactando presupuestos para clientes finales exigentes. Dominas la terminología técnica del sector (mobiliario, tapicería, carpintería, iluminación integrada, ergonomía, materiales, acabados, revestimientos, sistemas de apertura…).
 
-  const systemPrompt = `Eres un interiorista profesional senior con 20 años de experiencia redactando presupuestos para clientes finales exigentes. Tu trabajo: redactar una descripción elegante, profesional y comercial (3-5 frases, 50-120 palabras) que agrupe el conjunto de partidas listadas como UNA sola partida en el presupuesto del cliente.
+Tu trabajo: redactar una descripción ÚNICA, técnica, profesional y elegante (4-6 frases, 80-160 palabras) que presente al cliente el conjunto de partidas del presupuesto de forma unificada.
 
 REGLAS ESTRICTAS:
-• NO menciones referencias de producto, códigos (D8157, RL0008…), SKUs ni precios unitarios.
-• NO uses superlativos huecos ("el mejor", "increíble", "espectacular").
-• NO repitas literalmente la descripción de entrada — reinterprétala y enriquécela.
-• SÍ menciona: tipología de elementos (armarios, camas, módulos, sanitarios, revestimientos…), acabados, función del espacio, conjunto armónico.
-• Si es MOBILIARIO / INTERIORISMO: resalta armonía del conjunto, funcionalidad, integración del diseño, calidad de los acabados.
-• Si es OBRA / REHABILITACIÓN: resalta calidad técnica, materiales, ejecución profesional, solución integral.
-• Usa lenguaje evocativo pero preciso: "cuidadosamente seleccionado", "diseñado a medida", "acabados de alta resistencia", "distribución funcional", "conjunto coherente"…
-• Respuesta en español neutro, tono profesional.
+• NO copies ni repitas literalmente las descripciones de entrada. Tu texto debe ser una REDACCIÓN NUEVA que interprete el conjunto.
+• NO menciones referencias, códigos, SKUs, modelos (D8157, RL0008, GAP LED 0801, H38, H1670…) ni precios unitarios.
+• NO uses superlativos huecos ("el mejor", "increíble", "espectacular", "único").
+• SÍ menciona tipologías concretas que estén presentes: armarios, arrimaderos, camas, módulos, cajones, encimeras, estanterías, escritorios, iluminación LED integrada, puertas ranuradas, estructuras metálicas, cabeceros, sanitarios, grifería, revestimientos cerámicos, pavimentos, falso techo, instalación eléctrica, etc.
+• SÍ menciona acabados y materiales si se infieren (lacado, chapado, metálico, melamina, color, estructura…).
+• SÍ menciona la función del espacio (habitación juvenil, cocina, baño, salón, dormitorio…) si es identificable.
+• USA lenguaje técnico y evocativo: "conjunto modular coordinado", "iluminación LED integrada en frentes", "estructura de apertura ranurada", "distribución funcional del espacio", "conjunto diseñado a medida", "acabados de alta resistencia", "solución integral de interiorismo"…
+• Respuesta en español neutro, tono profesional pero cercano.
 • SOLO la descripción final. SIN comillas, SIN títulos, SIN viñetas, SIN explicaciones previas.`;
 
-  const userPrompt = esUnica
-    ? `Contexto del presupuesto:
+  const tieneDetalleAmplio = todasLineas.length >= 3;
+
+  let userPrompt;
+  if(tieneDetalleAmplio){
+    userPrompt = `CONTEXTO DEL PRESUPUESTO
 ${ctx}
 
-Única partida seleccionada:
-${detalle}
+LÍNEA(S) A REDACTAR COMO RESUMEN FINAL PARA EL CLIENTE:
+${detalleSeleccion}
 
-Enriquece y reformula esta partida con estilo profesional para el cliente. NO la copies literal: reinterprétala, amplíala con matices profesionales de interiorismo y redáctala como si fuera la presentación final al cliente. 3-5 frases.`
-    : `Contexto del presupuesto:
+DETALLE TÉCNICO COMPLETO DEL CONJUNTO (${todasLineas.length} elementos — contexto interno para que sepas qué hay exactamente, NO lo listes literal):
+${detalleTecnico}
+
+TAREA:
+Redacta UNA descripción técnica, profesional y elegante que agrupe TODO el conjunto anterior en un único texto para presentar al cliente. El lector no verá la lista detallada, solo tu redacción. Debe reflejar la variedad y tipología real del conjunto (armarios, módulos, camas, iluminación integrada, estructuras metálicas, escritorios, estanterías…) SIN listar cada elemento, SIN códigos, SIN precios. 4-6 frases, lenguaje técnico de interiorismo.`;
+  } else {
+    userPrompt = `CONTEXTO DEL PRESUPUESTO
 ${ctx}
 
-Partidas detalladas a agrupar (${lineas.length}):
-${detalle}
+PARTIDA(S) A REDACTAR PARA EL CLIENTE:
+${detalleSeleccion}
 
-Redacta una descripción única, elegante y profesional que agrupe TODAS estas partidas en un solo concepto para el cliente. Identifica el hilo conductor (habitación, reforma, conjunto de mobiliario…), menciona las tipologías más relevantes sin listarlas todas, y transmite la sensación de conjunto. 3-5 frases.`;
+TAREA:
+Enriquece y reformula esta(s) partida(s) con lenguaje técnico y profesional de interiorismo. NO la copies literal: interprétala, amplíala con matices técnicos (materiales, acabados, función del espacio, calidad de ejecución) y redáctala como presentación final al cliente. 4-6 frases.`;
+  }
 
   try{
     const resp = await fetch('https://api.anthropic.com/v1/messages',{
@@ -8601,7 +8626,7 @@ Redacta una descripción única, elegante y profesional que agrupe TODAS estas p
       headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       body:JSON.stringify({
         model:'claude-sonnet-4-5-20250929',
-        max_tokens:600,
+        max_tokens:700,
         system:systemPrompt,
         messages:[{role:'user',content:userPrompt}]
       })
@@ -8613,7 +8638,8 @@ Redacta una descripción única, elegante y profesional que agrupe TODAS estas p
     const data = await resp.json();
     const txt = data.content.filter(b=>b.type==='text').map(b=>b.text).join('').trim();
     document.getElementById('ria-desc').value = txt;
-    status.innerHTML = '<span style="color:#2e7d32">✅ Generado. Puedes editarlo o regenerar si prefieres otra versión.</span>';
+    const infoCtx = tieneDetalleAmplio ? ` · con contexto de ${todasLineas.length} líneas del presupuesto` : '';
+    status.innerHTML = `<span style="color:#2e7d32">✅ Generado${infoCtx}. Puedes editarlo o regenerar.</span>`;
   }catch(e){
     status.innerHTML = '<span style="color:#c62828">❌ Error: '+e.message+'</span>';
   }finally{
