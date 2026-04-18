@@ -5388,7 +5388,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
           <input type="radio" name="ria-modo" value="ia" checked onchange="riaSetModo('ia')">
           <div>
             <div style="font-weight:700;font-size:12px;color:var(--navy)">🤖 Generar con IA</div>
-            <div style="font-size:10px;color:var(--text-soft)">Claude redacta 2-3 frases elegantes</div>
+            <div style="font-size:10px;color:var(--text-soft)">Claude redacta la descripción técnica</div>
           </div>
         </label>
         <label style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:2px solid var(--border);border-radius:8px;cursor:pointer" id="ria-modo-man-lbl">
@@ -5401,16 +5401,22 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       </div>
     </div>
 
-    <!-- Botón generar (modo IA) -->
-    <div id="ria-ia-controls" style="margin-bottom:12px">
-      <button class="btn btn-primary" id="ria-btn-generar" onclick="riaGenerarIA()" style="width:100%;background:var(--navy)">🤖 Generar descripción con IA</button>
-      <div id="ria-ia-status" style="font-size:11px;color:var(--text-soft);margin-top:6px;text-align:center"></div>
+    <!-- BLOQUE IA (visible solo en modo IA) -->
+    <div id="ria-ia-controls" style="margin-bottom:14px;padding:12px;background:#f0f4fa;border:1px solid #d6e0ed;border-radius:8px">
+      <!-- Seed / Idea base -->
+      <div class="form-group" style="margin-bottom:10px">
+        <label class="form-label" style="color:var(--navy)">💡 Tu idea base <span style="font-weight:400;color:var(--text-soft);font-size:10px">· opcional · la IA la enriquecerá técnicamente</span></label>
+        <input class="form-input" id="ria-seed" placeholder="Ej. Reforma integral de 2 apartamentos · Mobiliario habitación juvenil · Baño completo…" style="background:#fff">
+      </div>
+      <!-- Botón generar GRANDE -->
+      <button class="btn btn-primary" id="ria-btn-generar" onclick="riaGenerarIA()" style="width:100%;background:var(--navy);font-size:13px;padding:10px 14px;font-weight:700">🤖 Generar descripción técnica con IA</button>
+      <div id="ria-ia-status" style="font-size:11px;color:var(--text-soft);margin-top:6px;text-align:center;min-height:14px"></div>
     </div>
 
-    <!-- Descripción generada/editable -->
+    <!-- Descripción final (editable, siempre visible) -->
     <div class="form-group" style="margin-bottom:12px">
-      <label class="form-label">Descripción para el cliente <span style="font-weight:400;color:var(--text-soft);font-size:10px">· editable antes de guardar · 🎤 para dictar</span></label>
-      <div class="mic-field-wrap"><textarea class="form-input" id="ria-desc" rows="5" style="resize:vertical;min-height:110px;font-family:inherit;line-height:1.45" placeholder="La descripción aparecerá aquí. Puedes editarla libremente."></textarea><button type="button" class="mic-btn" data-mic-for="ria-desc" onclick="voiceDictate('ria-desc',this)" title="Dictar por voz">🎤</button></div>
+      <label class="form-label">📝 Descripción final para el cliente <span style="font-weight:400;color:var(--text-soft);font-size:10px">· editable · 🎤 para dictar</span></label>
+      <div class="mic-field-wrap"><textarea class="form-input" id="ria-desc" rows="6" style="resize:vertical;min-height:130px;font-family:inherit;line-height:1.45" placeholder="(En modo IA, pulsa &quot;Generar&quot; arriba. En modo manual, escribe aquí directamente.)"></textarea><button type="button" class="mic-btn" data-mic-for="ria-desc" onclick="voiceDictate('ria-desc',this)" title="Dictar por voz">🎤</button></div>
     </div>
 
     <!-- Qué hacer con las líneas de detalle -->
@@ -8486,11 +8492,19 @@ function presAgruparCliente(){
   document.querySelector('input[name="ria-modo"][value="ia"]').checked = true;
   document.querySelector('input[name="ria-accion"][value="interno"]').checked = true;
   document.getElementById('ria-desc').value = '';
+  document.getElementById('ria-seed').value = '';
   document.getElementById('ria-ia-status').textContent = '';
+  _riaIAGenerated = false;
   riaSetModo('ia');
 
   openModal('m-pres-resumen-ia');
+
+  // Auto-generar en modo IA para que el usuario NUNCA se encuentre un textarea vacío
+  // que le invite a escribir directamente (y saltarse la IA sin darse cuenta).
+  setTimeout(()=>{ if(document.querySelector('input[name="ria-modo"]:checked')?.value==='ia') riaGenerarIA(); }, 250);
 }
+
+let _riaIAGenerated = false; // true tras una generación exitosa con IA en esta sesión del modal
 
 function riaSetModo(modo){
   const ctrl = document.getElementById('ria-ia-controls');
@@ -8595,12 +8609,15 @@ REGLAS ESTRICTAS:
 • SOLO la descripción final. SIN comillas, SIN títulos, SIN viñetas, SIN explicaciones previas.`;
 
   const tieneDetalleAmplio = todasLineas.length >= 3;
+  const seed = (document.getElementById('ria-seed')?.value || '').trim();
+
+  const seedBloque = seed ? `\nIDEA BASE DEL INTERIORISTA (úsala como hilo conductor y enriquécela técnicamente, NO la copies literal):\n"${seed}"\n` : '';
 
   let userPrompt;
   if(tieneDetalleAmplio){
     userPrompt = `CONTEXTO DEL PRESUPUESTO
 ${ctx}
-
+${seedBloque}
 LÍNEA(S) A REDACTAR COMO RESUMEN FINAL PARA EL CLIENTE:
 ${detalleSeleccion}
 
@@ -8608,16 +8625,16 @@ DETALLE TÉCNICO COMPLETO DEL CONJUNTO (${todasLineas.length} elementos — cont
 ${detalleTecnico}
 
 TAREA:
-Redacta UNA descripción técnica, profesional y elegante que agrupe TODO el conjunto anterior en un único texto para presentar al cliente. El lector no verá la lista detallada, solo tu redacción. Debe reflejar la variedad y tipología real del conjunto (armarios, módulos, camas, iluminación integrada, estructuras metálicas, escritorios, estanterías…) SIN listar cada elemento, SIN códigos, SIN precios. 4-6 frases, lenguaje técnico de interiorismo.`;
+Redacta UNA descripción técnica, profesional y elegante que agrupe TODO el conjunto anterior en un único texto para presentar al cliente. El lector no verá la lista detallada, solo tu redacción. Debe reflejar la variedad y tipología real del conjunto (armarios, módulos, camas, iluminación integrada, estructuras metálicas, escritorios, estanterías, sanitarios, revestimientos, ejecución de obra…) SIN listar cada elemento, SIN códigos, SIN precios. ${seed?'Parte de la idea base y enriquécela con todo el detalle técnico de las líneas del presupuesto.':''} 4-6 frases, 80-160 palabras, lenguaje técnico de interiorismo.`;
   } else {
     userPrompt = `CONTEXTO DEL PRESUPUESTO
 ${ctx}
-
+${seedBloque}
 PARTIDA(S) A REDACTAR PARA EL CLIENTE:
 ${detalleSeleccion}
 
 TAREA:
-Enriquece y reformula esta(s) partida(s) con lenguaje técnico y profesional de interiorismo. NO la copies literal: interprétala, amplíala con matices técnicos (materiales, acabados, función del espacio, calidad de ejecución) y redáctala como presentación final al cliente. 4-6 frases.`;
+Enriquece y reformula esta(s) partida(s) con lenguaje técnico y profesional de interiorismo. NO la copies literal: interprétala, amplíala con matices técnicos (materiales, acabados, función del espacio, calidad de ejecución) y redáctala como presentación final al cliente. ${seed?'Parte de la idea base y desarróllala.':''} 4-6 frases, 80-160 palabras.`;
   }
 
   try{
@@ -8638,13 +8655,14 @@ Enriquece y reformula esta(s) partida(s) con lenguaje técnico y profesional de 
     const data = await resp.json();
     const txt = data.content.filter(b=>b.type==='text').map(b=>b.text).join('').trim();
     document.getElementById('ria-desc').value = txt;
-    const infoCtx = tieneDetalleAmplio ? ` · con contexto de ${todasLineas.length} líneas del presupuesto` : '';
-    status.innerHTML = `<span style="color:#2e7d32">✅ Generado${infoCtx}. Puedes editarlo o regenerar.</span>`;
+    _riaIAGenerated = true;
+    const infoCtx = tieneDetalleAmplio ? ` · contexto de ${todasLineas.length} líneas` : '';
+    status.innerHTML = `<span style="color:#2e7d32">✅ Generado${infoCtx}. Edita si quieres o regenera.</span>`;
   }catch(e){
-    status.innerHTML = '<span style="color:#c62828">❌ Error: '+e.message+'</span>';
+    status.innerHTML = '<span style="color:#c62828">❌ Error: '+e.message+' · Puedes escribir manualmente abajo.</span>';
   }finally{
     btn.disabled = false;
-    btn.innerHTML = '🔄 Regenerar con IA';
+    btn.innerHTML = _riaIAGenerated ? '🔄 Regenerar con IA' : '🤖 Generar descripción técnica con IA';
   }
 }
 
@@ -8652,6 +8670,13 @@ async function riaConfirmar(){
   if(!_riaCtx){ toast('Contexto perdido','error'); return; }
   const descripcion = document.getElementById('ria-desc').value.trim();
   if(!descripcion){ toast('Escribe o genera una descripción antes de guardar','error'); return; }
+  const modo = document.querySelector('input[name="ria-modo"]:checked')?.value || 'ia';
+  // En modo IA: si el usuario nunca generó con IA, le preguntamos antes de guardar
+  // para evitar el bug típico de escribir en el textarea sin pasar por la IA.
+  if(modo==='ia' && !_riaIAGenerated){
+    const ok = confirm('Estás en modo IA pero no has pulsado "Generar descripción técnica con IA". \n\n¿Guardar el texto tal como está (sin pasar por la IA)?\n\n[Aceptar] = Guardar tal cual\n[Cancelar] = Volver y generar con IA primero');
+    if(!ok) return;
+  }
   const accion = document.querySelector('input[name="ria-accion"]:checked').value;
 
   const proy = document.getElementById('pres-proyecto-sel')?.value;
