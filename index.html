@@ -992,8 +992,9 @@ if(window.MutationObserver){
         </table>
         <!-- Totales -->
         <div style="display:flex;justify-content:flex-end">
-          <div style="width:250px">
+          <div style="width:290px">
             <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #ddd;font-size:12px"><span>Base imponible</span><span id="pf-base">—</span></div>
+            <div id="pf-base-desglose"></div>
             <div id="pf-iva-rows"><div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #ddd;font-size:12px"><span id="pf-iva-lbl">IVA</span><span id="pf-iva">—</span></div></div>
             <div style="display:flex;justify-content:space-between;padding:9px 0;font-size:14px;font-weight:700;color:#4a3728"><span>TOTAL</span><span id="pf-total">—</span></div>
           </div>
@@ -6771,6 +6772,7 @@ async function loadPresupuestoFinal(){
     }
     // Lineas
     let totalBase=0;
+    let baseExenta=0;
     let ivaDesglose={};
     const tbody=document.getElementById('pf-lineas');
     // Filtrar líneas internas (no mostrar al cliente en Doc. Final)
@@ -6789,6 +6791,8 @@ async function loadPresupuestoFinal(){
       if(pctIva>0){
         if(!ivaDesglose[tipoIva]) ivaDesglose[tipoIva]={pct:pctIva, base:0};
         ivaDesglose[tipoIva].base += sub;
+      } else {
+        baseExenta += sub;
       }
       const bg=i%2===0?'white':'#f9f9f9';
       const ivaLabel=(tipoIva==='Exento'||tipoIva===0||tipoIva==='0')?'<span style="font-size:9px;background:#f0f8f0;color:#2d7a52;border-radius:3px;padding:1px 4px;font-weight:600">Exento</span>':'<span style="font-size:9px;color:#666">'+tipoIva+'</span>';
@@ -6799,6 +6803,25 @@ async function loadPresupuestoFinal(){
     const totalIva = Object.values(ivaDesglose).reduce((s,v)=>s+v.base*v.pct/100, 0);
     const total=totalBase+totalIva;
     document.getElementById('pf-base').textContent=fmtES(totalBase)+'€';
+    // Desglose de la base: lo que va con IVA (por tipo) y lo que va exento
+    const pfBaseDesglose = document.getElementById('pf-base-desglose');
+    if(pfBaseDesglose){
+      const baseSujetaTotal = Object.values(ivaDesglose).reduce((s,v)=>s+v.base,0);
+      const mostrar = baseExenta>0.001 && baseSujetaTotal>0.001;
+      if(mostrar){
+        const subRowStyle = 'display:flex;justify-content:space-between;padding:3px 0 3px 14px;font-size:11px;color:#6b5a44;border-bottom:1px dotted #e8e0d4';
+        let html = '';
+        // Una fila por cada tipo de IVA sujeto
+        Object.keys(ivaDesglose).sort().forEach(k=>{
+          const d = ivaDesglose[k];
+          html += `<div style="${subRowStyle}"><span>· Sujeta al IVA ${k}</span><span>${fmtES(d.base)}€</span></div>`;
+        });
+        html += `<div style="${subRowStyle}"><span>· Exenta de IVA</span><span style="color:#2d7a52;font-weight:600">${fmtES(baseExenta)}€</span></div>`;
+        pfBaseDesglose.innerHTML = html;
+      } else {
+        pfBaseDesglose.innerHTML = '';
+      }
+    }
     // Mostrar IVA desglosado por tipo
     const ivaKeys = Object.keys(ivaDesglose).sort();
     const pfIvaRows = document.getElementById('pf-iva-rows');
