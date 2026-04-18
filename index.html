@@ -1634,6 +1634,8 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
             <div onclick="presAgruparCliente();this.closest('.pres-dd-menu').classList.remove('pres-dd-open')" style="padding:7px 14px;cursor:pointer;font-size:11px;color:#166534;font-weight:700" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background=''">🤖 Resumir con IA para cliente</div>
             <div onclick="presToggleInterno();this.closest('.pres-dd-menu').classList.remove('pres-dd-open')" style="padding:7px 14px;cursor:pointer;font-size:11px" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background=''">👁 Marcar como interno</div>
             <div onclick="presCrearPedido();this.closest('.pres-dd-menu').classList.remove('pres-dd-open')" style="padding:7px 14px;cursor:pointer;font-size:11px;color:#e65100" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background=''">📦 Crear pedido</div>
+            <div style="border-top:1px solid #eee;margin:2px 0"></div>
+            <div onclick="presRegistrarCobro();this.closest('.pres-dd-menu').classList.remove('pres-dd-open')" style="padding:7px 14px;cursor:pointer;font-size:11px;color:#7b3fa0;font-weight:700" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background=''">💵 Registrar cobro (entrega / efectivo)</div>
             <div onclick="presReimportarACatalogo();this.closest('.pres-dd-menu').classList.remove('pres-dd-open')" style="padding:7px 14px;cursor:pointer;font-size:11px;color:#1a5276" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background=''">📥 Reimportar catálogo</div>
           </div>
         </div>
@@ -11037,6 +11039,19 @@ function _driveFolderId(proyId){
   const url=p?.carpeta_drive||'';
   const m=url.match(/folders\/([a-zA-Z0-9_-]+)/);
   return m?m[1]:null;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// ATAJO: Registrar cobro (entrega a cuenta / nota efectivo) desde Presupuesto
+// Reutiliza el modal m-entrega-cuenta pero pre-rellena el proyecto
+// del presupuesto activo, sin necesidad de abrir el Expediente.
+// ═══════════════════════════════════════════════════════════════════
+function presRegistrarCobro(){
+  const proyId = document.getElementById('pres-proyecto-sel')?.value;
+  if(!proyId){ toast('Selecciona un proyecto primero','error'); return; }
+  // Fijamos el proyecto temporalmente para que abrirModalEntrega lo recoja
+  window._expProyId = proyId;
+  abrirModalEntrega();
 }
 
 // ═══════════════════════════════════════════════════════════════════
