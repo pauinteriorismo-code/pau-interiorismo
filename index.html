@@ -36743,10 +36743,10 @@ async function ejecutarEnvioEmail(){
       </div>
     </div>`;
 
-    // 4. Llamar al endpoint serverless /api/send-email-smtp:
-    //    - envía por SMTP de Vadavo con las credenciales del alias (env vars en Vercel)
-    //    - hace IMAP APPEND a la carpeta "Enviados" del buzón, así el correo
-    //      queda registrado de forma nativa en el webmail.
+    // 4. Envío del correo:
+    //    4a) Primero intentamos /api/send-email-smtp (SMTP Vadavo + IMAP APPEND a Enviados).
+    //    4b) Si falla (host SMTP mal, auth, etc.) caemos al Apps Script antiguo
+    //        para que el correo SIEMPRE salga, aunque no quede copia en Enviados.
     const payload = {
       from: desde,
       to: para,
@@ -36759,18 +36759,36 @@ async function ejecutarEnvioEmail(){
       payload.attachments = [{ filename: _emailFilename, contentBase64: base64Pdf, mimeType: 'application/pdf' }];
     }
 
-    const res = await fetch('/api/send-email-smtp', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    const txt = await res.text();
     let json = {};
-    try { json = JSON.parse(txt); } catch(_){ json = { ok:false, error: txt.slice(0,200) }; }
-    if(!json.ok){ throw new Error(json.error || 'El servidor no devolvió ok:true'); }
-    if(json.appendError){
-      // El envío se hizo pero no se pudo guardar copia en Enviados — solo avisar, no bloquear.
-      console.warn('Enviado OK pero no se guardó copia en Enviados:', json.appendError);
+    let viaFallback = false;
+    try {
+      const res = await fetch('/api/send-email-smtp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const txt = await res.text();
+      try { json = JSON.parse(txt); } catch(_){ json = { ok:false, error: txt.slice(0,200) }; }
+      if(!json.ok) throw new Error(json.error || 'SMTP error');
+    } catch(smtpErr){
+      console.warn('[send-email-smtp] Falló → fallback a Apps Script:', smtpErr.message);
+      viaFallback = true;
+      // Fallback: Apps Script (Gmail alias) — el correo llega pero NO queda en Enviados de Vadavo.
+      const res2 = await fetch(EMAIL_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: 'sendEmail', ...payload })
+      });
+      const txt2 = await res2.text();
+      try { json = JSON.parse(txt2); } catch(_){ json = { ok:false, error: txt2.slice(0,200) }; }
+      if(!json.ok) throw new Error(json.error || 'Envío fallido por ambas vías');
+    }
+    if(viaFallback){
+      console.warn('⚠ Correo enviado por Gmail (Apps Script). NO queda copia en carpeta Enviados de Vadavo. Revisa VADAVO_SMTP_HOST.');
+    } else if(json.appendError){
+      console.warn('Enviado por Vadavo OK pero no se guardó copia en Enviados:', json.appendError);
+    } else if(json.sentFolder){
+      console.log('✅ Correo enviado y copia guardada en:', json.sentFolder);
     }
 
     // 5. Registrar en historial document_emails (si Supabase está disponible)
