@@ -37557,17 +37557,10 @@ function actualizarFirmaEmail(){
       `📞 ${f.telefono} · ✉ ${f.email}<br>` +
       `<span style="color:#999">${EMPRESA.nombre} · ${EMPRESA.web||'pauinteriorismo.com'}</span>`;
   }
-  // Auto-rellenar CCO con el mismo alias del remitente para que quede copia
-  // automática en ese buzón. Respetamos lo que haya escrito el usuario si no
-  // es uno de nuestros alias conocidos.
-  const bccEl = document.getElementById('em-bcc');
-  if(bccEl){
-    const actual = (bccEl.value||'').trim().toLowerCase();
-    const esAlias = Array.isArray(EMAIL_ALIASES) && EMAIL_ALIASES.some(a=>a.toLowerCase()===actual);
-    if(!actual || esAlias){
-      bccEl.value = alias;
-    }
-  }
+  // Nota: ya no auto-rellenamos CCO con el alias del remitente. Con SMTP Vadavo
+  // + IMAP APPEND el correo queda directamente en la carpeta "Enviados" del
+  // buzón, sin necesidad de BCC. Si el usuario quiere copia manual, puede
+  // escribir un email en el campo CCO.
 }
 
 // (enviarDocumentoEmail removed - dead code, no callers)
