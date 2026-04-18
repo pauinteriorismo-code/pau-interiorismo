@@ -8539,29 +8539,86 @@ async function riaGenerarIA(){
   btn.innerHTML = '⏳ Generando…';
   status.textContent = 'Consultando a Claude…';
 
-  const resumen = _riaCtx.lineas.map(l=>`- ${(l.descripcion||'').replace(/\n/g,' ')} (${l.cantidad||1} ud)`).join('\n');
+  // Contexto del proyecto y cliente
+  const proyId = document.getElementById('pres-proyecto-sel')?.value || '';
+  const cliId = document.getElementById('filter-cliente-presupuesto')?.value || '';
+  const p = (typeof PC!=='undefined' ? PC.find(x=>x.proyecto_id===proyId) : null) || {};
+  const cli = (typeof CC!=='undefined' ? CC.find(x=>x.cliente_id===cliId || x.cliente_id===p.cliente_id) : null) || {};
+
+  const {lineas, totCoste, totPvp, totPvpSinDto, dtoDetectado} = _riaCtx;
+
+  // Detalle de cada línea con cantidad, unidad y PVP total
+  const detalle = lineas.map(l=>{
+    const d = (l.descripcion||'').replace(/\n/g,' — ').trim();
+    const cant = l.cantidad||1;
+    const ud = l.unidad||'Ud';
+    return `- ${d} · ${cant} ${ud}`;
+  }).join('\n');
+
+  const ctx = [
+    cli.nombre ? `Cliente: ${cli.nombre}` : null,
+    p.nombre ? `Proyecto: ${p.nombre}` : null,
+    p.tipo ? `Tipo de proyecto: ${p.tipo}` : null,
+    `Nº de partidas a agrupar: ${lineas.length}`,
+    `PVP total del conjunto: ${totPvp.toFixed(2)} €`,
+    dtoDetectado>0 ? `Descuento aplicado: ${dtoDetectado.toFixed(1)}%` : null
+  ].filter(Boolean).join('\n');
+
+  const esUnica = lineas.length===1;
+
+  const systemPrompt = `Eres un interiorista profesional senior con 20 años de experiencia redactando presupuestos para clientes finales exigentes. Tu trabajo: redactar una descripción elegante, profesional y comercial (3-5 frases, 50-120 palabras) que agrupe el conjunto de partidas listadas como UNA sola partida en el presupuesto del cliente.
+
+REGLAS ESTRICTAS:
+• NO menciones referencias de producto, códigos (D8157, RL0008…), SKUs ni precios unitarios.
+• NO uses superlativos huecos ("el mejor", "increíble", "espectacular").
+• NO repitas literalmente la descripción de entrada — reinterprétala y enriquécela.
+• SÍ menciona: tipología de elementos (armarios, camas, módulos, sanitarios, revestimientos…), acabados, función del espacio, conjunto armónico.
+• Si es MOBILIARIO / INTERIORISMO: resalta armonía del conjunto, funcionalidad, integración del diseño, calidad de los acabados.
+• Si es OBRA / REHABILITACIÓN: resalta calidad técnica, materiales, ejecución profesional, solución integral.
+• Usa lenguaje evocativo pero preciso: "cuidadosamente seleccionado", "diseñado a medida", "acabados de alta resistencia", "distribución funcional", "conjunto coherente"…
+• Respuesta en español neutro, tono profesional.
+• SOLO la descripción final. SIN comillas, SIN títulos, SIN viñetas, SIN explicaciones previas.`;
+
+  const userPrompt = esUnica
+    ? `Contexto del presupuesto:
+${ctx}
+
+Única partida seleccionada:
+${detalle}
+
+Enriquece y reformula esta partida con estilo profesional para el cliente. NO la copies literal: reinterprétala, amplíala con matices profesionales de interiorismo y redáctala como si fuera la presentación final al cliente. 3-5 frases.`
+    : `Contexto del presupuesto:
+${ctx}
+
+Partidas detalladas a agrupar (${lineas.length}):
+${detalle}
+
+Redacta una descripción única, elegante y profesional que agrupe TODAS estas partidas en un solo concepto para el cliente. Identifica el hilo conductor (habitación, reforma, conjunto de mobiliario…), menciona las tipologías más relevantes sin listarlas todas, y transmite la sensación de conjunto. 3-5 frases.`;
 
   try{
     const resp = await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
       headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:400,
-        system:`Eres un interiorista profesional. Genera una descripción breve y elegante (2-3 frases) para un presupuesto de cliente, resumiendo los productos/mobiliario listados. NO menciones referencias de producto, códigos, ni precios unitarios. Usa un tono profesional y atractivo. Responde SOLO con la descripción, sin comillas ni formato extra.`,
-        messages:[{role:'user',content:`Resume estas ${_riaCtx.lineas.length} partidas de mobiliario/interiorismo para presentar al cliente:\n\n${resumen}`}]
+        model:'claude-sonnet-4-5-20250929',
+        max_tokens:600,
+        system:systemPrompt,
+        messages:[{role:'user',content:userPrompt}]
       })
     });
-    if(!resp.ok) throw new Error('API '+resp.status);
+    if(!resp.ok){
+      const errTxt = await resp.text().catch(()=>'');
+      throw new Error('API '+resp.status+(errTxt?': '+errTxt.substring(0,120):''));
+    }
     const data = await resp.json();
     const txt = data.content.filter(b=>b.type==='text').map(b=>b.text).join('').trim();
     document.getElementById('ria-desc').value = txt;
-    status.innerHTML = '<span style="color:#2e7d32">✅ Generado. Puedes editarlo antes de guardar.</span>';
+    status.innerHTML = '<span style="color:#2e7d32">✅ Generado. Puedes editarlo o regenerar si prefieres otra versión.</span>';
   }catch(e){
     status.innerHTML = '<span style="color:#c62828">❌ Error: '+e.message+'</span>';
   }finally{
     btn.disabled = false;
-    btn.innerHTML = '🤖 Regenerar con IA';
+    btn.innerHTML = '🔄 Regenerar con IA';
   }
 }
 
