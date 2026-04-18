@@ -128,6 +128,12 @@ tbody td{padding:7px 10px;vertical-align:middle}
 .form-group{display:flex;flex-direction:column;gap:4px}
 .form-label{font-size:11px;font-weight:600;color:var(--text-mid)}
 .form-input{padding:7px 9px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;color:var(--text);background:var(--white);outline:none;transition:border-color .15s;width:100%}
+@keyframes pulse-mic{0%,100%{box-shadow:0 0 0 0 rgba(198,40,40,.7)}50%{box-shadow:0 0 0 6px rgba(198,40,40,0)}}
+.mic-btn{background:#fff;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:13px;padding:4px 8px;line-height:1;transition:all .15s;display:inline-flex;align-items:center;gap:4px;color:var(--text-soft)}
+.mic-btn:hover{background:#f5f5f5;border-color:var(--navy);color:var(--navy)}
+.mic-field-wrap{position:relative}
+.mic-field-wrap .mic-btn{position:absolute;top:6px;right:6px;z-index:2;padding:3px 7px;font-size:12px}
+.mic-field-wrap textarea{padding-right:38px}
 .search-dd{position:absolute;top:100%;left:0;right:0;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-sm);box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:9999;max-height:220px;overflow-y:auto;margin-top:2px}
 .search-dd-item{padding:8px 10px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--border-light,#f0f0f0)}
 .search-dd-item:hover{background:var(--blue-light)}
@@ -1766,7 +1772,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         <div id="pp-body-libre" class="pres-panel-body" style="display:none">
           <div class="pp-libre">
             <label>Descripción *</label>
-            <textarea id="pp-l-desc" placeholder="Descripción de la partida…" rows="4" style="resize:vertical;min-height:90px;font-family:inherit;line-height:1.4;width:100%"></textarea>
+            <div class="mic-field-wrap"><textarea id="pp-l-desc" placeholder="Descripción de la partida…" rows="4" style="resize:vertical;min-height:90px;font-family:inherit;line-height:1.4;width:100%"></textarea><button type="button" class="mic-btn" data-mic-for="pp-l-desc" onclick="voiceDictate('pp-l-desc',this)" title="Dictar por voz">🎤</button></div>
             <div class="pp-libre-grid">
               <div><label>Precio base (€)</label><input type="number" id="pp-l-precio" step="0.01" value="0" oninput="ppLibreCalc()"></div>
               <div><label>Margen %</label><input type="number" id="pp-l-margen" step="0.1" value="0" oninput="ppLibreCalc()"></div>
@@ -5338,7 +5344,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       </select>
     </div>
     <div class="form-grid">
-      <div class="form-group fg-full"><label class="form-label">Descripción * <span style="font-weight:400;color:var(--text-soft);font-size:10px">· pulsa Enter para saltos de línea</span></label><textarea class="form-input" id="pl-desc" rows="4" style="resize:vertical;min-height:90px;font-family:inherit;line-height:1.4" placeholder="Línea 1 del concepto&#10;Línea 2 con más detalle…&#10;Línea 3 de observaciones"></textarea></div>
+      <div class="form-group fg-full"><label class="form-label">Descripción * <span style="font-weight:400;color:var(--text-soft);font-size:10px">· pulsa Enter para saltos de línea · 🎤 para dictar</span></label><div class="mic-field-wrap"><textarea class="form-input" id="pl-desc" rows="4" style="resize:vertical;min-height:90px;font-family:inherit;line-height:1.4" placeholder="Línea 1 del concepto&#10;Línea 2 con más detalle…&#10;Línea 3 de observaciones"></textarea><button type="button" class="mic-btn" data-mic-for="pl-desc" onclick="voiceDictate('pl-desc',this)" title="Dictar por voz">🎤</button></div></div>
       <div class="form-group"><label class="form-label">Unidad</label><select class="form-input" id="pl-ud"><option>h</option><option>kg</option><option>m</option><option>ml</option><option>m²</option><option>m³</option><option>PA</option><option>Ud</option></select></div>
       <div class="form-group"><label class="form-label">Cantidad</label><input class="form-input" id="pl-cant" type="number" step="0.01" value="1" oninput="calcLineaPres()"></div>
       <div class="form-group"><label class="form-label">Precio Base (coste)</label><input class="form-input" id="pl-precio" type="number" step="0.01" oninput="calcLineaPres()"></div>
@@ -5403,8 +5409,8 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
 
     <!-- Descripción generada/editable -->
     <div class="form-group" style="margin-bottom:12px">
-      <label class="form-label">Descripción para el cliente <span style="font-weight:400;color:var(--text-soft);font-size:10px">· editable antes de guardar</span></label>
-      <textarea class="form-input" id="ria-desc" rows="5" style="resize:vertical;min-height:110px;font-family:inherit;line-height:1.45" placeholder="La descripción aparecerá aquí. Puedes editarla libremente."></textarea>
+      <label class="form-label">Descripción para el cliente <span style="font-weight:400;color:var(--text-soft);font-size:10px">· editable antes de guardar · 🎤 para dictar</span></label>
+      <div class="mic-field-wrap"><textarea class="form-input" id="ria-desc" rows="5" style="resize:vertical;min-height:110px;font-family:inherit;line-height:1.45" placeholder="La descripción aparecerá aquí. Puedes editarla libremente."></textarea><button type="button" class="mic-btn" data-mic-for="ria-desc" onclick="voiceDictate('ria-desc',this)" title="Dictar por voz">🎤</button></div>
     </div>
 
     <!-- Qué hacer con las líneas de detalle -->
@@ -5966,7 +5972,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="form-group"><label class="form-label">Proyecto *</label><select class="form-input" id="i-proyecto"><option value="">Seleccionar…</option><option value="PRY-001">PRY-001 · Mobiliario de cocina</option><option value="PRY-002">PRY-002 · Rehabilitación lateral fachada</option><option value="PRY-003">PRY-003 · Pavimento/revestimiento vivienda.</option><option value="PRY-004">PRY-004 · Rehabilitación estudio</option><option value="PRY-005">PRY-005 · Trabajos en terraza</option></select></div>
       <div class="form-group"><label class="form-label">Estancia</label><select class="form-input" id="i-estancia"><option value="">Seleccionar…</option><option value="Baño">Baño</option><option value="Cocina">Cocina</option><option value="Comedor">Comedor</option><option value="Despacho">Despacho</option><option value="Dormitorio">Dormitorio</option><option value="Entrada">Entrada</option><option value="Otros">Otros</option><option value="Pasillo">Pasillo</option><option value="Salón">Salón</option><option value="Terraza">Terraza</option></select></div>
       <div class="form-group"><label class="form-label">Ref. Tarifario</label><select class="form-input" id="i-ref" onchange="loadTarifarioItem()"><option value="">— descripción libre —</option><option value="be0b88a6-47d5-46e2-8911-408eff64ca38">79B000RL10 · REJILLA AIRZONE LINEAL LAMA FIJA 1000X100 BLANCO CON REGULACION</option><option value="6c08d760-3e93-4764-90b6-551bfeee2bf9">RL00060010BKRT · REJILLA AIRZONE LINEAL LAMA FIJA 600X100 BLANCO CON REGULACION</option><option value="12861e98-87d9-4d59-8aaa-4701535670d0">RL00080010BKRT · REJILLA AIRZONE LINEAL LAMA FIJA 800X100 BLANCO CON REGULACION</option><option value="3081dc03-900a-4741-8fa6-4ebea580a14b">RL00100010BKX · REJILLA AIRZONE LINEAL LAMA FIJA 1000X100 BLANCO</option><option value="9a9cbb45-7acb-4099-91dd-05fe5d1b4f12">RL00150010BKX · REJILLA AIRZONE LINEAL LAMA FIJA 1500X100 BLANCO</option><option value="d231d767-b51f-4122-9942-59a7b7686849">RL00200010BKX · REJILLA AIRZONE LINEAL LAMA FIJA 2000X100 BLANCO</option></select></div>
-      <div class="form-group fg-full"><label class="form-label">Descripción</label><textarea class="form-input" id="i-desc" rows="4" style="resize:vertical;min-height:90px;font-family:inherit;line-height:1.4"></textarea></div>
+      <div class="form-group fg-full"><label class="form-label">Descripción</label><div class="mic-field-wrap"><textarea class="form-input" id="i-desc" rows="4" style="resize:vertical;min-height:90px;font-family:inherit;line-height:1.4"></textarea><button type="button" class="mic-btn" data-mic-for="i-desc" onclick="voiceDictate('i-desc',this)" title="Dictar por voz">🎤</button></div></div>
       <div class="form-group"><label class="form-label">Marca</label><input class="form-input" id="i-marca"></div>
       <div class="form-group"><label class="form-label">Acabado</label><input class="form-input" id="i-acabado"></div>
       <div class="form-group"><label class="form-label">Cantidad</label><input class="form-input" id="i-cant" type="number" value="1" step="0.01" oninput="calcIntPvp()"></div>
@@ -6277,7 +6283,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
       <div class="form-group"><label class="form-label">Trabajador</label><select class="form-input" id="h-trab"><option value="">Seleccionar…</option><option value="Francisco Gascón Gil">Francisco Gascón Gil</option><option value="Jose Asins Primo">Jose Asins Primo</option><option value="Julio Alemany Fort">Julio Alemany Fort</option><option value="María Paz Primo Iborra">María Paz Primo Iborra</option><option value="Raúl Gascón Gil">Raúl Gascón Gil</option><option value="Salvador Aguado Simó">Salvador Aguado Simó</option></select></div>
       <div class="form-group"><label class="form-label">Horas</label><input class="form-input" id="h-horas" type="number" step="0.5" placeholder="8"></div>
       <div class="form-group"><label class="form-label">€/hora</label><input class="form-input" id="h-coste" type="number" value="18"></div>
-      <div class="form-group fg-full"><label class="form-label">Descripción</label><textarea class="form-input" id="h-desc" rows="4" style="resize:vertical;min-height:90px;font-family:inherit;line-height:1.4"></textarea></div>
+      <div class="form-group fg-full"><label class="form-label">Descripción</label><div class="mic-field-wrap"><textarea class="form-input" id="h-desc" rows="4" style="resize:vertical;min-height:90px;font-family:inherit;line-height:1.4"></textarea><button type="button" class="mic-btn" data-mic-for="h-desc" onclick="voiceDictate('h-desc',this)" title="Dictar por voz">🎤</button></div></div>
     </div>
   </div>
   <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('m-hora')">Cancelar</button><button class="btn btn-primary" onclick="saveHora()">💾 Guardar</button></div>
@@ -6321,7 +6327,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
         </div>
       </div>
 
-      <div class="form-group fg-full"><label class="form-label">Referencia / Descripción</label><textarea class="form-input" id="ped-ref" placeholder="Ej: Azulejo baño modelo X, Mueble cocina ref.123..." rows="4" style="resize:vertical;min-height:90px;font-family:inherit;line-height:1.4"></textarea></div>
+      <div class="form-group fg-full"><label class="form-label">Referencia / Descripción</label><div class="mic-field-wrap"><textarea class="form-input" id="ped-ref" placeholder="Ej: Azulejo baño modelo X, Mueble cocina ref.123..." rows="4" style="resize:vertical;min-height:90px;font-family:inherit;line-height:1.4"></textarea><button type="button" class="mic-btn" data-mic-for="ped-ref" onclick="voiceDictate('ped-ref',this)" title="Dictar por voz">🎤</button></div></div>
       <div class="form-group"><label class="form-label">Importe €</label><input class="form-input" id="ped-importe" type="number" step="0.01"></div>
       <div class="form-group"><label class="form-label">Estado</label><select class="form-input" id="ped-estado"><option>Cancelado</option><option selected>Confirmado</option><option>En tránsito</option><option>Pagado</option><option>Pendiente</option><option>Recibido parcialmente</option><option>Recibido completamente</option><option>Recibido</option><option>Solicitado</option></select></div>
       <div class="form-group fg-full"><label class="form-label">Observaciones</label><input class="form-input" id="ped-obs"></div>
@@ -6349,7 +6355,7 @@ TELFN. CONTACTO 677 970 074 ATENCIÓN DE JOSE.</textarea>
   <div class="modal-body">
     <input type="hidden" id="ag-id">
     <div class="form-grid">
-      <div class="form-group fg-full"><label class="form-label">Descripción *</label><textarea class="form-input" id="ag-desc" placeholder="Descripción del aviso…" rows="4" style="resize:vertical;min-height:90px;font-family:inherit;line-height:1.4"></textarea></div>
+      <div class="form-group fg-full"><label class="form-label">Descripción *</label><div class="mic-field-wrap"><textarea class="form-input" id="ag-desc" placeholder="Descripción del aviso…" rows="4" style="resize:vertical;min-height:90px;font-family:inherit;line-height:1.4"></textarea><button type="button" class="mic-btn" data-mic-for="ag-desc" onclick="voiceDictate('ag-desc',this)" title="Dictar por voz">🎤</button></div></div>
       <div class="form-group"><label class="form-label">Fecha *</label><input class="form-input" type="date" id="ag-fecha"></div>
       <div class="form-group"><label class="form-label">Hora</label><input class="form-input" type="time" id="ag-hora"></div>
       <div class="form-group"><label class="form-label">Tipo</label>
@@ -7838,6 +7844,83 @@ const bColors={'Nuevo lead':'b-gray','Presupuesto enviado':'b-amber','Aprobado':
 function bE(v){return`<span class="badge ${bColors[v]||'b-gray'}">${v||'—'}</span>`}
 function fmt(n){if(n===null||n===undefined||n==='')return'—';return fmtES(Number(n))+'€'}
 function fmtES(n){var s=Math.abs(n).toFixed(2);var parts=s.split('.');var intPart=parts[0];var decPart=parts[1];var result='';for(var i=intPart.length-1,c=0;i>=0;i--,c++){if(c>0&&c%3===0)result='.'+result;result=intPart[i]+result;}return (n<0?'-':'')+result+','+decPart;}
+
+// ═══════════════════════════════════════════
+// DICTADO POR VOZ (Web Speech API)
+// ═══════════════════════════════════════════
+let _voiceRec = null;
+let _voiceTarget = null;
+let _voiceBaseText = '';
+
+function voiceDictate(targetId, btnEl){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR){ toast('Tu navegador no soporta dictado. Usa Chrome o Edge.','error'); return; }
+  const target = document.getElementById(targetId);
+  if(!target){ toast('Campo no encontrado','error'); return; }
+
+  // Si ya está grabando y es el mismo target → parar
+  if(_voiceRec && _voiceTarget === target){
+    _voiceRec.stop();
+    return;
+  }
+  // Si estaba grabando en otro campo → cancelar antes
+  if(_voiceRec){ try{ _voiceRec.stop(); }catch(_){} }
+
+  const rec = new SR();
+  rec.lang = 'es-ES';
+  rec.continuous = true;
+  rec.interimResults = true;
+
+  _voiceRec = rec;
+  _voiceTarget = target;
+  _voiceBaseText = target.value;
+
+  const btn = btnEl || document.querySelector(`[data-mic-for="${targetId}"]`);
+  if(btn){
+    btn.dataset.recording = '1';
+    btn.style.background = '#c62828';
+    btn.style.color = '#fff';
+    btn.style.borderColor = '#c62828';
+    btn.style.animation = 'pulse-mic 1s ease-in-out infinite';
+    btn.title = 'Parar dictado';
+  }
+
+  rec.onresult = (ev)=>{
+    let finalText = '';
+    let interim = '';
+    for(let i=0; i<ev.results.length; i++){
+      const t = ev.results[i][0].transcript;
+      if(ev.results[i].isFinal) finalText += t;
+      else interim += t;
+    }
+    const sep = _voiceBaseText && !_voiceBaseText.endsWith('\n') && !_voiceBaseText.endsWith(' ') ? ' ' : '';
+    target.value = _voiceBaseText + sep + finalText + interim;
+  };
+  rec.onerror = (ev)=>{
+    if(ev.error==='not-allowed'||ev.error==='service-not-allowed'){
+      toast('Permite el acceso al micrófono en el navegador','error');
+    } else if(ev.error!=='aborted' && ev.error!=='no-speech'){
+      toast('Error de dictado: '+ev.error,'error');
+    }
+  };
+  rec.onend = ()=>{
+    _voiceRec = null;
+    _voiceTarget = null;
+    if(btn){
+      delete btn.dataset.recording;
+      btn.style.background = '';
+      btn.style.color = '';
+      btn.style.borderColor = '';
+      btn.style.animation = '';
+      btn.title = 'Dictar por voz';
+    }
+    // Disparar oninput por si algún cálculo depende del valor
+    target.dispatchEvent(new Event('input',{bubbles:true}));
+  };
+
+  try{ rec.start(); toast('🎤 Dictando… habla ahora'); }
+  catch(e){ toast('No se pudo iniciar el dictado','error'); }
+}
 // Poblaciones de la provincia de Valencia para autocompletado
 const _POBLACIONES_VLC=[
 'Ador','Agullent','Aielo de Malferit','Aielo de Rugat','Alaquas','Albaida','Albal','Albalat de la Ribera','Albalat dels Sorells','Albalat dels Tarongers',
